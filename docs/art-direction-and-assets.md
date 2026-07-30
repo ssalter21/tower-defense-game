@@ -357,6 +357,57 @@ correspondingly weaker here than it would be with a closed FBX-only pack. Combin
 owns attack timing in ticks, a custom unit can be dropped in beside a bought one without touching the
 simulation at all.
 
+### Mixing a Synty environment with KayKit characters
+
+Taking [POLYGON Enchanted Forest](https://syntystore.com/products/polygon-enchanted-forest-nature-biomes) as
+the worked example, because it is the case most likely to come up: you love a Synty *biome* and want it under
+KayKit units. **This is the easy direction, and one piece of technical luck makes it easier than it has any
+right to be.**
+
+| | |
+|---|---|
+| Contents | Environment ×127, Props ×22, FX ×15 — trees, cliffs, ferns, mushrooms, roots, vines, water planes; archway, crystals, lantern, portal, ruins, tree house |
+| Price | **$54.99** |
+| Formats | Unity 2022.3+ package, Unreal 4.25+ project, **FBX source**; URP and Built-in. *No Godot project for this pack*, unlike Dungeon Pack and Fantasy Kingdom |
+| **Characters** | **None.** Which is exactly why this mix is safe |
+
+**Why it is low-risk.** §5 already argued that character-to-character coherence is what the eye grades, because
+units are the thing crowded together at identical scale, and that an environment from a different publisher is
+a much weaker mismatch signal. A biome pack contains *no characters at all*, so it cannot create the failure
+mode. Under a fixed TD camera the environment is static set dressing seen at distance while the player's
+attention is on the lane.
+
+**The piece of luck: both publishers texture the same way.** Synty models use "a single material and a texture
+atlas with a series of color palettes arranged in a grid," and KayKit uses "a single gradient atlas texture
+(1024×1024)." Two flat palette-atlas packs, one material per object, no PBR detail maps, no normal maps to
+disagree. **The two usual killers of cross-pack mixing — mismatched texel density and PBR-versus-flat shading —
+simply do not arise here.** It also means the highest-leverage coherence fix is trivially available: recolour
+one atlas image toward the other's palette in any image editor. That is minutes of work, not hours, and it
+does more than any shader.
+
+**The four things to actually watch:**
+
+1. **Scale, settled once and globally.** Synty environments are proportioned around Synty characters; KayKit
+   characters are chunkier and shorter-proportioned. Pick your unit height as the reference and scale the
+   *environment* to it, never the reverse. Do it on import, once.
+2. **The vegetation shader is a real fork.** Synty ships vegetation shaders with world/local-space wind. KayKit
+   ships none. Putting one uniform ramp shader over everything (§10, item 2) costs you the foliage wind;
+   keeping Synty's costs you a single lighting response. The practical answer is to split it — Synty's
+   vegetation shader on foliage only, one shared shader on everything else, and unify the whole frame with one
+   post stack and LUT.
+3. **Prop density fights readability.** Synty biomes are lush, and a TD needs the lane legible under 40–60
+   crowded units. This is a gameplay-legibility risk, not a stylistic one, and it argues for thinning the
+   biome aggressively around the playfield and letting it be dense only at the edges.
+4. **A biome is not a tower pack.** Enchanted Forest has no buildings you would read as towers — an archway, a
+   tree house and some ruins are set dressing. Towers still come from Dungeon Pack, Fantasy Kingdom, or your
+   own work. Budget for that separately.
+
+**Verdict: yes, mix it, and it is cheap.** $54.99 of set dressing carries none of the coherence risk that
+$149.99 of Synty *characters* would. Run §13's screenshot test first using the free
+[POLYGON Starter Pack](https://syntystore.com/products/polygon-starter-pack) to confirm the palettes sit
+together at your camera distance — and note the biome is a purchase to make when you are dressing a scene,
+which is after the step-3 gate, not now.
+
 ---
 
 ## 6. Track B — 2D / pixel art. The shortlist, offered honestly.
@@ -780,9 +831,14 @@ Every claim above links to the page it came from. Grouped here for the record.
     [Lowpoly Complete Bundle — Medieval Fantasy](https://assetstore.unity.com/packages/3d/characters/lowpoly-complete-bundle-medieval-fantasy-series-315750);
     [Meshtint Phantom Mega Toon](https://www.meshtint.com/products/phantom-mega-toon-series),
     [Meshtint series list](https://www.meshtint.com/pages/all-series-list-on-unity-asset-store).
+11. Mixing and extending: [KayKit Character Animations](https://kaylousberg.itch.io/kaykit-character-animations)
+    (161 clips, CC0, retargeting note);
+    [POLYGON Enchanted Forest Nature Biome](https://syntystore.com/products/polygon-enchanted-forest-nature-biomes)
+    ($54.99, 127 environment + 22 props + 15 FX, no characters);
+    [POLYGON Starter Pack](https://syntystore.com/products/polygon-starter-pack) (free, for the screenshot test).
 
 **Track B packs**
-11. [Tiny Swords by Pixel Frog](https://pixelfrog-assets.itch.io/tiny-swords);
+12. [Tiny Swords by Pixel Frog](https://pixelfrog-assets.itch.io/tiny-swords);
     [Kenney Tower Defense (Top-Down)](https://kenney.nl/assets/tower-defense-top-down) and
     [Kenney's asset index](https://kenney.nl/assets);
     [CraftPix Tower Defense Top-Down Pixel Art Collection](https://craftpix.net/sets/tower-defense-top-down-pixel-art/) and
@@ -791,13 +847,13 @@ Every claim above links to the page it came from. Grouped here for the record.
     [LuizMelo Monsters Creatures Fantasy](https://luizmelo.itch.io/monsters-creatures-fantasy).
 
 **Aesthetic grounding**
-12. Legion TD 2: [Steam store page](https://store.steampowered.com/app/469600/Legion_TD_2__Multiplayer_Tower_Defense/),
+13. Legion TD 2: [Steam store page](https://store.steampowered.com/app/469600/Legion_TD_2__Multiplayer_Tower_Defense/),
     [official team page](https://beta.legiontd2.com/team/),
     [Sketchfab Game Studio Spotlight, 20 Aug 2018](https://sketchfab.com/blogs/community/game-studio-spotlight-autoattack-games),
     [Sketchfab model profile](https://sketchfab.com/autoattackgames),
     [Nekomata model, 1.8k tris](https://sketchfab.com/3d-models/legion-td-2-nekomata-06bb70ef39bb4751bb84bb9808b8fece),
     [dev post introducing their concept artist, 1 Aug 2016](https://beta.legiontd2.com/updates/introducing-our-new-concept-artist/).
-13. Noita: [official presskit](https://noitagame.com/press/),
+14. Noita: [official presskit](https://noitagame.com/press/),
     [Nolla Games — Falling Everything](https://nollagames.com/fallingeverything/),
     [GDC Vault — *Exploring the Tech and Design of 'Noita'*, Petri Purho, GDC 2019](https://www.gdcvault.com/play/1025695/Exploring-the-Tech-and-Design),
     [80.lv interview with Petri Purho, 5 Apr 2019](https://80.lv/articles/noita-a-game-based-on-falling-sand-simulation),
@@ -805,21 +861,21 @@ Every claim above links to the page it came from. Grouped here for the record.
     [Wikipedia — Noita](https://en.wikipedia.org/wiki/Noita_(video_game)).
 
 **Asset-pack strategy evidence**
-14. [Wikipedia — *Asset flip*](https://en.wikipedia.org/wiki/Asset_flip) (definition, Sterling attribution,
+15. [Wikipedia — *Asset flip*](https://en.wikipedia.org/wiki/Asset_flip) (definition, Sterling attribution,
     Foddy's counter-argument, PUBG);
     [GamesBeat — *In defense of asset flips on Steam*](https://venturebeat.com/pc-gaming/in-defense-of-asset-flips-on-steam/)
     *(429 on fetch — see §12)*;
     [Erenshor Steam forum — "these damn synty unity assets again"](https://steamcommunity.com/app/2382520/discussions/0/506200271931576244/);
     [Erenshor on Steam](https://store.steampowered.com/app/2382520/Erenshor/) (94%, 1,951 reviews);
     [Stolen Realm on Steam](https://store.steampowered.com/app/1330000/Stolen_Realm/) (84%, 2,490 reviews).
-15. [Made with Synty: Soulstone Survivors, 6 Aug 2024](https://syntystore.com/blogs/blog/made-with-synty-soulstone-survivors)
+16. [Made with Synty: Soulstone Survivors, 6 Aug 2024](https://syntystore.com/blogs/blog/made-with-synty-soulstone-survivors)
     and [Soulstone Survivors on Steam](https://store.steampowered.com/app/2066020/Soulstone_Survivors/) (26,675
     reviews all languages; 12,229 English at 91% positive);
     [Made with Synty: No Plan B](https://syntystore.com/blogs/blog/made-with-synty-no-plan-b);
     [Made with Synty: SurrounDead](https://syntystore.com/blogs/blog/made-with-synty-surroundead);
     [Made with Synty: It's Only Money](https://syntystore.com/blogs/blog/made-with-synty-its-only-money);
     [Humble Bundle: Best of Synty #5](https://syntystore.com/blogs/blog/humble-bundle-best-of-synty-5).
-16. Part III, *Technology Stack Assessment* — the engine-free sim library, the rendering rule, the fixed-camera
+17. Part III, *Technology Stack Assessment* — the engine-free sim library, the rendering rule, the fixed-camera
     budget argument, and §8's "art is the long pole, not code."
-17. Part II, *Async Ghost Round-Robin* — the ghost record format that makes grid-vs-free placement sticky, and
+18. Part II, *Async Ghost Round-Robin* — the ghost record format that makes grid-vs-free placement sticky, and
     the build order this document is sequenced against.
