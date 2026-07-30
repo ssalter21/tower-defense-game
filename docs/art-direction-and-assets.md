@@ -123,8 +123,38 @@ That version is stronger, because it survives a change of taste. See §7.
 | 144 unit models published publicly | [Sketchfab profile](https://sketchfab.com/autoattackgames) |
 | A representative unit — "Nekomata" — is **1,800 triangles / 916 vertices** | [Sketchfab model page](https://sketchfab.com/3d-models/legion-td-2-nekomata-06bb70ef39bb4751bb84bb9808b8fece) |
 | Other units on the same profile are listed at 950–3,000 triangles (Antler 950, Harbinger 1.5k, Samurai 2k, Janus 3k) | [Sketchfab profile listing](https://sketchfab.com/autoattackgames/models) |
+| A **13-step** per-character pipeline, beginning at "Gameplay ideation — what gameplay purpose will the character serve?" and running through concept art, orthographic turnarounds, high-poly sculpt, low-poly, UV, texturing, animation, VFX, balance and finally skins | [Character Design & "Making of a King"](https://beta.legiontd2.com/updates/character-design-making-of-a-king/) |
+| Concept artists are **named, recruited individuals** — e.g. Oğuzalp "Drakhas" Döndüren of Istanbul, introduced in a dedicated dev post showing his original Forsaken designs (Butcher, Fire Archer, Imp, Undead Dragon, Lord of Death) | [Introducing Our New Concept Artist](https://beta.legiontd2.com/updates/introducing-our-new-concept-artist/) |
+| Characters are commissioned from concept art turnaround sheets, in a "hand-painted style," by contract 3D character artists hired through industry job boards | [polycount job posting](https://polycount.com/discussion/228439/3d-character-artist-for-legion-td-2-played-by-220-000-players-on-steam) *(403 to fetch — see §12)* |
 
-**The useful conclusion.** Legion TD 2's units are *smaller* than the assets in most of the packs below.
+### Does Legion TD 2 itself use asset packs?
+
+**No. Not one.** This is worth stating outright, because it is the natural follow-up to a document recommending
+that you do.
+
+Every published trace of their production points the same way. The pipeline starts at *gameplay ideation* and
+reaches a model only at step 5 — the unit exists because the design needs it, which is the exact inverse of
+buying a pack and casting your roster from what is in it (§9, failure mode 5). They introduce concept artists
+by name in dev posts. They ship a Kickstarter artbook of "never-before-seen sketches of 50 characters." They
+post job listings for contract character artists working from their own turnaround sheets.
+
+What they *did* outsource is instructive, because it is the opposite of what an asset pack gives you.
+The studio's lead artist Jean Go handled concept, character art, illustration and marketing art, and as
+production scaled, **modelling and texturing were progressively contracted out while animation was outsourced
+from early on** — to SuperSpline Studios, with the studio supplying "assets, animation descriptions, and
+references… as detailed as possible about each animation's timing, feel, and use case"
+([Sketchfab studio spotlight](https://sketchfab.com/blogs/community/game-studio-spotlight-autoattack-games)).
+They bought *labour*, applied to their own designs. An asset pack sells you *designs*, with the labour already
+spent on someone else's.
+
+**So the honest framing of this document's recommendation is not "do what Legion TD 2 did."** It is: Legion TD 2
+spent eight years and a dedicated art department building 100+ bespoke units, you are one person, and the pack
+is how you get a playable game in front of players in the meantime. Treat the north star as a description of
+the *feel to aim at*, not a production plan to copy. The bespoke path is available later, unit by unit, funded
+by a game that already exists — which is precisely the order AutoAttack could not use, because in 2016 there
+was no game yet either.
+
+**The useful conclusion on budget.** Legion TD 2's units are *smaller* than the assets in most of the packs below.
 Nothing about the geometry budget is out of reach — a KayKit or Synty character is in the same order of
 magnitude, and a Meshtint "Mega Toon" creature is 505 triangles
 ([Phantom](https://www.meshtint.com/products/phantom-mega-toon-series)). The polygon count is not the gap.
@@ -450,13 +480,74 @@ own marketing and should be read as such, but the Steam numbers behind them are 
 
 ## 10. Avoiding the asset-flip read
 
-The term was coined by critic Jim Sterling in 2015 for games assembled predominantly from pre-made digital
-assets with little to no original content, cohesive design, or substantial gameplay implementation. Note what
-the definition actually indicts: **absence of original work, not presence of bought work.** Soulstone Survivors
-uses a bought dungeon pack and is not called an asset flip, because there is obviously a game there. *(The
-etymology here is my summary of widely-repeated secondary accounts, not a primary citation — see §12.)*
+### First, the definition — because it does not say what people think it says
 
-What shipped games do, in rough order of leverage per hour:
+An asset flip is "a type of shovelware in which a video game developer purchases pre-made assets" to create
+"numerous permutations of generic games to sell at low prices" — the term was coined by games journalist
+James Stephanie Sterling around 2015 ([Wikipedia: Asset flip](https://en.wikipedia.org/wiki/Asset_flip)).
+
+Read the load-bearing words: *shovelware*, *numerous permutations*, *generic*, *low prices*. The definition
+indicts **absence of original work, not presence of bought work.** A single game with real systems behind it
+does not meet it no matter how much of the art was purchased.
+
+### Do people look down on it? Yes — loudly, in public, and it does not appear to matter
+
+Both halves of that sentence are true and the gap between them is the actionable part.
+
+**The criticism is real and specific.** Players have learned to recognise Synty on sight. There is a thread on
+Erenshor's Steam forum titled *"these damn synty unity assets again"*
+([Steam](https://steamcommunity.com/app/2382520/discussions/0/506200271931576244/)), naming Stolen Realm and
+Soulstone Survivors in the same breath:
+
+> "These games all have the same spell effects, models, art, it's so boring… I'd much prefer bad graphics and
+> low res textures over these cringe overused assets."
+
+That is the risk, stated by an actual customer, and it is the strongest argument in this document for §10's
+coherence work below. Note the precise complaint, though: not *bought*, but **recognisable and repeated**.
+
+**The community answer, in the same thread, ran overwhelmingly the other way** — and no developer had to show
+up to make the case:
+
+> "These assets allow solo devs to be able to make games on their own that normally would take a studio of
+> multiple programmers and designers to make."
+
+> "You clearly don't know how hard it is to make even 'bad assets' for a full game. I'd rather have a game with
+> store assets than no game at all."
+
+**And the scoreboard is unambiguous.** Every game named in that complaint thread is a commercial and critical
+success:
+
+| Game | Steam reviews | Team |
+|---|---|---|
+| [Erenshor](https://store.steampowered.com/app/2382520/Erenshor/) — the game the thread was posted on | **94% positive, 1,951 reviews** (Very Positive) | Burgee Media |
+| [Soulstone Survivors](https://store.steampowered.com/app/2066020/Soulstone_Survivors/) | **91% positive**, 12,229 English of 26,675 total | Game Smithing |
+| [Stolen Realm](https://store.steampowered.com/app/1330000/Stolen_Realm/) | **84% positive, 2,490 reviews** (Very Positive) | Burst2Flame, three friends |
+
+A game can be the literal subject of a "these damn Synty assets" thread and sit at 94% positive. The complaint
+is loud; it is also a minority position that gets argued down by other players, and it does not show up in the
+numbers.
+
+**The precedent goes considerably higher than indie.** Bennett Foddy — who has more standing here than anyone,
+having shipped *Getting Over It* on "nearly all free assets, a handful of paid assets, one or two custom
+things" — has argued the label is applied incoherently, noting that games built from bought or free art can
+still contain "a huge amount of work in them when it comes to code and design and ideas," and naming
+*Flappy Bird*, *PUBG* and *Banished* as games arguably caught by the same definition
+([Wikipedia](https://en.wikipedia.org/wiki/Asset_flip),
+[GamesBeat](https://venturebeat.com/pc-gaming/in-defense-of-asset-flips-on-steam/) *(429 on fetch — see §12)*).
+PUBG shipped on pre-made assets and became one of the best-selling games ever made.
+
+**The conclusion for this project.** The reputational risk of buying art is real but small, well-understood by
+players, and almost entirely mitigable by the six items below. The risk of *not* buying art — a solo developer
+spending a year on models for a game whose core loop has not been validated — is far larger and is the one
+Part II's build order exists to prevent. Ship the game; the art is a surface you can replace unit by unit
+afterwards, and §8's animation-timing rule is what keeps that true.
+
+One genuine caveat, and it points at Synty rather than at packs generally: **the recognisability risk scales
+with the pack's popularity.** Synty is the most-used low-poly art in indie games, which is exactly why players
+can name it. KayKit is far less saturated — a real, if minor, secondary advantage of the §5 recommendation
+that has nothing to do with animations.
+
+### What to do about it — in rough order of leverage per hour
 
 1. **Custom UI.** The highest-leverage original art in the project, and the one nobody does. Players stare at
    your HUD for the entire match; it is the surface that says "someone made this." Part III already flags dense
@@ -536,8 +627,19 @@ Stated plainly, because a research document that only reports successes is not a
   **HTTP 403**. Those descriptions appear in search summaries and are consistent with the Sketchfab spotlight,
   but I have not read the postings, so §3.1's characterisation of the texture philosophy is **judgement, not a
   verified quote**.
-- **The Jim Sterling / asset-flip etymology in §10** is from secondary encyclopaedia-style sources, not from
-  Sterling's own material. The definition is uncontroversial; the attribution is not primary here.
+- **The asset-flip etymology and the Foddy quotes in §10** come from
+  [Wikipedia's *Asset flip* article](https://en.wikipedia.org/wiki/Asset_flip), not from Sterling's or Foddy's
+  own material. The [GamesBeat piece](https://venturebeat.com/pc-gaming/in-defense-of-asset-flips-on-steam/)
+  that carries Foddy's argument in full returned **HTTP 429** on every fetch. The definition is
+  uncontroversial and the Steam review numbers in §10 are independently checkable; the Foddy attribution is one
+  step removed from primary.
+- **Legion TD 2's outsourcing arrangement** (§3.1) — that modelling and texturing were progressively contracted
+  out while Jean Go moved to other work — comes from search-result summaries of the artist's ArtStation
+  project pages, which returned **HTTP 403** to direct fetching. The animation-outsourcing claim *is* primary,
+  from the [Sketchfab studio spotlight](https://sketchfab.com/blogs/community/game-studio-spotlight-autoattack-games).
+  The load-bearing claim — that Legion TD 2 uses no purchased asset packs — rests on the absence of any
+  evidence for them across every source checked, plus a documented pipeline that starts at gameplay ideation.
+  **Absence of evidence is weaker than a denial**, and no source states outright "we made everything ourselves."
 - **Noita's internal render resolution.** Not stated in the presskit or the 80.lv interview; the GDC talk may
   cover it and I could not extract its contents.
 - **Whether any recurring Synty Humble Bundle is live now.** The most recent I could verify is
@@ -657,14 +759,21 @@ Every claim above links to the page it came from. Grouped here for the record.
     [Wikipedia — Noita](https://en.wikipedia.org/wiki/Noita_(video_game)).
 
 **Asset-pack strategy evidence**
-14. [Made with Synty: Soulstone Survivors, 6 Aug 2024](https://syntystore.com/blogs/blog/made-with-synty-soulstone-survivors)
+14. [Wikipedia — *Asset flip*](https://en.wikipedia.org/wiki/Asset_flip) (definition, Sterling attribution,
+    Foddy's counter-argument, PUBG);
+    [GamesBeat — *In defense of asset flips on Steam*](https://venturebeat.com/pc-gaming/in-defense-of-asset-flips-on-steam/)
+    *(429 on fetch — see §12)*;
+    [Erenshor Steam forum — "these damn synty unity assets again"](https://steamcommunity.com/app/2382520/discussions/0/506200271931576244/);
+    [Erenshor on Steam](https://store.steampowered.com/app/2382520/Erenshor/) (94%, 1,951 reviews);
+    [Stolen Realm on Steam](https://store.steampowered.com/app/1330000/Stolen_Realm/) (84%, 2,490 reviews).
+15. [Made with Synty: Soulstone Survivors, 6 Aug 2024](https://syntystore.com/blogs/blog/made-with-synty-soulstone-survivors)
     and [Soulstone Survivors on Steam](https://store.steampowered.com/app/2066020/Soulstone_Survivors/) (26,675
     reviews all languages; 12,229 English at 91% positive);
     [Made with Synty: No Plan B](https://syntystore.com/blogs/blog/made-with-synty-no-plan-b);
     [Made with Synty: SurrounDead](https://syntystore.com/blogs/blog/made-with-synty-surroundead);
     [Made with Synty: It's Only Money](https://syntystore.com/blogs/blog/made-with-synty-its-only-money);
     [Humble Bundle: Best of Synty #5](https://syntystore.com/blogs/blog/humble-bundle-best-of-synty-5).
-15. Part III, *Technology Stack Assessment* — the engine-free sim library, the rendering rule, the fixed-camera
+16. Part III, *Technology Stack Assessment* — the engine-free sim library, the rendering rule, the fixed-camera
     budget argument, and §8's "art is the long pole, not code."
-16. Part II, *Async Ghost Round-Robin* — the ghost record format that makes grid-vs-free placement sticky, and
+17. Part II, *Async Ghost Round-Robin* — the ghost record format that makes grid-vs-free placement sticky, and
     the build order this document is sequenced against.
