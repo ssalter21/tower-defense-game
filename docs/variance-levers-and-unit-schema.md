@@ -82,8 +82,12 @@ of the design space, not edge cases to be excluded:
 
 - A **moving tower** is a repositionable defense, or a patrolling blocker.
 - A **placed creep** is a summoner's totem the attacker drops on the map, or a siege engine that stops to fire.
-- A **creep that attacks towers** is the Warcraft 3 "attacks buildings in its path" behaviour that decides
-  whether mazing is legal at all — the single most consequential creep lever in the genre.
+- A **creep that attacks towers** is one of the four shipped answers to "the player has fully blocked the path",
+  alongside refusing the placement, auto-selling the offending tower, and zeroing the creep's collision so it
+  walks through. It is the *minority* choice — Warcraft 3 does not do this by default at the engine level, it is
+  a mapmaker's trigger — and it only arises at all if the player authors the geometry. **In a preset-path
+  design it has no justification whatsoever.** See the mazing-versus-preset-path question in the
+  [index](README.md#status); this lever, `blocksPath` (3.9) and `Path policy` (3.5) all stand or fall with it.
 - A **tower with bounty** is a defense that pays its attacker for killing it.
 
 A schema that treats these as special cases will need surgery for each one. A schema where they are the natural

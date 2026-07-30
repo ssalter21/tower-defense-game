@@ -41,8 +41,17 @@ art comes *after* the step-3 gate — steps 1 to 3 are answerable with capsules.
 
 Open questions, in order of consequence:
 
+- **Mazing or preset path?** Does the player author the route by placing towers on open ground (Wintermaul,
+  Green Circle TD), or does the map ship with walls and a fixed route the player fills with towers (the Gem TD
+  shape)? **Current lean: preset path** — fixed walls, designated tower slots. Six levers in Part V assume the
+  mazing answer and become dead weight under the other: `Path policy` and `Repath trigger` (§3.5), `blocksPath`
+  and Sanctum's maze/gun resource split and geometry-driven stats (§3.9), and route choice (§3.6). It also
+  raises the stakes on the damage-type matrix spread (§4.1) — with no mazing to differentiate builds, tower
+  selection and wave composition carry the entire strategic surface. Free to decide on paper; decide it before
+  the first ruleset.
 - **Top-down grid or side-on lane?** Flagged in [Part IV, §11](art-direction-and-assets.md#11-the-one-input-i-do-not-have).
-  It decides whether 2D is viable at all, and it is a free decision made on paper. Answer it first.
+  It decides whether 2D is viable at all, and it is a free decision made on paper. Answer it alongside the
+  question above — the two constrain each other, and neither costs anything to settle now.
 - **Can the developer rig and animate in Blender?** The Part IV recommendation flips from KayKit to Synty on
   this single fact.
 - **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** Flagged in Part III.
