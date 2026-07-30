@@ -1,6 +1,6 @@
 # Design documents
 
-Three deep dives, in the order they were written. Each one answers a question raised by the one before it, so
+Four deep dives, in the order they were written. Each one answers a question raised by the one before it, so
 they read best in sequence.
 
 | # | Document | Question it answers | Verdict |
@@ -8,8 +8,9 @@ they read best in sequence.
 | I | [Market Report & Viability Read](market-report.md) | Is a multiplayer tower defense worth building in 2026? | Viable, but **not multiplayer-first**. Synchronous PvP TD tops out around 830 concurrent players. |
 | II | [Async Ghost Round-Robin](async-ghost-round-robin.md) | Does asynchronous ghost PvP fix that, and what does it cost? | The model is proven and fits TD unusually well. **Determinism is the whole build risk.** |
 | III | [Technology Stack Assessment](tech-stack-assessment.md) | What do we build it with? | Unity 6 client, plain C# integer sim library, no realtime networking. |
+| IV | [Art Direction & Asset Pack Strategy](art-direction-and-assets.md) | What does it look like, and what do we buy to get there fast? | Stylized 3D, not pixel art. **KayKit Complete, $150.** Synty ships no animations — that inverts the obvious pick. |
 
-## The thread running through all three
+## The thread running through all four
 
 Part I found that every competitive tower defense is population-gated, and that a tower layout is the most
 snapshot-friendly artefact in strategy gaming — so the competition can be made asynchronous and the ceiling
@@ -24,10 +25,25 @@ simulation must be a separately compiled library with no engine reference — co
 the server that re-validates results, and a headless harness — which makes the engine choice reversible and
 turns balance into a computation.
 
+Part IV tests the one assumption Part III made without examining it — that the art is stylized 3D — and closes
+it. The art direction holds, but the reason changes: 2D loses on **unit-count × facings arithmetic**, not on
+taste. Part III's stack verdict survives, though its Unity justification does not: asset packs are portable
+between engines now, so what still holds Unity in place is Mecanim humanoid retargeting and UI, not lock-in.
+Part IV also extends Part III's rendering rule into art: **the sim owns attack timing in integer ticks and the
+view scales animation playback to fit** — which is what makes swapping asset packs, or the whole art direction,
+a reversible decision rather than a rewrite.
+
 ## Status
 
 No code yet. The build order is in [Part II, section 6](async-ghost-round-robin.md#6-build-order--how-to-de-risk-this-in-order);
-step 1 is a determinism harness, and nothing has been started.
+step 1 is a determinism harness, and nothing has been started. Nothing in Part IV repeals Part III's rule that
+art comes *after* the step-3 gate — steps 1 to 3 are answerable with capsules.
 
-The open question flagged in Part III is whether a shareable browser replay viewer matters enough to move the
-simulation to Rust. Current assumption: no — C# throughout.
+Open questions, in order of consequence:
+
+- **Top-down grid or side-on lane?** Flagged in [Part IV, §11](art-direction-and-assets.md#11-the-one-input-i-do-not-have).
+  It decides whether 2D is viable at all, and it is a free decision made on paper. Answer it first.
+- **Can the developer rig and animate in Blender?** The Part IV recommendation flips from KayKit to Synty on
+  this single fact.
+- **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** Flagged in Part III.
+  Current assumption: no — C# throughout.
