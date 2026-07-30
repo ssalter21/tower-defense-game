@@ -37,8 +37,9 @@ costs $150 once, forever, including every future pack, under CC0.
 |---|---|
 | **Art direction** | Stylized low-poly 3D, flat/gradient-atlas textures, fixed three-quarter camera. Not pixel art. |
 | **Day-one purchase** | [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — **$150**, CC0, ~57 rigged and animated characters across 5 character packs, plus dungeon and hex environment kits, plus `.blend` sources, plus all future packs. |
-| **Day-one free supplements** | [Kenney](https://kenney.nl/assets) (CC0) for prototype UI and blockout; [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated monsters) as an explicitly-temporary stand-in for non-humanoid creeps. **$0.** |
-| **Deferred purchase (only after Part II step 3 passes)** | Synty, for the things that do not move — environment, towers, UI. [POLYGON Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99 + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. |
+| **Day-one free supplements** | [Kenney](https://kenney.nl/assets) (CC0) for prototype UI and blockout; [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated monsters) as an explicitly-temporary stand-in for non-humanoid creeps; [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings in upgrade-tier evolution stages) if you want literal towers. **$0.** |
+| **Buildings** | Far smaller than expected. In a Legion TD-shaped game the towers *are* the fighters and **the King is the only structure** — see §5. Lane and dungeon geometry is already inside the $150; towers, if you want them, are free from Quaternius. |
+| **Deferred purchase (only after Part II step 3 passes)** | Synty, for environment and UI — *not* towers. [POLYGON Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99 + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. Optional and deferrable. |
 | **Total to a playable, coherent, non-embarrassing build** | **$150.** Total to a vertical slice: **~$400.** |
 | **Does the Part III stack verdict survive?** | **Yes — but one of its two supporting arguments has expired.** See §2. |
 
@@ -357,6 +358,60 @@ correspondingly weaker here than it would be with a closed FBX-only pack. Combin
 owns attack timing in ticks, a custom unit can be dropped in beside a bought one without touching the
 simulation at all.
 
+### Towers: the Legion TD trick, and how few buildings you actually need
+
+**In Legion TD, the towers are characters.** This is not a shortcut someone invented to save art — it is the
+mechanic the whole game is named after, and it is worth stating plainly because it removes most of a category
+this document has so far assumed you would have to buy.
+
+Verified from first-party material:
+
+| Fact | Source |
+|---|---|
+| "Assemble your army from over 100 unique **fighters**, each with its own strengths and abilities" — the store description never mentions building a tower | [Steam](https://store.steampowered.com/app/469600/Legion_TD_2__Multiplayer_Tower_Defense/) |
+| Each wave, during the build phase, "you build and upgrade **fighters**." In the battle phase enemies spawn at the top of the lane, your fighters move up to meet them, and combat resolves automatically | [Official manual](https://beta.legiontd2.com/manual/) |
+| **The King is the only persistent structure in the game.** "Upgrade your team's king to power up its attack, regeneration, and spell damage." No barracks, shops, spires or worker buildings appear anywhere in the manual | [Official manual](https://beta.legiontd2.com/manual/) |
+| Workers and mercenaries are units and resources, not constructed buildings | [Official manual](https://beta.legiontd2.com/manual/) |
+
+So the art bill for "towers" in a Legion TD-shaped game is: **characters you already bought, plus one King.**
+That is it. The $149.99 Synty Dungeon Pack line item in the Recommendation table was scoped for *environment
+and towers*; on this design the towers half disappears.
+
+**Treat this as a design decision, not an art saving.** Fighters-as-towers is the thing that makes Legion TD
+feel like Legion TD — the defense is an army that fights back rather than a static emplacement, which is why
+composition and positioning carry the strategy. It also serves Part II's async ghost design unusually well:
+watching a stored ghost army physically fight yours is a far better spectator artefact than watching turrets
+shoot, and the replay is the product. **Judgement, not fact:** if you adopt the Legion TD feel at all, adopt
+this with it. A classic static-turret TD wearing Legion TD's clothes gets the art bill of one and the appeal
+of neither.
+
+**What you genuinely still need**, and where each comes from:
+
+| Need | Count | Source | Cost |
+|---|---|---|---|
+| **The King** | 1 | See below — the one asset worth making yourself | — |
+| Lane floor, walls, path edging | modular set | [KayKit Dungeon Remastered](https://kaylousberg.itch.io/kaykit-dungeon-remastered) — 275+ modular assets at the Extra tier (walls, floors, stairs, doors, chests, barrels, banners, traps), same 1024×1024 atlas as the characters | **In the $150** |
+| Hex/tile playfield | modular set | KayKit Medieval Hexagon kit | **In the $150** |
+| Environment dressing | — | Biome pack (§ above), or Quaternius nature assets | $0–55 |
+| Spawn portal / lane endpoints | 2 | Enchanted Forest ships a portal; Quaternius ships gates | $0 |
+| **If you want literal towers after all** | 107+ | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) — **free, CC0** | **$0** |
+
+**That last row deserves its own paragraph, because it is the best-value item in this entire document.**
+Quaternius' Ultimate Fantasy RTS is 107–128 models under CC0, free, containing Watch Towers in small and
+standard variants, Archery Towers, Archery Training Grounds, Fortresses, Castles, Stone and Wooden Wall Towers,
+Gates, Barracks, Town Centers, Temples, Farms and Windmills. Critically, the publisher describes it as
+"a collection of buildings in **different evolution stages**" — which maps directly onto tower upgrade tiers,
+the exact thing a TD needs and the exact thing most building packs do not provide. It is also the *same
+publisher* as Ultimate Monsters, the 50-animated-creature pack already recommended as a free supplement, so the
+two are internally coherent by construction.
+
+**Where to spend bespoke effort: the King.** It is one model. It is on screen for every second of every match,
+it is the thing that dies, it is what both players are looking at when the game ends, and it will be in every
+screenshot you ever publish. Under §10's rule — "you need the four or five units that appear in every
+screenshot to be yours" — the King is candidate number one, ahead of any creep. One custom model, modelled onto
+the KayKit rig and UV'd onto their atlas (§ above), is a realistic weekend and buys more perceived originality
+than fifty bought creeps cost you.
+
 ### Mixing a Synty environment with KayKit characters
 
 Taking [POLYGON Enchanted Forest](https://syntystore.com/products/polygon-enchanted-forest-nature-biomes) as
@@ -674,7 +729,14 @@ The entire recommendation pivots on this one fact, and it flips cleanly:
   ceiling, the prop vocabulary and the environment coverage are all meaningfully higher, and Synty's FBX-only
   delivery (no `.blend` sources) stops mattering once you can rig.
 
-**A second, smaller unknown that would change §6 and §7 substantially:** is the game **top-down grid** or
+**A second question that is purely a design decision, and decides a whole art category: are your towers
+fighters or buildings?** §5 establishes that Legion TD's are fighters and that the King is the only structure
+in the game. If you take that model, the tower art budget collapses into the character budget you have already
+paid, and the deferred Synty purchase shrinks to environment and UI. If you want literal turrets instead, that
+is a legitimate choice — Quaternius covers it free — but it is a different game from the north star, and it
+should be chosen rather than drifted into. I have assumed fighters throughout.
+
+**A third, smaller unknown that would change §6 and §7 substantially:** is the game **top-down grid** or
 **side-on lane**? A side-on lane game collapses the facings multiplier from 8 to 1, removes the depth-sorting
 problem, and makes Track B's pixel packs — which are overwhelmingly drawn side-on — suddenly appropriate rather
 than mismatched. Legion TD 2 is top-down three-quarter and Part III assumed the same. If that is still open,
@@ -706,6 +768,10 @@ Stated plainly, because a research document that only reports successes is not a
 - **Roster counts and animation lists for several Unity Asset Store packs** are simply not on the listing page —
   including for both Dungeon Mason bundles and Meshtint's Monsters Ultimate Pack 01. That absence is itself a
   reason to prefer publishers who state it (KayKit, Quaternius, Synty all do).
+- **Ultimate Fantasy RTS model count.** Quaternius' own pack page says **128** models; the
+  [poly.pizza mirror](https://poly.pizza/bundle/Ultimate-Fantasy-RTS-nSDjmACoSU), which is where the itemised
+  building list in §5 comes from, says **107**. Both are CC0 and the discrepancy does not affect the argument,
+  but the enumerated list of towers and fortresses is from the mirror, not from Quaternius directly.
 - **KayKit's modular-mesh claim.** Several secondary listings state that body, head, arms and legs are separate
   meshes and can be swapped between characters. Neither the itch.io pack pages nor the Unity Asset Store listing
   confirmed it on fetch, so §5's "adding your own models" subsection does not rely on it. If true it is a
@@ -755,7 +821,9 @@ Ordered so that nothing you buy can be wasted by a later decision.
 2. **Download the free tier of everything before buying anything.** [KayKit Adventurers and
    Skeletons](https://kaylousberg.itch.io/) (free, 14 animated characters between them),
    [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (free, 50 animated
-   monsters), [Kenney Tower Defense (Top-Down)](https://kenney.nl/assets/tower-defense-top-down) (free, 300
+   monsters), [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (free,
+   107+ buildings including watch towers, archery towers and fortresses in upgrade-tier evolution stages),
+   [Kenney Tower Defense (Top-Down)](https://kenney.nl/assets/tower-defense-top-down) (free, 300
    assets), [Synty Sidekick Starter Pack](https://syntystore.com/products/sidekick-modular-characters-starter-pack)
    (free). **Total: $0, and it is already enough art for build-order steps 1 through 3.**
 3. **Run the screenshot test.** Drop a KayKit skeleton, a Quaternius monster and a Synty Sidekick character into
@@ -809,7 +877,10 @@ Every claim above links to the page it came from. Grouped here for the record.
    [Kay Lousberg's itch.io profile](https://kaylousberg.itch.io/).
 8. Quaternius: [Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html),
    [Ultimate Animated Characters](https://quaternius.com/packs/ultimatedanimatedcharacter.html),
-   [Universal Animation Library 2](https://quaternius.com/packs/universalanimationlibrary2.html).
+   [Universal Animation Library 2](https://quaternius.com/packs/universalanimationlibrary2.html),
+   [Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (128 models per the pack page;
+   the [poly.pizza mirror](https://poly.pizza/bundle/Ultimate-Fantasy-RTS-nSDjmACoSU) lists 107 and enumerates
+   the buildings).
 9. Synty: [Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom),
    [Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack),
    [Dungeon Realms](https://syntystore.com/products/polygon-dungeon-realms),
