@@ -12,16 +12,20 @@ assumption and then closes it.
 
 ## Recommendation
 
-**Stay 3D. Start at $0 on Quaternius. Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete)
-for $150 when the creep roster runs thin. Do not buy Synty yet.**
+**Stay 3D. Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) for $150. Take
+[Quaternius](https://quaternius.com/) free alongside it. Do not buy Synty yet.**
 
-> **Revised after the turret decision.** This document originally recommended KayKit as a day-one $150
-> purchase, on the strength of the animation argument below. The subsequent decision to use **classic WC3
-> fixed turrets rather than Legion TD fighters** (§5) demoted it: static buildings need no animation, so the
-> animated-character requirement halves to creeps only, and [Quaternius](https://quaternius.com/) covers
-> *both* halves free and coherently — Ultimate Fantasy RTS for towers, Ultimate Monsters for creeps, same
-> publisher, CC0. KayKit is still the right purchase and still the right pack. It is no longer the urgent one.
-> The animation argument below is unchanged and still decides the *creep* half.
+> **How the design decisions moved this.** The recommendation was reconsidered twice as the design firmed up,
+> and it is worth recording the path because the *reasoning* is what transfers.
+> **(a)** Original: KayKit day-one, because Synty ships no animations and a TD unit is nothing but animation.
+> **(b)** Then: fixed WC3 turrets were chosen over Legion TD fighters — static meshes need no animation, so the
+> constraint appeared to lift and a free Quaternius-only stack looked sufficient.
+> **(c)** Final: the towers are **rooted animated characters** that attack in place, not inert turret meshes.
+> Animation is therefore required for *both* towers and creeps, and KayKit returns to day-one. See §5.
+>
+> The stable conclusion underneath all three: **animation, not models, is the constraint that decides this
+> purchase** — so the question to ask of any pack is never "how does it look" but "what moves, and did I have
+> to make it move myself."
 
 The single most important fact in this entire document, and the one that inverts the obvious answer:
 **Synty POLYGON packs do not include animations.** Synty says so itself — "most Synty art asset packs (i.e.
@@ -40,17 +44,19 @@ solve with months. Mixamo covers the humanoids; nothing covers a troll, a rock g
 KayKit is the only *paid* shortlisted option that satisfies all four requirements at once — **one artist's
 coherent style, animations included, a roster large enough for a whole TD, and raw engine-agnostic formats** —
 and it costs $150 once, forever, including every future pack, under CC0. Quaternius satisfies the same four at
-$0 with older and simpler art and a thinner roster, which is why the recommendation is now "start there, buy
-KayKit when it runs short" rather than "buy KayKit today."
+$0, with older and simpler art and a thinner roster — which is why it is the free supplement rather than the
+substitute. With towers *and* creeps both animated (§5), you need roughly 60 animated characters, and 50 alone
+does not reach it.
 
 | Decision | Verdict |
 |---|---|
 | **Art direction** | Stylized low-poly 3D, flat/gradient-atlas textures, fixed three-quarter camera. Not pixel art. |
-| **Day-one purchase** | **None — see §5.** The design decision for fixed WC3-style turrets means towers need no animation and Quaternius covers towers *and* creeps free, coherently, under CC0. [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) at **$150** (CC0, ~57 rigged and animated characters, dungeon and hex kits, `.blend` sources, all future packs) remains the right purchase — but as a roster deepener when creeps run thin, not a prerequisite. |
-| **Day-one stack, free** | **Towers:** [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings in upgrade-tier evolution stages). **Creeps:** [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated). **Lane & UI blockout:** [Kenney](https://kenney.nl/assets) (CC0, 300-asset TD kit). Same publisher across both halves that matter, so coherent by construction. **$0.** |
-| **Towers** | Static buildings on a fixed grid, so **no animation is required** — the constraint that drives every other recommendation here does not apply to them. Covered free. Upgrade tiers come from Quaternius' "evolution stages." |
+| **Day-one purchase** | [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — **$150**, CC0, ~57 rigged and animated characters, a 161-clip animation library, dungeon and hex kits, `.blend` sources, all future packs. Supplies **tower characters and humanoid creeps from one hand**. |
+| **Day-one free supplements** | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated) for non-humanoid creeps; [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings) for the base, walls and lane dressing; [Kenney](https://kenney.nl/assets) (CC0) for UI blockout and the [Particle Pack](https://kenney.nl/assets/particle-pack) (80 files) for VFX. **$0.** |
+| **Towers** | Fixed grid placement, **rooted animated characters** that attack in place — WC3 placement, Legion TD life. They need idle/attack/hit/death but **no locomotion**, which is the half of the animation problem you get to skip. §5. |
+| **Particle effects** | Built-in Particle System (Shuriken), not VFX Graph. **View-layer only, driven by a sim event stream** — a particle must never feed back into the simulation. Clear all VFX on replay seek; scale simulation speed on fast-forward; disable entirely on instant-resolve. §8. |
 | **Deferred purchase (only after Part II step 3 passes)** | Synty, for environment, deeper tower vocabulary and UI. [POLYGON Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom) $349.99 (2,100 prefabs of castle/village/tower) or [Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99, + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. With no animation needed, Synty's one disqualifying flaw is gone for buildings. |
-| **Total to a playable, coherent, non-embarrassing build** | **$0.** Deepened roster: **$150.** Vertical slice: **~$400.** |
+| **Total to a playable, coherent, non-embarrassing build** | **$150.** Vertical slice with Synty environment and UI: **~$400.** |
 | **Does the Part III stack verdict survive?** | **Yes — but one of its two supporting arguments has expired.** See §2. |
 
 The 2D question deserves a plain answer rather than a hedge: **2D is not faster here, it is roughly eight times
@@ -403,51 +409,65 @@ that invalidates every stored defense — decide before step 2." That decision i
 side the format was designed for. **Nothing needs to change in Part II, and the stickiest open question in §8 is
 closed at zero cost.** Freeform positioning would have been the expensive answer.
 
-**What this changes about the art, in descending order of consequence:**
+### Rooted animated characters — fixed placement, living towers
 
-**1. Towers need no animation at all — which retires the argument this whole document was built on.** §5's
-entire KayKit-over-Synty case rests on Synty shipping no animations. **That objection does not apply to
-buildings.** A turret needs a mesh, optionally a rotating head that tracks a target, and a muzzle VFX. There is
-no rig, no skeleton, no idle/walk/attack/death set. Rotation is a transform the view applies from sim state; the
-muzzle flash is VFX. So for the tower half of the game, *every* pack on the market is equally viable and Synty's
-weakness is irrelevant.
+**Refined further, and this is the final form: the towers are placed on a fixed grid cell and stay there, but
+they are *animated character models that play an attack animation in place*, not inert turret meshes.** This is
+the original WC3 mod's look — a creature standing on its plot, swinging or casting each time it fires.
 
-**2. The animated-character requirement roughly halves.** You no longer need ~50 animated *fighters* plus
-creeps. You need **creeps only** — the things that walk down the lane and die. That is the one category where
-animation is unavoidable, and it is now the *only* one.
+**Yes, this is entirely possible, and nothing about the architecture resists it.** Placement model and visual
+model are independent by construction. The sim stores `kind, cell, upgrades` and knows only that a tower of some
+type occupies a discrete cell and fires on a tick cadence. Whether the view draws a stone turret or a goblin
+archer at that cell is a prefab binding — content, not code, and §8 already lists "which asset pack" and "art
+style, models, VFX" as *cheap*. You get WC3's placement discipline and Legion TD's visual life at the same time.
 
-**3. A coherent $0 stack becomes genuinely viable, and it changes the Monday advice.** Both halves are now
-covered free, by the same publisher:
+> **This reverses part of the previous revision, and the reversal should be stated plainly rather than buried.**
+> Rooted *characters* need animation. Rooted *turret meshes* did not. So the animation constraint — the fact
+> this entire document is built on — is back, and it now governs **both** halves of the game.
+> **[The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) at $150 returns to being the day-one
+> purchase.** The zero-cost Quaternius-only stack no longer covers the roster: 50 monsters cannot supply both
+> ~30 tower types and ~30 creep types. Quaternius' 50 plus KayKit's ~57 is ~107 animated characters, which is
+> the right order of magnitude for this design.
 
-| Half | Pack | Count | Cost |
-|---|---|---|---|
-| Towers | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) | 107–128 buildings **in evolution stages** | **$0** |
-| Creeps | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) | 50 animated (attack, death, run, walk) | **$0** |
+**The saving that does survive, and it is a real one: rooted units need no locomotion.** A walking creep needs
+idle, walk, attack, hit-react and death. A rooted tower needs **idle, attack, hit-react and a spawn/build
+flourish — and no walk or run cycle at all.** Locomotion clips are the hardest to make read well, the most
+sensitive to retargeting onto different proportions, and the ones that expose a mismatched rig fastest. Skipping
+them for half your roster is worth more than it sounds.
 
-Same publisher means coherent by construction — the mixing risk in §5 does not arise. Both CC0. And "evolution
-stages" is precisely the tower-upgrade-tier structure a classic TD needs, which almost no building pack provides.
+**KayKit's library covers this precisely.** The animation pack is documented as including "idling, getting hit,
+death, spawning, interacting"; melee in "one handed, two handed, unarmed, dual wielding, blocking"; and ranged
+in "shooting, aiming, reloading for one-handed, two-handed weapons, bows and also magic/spellcasting"
+([KayKit](https://kaylousberg.com/game-assets/character-animations)). Read that as a tower roster and it is
+already three archetypes you own outright — **a melee tower, an archer tower and a mage tower** — each with idle,
+attack and death, and each retargetable across every humanoid in the pack. That is the tower half of a classic
+TD, animated, for $150 total.
 
-**So does the $150 KayKit purchase still stand? Weakened, and now deferrable rather than day-one.** It is no
-longer the thing standing between you and a playable game, because the free Quaternius pair covers both halves.
-What the $150 still buys, honestly stated: better and more current art (2025–26 versus Quaternius' 2022), the
-161-clip animation library, `.blend` rig sources, ~57 additional animated characters to deepen a creep roster
-that 50 will eventually feel thin against, and humanoid creeps to sit beside the monsters. **Revised advice:
-start on Quaternius at $0, and buy KayKit when the creep roster actually runs short — which you will feel, and
-which is after the step-3 gate anyway.**
+**Rooted is also simpler to implement than walking.** No pathfinding, no locomotion blend trees, no root-motion
+drift to fight, no facing interpolation while moving. The tower rotates to face its target and plays one clip.
 
-**4. Synty re-enters for towers, as a quality upgrade rather than a necessity.**
-[Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom) ($349.99, 2,100 prefabs) is the deep
-castle/village/tower vocabulary, and with no animation needed its one disqualifying flaw is gone. Buy it if and
-when the free towers look thin — not before.
+**Where this leaves the other packs:**
 
-**5. The 3D verdict holds, slightly more firmly.** §7.1's facings arithmetic is unchanged for creeps, and a
-turret that rotates to track targets needs the same 8 facings per tower *per upgrade tier* in 2D that it gets
-free in 3D. Fixed turrets make the 2D case marginally worse, not better.
+| Pack | New role |
+|---|---|
+| [KayKit Complete](https://kaylousberg.itch.io/kaykit-complete) $150 | **Day-one.** Tower characters *and* humanoid creeps, with the shared animation library serving both. |
+| [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) free | Non-humanoid creeps — the walking, dying half. Still excellent, still free. |
+| [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) free | **Demoted from towers to environment**: the base being defended, the King, walls, gates, lane dressing. Still free, still useful, no longer the tower source. |
+| [Synty](https://syntystore.com/collections/polygon) | Unchanged and still deferred. Its no-animation flaw is disqualifying again now that towers animate. |
 
-**One thing to get right, and it is a §8 rule.** Do not drive firing off an animation event or a rotation
-finishing. **The sim owns fire cadence in integer ticks; the view rotates the turret head and plays a muzzle
-flash to match.** A turret whose head has not finished turning still fires exactly on tick, or your replays
-desync and your balance sweep stops meaning anything.
+**A mixed roster is very WC3, and it is free to do.** Nothing forces every tower to be a creature. A roster where
+melee and caster towers are characters while a few siege or trap towers are static buildings is both authentic
+to the genre and cheaper — and because the sim only stores `kind`, it costs nothing to mix.
+
+**The 3D verdict holds, and now more firmly than before.** Animated rooted towers need the full 8-facing
+treatment per tier in 2D — §7.1's arithmetic now applies to the tower half as well as the creep half, roughly
+doubling the sprite count 2D would demand.
+
+**One rule to get right, and it is §8's.** Do not drive firing off an animation event — not off the frame the
+sword lands, not off the rotation finishing. **The sim owns fire cadence in integer ticks; the view plays the
+attack clip scaled to fit and rotates the model to match.** A tower whose attack animation has not finished
+still fires exactly on tick, or replays desync and the balance sweep stops meaning anything. This is the same
+rule that makes the pack swappable, applied to towers.
 
 **What you genuinely still need**, and where each comes from:
 
@@ -645,6 +665,56 @@ with replay scrubbing, double speed, instant-resolve, and server re-validation.
 > anything**, because no stored ghost ever encoded a frame number. This one rule is what converts "centre the
 > game on an asset pack" from a lock-in into a genuinely reversible decision.
 
+### Particle effects, and the one way they can destroy this architecture
+
+VFX is where a TD's personality lives — §10 ranks it fourth by leverage — and it is also the single easiest way
+to break everything Parts II and III are built on. The rule first, because it is absolute:
+
+> **Particles are view-layer only. Nothing a particle system computes may ever be read back into the
+> simulation.** Particle systems use floating-point math and their own RNG, which is *fine* precisely because
+> nothing depends on the result. The moment a particle collision applies damage, or an effect's lifetime gates
+> a gameplay event, determinism is gone, every stored ghost is invalid, and the server can no longer re-validate
+> a match.
+
+The correct shape is an **event stream**: the sim emits what happened — `TowerFired(towerId, targetId, tick)`,
+`UnitDied(unitId, tick)`, `AbilityCast(kind, cell, tick)` — and the view maps events to effects. Damage is a sim
+event on a tick; the explosion is a *consequence you play*, never a cause. This also means you can rebuild every
+effect in the game without touching a stored record, because no ghost ever encoded a particle.
+
+**Which system: use the built-in Particle System (Shuriken), not VFX Graph.**
+
+| | Built-in Particle System (Shuriken) | VFX Graph |
+|---|---|---|
+| Runs on | CPU | GPU (needs compute-shader support, URP/HDRP) |
+| Practical scale | ~10K particles | millions |
+| Workflow | All options in the inspector, limited but immediate | Node-based, steeper learning curve, more power |
+| Fit here | **Correct choice** | Overkill |
+
+A TD's VFX load is *many small effects*, not few huge ones — muzzle flashes, projectile trails, impact puffs,
+buff auras, death dissolves. The consensus guidance is that for "typical in-game effects (hits, smoke, magic,
+ambient flourishes), Shuriken is all you need," and that VFX Graph earns its complexity only when you need
+"orders of magnitude more" particles. *(Comparison from
+[Real Time VFX](https://realtimevfx.com/t/unity-vfx-graph-and-shuriken/15033) and secondary summaries — Unity's
+own feature and manual pages returned 403/404 on every fetch, see §12.)* **Pool the effects** — 40–60 units
+firing continuously will thrash the allocator otherwise.
+
+**The part that is specific to this design, and that most VFX advice will not warn you about: particle systems
+do not scrub.** Part II requires the replay to seek, fast-forward and instant-resolve. Particle systems are
+stateful and cannot be rewound. Three cases, three answers:
+
+| Playback mode | What to do |
+|---|---|
+| **Seek / scrub backwards** | You cannot rewind a particle system. **Clear all active VFX on any seek**, then let them re-accumulate from the event stream as playback resumes. Accept one frame of visual discontinuity — it is invisible in practice and the alternative is unbounded complexity. |
+| **Fast-forward (2×, 4×)** | Scale the particle simulation speed to match the playback rate, or every effect visibly lags the action it belongs to. |
+| **Instant-resolve** | Disable VFX entirely. Nothing is rendered, so nothing needs simulating — this is most of why instant-resolve is fast. |
+
+**Where to get them.** [Kenney's Particle Pack](https://kenney.nl/assets/particle-pack) — 80 files, **CC0**,
+free — is the right starting point for sprites, light cookies and shaders. Beyond that, VFX is authored rather
+than bought: Legion TD 2 used PopcornFX ([Sketchfab spotlight](https://sketchfab.com/blogs/community/game-studio-spotlight-autoattack-games)),
+and the modern equivalent is Shuriken plus a stylized pack you re-tint to your palette. Because the whole art
+direction is flat gradient-atlas colour (§ above), a handful of soft sprites tinted from the *same palette* will
+sit correctly on both KayKit and Quaternius models — the cheapest coherence win available in VFX.
+
 ---
 
 ## 9. Does centring on one pack actually accelerate a solo dev?
@@ -830,6 +900,16 @@ Stated plainly, because a research document that only reports successes is not a
 - **Roster counts and animation lists for several Unity Asset Store packs** are simply not on the listing page —
   including for both Dungeon Mason bundles and Meshtint's Monsters Ultimate Pack 01. That absence is itself a
   reason to prefer publishers who state it (KayKit, Quaternius, Synty all do).
+- **Unity's own VFX Graph and Particle System documentation.** `docs.unity3d.com`'s
+  `VFXGraphAndParticleSystem` manual page returned **404** and `unity.com/features/visual-effect-graph`
+  returned **403**, consistent with the EULA failures above. §8's comparison table (CPU vs GPU, ~10K vs
+  millions, render-pipeline requirements) is assembled from
+  [Real Time VFX](https://realtimevfx.com/t/unity-vfx-graph-and-shuriken/15033) and secondary summaries. The
+  conclusion — Shuriken for a TD — is not controversial, but **confirm the URP/compute-shader requirement in
+  Unity's docs in a browser before ruling VFX Graph in or out.**
+- **Kenney Particle Pack contents.** The [pack page](https://kenney.nl/assets/particle-pack) confirms **80
+  files** and **CC0** but does not itemise them; the claim that it ships a Unity package with sample fire,
+  smoke, magic, sparks and electricity effects is from secondary summaries.
 - **Ultimate Fantasy RTS model count.** Quaternius' own pack page says **128** models; the
   [poly.pizza mirror](https://poly.pizza/bundle/Ultimate-Fantasy-RTS-nSDjmACoSU), which is where the itemised
   building list in §5 comes from, says **107**. Both are CC0 and the discrepancy does not affect the argument,
@@ -891,11 +971,11 @@ Ordered so that nothing you buy can be wasted by a later decision.
 3. **Run the screenshot test.** Drop a KayKit skeleton, a Quaternius monster and a Synty Sidekick character into
    one scene at your intended camera distance and unit scale. Screenshot. This is the only reliable way to judge
    coherence, and it costs nothing.
-4. **Do not buy KayKit on day one either — the fixed-turret decision demoted it.** With towers as static
-   buildings, Quaternius covers both halves free and coherently: Ultimate Fantasy RTS for towers, Ultimate
-   Monsters for creeps. **Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150 — when
-   the creep roster runs thin**, which is a feeling you will have rather than a date you can predict, and which
-   is after the step-3 gate regardless. It remains the right purchase; it is no longer the urgent one. (§5)
+4. **Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150.** One transaction, CC0,
+   ~57 animated characters, a 161-clip library, `.blend` sources, every future pack included. Because the towers
+   are rooted *characters* (§5), this single purchase covers the tower roster and the humanoid creeps from one
+   hand, with one animation library serving both. Take Quaternius free alongside it for non-humanoid creeps and
+   for the base and lane dressing.
 5. **Write the animation-timing rule into `sim/` before you import a single model.** Windup and backswing are
    integer ticks in `content/`; the view scales playback to fit. Enforce it the same way Part III enforces the
    banned-API list — as a build error or a code review you never skip. (§8)
