@@ -319,6 +319,44 @@ If you *do* go Synty-first, here is what you are actually signing up for. It is 
 That is the calculation that moves KayKit above Synty for a solo developer optimising for speed to a playable
 build. It is not a statement about the art.
 
+### Adding your own models to KayKit
+
+This determines how sticky the $150 actually is, so it is worth the detail. **It is unusually straightforward —
+more so than for any other pack on the shortlist.** Four properties combine, and the fourth is the one nobody
+mentions.
+
+| Property | What it gives you | Source |
+|---|---|---|
+| **Animations are a separate free CC0 pack, not baked per character** | [KayKit Character Animations](https://kaylousberg.itch.io/kaykit-character-animations) is **161 humanoid animations**, free, standalone. Anything you rig to the same skeleton inherits the entire library at zero cost. | itch listing |
+| **Explicit retargeting support** | "If you're using an engine that supports rig/skeletal retargeting these animations will work for other characters too" — so even a model *not* built on their skeleton can use the library, via Unity's Humanoid avatar. | [same](https://kaylousberg.itch.io/kaykit-character-animations) |
+| **`.blend` sources included at the SOURCE tier** (and in the $150 Complete) | You get the actual rig, not just baked FBX. Open it, model onto the existing armature, weight-paint, done — no rig authoring at all. The Skeletons SOURCE tier is documented as "the .blend source files for all 6 characters, 50+ accessories, and 75 animations." | [Skeletons](https://kaylousberg.itch.io/kaykit-skeletons) |
+| **One shared gradient atlas** — "a single gradient atlas texture (1024×1024) that can be downsampled to 128×128" | **The sleeper feature.** Style-matching a custom model means UV-unwrapping it onto *their existing atlas* — you are picking colours off a palette image, not painting a texture. It requires no texturing skill whatsoever, and it is why a custom KayKit-compatible model reads as native rather than bolted on. | [Adventurers](https://kaylousberg.itch.io/kaykit-adventurers) |
+
+Two rigs exist — **`Rig_Medium` and `Rig_Large`**, for regular and large characters — and the listing notes
+"the amount of `Rig_Large` animations is currently on the lower side, but more will be added with updates over
+time." CC0 means there is no licence friction in modifying, rebuilding or shipping derivatives.
+
+**The practical path for a custom unit**, in the order that costs least:
+
+1. Open the `.blend`, model your unit onto the existing `Rig_Medium` armature, UV it onto the shared atlas.
+   Inherits all 161 animations. Realistically an afternoon per unit once you have done one.
+2. If you model in your own tool instead, export as FBX, set the rig to **Humanoid** in Unity's import tab and
+   copy the avatar from a KayKit character. This is the standard Mecanim path — the Unity Asset Store listings
+   are tagged `Mecanim`.
+3. Only if the creature is non-humanoid do you own the rig and the clips.
+
+**The honest limits.** Retargeting is not free of judgement — the pack's own wording is that animations
+"are designed for use with KayKit characters so they might not look good on other characters," which in
+practice means proportions must stay near theirs. And a genuinely non-humanoid custom creature — a dragon, a
+worm, a siege engine — gets no free ride from any of the above. That is the same wall as §5's Synty problem,
+merely much further away: you start with ~57 units rather than needing all of them.
+
+**Which is the answer to "how locked in am I?"** — not very. The pack is a *starting roster on an open rig with
+a free animation library and a palette*, and the §9 failure mode "the pack starts designing the game" is
+correspondingly weaker here than it would be with a closed FBX-only pack. Combined with §8's rule that the sim
+owns attack timing in ticks, a custom unit can be dropped in beside a bought one without touching the
+simulation at all.
+
 ---
 
 ## 6. Track B — 2D / pixel art. The shortlist, offered honestly.
@@ -617,6 +655,14 @@ Stated plainly, because a research document that only reports successes is not a
 - **Roster counts and animation lists for several Unity Asset Store packs** are simply not on the listing page —
   including for both Dungeon Mason bundles and Meshtint's Monsters Ultimate Pack 01. That absence is itself a
   reason to prefer publishers who state it (KayKit, Quaternius, Synty all do).
+- **KayKit's modular-mesh claim.** Several secondary listings state that body, head, arms and legs are separate
+  meshes and can be swapped between characters. Neither the itch.io pack pages nor the Unity Asset Store listing
+  confirmed it on fetch, so §5's "adding your own models" subsection does not rely on it. If true it is a
+  further point in KayKit's favour; verify in Blender after purchase.
+- **The Mecanim avatar detail.** That one avatar is set up as Mecanim Humanoid for all standard KayKit
+  characters, with the skeleton golem carrying its own, comes from secondary summaries. What *is* confirmed
+  primary: the Unity Asset Store listings are tagged `Mecanim`, and the animation pack documents engine
+  retargeting explicitly.
 - **KayKit's total character count.** The [Complete KayKit devlog](https://kaylousberg.itch.io/kaykit-complete/devlog/1571041/the-complete-kaykit-v6)
   does not state a total. The ~57 figure is my own sum from the individual pack pages: Adventurers 8 +
   Skeletons 6 + Mystery Monthly Series 4 (15) + Series 5 (14) + Series 6 (14).
