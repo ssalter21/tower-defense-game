@@ -12,8 +12,16 @@ assumption and then closes it.
 
 ## Recommendation
 
-**Stay 3D. Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) for $150 today. Do not buy
-Synty yet.**
+**Stay 3D. Start at $0 on Quaternius. Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete)
+for $150 when the creep roster runs thin. Do not buy Synty yet.**
+
+> **Revised after the turret decision.** This document originally recommended KayKit as a day-one $150
+> purchase, on the strength of the animation argument below. The subsequent decision to use **classic WC3
+> fixed turrets rather than Legion TD fighters** (§5) demoted it: static buildings need no animation, so the
+> animated-character requirement halves to creeps only, and [Quaternius](https://quaternius.com/) covers
+> *both* halves free and coherently — Ultimate Fantasy RTS for towers, Ultimate Monsters for creeps, same
+> publisher, CC0. KayKit is still the right purchase and still the right pack. It is no longer the urgent one.
+> The animation argument below is unchanged and still decides the *creep* half.
 
 The single most important fact in this entire document, and the one that inverts the obvious answer:
 **Synty POLYGON packs do not include animations.** Synty says so itself — "most Synty art asset packs (i.e.
@@ -29,18 +37,20 @@ animation — idle, walk, attack, hit-react, die, on loop, forty times over, wat
 entire match. Buying Synty first converts an art problem you can solve with money into a Blender problem you
 solve with months. Mixamo covers the humanoids; nothing covers a troll, a rock golem, a medusa or a behemoth.
 
-KayKit is the only shortlisted option that satisfies all four requirements at once — **one artist's coherent
-style, animations included, a roster large enough for a whole TD, and raw engine-agnostic formats** — and it
-costs $150 once, forever, including every future pack, under CC0.
+KayKit is the only *paid* shortlisted option that satisfies all four requirements at once — **one artist's
+coherent style, animations included, a roster large enough for a whole TD, and raw engine-agnostic formats** —
+and it costs $150 once, forever, including every future pack, under CC0. Quaternius satisfies the same four at
+$0 with older and simpler art and a thinner roster, which is why the recommendation is now "start there, buy
+KayKit when it runs short" rather than "buy KayKit today."
 
 | Decision | Verdict |
 |---|---|
 | **Art direction** | Stylized low-poly 3D, flat/gradient-atlas textures, fixed three-quarter camera. Not pixel art. |
-| **Day-one purchase** | [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — **$150**, CC0, ~57 rigged and animated characters across 5 character packs, plus dungeon and hex environment kits, plus `.blend` sources, plus all future packs. |
-| **Day-one free supplements** | [Kenney](https://kenney.nl/assets) (CC0) for prototype UI and blockout; [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated monsters) as an explicitly-temporary stand-in for non-humanoid creeps; [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings in upgrade-tier evolution stages) if you want literal towers. **$0.** |
-| **Buildings** | Far smaller than expected. In a Legion TD-shaped game the towers *are* the fighters and **the King is the only structure** — see §5. Lane and dungeon geometry is already inside the $150; towers, if you want them, are free from Quaternius. |
-| **Deferred purchase (only after Part II step 3 passes)** | Synty, for environment and UI — *not* towers. [POLYGON Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99 + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. Optional and deferrable. |
-| **Total to a playable, coherent, non-embarrassing build** | **$150.** Total to a vertical slice: **~$400.** |
+| **Day-one purchase** | **None — see §5.** The design decision for fixed WC3-style turrets means towers need no animation and Quaternius covers towers *and* creeps free, coherently, under CC0. [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) at **$150** (CC0, ~57 rigged and animated characters, dungeon and hex kits, `.blend` sources, all future packs) remains the right purchase — but as a roster deepener when creeps run thin, not a prerequisite. |
+| **Day-one stack, free** | **Towers:** [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings in upgrade-tier evolution stages). **Creeps:** [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated). **Lane & UI blockout:** [Kenney](https://kenney.nl/assets) (CC0, 300-asset TD kit). Same publisher across both halves that matter, so coherent by construction. **$0.** |
+| **Towers** | Static buildings on a fixed grid, so **no animation is required** — the constraint that drives every other recommendation here does not apply to them. Covered free. Upgrade tiers come from Quaternius' "evolution stages." |
+| **Deferred purchase (only after Part II step 3 passes)** | Synty, for environment, deeper tower vocabulary and UI. [POLYGON Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom) $349.99 (2,100 prefabs of castle/village/tower) or [Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99, + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. With no animation needed, Synty's one disqualifying flaw is gone for buildings. |
+| **Total to a playable, coherent, non-embarrassing build** | **$0.** Deepened roster: **$150.** Vertical slice: **~$400.** |
 | **Does the Part III stack verdict survive?** | **Yes — but one of its two supporting arguments has expired.** See §2. |
 
 The 2D question deserves a plain answer rather than a hedge: **2D is not faster here, it is roughly eight times
@@ -377,26 +387,81 @@ So the art bill for "towers" in a Legion TD-shaped game is: **characters you alr
 That is it. The $149.99 Synty Dungeon Pack line item in the Recommendation table was scoped for *environment
 and towers*; on this design the towers half disappears.
 
-**Treat this as a design decision, not an art saving.** Fighters-as-towers is the thing that makes Legion TD
-feel like Legion TD — the defense is an army that fights back rather than a static emplacement, which is why
-composition and positioning carry the strategy. It also serves Part II's async ghost design unusually well:
-watching a stored ghost army physically fight yours is a far better spectator artefact than watching turrets
-shoot, and the replay is the product. **Judgement, not fact:** if you adopt the Legion TD feel at all, adopt
-this with it. A classic static-turret TD wearing Legion TD's clothes gets the art bill of one and the appeal
-of neither.
+### DECIDED: classic WC3 fixed turrets, not Legion TD fighters
+
+**The design decision has been made, and it is the opposite of Legion TD's:** towers are placed on a grid and
+stay there as turrets. Legion TD's freeform fighter positioning is explicitly not wanted. The section above is
+retained because it explains what is being traded away, but the rest of this document assumes fixed turrets.
+
+**The first thing to know is that this is free.** Part II's stored ghost format already assumed it:
+
+> `layout          []Tower    // ~16 bytes each: kind, cell, upgrades`
+
+`kind`, **`cell`**, `upgrades` *is* the classic fixed-grid tower model — a type, a discrete grid position, and
+an upgrade tier. §8 lists "grid vs free placement" as **sticky**, warning that "grid-to-free is a format change
+that invalidates every stored defense — decide before step 2." That decision is now made, and it lands on the
+side the format was designed for. **Nothing needs to change in Part II, and the stickiest open question in §8 is
+closed at zero cost.** Freeform positioning would have been the expensive answer.
+
+**What this changes about the art, in descending order of consequence:**
+
+**1. Towers need no animation at all — which retires the argument this whole document was built on.** §5's
+entire KayKit-over-Synty case rests on Synty shipping no animations. **That objection does not apply to
+buildings.** A turret needs a mesh, optionally a rotating head that tracks a target, and a muzzle VFX. There is
+no rig, no skeleton, no idle/walk/attack/death set. Rotation is a transform the view applies from sim state; the
+muzzle flash is VFX. So for the tower half of the game, *every* pack on the market is equally viable and Synty's
+weakness is irrelevant.
+
+**2. The animated-character requirement roughly halves.** You no longer need ~50 animated *fighters* plus
+creeps. You need **creeps only** — the things that walk down the lane and die. That is the one category where
+animation is unavoidable, and it is now the *only* one.
+
+**3. A coherent $0 stack becomes genuinely viable, and it changes the Monday advice.** Both halves are now
+covered free, by the same publisher:
+
+| Half | Pack | Count | Cost |
+|---|---|---|---|
+| Towers | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) | 107–128 buildings **in evolution stages** | **$0** |
+| Creeps | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) | 50 animated (attack, death, run, walk) | **$0** |
+
+Same publisher means coherent by construction — the mixing risk in §5 does not arise. Both CC0. And "evolution
+stages" is precisely the tower-upgrade-tier structure a classic TD needs, which almost no building pack provides.
+
+**So does the $150 KayKit purchase still stand? Weakened, and now deferrable rather than day-one.** It is no
+longer the thing standing between you and a playable game, because the free Quaternius pair covers both halves.
+What the $150 still buys, honestly stated: better and more current art (2025–26 versus Quaternius' 2022), the
+161-clip animation library, `.blend` rig sources, ~57 additional animated characters to deepen a creep roster
+that 50 will eventually feel thin against, and humanoid creeps to sit beside the monsters. **Revised advice:
+start on Quaternius at $0, and buy KayKit when the creep roster actually runs short — which you will feel, and
+which is after the step-3 gate anyway.**
+
+**4. Synty re-enters for towers, as a quality upgrade rather than a necessity.**
+[Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom) ($349.99, 2,100 prefabs) is the deep
+castle/village/tower vocabulary, and with no animation needed its one disqualifying flaw is gone. Buy it if and
+when the free towers look thin — not before.
+
+**5. The 3D verdict holds, slightly more firmly.** §7.1's facings arithmetic is unchanged for creeps, and a
+turret that rotates to track targets needs the same 8 facings per tower *per upgrade tier* in 2D that it gets
+free in 3D. Fixed turrets make the 2D case marginally worse, not better.
+
+**One thing to get right, and it is a §8 rule.** Do not drive firing off an animation event or a rotation
+finishing. **The sim owns fire cadence in integer ticks; the view rotates the turret head and plays a muzzle
+flash to match.** A turret whose head has not finished turning still fires exactly on tick, or your replays
+desync and your balance sweep stops meaning anything.
 
 **What you genuinely still need**, and where each comes from:
 
 | Need | Count | Source | Cost |
 |---|---|---|---|
-| **The King** | 1 | See below — the one asset worth making yourself | — |
-| Lane floor, walls, path edging | modular set | [KayKit Dungeon Remastered](https://kaylousberg.itch.io/kaykit-dungeon-remastered) — 275+ modular assets at the Extra tier (walls, floors, stairs, doors, chests, barrels, banners, traps), same 1024×1024 atlas as the characters | **In the $150** |
+| **Towers**, across types and upgrade tiers | 15–30 types × 2–4 tiers | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) — **free, CC0**, buildings in evolution stages | **$0** |
+| **Creeps**, animated | 30–50 | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) free (50), then [KayKit](https://kaylousberg.itch.io/kaykit-complete) when it runs thin (+57) | $0, then $150 |
+| **The King** / the thing being defended | 1 | See below — the one asset worth making yourself | — |
+| Lane floor, walls, path edging, buildable-plot markers | modular set | [KayKit Dungeon Remastered](https://kaylousberg.itch.io/kaykit-dungeon-remastered) — 275+ modular assets at the Extra tier (walls, floors, stairs, doors, banners, traps), same 1024×1024 atlas as the characters; or Kenney's 300-asset CC0 TD kit for free | $0 or in the $150 |
 | Hex/tile playfield | modular set | KayKit Medieval Hexagon kit | **In the $150** |
-| Environment dressing | — | Biome pack (§ above), or Quaternius nature assets | $0–55 |
+| Environment dressing | — | Biome pack (§ below), or Quaternius nature assets | $0–55 |
 | Spawn portal / lane endpoints | 2 | Enchanted Forest ships a portal; Quaternius ships gates | $0 |
-| **If you want literal towers after all** | 107+ | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) — **free, CC0** | **$0** |
 
-**That last row deserves its own paragraph, because it is the best-value item in this entire document.**
+**The towers row deserves its own paragraph, because it is the best-value item in this entire document.**
 Quaternius' Ultimate Fantasy RTS is 107–128 models under CC0, free, containing Watch Towers in small and
 standard variants, Archery Towers, Archery Training Grounds, Fortresses, Castles, Stone and Wooden Wall Towers,
 Gates, Barracks, Town Centers, Temples, Farms and Windmills. Critically, the publisher describes it as
@@ -729,14 +794,11 @@ The entire recommendation pivots on this one fact, and it flips cleanly:
   ceiling, the prop vocabulary and the environment coverage are all meaningfully higher, and Synty's FBX-only
   delivery (no `.blend` sources) stops mattering once you can rig.
 
-**A second question that is purely a design decision, and decides a whole art category: are your towers
-fighters or buildings?** §5 establishes that Legion TD's are fighters and that the King is the only structure
-in the game. If you take that model, the tower art budget collapses into the character budget you have already
-paid, and the deferred Synty purchase shrinks to environment and UI. If you want literal turrets instead, that
-is a legitimate choice — Quaternius covers it free — but it is a different game from the north star, and it
-should be chosen rather than drifted into. I have assumed fighters throughout.
+*(A second question — fighters or fixed turrets — has since been **answered**: classic WC3 fixed turrets on a
+grid. See §5. It closes §8's stickiest item at zero cost, since Part II's stored layout already assumed a
+`cell`.)*
 
-**A third, smaller unknown that would change §6 and §7 substantially:** is the game **top-down grid** or
+**A second, smaller unknown that would change §6 and §7 substantially:** is the game **top-down grid** or
 **side-on lane**? A side-on lane game collapses the facings multiplier from 8 to 1, removes the depth-sorting
 problem, and makes Track B's pixel packs — which are overwhelmingly drawn side-on — suddenly appropriate rather
 than mismatched. Legion TD 2 is top-down three-quarter and Part III assumed the same. If that is still open,
@@ -829,8 +891,11 @@ Ordered so that nothing you buy can be wasted by a later decision.
 3. **Run the screenshot test.** Drop a KayKit skeleton, a Quaternius monster and a Synty Sidekick character into
    one scene at your intended camera distance and unit scale. Screenshot. This is the only reliable way to judge
    coherence, and it costs nothing.
-4. **Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150.** One transaction, CC0,
-   ~57 animated characters, `.blend` sources, every future pack included. This is the whole Track A purchase.
+4. **Do not buy KayKit on day one either — the fixed-turret decision demoted it.** With towers as static
+   buildings, Quaternius covers both halves free and coherently: Ultimate Fantasy RTS for towers, Ultimate
+   Monsters for creeps. **Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150 — when
+   the creep roster runs thin**, which is a feeling you will have rather than a date you can predict, and which
+   is after the step-3 gate regardless. It remains the right purchase; it is no longer the urgent one. (§5)
 5. **Write the animation-timing rule into `sim/` before you import a single model.** Windup and backswing are
    integer ticks in `content/`; the view scales playback to fit. Enforce it the same way Part III enforces the
    banned-API list — as a build error or a code review you never skip. (§8)
