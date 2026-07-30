@@ -248,6 +248,70 @@ Read the licence before the screenshots. Every row below was checked against the
 | [Poly Haven](https://polyhaven.com/license) | **CC0** | Yes | No | HDRIs, PBR textures, props. **No characters.** Right source for your ground materials and sky, wrong source for creeps. |
 | [Mixamo](https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html) | Free with an Adobe account; no royalty; ship inside a finished product, don't repackage the raw files | Yes | No | **Bipedal humanoids only**, and effectively unmaintained by Adobe. See §12 — I could not fetch this page directly. |
 
+### Shipping commercially: what you owe for the stack actually chosen
+
+The short answer for the recommended stack: **nothing, and no attribution.** Verified against each licensor's
+own text. *(This is a reading of published licences, not legal advice — for anything load-bearing, read them
+yourself.)*
+
+| Pack | Licence | Attribution | Royalty / revenue share | Sell on Steam |
+|---|---|---|---|---|
+| [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150 | **CC0** | **Not required** | **None** | **Yes** |
+| [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) / [Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) | **CC0** | **Not required** | **None** | **Yes** |
+| [Kenney](https://kenney.nl/assets) — assets and [Particle Pack](https://kenney.nl/assets/particle-pack) | **CC0** | **Not required** | **None** | **Yes** |
+
+Creative Commons' own deed for CC0 is unambiguous: you may "copy, modify, distribute and perform the work,
+**even for commercial purposes, all without asking permission**," because the affirmer has waived "all of his
+or her rights to the work worldwide under copyright law, including all related and neighboring rights"
+([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/)). Kenney states it directly — "all game assets on
+the asset pages are public domain licensed (CC0)… Attribution is not required, but if you choose to give credit
+you can do so by mentioning 'Kenney'… You're free to use them, even in commercial projects"
+([Kenney support](https://kenney.nl/support)).
+
+**So the $150 is not a licence fee.** KayKit's free tiers carry the same CC0 as the paid ones; what the money
+buys is bundling, `.blend` sources, and every future pack. You are paying for convenience and to support the
+artist, not for permission. **Judgement:** pay it anyway — it is the cheapest line item in the project and the
+one that keeps this kind of work being made.
+
+**Requests are not requirements, and should still be honoured.** KayKit asks that you "please don't resell
+unmodified copies or claim them as your own." CC0 does not make that enforceable. Shipping the models inside
+your game is emphatically *not* reselling them; publishing the FBX files as a downloadable pack would be.
+
+**If you later buy Synty, the model is different but still clean:** perpetual, royalty-free, "cannot be
+terminated except as stated in this EULA," **five seats per purchase**, no attribution required, and explicitly
+usable in videogames published and distributed commercially
+([One-Time Purchase Licence](https://syntystore.com/pages/one-time-purchase-licence)). The prohibitions that
+actually matter:
+
+- **No NFTs or blockchain projects.**
+- **No inclusion in datasets used by Generative AI programs**, and no use in GenAI promotional material.
+- **No redistribution as stock images or stock art**, and restrictions on metaverse and game-creation software.
+- **Humble Bundle copies carry one seat, not five** ([FAQ](https://syntystore.com/community/faq)).
+- **SyntyPass is a rental** — see the box below. Do not ship on it.
+
+**Six things that could still bite you**, none of which apply to the current stack but all of which apply the
+moment you add a pack:
+
+1. **CC0 waives copyright — not trademark or patent.** Creative Commons states plainly that "patent or trademark
+   rights of any person" are unaffected, that it "has not verified copyright status," and that the affirmer
+   "makes no warranties about the work, and disclaims liability for all uses." A CC0 model of something
+   recognisably someone else's IP is still a problem.
+2. **Unity Asset Store packs work on a materially different rule.** Assets must be "embedded and integrated into
+   your game… with a substantial amount of original creative work," and you must not ship anything that lets end
+   users "extract or download assets separately"
+   ([EULA FAQ](https://assetstore.unity.com/browse/eula-faq)). Do not expose raw asset files in your build.
+3. **OpenGameArt is the trap row.** Mixed CC0, CC-BY, **CC-BY-SA** and **GPL**. CC-BY-SA forces derivatives under
+   the same licence; GPL can reach your code. Filter to CC0 or do not use it.
+4. **itch.io has no platform-wide licence** — it is per-seller, and some free assets carry none at all
+   ([itch.io](https://itch.io/blog/929708/general-paid-asset-license)). KayKit is safe because it states CC0
+   explicitly; do not assume the next itch pack does.
+5. **Mixamo is humanoid-only and effectively unmaintained.** Ship the animations inside a finished product;
+   do not repackage the raw files.
+6. **Keep evidence.** Save a dated copy — PDF or screenshot — of each pack's licence page at the moment you
+   acquire it, alongside the receipt. Licences change, packs get delisted, and years later the only thing that
+   proves what you were granted is the snapshot you took. This costs five minutes per pack and is the single
+   cheapest risk mitigation in this document.
+
 > ### ⚠ The SyntyPass trap, stated plainly
 >
 > SyntyPass at $30/month annually looks like the obvious play: 130+ packs, everything you could want, less than
@@ -987,9 +1051,11 @@ Ordered so that nothing you buy can be wasted by a later decision.
    Pack](https://syntystore.com/products/polygon-dungeon-pack) ($149.99) for environment and towers, and
    [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) ($79.99) as a UI base to
    modify. Watch for a recurring Humble bundle at ~$30 first; note it carries 1 seat.
-8. **Read the Unity Asset Store EULA in a browser** before you buy anything there, and ask Synty in writing what
+8. **Save a dated copy of every licence page as you acquire each pack**, next to the receipt. Five minutes per
+   pack, and it is the only thing that will prove years later what you were granted. (§4)
+9. **Read the Unity Asset Store EULA in a browser** before you buy anything there, and ask Synty in writing what
    happens to a shipped game after a SyntyPass cancellation. (§12)
-9. **Ignore all of the above until the determinism harness is green.** Part III's seventh thing-not-to-build is
+10. **Ignore all of the above until the determinism harness is green.** Part III's seventh thing-not-to-build is
    "art, before step 3 passes," and this document does not repeal it. Steps 1–3 are answerable with capsules.
    The $150 buys you the *option* to make it look like a game the week the gate opens — not permission to start
    now.
@@ -1001,6 +1067,8 @@ Ordered so that nothing you buy can be wasted by a later decision.
 Every claim above links to the page it came from. Grouped here for the record.
 
 **Licences (primary documents)**
+0. [Creative Commons CC0 1.0 Universal deed](https://creativecommons.org/publicdomain/zero/1.0/) — the licence
+   the entire recommended stack ships under; [Kenney support/licence statement](https://kenney.nl/support).
 1. [Synty One-Time Purchase Licence & EULA](https://syntystore.com/pages/one-time-purchase-licence);
    [Synty Licences Overview](https://syntystore.com/pages/licences-overview); [Synty FAQ](https://syntystore.com/community/faq).
 2. [Unity Asset Store Terms of Service and EULA FAQ](https://assetstore.unity.com/browse/eula-faq);
