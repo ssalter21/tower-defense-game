@@ -1,9 +1,10 @@
 # Technology Stack Assessment
 
+**Part III of III** · 30 July 2026
+
 **Subject:** Async ghost round-robin tower defense
 **Aesthetic north star:** Legion TD 2
-**Date:** 30 July 2026
-**Input:** *Async Ghost Round-Robin: A Design & Feasibility Deep Dive* (Part II)
+**Input:** [Async Ghost Round-Robin: A Design & Feasibility Deep Dive](async-ghost-round-robin.md) (Part II)
 
 ---
 
