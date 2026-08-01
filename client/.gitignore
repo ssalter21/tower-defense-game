@@ -140,10 +140,17 @@ InitTestScene*.unity*
 # contain. Expect a lockfile diff for as long as the probe is installed, and
 # never commit it. Same shape as the Sim.dll.meta hazard above: ignore rules
 # govern untracked files, not what a tracked file says about them.
+#
+# Two rules are enough because the probe now generates nothing outside its own
+# package. It used to also write an Editor script into Assets/Editor/, and
+# Unity then generated an Assets/Editor.meta that no rule here matched -- so
+# the probe did leave one file for `git add -A` to commit. Naming that stray
+# .meta would have been the wrong fix: Assets/Editor/ is an ordinary Unity
+# folder the real project will want tracked, and an ignored .meta beside a
+# tracked folder is the hazard the Sim.pdb.meta negation above exists to
+# avoid. The probe's logger moved inside the package instead. See issue #34.
 /Packages/com.ssalter.hotreloadprobe/
 /Packages/com.ssalter.hotreloadprobe.meta
-/Assets/Editor/HotReloadProbeLog.cs
-/Assets/Editor/HotReloadProbeLog.cs.meta
 
 # Scene-template state: Unity writes this into ProjectSettings/, but its
 # contents are UserSettings/-class -- per-user template pin states plus a
