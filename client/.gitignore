@@ -149,6 +149,10 @@ InitTestScene*.unity*
 # folder the real project will want tracked, and an ignored .meta beside a
 # tracked folder is the hazard the Sim.pdb.meta negation above exists to
 # avoid. The probe's logger moved inside the package instead. See issue #34.
+#
+# One consequence: a probe installed by the OLD script is no longer shielded
+# here, so run `probe.ps1 -Remove` before trusting `git add -A` in a checkout
+# that predates this. -Remove clears both layouts.
 /Packages/com.ssalter.hotreloadprobe/
 /Packages/com.ssalter.hotreloadprobe.meta
 

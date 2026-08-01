@@ -99,7 +99,16 @@ Every trial recorded the system-wide idle time from `GetLastInputInfo`, so a
 human touching the machine mid-trial shows up in the record instead of silently
 becoming the explanation.
 
-Still open, and not worth blocking on: what actually schedules the check, and
-why the same editor went 18 seconds once and minutes the next time. The
+**One variant was not measured: a human alt-tabbing onto the editor in the
+seconds after a rebuild.** Windows would not let a background process stage
+that transition, and both attempts to force it landed on a refresh the editor
+had already begun ~18 s earlier of its own accord. What the table has instead
+is an editor that *held* focus throughout, which took 14 min 47 s. That is
+enough to show focus is not the trigger, and enough to settle whether an agent
+can work unattended, but it is not the same experiment — if anyone wants the
+alt-tab transition itself timed, it is still a minute of hands-on work.
+
+Also still open, and not worth blocking on: what actually schedules the check,
+and why the same editor went 18 seconds once and 11 minutes the next time. The
 decision this answers — can an agent work while the developer is away — does
-not depend on it.
+not depend on either.
