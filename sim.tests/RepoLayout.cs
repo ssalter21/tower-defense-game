@@ -1,0 +1,125 @@
+using System.Diagnostics;
+
+namespace Sim.Tests;
+
+/// <summary>
+/// Where the things the gate tests actually live, and how to build the ones
+/// that have to be built fresh.
+/// </summary>
+/// <remarks>
+/// Paths are discovered by walking up from the test binary rather than being
+/// passed in, so the gate runs the same way from a shell, from an IDE and from
+/// continuous integration. Every lookup throws with the path it looked for if
+/// it fails: a gate that silently skips is a gate that is green for no reason.
+/// </remarks>
+public static class RepoLayout
+{
+    private static readonly Lazy<string> LazyRoot = new(FindRoot);
+
+    private static readonly Lazy<string> LazyFreshSim = new(() => Build(SimProject, "sim"));
+
+    private static readonly Lazy<string> LazyPoison = new(() => Build(PoisonProject, "poison"));
+
+    /// <summary>The repository root.</summary>
+    public static string Root => LazyRoot.Value;
+
+    /// <summary>The simulation's sources and project file.</summary>
+    public static string SimDirectory => Path.Combine(Root, "sim");
+
+    public static string SimProject => Path.Combine(SimDirectory, "Sim.csproj");
+
+    public static string PoisonProject => Path.Combine(Root, "sim.poison", "Sim.Poison.csproj");
+
+    /// <summary>
+    /// The assembly as it exists in the repository. This -- not a fresh build
+    /// -- is what the behavioural tests link against, because bytes that only
+    /// ever exist on a build machine are bytes nobody has checked.
+    /// </summary>
+    public static string CommittedAssembly =>
+        Path.Combine(Root, "client", "Packages", "com.ssalter.sim", "Runtime", "Sim.dll");
+
+    /// <summary>The committed debug symbols, beside the assembly where the debugger needs them.</summary>
+    public static string CommittedSymbols =>
+        Path.Combine(Root, "client", "Packages", "com.ssalter.sim", "Runtime", "Sim.pdb");
+
+    /// <summary>
+    /// A build of the simulation from the sources as they stand right now,
+    /// into scratch space. Built once per test run.
+    /// </summary>
+    public static string FreshlyBuiltAssembly => Path.Combine(LazyFreshSim.Value, "Sim.dll");
+
+    /// <summary>The poison assembly, built the same way and referenced by nothing.</summary>
+    public static string PoisonAssembly => Path.Combine(LazyPoison.Value, "Sim.Poison.dll");
+
+    /// <summary>
+    /// Builds a project into scratch space and returns the output directory.
+    /// The output goes to a temporary directory on purpose: building into the
+    /// committed plug-in folder would have the gate rewrite the artefact it is
+    /// supposed to be checking, which is the shape of a test that cannot fail.
+    /// </summary>
+    public static string Build(string projectPath, string label, string configuration = "Debug")
+    {
+        string output = Path.Combine(Path.GetTempPath(), "sim-build-gate", label);
+
+        if (Directory.Exists(output))
+        {
+            Directory.Delete(output, recursive: true);
+        }
+
+        Directory.CreateDirectory(output);
+
+        var startInfo = new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            WorkingDirectory = Root,
+        };
+
+        startInfo.ArgumentList.Add("build");
+        startInfo.ArgumentList.Add(projectPath);
+        startInfo.ArgumentList.Add("--configuration");
+        startInfo.ArgumentList.Add(configuration);
+        startInfo.ArgumentList.Add("--output");
+        startInfo.ArgumentList.Add(output);
+        startInfo.ArgumentList.Add("--nologo");
+        startInfo.Environment["MSBUILDDISABLENODEREUSE"] = "1";
+
+        using Process process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Could not start dotnet build.");
+
+        string standardOutput = process.StandardOutput.ReadToEnd();
+        string standardError = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"dotnet build failed for {projectPath} (exit {process.ExitCode}).{Environment.NewLine}"
+                + standardOutput
+                + standardError);
+        }
+
+        return output;
+    }
+
+    private static string FindRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "sim", "Sim.csproj")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Could not find the repository root by walking up from "
+            + AppContext.BaseDirectory
+            + " looking for sim/Sim.csproj.");
+    }
+}
