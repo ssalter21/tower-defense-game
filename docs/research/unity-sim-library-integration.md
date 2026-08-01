@@ -6,6 +6,73 @@
 mechanism cost?
 **Input:** [Part III — Technology Stack Assessment](../tech-stack-assessment.md) §2, §3, §6.
 
+> **This note has been amended since it was written. Read [Amendments](#amendments) before acting on §2, §4, §8 or §9.**
+> Its headline recommendation — build outside Unity, consume a precompiled `netstandard2.1` DLL — **stands and was
+> adopted**. Four supporting arguments did not survive. Nothing in §1, §3, §5, §6 or §7 is affected.
+
+---
+
+## Amendments
+
+Recorded 1 August 2026, when the notes were landed on `main`. All four corrections come from
+[Where the Unity project lives, and what git tracks inside it](https://github.com/ssalter21/tower-defense-game/issues/15),
+which had to choose a concrete on-disk layout and found that four of this note's arguments do not hold once the DLL form
+is the one being placed. The original text is left in place with a marker at each site, so the reasoning can still be
+followed; this section says what replaced it.
+
+**1. §2's ranking of the packaging mechanisms is inverted for the DLL form.** The note places the embedded package
+(§2 D) last — *"it buys nothing over C for this repo and costs the top-level `sim/` directory"* — and recommends the
+local `file:` package (§2 C's packaging with §2 E's contents, wired as `"com.ssalter.sim": "file:../../sim"` in §9's
+layout). That ranking is **correct for the source form and backwards for the DLL form**. A local `file:` package points
+Unity at `sim/`, and Unity writes `.meta` files into whatever it is pointed at — so the `file:` route sprinkles Unity
+metadata through the very directory the headless CLI and the test project compile from. #15 chose the **embedded**
+package at `client/Packages/com.ssalter.sim/Runtime/`, which keeps Unity's footprint inside the Unity project root.
+The cost the note feared — losing the top-level `sim/` — does not arise: `sim/` keeps its Part III §6 shape and holds
+the `.csproj` and sources; only the **build output** lands under `client/`.
+
+**2. §2 E's headline argument for choosing a package at all is retracted.** The note sells the package on
+`package.json`'s `version` field *"becoming the sim version the client is pinned to, which is the thing Part III §2
+means by 'separately versioned artefact'"*, and §8's comparison table scores mechanisms on *"Sim version pinned &
+visible"*. #15 pinned that field **inert at `0.0.0`**, because a second hand-bumped number shadowing the record's
+`sim_version` is exactly the pattern [Ghost record v0](https://github.com/ssalter21/tower-defense-game/issues/9) spent
+a whole ticket engineering out — anything that determines an outcome is pinned by a hash of itself, never by a number
+someone remembers to increment. The truth about which sim is in the package lives in `package.json`'s `description`.
+The package is still the right shape; it earns its place on §2 D's boundary-hygiene grounds instead, plus one #15 added
+that this note does not make — a package **gives the sim/view seam a name in the filesystem**, where
+`Assets/Plugins/` is a folder someone eventually drops a helper script into.
+
+**3. §9's justification for committing the DLL is circular, and the real reason is different.** The note argues from
+*"the precompiled DLL produces exactly one artefact, byte-identical across client, server and CLI"* to committing it —
+but CI builds from source, so *"the client ships the image CI hashed"* assumes the very check it is offered as evidence
+for. #15's actual decider is mechanical: **`Sim.dll.meta` carries the Auto Reference *off* setting** that §7 of this
+note correctly insists on, **and Unity deletes orphaned `.meta` files** — so a git-ignored DLL silently returns with
+Auto Reference back **on** at every fresh clone, dissolving the boundary discipline the setting exists to protect. The
+conclusion is unchanged (`Sim.dll` and `Sim.pdb` are committed); only the reason is load-bearing, and it is this one.
+#15 also closed the staleness hole the note leaves open, by pointing `sim.tests` and `simcli` at the **committed DLL**
+rather than at `Sim.csproj` — a `ProjectReference` was proposed and rejected on discovering it defeats the check, since
+CI would rebuild before testing and never exercise the committed bytes.
+
+**4. §4's "Debug and Release are semantically identical" is true of the arithmetic and false of this sim.** The claim
+rests on Part III §3 — C# has no debug/release overflow asymmetry — and that much is right. But
+[the content ticket](https://github.com/ssalter21/tower-defense-game/issues/7) and
+[Ghost record v0](https://github.com/ssalter21/tower-defense-game/issues/9) built an architecture on **load-time
+assertions**: the corridor is one hex wide and never branches, towers sorted by `(q,r)`, orders unique on
+`(tick, type_id)`, all three header copies agreeing. Written as `Debug.Assert` or wrapped in `#if DEBUG`, every one of
+them **compiles out of a Release build** — and the shipping build would be the one *without* the loud-failure
+architecture everything else rests on. This note must not be read as licence to use `Debug.Assert`. #15's rule:
+
+> **The sim's invariants are unconditional throws. No `Debug.Assert`, no `#if DEBUG`, anywhere in `sim/`.**
+
+With that rule in force, swapping configurations is safe again, and #15 made **Debug the committed build** — because
+committing Release means every debugging session leaves `git status` dirty and every commit depends on remembering
+`-c Release`. Note the shape of this one: it is the same failure as §6b, where `BannedApiAnalyzers` loads, finds no ban
+list and leaves the build green. A check that silently is not running is worse than no check, because it converts an
+unenforced rule into a believed one.
+
+**Standing caveat, unchanged.** `unity.com` returns 403 to automated fetching, so every licence and pricing claim in
+this note was read via a browser user-agent as extracted text. Confirm them in a real browser before relying on them
+commercially.
+
 ---
 
 ## Recommendation
@@ -160,6 +227,11 @@ under your project's `Packages` folder is embedded in that project" [[20]](#s20)
 This is C with the folder moved back inside the Unity project. It buys nothing over C for this repo and costs the
 top-level `sim/` directory the architecture diagram depends on. Include for completeness; do not choose it.
 
+> **Superseded — [Amendment 1](#amendments). This is the option that was chosen.** The ranking above is correct for the
+> *source* form and inverted for the *DLL* form: a `file:` package points Unity at `sim/`, and Unity writes `.meta`
+> files into whatever it is pointed at — including the directory the CLI and tests compile from. Nor does the embedded
+> package cost the top-level `sim/`: only the build output moves under `client/`.
+
 ### E. Local/embedded UPM package containing the **precompiled DLL** — the recommended shape
 
 **Setup.** A package whose `Runtime/` folder contains `Sim.dll` + `Sim.pdb` rather than sources. `dotnet build` targets
@@ -170,6 +242,11 @@ This is option A's compilation model with option C's packaging, and it inherits 
 `Assets/Plugins/` is a **version number** — `package.json`'s `version` field becomes the sim version the client is
 pinned to, which is the thing Part III §2 means by "separately versioned artefact" and which the ghost record's
 `u32 sim_version` has to agree with. That is a real benefit and it costs one JSON file.
+
+> **Retracted — [Amendment 2](#amendments).** The version field is pinned inert at `0.0.0`. A second hand-bumped number
+> shadowing `sim_version` is the pattern [#9](https://github.com/ssalter21/tower-defense-game/issues/9) engineered out.
+> The package survives on boundary-hygiene grounds instead: it keeps Unity's `.meta` files out of `sim/`, and it gives
+> the sim/view seam a name in the filesystem.
 
 If UPM adds friction in week one — it is another unfamiliar subsystem on a cold start — fall back to `Assets/Plugins/`
 and add the package wrapper later. Nothing about the sim changes; only where the DLL lands.
@@ -251,6 +328,14 @@ ever wondered why a Unity plug-in "can't be debugged", it is almost always that 
 Note the corollary: **do not ship a Release build of the sim into the Unity project during development.** Build the sim
 Debug for the editor loop and Release for the determinism matrix and shipping builds — C# has no debug/release overflow
 asymmetry (Part III §3), so the two are semantically identical and swapping is safe.
+
+> **Corrected — [Amendment 4](#amendments).** "Semantically identical" is true of the arithmetic and false of this sim
+> as designed: written as `Debug.Assert` or `#if DEBUG`, the load-time assertions from
+> [#7](https://github.com/ssalter21/tower-defense-game/issues/7) and
+> [#9](https://github.com/ssalter21/tower-defense-game/issues/9) compile *out* of Release, and the shipping build is the
+> one without the loud-failure architecture. **The sim's invariants are unconditional throws** — no `Debug.Assert`, no
+> `#if DEBUG`, anywhere in `sim/`. With that rule in force the paragraph above is safe again, and **Debug is the
+> committed build**.
 
 ---
 
@@ -393,7 +478,7 @@ outside Unity and the whole problem is out of scope.
 |---|---|---|---|---|---|
 | `UnityEngine` unresolvable | **By construction** | By checkbox | By checkbox | By checkbox | **By construction** |
 | One artefact across client/server/CLI | **Yes** | No | No | No | **Yes** |
-| Sim version pinned & visible | Weakly | No | Via `package.json` | Via `package.json` | **Via `package.json`** |
+| ~~Sim version pinned & visible~~ ([retracted](#amendments)) | Weakly | No | Via `package.json` | Via `package.json` | **Via `package.json`** |
 | Change one line | build (~0.8 s) + reimport + reload | reimport + reload | reimport + reload | reimport + reload | build + reimport + reload |
 | Manual copy step | avoidable via build output path | none | none | none | avoidable |
 | Editor restart | not in the normal path; **test this** | never | never | never | **test this** |
@@ -401,6 +486,12 @@ outside Unity and the whole problem is out of scope.
 | `BannedApiAnalyzers` runs | **Yes, in MSBuild** | Unity path likely broken (§6b) | likely broken | likely broken | **Yes, in MSBuild** |
 | `.meta` files in sim source tree | one, for the DLL | one per file | one per file | one per file | one, for the DLL |
 | `sim/` keeps Part III §6 shape | yes | **no** | yes | no | yes |
+
+> **Two rows of this table are wrong for the shape that was chosen — see [Amendments](#amendments) 1 and 2.** The
+> version row is retracted outright. The `sim/`-shape row scores D "no" on the assumption that an embedded package means
+> moving the *sources*; with the DLL form only the build output moves, so D keeps `sim/` intact **and** keeps Unity's
+> `.meta` files out of it, which the `file:` variants do not. The chosen mechanism is **E packaged as D** — precompiled
+> DLL in an embedded package at `client/Packages/com.ssalter.sim/Runtime/`. Every other row stands.
 
 ---
 
@@ -422,11 +513,40 @@ client/
   Assets/View/View.asmdef        # overrideReferences: true, precompiledReferences: ["Sim.dll"]
 ```
 
+> **Superseded — [Amendments](#amendments) 1 and 2. The layout that was adopted is
+> [#15](https://github.com/ssalter21/tower-defense-game/issues/15)'s, not this one.** Same mechanism (precompiled DLL,
+> `dotnet build` outside Unity), different placement: the package is **embedded** under `client/`, not a `file:`
+> reference into `sim/`, so Unity never writes `.meta` files into the directory the CLI and tests compile from. `sim/`
+> keeps the `.csproj`, the sources and the ban list; there is no `package.json` in it and no `manifest.json` edit.
+>
+> ```
+> sim/                                        # unchanged; Unity never sees this directory
+>   Sim.csproj  BannedSymbols.txt  *.cs
+> client/                                     # client/ IS the Unity project root
+>   Assets/  ProjectSettings/
+>   Packages/com.ssalter.sim/
+>     package.json                            # pinned inert at 0.0.0; truth lives in `description`
+>     Runtime/
+>       Sim.dll  Sim.dll.meta                 # committed — the .meta carries Auto Reference: off
+>       Sim.pdb  Sim.pdb.meta                 # committed
+>       com.ssalter.sim.asmdef
+> ```
+>
+> `sim.tests` and `simcli` reference the **committed DLL** by `HintPath`, not `Sim.csproj`, so a forgotten rebuild goes
+> red on the next push. **Debug is the committed configuration.**
+
 `dotnet build sim -c Debug` during development, `-c Release` for the determinism matrix and shipping builds. Commit the
 DLL and PDB: they are small, they make the client project openable without a build step, they carry the plug-in import
 settings in a `.meta` that would otherwise regenerate per machine, and — the real reason — a client commit then names
 exactly one sim binary, which is what "separately versioned artefact" has to mean if ghost records are going to replay
 for years.
+
+> **Corrected — [Amendment 3](#amendments).** The conclusion holds: `Sim.dll` and `Sim.pdb` are committed. The stated
+> reason does not — CI builds the sim from source, so *"the client ships the image CI hashed"* assumes the check it is
+> offered as evidence for. The load-bearing reason is the clause listed third above, and it is mechanical rather than
+> aspirational: **`Sim.dll.meta` carries the Auto Reference *off* setting from §7, and Unity deletes orphaned `.meta`
+> files** — so an ignored DLL comes back with Auto Reference **on** at every fresh clone, dissolving the boundary
+> discipline it was turned off to protect.
 
 The argument in one line: **the mechanism that makes `UnityEngine` genuinely unresolvable and the mechanism that makes
 the client run the binary CI hashed are the same mechanism**, and it also happens to be the only one where Part III's
