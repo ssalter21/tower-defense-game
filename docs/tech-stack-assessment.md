@@ -113,23 +113,38 @@ engine-based game is gameplay code reaching for `Time.deltaTime`, `Vector3` or `
 project layout makes that a build error. C# also has no debug/release overflow asymmetry: integer overflow is
 `unchecked` in both configurations by default.
 
-**What it does not give free:** `float` and `Math.*` are always in scope. Add `BannedApiAnalyzers` with the list
-below and set the sim project to treat those diagnostics as errors. Tooling rather than structure — good
-enough, but you must remember to do it on day one.
+**What it does not give free:** `float` and `Math.*` are always in scope, and this document's original answer to
+that — `BannedApiAnalyzers` with the list below, escalated to build errors — **does not work.** Measured
+(1 Aug 2026, .NET SDK 10.0.101, analyzer 4.14.0, `RS0030` at `error`): the analyzer registers on the source
+`IOperation` tree and never visits types in declarations, parameters, returns, or built-in arithmetic, so
+`float x = a * b;` compiles clean; and `lock (gate)` is an `ILockOperation`, not an invocation, so banning
+`System.Threading.Monitor` does not see it. Four of the eight rows below are enforced; three are not, and the
+analyzer reports nothing about the difference.
+
+The enforcement is therefore **structural, at the artefact level**: a Mono.Cecil scan of the compiled `Sim.dll`
+in `sim.tests`, checking every method's signature, local slots, instruction stream and referenced-member
+signatures, run against both the committed DLL and a fresh build. A companion `sim.poison` project carries one
+deliberate violation per row, so the scan is proven able to fail. `BannedApiAnalyzers` is **not used in this
+project.** See [#14](https://github.com/ssalter21/tower-defense-game/issues/14) for the full reasoning and the
+measurements.
 
 ### Banned inside the simulation assembly
 
-Enforce as build errors, not review comments.
+*Enforced by IL scan of the compiled assembly, not by review comments and not by source analyzers.*
 
-| Symbol | Why |
-|---|---|
-| `float`, `double`, `decimal` | The entire hazard catalogue. No "just for a UI number" exception — one leak loses determinism silently and you find out months later. |
-| `Math.*`, `MathF.*` | Returns doubles; transcendentals differ across silicon vendors. Write integer `Sqrt` and a lookup-table `SinCos` against your fixed-point type. |
-| `Dictionary`, `HashSet` | **Iteration order is explicitly unspecified.** Two runs can visit entities in different orders and diverge. Use arrays indexed by entity id, or `SortedDictionary`. |
-| `Array.Sort`, `List.Sort` | Introsort — **not stable.** Equal elements land in arbitrary order. Use a total-order comparator that can never return zero. |
-| `DateTime.Now`, `Guid.NewGuid`, `System.Random` | Ambient nondeterminism. All randomness comes from the seeded PCG in the record; all timing from the tick counter. |
-| `Task`, `Parallel`, `lock` | Thread scheduling is not reproducible. The tick loop is single-threaded. Parallelise across *matches* on the server, never within one. |
-| `UnityEngine.*` | Free — the assembly has no such reference, so this enforces itself. |
+| Symbol | Why | Caught by |
+|---|---|---|
+| `float`, `double`, `decimal` | The entire hazard catalogue. No "just for a UI number" exception — one leak loses determinism silently and you find out months later. | `ldc.r4`/`ldc.r8`/`conv.r4`/`conv.r8`/`conv.r.un`/`ckfinite`, plus any `Single`/`Double`/`Decimal` in a signature or local slot |
+| `Math.*`, `MathF.*` | Returns doubles; transcendentals differ across silicon vendors. Write integer `Sqrt` and a lookup-table `SinCos` against your fixed-point type. | referenced-member signature |
+| `Dictionary`, `HashSet` | **Iteration order is explicitly unspecified.** Two runs can visit entities in different orders and diverge. Use arrays indexed by entity id, or `SortedDictionary`. | type reference |
+| `Array.Sort`, `List.Sort` | Introsort — **not stable.** Equal elements land in arbitrary order. Use a total-order comparator that can never return zero. | member name — all overloads, no per-overload list |
+| `DateTime.Now`, `Guid.NewGuid`, `System.Random` | Ambient nondeterminism. All randomness comes from the seeded PCG in the record; all timing from the tick counter. | type reference |
+| `Task`, `Parallel`, `lock` | Thread scheduling is not reproducible. The tick loop is single-threaded. Parallelise across *matches* on the server, never within one. | type reference; `lock` via `Monitor.Enter`/`Exit` in the instruction stream |
+| `System.Diagnostics.Debug`, `Trace` | `Debug.Assert` is `[Conditional("DEBUG")]` and compiles out of Release, so a load-time invariant written that way is absent from the shipping build. Per [#15](https://github.com/ssalter21/tower-defense-game/issues/15) the sim's invariants are unconditional throws. | referenced-member signature (visible because Debug is the committed configuration) |
+| `UnityEngine.*` | Free — the assembly has no such reference, so this enforces itself. | free — the assembly has no such reference |
+
+`#if DEBUG` / `#if !DEBUG` / `#if RELEASE` are banned in `sim/` by a **source-level** test, because a
+preprocessor directive leaves no residue in either artefact and cannot be seen at IL level.
 
 ### The one input I do not have
 
