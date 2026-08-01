@@ -63,6 +63,16 @@ outcome prints in the Console as a legible result.
 It also adds **Tools ▸ Hot-reload probe ▸ Print stamp now**, for checking which
 build is currently loaded without forcing a reload.
 
+## Answered
+
+Question 1 below — does the new stamp appear on focus alone? — was run and
+recorded in [#34](https://github.com/ssalter21/tower-defense-game/issues/34).
+The short version: **focus is not the trigger at all.** An untouched, minimised
+editor picks the rebuild up by itself; an editor holding the foreground took
+nearly fifteen minutes to do the same. The delay is minutes and is not a fixed
+interval. The measured timings, and what they mean for an agent, are in
+`CLAUDE.md` at the repo root. Questions 3 and 4 are still unrun.
+
 ## What to record on [#10](https://github.com/ssalter21/tower-defense-game/issues/10)
 
 1. Does the new stamp appear **on focus alone**, with no other action?

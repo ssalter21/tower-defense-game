@@ -50,8 +50,17 @@ $Client      = Join-Path $RepoRoot 'client'
 $PackageDir  = Join-Path $Client 'Packages/com.ssalter.hotreloadprobe'
 $RuntimeDir  = Join-Path $PackageDir 'Runtime'
 $CounterFile = Join-Path $PackageDir '.counter'
-$EditorDir   = Join-Path $Client 'Assets/Editor'
+# The logger lives INSIDE the package, so every file the probe generates sits
+# under the one directory client/.gitignore already refuses. Putting it in
+# Assets/Editor/ instead made Unity generate an Assets/Editor.meta that no
+# ignore rule covered, so `git add -A` would have committed a trace of the
+# probe -- the exact leak this probe is supposed to be incapable of.
+$EditorDir   = Join-Path $PackageDir 'Editor'
 $EditorDest  = Join-Path $EditorDir 'HotReloadProbeLog.cs'
+# Where -Install used to put it. -Remove still clears this so an install made
+# by the older script is cleaned up rather than left behind.
+$LegacyDir   = Join-Path $Client 'Assets/Editor'
+$LegacyDest  = Join-Path $LegacyDir 'HotReloadProbeLog.cs'
 $SrcDir      = Join-Path $PSScriptRoot 'src'
 $ProbeCs     = Join-Path $SrcDir 'Probe.cs'
 $EditorSrc   = Join-Path $PSScriptRoot 'editor/HotReloadProbeLog.cs'
@@ -113,6 +122,18 @@ if ($Install) {
 }
 '@ | Set-Content -Path (Join-Path $PackageDir 'package.json') -Encoding utf8
 
+    # Code inside a package is not compiled without an assembly definition --
+    # unlike code under Assets/, it never joins Assembly-CSharp-Editor.
+    @'
+{
+  "name": "HotReloadProbe.Editor",
+  "rootNamespace": "",
+  "references": [],
+  "includePlatforms": [ "Editor" ],
+  "autoReferenced": true
+}
+'@ | Set-Content -Path (Join-Path $EditorDir 'HotReloadProbe.Editor.asmdef') -Encoding utf8
+
     Copy-Item $EditorSrc $EditorDest -Force
 
     $r = Build-Probe 1
@@ -120,7 +141,7 @@ if ($Install) {
     Write-Host ""
     Write-Host "Probe installed." -ForegroundColor Green
     Write-Host "  package : client/Packages/com.ssalter.hotreloadprobe/"
-    Write-Host "  editor  : client/Assets/Editor/HotReloadProbeLog.cs"
+    Write-Host "  editor  : client/Packages/com.ssalter.hotreloadprobe/Editor/HotReloadProbeLog.cs"
     Write-Host "  stamp   : $($r.Stamp)   (dotnet build took $($r.BuildMs) ms)"
     Write-Host ""
     Write-Host "Now switch to Unity and let it import. You should see a line in the"
@@ -129,13 +150,16 @@ if ($Install) {
 }
 
 if ($Remove) {
-    foreach ($p in @($PackageDir, "$PackageDir.meta", $EditorDest, "$EditorDest.meta")) {
+    # Everything a current install generates is inside the package, so removing
+    # it is one delete. The rest clears an install made by the older layout,
+    # which put the logger under Assets/Editor/.
+    foreach ($p in @($PackageDir, "$PackageDir.meta", $LegacyDest, "$LegacyDest.meta")) {
         if (Test-Path $p) { Remove-Item $p -Recurse -Force; Write-Host "removed $p" }
     }
-    if ((Test-Path $EditorDir) -and -not (Get-ChildItem $EditorDir -Force)) {
-        Remove-Item $EditorDir -Force
-        if (Test-Path "$EditorDir.meta") { Remove-Item "$EditorDir.meta" -Force }
-        Write-Host "removed $EditorDir (was empty)"
+    if ((Test-Path $LegacyDir) -and -not (Get-ChildItem $LegacyDir -Force)) {
+        Remove-Item $LegacyDir -Force
+        if (Test-Path "$LegacyDir.meta") { Remove-Item "$LegacyDir.meta" -Force }
+        Write-Host "removed $LegacyDir (was empty)"
     }
     Remove-Item (Join-Path $SrcDir 'bin'), (Join-Path $SrcDir 'obj'), $ProbeCs `
         -Recurse -Force -ErrorAction SilentlyContinue
