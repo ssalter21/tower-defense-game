@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The simulation. A plain .NET class library with no engine reference, so
+    calling into Unity from gameplay code is a compile error rather than a
+    code-review comment: UnityEngine does not exist in this compilation and
+    cannot be added by anyone who does not edit this file.
+
+    netstandard2.1 because that is Unity 6's default API compatibility level
+    and the one profile Mono and IL2CPP both implement. LangVersion is pinned
+    at 9.0 rather than inherited, because the SDK derives C# 8.0 from this TFM
+    while Unity's bundled Roslyn compiles at C# 9.0, and a language version
+    that differs between the two toolchains is a way for one source tree to
+    mean two things.
+
+    The build output lands directly in the embedded Unity package. The
+    assembly is committed from there, because Sim.dll.meta carries the
+    "Auto Reference off" setting and Unity deletes orphaned .meta files: an
+    ignored assembly silently returns auto-reference ON at every fresh clone.
+
+    DEBUG IS THE COMMITTED CONFIGURATION, and that is load-bearing twice over.
+    Committing Release would mean every debugging session leaves the tree
+    dirty and every commit depends on remembering a flag. It would also make
+    the conditional-diagnostics ban unenforceable: Debug.Assert and anything
+    else marked [Conditional] leaves no trace in a Release image, so the IL
+    scan can only catch it because the calls are actually emitted.
+    CommittedAssemblyTests asserts the committed image is a Debug build, so
+    that sentence is checked rather than remembered.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Sim</AssemblyName>
+    <RootNamespace>Sim</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DebugType>portable</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)../client/Packages/com.ssalter.sim/Runtime/</OutputPath>
+
+    <!-- Unity has no use for a deps file and would import it as an asset. -->
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+
+    <Version>0.0.0</Version>
+    <Company>ssalter</Company>
+    <Product>Sim</Product>
+  </PropertyGroup>
+
+</Project>
