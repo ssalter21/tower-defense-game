@@ -41,3 +41,7 @@ venv/
 bin/
 obj/
 target/
+
+# Spike render output — regenerate with ScrubStripCapture
+/scrub-strip/
+/client/fbx-clip-report.md
