@@ -1,0 +1,24 @@
+* text=auto
+
+*.cs      text diff=csharp
+*.json    text
+*.md      text
+
+# Unity text assets -- LF, and Unity's own merge tool.
+# `merge=unityyamlmerge` needs a per-machine .gitconfig entry naming
+# UnityYAMLMerge.exe inside the Editor install -- see issue #10.
+*.unity   text eol=lf merge=unityyamlmerge
+*.prefab  text eol=lf merge=unityyamlmerge
+*.asset   text eol=lf merge=unityyamlmerge
+*.meta    text eol=lf
+
+# Sim content: byte-stable on every machine
+content/**  text eol=lf
+
+# Binaries -- never diff, never merge
+*.dll binary
+*.pdb binary
+*.fbx binary
+*.png binary
+*.jpg binary
+*.wav binary
