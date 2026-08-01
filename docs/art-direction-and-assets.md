@@ -51,8 +51,8 @@ does not reach it.
 | Decision | Verdict |
 |---|---|
 | **Art direction** | Stylized low-poly 3D, flat/gradient-atlas textures, fixed three-quarter camera. Not pixel art. |
-| **Day-one purchase** | [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — **$150**, CC0, ~57 rigged and animated characters, a 161-clip animation library, dungeon and hex kits, `.blend` sources, all future packs. Supplies **tower characters and humanoid creeps from one hand**. |
-| **Day-one free supplements** | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated) for non-humanoid creeps; [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings) for the base, walls and lane dressing; [Kenney](https://kenney.nl/assets) (CC0) for UI blockout and the [Particle Pack](https://kenney.nl/assets/particle-pack) (80 files) for VFX. **$0.** |
+| **Day-one purchase** | [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — **$150**, CC0, ~57 rigged and animated characters, a 161-clip animation library, dungeon and hex kits, `.blend` sources, all future packs. Supplies **tower characters and humanoid creeps from one hand**. The hex kit is **also free standalone** ([Medieval Hexagon](https://kaylousberg.itch.io/kaykit-medieval-hexagon), CC0, 200+ models) — the $150 is additive, not a gate. |
+| **Day-one free supplements** | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (CC0, 50 animated) for non-humanoid creeps; [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) (CC0, 107+ buildings) for the base, walls and lane dressing; [Kenney](https://kenney.nl/assets) (CC0) for UI blockout and the [Particle Pack](https://kenney.nl/assets/particle-pack) (80 files) for VFX. Ultimate Fantasy RTS is **static meshes, not animated** — dressing only, never tower characters. Also [KayKit Medieval Hexagon](https://kaylousberg.itch.io/kaykit-medieval-hexagon) (CC0, 200+ hex tiles, buildings and props) and [KayKit Character Animations](https://kaylousberg.com/game-assets/character-animations) (CC0, **133 humanoid clips, compatible with every KayKit character pack past and future**). **$0.** |
 | **Towers** | Fixed grid placement, **rooted animated characters** that attack in place — WC3 placement, Legion TD life. They need idle/attack/hit/death but **no locomotion**, which is the half of the animation problem you get to skip. §5. |
 | **Particle effects** | Built-in Particle System (Shuriken), not VFX Graph. **View-layer only, driven by a sim event stream** — a particle must never feed back into the simulation. Clear all VFX on replay seek; scale simulation speed on fast-forward; disable entirely on instant-resolve. §8. |
 | **Deferred purchase (only after Part II step 3 passes)** | Synty, for environment, deeper tower vocabulary and UI. [POLYGON Fantasy Kingdom](https://syntystore.com/products/polygon-fantasy-kingdom) $349.99 (2,100 prefabs of castle/village/tower) or [Dungeon Pack](https://syntystore.com/products/polygon-dungeon-pack) $149.99, + [INTERFACE Fantasy Menus](https://syntystore.com/products/interface-fantasy-menus) $79.99, or a Humble bundle at ~$30 if one recurs. With no animation needed, Synty's one disqualifying flaw is gone for buildings. |
@@ -537,11 +537,11 @@ rule that makes the pack swappable, applied to towers.
 
 | Need | Count | Source | Cost |
 |---|---|---|---|
-| **Towers**, across types and upgrade tiers | 15–30 types × 2–4 tiers | [Quaternius Ultimate Fantasy RTS](https://quaternius.com/packs/ultimatefantasyrts.html) — **free, CC0**, buildings in evolution stages | **$0** |
+| **Towers**, across types and upgrade tiers | 15–30 types × 2–4 tiers | **A mix — see the amendment below.** *Character towers*: KayKit character packs, sharing one rig and one clip library with the creeps. *Building towers*: [KayKit Medieval Hexagon](https://kaylousberg.itch.io/kaykit-medieval-hexagon) — free, CC0 — ships `building_tower_A`, `_B`, `_catapult`, `_base` and `building_archeryrange`, each in **four team colours the pack README describes as "for versus gameplay"**, plus a neutral `projectile_catapult` mesh | **$0** |
 | **Creeps**, animated | 30–50 | [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) free (50), then [KayKit](https://kaylousberg.itch.io/kaykit-complete) when it runs thin (+57) | $0, then $150 |
 | **The King** / the thing being defended | 1 | See below — the one asset worth making yourself | — |
 | Lane floor, walls, path edging, buildable-plot markers | modular set | [KayKit Dungeon Remastered](https://kaylousberg.itch.io/kaykit-dungeon-remastered) — 275+ modular assets at the Extra tier (walls, floors, stairs, doors, banners, traps), same 1024×1024 atlas as the characters; or Kenney's 300-asset CC0 TD kit for free | $0 or in the $150 |
-| Hex/tile playfield | modular set | KayKit Medieval Hexagon kit | **In the $150** |
+| Hex/tile playfield | modular set | [KayKit Medieval Hexagon](https://kaylousberg.itch.io/kaykit-medieval-hexagon) — **free, CC0**, 200+ models: hex tiles for roads, rivers, ocean and coast, plus buildings and nature props, on the same 1024×1024 gradient atlas as the characters. Extra tier $9.99 adds 150+ assets including units; Source $14.99 adds `.blend` | **$0** |
 | Environment dressing | — | Biome pack (§ below), or Quaternius nature assets | $0–55 |
 | Spawn portal / lane endpoints | 2 | Enchanted Forest ships a portal; Quaternius ships gates | $0 |
 
@@ -554,12 +554,26 @@ the exact thing a TD needs and the exact thing most building packs do not provid
 publisher* as Ultimate Monsters, the 50-animated-creature pack already recommended as a free supplement, so the
 two are internally coherent by construction.
 
+> **★ Corrected by [#17](https://github.com/ssalter21/tower-defense-game/issues/17).** Ultimate Fantasy RTS is
+> **static meshes** — its pack page marks animation ✗ — so it cannot supply the *rooted animated characters*
+> this same section rules towers must be. It is also no longer needed for the building half: the Medieval
+> Hexagon pack ships tower buildings, already free, already CC0, on the same atlas as the characters, and
+> modelled to sit on these exact hexes. The internal-coherence argument for pairing it with Ultimate Monsters is
+> likewise void, since the creeps are now KayKit. **Towers are a mix of animated character towers and static
+> building towers, both from KayKit.**
+
 **Where to spend bespoke effort: the King.** It is one model. It is on screen for every second of every match,
 it is the thing that dies, it is what both players are looking at when the game ends, and it will be in every
 screenshot you ever publish. Under §10's rule — "you need the four or five units that appear in every
 screenshot to be yours" — the King is candidate number one, ahead of any creep. One custom model, modelled onto
 the KayKit rig and UV'd onto their atlas (§ above), is a realistic weekend and buys more perceived originality
 than fifty bought creeps cost you.
+
+> **★ Amended by [#17](https://github.com/ssalter21/tower-defense-game/issues/17): this describes one kind of
+> tower, not every tower.** Ordinary buildings are wanted alongside rooted characters. Nothing above changes for
+> the towers that *are* characters — in particular the rule that **the sim owns fire cadence in integer ticks
+> and firing is never driven off an animation event** applies to both kinds, and a static building tower simply
+> has no clip to get this wrong with.
 
 ### Mixing a Synty environment with KayKit characters
 
@@ -1022,8 +1036,10 @@ Stated plainly, because a research document that only reports successes is not a
 
 Ordered so that nothing you buy can be wasted by a later decision.
 
-1. **Spend $0 and answer the perspective question first.** Top-down grid or side-on lane? It is worth more than
-   any purchase on this page and it is a fifteen-minute paper decision. (§11)
+1. ~~**Spend $0 and answer the perspective question first.**~~ **★ Done** — resolved by
+   [Top-down grid or side-on lane?](https://github.com/ssalter21/tower-defense-game/issues/3). The step is kept
+   rather than deleted because the reasoning for why it comes before any purchase is still worth reading: it is
+   worth more than any purchase on this page and it was a paper decision. (§11)
 2. **Download the free tier of everything before buying anything.** [KayKit Adventurers and
    Skeletons](https://kaylousberg.itch.io/) (free, 14 animated characters between them),
    [Quaternius Ultimate Monsters](https://quaternius.com/packs/ultimatemonsters.html) (free, 50 animated
@@ -1031,10 +1047,21 @@ Ordered so that nothing you buy can be wasted by a later decision.
    107+ buildings including watch towers, archery towers and fortresses in upgrade-tier evolution stages),
    [Kenney Tower Defense (Top-Down)](https://kenney.nl/assets/tower-defense-top-down) (free, 300
    assets), [Synty Sidekick Starter Pack](https://syntystore.com/products/sidekick-modular-characters-starter-pack)
-   (free). **Total: $0, and it is already enough art for build-order steps 1 through 3.**
-3. **Run the screenshot test.** Drop a KayKit skeleton, a Quaternius monster and a Synty Sidekick character into
-   one scene at your intended camera distance and unit scale. Screenshot. This is the only reliable way to judge
-   coherence, and it costs nothing.
+   (free), and — **★ added by [#17](https://github.com/ssalter21/tower-defense-game/issues/17), which made both
+   load-bearing** — [KayKit Medieval Hexagon](https://kaylousberg.itch.io/kaykit-medieval-hexagon) (CC0, 200+
+   hex tiles, buildings and props) and
+   [KayKit Character Animations](https://kaylousberg.com/game-assets/character-animations) (CC0, **133 humanoid
+   clips, compatible with every KayKit character pack past and future**).
+   **Total: $0, and it is already enough art for build-order steps 1 through 3.**
+3. **Run the screenshot test.** ★ Rewritten by
+   [#17](https://github.com/ssalter21/tower-defense-game/issues/17). The original test compared publishers; the
+   walking skeleton uses one, so coherence is free by construction and the test has no subject. It survives as
+   an **import-pipeline acceptance check** instead, living as eight rows on
+   [#11](https://github.com/ssalter21/tower-defense-game/issues/11)'s Tier 3 landmark table — floor gaps,
+   magenta, foot sliding, scrub direction, fast-forward rate, fire-vs-clip, death clip, and a full camera yaw
+   against the no-billboards rule. **Keep the original test for the day a second publisher is introduced** — drop
+   a KayKit skeleton, a Quaternius monster and a Synty Sidekick character into one scene at your intended camera
+   distance and unit scale, and screenshot. It is the right test for that question, and only for that question.
 4. **Buy [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete) — $150.** One transaction, CC0,
    ~57 animated characters, a 161-clip library, `.blend` sources, every future pack included. Because the towers
    are rooted *characters* (§5), this single purchase covers the tower roster and the humanoid creeps from one
