@@ -1,0 +1,66 @@
+# The build gate. Every push, no engine, no human.
+#
+# If this is red, nothing else matters. It is deliberately the only automation
+# in this repository that needs no Unity licence, no multi-gigabyte image and
+# nobody at a keyboard: the engine-side tests have their own runner
+# (tools/run-playmode-tests.ps1) and they are not this.
+#
+# The steps below are the ticket's list in order: build, run the tests, run
+# the scan against the committed AND freshly built assemblies, run the poison
+# suite, run the source-level preprocessor test, and fail on any file over
+# five megabytes. Four of those six live inside `dotnet test`, because they
+# are assertions rather than scripts and they have to be runnable from a shell
+# on a laptop as well as here.
+name: build gate
+
+on: push
+
+jobs:
+  gate:
+    name: simulation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # First, because it is the cheapest and because a repository that has
+      # already swallowed something huge is a repository whose history has to
+      # be rewritten rather than fixed.
+      - name: No tracked file over five megabytes
+        shell: pwsh
+        run: ./tools/check-file-sizes.ps1
+
+      # Into scratch space, NOT into the default output path. The default
+      # sends the build straight into client/Packages/com.ssalter.sim/Runtime/,
+      # which would overwrite the committed assembly before anything had
+      # looked at it -- and the whole arrangement here rests on the tests
+      # exercising the bytes in the repository rather than bytes this runner
+      # made. The tree-clean step at the bottom is what stops that mistake
+      # being reintroduced quietly.
+      - name: The simulation builds
+        run: dotnet build sim --configuration Debug --nologo --output "${{ runner.temp }}/sim-build"
+
+      # This one run covers: the arithmetic and dice tests against the
+      # COMMITTED assembly; the IL scan over the committed assembly and over a
+      # fresh build of the same sources; the poison suite, which builds
+      # sim.poison and requires every banned row to fire from its own
+      # violation; and the source-level ban on conditional compilation.
+      - name: Tests, IL scan on both images, poison suite, preprocessor ban
+        run: dotnet test sim.tests --configuration Debug --nologo
+
+      # A gate that rewrites the repository it is checking is worse than no
+      # gate. Deliberately an assertion and not a cleanup: a step that repairs
+      # what it finds is a step that can never fail, and would have gone green
+      # through every regression it exists to catch.
+      - name: The gate did not rewrite the repository
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "The gate left the working tree dirty:"
+            git status --porcelain
+            git diff --stat
+            exit 1
+          fi
