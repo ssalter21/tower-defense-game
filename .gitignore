@@ -22,8 +22,6 @@ pnpm-debug.log*
 
 # Node
 node_modules/
-dist/
-build/
 .cache/
 coverage/
 .vite/
@@ -37,10 +35,34 @@ venv/
 .mypy_cache/
 *.egg-info/
 
-# Build artifacts (compiled languages)
-bin/
-obj/
-target/
+# Build output -- ANCHORED ON PURPOSE. See issue #33.
+#
+# These used to be written bare (`bin/`, `build/`, `dist/`), which in gitignore
+# syntax matches a directory of that name at ANY depth. A folder called `build`
+# or `bin` inside an imported art pack would then vanish from git entirely --
+# not deleted, not conflicted, just absent, and not even listed by
+# `git status --ignored`. That is a silent content loss, and the leading slash
+# is the whole fix: it pins each pattern to this directory and nowhere else.
+#
+# A subproject that produces build output of its own carries its own ignore
+# file, the way client/.gitignore and tools/hotreload-probe/.gitignore do. That
+# keeps every such rule inside the territory it is true for.
+/bin/
+/obj/
+/target/
+/build/
+/dist/
+
+# Agent worktrees. `git worktree add` puts a COMPLETE second checkout here,
+# Library folder and all -- hundreds of megabytes of engine cache that a single
+# `git add -A` at the root would otherwise happily commit. Ignoring them makes
+# that impossible rather than merely unlikely.
+/.claude/worktrees/
+/.claude/settings.local.json
+
+# Output of tools/run-playmode-tests.ps1. Ignored so the runner's own
+# tree-dirtiness check does not trip over the runner's own artefacts.
+/playmode-results.xml
 
 # Spike render output — regenerate with ScrubStripCapture
 /scrub-strip/

@@ -1,8 +1,12 @@
-# Undo the repo-root's unanchored build-output patterns inside Unity territory.
-# The root .gitignore's bare `bin/ obj/ build/ dist/` match at ANY depth, so an
-# imported art pack shipping a folder of that name would vanish from git with no
-# warning -- not even listed as ignored. The anchored Unity rules below cover
-# what genuinely needs ignoring here. See issue #15.
+# Belt and braces over the repo root's build-output patterns.
+#
+# Those patterns used to be bare (`bin/ obj/ build/ dist/`) and so matched at
+# ANY depth: an imported art pack shipping a folder of that name vanished from
+# git with no warning, not even listed as ignored. They are anchored to the
+# repo root now (issue #33), so nothing outside this file reaches in here any
+# more -- but these negations stay, because the failure they prevent is silent
+# and the cost of keeping them is nil. The anchored Unity rules below cover
+# what genuinely needs ignoring here. See issues #15 and #33.
 !bin/
 !obj/
 !build/
