@@ -24,8 +24,21 @@ same *kind* of place the real sim will. So this probe is:
 - **an embedded UPM package** under `client/Packages/` — as [#15](https://github.com/ssalter21/tower-defense-game/issues/15) decided, and *not* `Assets/Plugins/`, because Unity can treat package contents differently from assets and that difference is part of what is being measured
 - **not called `Sim`** — so it can never be mistaken for the real plug-in
 
-`client/.gitignore` refuses to commit any of the generated output. The probe
-cannot leak into the repo by accident.
+`client/.gitignore` refuses to commit any of the generated **files**.
+
+> **It leaked anyway, once.** That sentence used to end "the probe cannot leak
+> into the repo by accident", and [#29](https://github.com/ssalter21/tower-defense-game/issues/29)
+> found it was false. `client/Packages/packages-lock.json` is **tracked**, and
+> Unity records the probe in it as an embedded dependency the moment it is
+> installed. A `.gitignore` has no authority over what a tracked file says
+> about an ignored one. The probe was installed when the Unity project was
+> first committed, so the lockfile shipped naming a package no clone could
+> ever contain — and every clone since has had Unity strip it straight back
+> out, producing a diff on the very first run.
+>
+> **So: while the probe is installed, `packages-lock.json` will show a diff.
+> That is expected. Never commit it.** After `-Remove`, let Unity refresh once
+> and the lockfile returns to clean on its own.
 
 ## Use
 

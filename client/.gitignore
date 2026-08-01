@@ -132,7 +132,24 @@ InitTestScene*.unity*
 # project and must never be committed -- it is a stand-in for Sim.dll, and a
 # committed stand-in is exactly the thing someone later mistakes for the real
 # plug-in. Ignored by construction rather than by remembering.
+#
+# NOTE: this ignores the probe's FILES, and that is all a .gitignore can do.
+# It cannot stop packages-lock.json -- a TRACKED file -- from recording the
+# probe as a dependency while it is installed. It did exactly that once (see
+# issue #29), and the lockfile then named a package no clone could ever
+# contain. Expect a lockfile diff for as long as the probe is installed, and
+# never commit it. Same shape as the Sim.dll.meta hazard above: ignore rules
+# govern untracked files, not what a tracked file says about them.
 /Packages/com.ssalter.hotreloadprobe/
 /Packages/com.ssalter.hotreloadprobe.meta
 /Assets/Editor/HotReloadProbeLog.cs
 /Assets/Editor/HotReloadProbeLog.cs.meta
+
+# Scene-template state: Unity writes this into ProjectSettings/, but its
+# contents are UserSettings/-class -- per-user template pin states plus a
+# type list re-derived from whatever packages are installed. Nothing
+# references it, it has no .meta, and Unity rebuilds it on demand, so none of
+# the reasons that force Sim.dll to be committed apply. Ignored so it stops
+# showing up untracked in every clone forever, which is how people learn to
+# stop reading `git status`.
+/ProjectSettings/SceneTemplateSettings.json
