@@ -16,7 +16,11 @@
     netstandard2.1 with no engine reference, exactly as issue #15 decided.
 
     It is deliberately NOT named Sim, so it can never be confused with the
-    real plug-in, and client/.gitignore refuses to commit any of it.
+    real plug-in, and client/.gitignore refuses to commit any of its files.
+
+    NOTE: while installed, the probe WILL show up in the tracked file
+    client/Packages/packages-lock.json, which .gitignore cannot prevent.
+    That diff is expected -- never commit it. See issue #29.
 
 .EXAMPLE
     ./tools/hotreload-probe/probe.ps1 -Install
@@ -136,6 +140,10 @@ if ($Remove) {
     Remove-Item (Join-Path $SrcDir 'bin'), (Join-Path $SrcDir 'obj'), $ProbeCs `
         -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "Probe removed." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Let Unity refresh once, then check: client/Packages/packages-lock.json" -ForegroundColor Yellow
+    Write-Host "should go back to clean on its own. If it still names" -ForegroundColor Yellow
+    Write-Host "com.ssalter.hotreloadprobe, do NOT commit it -- see issue #29." -ForegroundColor Yellow
     exit 0
 }
 
