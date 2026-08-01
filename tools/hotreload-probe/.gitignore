@@ -1,0 +1,4 @@
+# Probe.cs is regenerated with a fresh stamp on every build, so committing it
+# would mean every -Bump shows up as a diff. probe.ps1 writes it; nothing reads
+# it but the compiler.
+/src/Probe.cs
