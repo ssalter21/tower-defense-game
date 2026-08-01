@@ -49,10 +49,16 @@ if ($tracked.Count -eq 0) {
     throw "git ls-files reported no tracked files in $repoRoot. A check that inspects nothing is not a check."
 }
 
+# Sizes come from System.IO rather than Get-Item, and that is not a style
+# preference. PowerShell's file provider treats a leading dot as "hidden" on
+# Linux, so Get-Item without -Force finds .gitattributes on Windows and throws
+# on it in continuous integration -- which is how the very first run of this
+# gate went red. System.IO has no hidden-file, wildcard or provider semantics
+# to differ across platforms.
 $oversized = foreach ($path in $tracked) {
-    $full = Join-Path $repoRoot $path
-    if (Test-Path -LiteralPath $full -PathType Leaf) {
-        $length = (Get-Item -LiteralPath $full).Length
+    $full = [System.IO.Path]::Combine($repoRoot, $path)
+    if ([System.IO.File]::Exists($full)) {
+        $length = [System.IO.FileInfo]::new($full).Length
         if ($length -gt $LimitBytes) {
             [pscustomobject]@{ Path = $path; Bytes = $length }
         }
