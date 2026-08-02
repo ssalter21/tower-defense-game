@@ -35,6 +35,17 @@ jobs:
         shell: pwsh
         run: ./tools/check-file-sizes.ps1
 
+      # A client-side check in an engine-free gate, which is only surprising
+      # until you notice it never launches Unity: the expensive settings are
+      # recorded in serialized YAML, and reading YAML needs no licence, no
+      # project lock and nobody at a keyboard. Most of these arrived as
+      # template defaults nobody chose, which is exactly why a one-time
+      # confirmation is not enough -- a default nobody chose is a default
+      # nobody would notice changing.
+      - name: The client's expensive project settings are what was decided
+        shell: pwsh
+        run: ./tools/check-project-settings.ps1
+
       # Into scratch space, NOT into the default output path. The default
       # sends the build straight into client/Packages/com.ssalter.sim/Runtime/,
       # which would overwrite the committed assembly before anything had
