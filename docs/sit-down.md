@@ -76,16 +76,44 @@ The match ends on tick 1852. Twelve of forty creeps get through.
 | 11 | **Yaw the camera through all six snaps** with Q and E, parked at tick 900 | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule |
 | 12 | Double-click the build on a clean machine — one that never cloned this repository and has no editor on it | Missing assembly, or a runtime prompt |
 
-## Row 4 is the one worth defending
+## Rows 4 and 5 are assertions now, and this is why
 
-It is the same failure as row 5, and it is the *visible* one. Row 5 asks whether
-a walk cycle sped up, which is a judgement about a thing that is already moving;
-row 4 asks whether legs went backwards, which is not a judgement at all.
+**They were run, and they came back "hard to tell".** Every other row of the
+twelve was called on the first sitting. These two were not, and the reason is
+not that the developer did not look — it is that both rows ask whether something
+*already in motion* is moving at the right rate, and a walk cycle at thirty hertz
+does not hold still to be judged. Row 4 was written believing it asked a
+yes-or-no question. In front of the build it turned out to ask a judgement, which
+is the thing this file spends its opening paragraph refusing to accept.
 
-It is also the only place in the whole suite — every tier of it — where a human
-can catch the animation decision being wrong. Nothing else looks at whether the
-view holds a playback head of its own. If exactly one row of these twelve gets
-looked at properly, it is this one.
+So they left behind an assertion, which is what the closing section of this file
+says to do. `client/Assets/Tests/PlayMode/LocomotionTests.cs`:
+
+- `ScrubbingBackwardsWalksTheLegsBackwards` — seeks to tick 900, seeks back a
+  tick, and requires the creep to stand further back **and** its legs to be
+  further back through the cycle.
+- `FastForwardCyclesTheLegsWithTheGroundAndNotTheClock` — runs the same half
+  second of frames at 1x and at 8x, requires eight times the ticks, and requires
+  every walking creep's phase to stay inside the ground it actually covered.
+
+Both rest on one invariant a clock-driven view cannot satisfy: **the walk phase
+is what the snapshot's distance says it is**, not what the last frame plus some
+elapsed time says.
+
+**They were watched failing.** Feeding `CreepView.Pose` a wall-clock value
+instead of the snapshot distance — one argument at `MatchView.DrawCreeps` — turns
+exactly these two red and **leaves all seventy other tests green**, which is also
+the measurement of what was missing: nothing else in any tier noticed the view
+being rewired to a clock. The component seam was already covered
+(`PlayablesSamplingTests`, `RealRigSamplingTests`, `PlayableHeadPoisonTests` —
+a clip told a time poses at that time, forwards or backwards, and never advances
+on its own). What was never covered was the wiring between the match and that
+clip, and the wiring is what rows 4 and 5 were looking at.
+
+**What this does not do is retire the rows.** They stay in the twelve. An
+assertion knows the phase is right; only a person knows the creep looks like it
+is walking. But the load-bearing half — the half where the animation bet is
+lost — no longer depends on anyone being able to tell.
 
 ## The reference image
 
@@ -129,3 +157,8 @@ that *can* be caught by an assertion should leave behind an assertion — that i
 what happened the first time these frames were rendered, when the towers turned
 out to be lying on their side and `EveryModelStandsTheWayItWasImported` was
 written.
+
+It happened a second time on the first real sitting, and in a more useful way:
+rows 4 and 5 were not failed, they were found **unanswerable by eye**, and
+`LocomotionTests` is what they left behind. A row that cannot be judged is worth
+as much as a row that fails — both mean the check is not where it needs to be.
