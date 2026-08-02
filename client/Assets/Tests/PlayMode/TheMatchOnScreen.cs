@@ -39,14 +39,41 @@ namespace Tests.PlayMode
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
-            var view = host.AddComponent<MatchView>();
-            view.Begin(
+            return Begin(
+                host,
                 StreamingContent.ReadMap(),
                 types,
                 StreamingContent.ReadDefense(types),
                 StreamingContent.ReadWave(types),
-                Seed,
-                Art());
+                Seed);
+        }
+
+        /// <summary>
+        /// A match, drawn, on the four things and the seed the caller names
+        /// rather than the shipped ones.
+        /// </summary>
+        /// <remarks>
+        /// For the fixture that watches a match somebody else recorded — the
+        /// parity run reads the map, the defense, the wave and the seed out of
+        /// <c>content/match.replay</c>, so what it draws is the command line's
+        /// match and not this file's. The type table is the exception and comes
+        /// from the shipped content, because it is what the record is replayed
+        /// <i>against</i> rather than something stored in it: the replay gate
+        /// exists to refuse a record whose content hash is not this build's,
+        /// and a table taken out of the record would have nothing to refuse.
+        /// The art stays here, because which models and clips a match is drawn
+        /// with is the one thing this class is for.
+        /// </remarks>
+        public static MatchView Begin(
+            GameObject host,
+            HexMap map,
+            UnitTypeTable types,
+            TowerLayout defense,
+            WaveScript wave,
+            ulong seed)
+        {
+            var view = host.AddComponent<MatchView>();
+            view.Begin(map, types, defense, wave, seed, Art());
 
             return view;
         }
