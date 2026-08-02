@@ -222,5 +222,19 @@ namespace Sim
 
             return new TowerLayout(towers.ToArray());
         }
+
+        /// <summary>
+        /// The same defense, arriving from a stored record instead of from text.
+        /// </summary>
+        /// <remarks>
+        /// There is no order assertion here, and that is not a gap:
+        /// <see cref="GhostRecord"/> asserts ascending <c>(r, q)</c> over the
+        /// bytes as it reads them, which is the same order this file asserts over
+        /// rows and columns -- <c>r</c> is the row, and the offset conversion is
+        /// monotone in the column within a row. Re-checking it here would be a
+        /// second implementation of one rule, and the maps the two disagreed
+        /// about would be the interesting ones.
+        /// </remarks>
+        internal static TowerLayout FromRecord(PlacedTower[] towers) => new TowerLayout(towers);
     }
 }

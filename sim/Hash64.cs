@@ -149,6 +149,56 @@ namespace Sim
         public Hash64 Add(int high, int low) =>
             Add(unchecked(((long)high << 32) | (long)(uint)low));
 
+        /// <summary>
+        /// Folds a range of bytes in, one octet at a time. This is plain FNV-1a
+        /// over those bytes and nothing else.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the one place hashing bytes is right, and the remarks on
+        /// <see cref="Hash64"/> explain why it is wrong everywhere else.</b> A
+        /// content hash folds parsed integers because the bytes it would
+        /// otherwise fold are authored text, where reindenting a column is not a
+        /// change to anything. A record id folds bytes because the bytes
+        /// <i>are</i> the record: the format has one writer, fixed-width fields
+        /// and a canonical array order, so two records with the same meaning have
+        /// the same bytes by construction and there is no formatting left for a
+        /// byte fold to be fooled by.
+        /// </para>
+        /// </remarks>
+        public Hash64 Add(byte[] bytes, int start, int count)
+        {
+            if (bytes is null)
+            {
+                throw new ArgumentNullException(nameof(bytes));
+            }
+
+            if (start < 0 || count < 0 || start > bytes.Length - count)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(start),
+                    "["
+                    + start.ToString(CultureInfo.InvariantCulture)
+                    + ", "
+                    + count.ToString(CultureInfo.InvariantCulture)
+                    + ") is not inside an array of "
+                    + bytes.Length.ToString(CultureInfo.InvariantCulture)
+                    + " bytes.");
+            }
+
+            ulong hash = Value;
+
+            unchecked
+            {
+                for (int index = start; index < start + count; index++)
+                {
+                    hash = (hash ^ bytes[index]) * Prime;
+                }
+            }
+
+            return new Hash64(hash);
+        }
+
         public static bool operator ==(Hash64 a, Hash64 b) => a.Value == b.Value;
 
         public static bool operator !=(Hash64 a, Hash64 b) => a.Value != b.Value;

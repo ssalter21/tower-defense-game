@@ -220,5 +220,36 @@ namespace Sim
 
             return new WaveScript(orders.ToArray(), (int)total);
         }
+
+        /// <summary>
+        /// The same wave, arriving from a stored record instead of from text.
+        /// </summary>
+        /// <remarks>
+        /// The canonical order and the uniqueness of <c>(tick, type)</c> are
+        /// asserted by <see cref="WaveRecord"/> over the bytes, for the same
+        /// reason the tower order is: one rule, one implementation, checked where
+        /// the thing being checked actually is.
+        /// </remarks>
+        internal static WaveScript FromRecord(UnitOrder[] orders)
+        {
+            long total = 0;
+
+            for (int index = 0; index < orders.Length; index++)
+            {
+                total += orders[index].Count;
+            }
+
+            if (orders.Length == 0)
+            {
+                throw new ContentException("wave record", 0, "sends nothing at all.");
+            }
+
+            if (total > int.MaxValue)
+            {
+                throw new ContentException("wave record", 0, "sends more units than an integer can count.");
+            }
+
+            return new WaveScript(orders, (int)total);
+        }
     }
 }

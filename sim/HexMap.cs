@@ -126,8 +126,97 @@ namespace Sim
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var grid = new Grid(source, DataText.SplitLines(text));
+            return FromGrid(new Grid(source, DataText.SplitLines(text)));
+        }
 
+        /// <summary>
+        /// Builds a map from the parsed grid itself -- width, height and one
+        /// byte per cell, row-major -- which is exactly what a replay bundle
+        /// inlines and exactly what <see cref="MapHash"/> covers.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the same corridor assertion, not a second one.</b> A map
+        /// arriving as bytes inside a stored replay is checked one hex wide and
+        /// never branching by the identical code that checks a map arriving as
+        /// text, because a second implementation is a second opinion and the
+        /// interesting maps are the ones the two would disagree about.
+        /// </para>
+        /// <para>
+        /// Faults are <see cref="ContentException"/> rather than a record error
+        /// for the same reason: what is wrong with the grid is wrong with the
+        /// grid however it arrived. The <paramref name="source"/> is what names
+        /// where it came from.
+        /// </para>
+        /// </remarks>
+        public static HexMap FromCells(string source, int width, int height, byte[] cells)
+        {
+            if (source is null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (cells is null)
+            {
+                throw new ArgumentNullException(nameof(cells));
+            }
+
+            if (width < 1 || height < 1)
+            {
+                throw new ContentException(
+                    source,
+                    0,
+                    "is "
+                    + width.ToString(CultureInfo.InvariantCulture)
+                    + " by "
+                    + height.ToString(CultureInfo.InvariantCulture)
+                    + ", which has no grid in it at all.");
+            }
+
+            if ((long)width * height != cells.Length)
+            {
+                throw new ContentException(
+                    source,
+                    0,
+                    "says it is "
+                    + width.ToString(CultureInfo.InvariantCulture)
+                    + " by "
+                    + height.ToString(CultureInfo.InvariantCulture)
+                    + " and carries "
+                    + cells.Length.ToString(CultureInfo.InvariantCulture)
+                    + " cells. A grid whose shape and contents disagree has no unambiguous reading.");
+            }
+
+            var parsed = new MapCell[cells.Length];
+
+            for (int index = 0; index < cells.Length; index++)
+            {
+                parsed[index] = ReadCellByte(source, width, index, cells[index]);
+            }
+
+            return FromGrid(new Grid(source, width, height, parsed));
+        }
+
+        private static MapCell ReadCellByte(string source, int width, int index, byte value)
+        {
+            if (value > (byte)MapCell.Exit)
+            {
+                throw new ContentException(
+                    source,
+                    (index / width) + 1,
+                    "has "
+                    + value.ToString(CultureInfo.InvariantCulture)
+                    + " at column "
+                    + ((index % width) + 1).ToString(CultureInfo.InvariantCulture)
+                    + ". A cell byte is 0 for ground, 1 for corridor, 2 for the entrance or 3 for the "
+                    + "exit, and a byte outside that range is refused rather than read as ground.");
+            }
+
+            return (MapCell)value;
+        }
+
+        private static HexMap FromGrid(Grid grid)
+        {
             Hash64 hash = Hash64.Start(HashLabel).Add(grid.Width).Add(grid.Height);
 
             for (int index = 0; index < grid.Cells.Length; index++)
@@ -219,6 +308,20 @@ namespace Sim
                         Cells[(row * Width) + column] = ReadCell(source, _firstLine + row, column, line[column]);
                     }
                 }
+            }
+
+            /// <summary>
+            /// A grid that is already cells. The line numbers in any message are
+            /// grid rows counted from one, because bytes inside a record have no
+            /// lines for them to be offset from.
+            /// </summary>
+            internal Grid(string source, int width, int height, MapCell[] cells)
+            {
+                _source = source;
+                _firstLine = 1;
+                Width = width;
+                Height = height;
+                Cells = cells;
             }
 
             internal int Width { get; }

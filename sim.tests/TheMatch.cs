@@ -44,6 +44,31 @@ public static class TheMatch
         return new Match(Map(), Layout(types), Wave(types), seed);
     }
 
+    /// <summary>The committed defense, recorded.</summary>
+    public static GhostRecord Ghost(UnitTypeTable types) => GhostRecord.Of(Map(), Layout(types), types);
+
+    /// <summary>The committed wave, recorded.</summary>
+    public static WaveRecord WaveOf(UnitTypeTable types) => WaveRecord.Of(Wave(types), types);
+
+    /// <summary>
+    /// The committed unit types with exactly one number moved -- a ruleset that
+    /// has been retuned. Every id and every role is unchanged, so records made
+    /// against it parse perfectly and only the content hash tells them apart,
+    /// which is the whole situation the replay gate exists for.
+    /// </summary>
+    public static UnitTypeTable RetunedTypes()
+    {
+        string text = File.ReadAllText(RepoLayout.UnitsFile);
+        string retuned = text.Replace(
+            "unit   1   grunt   moving  200",
+            "unit   1   grunt   moving  201",
+            StringComparison.Ordinal);
+
+        Assert.NotEqual(text, retuned);
+
+        return UnitTypeTable.Parse(retuned);
+    }
+
     /// <summary>Everything a match said happened, in the order it said it.</summary>
     public sealed class EventLog : IMatchEvents
     {
