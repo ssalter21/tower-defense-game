@@ -7,8 +7,9 @@ namespace Sim
 {
     /// <summary>
     /// The handful of ticks in a match that anybody wants to be told about: the
-    /// first kill, the first pass, the shot that lost its target, the first
-    /// leak, and the last creep to die.
+    /// shot that lost its target, the first pass, the first leak, and the last
+    /// creep to die. Those four and no more, because those four are the ones the
+    /// sit-down checklist is written against.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -16,7 +17,7 @@ namespace Sim
     /// sit-down checklist that ends this slice is written against them, which is
     /// why it can say "drag to 412 and back to 400" instead of "hunt for the
     /// moment" -- and why the table is committed rather than printed and thrown
-    /// away. Regenerating it after a content change is a diff of five rows, and
+    /// away. Regenerating it after a content change is a diff of four rows, and
     /// a checklist pointed at a tick that has moved goes stale loudly rather
     /// than sending somebody to look at the wrong second of the match.
     /// </para>
@@ -40,9 +41,6 @@ namespace Sim
     /// </remarks>
     public sealed class Landmarks : IMatchEvents
     {
-        /// <summary>The tick the first creep began dying on.</summary>
-        public const string FirstKill = "first-kill";
-
         /// <summary>The tick a fast group first drew ahead of a slow one.</summary>
         public const string FirstOvertake = "first-overtake";
 
@@ -70,7 +68,6 @@ namespace Sim
         /// </summary>
         private static readonly string[] Order =
         {
-            FirstKill,
             FirstOvertake,
             Orphaned,
             FirstLeak,
@@ -219,11 +216,7 @@ namespace Sim
         }
 
         /// <inheritdoc/>
-        public void CreepDied(int creepId)
-        {
-            Note(FirstKill, creepId, 0);
-            Replace(LastCreepDies, creepId, 0);
-        }
+        public void CreepDied(int creepId) => Replace(LastCreepDies, creepId, 0);
 
         /// <inheritdoc/>
         public void CreepLeaked(int creepId) => Note(FirstLeak, creepId, 0);

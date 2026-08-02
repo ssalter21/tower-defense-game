@@ -27,7 +27,6 @@
 # who   : the entity it happened to -- a creep, or a projectile
 # other : the other entity involved, or zero where there is only one
 
-landmark  first-kill                133      7      0
 landmark  first-overtake            366     25     19
 landmark  projectile-orphaned       224     23      0
 landmark  first-leak                551     29      0

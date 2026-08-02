@@ -204,7 +204,7 @@ public class LandmarkTests
     {
         Landmarks landmarks = TheMatch.LandmarksOfTheCommittedRun();
 
-        Assert.Equal(5, landmarks.Rows.Count);
+        Assert.Equal(4, landmarks.Rows.Count);
         Assert.Null(landmarks.Missing);
 
         foreach (Landmark landmark in landmarks.Rows)
@@ -213,9 +213,16 @@ public class LandmarkTests
             Assert.True(landmark.Who > 0, $"{landmark.Name} names no entity.");
         }
 
-        Assert.True(
-            TickOf(Landmarks.FirstKill) < TickOf(Landmarks.LastCreepDies),
-            "The first kill is not before the last one.");
+        // The last creep to die is the last thing any of these can be about, so
+        // every other row sits at or before it.
+        int last = TickOf(Landmarks.LastCreepDies);
+
+        foreach (Landmark landmark in landmarks.Rows)
+        {
+            Assert.True(
+                landmark.Tick <= last,
+                $"{landmark.Name} is on tick {landmark.Tick}, after the last creep died on {last}.");
+        }
     }
 
     private static int TickOf(string name)

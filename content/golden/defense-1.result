@@ -3,7 +3,6 @@ seed       20260801
 defense    5FEF8A8296DACE87, read at defense record format 1
 wave       44C52C885C1A75C2
 result     12 of 40 leaked, tick 1852 (61 seconds at 30 ticks a second), state CA3F66473C4B975D
-landmark  first-kill                133      7      0
 landmark  first-overtake            366     25     19
 landmark  projectile-orphaned       224     23      0
 landmark  first-leak                551     29      0
