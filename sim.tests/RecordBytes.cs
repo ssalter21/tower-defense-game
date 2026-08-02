@@ -36,6 +36,16 @@ public static class RecordBytes
     /// <summary>Where a wave's order array starts, relative to the start of that record.</summary>
     public const int WaveOrdersOffset = RecordFormat.HeaderBytes + 2;
 
+    /// <summary>Where a bundle's inlined map cells start.</summary>
+    public const int BundleCellsOffset = RecordFormat.HeaderBytes + 8 + 2 + 2;
+
+    /// <summary>Where the defense inside a bundle starts.</summary>
+    public static int GhostIn(ReplayBundle bundle) =>
+        BundleCellsOffset + (bundle.Map.Width * bundle.Map.Height);
+
+    /// <summary>Where the wave inside a bundle starts.</summary>
+    public static int WaveIn(ReplayBundle bundle) => GhostIn(bundle) + bundle.Ghost.ToBytes().Length;
+
     /// <summary>The same bytes with one of them replaced.</summary>
     public static byte[] With(byte[] bytes, int offset, byte value)
     {

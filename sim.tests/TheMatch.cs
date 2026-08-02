@@ -50,6 +50,13 @@ public static class TheMatch
     /// <summary>The committed wave, recorded.</summary>
     public static WaveRecord WaveOf(UnitTypeTable types) => WaveRecord.Of(Wave(types), types);
 
+    /// <summary>The committed match as one self-contained replay bundle.</summary>
+    public static ReplayBundle Bundle(ulong seed = Seed)
+    {
+        UnitTypeTable types = Types();
+        return ReplayBundle.Of(Map(), Layout(types), Wave(types), types, seed);
+    }
+
     /// <summary>
     /// The committed unit types with exactly one number moved -- a ruleset that
     /// has been retuned. Every id and every role is unchanged, so records made
