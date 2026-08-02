@@ -1,0 +1,7 @@
+{
+  "name": "com.ssalter.sim",
+  "version": "0.0.0",
+  "displayName": "Simulation",
+  "description": "The deterministic simulation, compiled outside Unity by dotnet build from sim/ and consumed here as a managed plug-in. Runtime/Sim.dll and Runtime/Sim.pdb are committed build output, not build leftovers: Sim.dll.meta carries the Auto Reference off setting and Unity deletes orphaned .meta files, so an ignored assembly would silently return auto-reference on at every fresh clone. The version field above is pinned inert at 0.0.0 on purpose -- a second hand-bumped number shadowing the record's sim_version is exactly the pattern the record format spent a ticket engineering out. Which simulation this is, is answered by the bytes, not by a number someone remembered to increment.",
+  "unity": "6000.3"
+}

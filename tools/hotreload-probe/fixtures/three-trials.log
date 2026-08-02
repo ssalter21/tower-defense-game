@@ -1,0 +1,152 @@
+Imported 'GUID: f30db7b97c27af94d8e13fd1d5094541' -> (Import Result ID: 'b0c5b6fe2017a9d5d646ea9d7a1d89b2') in 0.008 seconds [static dependencies only]. Details - ImportResultOutputID=f20a9cf5f562b997a647ac142aa11ea4 DependenciesID=67fb3e123c52c45e4f67857c7038d1ca StaticDependenciesID=471ea586ea37bbe428be0c0ef609355d 
+Refreshing native plugins compatible for Editor in 49.67 ms, found 4 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[hot-reload probe] 20:12:03.379 (domain reload) -- plug-in stamp: build #1 at 2026-08-01 20:08:26.743
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+HotReloadProbeLog:Report (string) (at Assets/Editor/HotReloadProbeLog.cs:50)
+HotReloadProbeLog:.cctor () (at Assets/Editor/HotReloadProbeLog.cs:25)
+System.Runtime.CompilerServices.RuntimeHelpers:RunClassConstructor (System.RuntimeTypeHandle)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.ReadOnlySpan`1<intptr>)
+
+(Filename: Assets/Editor/HotReloadProbeLog.cs Line: 50)
+
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.348 seconds
+Domain Reload Profiling: 3096ms
+	BeginReloadAssembly (1093ms)
+		DisableScriptedObjects (222ms)
+		CreateAndSetChildDomain (618ms)
+	RebuildCommonClasses (10ms)
+	RebuildNativeTypeToScriptingClass (15ms)
+	initialDomainReloadingComplete (89ms)
+	LoadAllAssembliesAndSetupDomain (540ms)
+		LoadAssemblies (348ms)
+		AnalyzeDomain (206ms)
+			TypeCache.Refresh (103ms)
+				TypeCache.ScanAssembly (89ms)
+			BuildScriptInfoCaches (95ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (1348ms)
+		SetupLoadedEditorAssemblies (0ms)
+			BeforeProcessingInitializeOnLoad (158ms)
+			ProcessInitializeOnLoadAttributes (328ms)
+			ProcessInitializeOnLoadMethodAttributes (117ms)
+			AfterProcessingInitializeOnLoad (9ms)
+		AwakeInstancesAfterBackupRestoration (375ms)
+Importing 'GUID: c1ef25504d8690542b96d7f48297f89f - Path: Packages/com.ssalter.hotreloadprobe/Runtime/HotReloadProbe.pdb' with importer (DefaultImporter)
+Imported 'GUID: c1ef25504d8690542b96d7f48297f89f' -> (Import Result ID: 'de11eb4fba765a66807be9d73b062694') in 0.033 seconds [static dependencies only]. Details - ImportResultOutputID=93a7cab9e8929bde32c52154996d0b19 DependenciesID=9057e7f1db3f1a762767b5f8f66251c8 StaticDependenciesID=764bf3a8a7defb019ee06a2b2ba90c64 
+Importing 'GUID: f7b4031cfab7f78448d97b8d5eac9813 - Path: Packages/com.ssalter.hotreloadprobe/package.json' with importer (PackageManifestImporter)
+Imported 'GUID: f7b4031cfab7f78448d97b8d5eac9813' -> (Import Result ID: 'd996b8c030564e749ad2a4eb13db17ab') in 0.008 seconds [static dependencies only]. Details - ImportResultOutputID=ef4f188878ef056d7db0e19445f8f91e DependenciesID=3b41811093642bf4277b3a78fcce5a66 StaticDependenciesID=cd137261088040bfb8593b26d4e7d284 
+No restricted APIs configured; Validation skipped.
+Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
+
+Asset Pipeline Refresh (id=87fa0a045d1051b4e8fd5252aa1b7e82): Total: 26.731 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
+Begin MonoManager ReloadAssembly
+Refreshing native plugins compatible for Editor in 2.09 ms, found 4 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[hot-reload probe] 20:16:06.586 (domain reload) -- plug-in stamp: build #2 at 2026-08-01 20:14:02.729
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+HotReloadProbeLog:Report (string) (at Assets/Editor/HotReloadProbeLog.cs:50)
+HotReloadProbeLog:.cctor () (at Assets/Editor/HotReloadProbeLog.cs:25)
+System.Runtime.CompilerServices.RuntimeHelpers:RunClassConstructor (System.RuntimeTypeHandle)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.ReadOnlySpan`1<intptr>)
+
+(Filename: Assets/Editor/HotReloadProbeLog.cs Line: 50)
+
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.206 seconds
+Domain Reload Profiling: 2461ms
+	BeginReloadAssembly (742ms)
+		DisableScriptedObjects (152ms)
+		CreateAndSetChildDomain (415ms)
+	RebuildCommonClasses (7ms)
+	RebuildNativeTypeToScriptingClass (13ms)
+	initialDomainReloadingComplete (49ms)
+	LoadAllAssembliesAndSetupDomain (444ms)
+		LoadAssemblies (233ms)
+		AnalyzeDomain (185ms)
+			TypeCache.Refresh (91ms)
+				TypeCache.ScanAssembly (81ms)
+			BuildScriptInfoCaches (87ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (1206ms)
+		SetupLoadedEditorAssemblies (0ms)
+			BeforeProcessingInitializeOnLoad (136ms)
+			ProcessInitializeOnLoadAttributes (288ms)
+			ProcessInitializeOnLoadMethodAttributes (107ms)
+			AfterProcessingInitializeOnLoad (7ms)
+		AwakeInstancesAfterBackupRestoration (345ms)
+Importing 'GUID: c1ef25504d8690542b96d7f48297f89f - Path: Packages/com.ssalter.hotreloadprobe/Runtime/HotReloadProbe.pdb' with importer (DefaultImporter)
+Imported 'GUID: c1ef25504d8690542b96d7f48297f89f' -> (Import Result ID: 'd5414d58c92f4c4d18fb12c93b63af56') in 0.003 seconds [static dependencies only]. Details - ImportResultOutputID=93a7cab9e8929bde32c52154996d0b19 DependenciesID=ba900ba4aeafb8379102421aabd9d612 StaticDependenciesID=fd071e669fbec69bea2c8a438c3a8763 
+No restricted APIs configured; Validation skipped.
+Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
+
+Asset Pipeline Refresh (id=d2db1aa11180b034bba9a10d7e1ceef2): Total: 17.800 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
+Begin MonoManager ReloadAssembly
+Refreshing native plugins compatible for Editor in 58.69 ms, found 4 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[hot-reload probe] 20:32:22.584 (domain reload) -- plug-in stamp: build #3 at 2026-08-01 20:17:35.675
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+HotReloadProbeLog:Report (string) (at Assets/Editor/HotReloadProbeLog.cs:50)
+HotReloadProbeLog:.cctor () (at Assets/Editor/HotReloadProbeLog.cs:25)
+System.Runtime.CompilerServices.RuntimeHelpers:RunClassConstructor (System.RuntimeTypeHandle)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.ReadOnlySpan`1<intptr>)
+
+(Filename: Assets/Editor/HotReloadProbeLog.cs Line: 50)
+
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.254 seconds
+Domain Reload Profiling: 2596ms
+	BeginReloadAssembly (742ms)
+		DisableScriptedObjects (173ms)
+		CreateAndSetChildDomain (417ms)
+	RebuildCommonClasses (7ms)
+	RebuildNativeTypeToScriptingClass (13ms)
+	initialDomainReloadingComplete (47ms)
+	LoadAllAssembliesAndSetupDomain (532ms)
+		LoadAssemblies (313ms)
+		AnalyzeDomain (188ms)
+			TypeCache.Refresh (89ms)
+				TypeCache.ScanAssembly (80ms)
+			BuildScriptInfoCaches (91ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (1255ms)
+		SetupLoadedEditorAssemblies (0ms)
+			BeforeProcessingInitializeOnLoad (148ms)
+			ProcessInitializeOnLoadAttributes (309ms)
+			ProcessInitializeOnLoadMethodAttributes (95ms)
+			AfterProcessingInitializeOnLoad (6ms)
+		AwakeInstancesAfterBackupRestoration (361ms)
+Importing 'GUID: c1ef25504d8690542b96d7f48297f89f - Path: Packages/com.ssalter.hotreloadprobe/Runtime/HotReloadProbe.pdb' with importer (DefaultImporter)
+Imported 'GUID: c1ef25504d8690542b96d7f48297f89f' -> (Import Result ID: 'a12bbfde98e8c75b5f64e1b2ad948d13') in 0.008 seconds [static dependencies only]. Details - ImportResultOutputID=93a7cab9e8929bde32c52154996d0b19 DependenciesID=16dc77b26810805d75b9e1377d1a4463 StaticDependenciesID=17a4d788161190385a1663cb82c0e793 
+No restricted APIs configured; Validation skipped.
+Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
+
+Asset Pipeline Refresh (id=f1c6264698c5cfd4fa41b62607e44beb): Total: 22.057 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)

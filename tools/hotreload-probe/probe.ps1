@@ -33,6 +33,12 @@
     time, alt-tab to Unity, and watch the Console for the new stamp.
 
 .EXAMPLE
+    ./tools/hotreload-probe/probe.ps1 -Trial
+    The attended measurement issue #51 wants: rebuild, wait for a HUMAN to
+    alt-tab onto the editor, and time what that did or did not cause. Run it,
+    alt-tab when told, twice. Everything else is done for you.
+
+.EXAMPLE
     ./tools/hotreload-probe/probe.ps1 -Remove
     Deletes every trace of the probe.
 #>
@@ -40,7 +46,17 @@
 param(
     [Parameter(ParameterSetName = 'Install')][switch]$Install,
     [Parameter(ParameterSetName = 'Bump')][switch]$Bump,
-    [Parameter(ParameterSetName = 'Remove')][switch]$Remove
+    [Parameter(ParameterSetName = 'Remove')][switch]$Remove,
+    [Parameter(ParameterSetName = 'Trial', Mandatory)][switch]$Trial,
+    # Two, so one lucky coincidence is not the answer -- issue #51.
+    [Parameter(ParameterSetName = 'Trial')][int]$Trials = 2,
+    # Void trials do not count towards -Trials, but they cannot be unlimited
+    # either or a wrong setup loops until somebody notices.
+    [Parameter(ParameterSetName = 'Trial')][int]$MaxAttempts = 10,
+    # An editor that went 11 minutes on #34 is the reason this is not 60.
+    [Parameter(ParameterSetName = 'Trial')][int]$TimeoutMinutes = 20,
+    # How long to stand there waiting for a human who may have wandered off.
+    [Parameter(ParameterSetName = 'Trial')][int]$AltTabTimeoutSeconds = 180
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,6 +66,12 @@ $Client      = Join-Path $RepoRoot 'client'
 $PackageDir  = Join-Path $Client 'Packages/com.ssalter.hotreloadprobe'
 $RuntimeDir  = Join-Path $PackageDir 'Runtime'
 $CounterFile = Join-Path $PackageDir '.counter'
+# Project-local, not the one under AppData: this is the editor that has client/
+# open, and it is the only log that can say what that editor did.
+$LogPath     = Join-Path $Client 'Logs/Editor.log'
+# Inside the package, so -Remove takes the trial record with everything else and
+# `git status` stays clean of the probe.
+$TrialRecord = Join-Path $PackageDir 'trials.md'
 # The logger lives INSIDE the package, so every file the probe generates sits
 # under the one directory client/.gitignore already refuses. Putting it in
 # Assets/Editor/ instead made Unity generate an Assets/Editor.meta that no
@@ -168,6 +190,275 @@ if ($Remove) {
     Write-Host "Let Unity refresh once, then check: client/Packages/packages-lock.json" -ForegroundColor Yellow
     Write-Host "should go back to clean on its own. If it still names" -ForegroundColor Yellow
     Write-Host "com.ssalter.hotreloadprobe, do NOT commit it -- see issue #29." -ForegroundColor Yellow
+    exit 0
+}
+
+if ($Trial) {
+    if (-not (Test-Path $PackageDir)) {
+        throw "Probe is not installed. Run: ./tools/hotreload-probe/probe.ps1 -Install"
+    }
+    if (-not (Test-Path $LogPath)) {
+        throw ("No editor log at $LogPath.`n" +
+               "Open client/ in the Unity editor first -- this measurement is about a running editor.")
+    }
+
+    Import-Module (Join-Path $PSScriptRoot 'TrialLog.psm1') -Force
+
+    Add-Type @'
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class TrialWin32 {
+    public delegate bool EnumProc(IntPtr h, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc cb, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowTextW(IntPtr h, StringBuilder s, int n);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern bool GetLastInputInfo(ref LI p);
+    [DllImport("kernel32.dll")] public static extern uint GetTickCount();
+    [StructLayout(LayoutKind.Sequential)] public struct LI { public uint cbSize; public uint dwTime; }
+
+    public static string Title(IntPtr h) {
+        var sb = new StringBuilder(1024);
+        GetWindowTextW(h, sb, sb.Capacity);
+        return sb.ToString();
+    }
+    // Seconds since the last keyboard or mouse event anywhere on the machine.
+    // Near zero at the moment of the transition is what says a human did it.
+    public static double IdleSeconds() {
+        var li = new LI(); li.cbSize = (uint)Marshal.SizeOf(li);
+        if (!GetLastInputInfo(ref li)) return -1;
+        return (GetTickCount() - li.dwTime) / 1000.0;
+    }
+    public static List<IntPtr> WindowsOfPid(uint want) {
+        var found = new List<IntPtr>();
+        EnumWindows((h, l) => {
+            if (!IsWindowVisible(h)) return true;
+            uint pid; GetWindowThreadProcessId(h, out pid);
+            if (pid == want && Title(h).Length > 0) found.Add(h);
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+}
+'@
+
+    # Unity's main window does not reliably surface as Process.MainWindowHandle,
+    # so it is found by enumerating the windows the editor process owns.
+    function Find-EditorWindow {
+        $procs = @(Get-Process Unity -ErrorAction SilentlyContinue)
+        if ($procs.Count -eq 0) {
+            throw "No Unity editor is running. Open client/ in the editor, then run -Trial again."
+        }
+        $candidates = foreach ($p in $procs) {
+            foreach ($h in [TrialWin32]::WindowsOfPid([uint32]$p.Id)) {
+                [pscustomobject]@{ Pid = $p.Id; Handle = $h; Title = [TrialWin32]::Title($h) }
+            }
+        }
+        $candidates = @($candidates)
+        if ($candidates.Count -eq 0) {
+            throw "Found $($procs.Count) Unity process(es) but no window. Is the editor still starting up?"
+        }
+        if ($candidates.Count -gt 1) {
+            Write-Host "More than one Unity editor window is open:" -ForegroundColor Yellow
+            $candidates | ForEach-Object { Write-Host "  pid $($_.Pid)  $($_.Title)" }
+            throw ("#34 ran two editors at once and this measurement cannot tell them apart.`n" +
+                   "Close the editors that are not on client/, then run -Trial again.")
+        }
+        return $candidates[0]
+    }
+
+    # The editor keeps the log open, so it has to be read with sharing on.
+    function Read-EditorLog {
+        $stream = [IO.File]::Open($LogPath, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::ReadWrite)
+        try {
+            $reader = New-Object IO.StreamReader($stream)
+            try { return ($reader.ReadToEnd() -split "`r?`n") } finally { $reader.Dispose() }
+        } finally { $stream.Dispose() }
+    }
+
+    function Wait-EditorInBackground($window) {
+        if ([TrialWin32]::GetForegroundWindow() -ne $window.Handle) { return }
+        Write-Host ""
+        Write-Host "The editor is holding the foreground. ALT-TAB AWAY from it now." -ForegroundColor Yellow
+        Write-Host "  (a continuously-focused editor never sees a transition -- that is the" -ForegroundColor DarkYellow
+        Write-Host "   case that took 14 min 47 s on #34, and it is not what this measures)" -ForegroundColor DarkYellow
+        $giveUpAt = (Get-Date).AddSeconds($AltTabTimeoutSeconds)
+        while ([TrialWin32]::GetForegroundWindow() -eq $window.Handle) {
+            if ((Get-Date) -ge $giveUpAt) {
+                throw "The editor still holds the foreground after $AltTabTimeoutSeconds s. Nothing was rebuilt."
+            }
+            Start-Sleep -Milliseconds 200
+        }
+        # Let the editor settle into the background before the rebuild lands.
+        Start-Sleep -Seconds 2
+    }
+
+    $unity = Find-EditorWindow
+    Write-Host ""
+    Write-Host "Editor: pid $($unity.Pid) -- $($unity.Title)"
+    Write-Host "Log   : $LogPath"
+    Write-Host ""
+    Write-Host "This needs you at the keyboard. You will be told exactly when to alt-tab;" -ForegroundColor Cyan
+    Write-Host "everything else -- the timing, the refresh record, and whether the trial" -ForegroundColor Cyan
+    Write-Host "counts at all -- is worked out from the editor's own clock." -ForegroundColor Cyan
+
+    $results = @()
+    $valid = 0
+    $attempt = 0
+
+    while ($valid -lt $Trials -and $attempt -lt $MaxAttempts) {
+        $attempt++
+        Write-Host ""
+        Write-Host ("=" * 68)
+        Write-Host "Attempt $attempt  (valid so far: $valid of $Trials)" -ForegroundColor Cyan
+
+        Wait-EditorInBackground $unity
+
+        $n = 1
+        if (Test-Path $CounterFile) { $n = [int](Get-Content $CounterFile -Raw).Trim() + 1 }
+        Write-Host "Rebuilding the plug-in..."
+        $build = Build-Probe $n
+        $rebuiltAt = Get-Date
+        Write-Host ("  rebuilt at {0:HH:mm:ss.fff}  ({1} ms)  stamp: {2}" -f $rebuiltAt, $build.BuildMs, $build.Stamp)
+
+        Write-Host ""
+        Write-Host ">>> ALT-TAB ONTO THE UNITY EDITOR NOW <<<" -ForegroundColor Green
+        Write-Host "    IMMEDIATELY -- do not read this line first. The editor can start" -ForegroundColor DarkGray
+        Write-Host "    refreshing on its own within a few seconds, and once it has, the" -ForegroundColor DarkGray
+        Write-Host "    trial is void. Hold alt-tab ready before you run this." -ForegroundColor DarkGray
+
+        # Watch for two things at once: the human arriving, and the editor
+        # noticing on its own. Whichever happens first decides what this is.
+        $altTabAt = $null
+        $altTabIdle = $null
+        $deadline = (Get-Date).AddSeconds($AltTabTimeoutSeconds)
+        $pickedUpFirst = $false
+        # The foreground is checked often, because the transition is the thing
+        # being timed. The log is checked rarely: it is a megabyte, and reading
+        # it ten times a second would burn a core on the machine whose editor is
+        # under measurement -- the instrument would be changing the result.
+        $nextLogCheck = (Get-Date).AddSeconds(2)
+        while ((Get-Date) -lt $deadline) {
+            if ([TrialWin32]::GetForegroundWindow() -eq $unity.Handle) {
+                $altTabAt = Get-Date
+                $altTabIdle = [TrialWin32]::IdleSeconds()
+                break
+            }
+            if ((Get-Date) -ge $nextLogCheck) {
+                if (@(Get-ProbeReload -Lines (Read-EditorLog) -Stamp $build.Stamp).Count -gt 0) {
+                    $pickedUpFirst = $true
+                    break
+                }
+                $nextLogCheck = (Get-Date).AddSeconds(2)
+            }
+            Start-Sleep -Milliseconds 100
+        }
+
+        if ($pickedUpFirst) {
+            Write-Host "VOID -- the editor picked the rebuild up before you alt-tabbed." -ForegroundColor Yellow
+            Write-Host "       Not a negative result. Retrying." -ForegroundColor Yellow
+            $results += [pscustomobject]@{ Attempt = $attempt; Verdict = 'no-alt-tab'; Outcome = $null }
+            continue
+        }
+        if ($null -eq $altTabAt) {
+            Write-Host "Nobody alt-tabbed within $AltTabTimeoutSeconds s. Stopping." -ForegroundColor Red
+            break
+        }
+
+        Write-Host ("  alt-tab at {0:HH:mm:ss.fff}   (idle before it: {1:N1} s)" -f $altTabAt, $altTabIdle)
+        if ($altTabIdle -gt 2) {
+            Write-Host "  NOTE: no input for $([math]::Round($altTabIdle,1)) s before the switch --" -ForegroundColor Yellow
+            Write-Host "        that transition may not have come from the keyboard." -ForegroundColor Yellow
+        }
+
+        Write-Host "  waiting for the domain reload (up to $TimeoutMinutes min)..."
+        $reload = $null
+        $refresh = $null
+        $waitUntil = (Get-Date).AddMinutes($TimeoutMinutes)
+        while ((Get-Date) -lt $waitUntil) {
+            $lines = Read-EditorLog
+            $reload = @(Get-ProbeReload -Lines $lines -Stamp $build.Stamp) | Select-Object -First 1
+            if ($reload) {
+                # The record naming the refresh's duration is written after the
+                # reload, and the log is buffered -- so absence here means "not
+                # flushed yet", never "there was no refresh".
+                $refresh = Get-RefreshAfter -Lines $lines -FromIndex $reload.LineIndex
+                if ($refresh) { break }
+            }
+            Start-Sleep -Seconds 2
+        }
+
+        if (-not $reload) {
+            Write-Host "  no reload for this build within $TimeoutMinutes min. Stopping." -ForegroundColor Red
+            break
+        }
+        if (-not $refresh) {
+            Write-Host "  reload seen but its refresh record never flushed. Cannot date the start." -ForegroundColor Red
+            break
+        }
+
+        $outcome = Resolve-TrialOutcome -ReloadAt $reload.ReloadAt -BuiltAt $reload.BuiltAt `
+            -RefreshSeconds $refresh.TotalSeconds -TailSeconds $refresh.TailSeconds -AltTabAt $altTabAt
+
+        Write-Host ("  reload at        {0:HH:mm:ss.fff}   (editor's own clock)" -f $outcome.ReloadAt)
+        Write-Host ("  refresh ran      {0:N3} s, initiated by {1}" -f $refresh.TotalSeconds, $refresh.InitiatedBy)
+        if ($refresh.HasPhaseBreakdown) {
+            Write-Host ("  of which {0:N3} s ran after the reload was logged" -f $refresh.TailSeconds)
+        } else {
+            Write-Host "  no phase breakdown in the record -- the start is an upper bound" -ForegroundColor DarkYellow
+        }
+        Write-Host ("  refresh STARTED  {0:HH:mm:ss.fff}   ({1:N1} s after the rebuild)" -f `
+            $outcome.RefreshStartedAt, ($outcome.RefreshStartedAt - $outcome.BuiltAt).TotalSeconds)
+        Write-Host ("  you alt-tabbed   {0:N1} s after the rebuild" -f ($altTabAt - $outcome.BuiltAt).TotalSeconds)
+
+        if ($outcome.Verdict -eq 'void') {
+            Write-Host ("VOID -- the refresh had already started {0:N1} s before you alt-tabbed." -f `
+                [math]::Abs($outcome.AltTabToRefreshSeconds)) -ForegroundColor Yellow
+            Write-Host ("       You had about {0:N0} s and used {1:N0} s. Alt-tab the INSTANT the prompt appears." -f `
+                ($outcome.RefreshStartedAt - $outcome.BuiltAt).TotalSeconds,
+                ($altTabAt - $outcome.BuiltAt).TotalSeconds) -ForegroundColor Yellow
+            Write-Host "       Not a negative result. Retrying." -ForegroundColor Yellow
+        } else {
+            $valid++
+            Write-Host ("VALID -- alt-tab to refresh start: {0:N1} s" -f $outcome.AltTabToRefreshSeconds) -ForegroundColor Green
+        }
+
+        $results += [pscustomobject]@{ Attempt = $attempt; Verdict = $outcome.Verdict; Outcome = $outcome }
+    }
+
+    Write-Host ""
+    Write-Host ("=" * 68)
+    Write-Host "Trials" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "| # | verdict | rebuilt | alt-tabbed | refresh started | alt-tab -> refresh |"
+    Write-Host "| --- | --- | --- | --- | --- | --- |"
+    $rows = foreach ($r in $results) {
+        if ($null -eq $r.Outcome) {
+            "| $($r.Attempt) | $($r.Verdict) | - | - | - | - |"
+        } else {
+            $o = $r.Outcome
+            "| {0} | {1} | {2:HH:mm:ss.fff} | {3:HH:mm:ss.fff} | {4:HH:mm:ss.fff} | {5:N1} s |" -f `
+                $r.Attempt, $o.Verdict, $o.BuiltAt, $o.AltTabAt, $o.RefreshStartedAt, $o.AltTabToRefreshSeconds
+        }
+    }
+    $rows | ForEach-Object { Write-Host $_ }
+
+    $record = @("# Hot-reload alt-tab trials -- issue #51", "",
+                "Machine clock, and the editor's own clock for the reload.", "",
+                "| # | verdict | rebuilt | alt-tabbed | refresh started | alt-tab -> refresh |",
+                "| --- | --- | --- | --- | --- | --- |") + $rows
+    $record | Set-Content -Path $TrialRecord -Encoding utf8
+    Write-Host ""
+    Write-Host "Written to $TrialRecord (inside the ignored package -- -Remove deletes it)."
+
+    if ($valid -lt $Trials) {
+        Write-Host ""
+        Write-Host "Only $valid of $Trials trials came out valid. Run -Trial again for the rest." -ForegroundColor Yellow
+        exit 1
+    }
     exit 0
 }
 

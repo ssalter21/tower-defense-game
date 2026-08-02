@@ -15,6 +15,30 @@
 # Sim content: byte-stable on every machine
 content/**  text eol=lf
 
+# The generated copy of that content inside the player. It has to be
+# BYTE-IDENTICAL to the authored original -- an edit-mode test compares the two
+# and the map hash is over what the parser read -- so it needs the same line
+# endings, and `content/**` above does not reach it. Without this line the
+# default `text=auto` would give the copy CRLF in a Windows working tree while
+# the original kept LF, and a fresh clone would go red on two files nobody had
+# touched. Same class of trap as the *.replay rule below: a generated file
+# whose bytes a checkout may rewrite is a generated file that does not match
+# what generated it.
+client/Assets/StreamingAssets/**  text eol=lf
+
+# ...except the replay bundles, which are records and not lines of text. The
+# rule above would have git normalise line endings inside a run of bytes whose
+# id is the hash of those bytes, so a checkout on the wrong platform would
+# produce a record that no longer is the record it says it is. This line comes
+# after that one on purpose: the last matching pattern wins.
+#
+# UNANCHORED, AND THAT IS THE FIX RATHER THAN THE SHORTHAND. It used to read
+# `content/*.replay`, which contains a slash and is therefore anchored at the
+# content directory -- so the golden bundles in content/golden/ matched the
+# `content/**` line above instead and would have been line-ending normalised on
+# checkout. A record whose bytes a checkout may rewrite is not a record.
+*.replay  binary
+
 # Binaries -- never diff, never merge
 *.dll binary
 *.pdb binary

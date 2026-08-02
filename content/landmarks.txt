@@ -1,0 +1,33 @@
+# The interesting ticks of one match, as a real run reported them.
+# Regenerate it with tools/run-headless-match.ps1 -Regenerate; never edit it by hand.
+#
+# THIS IS A GENERATED FILE AND IT IS COMMITTED ON PURPOSE. These are the tick
+# numbers nobody knows until the match runs, and the sit-down checklist is written
+# against them -- which is why it can say "drag to 412 and back to 400" instead of
+# "hunt for the moment". Regenerating it after a content change is a diff of four
+# rows, so a checklist pointed at a moment that has moved goes stale loudly.
+#
+# EVERY ROW CAME OUT OF THE EVENT STREAM. The run that produced this pulled no
+# snapshots and inspected nothing: it listened. A moment the simulation does not
+# report is a moment that cannot appear here, which is deliberate -- inferring one
+# from the outside would mean a second copy of a rule, living in a program that
+# would not be rebuilt when the rule changed.
+#
+# The run this came from:
+#
+#   replay bundle format 0, simulation version 1, content 39B848CEFDDCC9CF
+#   seed       20260801
+#   defense    5FEF8A8296DACE87, read at defense record format 1
+#   wave       44C52C885C1A75C2
+#   result     12 of 40 leaked, tick 1852 (61 seconds at 30 ticks a second), state CA3F66473C4B975D
+#
+#         landmark                 tick    who  other
+#
+# tick  : the tick the moment happened on
+# who   : the entity it happened to -- a creep, or a projectile
+# other : the other entity involved, or zero where there is only one
+
+landmark  first-overtake            366     25     19
+landmark  projectile-orphaned       224     23      0
+landmark  first-leak                551     29      0
+landmark  last-creep-dies          1840    107      0

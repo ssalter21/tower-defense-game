@@ -1,0 +1,102 @@
+# The build gate. Every push, no engine, no human.
+#
+# If this is red, nothing else matters. It is deliberately the only automation
+# in this repository that needs no Unity licence, no multi-gigabyte image and
+# nobody at a keyboard: the engine-side tests have their own runner
+# (tools/run-playmode-tests.ps1) and they are not this.
+#
+# The steps below are the ticket's list in order: build, run the tests, run
+# the scan against the committed AND freshly built assemblies, run the poison
+# suite, run the source-level preprocessor test, play the committed replay
+# bundle on the command line, and fail on any file over five megabytes. Four of
+# those live inside `dotnet test`, because they are assertions rather than
+# scripts and they have to be runnable from a shell on a laptop as well as
+# here.
+name: build gate
+
+on: push
+
+jobs:
+  gate:
+    name: simulation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # First, because it is the cheapest and because a repository that has
+      # already swallowed something huge is a repository whose history has to
+      # be rewritten rather than fixed.
+      - name: No tracked file over five megabytes
+        shell: pwsh
+        run: ./tools/check-file-sizes.ps1
+
+      # A client-side check in an engine-free gate, which is only surprising
+      # until you notice it never launches Unity: the expensive settings are
+      # recorded in serialized YAML, and reading YAML needs no licence, no
+      # project lock and nobody at a keyboard. Most of these arrived as
+      # template defaults nobody chose, which is exactly why a one-time
+      # confirmation is not enough -- a default nobody chose is a default
+      # nobody would notice changing.
+      - name: The client's expensive project settings are what was decided
+        shell: pwsh
+        run: ./tools/check-project-settings.ps1
+
+      # The content the player ships with is a generated copy of the content
+      # in content/, committed like a lockfile. There is an edit-mode test that
+      # compares them, but it needs an engine and a licence and this gate has
+      # neither -- and drift between an authored map and the map inside the
+      # build is exactly the failure that would otherwise be found by somebody
+      # wondering why the game disagrees with the tests.
+      - name: The streaming copy of the content matches the authored content
+        shell: pwsh
+        run: ./tools/sync-streaming-content.ps1 -Check
+
+      # Into scratch space, NOT into the default output path. The default
+      # sends the build straight into client/Packages/com.ssalter.sim/Runtime/,
+      # which would overwrite the committed assembly before anything had
+      # looked at it -- and the whole arrangement here rests on the tests
+      # exercising the bytes in the repository rather than bytes this runner
+      # made. The tree-clean step at the bottom is what stops that mistake
+      # being reintroduced quietly.
+      - name: The simulation builds
+        run: dotnet build sim --configuration Debug --nologo --output "${{ runner.temp }}/sim-build"
+
+      # This one run covers: the arithmetic and dice tests against the
+      # COMMITTED assembly; the IL scan over the committed assembly and over a
+      # fresh build of the same sources; the poison suite, which builds
+      # sim.poison and requires every banned row to fire from its own
+      # violation; and the source-level ban on conditional compilation.
+      - name: Tests, IL scan on both images, poison suite, preprocessor ban
+        run: dotnet test sim.tests --configuration Debug --nologo
+
+      # The observation the headless runner exists for: play the committed
+      # bundle and require the trace and the landmark table it produces to be
+      # the ones in the repository, line for line.
+      #
+      # It writes into scratch space and compares, rather than writing over the
+      # committed files and finding them equal -- which would be a check that
+      # cannot fail. It is also the step that exercises the static command-line
+      # entry point itself, so a runner that rots is a red gate rather than a
+      # quiet one, and it runs the COMMITTED simulation assembly, so a source
+      # change pushed without its rebuild produces a different trace here.
+      - name: The committed bundle still produces the committed trace and landmarks
+        shell: pwsh
+        run: ./tools/run-headless-match.ps1 -Verify
+
+      # A gate that rewrites the repository it is checking is worse than no
+      # gate. Deliberately an assertion and not a cleanup: a step that repairs
+      # what it finds is a step that can never fail, and would have gone green
+      # through every regression it exists to catch.
+      - name: The gate did not rewrite the repository
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "The gate left the working tree dirty:"
+            git status --porcelain
+            git diff --stat
+            exit 1
+          fi

@@ -1,0 +1,20 @@
+# The capture writes six frames by default; two of them are committed as
+# documentation. README.md says which two and why.
+#
+# The other four must not be committed, and that cannot be left to whoever runs
+# the capture next. The fourth working agreement is explicit about it: "if a
+# generated file must **not** be committed, that has to be arranged by
+# construction — an ignore rule — and not by remembering."
+#
+# Without this file, a plain `tools/capture-match-frames.ps1` leaves four
+# untracked PNGs sitting in the tree, and the build gate's last step — the one
+# that fails a push whose run rewrote the repository — goes red for a reason
+# that has nothing to do with the push.
+#
+# The two negations are not load-bearing today, because an ignore rule cannot
+# govern a file git already tracks. They are here so that re-adding either
+# frame after a deliberate deletion works without anybody having to remember
+# this file exists.
+*.png
+!match-tick-0366.png
+!match-tick-0900.png

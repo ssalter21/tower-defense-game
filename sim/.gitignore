@@ -1,0 +1,8 @@
+# dotnet build intermediates. The repo root's build-output patterns are
+# anchored to the root (issue #33), so the rule lives beside the csproj that
+# produces the output -- the same arrangement tools/hotreload-probe/ uses.
+#
+# There is no /bin/ here on purpose: Sim.csproj sends its OutputPath into
+# client/Packages/com.ssalter.sim/Runtime/, and that output is COMMITTED. See
+# the comment in Sim.csproj for why.
+/obj/

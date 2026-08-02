@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The positive control for the IL scan: one deliberate violation of each of
+    the eight banned rows, and nothing else.
+
+    NOTHING REFERENCES THIS PROJECT. It is not in any solution, no other
+    project has a reference to it, and its output never lands in the Unity
+    package. The poison suite builds it into scratch space, scans it, and
+    asserts that every row fires and that each one fires from its own type. If
+    this were referenced anywhere, the violations in it would be reachable
+    code, which is the one thing this project must never be.
+
+    It mirrors the simulation's build settings (same target framework, same
+    language version, same Debug configuration) because a control that differs
+    from the subject is not a control. The Debug part is load-bearing: the
+    conditional-diagnostics row is a Debug.Assert call, and a Release build
+    would omit it and quietly turn that row into a test that cannot fail.
+
+    Warnings are deliberately NOT errors here. Every file in this project is
+    dead code by design, and the compiler is right to say so.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Sim.Poison</AssemblyName>
+    <RootNamespace>Sim.Poison</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+    <DebugType>portable</DebugType>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <NoWarn>$(NoWarn);CS0219;CS0414;CS0649;CS8321</NoWarn>
+  </PropertyGroup>
+
+</Project>

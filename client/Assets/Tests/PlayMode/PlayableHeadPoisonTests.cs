@@ -1,19 +1,23 @@
 using System.Collections;
 using NUnit.Framework;
-using Spikes.Playables;
+using View;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The positive control for <see cref="PlayablesSamplingTests"/>.
+    /// The permanent positive control for <see cref="PlayablesSamplingTests"/>.
     ///
     /// Those tests pass. This file exists to prove they pass for a reason: it
-    /// builds the same graph with each guard removed and shows the pose then
-    /// *does* drift under real frames. A guard nobody has watched fail is not
-    /// known to be doing anything, and a green test that cannot go red is the
+    /// rebuilds the same subject with each head-guard removed and shows the pose
+    /// then *does* drift under real frames. A guard nobody has watched fail is
+    /// not known to be doing anything, and a green test that cannot go red is the
     /// species this map has already killed twice.
+    ///
+    /// It travelled out of the spike with the component and stays permanent: the
+    /// day someone deletes a guard as redundant, <see cref="NoGuards_ThePoseDriftsOnItsOwn"/>
+    /// is the row that still knows what the guards were for.
     /// </summary>
     public class PlayableHeadPoisonTests
     {

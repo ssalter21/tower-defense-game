@@ -1,0 +1,5 @@
+# dotnet build output. Anchored here rather than at the repo root, because the
+# root's patterns are anchored to the root (issue #33) and a rule belongs
+# inside the territory it is true for.
+/bin/
+/obj/
