@@ -23,7 +23,7 @@
 # comparison against the row above rather than a lookup nobody performed.
 #
 # THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
-# the committed wave, thirteen of forty creeps get through -- a third, near
+# the committed wave, twelve of forty creeps get through -- a third, near
 # enough -- over sixty-two seconds. That is the point of the tuning and not a
 # coincidence: a defense that holds tells you nothing when it changes, and a
 # defense that collapses tells you nothing either. A third leaking means the
