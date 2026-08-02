@@ -68,6 +68,28 @@ public static class RepoLayout
     /// </summary>
     public static string BundleFile => Path.Combine(ContentDirectory, "match.replay");
 
+    /// <summary>
+    /// One tiny replay bundle per defense record format version that has ever
+    /// shipped, and the result a real run of each produced.
+    /// </summary>
+    /// <remarks>
+    /// <b>These files are committed forever.</b> The writer emits the current
+    /// format version and nothing else, so an older bundle is not something
+    /// this repository can produce again -- it can only be kept. They are the
+    /// whole evidence that the reader branch for a retired version still reads,
+    /// and deleting one is deleting the only test of that branch there will ever
+    /// be.
+    /// </remarks>
+    public static string GoldenDirectory => Path.Combine(ContentDirectory, "golden");
+
+    /// <summary>The committed bundle whose defense is at this format version.</summary>
+    public static string GoldenBundleFile(int defenseFormatVersion) =>
+        Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".replay");
+
+    /// <summary>What a real run of that bundle printed, committed beside it.</summary>
+    public static string GoldenResultFile(int defenseFormatVersion) =>
+        Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".result");
+
     /// <summary>The headless runner's project.</summary>
     public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
 
@@ -154,6 +176,9 @@ public static class RepoLayout
 
         return output;
     }
+
+    private static string Number(int value) =>
+        value.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private static string FindRoot()
     {

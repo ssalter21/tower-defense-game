@@ -27,8 +27,14 @@ public static class RecordBytes
     /// <summary>Where a defense's map hash sits, relative to the start of that record.</summary>
     public const int GhostMapHashOffset = RecordFormat.HeaderBytes;
 
+    /// <summary>
+    /// Where a version-1 defense's map handle sits. A version-0 record has
+    /// nothing here and its tower count starts two bytes earlier.
+    /// </summary>
+    public const int GhostMapHandleOffset = GhostMapHashOffset + 8;
+
     /// <summary>Where a defense's tower count sits, relative to the start of that record.</summary>
-    public const int GhostTowerCountOffset = RecordFormat.HeaderBytes + 8;
+    public const int GhostTowerCountOffset = GhostMapHandleOffset + 2;
 
     /// <summary>Where a defense's tower array starts, relative to the start of that record.</summary>
     public const int GhostTowersOffset = GhostTowerCountOffset + 2;

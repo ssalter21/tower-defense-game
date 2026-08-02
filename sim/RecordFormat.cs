@@ -66,19 +66,45 @@ namespace Sim
         public const int OrderBytes = 9;
 
         /// <summary>
-        /// The defense layout, version 0.
+        /// The defense layout, version 1: the version-0 fields with a
+        /// <c>u16 map_id</c> added after the map hash.
         /// </summary>
         /// <remarks>
-        /// <b>Version 0 deliberately has no map handle in it.</b> The record
-        /// pins its geometry by <c>u64 map_hash</c> alone, which answers the only
-        /// question a replay actually asks -- what geometry did this run on, and
-        /// can I prove it is unchanged -- under every theory of where maps come
-        /// from. A <c>u16 map_id</c> is genuinely wanted as a handle for looking
-        /// a map up, and it is being held back on purpose so that adding it is a
-        /// real format bump to version 1 rather than a rehearsal with an invented
-        /// field. <b>Do not "fix" this by adding the field here.</b>
+        /// <para>
+        /// <b>Version 0 had no map handle, and version 1 is the bump that added
+        /// one.</b> Version 0 pinned its geometry by <c>u64 map_hash</c> alone,
+        /// which answers the only question a replay actually asks -- what
+        /// geometry did this run on, and can I prove it is unchanged -- under
+        /// every theory of where maps come from. The handle was held back so
+        /// that adding it would be a real format bump rather than a rehearsal
+        /// with an invented field, and this is that bump.
+        /// </para>
+        /// <para>
+        /// <b>The version-0 branch defaults the field, and that is only legal
+        /// because the field is not simulation-affecting.</b> A version-0
+        /// defense reads back with
+        /// <see cref="GhostRecord.NoMapHandle"/> and replays to exactly the
+        /// result it always did: nothing in the tick loop can see a map handle,
+        /// because geometry reaches the simulation as the inlined grid and is
+        /// checked by hash. A defaulted handle is therefore a record that does
+        /// not say which map it was, which is the truth about it.
+        /// </para>
+        /// <para>
+        /// <b>A simulation-affecting field may not be defaulted, ever</b>, and
+        /// the distinction is the whole reason this particular field was chosen
+        /// to rehearse on. Had version 1 added, say, a per-tower facing that the
+        /// targeting rule consulted, there would be no value the version-0
+        /// branch could supply: every choice invents an input the recorded run
+        /// never had, so the replay would be a confidently wrong answer that
+        /// still validates. The only honest reader for that field is one that
+        /// refuses -- either by leaving the old records readable and unrunnable,
+        /// or by retiring them at the replay gate the way a moved simulation
+        /// version does. Defaulting is a decision about a field, not a policy
+        /// about old records, and the test for it is whether a replay's result
+        /// can depend on the value.
+        /// </para>
         /// </remarks>
-        public const int GhostVersion = 0;
+        public const int GhostVersion = 1;
 
         /// <summary>The wave layout, version 0.</summary>
         public const int WaveVersion = 0;
@@ -162,7 +188,11 @@ namespace Sim
             switch (kind)
             {
                 case RecordKind.Ghost:
-                    return formatVersion == 0;
+                    // Version 0 is not a legacy path being tolerated. It is a
+                    // version of this format, it has a golden record committed
+                    // against it forever, and its branch is expected to be here
+                    // for as long as any version-0 bytes exist anywhere.
+                    return formatVersion == 0 || formatVersion == 1;
 
                 case RecordKind.Wave:
                     return formatVersion == 0;

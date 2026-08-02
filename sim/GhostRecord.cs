@@ -70,9 +70,14 @@ namespace Sim
     /// on different geometry and nothing would notice.
     /// </para>
     /// <para>
-    /// <b>Version 0 deliberately carries no map handle</b>, which is a decision
-    /// and not an omission. See <see cref="RecordFormat.GhostVersion"/> before
-    /// adding one.
+    /// <b>The map handle arrived at format version 1 and it is a handle, not an
+    /// input.</b> It says which map this defense claims to be on, so a defense
+    /// can be looked up, listed and drawn beside its map without a search
+    /// through every map anybody has; it does not say what the geometry is, and
+    /// nothing in the tick loop reads it. That is why the version-0 branch may
+    /// default it -- see <see cref="RecordFormat.GhostVersion"/> for the same
+    /// argument at length, and for why a simulation-affecting field could not be
+    /// treated this way.
     /// </para>
     /// <para>
     /// <b>Canonical order is asserted here, not restored here.</b> Towers ascend
@@ -85,12 +90,26 @@ namespace Sim
     /// </remarks>
     public sealed class GhostRecord : IEquatable<GhostRecord>
     {
+        /// <summary>
+        /// The handle a record carries when it does not say which map it was
+        /// on: version-0 records, which had no field for one, and version-1
+        /// records written by a caller that had no handle to give.
+        /// </summary>
+        /// <remarks>
+        /// Zero is "unstated" rather than "map zero" for the same reason a type
+        /// id of zero means no unit: a sentinel that is also a legal value is a
+        /// sentinel nobody can test for. Whatever ends up assigning handles
+        /// starts at one.
+        /// </remarks>
+        public const int NoMapHandle = 0;
+
         private readonly RecordTower[] _towers;
 
-        private GhostRecord(RecordHeader header, Hash64 mapHash, RecordTower[] towers)
+        private GhostRecord(RecordHeader header, Hash64 mapHash, int mapHandle, RecordTower[] towers)
         {
             Header = header;
             MapHash = mapHash;
+            MapHandle = mapHandle;
             _towers = towers;
         }
 
@@ -100,14 +119,33 @@ namespace Sim
         /// <summary>The hash of the parsed grid this defense was placed on.</summary>
         public Hash64 MapHash { get; }
 
+        /// <summary>
+        /// Which map this defense claims to be on, or <see cref="NoMapHandle"/>
+        /// when it does not say. A handle for looking one up, and never the
+        /// authority on what the geometry is -- that is <see cref="MapHash"/>,
+        /// and no amount of agreement here substitutes for it.
+        /// </summary>
+        public int MapHandle { get; }
+
         /// <summary>The towers, ascending by <c>(r, q)</c>. Asserted at load.</summary>
         public IReadOnlyList<RecordTower> Towers => _towers;
 
         /// <summary>How many towers there are.</summary>
         public int Count => _towers.Length;
 
-        /// <summary>Records a live defense, at the current format version.</summary>
-        public static GhostRecord Of(HexMap map, TowerLayout layout, UnitTypeTable types)
+        /// <summary>
+        /// Records a live defense, at the current format version, on a map the
+        /// caller names by handle.
+        /// </summary>
+        /// <remarks>
+        /// The handle is asked for rather than found on the map, because a
+        /// <see cref="HexMap"/> is a parsed grid and a grid has no name.
+        /// Whatever stores maps knows what it filed this one under; the
+        /// simulation does not, and inventing one here would put a number in
+        /// records that means whatever the last person to guess thought it did.
+        /// Pass <see cref="NoMapHandle"/> when there is nothing to say.
+        /// </remarks>
+        public static GhostRecord Of(HexMap map, TowerLayout layout, UnitTypeTable types, int mapHandle)
         {
             if (map is null)
             {
@@ -135,6 +173,7 @@ namespace Sim
             return new GhostRecord(
                 RecordHeader.Current(RecordKind.Ghost, types.ContentHash),
                 map.MapHash,
+                mapHandle,
                 towers);
         }
 
@@ -153,7 +192,7 @@ namespace Sim
         /// <summary>The bytes. Always the current format version -- there is one writer.</summary>
         public byte[] ToBytes()
         {
-            var writer = new ByteWriter(RecordFormat.HeaderBytes + 10 + (_towers.Length * RecordFormat.TowerBytes));
+            var writer = new ByteWriter(RecordFormat.HeaderBytes + 12 + (_towers.Length * RecordFormat.TowerBytes));
             WriteTo(writer);
             return writer.ToArray();
         }
@@ -209,7 +248,10 @@ namespace Sim
 
         public bool Equals(GhostRecord? other)
         {
-            if (other is null || Header != other.Header || MapHash != other.MapHash)
+            if (other is null
+                || Header != other.Header
+                || MapHash != other.MapHash
+                || MapHandle != other.MapHandle)
             {
                 return false;
             }
@@ -239,12 +281,20 @@ namespace Sim
             + ", "
             + _towers.Length.ToString(CultureInfo.InvariantCulture)
             + " towers on map "
-            + MapHash.ToString();
+            + MapHash.ToString()
+            + (MapHandle == NoMapHandle
+                ? " (no handle)"
+                : " (handle " + MapHandle.ToString(CultureInfo.InvariantCulture) + ")");
 
         internal void WriteTo(ByteWriter writer)
         {
+            // One writer, one version. There is no branch here and there never
+            // will be: history lives in the reader, where it is a list that
+            // grows by one, and a writer with history would multiply the pairs
+            // anybody has to think about.
             Header.Write(writer);
             writer.U64(MapHash.Value);
+            writer.U16("map handle", MapHandle);
             writer.U16("tower count", _towers.Length);
 
             for (int index = 0; index < _towers.Length; index++)
@@ -265,6 +315,9 @@ namespace Sim
                 case 0:
                     return ReadVersion0(cursor, header);
 
+                case 1:
+                    return ReadVersion1(cursor, header);
+
                 default:
                     throw cursor.Fault(
                         "is defense format version "
@@ -276,18 +329,70 @@ namespace Sim
         }
 
         /// <summary>
-        /// Version 0: <c>u64 map_hash + u16 tower_count + Tower[]</c>.
+        /// Version 0: <c>u64 map_hash + u16 tower_count + Tower[]</c>. No map
+        /// handle, so one is defaulted.
         /// </summary>
         /// <remarks>
-        /// This branch never goes away. When version 1 arrives it gets its own
-        /// branch beside this one and this one keeps reading version-0 records
-        /// forever, which is the normal case rather than a legacy path.
+        /// <para>
+        /// <b>This branch never goes away.</b> Version 1 sits beside it and this
+        /// one keeps reading version-0 records forever, which is the normal case
+        /// rather than a legacy path. <c>content/golden/defense-0.replay</c> is
+        /// the evidence: a real recorded bundle, kept so that deleting this
+        /// branch is a red gate rather than a quiet loss.
+        /// </para>
+        /// <para>
+        /// <b>The default here is <see cref="NoMapHandle"/>, and it is honest
+        /// rather than convenient.</b> A version-0 record genuinely does not say
+        /// which map it was on, so "unstated" is what it says; the alternative,
+        /// guessing a handle from the map hash, would put a number into a record
+        /// that the record never carried. Nothing downstream is misled, because
+        /// nothing downstream simulates from a handle. A field the tick loop
+        /// read could not be defaulted at all -- see
+        /// <see cref="RecordFormat.GhostVersion"/>.
+        /// </para>
         /// </remarks>
         private static GhostRecord ReadVersion0(ByteCursor cursor, RecordHeader header)
         {
             ulong mapHash = cursor.U64("the map hash");
             int count = cursor.U16("the tower count");
 
+            return ReadTowers(cursor, header, mapHash, NoMapHandle, count);
+        }
+
+        /// <summary>
+        /// Version 1: <c>u64 map_hash + u16 map_id + u16 tower_count +
+        /// Tower[]</c>.
+        /// </summary>
+        /// <remarks>
+        /// The handle goes after the hash rather than in front of it, so the two
+        /// things about the map sit together and every version-0 offset before
+        /// them is unmoved. That is a courtesy to a hexdump and to a person
+        /// reading both branches side by side; it is not what makes the old
+        /// records readable, which is the branch above.
+        /// </remarks>
+        private static GhostRecord ReadVersion1(ByteCursor cursor, RecordHeader header)
+        {
+            ulong mapHash = cursor.U64("the map hash");
+            int mapHandle = cursor.U16("the map handle");
+            int count = cursor.U16("the tower count");
+
+            return ReadTowers(cursor, header, mapHash, mapHandle, count);
+        }
+
+        /// <summary>
+        /// The tower array, which both versions share unchanged. Shared because
+        /// it is the same bytes and not because it is convenient: a copy per
+        /// branch would let the canonical-order assertion drift between them,
+        /// and the version that lost it would go on loading records the other
+        /// refuses.
+        /// </summary>
+        private static GhostRecord ReadTowers(
+            ByteCursor cursor,
+            RecordHeader header,
+            ulong mapHash,
+            int mapHandle,
+            int count)
+        {
             if (count == 0)
             {
                 throw cursor.Fault("has no towers in it at all.");
@@ -337,7 +442,7 @@ namespace Sim
                 towers[index] = new RecordTower(typeId, new Hex(q, r));
             }
 
-            return new GhostRecord(header, Hash64.FromValue(mapHash), towers);
+            return new GhostRecord(header, Hash64.FromValue(mapHash), mapHandle, towers);
         }
     }
 }

@@ -96,13 +96,25 @@ namespace Sim
         /// <summary>The wave's id, on the same terms.</summary>
         public Hash64 WaveId => RecordId.Of(_waveBytes);
 
-        /// <summary>Records a live match, at the current format version.</summary>
+        /// <summary>
+        /// Records a live match, at the current format version, on a map the
+        /// caller names by handle.
+        /// </summary>
+        /// <remarks>
+        /// The handle reaches the defense record and stops there. It is
+        /// deliberately not a field of the bundle as well: the bundle inlines
+        /// the grid, so it already answers "which map" in the only way that
+        /// cannot be wrong, and a second copy of the handle would be a second
+        /// thing to keep in agreement for no gain. See
+        /// <see cref="GhostRecord.MapHandle"/>.
+        /// </remarks>
         public static ReplayBundle Of(
             HexMap map,
             TowerLayout layout,
             WaveScript wave,
             UnitTypeTable types,
-            ulong seed)
+            ulong seed,
+            int mapHandle)
         {
             if (map is null)
             {
@@ -114,7 +126,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            GhostRecord ghost = GhostRecord.Of(map, layout, types);
+            GhostRecord ghost = GhostRecord.Of(map, layout, types, mapHandle);
             WaveRecord waveRecord = WaveRecord.Of(wave, types);
 
             return new ReplayBundle(
@@ -330,7 +342,10 @@ namespace Sim
         /// The bundle and both inner records name one ruleset, or the bundle is
         /// refused. Format versions are deliberately not compared: they are
         /// counted per record kind, so a bundle at version 0 holding a defense at
-        /// version 1 is ordinary rather than suspicious.
+        /// version 1 is ordinary rather than suspicious. That is no longer a
+        /// hypothetical -- adding the map handle bumped the defense to version 1
+        /// and left the bundle at 0, which is exactly what per-kind counting is
+        /// for, and every bundle written since is one of these.
         /// </summary>
         private static void CrossCheck(ByteCursor cursor, RecordHeader outer, RecordHeader inner, string what)
         {

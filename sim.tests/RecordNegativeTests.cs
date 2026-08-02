@@ -61,7 +61,12 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => GhostRecord.FromBytes(bytes));
 
-        Assert.Contains("newer than the 0 this reader knows", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "newer than the "
+            + RecordFormat.GhostVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            + " this reader knows",
+            thrown.Message,
+            StringComparison.Ordinal);
         Assert.Contains("cannot know what it is missing", thrown.Message, StringComparison.Ordinal);
     }
 

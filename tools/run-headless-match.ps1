@@ -62,7 +62,14 @@ param(
     # rather than in the defense, so changing the dice does not change what a
     # defense is -- and it is only needed here when re-recording the bundle,
     # because every run after that reads it out of the bundle's own bytes.
-    [ulong]$Seed = 20260801
+    [ulong]$Seed = 20260801,
+
+    # Which map the recorded defense claims to be on. A handle for looking a
+    # map up, and NOT what pins the geometry -- that is the map hash, which is
+    # computed from the parsed grid and checked at the replay gate. Handles are
+    # assigned by whatever stores maps; zero means "this record does not say",
+    # and content/map.txt is the one map the skeleton ships, so it is one.
+    [int]$MapHandle = 1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -152,6 +159,7 @@ if ($Regenerate) {
         '--defense', (Join-Path $content 'defense.txt'),
         '--wave', (Join-Path $content 'wave.txt'),
         '--seed', $Seed.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+        '--map-handle', $MapHandle.ToString([System.Globalization.CultureInfo]::InvariantCulture),
         '--out', $bundle)
 
     Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--out', $content)

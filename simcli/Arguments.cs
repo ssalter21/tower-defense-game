@@ -100,6 +100,38 @@ internal sealed class Arguments
 
         return parsed;
     }
+
+    /// <summary>
+    /// A number in a range, or the fallback when the option was not given.
+    /// </summary>
+    /// <remarks>
+    /// The range is checked here rather than at the record's edge so the
+    /// complaint names the option somebody typed. A <c>u16</c> field refusing
+    /// "70000" says nothing about which argument produced it.
+    /// </remarks>
+    public int Optional(string name, int fallback, int minimum, int maximum)
+    {
+        string? value = Optional(name);
+
+        if (value is null)
+        {
+            return fallback;
+        }
+
+        if (!int.TryParse(value, NumberStyles.None, PlainText.Culture, out int parsed))
+        {
+            throw new UsageException($"--{name} is '{value}', which is not a number written in digits.");
+        }
+
+        if (parsed < minimum || parsed > maximum)
+        {
+            throw new UsageException(
+                $"--{name} is {parsed.ToString(PlainText.Culture)}, and it has to be between "
+                + $"{minimum.ToString(PlainText.Culture)} and {maximum.ToString(PlainText.Culture)}.");
+        }
+
+        return parsed;
+    }
 }
 
 /// <summary>A command line that cannot be acted on, said in a sentence.</summary>

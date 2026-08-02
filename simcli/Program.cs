@@ -30,6 +30,9 @@ public static class Program
 
     private const string LandmarkFileName = "landmarks.txt";
 
+    /// <summary>The map handle is a <c>u16</c> in the record, and this is that.</summary>
+    private const int MaximumMapHandle = 65535;
+
     private static readonly string[] Usage =
     {
         "Sim.Cli -- one match, played headless.",
@@ -40,11 +43,15 @@ public static class Program
         "         With --out, writes " + TraceFileName + " and " + LandmarkFileName + " there.",
         string.Empty,
         "  record --map <file> --units <file> --defense <file> --wave <file>",
-        "         --seed <number> --out <file>",
+        "         --seed <number> --out <file> [--map-handle <number>]",
         string.Empty,
         "         Records the content as one self-contained replay bundle, having",
         "         first read it back and played it. Nothing is written if it will",
         "         not replay.",
+        string.Empty,
+        "         --map-handle says which map the defense claims to be on, for",
+        "         looking one up. It is not what pins the geometry -- the map hash",
+        "         is -- so leaving it out records a defense that does not say.",
     };
 
     /// <summary>The entry point. Zero if the run happened, non-zero if it did not.</summary>
@@ -101,7 +108,7 @@ public static class Program
                     "record",
                     args,
                     1,
-                    new[] { "map", "units", "defense", "wave", "seed", "out" }));
+                    new[] { "map", "units", "defense", "wave", "seed", "out", "map-handle" }));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
@@ -147,7 +154,8 @@ public static class Program
             File.ReadAllText(arguments.Required("units")),
             File.ReadAllText(arguments.Required("defense")),
             File.ReadAllText(arguments.Required("wave")),
-            arguments.RequiredUnsigned("seed"));
+            arguments.RequiredUnsigned("seed"),
+            arguments.Optional("map-handle", GhostRecord.NoMapHandle, 0, MaximumMapHandle));
 
         string path = arguments.Required("out");
         string? directory = Path.GetDirectoryName(Path.GetFullPath(path));

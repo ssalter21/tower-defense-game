@@ -21,8 +21,7 @@ public class RecordFormatTests
         Assert.Equal((byte)'H', bytes[1]);
         Assert.Equal((byte)'S', bytes[2]);
         Assert.Equal((byte)'T', bytes[3]);
-        Assert.Equal(0, bytes[RecordBytes.FormatVersionOffset]);
-        Assert.Equal(0, bytes[RecordBytes.FormatVersionOffset + 1]);
+        Assert.Equal(RecordFormat.GhostVersion, BitConverter.ToUInt16(bytes, RecordBytes.FormatVersionOffset));
         Assert.Equal(SimulationVersion.Current, BitConverter.ToUInt32(bytes, RecordBytes.SimVersionOffset));
         Assert.Equal(types.ContentHash.Value, BitConverter.ToUInt64(bytes, RecordBytes.ContentHashOffset));
     }
@@ -52,22 +51,32 @@ public class RecordFormatTests
         Assert.False(RecordFormat.IsKnown(RecordKind.Ghost, RecordFormat.GhostVersion + 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, RecordFormat.WaveVersion + 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Replay, RecordFormat.ReplayVersion + 1));
+
+        // And now it is not three constants that happen to be equal. The
+        // defense gained the map handle and moved to version 1; the other two
+        // kinds did not move, and a version 1 of either of them is a version
+        // that has never existed.
+        Assert.Equal(1, RecordFormat.GhostVersion);
+        Assert.Equal(0, RecordFormat.WaveVersion);
+        Assert.Equal(0, RecordFormat.ReplayVersion);
+        Assert.False(RecordFormat.IsKnown(RecordKind.Wave, 1));
+        Assert.False(RecordFormat.IsKnown(RecordKind.Replay, 1));
     }
 
     [Fact]
-    public void Version_zero_carries_no_map_handle_and_the_size_says_so()
+    public void Version_one_carries_the_map_handle_and_the_size_says_so()
     {
-        // The defense is exactly header, map hash, count and towers -- nothing
-        // else fits. That is the version-0 layout, deliberately without the
-        // u16 map_id the developer actually wants: it is held back so that
-        // adding it is a real format bump rather than a rehearsal on an invented
-        // field. If this number grows by two without the format version moving,
-        // that is the mistake this assertion exists to catch.
+        // The defense is exactly header, map hash, map handle, count and towers
+        // -- nothing else fits. Version 0 was the same without the two-byte
+        // handle, which is the whole of the bump. If this number grows again
+        // without the format version moving, that is the mistake this assertion
+        // exists to catch.
         UnitTypeTable types = TheMatch.Types();
         GhostRecord ghost = TheMatch.Ghost(types);
 
         Assert.Equal(6, ghost.Count);
-        Assert.Equal(18 + 8 + 2 + (6 * 6), ghost.ToBytes().Length);
+        Assert.Equal(18 + 8 + 2 + 2 + (6 * 6), ghost.ToBytes().Length);
+        Assert.Equal(TheMatch.MapHandle, ghost.MapHandle);
     }
 
     [Fact]
@@ -81,7 +90,7 @@ public class RecordFormatTests
         // orphan every replay pointing at it.
         UnitTypeTable types = TheMatch.Types();
 
-        Assert.Equal(18 + 8 + 2 + (6 * RecordFormat.TowerBytes), TheMatch.Ghost(types).ToBytes().Length);
+        Assert.Equal(18 + 8 + 2 + 2 + (6 * RecordFormat.TowerBytes), TheMatch.Ghost(types).ToBytes().Length);
         Assert.Equal(18 + 2 + (6 * RecordFormat.OrderBytes), TheMatch.WaveOf(types).ToBytes().Length);
     }
 
@@ -197,8 +206,9 @@ public class RecordFormatTests
 
         Assert.NotEqual(original, reauthored);
 
-        byte[] first = GhostRecord.Of(map, TowerLayout.Parse(original, types), types).ToBytes();
-        byte[] second = GhostRecord.Of(map, TowerLayout.Parse(reauthored, types), types).ToBytes();
+        byte[] first = GhostRecord.Of(map, TowerLayout.Parse(original, types), types, TheMatch.MapHandle).ToBytes();
+        byte[] second =
+            GhostRecord.Of(map, TowerLayout.Parse(reauthored, types), types, TheMatch.MapHandle).ToBytes();
 
         Assert.Equal(first, second);
         Assert.Equal(RecordId.Of(first), RecordId.Of(second));

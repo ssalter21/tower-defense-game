@@ -34,14 +34,15 @@ internal static class Recording
         string unitsText,
         string defenseText,
         string waveText,
-        ulong seed)
+        ulong seed,
+        int mapHandle)
     {
         UnitTypeTable types = UnitTypeTable.Parse(unitsText);
         HexMap map = HexMap.Parse(mapText);
         TowerLayout layout = TowerLayout.Parse(defenseText, types);
         WaveScript wave = WaveScript.Parse(waveText, types);
 
-        byte[] bytes = ReplayBundle.Of(map, layout, wave, types, seed).ToBytes();
+        byte[] bytes = ReplayBundle.Of(map, layout, wave, types, seed, mapHandle).ToBytes();
 
         return (bytes, HeadlessRun.Of(bytes, unitsText));
     }

@@ -25,6 +25,14 @@ public static class TheMatch
     /// <summary>The tick the committed run ends on.</summary>
     public const int FinalTickOfTheCommittedRun = 1852;
 
+    /// <summary>
+    /// The handle the committed map is filed under, and the one
+    /// tools/run-headless-match.ps1 records the bundle with. Zero would mean
+    /// "the record does not say"; this map is the one the skeleton ships, so it
+    /// is one.
+    /// </summary>
+    public const int MapHandle = 1;
+
     public static HexMap Map() => HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
     public static UnitTypeTable Types() => UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
@@ -45,7 +53,8 @@ public static class TheMatch
     }
 
     /// <summary>The committed defense, recorded.</summary>
-    public static GhostRecord Ghost(UnitTypeTable types) => GhostRecord.Of(Map(), Layout(types), types);
+    public static GhostRecord Ghost(UnitTypeTable types) =>
+        GhostRecord.Of(Map(), Layout(types), types, MapHandle);
 
     /// <summary>The committed wave, recorded.</summary>
     public static WaveRecord WaveOf(UnitTypeTable types) => WaveRecord.Of(Wave(types), types);
@@ -54,7 +63,7 @@ public static class TheMatch
     public static ReplayBundle Bundle(ulong seed = Seed)
     {
         UnitTypeTable types = Types();
-        return ReplayBundle.Of(Map(), Layout(types), Wave(types), types, seed);
+        return ReplayBundle.Of(Map(), Layout(types), Wave(types), types, seed, MapHandle);
     }
 
     /// <summary>
