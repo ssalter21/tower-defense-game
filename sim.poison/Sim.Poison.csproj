@@ -2,7 +2,7 @@
 
   <!--
     The positive control for the IL scan: one deliberate violation of each of
-    the seven banned rows, and nothing else.
+    the eight banned rows, and nothing else.
 
     NOTHING REFERENCES THIS PROJECT. It is not in any solution, no other
     project has a reference to it, and its output never lands in the Unity

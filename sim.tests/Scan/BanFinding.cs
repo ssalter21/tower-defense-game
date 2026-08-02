@@ -1,7 +1,7 @@
 namespace Sim.Tests.Scan;
 
 /// <summary>One banned construct, found in one place in one assembly.</summary>
-/// <param name="Row">Which of the seven rules was broken.</param>
+/// <param name="Row">Which of the eight rules was broken.</param>
 /// <param name="Clause">
 /// Which clause of the scan noticed. A row can have more than one clause --
 /// floating point has three, because a float can enter through a signature, a

@@ -32,6 +32,7 @@ public class PoisonSuiteTests
     [InlineData(BanRow.AmbientTimeAndRandomness, "PoisonAmbient")]
     [InlineData(BanRow.Threading, "PoisonThreading")]
     [InlineData(BanRow.ConditionalDiagnostics, "PoisonConditionalDiagnostics")]
+    [InlineData(BanRow.AmbientIo, "PoisonAmbientIo")]
     public void Every_banned_row_fires_from_its_own_deliberate_violation(BanRow row, string poisonType)
     {
         BanFinding[] forRow = Findings.Where(finding => finding.Row == row).ToArray();
@@ -80,7 +81,7 @@ public class PoisonSuiteTests
     }
 
     [Fact]
-    public void All_seven_rows_are_accounted_for()
+    public void All_eight_rows_are_accounted_for()
     {
         BanRow[] fired = Findings.Select(finding => finding.Row).Distinct().OrderBy(row => row).ToArray();
         BanRow[] all = Enum.GetValues<BanRow>().OrderBy(row => row).ToArray();

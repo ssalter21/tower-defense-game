@@ -1,7 +1,7 @@
 namespace Sim.Tests.Scan;
 
 /// <summary>
-/// The seven banned rows. Each is a rule the simulation cannot break without
+/// The eight banned rows. Each is a rule the simulation cannot break without
 /// the compiled artefact showing it, and each has exactly one deliberate
 /// violation in sim.poison so that the clause enforcing it is known to work.
 /// </summary>
@@ -57,4 +57,27 @@ public enum BanRow
     /// configuration and the calls are therefore actually emitted.
     /// </summary>
     ConditionalDiagnostics,
+
+    /// <summary>
+    /// <c>System.IO</c>, all of it. The simulation is handed bytes and text and
+    /// never a path: opening the file is the caller's job, and the parsers live
+    /// inside this assembly precisely so that the scan can see them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// The rule exists because a file is ambient state. Its contents, its
+    /// existence, its encoding and its line endings are all things a replay
+    /// cannot pin, so a simulation that reads one has a second input nobody
+    /// recorded -- and the failure arrives as a record that replays differently
+    /// on a machine whose disk says something else.
+    /// </para>
+    /// <para>
+    /// Banned as a namespace prefix rather than a list of types, because the
+    /// area is out of bounds rather than a handful of members: <c>File</c> and
+    /// <c>Path</c> are the obvious ones, but <c>StringReader</c> is in here too
+    /// and is exactly the innocent-looking way a parser acquires a second seam
+    /// underneath the assembly's public surface.
+    /// </para>
+    /// </remarks>
+    AmbientIo,
 }

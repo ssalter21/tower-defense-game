@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace Sim.Tests.Scan;
 
-/// <summary>What each of the seven rows forbids, as data the scanner reads.</summary>
+/// <summary>What each of the eight rows forbids, as data the scanner reads.</summary>
 /// <remarks>
 /// <para>
 /// Everything here is a metadata reference the compiled assembly makes, which
@@ -12,8 +12,10 @@ namespace Sim.Tests.Scan;
 /// </para>
 /// <para>
 /// The banned-API analyzer that was once planned for this job is deliberately
-/// not used anywhere in this project. It catches four of these seven rows and
-/// reports nothing at all about the other three, so a build that passed it
+/// not used anywhere in this project. Of the seven rows it was measured
+/// against in issue #25 it catches four and reports nothing at all about the
+/// other three -- the eighth row here was added afterwards and it has never
+/// been assessed against that one at all. So a build that passed it
 /// would look like a build that had been checked. A check that silently is not
 /// running is worse than no check, because it converts an unenforced rule into
 /// a believed one.
@@ -82,6 +84,12 @@ public static class BanTable
         {
             Entry("System.Threading.", BanRow.Threading),
             Entry("System.Security.Cryptography.", BanRow.AmbientTimeAndRandomness),
+
+            // Ambient IO. The simulation parses text and bytes it was handed
+            // and never opens anything, so the whole namespace is out of
+            // bounds -- StringReader as much as File, because the harmless
+            // half is how a second seam gets added under the public surface.
+            Entry("System.IO.", BanRow.AmbientIo),
         });
 
     /// <summary>
