@@ -60,9 +60,11 @@ venv/
 /.claude/worktrees/
 /.claude/settings.local.json
 
-# Output of tools/run-playmode-tests.ps1. Ignored so the runner's own
-# tree-dirtiness check does not trip over the runner's own artefacts.
+# Output of tools/run-unity-tests.ps1, one report per test platform. Ignored so
+# the runner's own tree-dirtiness check does not trip over the runner's own
+# artefacts. (The .log files beside them are already covered by `*.log`.)
 /playmode-results.xml
+/editmode-results.xml
 
 # Spike render output — regenerate with ScrubStripCapture
 /scrub-strip/
