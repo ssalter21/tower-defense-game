@@ -20,9 +20,25 @@ namespace Tests.PlayMode
     public class RealRigSamplingTests
     {
         private const string CharacterPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
+        private const string RangerPath = "Assets/Art/Characters/Ranger.fbx";
         private const string MovementPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
         private const string GeneralPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
+        private const string RangedPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
         private const string ClipName = "Walking_A";
+
+        /// <summary>
+        /// Every FBX in this project that carries a rig or clips. Both lists
+        /// below walk all of them rather than the two the spike happened to
+        /// start with, so an import added later is covered by being imported
+        /// rather than by somebody remembering to add it here.
+        /// </summary>
+        private static readonly string[] RiggedPaths =
+        {
+            CharacterPath, RangerPath, MovementPath, GeneralPath, RangedPath,
+        };
+
+        /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
+        private static readonly string[] ClipBankPaths = { MovementPath, GeneralPath, RangedPath };
 
         private GameObject _instance;
 
@@ -143,7 +159,7 @@ namespace Tests.PlayMode
         {
             // Locomotion phase is driven from distance travelled in the sim, so any
             // clip-owned translation would be authoritative progress living in the view.
-            foreach (var path in new[] { MovementPath, GeneralPath })
+            foreach (var path in ClipBankPaths)
             {
                 foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>())
                 {
@@ -161,7 +177,7 @@ namespace Tests.PlayMode
             // transforms in this hierarchy directly. Humanoid would put a retargeting
             // solver between the clip and the bones -- one more thing between sim time
             // and the pose, on a rig that never needed retargeting in the first place.
-            foreach (var path in new[] { CharacterPath, MovementPath, GeneralPath })
+            foreach (var path in RiggedPaths)
             {
                 var importer = (ModelImporter)AssetImporter.GetAtPath(path);
                 Assert.IsNotNull(importer, $"no model importer for {path}");
