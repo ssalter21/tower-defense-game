@@ -1,0 +1,379 @@
+using System.Globalization;
+
+namespace Sim.Tests;
+
+/// <summary>
+/// The trigger, as opposed to the gate: whether each of the three identity
+/// fields is computed over the thing it claims to be about.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <b>The record format's negative suite tests the gate.</b> It takes a good
+/// record, damages one byte, and watches the specific refusal fire. Every one of
+/// those tests passes just as well when a hash is folded over the wrong input,
+/// because a hash compared against itself always agrees with itself. A content
+/// hash computed over file bytes, or a map hash computed over the width alone,
+/// would sail through the whole suite and then never move when it mattered.
+/// </para>
+/// <para>
+/// <b>These are the other half.</b> Each one names an edit that must move a
+/// hash, and -- where there is one -- an edit that must not. A derivation test
+/// without the second half is barely a test: any hash at all moves when
+/// everything moves. What separates a hash over the parsed numbers from a hash
+/// over the file is precisely the edit that changes the file and not the
+/// numbers.
+/// </para>
+/// <para>
+/// <b>Each was watched failing under a deliberately wrong input</b>, which is
+/// the only way to know an assertion is load bearing. The wrong input for each
+/// is written above it, so the observation can be repeated.
+/// </para>
+/// </remarks>
+public class DerivationTests
+{
+    /// <summary>
+    /// The behaviour this build implements, folded into one number, per
+    /// simulation version that has declared one.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b><see cref="SimulationVersion.Current"/> is a hand-edited constant and
+    /// nothing derives it.</b> It cannot notice a rule change on its own and it
+    /// is not going to: a version number that recomputed itself from the rules
+    /// would move without anybody deciding to retire anything, which is the
+    /// opposite of what it is for. So the mechanism cannot be "the simulation
+    /// version notices"; it has to be "something notices and names the
+    /// simulation version", and this table is that something.
+    /// </para>
+    /// <para>
+    /// <b>The fingerprint is over a scenario written here, not over the
+    /// committed content.</b> That is what makes it a simulation-version trigger
+    /// rather than a second content hash: retuning a number in
+    /// <c>content/units.txt</c> moves the golden trace and must not move this,
+    /// because the content hash already covers a retune and bumping the
+    /// simulation version as well would retire every record made under rules
+    /// that did not change. Change a rule -- the rounding, the tick order, the
+    /// tiebreak, the release cadence -- and this moves while the content hash
+    /// does not.
+    /// </para>
+    /// <para>
+    /// A bump is therefore two edits, and this table is the second one. Adding a
+    /// row is the moment somebody has decided that every stored record made
+    /// under the old rules is retired; the value in it is read off a run,
+    /// because a number anybody could have written down by hand is a number
+    /// nobody derived.
+    /// </para>
+    /// </remarks>
+    private static readonly (uint Version, ulong Fingerprint)[] BehaviourByVersion =
+    {
+        (1u, 0xAB1569545287E5B0UL),
+    };
+
+    /// <summary>
+    /// The scenario the fingerprint is taken over: one corridor, one tower, one
+    /// order of three walkers. Written out here on purpose -- a fingerprint over
+    /// the committed files would move every time somebody retuned a number, and
+    /// would then be a content hash wearing a simulation version's name.
+    /// </summary>
+    private const string FingerprintMap = """
+        S####E
+        ......
+        """;
+
+    private const string FingerprintUnits = """
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4
+        unit  3  turret  placed  0    0   2000  5  2  1  4  9  hitscan  0  0
+        """;
+
+    private const string FingerprintDefense = "tower  3  2  1";
+
+    private const string FingerprintWave = "order  0  1  3  0";
+
+    private const ulong FingerprintSeed = 20260802UL;
+
+    /// <summary>How many ticks of it are folded in. Enough for three spawns, every shot and every death.</summary>
+    private const int FingerprintTicks = 400;
+
+    [Fact]
+    public void Editing_a_type_table_moves_the_content_hash_and_editing_a_comment_does_not()
+    {
+        // OBSERVED: point the fold at the file instead of at the parsed
+        // integers -- in UnitTypeTable.Parse, absorb the characters of the text
+        // in place of the loop over the rows. The retune assertion still passes,
+        // because a changed number is also changed bytes. The comment assertion
+        // goes red, 1BEF1F9F2EEF6616 against 0CDA1F685DA57EC3, and so does every
+        // formatting assertion after it. That asymmetry is the whole reason the
+        // hash is over what was parsed: a hash over the file would say "somebody
+        // touched units.txt", which is a signal nobody can act on.
+        string original = File.ReadAllText(RepoLayout.UnitsFile);
+        Hash64 hash = UnitTypeTable.Parse(original).ContentHash;
+
+        // A number moved. One character, and every record pinned to the old
+        // ruleset is retired -- which is exactly what should happen.
+        string retuned = original.Replace(
+            "unit   1   grunt   moving  200",
+            "unit   1   grunt   moving  201",
+            StringComparison.Ordinal);
+
+        Assert.NotEqual(original, retuned);
+        Assert.NotEqual(hash, UnitTypeTable.Parse(retuned).ContentHash);
+
+        // Nothing that is not a number moved. Every one of these changes the
+        // file, and a hash over the file would retire every stored record for
+        // each of them -- at which point the signal means "somebody touched
+        // units.txt", which is a signal nobody can act on and everybody learns
+        // to override.
+        Assert.Equal(hash, UnitTypeTable.Parse(WithCommentsRewritten(original)).ContentHash);
+        Assert.Equal(hash, UnitTypeTable.Parse(WithColumnsRespaced(original)).ContentHash);
+        Assert.Equal(hash, UnitTypeTable.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal)).ContentHash);
+        Assert.Equal(hash, UnitTypeTable.Parse(original + "\n\n\n").ContentHash);
+
+        // And a label, which is for people. The simulation branches on nothing
+        // in it, so renaming one is not a ruleset change either.
+        Assert.Equal(
+            hash,
+            UnitTypeTable.Parse(original.Replace("grunt ", "goblin", StringComparison.Ordinal)).ContentHash);
+    }
+
+    [Fact]
+    public void The_rules_this_build_implements_are_the_ones_its_simulation_version_names()
+    {
+        // OBSERVED, both ways round, on this build.
+        //
+        // RIGHT INPUT: change Fix64's restoring division from truncation toward
+        // zero to rounding the magnitude to nearest -- four lines, no number in
+        // any content file moved, no byte of any record layout moved -- and this
+        // goes red, AB1569545287E5B0 to 90B255DEE5C77BB4. The change reaches the
+        // match through the lateral offsets, which are three tenths of a hex and
+        // are folded into the state hash the moment a creep spawns.
+        //
+        // WRONG INPUT: replace the body of RuleFingerprint with
+        // Hash64.Start(label).Add(SimulationVersion.Current) -- the declared
+        // version, compared against itself -- and record the value it produces.
+        // The identical rounding change is then green, and so is reverting it:
+        // the same number comes out of a build that rounds and a build that
+        // truncates, because nothing in the fold ever ran the rules. That is the
+        // failure this whole file exists to catch, and it is invisible from
+        // inside the assertion below.
+        (uint Version, ulong Fingerprint) declared = Row(SimulationVersion.Current);
+
+        Assert.Equal(
+            Hash64.FromValue(declared.Fingerprint),
+            RuleFingerprint());
+    }
+
+    [Fact]
+    public void Retuning_a_number_is_not_a_rule_change_and_does_not_touch_the_fingerprint()
+    {
+        // The converse, and the reason the fingerprint is taken over a scenario
+        // written in this file rather than over the committed content. The
+        // mistake runs both ways: bumping the simulation version for a retune
+        // retires every record made under rules that did not change, and the
+        // content hash already covers a retune automatically.
+        UnitTypeTable types = TheMatch.Types();
+        UnitTypeTable retuned = TheMatch.RetunedTypes();
+
+        Assert.NotEqual(types.ContentHash, retuned.ContentHash);
+        Assert.Equal(Hash64.FromValue(Row(SimulationVersion.Current).Fingerprint), RuleFingerprint());
+    }
+
+    [Fact]
+    public void The_rounding_rule_itself_is_pinned_to_a_value_a_different_rule_would_change()
+    {
+        // Rounding is truncation toward zero, for multiplication and division
+        // alike, and these are the numbers that say so rather than a comment
+        // saying so. Three tenths in Q32.32 is 1288490188.8 exactly: truncation
+        // keeps 1288490188 and round-to-nearest would keep 1288490189, so a
+        // change of rule with no number moved is visible right here.
+        //
+        // The negative sign is the other half. Toward zero and toward negative
+        // infinity agree on every positive value and disagree on every negative
+        // one that is not exact, so a rule quietly changed to flooring passes
+        // the line above and fails the line below.
+        Assert.Equal(1288490188L, Fix64.FromRatio(3, 10).Raw);
+        Assert.Equal(-1288490188L, Fix64.FromRatio(-3, 10).Raw);
+
+        // The same claim for multiplication, whose truncation is a shift on the
+        // magnitude with the sign reattached afterwards. Half of the smallest
+        // representable value is exactly half a raw unit, so all three candidate
+        // rules disagree about it: truncation toward zero keeps nothing, flooring
+        // would take the negative one down to -1, and rounding half away from
+        // zero would take both out to a whole unit.
+        Assert.Equal(0L, (Fix64.FromRatio(1, 2) * Fix64.Epsilon).Raw);
+        Assert.Equal(0L, (Fix64.FromRatio(-1, 2) * Fix64.Epsilon).Raw);
+    }
+
+    [Fact]
+    public void Editing_one_hex_of_the_map_moves_the_map_hash_and_rewrapping_the_legend_does_not()
+    {
+        // OBSERVED: fold only the width and the height in HexMap.FromGrid --
+        // delete the loop over the cells. The reformatting assertions below
+        // still pass, and the first one goes red with the two five-by-three
+        // grids both hashing 370199AFA18A6E97. That is the shape of a map hash
+        // that pins nothing: a stored defense would replay happily on geometry
+        // somebody had nudged, and every gate in the negative suite would still
+        // be green.
+        //
+        // One hex longer rather than one character different, because a
+        // single-character edit of a valid map is never another valid map: the
+        // corridor assertion refuses an isolated cell, a branch, a second
+        // entrance and a dead end, which between them cover every one-character
+        // change there is. The corridor gaining a hex is the smallest edit to
+        // the playfield that exists.
+        HexMap shorter = HexMap.Parse("""
+            .....
+            .S#E.
+            .....
+            """);
+
+        HexMap longer = HexMap.Parse("""
+            .....
+            .S##E
+            .....
+            """);
+
+        Assert.NotEqual(shorter.MapHash, longer.MapHash);
+
+        // The same grid somewhere else on the same board. Nothing about the
+        // corridor changed except which hexes it is made of.
+        Assert.NotEqual(
+            shorter.MapHash,
+            HexMap.Parse("""
+                .....
+                .....
+                .S#E.
+                """).MapHash);
+
+        // And the file around it, rewritten. The map's comment marker, its line
+        // endings and its trailing blank lines are not the playfield, and a hash
+        // over the file would retire every stored defense for each of them.
+        string original = File.ReadAllText(RepoLayout.MapFile);
+        Hash64 hash = HexMap.Parse(original).MapHash;
+
+        Assert.Equal(hash, HexMap.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal)).MapHash);
+        Assert.Equal(hash, HexMap.Parse(original + "\n\n").MapHash);
+        Assert.Equal(hash, HexMap.Parse("// a completely rewritten legend\n\n" + WithoutMapComments(original)).MapHash);
+    }
+
+    [Fact]
+    public void No_single_hex_of_the_committed_map_can_be_changed_without_something_noticing()
+    {
+        // The exhaustive form. Every cell of the committed grid, changed to each
+        // of the other three kinds, and every one of them either refused by the
+        // corridor assertion or landing on a different map hash. Nothing is
+        // allowed to load quietly with the hash it had.
+        byte[] cells = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile)).ToCellBytes();
+        HexMap original = HexMap.FromCells("map", 15, 9, cells);
+        int refused = 0;
+        int rehashed = 0;
+
+        for (int index = 0; index < cells.Length; index++)
+        {
+            for (byte kind = 0; kind <= (byte)MapCell.Exit; kind++)
+            {
+                if (cells[index] == kind)
+                {
+                    continue;
+                }
+
+                byte[] edited = (byte[])cells.Clone();
+                edited[index] = kind;
+
+                try
+                {
+                    Assert.NotEqual(original.MapHash, HexMap.FromCells("edited", 15, 9, edited).MapHash);
+                    rehashed++;
+                }
+                catch (ContentException)
+                {
+                    refused++;
+                }
+            }
+        }
+
+        Assert.Equal(cells.Length * 3, refused + rehashed);
+        Assert.True(refused > 0, "The corridor assertion caught none of them, which cannot be right.");
+    }
+
+    /// <summary>
+    /// One number for what this build's rules do: a fold over the state hash of
+    /// every tick of a fixed scenario.
+    /// </summary>
+    /// <remarks>
+    /// The scenario is deliberately small and deliberately local. Every rule
+    /// worth calling one reaches it -- the tick order, the release cadence, the
+    /// targeting tiebreak, the dice, and the rounding under both the movement
+    /// step and the lateral offsets -- and nothing in <c>content/</c> does.
+    /// </remarks>
+    private static Hash64 RuleFingerprint()
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint units", FingerprintUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+        TowerLayout layout = TowerLayout.Parse("fingerprint defense", FingerprintDefense, types);
+        WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
+
+        var match = new Match(map, layout, wave, FingerprintSeed);
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/1").Add(unchecked((long)match.StateHash.Value));
+
+        for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
+        {
+            match.Advance(1);
+            fingerprint = fingerprint.Add(unchecked((long)match.StateHash.Value));
+        }
+
+        MatchResult result = match.Result();
+
+        return fingerprint
+            .Add(result.Leaked, result.Total)
+            .Add(result.FinalTick)
+            .Add(unchecked((long)result.RollingStateHash.Value));
+    }
+
+    private static (uint Version, ulong Fingerprint) Row(uint version)
+    {
+        foreach ((uint Version, ulong Fingerprint) row in BehaviourByVersion)
+        {
+            if (row.Version == version)
+            {
+                return row;
+            }
+        }
+
+        throw new Xunit.Sdk.XunitException(
+            "Simulation version "
+            + version.ToString(CultureInfo.InvariantCulture)
+            + " has no behaviour fingerprint recorded for it. A bump is two edits: the constant, and a "
+            + "row here carrying what this build's rules actually do. Run this test, take the fingerprint "
+            + "it computed, and add the pair -- that is the moment every record made under the old rules "
+            + "is retired.");
+    }
+
+    /// <summary>The same table with every comment line replaced by a different one.</summary>
+    private static string WithCommentsRewritten(string original) =>
+        string.Join(
+            "\n",
+            original
+                .Split('\n')
+                .Select(line => line.TrimStart().StartsWith('#') ? "# something else entirely" : line));
+
+    /// <summary>The same table with the columns lined up by somebody else's habits.</summary>
+    private static string WithColumnsRespaced(string original) =>
+        string.Join(
+            "\n",
+            original
+                .Split('\n')
+                .Select(line => line.TrimStart().StartsWith('#') || line.Trim().Length == 0
+                    ? line
+                    : "\t" + string.Join(
+                        "  \t ",
+                        line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "  "));
+
+    /// <summary>The map's grid, with its legend stripped off.</summary>
+    private static string WithoutMapComments(string original) =>
+        string.Join(
+            "\n",
+            original
+                .Split('\n')
+                .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
+                .Where(line => line.Trim().Length > 0));
+}
