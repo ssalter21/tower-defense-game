@@ -1,0 +1,50 @@
+# The defense the skeleton's one match is fought by.
+#
+# Six towers, and they never change. There is no build phase, no economy and
+# nothing a mouse does that reaches the simulation: the defense is this file,
+# read once, and from then on it is one array that is never written to. Every
+# hit and every death in the match belongs to the creeps.
+#
+# Same rules as units.txt: integers only, no decimal point, comments free.
+#
+# THE CELL IS A COLUMN AND A ROW, counted the way map.txt is written -- so a
+# tower can be placed by counting characters in that file. The simulation
+# converts the pair to axial (q, r) on load through the one canonical odd-r
+# conversion it owns, which is also what the record format stores.
+#
+# TOWERS ASCEND BY ROW AND THEN BY COLUMN, AND THAT ORDER IS ASSERTED RATHER
+# THAN SORTED ON LOAD. Sorting would leave two identical defenses with two
+# different sets of bytes and content-addressing one would stop meaning
+# anything. It is also the order the match iterates towers in, and iteration
+# order is a simulation input here: where two towers cover the same stretch of
+# corridor, both can commit to the same creep on the same tick, and which of
+# them lands the killing shot is decided by which one this file lists first.
+#
+# RANGES OVERLAP ON PURPOSE. A defense whose towers each had the corridor to
+# themselves would never exercise overkill, never exercise a shot arriving at
+# something already dying, and never make iteration order matter -- so every
+# one of these six shares a stretch of corridor with at least one other, and
+# the build gate asserts that rather than leaving it to this comment. The
+# corridor is deliberately not covered everywhere: the first few hexes past the
+# entrance are watched by one tower and the stretch either side of the first
+# corner by one as well, which is a large part of why a third of the wave gets
+# through.
+#
+# The loader refuses a tower that is off the grid, a tower standing inside the
+# corridor, and a tower whose range cannot reach the route at all. The last is
+# what a mistyped coordinate looks like, and without the check it would present
+# as a balance problem rather than as a fault.
+#
+#       type  col  row
+#
+# type 3 : bolt, hitscan, three hexes -- lands damage on the tick it fires and
+#          puts nothing at all in the snapshot
+# type 4 : mortar, projectile, four hexes -- puts a real entity in the snapshot
+#          that flies for eleven ticks and can be orphaned mid-flight
+
+tower   4     9    0
+tower   3     3    2
+tower   3     6    4
+tower   3     12   4
+tower   4     4    6
+tower   3     10   8

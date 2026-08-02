@@ -47,8 +47,19 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 
 # The content a running player has to be able to read. See the note above about
 # how this list grows.
+#
+# The floor needed only the map. Drawing the MATCH needs the other three: the
+# type table, the defense the towers are built from and the wave that walks the
+# corridor. The list is mirrored by StreamingContent.MatchFileNames, and an
+# edit-mode test fails if the two disagree -- a file in one and not the other is
+# either content that ships and is never read, or content that is read and does
+# not ship, and the second presents as an empty playfield in a build that worked
+# perfectly in the editor.
 $files = @(
-    'map.txt'
+    'map.txt',
+    'units.txt',
+    'defense.txt',
+    'wave.txt'
 )
 
 if (-not (Test-Path $source)) { throw "No authored content at $source." }

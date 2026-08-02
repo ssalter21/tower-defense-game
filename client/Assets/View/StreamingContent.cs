@@ -43,6 +43,35 @@ namespace View
         /// <summary>The authored map grid.</summary>
         public const string MapFileName = "map.txt";
 
+        /// <summary>The unit type table — both creep types and both tower types.</summary>
+        public const string UnitsFileName = "units.txt";
+
+        /// <summary>The six towers the match is fought by.</summary>
+        public const string DefenseFileName = "defense.txt";
+
+        /// <summary>The orders the match is fought against.</summary>
+        public const string WaveFileName = "wave.txt";
+
+        /// <summary>
+        /// Every content file the player has to be able to read, in the order a
+        /// match needs them: the types first, because the defense and the wave
+        /// are both parsed against them.
+        /// </summary>
+        /// <remarks>
+        /// The same list <c>tools/sync-streaming-content.ps1</c> copies, and an
+        /// edit-mode test checks the two agree. A file in one and not the other
+        /// is either content that ships and is never read, or content that is
+        /// read and does not ship — the second of which presents as an empty
+        /// playfield in a build that worked perfectly in the editor.
+        /// </remarks>
+        public static readonly string[] MatchFileNames =
+        {
+            MapFileName,
+            UnitsFileName,
+            DefenseFileName,
+            WaveFileName,
+        };
+
         /// <summary>Where the generated copies are, at runtime and in the editor.</summary>
         public static string Directory => Path.Combine(Application.streamingAssetsPath, FolderName);
 
@@ -74,5 +103,40 @@ namespace View
         /// and there is not going to be one.
         /// </summary>
         public static HexMap ReadMap() => HexMap.ParseUtf8(MapFileName, Read(MapFileName));
+
+        /// <summary>The unit type table, parsed by the simulation.</summary>
+        public static UnitTypeTable ReadUnitTypes() =>
+            UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
+
+        /// <summary>The defense, parsed against <paramref name="types"/>.</summary>
+        public static TowerLayout ReadDefense(UnitTypeTable types) =>
+            TowerLayout.ParseUtf8(DefenseFileName, Read(DefenseFileName), types);
+
+        /// <summary>The wave, parsed against <paramref name="types"/>.</summary>
+        public static WaveScript ReadWave(UnitTypeTable types) =>
+            WaveScript.ParseUtf8(WaveFileName, Read(WaveFileName), types);
+
+        /// <summary>
+        /// True when every file a match needs is beside the player.
+        /// </summary>
+        /// <remarks>
+        /// Asked before starting a match rather than caught afterwards, so a
+        /// project whose streaming copy was never generated draws its floor and
+        /// says why the match did not start — instead of throwing out of
+        /// <c>Awake</c> and leaving a scene that is half built for a reason
+        /// nobody can see.
+        /// </remarks>
+        public static bool HasEveryMatchFile()
+        {
+            foreach (string fileName in MatchFileNames)
+            {
+                if (!File.Exists(PathOf(fileName)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
