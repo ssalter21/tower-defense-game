@@ -33,9 +33,11 @@ namespace View
     /// <b>Interpolation is a pure function of three arguments</b> — the two
     /// snapshots and an alpha — so it is not a playback head. It cannot drift,
     /// it holds no accumulated position, and drawing the same alpha twice draws
-    /// the same picture. The only clock in this class decides <i>when to
-    /// advance the simulation</i>, which is a different thing from a clock that
-    /// decides what a frame looks like.
+    /// the same picture. <b>There is no clock in this class at all</b>: which
+    /// tick is on screen is decided entirely by
+    /// <see cref="PlaybackController"/>, which calls <see cref="StepOneTick"/>,
+    /// <see cref="ReSimulateTo"/> and <see cref="Draw"/> and is the only thing
+    /// that does.
     /// </para>
     /// <para>
     /// <b>Draw order is by construction, not by sorting.</b> Everything on the
@@ -48,18 +50,6 @@ namespace View
     [DisallowMultipleComponent]
     public sealed class MatchView : MonoBehaviour
     {
-        /// <summary>
-        /// The most ticks one frame may advance the simulation by.
-        /// </summary>
-        /// <remarks>
-        /// A frame that arrives late — a domain reload, a breakpoint, a
-        /// minimised editor — would otherwise try to catch up the whole gap at
-        /// once and stall for longer than the gap. Capping means the match runs
-        /// slow for a moment instead, which is visible and recoverable, rather
-        /// than freezing, which looks like a hang.
-        /// </remarks>
-        public const int MaxTicksPerFrame = 8;
-
         private readonly Dictionary<int, Vector3> _drawnCreepPositions = new Dictionary<int, Vector3>();
 
         private readonly Dictionary<int, CreepSnapshot> _previousCreeps =
@@ -89,7 +79,13 @@ namespace View
 
         private Transform _projectileParent;
 
-        private float _tickClock;
+        private HexMap _map;
+
+        private TowerLayout _layout;
+
+        private WaveScript _wave;
+
+        private ulong _seed;
 
         /// <summary>The match being drawn.</summary>
         public Match Match { get; private set; }
@@ -119,6 +115,25 @@ namespace View
         public bool IsRunning => Match != null;
 
         /// <summary>
+        /// The tick the match ends on, known before anybody has watched a
+        /// single frame of it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Measured at <see cref="Begin"/> by resolving a throwaway match —
+        /// which costs one instant-resolve, is the same call as every other
+        /// scenario, and allocates nothing because nobody pulls a snapshot from
+        /// it. The build gate holds that run under ten milliseconds.
+        /// </para>
+        /// <para>
+        /// A scrub bar needs a length before the first drag. The alternatives
+        /// are guessing one or growing it as the match plays, and the second is
+        /// a slider whose far end moves while you are dragging towards it.
+        /// </para>
+        /// </remarks>
+        public int FinalTick { get; private set; }
+
+        /// <summary>
         /// True when the simulation will advance no further. The view keeps
         /// drawing the last snapshot rather than clearing, because a finished
         /// match still has a picture.
@@ -143,6 +158,15 @@ namespace View
 
             _types = types ?? throw new ArgumentNullException(nameof(types));
             _art = art ?? throw new ArgumentNullException(nameof(art));
+
+            // Kept so a seek can build the match again from nothing but these.
+            // A seek re-simulates, so these four are the whole of what the view
+            // has to remember about a match -- there is no cache below them.
+            _map = map;
+            _layout = layout;
+            _wave = wave;
+            _seed = seed;
+
             _route = RoutePath.For(map);
             _projectileMaterial = ViewMaterials.Create("Projectile", MatchTuning.ProjectileColor);
 
@@ -157,12 +181,15 @@ namespace View
 
             Decorations = new MatchDecorations(transform, CreepPositionOf, TowerMuzzleOf);
 
+            // Instant-resolve, and it is the same call as everything else:
+            // construct, run, and never pull a snapshot.
+            FinalTick = new Match(map, layout, wave, seed).Resolve().FinalTick;
+
             Match = new Match(map, layout, wave, seed);
 
             Previous = null;
             Current = Match.PullSnapshot();
             RememberPrevious(Current);
-            _tickClock = 0f;
 
             Draw(0f);
         }
@@ -230,32 +257,67 @@ namespace View
         /// </summary>
         public void ClearDecorations() => Decorations?.Clear();
 
-        private void Update()
+        /// <summary>
+        /// Puts the match on <paramref name="tick"/> by playing it again from
+        /// tick zero, and draws it. The mechanism behind every seek.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>There is no snapshot cache and this is what happens instead.</b>
+        /// A cache can never disagree with itself, so scrubbing one would prove
+        /// nothing; re-simulating makes every drag of the scrub bar a fresh
+        /// determinism check that either produces the same match or does not.
+        /// </para>
+        /// <para>
+        /// <b>The events of the re-run ticks are discarded — by nobody
+        /// subscribing, rather than by anybody filtering.</b>
+        /// <see cref="Match.Advance(int, IMatchEvents)"/> takes the sink as an
+        /// argument and this call does not pass one, so the whole match's
+        /// tracers, flashes and sparks are never built in the first place.
+        /// Seeking to the end therefore does not detonate them in one frame.
+        /// </para>
+        /// <para>
+        /// <b>Only the decorations are cleared</b>, because effects are the one
+        /// remaining thing in this client that owns a clock. Audio would be the
+        /// other and there is none yet; when there is, it clears here, next to
+        /// this line, and for the same reason.
+        /// </para>
+        /// <para>
+        /// <b>The object pool is deliberately left alone.</b> The draw at the
+        /// end of this method syncs it against the new snapshot, and everything
+        /// whose id is not in that snapshot goes back in the pool by
+        /// subtraction — the same path every ordinary frame uses. Clearing it
+        /// here would be a second opinion about what exists, and the two would
+        /// disagree exactly when something interesting happened.
+        /// </para>
+        /// </remarks>
+        public void ReSimulateTo(int tick)
         {
             if (Match == null)
             {
-                return;
+                throw new InvalidOperationException(
+                    "There is no match to seek in. Begin one first.");
             }
 
-            float tickSeconds = 1f / Sim.Match.TicksPerSecond;
-
-            _tickClock += Time.deltaTime;
-
-            int stepped = 0;
-
-            while (_tickClock >= tickSeconds && !Match.IsFinished && stepped < MaxTicksPerFrame)
+            if (tick < 0)
             {
-                StepOneTick();
-                _tickClock -= tickSeconds;
-                stepped++;
+                throw new ArgumentOutOfRangeException(
+                    nameof(tick), "There is no tick before the first one.");
             }
 
-            if (Match.IsFinished)
-            {
-                _tickClock = 0f;
-            }
+            Match = new Match(_map, _layout, _wave, _seed);
+            Match.Advance(tick);
 
-            Draw(Match.IsFinished ? 1f : _tickClock / tickSeconds);
+            // No previous snapshot, because the tick before this one was not
+            // watched. Interpolating across a discontinuity would draw a frame
+            // belonging to neither side of it.
+            Previous = null;
+            Current = Match.PullSnapshot();
+            RememberPrevious(Current);
+
+            Decorations.Clear();
+
+            Draw(0f);
         }
 
         // ---------------------------------------------------------------

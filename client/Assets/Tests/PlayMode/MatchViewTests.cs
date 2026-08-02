@@ -30,12 +30,6 @@ namespace Tests.PlayMode
     /// </remarks>
     public class MatchViewTests
     {
-        /// <summary>
-        /// The seed the committed golden trace was produced with, so these run
-        /// the match the rest of the project is written about.
-        /// </summary>
-        private const ulong Seed = 1;
-
         private readonly List<GameObject> _spawned = new List<GameObject>();
 
         [TearDown]
@@ -50,80 +44,21 @@ namespace Tests.PlayMode
         }
 
 #if UNITY_EDITOR
-        private static T Load<T>(string path)
-            where T : Object
-        {
-            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
-            Assert.IsNotNull(asset, $"nothing imported at {path}");
-
-            return asset;
-        }
-
-        private static AnimationClip Clip(string bank, string name)
-        {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(bank)
-                .OfType<AnimationClip>()
-                .FirstOrDefault(c => c.name == name);
-
-            Assert.IsNotNull(clip, $"no clip '{name}' in {bank}");
-
-            return clip;
-        }
-
-        /// <summary>
-        /// The art, loaded the way the scene builder loads it. Duplicated from
-        /// the builder on purpose: a test that asked the builder which clips it
-        /// chose could not catch the builder choosing the wrong ones.
-        /// </summary>
-        private static MatchArt Art() =>
-            MatchArt.Of(
-                Load<GameObject>("Assets/Art/Characters/Skeleton_Warrior.fbx"),
-                Clip("Assets/Art/Animations/Rig_Medium_MovementBasic.fbx", "Walking_A"),
-                Clip("Assets/Art/Animations/Rig_Medium_General.fbx", "Death_A"),
-                Load<GameObject>("Assets/Art/Characters/Ranger.fbx"),
-                Load<GameObject>("Assets/Art/Weapons/bow_withString.fbx"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Idle"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Draw"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Release"),
-                Load<GameObject>("Assets/Art/Buildings/building_tower_A_blue.fbx"));
-
         /// <summary>A match, drawn, with nobody watching it.</summary>
         private MatchView Begin()
         {
             var host = new GameObject("MatchViewTest");
             _spawned.Add(host);
 
-            UnitTypeTable types = StreamingContent.ReadUnitTypes();
-
-            var view = host.AddComponent<MatchView>();
-            view.Begin(
-                StreamingContent.ReadMap(),
-                types,
-                StreamingContent.ReadDefense(types),
-                StreamingContent.ReadWave(types),
-                Seed,
-                Art());
-
-            return view;
+            return TheMatchOnScreen.Begin(host);
         }
 
         /// <summary>
         /// Steps the match, drawing every tick, until <paramref name="stop"/>
         /// says so or the match ends.
         /// </summary>
-        private static void RunUntil(MatchView view, System.Func<bool> stop)
-        {
-            while (!view.IsFinished)
-            {
-                view.StepOneTick();
-                view.Draw(1f);
-
-                if (stop())
-                {
-                    return;
-                }
-            }
-        }
+        private static void RunUntil(MatchView view, System.Func<bool> stop) =>
+            TheMatchOnScreen.RunUntil(view, stop);
 
         // ---------------------------------------------------------------
         // Pulling and matching

@@ -95,6 +95,18 @@ namespace View
         /// <summary>How many effects are on screen. For tests.</summary>
         public int ActiveCount => _active.Count;
 
+        /// <summary>
+        /// How many events this has ever been told about. For tests, and
+        /// deliberately not reset by <see cref="Clear"/>.
+        /// </summary>
+        /// <remarks>
+        /// The counter a seek has to answer to. What a seek claims is that the
+        /// re-run ticks' events never arrived — which is a different and much
+        /// stronger thing than their effects having been tidied up afterwards,
+        /// and the two are indistinguishable from anything that resets here.
+        /// </remarks>
+        public int EventsHeard { get; private set; }
+
         /// <summary>How many tracers have been drawn since the last clear. For tests.</summary>
         public int TracersDrawn { get; private set; }
 
@@ -104,6 +116,8 @@ namespace View
         /// <summary>A tower released a shot: a tracer if it is hitscan, a flash either way.</summary>
         public void TowerFired(int towerId, int targetId)
         {
+            EventsHeard++;
+
             Vector3? muzzle = _towerMuzzle(towerId);
 
             if (!muzzle.HasValue)
@@ -124,6 +138,8 @@ namespace View
         /// <summary>Damage landed: a spark on the creep it landed on.</summary>
         public void CreepDamaged(int creepId, int amount)
         {
+            EventsHeard++;
+
             Vector3? at = _creepPosition(creepId);
 
             if (!at.HasValue)
@@ -147,6 +163,7 @@ namespace View
         /// </summary>
         public void CreepDied(int creepId)
         {
+            EventsHeard++;
         }
 
         /// <summary>
@@ -156,6 +173,7 @@ namespace View
         /// </summary>
         public void CreepLeaked(int creepId)
         {
+            EventsHeard++;
         }
 
         /// <summary>
@@ -167,6 +185,7 @@ namespace View
         /// </summary>
         public void ProjectileOrphaned(int projectileId)
         {
+            EventsHeard++;
         }
 
         /// <summary>
@@ -177,6 +196,7 @@ namespace View
         /// </summary>
         public void CreepOvertook(int creepId, int overtakenCreepId)
         {
+            EventsHeard++;
         }
 
         /// <summary>

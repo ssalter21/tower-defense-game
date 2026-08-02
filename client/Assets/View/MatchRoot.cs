@@ -66,6 +66,14 @@ namespace View
         /// <summary>The match being drawn, once one has started.</summary>
         public MatchView MatchView { get; private set; }
 
+        /// <summary>
+        /// What decides which tick is on screen, once a match has started.
+        /// </summary>
+        public PlaybackController Playback { get; private set; }
+
+        /// <summary>The scrub bar, once there is a match to scrub.</summary>
+        public PlaybackControls Controls { get; private set; }
+
         /// <summary>The art the match is drawn with.</summary>
         public MatchArt Art => art;
 
@@ -79,6 +87,15 @@ namespace View
             if (MatchView == null)
             {
                 BeginMatch();
+            }
+
+            // Only when there is a match. A run that could not read its content
+            // or its art has already said so, and a scrub bar over nothing is a
+            // second, quieter way of reporting the same thing.
+            if (MatchView != null && Controls == null)
+            {
+                Playback = new PlaybackController(MatchView);
+                Controls = PlaybackControls.Build(transform, Playback);
             }
         }
 
@@ -135,7 +152,7 @@ namespace View
 
         /// <summary>
         /// Starts a match from content already parsed. What a test calls, and
-        /// what the transport controls will call when they arrive.
+        /// what the frame capture calls with art of its own.
         /// </summary>
         public MatchView BeginMatch(UnitTypeTable types, TowerLayout layout, WaveScript wave, ulong seed) =>
             BeginMatch(types, layout, wave, seed, art);
