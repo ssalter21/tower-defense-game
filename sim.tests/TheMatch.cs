@@ -35,6 +35,8 @@ public static class TheMatch
     public static TowerLayout Layout(UnitTypeTable types) =>
         TowerLayout.Parse(File.ReadAllText(RepoLayout.DefenseFile), types);
 
+    public static GoldenTrace Trace() => GoldenTrace.Parse(File.ReadAllText(RepoLayout.GoldenTraceFile));
+
     /// <summary>A fresh match on the committed content. Every scenario starts here.</summary>
     public static Match Fresh(ulong seed = Seed)
     {

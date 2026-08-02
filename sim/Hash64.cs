@@ -52,6 +52,13 @@ namespace Sim
         public ulong Value { get; }
 
         /// <summary>
+        /// Reads a digest back from the number it is. This is how a recorded
+        /// hash re-enters the simulation to be compared against a live one; it
+        /// is not a way to start a fold, which always begins from a label.
+        /// </summary>
+        public static Hash64 FromValue(ulong value) => new Hash64(value);
+
+        /// <summary>
         /// Begins a fold, absorbing the label that names the table and its
         /// field layout. The label must be printable ASCII: a fold that
         /// depended on how a runtime encodes a character outside that range
