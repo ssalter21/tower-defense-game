@@ -17,6 +17,14 @@ the real `IsometricCameraRig` at its real snaps, and the real `MatchView`
 stepping the real simulation. A capture path that built its own approximation of
 the scene would be a picture of something this project does not ship.
 
+**And it is the real match**, read out of `content/match.replay` — the same
+bytes the command line replays and the player plays, seed included. The tick in
+each filename is only worth anything because of that: it is a tick of the run
+`content/landmarks.txt` was made from, so a frame named 366 and the checklist row
+that says "drag to tick 366" are about the same moment. These frames were
+captured against a seed of the capture tool's own until #48, which happened to
+agree on the overtake and disagreed by eleven ticks on the last creep to die.
+
 ## Regenerating
 
 ```powershell

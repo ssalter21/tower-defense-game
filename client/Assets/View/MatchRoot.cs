@@ -44,10 +44,6 @@ namespace View
         [Tooltip("The models and clips the match is drawn with. Every one chosen by the developer; see #44.")]
         private MatchArt art = new MatchArt();
 
-        [SerializeField]
-        [Tooltip("The seed the watched match is played with. Not a simulation rule — the same match every time.")]
-        private ulong matchSeed = 1;
-
         /// <summary>The parsed playfield, or null before <see cref="Build"/>.</summary>
         public HexMap Map { get; private set; }
 
@@ -79,14 +75,24 @@ namespace View
 
         private void Awake()
         {
+            // Read once, used twice. The floor is drawn from the record's own
+            // inlined grid rather than from map.txt, because the floor and the
+            // match have to be the same playfield and the only way to be certain
+            // of that is for there to be one of them. Where there is no record
+            // to read, the authored map still draws a floor and BeginMatch says
+            // what is missing.
+            ReplayBundle record = StreamingContent.HasEveryMatchFile()
+                ? StreamingContent.ReadRecordedMatch()
+                : null;
+
             if (Floor == null)
             {
-                Build(StreamingContent.ReadMap());
+                Build(record != null ? record.Map : StreamingContent.ReadMap());
             }
 
             if (MatchView == null)
             {
-                BeginMatch();
+                BeginMatch(record);
             }
 
             // Only when there is a match. A run that could not read its content
@@ -100,16 +106,26 @@ namespace View
         }
 
         /// <summary>
-        /// Reads the rest of the content and starts the match on the floor this
-        /// object already built.
+        /// Starts the recorded match on the floor this object already built.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Separate from <see cref="Build"/>, and deliberately so. The floor is
         /// drawable from a map alone, which is what lets a test write four rows
-        /// of characters and check the tiles; a match needs the type table, the
-        /// defense and the wave as well. Folding the two together would make
-        /// every floor test depend on content it does not care about.
+        /// of characters and check the tiles; a match needs the type table and a
+        /// record as well. Folding the two together would make every floor test
+        /// depend on content it does not care about.
+        /// </para>
+        /// <para>
+        /// <b>The match on screen is the recorded one, seed included.</b> Which
+        /// match this is decides what every tick number in
+        /// <c>docs/sit-down.md</c> means: the checklist is written against
+        /// <c>content/landmarks.txt</c>, and that table is what a real run of
+        /// these exact bytes reported. A seed serialized on this object instead
+        /// would be a second copy of a number that already lives in the record —
+        /// and the two the project actually had differed by eleven ticks on the
+        /// last creep to die, which does not look wrong from the screen and
+        /// simply sends somebody to the wrong second of the match.
         /// </para>
         /// <para>
         /// Missing content is reported and not thrown. A player whose streaming
@@ -120,9 +136,12 @@ namespace View
         /// there.
         /// </para>
         /// </remarks>
-        public void BeginMatch()
+        /// <param name="record">
+        /// The recorded match, or null when the streaming copy is incomplete.
+        /// </param>
+        public void BeginMatch(ReplayBundle record)
         {
-            if (!StreamingContent.HasEveryMatchFile())
+            if (record == null)
             {
                 Debug.LogWarning(
                     "MatchRoot: no match drawn — the streaming copy is incomplete. Run "
@@ -141,13 +160,41 @@ namespace View
                 return;
             }
 
-            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+            BeginMatch(StreamingContent.ReadUnitTypes(), record, art);
+        }
 
-            BeginMatch(
+        /// <summary>
+        /// Starts the match a record describes, drawn with the art the caller
+        /// supplies.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Two things have to happen in one order and this is the only place
+        /// that knows it: the record is put through the replay gate, and then
+        /// the match is built from what the record carries. Unpacking a bundle
+        /// at a call site meant repeating both, and the half anybody would
+        /// forget is the gate — which is the half that produces a refusal by
+        /// name instead of a match played under a ruleset it was not recorded
+        /// against.
+        /// </para>
+        /// <para>
+        /// The gate's return value is dropped on purpose. What is wanted from
+        /// it is the refusal; the view builds its own match, because a view
+        /// that cannot build one cannot seek.
+        /// </para>
+        /// </remarks>
+        public MatchView BeginMatch(UnitTypeTable types, ReplayBundle record, MatchArt art)
+        {
+            if (record == null) throw new System.ArgumentNullException(nameof(record));
+
+            record.Replay(types);
+
+            return BeginMatch(
                 types,
-                StreamingContent.ReadDefense(types),
-                StreamingContent.ReadWave(types),
-                matchSeed);
+                record.Ghost.ToLayout(types),
+                record.Wave.ToScript(types),
+                record.Seed,
+                art);
         }
 
         /// <summary>

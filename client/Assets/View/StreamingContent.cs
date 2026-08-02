@@ -53,16 +53,51 @@ namespace View
         public const string WaveFileName = "wave.txt";
 
         /// <summary>
+        /// The whole match in one run of bytes: the seed, the map, the defense
+        /// and the wave. What the player actually plays.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The player plays the record, not a seed of its own.</b> The
+        /// committed landmark table — the ticks the sit-down checklist sends
+        /// somebody to look at — is what a real run of <i>these bytes</i>
+        /// reported. A player that re-derived the same match from the four text
+        /// files would need the seed written down a second time, and a second
+        /// copy of a number is a number that goes out of date: the two differ by
+        /// eleven ticks on the last creep to die, which is not a difference
+        /// anybody would notice from the screen, only from being sent to the
+        /// wrong second of the match.
+        /// </para>
+        /// <para>
+        /// So the seed is not a field anywhere on the view side. It is read out
+        /// of the record, along with the map, the defense and the wave, which is
+        /// the same thing <c>ParityRunTests</c> does with the same bytes.
+        /// </para>
+        /// </remarks>
+        public const string ReplayFileName = "match.replay";
+
+        /// <summary>
         /// Every content file the player has to be able to read, in the order a
         /// match needs them: the types first, because the defense and the wave
         /// are both parsed against them.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The same list <c>tools/sync-streaming-content.ps1</c> copies, and an
         /// edit-mode test checks the two agree. A file in one and not the other
         /// is either content that ships and is never read, or content that is
         /// read and does not ship — the second of which presents as an empty
         /// playfield in a build that worked perfectly in the editor.
+        /// </para>
+        /// <para>
+        /// The four text files ship alongside the record even though the record
+        /// inlines three of them. <see cref="UnitsFileName"/> has to: the type
+        /// table is what the replay gate checks the record's content hash
+        /// against, and it is not in the bundle. The other three are the
+        /// authored originals the bundle was recorded from, and they are what
+        /// the fixtures read; the record's own gate is what stops the match on
+        /// screen being drawn from anything else.
+        /// </para>
         /// </remarks>
         public static readonly string[] MatchFileNames =
         {
@@ -70,6 +105,7 @@ namespace View
             UnitsFileName,
             DefenseFileName,
             WaveFileName,
+            ReplayFileName,
         };
 
         /// <summary>Where the generated copies are, at runtime and in the editor.</summary>
@@ -115,6 +151,19 @@ namespace View
         /// <summary>The wave, parsed against <paramref name="types"/>.</summary>
         public static WaveScript ReadWave(UnitTypeTable types) =>
             WaveScript.ParseUtf8(WaveFileName, Read(WaveFileName), types);
+
+        /// <summary>
+        /// The recorded match, read but not yet gated: the bytes the command
+        /// line replayed, beside the player.
+        /// </summary>
+        /// <remarks>
+        /// Reading and replaying are separate gates in the simulation, and this
+        /// is only the first — the record is readable here whatever ruleset it
+        /// was made against. What refuses a record this build cannot honour is
+        /// <c>ReplayBundle.Replay</c>, and it refuses by name.
+        /// </remarks>
+        public static ReplayBundle ReadRecordedMatch() =>
+            ReplayBundle.FromBytes(FolderName + "/" + ReplayFileName, Read(ReplayFileName));
 
         /// <summary>
         /// True when every file a match needs is beside the player.

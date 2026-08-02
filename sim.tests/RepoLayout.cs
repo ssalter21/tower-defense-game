@@ -69,6 +69,20 @@ public static class RepoLayout
     public static string BundleFile => Path.Combine(ContentDirectory, "match.replay");
 
     /// <summary>
+    /// The twelve-row eyeball checklist, and the one artefact in this
+    /// repository whose correctness is a human's job.
+    /// </summary>
+    /// <remarks>
+    /// It is here, in an engine-free gate, because the thing that can go wrong
+    /// with it is not engine-shaped: its rows name tick numbers taken from the
+    /// committed landmark table, and a content change that moves a moment
+    /// leaves those numbers pointing at the wrong second of the match. Nothing
+    /// about that looks wrong to the person reading the checklist, which is why
+    /// it is checked here rather than noticed there.
+    /// </remarks>
+    public static string SitDownFile => Path.Combine(Root, "docs", "sit-down.md");
+
+    /// <summary>
     /// One tiny replay bundle per defense record format version that has ever
     /// shipped, and the result a real run of each produced.
     /// </summary>

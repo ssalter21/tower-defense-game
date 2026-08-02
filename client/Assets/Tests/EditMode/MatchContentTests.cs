@@ -79,6 +79,44 @@ namespace Tests.EditMode
         }
 
         /// <summary>
+        /// The shipped record is one this build will actually replay.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Reading a record and being allowed to replay it are different gates,
+        /// and only the second is about this build: the simulation version, the
+        /// content hash and the map hash all have to be the ones in front of it.
+        /// A record that ships and is then refused presents as a player that
+        /// draws its floor and never starts a match — the same silent shape the
+        /// rest of this fixture exists for.
+        /// </para>
+        /// <para>
+        /// It matters more than it used to, because the record is now the whole
+        /// of what the player plays: the map it draws, the towers, the wave and
+        /// the seed. Every tick number in <c>docs/sit-down.md</c> is a tick of
+        /// this run.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheShippedRecordPassesTheReplayGate()
+        {
+            Sim.ReplayBundle record = StreamingContent.ReadRecordedMatch();
+
+            // Getting through the call is the assertion: the gate is three
+            // unconditional throws and what is wanted is that none of them
+            // fires. Asserting the returned match is on tick zero would be
+            // asserting about a freshly constructed object, which is true
+            // whatever the gate did — a check that cannot fail.
+            Assert.DoesNotThrow(() => record.Replay(StreamingContent.ReadUnitTypes()));
+
+            // The floor is drawn from the record's inlined grid, so this is the
+            // check that the playfield a human looks at is still the one
+            // somebody authored rather than one only the record remembers.
+            Assert.That(record.Map.MapHash, Is.EqualTo(StreamingContent.ReadMap().MapHash),
+                "the record was recorded on a different playfield than the one authored in content/map.txt");
+        }
+
+        /// <summary>
         /// The committed scene carries every art reference, so a player built
         /// from it draws a match rather than a floor.
         /// </summary>

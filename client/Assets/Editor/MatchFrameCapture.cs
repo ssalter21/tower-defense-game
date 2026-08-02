@@ -66,12 +66,12 @@ namespace View.Editor
 
         public static void Run()
         {
-            string outDir = ArgumentValue(DefaultOutDirArgument)
+            string outDir = BatchArguments.Value(DefaultOutDirArgument)
                 ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "docs", "frames"));
 
-            int[] ticks = ParseTicks(ArgumentValue(TicksArgument)) ?? DefaultTicks;
-            int snap = ParseInt(ArgumentValue(SnapArgument), 0);
-            int size = ParseInt(ArgumentValue(SizeArgument), 720);
+            int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
+            int snap = ParseInt(BatchArguments.Value(SnapArgument), 0);
+            int size = ParseInt(BatchArguments.Value(SizeArgument), 720);
 
             Directory.CreateDirectory(outDir);
 
@@ -83,16 +83,18 @@ namespace View.Editor
 
             try
             {
-                var root = host.AddComponent<MatchRoot>();
-                root.Build(StreamingContent.ReadMap());
+                // The recorded match, exactly as the player plays it. A capture
+                // of some other seed would be a picture of a match nobody can
+                // scrub to: the tick in each filename is only meaningful because
+                // it is a tick of the run content/landmarks.txt was made from.
+                ReplayBundle record = StreamingContent.ReadRecordedMatch();
 
-                UnitTypeTable types = StreamingContent.ReadUnitTypes();
+                var root = host.AddComponent<MatchRoot>();
+                root.Build(record.Map);
 
                 MatchView view = root.BeginMatch(
-                    types,
-                    StreamingContent.ReadDefense(types),
-                    StreamingContent.ReadWave(types),
-                    seed: 1,
+                    StreamingContent.ReadUnitTypes(),
+                    record,
                     art: LoadArt());
 
                 Camera camera = root.CameraRig.Camera;
@@ -246,19 +248,5 @@ namespace View.Editor
                 ? fallback
                 : int.Parse(value, CultureInfo.InvariantCulture);
 
-        private static string ArgumentValue(string flag)
-        {
-            string[] args = Environment.GetCommandLineArgs();
-
-            for (int index = 0; index < args.Length - 1; index++)
-            {
-                if (string.Equals(args[index], flag, StringComparison.Ordinal))
-                {
-                    return args[index + 1];
-                }
-            }
-
-            return null;
-        }
     }
 }

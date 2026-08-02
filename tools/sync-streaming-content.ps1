@@ -55,11 +55,19 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # either content that ships and is never read, or content that is read and does
 # not ship, and the second presents as an empty playfield in a build that worked
 # perfectly in the editor.
+#
+# match.replay joined the list when the player stopped deriving its match from
+# the four text files and started playing the RECORD. The seed is in there and
+# nowhere else on the view side, which is what makes the tick numbers in
+# docs/sit-down.md mean something in the build: they came from a real run of
+# these exact bytes. A player carrying its own seed instead had one eleven ticks
+# out from the committed landmark table, and nothing on screen looked wrong.
 $files = @(
     'map.txt',
     'units.txt',
     'defense.txt',
-    'wave.txt'
+    'wave.txt',
+    'match.replay'
 )
 
 if (-not (Test-Path $source)) { throw "No authored content at $source." }

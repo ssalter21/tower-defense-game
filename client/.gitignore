@@ -160,6 +160,25 @@ InitTestScene*.unity*
 /Packages/com.ssalter.hotreloadprobe/
 /Packages/com.ssalter.hotreloadprobe.meta
 
+# Every player build writes these two files into Assets/Resources/. They are
+# the performance testing package's per-run scratch -- the package ships as a
+# dependency of the test framework and has a build callback that stamps the run
+# id and settings into the project so a player can report timings back. They
+# describe one run on one machine and mean nothing in a clone, which is why they
+# are ignored by construction rather than by somebody remembering not to
+# `git add -A` after cutting a build (issue #48).
+#
+# THE FOLDER ITSELF IS DELIBERATELY NOT IGNORED. A bare `/Assets/Resources/`
+# would match a real Resources folder the day anybody adds one, and content
+# vanishing silently is the failure the root .gitignore was anchored to prevent.
+# Resources.meta is named here only because nothing else in that folder is
+# tracked; the day something is, this line has to go -- an ignored .meta beside
+# a tracked folder is the hazard the Sim.pdb.meta negation above exists to
+# avoid.
+/Assets/Resources/PerformanceTestRun*.json
+/Assets/Resources/PerformanceTestRun*.json.meta
+/Assets/Resources.meta
+
 # Scene-template state: Unity writes this into ProjectSettings/, but its
 # contents are UserSettings/-class -- per-user template pin states plus a
 # type list re-derived from whatever packages are installed. Nothing
