@@ -74,14 +74,20 @@ clone could never contain; that has to be watched for by hand. See
 does eventually notice a rebuilt managed plug-in, reimport it and reload the
 domain, with no keyboard or mouse input anywhere on the machine.
 
-**Focus is not what triggers it**, so the question "does it recompile on focus
-alone?" has a misleading shape. Both halves were measured directly:
+**It is the focus *transition* that triggers it, not the focus *state*.** That
+one distinction reconciles three results which otherwise contradict each other,
+and it is why "does it recompile on focus alone?" is the wrong question — it
+asks about a state. All three halves were measured directly:
 
 - an editor **minimised and provably untouched** — not the foreground window,
   and using 0.02 s of CPU per 5 s wall, so genuinely asleep — picked the
   rebuild up anyway, three times out of three;
 - an editor **holding the foreground continuously**, burning ~200% CPU, took
-  **nearly fifteen minutes** to notice a rebuild sitting on disk.
+  **nearly fifteen minutes** to notice a rebuild sitting on disk;
+- an editor **alt-tabbed onto** began refreshing in **a third of a second**,
+  twice out of two.
+
+Holding focus buys nothing. *Arriving* at focus buys everything.
 
 The delay is minutes, and it is not a fixed interval. Measured on this machine
 (Windows 11, Unity `6000.5.6f1`, `client/`, .NET SDK 10.0.101), on 1 Aug 2026,
@@ -98,10 +104,21 @@ became readable:
 | focused, foreground | 20:14:02.7 | 20:16:06.6 | **2 min 04 s** |
 | focused, foreground | 20:17:35.7 | 20:32:22.6 | **14 min 47 s** |
 
+And the attended case, measured 2 Aug 2026 with `probe.ps1 -Trial`: a human at
+the keyboard alt-tabbing onto the editor in the seconds after each rebuild. The
+refresh start is derived from the refresh record's own `Total`, less the phases
+that run after the reload is logged.
+
+| # | rebuilt | alt-tabbed | refresh started | **alt-tab → refresh** | domain reload | rebuild → reload |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 21:51:29.4 | 21:51:33.3 | 21:51:33.6 | **0.34 s** | 21:51:48.4 | 19.0 s |
+| 2 | 21:51:53.0 | 21:51:56.3 | 21:51:56.5 | **0.17 s** | 21:52:10.3 | 17.3 s |
+
 The reimport itself, once it starts, is not the slow part: the asset refreshes
 took 15–27 s wall, of which 10–15 s was Unity recompiling script assemblies
 that depend on the plug-in. `dotnet build` on the probe stub is ~0.9 s. So
-essentially all of the loop time is Unity deciding to look, not Unity working.
+essentially all of the loop time is Unity deciding to look, not Unity working —
+**and an alt-tab removes that deciding entirely.**
 
 ### What follows for an agent
 
@@ -113,12 +130,13 @@ essentially all of the loop time is Unity deciding to look, not Unity working.
 - **Never assume a fixed wait.** 18 seconds and 11 minutes were the same
   editor, minimised and untouched, doing the same thing. Poll for evidence; do
   not sleep and hope.
-- **Do not count on forcing it by activating the window.** Twice the editor was
-  deliberately restored and brought to the foreground over a rebuild that had
-  provably been sitting unnoticed for minutes. Both times the refresh had
-  already started ~18 s *earlier* on its own, so neither attempt is evidence
-  that activating helps — or that it does not. If you need a rebuild picked up
-  on demand, use batchmode rather than trying to poke a running editor.
+- **Activating the window does force it — and you still cannot do it.** A human
+  alt-tab starts the refresh in ~0.25 s, so the trigger is real. But
+  `SetForegroundWindow` from a background process is refused, confirmed twice on
+  this machine, including with the desktop idle for 204 s. The one thing that
+  would make the loop instant is the one thing an agent cannot reach. If you
+  need a rebuild picked up on demand, use batchmode rather than poking a running
+  editor — or ask the developer to alt-tab, which now has a known price.
 - **Poll the project-local log**, `client/Logs/Editor.log`, for a marker your
   own code emitted. Silence there means *not yet*, and never means *failed*.
 - **If you need it now, do not wait for the editor at all.** Close it and use
@@ -165,29 +183,33 @@ Every trial recorded the system-wide idle time from `GetLastInputInfo`, so a
 human touching the machine mid-trial shows up in the record instead of silently
 becoming the explanation.
 
-**One variant was not measured: a human alt-tabbing onto the editor in the
-seconds after a rebuild.** Windows would not let a background process stage
-that transition, and both attempts to force it landed on a refresh the editor
-had already begun ~18 s earlier of its own accord. What the table has instead
-is an editor that *held* focus throughout, which took 14 min 47 s. That is
-enough to show focus is not the trigger, and enough to settle whether an agent
-can work unattended, but it is not the same experiment — if anyone wants the
-alt-tab transition itself timed, it is still a minute of hands-on work.
+**The alt-tab variant is now measured too**, by
+[#51](https://github.com/ssalter21/tower-defense-game/issues/51), with
+`tools/hotreload-probe/probe.ps1 -Trial`. #34 could not get it because Windows
+refuses `SetForegroundWindow` to a background process — re-tested on this
+machine with the desktop idle for 204 s and the target window minimised, the
+call returned `false` and the foreground did not move. So the alt-tab is a
+human's and `-Trial` takes everything else: it will not rebuild while the
+editor holds the foreground, it timestamps the transition by watching for it,
+and it decides from the refresh **start** whether the trial counts at all.
 
-**That minute is now one command**, `tools/hotreload-probe/probe.ps1 -Trial`,
-and it is [#51](https://github.com/ssalter21/tower-defense-game/issues/51). The
-refusal is not a limitation of the old script and no rewrite of it will help:
-re-tested on this machine with the desktop idle for 204 s and the target window
-minimised, `SetForegroundWindow` from a background process returned `false` and
-the foreground did not move. So the alt-tab stays a human's, and `-Trial` takes
-everything else — it will not rebuild while the editor holds the foreground, it
-timestamps the transition by watching for it rather than asking anyone to, and
-it decides from the refresh **start** whether the trial counts at all. The two
-trials that were wasted on #34 are the two it now refuses to record.
+**Alt-tabbing starts the refresh in about a quarter of a second** — 0.34 s and
+0.17 s. That is not "sooner", it is immediate: the editor is waiting for the
+transition, and the 18 s – 11 min it otherwise takes is entirely the cost of
+nobody supplying one.
 
-**The number itself is still missing.** Until somebody runs `-Trial` twice, the
-attended loop is unmeasured, and [#5](https://github.com/ssalter21/tower-defense-game/issues/5)'s
-"3-second loop or 40-second one" has an answer only for the unattended case.
+**So [#5](https://github.com/ssalter21/tower-defense-game/issues/5)'s "3-second
+loop or 40-second one" has its answer, and it is neither: the attended loop is
+17–19 seconds.** Of that, ~1 s is `dotnet build`, ~0.25 s is the alt-tab
+landing, and **~15 s is Unity recompiling the script assemblies that reference
+the plug-in** — about 12 s of it `CompileScripts` alone. Being at the keyboard
+buys back the waiting, not the compile. The compile is the floor, and it is the
+only thing left worth attacking if the loop ever needs to be faster.
+
+The first trial run produced five voids before two valid ones, and the reason
+is worth keeping: the alt-tab window is **about six seconds**. On this machine
+an untouched editor began refreshing 5.4, 6.3 and 7.9 s after a rebuild, so a
+human who reads the prompt before moving has already lost the trial.
 
 Also still open, and not worth blocking on: what actually schedules the check,
 and why the same editor went 18 seconds once and 11 minutes the next time. The
