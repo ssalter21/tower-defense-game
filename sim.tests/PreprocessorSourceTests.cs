@@ -73,6 +73,8 @@ public class PreprocessorSourceTests
         Assert.NotEmpty(sources);
         Assert.Contains(sources, path => Path.GetFileName(path) == "Fix64.cs");
         Assert.Contains(sources, path => Path.GetFileName(path) == "Pcg32.cs");
+        Assert.Contains(sources, path => Path.GetFileName(path) == "DataText.cs");
+        Assert.Contains(sources, path => Path.GetFileName(path) == "HexMap.cs");
     }
 
     [Theory]

@@ -31,6 +31,30 @@ public static class RepoLayout
     public static string PoisonProject => Path.Combine(Root, "sim.poison", "Sim.Poison.csproj");
 
     /// <summary>
+    /// The committed content. The simulation never learns these paths: the
+    /// tests read the files and hand the text over, which is exactly what the
+    /// engine and the command line will do, and the only reason the parsers
+    /// can live inside an assembly that may not reference System.IO.
+    /// </summary>
+    public static string ContentDirectory => Path.Combine(Root, "content");
+
+    public static string UnitsFile => Path.Combine(ContentDirectory, "units.txt");
+
+    public static string WaveFile => Path.Combine(ContentDirectory, "wave.txt");
+
+    public static string MapFile => Path.Combine(ContentDirectory, "map.txt");
+
+    /// <summary>Every committed data file that holds numbers, and must therefore hold no decimal point.</summary>
+    public static IEnumerable<string> NumericContentFiles
+    {
+        get
+        {
+            yield return UnitsFile;
+            yield return WaveFile;
+        }
+    }
+
+    /// <summary>
     /// The assembly as it exists in the repository. This -- not a fresh build
     /// -- is what the behavioural tests link against, because bytes that only
     /// ever exist on a build machine are bytes nobody has checked.
