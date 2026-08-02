@@ -46,6 +46,16 @@ jobs:
         shell: pwsh
         run: ./tools/check-project-settings.ps1
 
+      # The content the player ships with is a generated copy of the content
+      # in content/, committed like a lockfile. There is an edit-mode test that
+      # compares them, but it needs an engine and a licence and this gate has
+      # neither -- and drift between an authored map and the map inside the
+      # build is exactly the failure that would otherwise be found by somebody
+      # wondering why the game disagrees with the tests.
+      - name: The streaming copy of the content matches the authored content
+        shell: pwsh
+        run: ./tools/sync-streaming-content.ps1 -Check
+
       # Into scratch space, NOT into the default output path. The default
       # sends the build straight into client/Packages/com.ssalter.sim/Runtime/,
       # which would overwrite the committed assembly before anything had
