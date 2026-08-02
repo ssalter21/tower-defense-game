@@ -13,14 +13,29 @@
 # network message and exactly wrong for a replay, which would otherwise
 # produce a confidently wrong result that still validates.
 #
+# A COUNT IS A COLUMN, NOT A PILE. The units of one order are released one
+# every fifteen ticks, which is a rule the simulation owns rather than a number
+# in this file -- so it is covered by the simulation version, and changing it
+# changes replays. Releasing a whole order on one tick was the obvious reading
+# and is the wrong one: units of one type share a speed and a route, so ten of
+# them released together are one stack forever, and a stack is the single
+# arrangement in which unit ordering cannot be observed at all.
+#
+# THE TICKS ARE TUNED, and two things are being tuned for. A runner order is
+# placed while the grunt order before it is still walking, so the fast group
+# visibly catches the slow one -- the first overtake in the committed run is at
+# tick 401. And the last order is grunts rather than runners, so the tail of
+# the match is the slowest thing on the map and the match lasts sixty-two
+# seconds rather than ending the moment the quick ones are dealt with.
+#
 #       tick  type  count  corridor
 #
 # tick     : ticks after the wave starts
 # corridor : which lane; the skeleton has one, and it is zero
 
 order   0     1     10     0
-order   120   2     8      0
-order   240   1     8      0
-order   300   2     6      0
-order   420   1     5      0
-order   480   2     3      0
+order   250   2     8      0
+order   700   1     8      0
+order   700   2     6      0
+order   1250  2     3      0
+order   1400  1     5      0

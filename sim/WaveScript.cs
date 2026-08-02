@@ -16,10 +16,10 @@ namespace Sim
     /// </remarks>
     public readonly struct UnitOrder
     {
-        internal UnitOrder(int tickOffset, int typeId, int count, int corridor)
+        internal UnitOrder(int tickOffset, UnitType type, int count, int corridor)
         {
             TickOffset = tickOffset;
-            TypeId = typeId;
+            Type = type;
             Count = count;
             Corridor = corridor;
         }
@@ -28,7 +28,17 @@ namespace Sim
         public int TickOffset { get; }
 
         /// <summary>Which unit type, by its stable id.</summary>
-        public int TypeId { get; }
+        public int TypeId => Type.Id;
+
+        /// <summary>
+        /// The type itself, resolved at load. The order already had to be
+        /// checked against the type table to be accepted at all, so carrying the
+        /// row it was checked against costs nothing and means nothing
+        /// downstream has to re-resolve an id it was already told is good --
+        /// which is what lets a match be constructed from the map, the defense,
+        /// the wave and the seed, with no fifth argument holding the table.
+        /// </summary>
+        public UnitType Type { get; }
 
         /// <summary>How many. Repeats of one key are merged into this rather than being two rows.</summary>
         public int Count { get; }
@@ -195,7 +205,7 @@ namespace Sim
                 previousTick = tick;
                 previousType = typeId;
                 total += count;
-                orders.Add(new UnitOrder(tick, typeId, count, corridor));
+                orders.Add(new UnitOrder(tick, type, count, corridor));
             }
 
             if (orders.Count == 0)

@@ -94,21 +94,53 @@ namespace Sim
         }
 
         /// <summary>Folds one value in, as eight little-endian bytes.</summary>
+        /// <remarks>
+        /// The arithmetic is written out here rather than looping over
+        /// <see cref="Absorb"/> because this is the simulation's hottest call
+        /// site by an order of magnitude -- the rolling state hash folds a few
+        /// dozen values every tick for the length of a match, and the committed
+        /// configuration is Debug, where a method call is a method call. Eight
+        /// calls and eight intermediate structs per value cost more than the
+        /// whole rest of the tick loop put together. The result is identical to
+        /// absorbing the eight bytes one at a time, which the tests pin.
+        /// </remarks>
         public Hash64 Add(long value)
         {
             ulong bits = unchecked((ulong)value);
-            Hash64 hash = this;
+            ulong hash = Value;
 
-            for (int shift = 0; shift < 64; shift += 8)
+            unchecked
             {
-                hash = hash.Absorb((byte)(bits >> shift));
+                hash = (hash ^ (byte)bits) * Prime;
+                hash = (hash ^ (byte)(bits >> 8)) * Prime;
+                hash = (hash ^ (byte)(bits >> 16)) * Prime;
+                hash = (hash ^ (byte)(bits >> 24)) * Prime;
+                hash = (hash ^ (byte)(bits >> 32)) * Prime;
+                hash = (hash ^ (byte)(bits >> 40)) * Prime;
+                hash = (hash ^ (byte)(bits >> 48)) * Prime;
+                hash = (hash ^ (byte)(bits >> 56)) * Prime;
             }
 
-            return hash;
+            return new Hash64(hash);
         }
 
         /// <summary>Folds one value in, widened to the same eight bytes.</summary>
         public Hash64 Add(int value) => Add((long)value);
+
+        /// <summary>
+        /// Folds a pair of 32-bit values in as one eight-byte word, high half
+        /// first.
+        /// </summary>
+        /// <remarks>
+        /// Two fields per fold rather than one, for the same reason
+        /// <see cref="Add(long)"/> is written out: the rolling state hash runs
+        /// once a tick for the length of a match and this halves what it costs.
+        /// It is not a weaker fold -- both values reach every byte of the digest
+        /// -- but it is a different one, so a field that moves between the high
+        /// and low halves is a layout change and bumps the fold's label.
+        /// </remarks>
+        public Hash64 Add(int high, int low) =>
+            Add(unchecked(((long)high << 32) | (long)(uint)low));
 
         public static bool operator ==(Hash64 a, Hash64 b) => a.Value == b.Value;
 
