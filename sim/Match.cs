@@ -397,6 +397,7 @@ namespace Sim
         private void Step(IMatchEvents? events)
         {
             MoveCreeps(events);
+            ReportPasses(events);
             AgeDyingCreeps();
             FlyProjectiles(events);
             RunTowers(events);
@@ -494,6 +495,78 @@ namespace Sim
             }
         }
 
+        /// <summary>
+        /// Tells a listener about every pass that completed on this tick: a
+        /// creep that is now further along the corridor than one which spawned
+        /// before it, and was not a tick ago.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It reports and decides nothing.</b> No field is written, no die is
+        /// rolled and the rolling state hash cannot tell this ran, which is why
+        /// it can sit between two phases whose order is part of the rules
+        /// without being part of them. A match nobody is listening to leaves on
+        /// the first line.
+        /// </para>
+        /// <para>
+        /// <b>Where a creep was a tick ago is arithmetic, not memory.</b> A
+        /// walking creep moved exactly one step this tick and a dying one did
+        /// not move at all, so the previous distance is the current one less
+        /// that step -- which is what makes this fire on the tick the order
+        /// flipped rather than on every tick the two stay flipped. No previous
+        /// tick is kept anywhere, and there is nothing to keep in step.
+        /// </para>
+        /// <para>
+        /// Creeps are held in ascending id order, so the outer index is always
+        /// the later-spawned of the pair. Anything that stopped existing this
+        /// tick is skipped: a creep that reached the exit has left the corridor
+        /// rather than been passed on it.
+        /// </para>
+        /// </remarks>
+        private void ReportPasses(IMatchEvents? events)
+        {
+            if (events is null)
+            {
+                return;
+            }
+
+            for (int index = 1; index < _creepCount; index++)
+            {
+                ref Creep passer = ref _creeps[index];
+
+                if (passer.Phase == CreepPhase.Gone)
+                {
+                    continue;
+                }
+
+                Fix64 passerWas = passer.Distance - StepThisTick(ref passer);
+
+                for (int other = 0; other < index; other++)
+                {
+                    ref Creep passed = ref _creeps[other];
+
+                    if (passed.Phase == CreepPhase.Gone)
+                    {
+                        continue;
+                    }
+
+                    if (passer.Distance <= passed.Distance)
+                    {
+                        continue;
+                    }
+
+                    if (passerWas <= passed.Distance - StepThisTick(ref passed))
+                    {
+                        events.CreepOvertook(passer.Id, passed.Id);
+                    }
+                }
+            }
+        }
+
+        /// <summary>How far a creep moved on the tick just run. Nothing if it is not walking.</summary>
+        private Fix64 StepThisTick(ref Creep creep) =>
+            creep.Phase == CreepPhase.Walking ? _stepPerTick[creep.OrderIndex] : Fix64.Zero;
+
         private void AgeDyingCreeps()
         {
             for (int index = 0; index < _creepCount; index++)
@@ -536,6 +609,7 @@ namespace Sim
                 if (target < 0)
                 {
                     projectile.Gone = true;
+                    events?.ProjectileOrphaned(projectile.Id);
                     continue;
                 }
 

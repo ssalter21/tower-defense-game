@@ -19,7 +19,7 @@ public class MatchTests
         { "fast-forward", 8, true, true },
         { "seek", 500, false, false },
         { "instant-resolve", int.MaxValue, false, false },
-        { "the command line", 1, false, false },
+        { "the command line", 1, false, true },
         { "the parity run", 1, true, false },
         { "a server re-validating", int.MaxValue, false, true },
     };
@@ -515,8 +515,16 @@ public class MatchTests
         MethodInfo[] methods = typeof(IMatchEvents).GetMethods();
 
         Assert.Equal(
-            new[] { "CreepDamaged", "CreepDied", "CreepLeaked", "TowerFired" },
-            methods.Select(method => method.Name).OrderBy(name => name).ToArray());
+            new[]
+            {
+                "CreepDamaged",
+                "CreepDied",
+                "CreepLeaked",
+                "CreepOvertook",
+                "ProjectileOrphaned",
+                "TowerFired",
+            },
+            methods.Select(method => method.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray());
 
         foreach (MethodInfo method in methods)
         {

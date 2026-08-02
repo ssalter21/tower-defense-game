@@ -58,6 +58,31 @@ public static class TheMatch
     }
 
     /// <summary>
+    /// The committed match run the way the command line runs it: a tick at a
+    /// time, nothing pulling a snapshot, and a listener collecting the moments
+    /// the landmark table is made of.
+    /// </summary>
+    public static Landmarks LandmarksOfTheCommittedRun()
+    {
+        Match match = Fresh();
+        var landmarks = new Landmarks();
+
+        while (!match.IsFinished)
+        {
+            landmarks.EnteringTick(match.Tick + 1);
+            match.Advance(1, landmarks);
+        }
+
+        return landmarks;
+    }
+
+    /// <summary>The data rows of a committed file, with its prose header dropped.</summary>
+    public static string[] DataRows(string path) =>
+        File.ReadAllLines(path)
+            .Where(line => line.Length > 0 && !line.TrimStart().StartsWith('#'))
+            .ToArray();
+
+    /// <summary>
     /// The committed unit types with exactly one number moved -- a ruleset that
     /// has been retuned. Every id and every role is unchanged, so records made
     /// against it parse perfectly and only the content hash tells them apart,
@@ -94,6 +119,11 @@ public static class TheMatch
         public void CreepDied(int creepId) => Record("died", creepId, 0);
 
         public void CreepLeaked(int creepId) => Record("leaked", creepId, 0);
+
+        public void ProjectileOrphaned(int projectileId) => Record("orphaned", projectileId, 0);
+
+        public void CreepOvertook(int creepId, int overtakenCreepId) =>
+            Record("overtook", creepId, overtakenCreepId);
 
         public int CountOf(string kind) => Kinds.Count(name => name == kind);
 
