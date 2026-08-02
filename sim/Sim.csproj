@@ -42,6 +42,44 @@
     <!-- Unity has no use for a deps file and would import it as an asset. -->
     <GenerateDependencyFile>false</GenerateDependencyFile>
 
+    <!--
+      Three switches, one problem: by default this assembly cannot be committed
+      in a state that matches its own sources.
+
+      The SDK asks git what commit is checked out and writes the answer into
+      two places, both of which reach the compiled image. It appends the hash
+      to AssemblyInformationalVersion, and it generates a Source Link document
+      naming a raw.githubusercontent.com URL that contains the same hash and
+      that the compiler embeds in the portable PDB. Because the build is
+      deterministic, the module version id is a hash of the inputs, so an input
+      that names HEAD makes the output name HEAD. Committing the assembly then
+      moves HEAD, which changes the input, which changes the next build. The
+      file can never catch up with itself.
+
+      Measured here across one commit, sources untouched: 146 bytes differed
+      with the informational version still carrying the hash, and 72 still
+      differed after that alone was switched off, because Source Link was the
+      other half. No IL moved either time.
+
+      Source Link earns its keep when a consumer has to fetch sources it does
+      not have. Nobody here is in that position: the sources are in the same
+      repository as the assembly, two directories away.
+
+      Off, the build is a pure function of the sources, the SDK and the path.
+
+      Note the path in that list. Source paths are deliberately NOT normalised
+      with PathMap, which would go one better and make the artefact
+      reproducible on any machine. It would also break the reason Sim.pdb is
+      committed at all: the debugger resolves breakpoints in sim/ through the
+      absolute paths recorded in it. Stepping from view code into simulation
+      code is worth more than a byte-identical rebuild on someone else's disk,
+      so a rebuild in a different checkout does show a diff, and that is a
+      trade rather than an oversight.
+    -->
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <EnableSourceLink>false</EnableSourceLink>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+
     <Version>0.0.0</Version>
     <Company>ssalter</Company>
     <Product>Sim</Product>
