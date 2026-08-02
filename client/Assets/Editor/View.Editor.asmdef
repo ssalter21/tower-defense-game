@@ -1,10 +1,12 @@
 {
-    "name": "View",
-    "rootNamespace": "View",
+    "name": "View.Editor",
+    "rootNamespace": "View.Editor",
     "references": [
-        "Unity.InputSystem"
+        "View"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
