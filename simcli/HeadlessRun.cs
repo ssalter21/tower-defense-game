@@ -170,7 +170,7 @@ internal sealed class HeadlessRun
                 "THIS IS A GENERATED FILE AND IT IS COMMITTED ON PURPOSE. These are the tick",
                 "numbers nobody knows until the match runs, and the sit-down checklist is written",
                 "against them -- which is why it can say \"drag to 412 and back to 400\" instead of",
-                "\"hunt for the moment\". Regenerating it after a content change is a diff of five",
+                "\"hunt for the moment\". Regenerating it after a content change is a diff of four",
                 "rows, so a checklist pointed at a moment that has moved goes stale loudly.",
                 string.Empty,
                 "EVERY ROW CAME OUT OF THE EVENT STREAM. The run that produced this pulled no",

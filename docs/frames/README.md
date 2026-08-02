@@ -43,7 +43,11 @@ Two frames, kept as a record of what the match looked like when
 - `match-tick-0900.png` — the wave spread along the corridor, both kinds of
   tower engaged.
 
-The rest of the default set is regenerable and not committed.
+The rest of the default set is regenerable and not committed — and that is
+arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture
+next remembering to delete four files. Left to memory, a plain
+`tools/capture-match-frames.ps1` leaves them in the tree and the build gate's
+last step fails the next push for a dirty repository.
 
 ## What to look at
 

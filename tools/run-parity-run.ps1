@@ -37,11 +37,16 @@
     Run both halves and exit non-zero if either disagrees.
 #>
 param(
-    # Deliberately without a default. The editor path is declared once, in
-    # run-unity-tests.ps1, and forwarded here only when somebody actually
-    # passed one -- a second copy of that path would be a second thing to edit
+    # Deliberately without a default, and forwarded to the half that runs the
+    # editor only when somebody actually passed one -- so this script adds no
+    # new copy of the editor path. A copy here would be one more thing to edit
     # the day the editor version moves, and the copy that got missed would be
     # the one that still worked on the machine it was written on.
+    #
+    # Not to be read as "the path is declared once": it is not. Seven scripts
+    # in tools/ carry the same hardcoded default, and check-project-settings.ps1
+    # asserts the version string an eighth time. Collapsing those into one
+    # shared launcher is worth doing and is not done here.
     [string]$Unity
 )
 
