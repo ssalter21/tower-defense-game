@@ -21,6 +21,7 @@ namespace Tests.PlayMode
     {
         private const string CharacterPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
         private const string MovementPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
+        private const string GeneralPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
         private const string ClipName = "Walking_A";
 
         private GameObject _instance;
@@ -142,7 +143,7 @@ namespace Tests.PlayMode
         {
             // Locomotion phase is driven from distance travelled in the sim, so any
             // clip-owned translation would be authoritative progress living in the view.
-            foreach (var path in new[] { MovementPath, "Assets/Art/Animations/Rig_Medium_General.fbx" })
+            foreach (var path in new[] { MovementPath, GeneralPath })
             {
                 foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>())
                 {
@@ -150,6 +151,24 @@ namespace Tests.PlayMode
                     Assert.IsFalse(clip.hasMotionCurves, $"{clip.name} carries motion curves");
                     Assert.IsFalse(clip.hasGenericRootTransform, $"{clip.name} carries a generic root transform");
                 }
+            }
+        }
+
+        [Test]
+        public void TheRigIsImportedGenericWithNoAvatar()
+        {
+            // The proven path is generic transform curves: the clip animates named
+            // transforms in this hierarchy directly. Humanoid would put a retargeting
+            // solver between the clip and the bones -- one more thing between sim time
+            // and the pose, on a rig that never needed retargeting in the first place.
+            foreach (var path in new[] { CharacterPath, MovementPath, GeneralPath })
+            {
+                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
+                Assert.IsNotNull(importer, $"no model importer for {path}");
+                Assert.AreEqual(ModelImporterAnimationType.Generic, importer.animationType,
+                    $"{path} is not imported as Generic");
+                Assert.AreEqual(ModelImporterAvatarSetup.NoAvatar, importer.avatarSetup,
+                    $"{path} was given an avatar");
             }
         }
 #endif
