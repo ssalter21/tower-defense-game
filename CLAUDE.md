@@ -174,6 +174,21 @@ enough to show focus is not the trigger, and enough to settle whether an agent
 can work unattended, but it is not the same experiment — if anyone wants the
 alt-tab transition itself timed, it is still a minute of hands-on work.
 
+**That minute is now one command**, `tools/hotreload-probe/probe.ps1 -Trial`,
+and it is [#51](https://github.com/ssalter21/tower-defense-game/issues/51). The
+refusal is not a limitation of the old script and no rewrite of it will help:
+re-tested on this machine with the desktop idle for 204 s and the target window
+minimised, `SetForegroundWindow` from a background process returned `false` and
+the foreground did not move. So the alt-tab stays a human's, and `-Trial` takes
+everything else — it will not rebuild while the editor holds the foreground, it
+timestamps the transition by watching for it rather than asking anyone to, and
+it decides from the refresh **start** whether the trial counts at all. The two
+trials that were wasted on #34 are the two it now refuses to record.
+
+**The number itself is still missing.** Until somebody runs `-Trial` twice, the
+attended loop is unmeasured, and [#5](https://github.com/ssalter21/tower-defense-game/issues/5)'s
+"3-second loop or 40-second one" has an answer only for the unattended case.
+
 Also still open, and not worth blocking on: what actually schedules the check,
 and why the same editor went 18 seconds once and 11 minutes the next time. The
 decision this answers — can an agent work while the developer is away — does
