@@ -1,3 +1,4 @@
+Imported 'GUID: f30db7b97c27af94d8e13fd1d5094541' -> (Import Result ID: 'b0c5b6fe2017a9d5d646ea9d7a1d89b2') in 0.008 seconds [static dependencies only]. Details - ImportResultOutputID=f20a9cf5f562b997a647ac142aa11ea4 DependenciesID=67fb3e123c52c45e4f67857c7038d1ca StaticDependenciesID=471ea586ea37bbe428be0c0ef609355d 
 Refreshing native plugins compatible for Editor in 49.67 ms, found 4 plugins.
 Native extension for WindowsStandalone target not found
 Native extension for WebGL target not found
@@ -49,8 +50,8 @@ No restricted APIs configured; Validation skipped.
 Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
 
 Asset Pipeline Refresh (id=87fa0a045d1051b4e8fd5252aa1b7e82): Total: 26.731 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
-	(Values over 0.05ms)
-	Summary:
+Begin MonoManager ReloadAssembly
+Refreshing native plugins compatible for Editor in 2.09 ms, found 4 plugins.
 Native extension for WindowsStandalone target not found
 Native extension for WebGL target not found
 [MODES] ModeService[none].Initialize
@@ -99,8 +100,8 @@ No restricted APIs configured; Validation skipped.
 Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
 
 Asset Pipeline Refresh (id=d2db1aa11180b034bba9a10d7e1ceef2): Total: 17.800 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
-	(Values over 0.05ms)
-	Summary:
+Begin MonoManager ReloadAssembly
+Refreshing native plugins compatible for Editor in 58.69 ms, found 4 plugins.
 Native extension for WindowsStandalone target not found
 Native extension for WebGL target not found
 [MODES] ModeService[none].Initialize
@@ -149,5 +150,3 @@ No restricted APIs configured; Validation skipped.
 Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
 
 Asset Pipeline Refresh (id=f1c6264698c5cfd4fa41b62607e44beb): Total: 22.057 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
-	(Values over 0.05ms)
-	Summary:

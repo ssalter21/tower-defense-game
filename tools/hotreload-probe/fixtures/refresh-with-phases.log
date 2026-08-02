@@ -1,0 +1,117 @@
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[hot-reload probe] 21:42:23.750 (domain reload) -- plug-in stamp: build #3 at 2026-08-02 21:42:03.369
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+HotReloadProbeLog:Report (string) (at ./Packages/com.ssalter.hotreloadprobe/Editor/HotReloadProbeLog.cs:50)
+HotReloadProbeLog:.cctor () (at ./Packages/com.ssalter.hotreloadprobe/Editor/HotReloadProbeLog.cs:25)
+System.Runtime.CompilerServices.RuntimeHelpers:RunClassConstructor (System.RuntimeTypeHandle)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.ReadOnlySpan`1<intptr>)
+
+(Filename: ./Packages/com.ssalter.hotreloadprobe/Editor/HotReloadProbeLog.cs Line: 50)
+
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.163 seconds
+Domain Reload Profiling: 2518ms
+	BeginReloadAssembly (834ms)
+		DisableScriptedObjects (209ms)
+		CreateAndSetChildDomain (401ms)
+	RebuildCommonClasses (7ms)
+	RebuildNativeTypeToScriptingClass (12ms)
+	initialDomainReloadingComplete (45ms)
+	LoadAllAssembliesAndSetupDomain (455ms)
+		LoadAssemblies (236ms)
+		AnalyzeDomain (201ms)
+			TypeCache.Refresh (87ms)
+				TypeCache.ScanAssembly (78ms)
+			BuildScriptInfoCaches (107ms)
+			ResolveRequiredComponents (6ms)
+	FinalizeReload (1164ms)
+		SetupLoadedEditorAssemblies (0ms)
+			BeforeProcessingInitializeOnLoad (134ms)
+			ProcessInitializeOnLoadAttributes (267ms)
+			ProcessInitializeOnLoadMethodAttributes (94ms)
+			AfterProcessingInitializeOnLoad (6ms)
+		AwakeInstancesAfterBackupRestoration (347ms)
+Importing 'GUID: 3a0d42faab58de141bb41679e96fb2eb - Path: Packages/com.ssalter.hotreloadprobe/Runtime/HotReloadProbe.pdb' with importer (DefaultImporter)
+Imported 'GUID: 3a0d42faab58de141bb41679e96fb2eb' -> (Import Result ID: '62bd4f0f2fd943e2ae2ca61dcab8c9d7') in 0.003 seconds [static dependencies only]. Details - ImportResultOutputID=bf421aa59eb9ba62fbf3826ad0708795 DependenciesID=8467d0ad4cd13d0be8c995ca6b7135d1 StaticDependenciesID=b85c870bb2202a5a58e352ca45a9f38b 
+No restricted APIs configured; Validation skipped.
+Checking 1 assemblies for restricted APIs found 0 usage(s) in 3 ms
+
+Asset Pipeline Refresh (id=4d9eb11f7ca21764f9ded3ae83865925): Total: 14.955 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=1 (actual=1, local cache=0, cache server=0)
+		Asset DB Process Time: managed=1 ms, native=1308 ms
+		Asset DB Callback time: managed=159 ms, native=8 ms
+		Scripting: domain reloads=1, domain reload time=1435 ms, compile time=12042 ms, other=0 ms
+		Project Asset Count: scripts=1378, non-scripts=2332
+		Asset File Changes: new=0, changed=2, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokePackagesCallback: 2.904ms
+	ApplyChangesToAssetFolders: 0.339ms
+	Scan: 31.754ms
+	Collect global state as custom dependencies: 2.364ms
+	OnSourceAssetsModified: 0.639ms
+	CategorizeScriptCompilationAssets: 0.105ms
+	ProcessAssetsWithTransientArtifactChanges: 4.106ms
+	CategorizeAssets: 36.697ms
+	CompileScripts: 12042.025ms
+	ImportOutOfDateAssets: 1198.104ms (1173.987ms without children)
+		ImportManagerImport: 3.986ms (0.606ms without children)
+		CollectScriptTypesHashes: 4.522ms
+		ReloadNativeAssets: 0.773ms
+		UnloadImportedAssets: 0.086ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.337ms
+		ImportSchedulerStart: 18.916ms
+	PostProcessAllAssets: 164.898ms
+		AssemblyValidation.PostprocessAllAssets 1.845ms
+		XRBuildSystem.XRAssetImported 0.442ms
+		MonoPostProcessAllAssets: 159.255ms
+			SyncVS.PostprocessSyncProject 122.327ms
+			UniversalRenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 7.551ms
+			BuilderAssetPostprocessor.OnPostprocessAllAssets 4.190ms
+			AssetChangedListener.OnPostprocessAllAssets 4.065ms
+			AssetPostprocessor.OnPostprocessAllAssets 3.155ms
+			WindowAssetPostprocessingWatcher.OnPostprocessAllAssets 1.469ms
+			SpeedTree9Postprocessor.OnPostprocessAllAssets 1.299ms
+			ShaderGraphAssetPostProcessor.OnPostprocessAllAssets 1.210ms
+			RetainedModeAssetPostprocessor.OnPostprocessAllAssets 0.868ms
+			EditModeScopePostprocessor.OnPostprocessAllAssets 0.789ms
+			MaterialPostprocessor.OnPostprocessAllAssets 0.572ms
+			RenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 0.548ms
+			ProjectSettingsPostprocessor.OnPostprocessAllAssets 0.510ms
+			ArtifactBrowserPostProcessor.OnPostprocessAllAssets 0.366ms
+			InputActionAssetPostprocessor.OnPostprocessAllAssets 0.279ms
+			UVCSAssetPostprocessor.OnPostprocessAllAssets 0.273ms
+			TextAssetPostProcessor.OnPostprocessAllAssets 0.268ms
+			AudioMixerPostprocessor.OnPostprocessAllAssets 0.244ms
+			ShaderReflectionAssetPostProcessor.OnPostprocessAllAssets 0.243ms
+			InputActionJsonNameModifierAssetProcessor.OnPostprocessAllAssets 0.218ms
+			SampleDependencyImporterPostProcessor.OnPostprocessAllAssets 0.201ms
+			ReferencedClipsPostProcessor.OnPostprocessAllAssets 0.200ms
+			TMPro_TexturePostProcessor.OnPostprocessAllAssets 0.195ms
+			PostProcessor.OnPostprocessAllAssets 0.188ms
+			StyleCatalogPostProcessor.OnPostprocessAllAssets 0.164ms
+			AssetEvents.OnPostprocessAllAssets 0.156ms
+			AssetDatabaseCallbacks.OnPostprocessAllAssets 0.145ms
+			TerrainToolbarOverlayPostProcessor.OnPostprocessAllAssets 0.118ms
+			SpeedTreePostProcessor.OnPostprocessAllAssets 0.117ms
+			ConfigAssetsTracker.OnPostprocessAllAssets 0.116ms
+			ScenarioDriftAssetsTracker.OnPostprocessAllAssets 0.110ms
+			SamplePostprocessor.OnPostprocessAllAssets 0.107ms
+			AssetReloadNotifier.OnPostprocessAllAssets 0.089ms
+			AudioContainerPostProcessor.OnPostprocessAllAssets 0.055ms
+	PostAssetChangesProfiler: 2.017ms
+	GatherAllCurrentPrimaryImportResultRevisions: 0.084ms
+	PersistCurrentRevisions: 0.199ms
+	GenerateScriptTypeHashes: 1.634ms
+	GenerateScriptTypeSerializationHashes: 2.796ms
+	Untracked: 1461.813ms
