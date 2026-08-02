@@ -48,12 +48,54 @@ safe to re-run.
 ```powershell
 ./tools/hotreload-probe/probe.ps1 -Install   # once
 ./tools/hotreload-probe/probe.ps1 -Bump      # the measurement, repeat freely
+./tools/hotreload-probe/probe.ps1 -Trial     # the attended measurement (#51)
 ./tools/hotreload-probe/probe.ps1 -Remove    # deletes every trace
 ```
 
 `-Install` creates the package, builds it, and drops an Editor script that logs
 the plug-in's build stamp on **every domain reload**. `-Bump` rebuilds with a
 fresh stamp — that is the thing to time.
+
+## `-Trial`: the one measurement a human has to be present for
+
+[#51](https://github.com/ssalter21/tower-defense-game/issues/51) wants the one
+variant [#34](https://github.com/ssalter21/tower-defense-game/issues/34) could
+not get: **a human alt-tabbing onto the editor in the seconds after a rebuild.**
+An agent cannot stage it — Windows refuses `SetForegroundWindow` to a background
+process, which was re-confirmed on this machine with the desktop idle for over
+three minutes. So the keyboard part is yours. Everything around it is not.
+
+```powershell
+./tools/hotreload-probe/probe.ps1 -Trial     # alt-tab when it says to, twice
+```
+
+#34 burned two of its trials on four traps. Each is now structural rather than
+remembered:
+
+| The trap | What `-Trial` does about it |
+| --- | --- |
+| A continuously-focused editor never sees a transition | Refuses to rebuild until the editor is out of the foreground |
+| You time a refresh that started without you | Derives the refresh **start** and calls the trial **void**, then retries |
+| A quiet log is not proof it has not been picked up | Never asks the log to prove a negative — decides afterwards, from the start time |
+| Timing by when a line became readable | Reads the editor's own clock out of the probe's message |
+
+**Void is not negative.** A trial where the refresh was already under way is
+discarded and re-run; only trials where the alt-tab came first are counted.
+
+The alt-tab is timed by watching for the editor actually taking the foreground,
+so there is no stopwatch to hold. System idle time is recorded at that instant
+too: near zero is what says a human did it, and the run says so if it was not.
+
+Results print as a table and are written to `trials.md` **inside the package**,
+so `-Remove` takes them with everything else and `git status` stays clean.
+
+`TrialLog.psm1` holds the log reading, and `TrialLog.Tests.ps1` holds it against
+`fixtures/three-trials.log` — a verbatim slice of the real `Editor.log` from the
+#34 session, whose numbers are already published in `CLAUDE.md`. Run it with:
+
+```powershell
+./tools/hotreload-probe/TrialLog.Tests.ps1
+```
 
 The Editor script reads the stamp by **reflection**, not by a direct type
 reference. A direct reference would turn *"Unity never loaded the plug-in"* into
