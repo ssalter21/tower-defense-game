@@ -107,13 +107,17 @@ build is currently loaded without forcing a reload.
 
 ## Answered
 
-Question 1 below — does the new stamp appear on focus alone? — was run and
-recorded in [#34](https://github.com/ssalter21/tower-defense-game/issues/34).
-The short version: **focus is not the trigger at all.** An untouched, minimised
-editor picks the rebuild up by itself; an editor holding the foreground took
-nearly fifteen minutes to do the same. The delay is minutes and is not a fixed
-interval. The measured timings, and what they mean for an agent, are in
-`CLAUDE.md` at the repo root. Questions 3 and 4 are still unrun.
+Questions 1 and 2 below were run and recorded, in
+[#34](https://github.com/ssalter21/tower-defense-game/issues/34) and
+[#51](https://github.com/ssalter21/tower-defense-game/issues/51). The short
+version: **it is the focus *transition* that triggers it, not the focus
+*state*.** An untouched, minimised editor picks the rebuild up by itself in
+anything from 18 s to 11 min; an editor *holding* the foreground took nearly
+fifteen minutes to do the same; an editor **alt-tabbed onto** starts refreshing
+in about a quarter of a second. The attended loop is **17–19 s end to end**,
+almost all of it Unity recompiling the assemblies that reference the plug-in.
+The measured timings, and what they mean for an agent, are in `CLAUDE.md` at the
+repo root. Questions 3 and 4 are still unrun.
 
 ## What to record on [#10](https://github.com/ssalter21/tower-defense-game/issues/10)
 
