@@ -1,0 +1,29 @@
+// The playfield: one hex corridor, exactly one hex wide, never branching.
+//
+// '.' ground   '#' corridor   'S' the entrance   'E' the exit
+//
+// A comment here starts with '//' rather than '#', because '#' is a corridor
+// cell and sharing the marker would make a corridor beginning at column one
+// vanish into a comment on some maps and not others.
+//
+// One row per line, one character per cell, so the map is diffable and an
+// agent can write it. Rows are odd-r offset: ODD-NUMBERED ROWS ARE THE ONES
+// SHIFTED HALF A CELL RIGHT, which is why the corridor's turns look like they
+// step sideways. The simulation converts that to axial (q, r) on load and
+// never stores a cube coordinate; how any of it is drawn is a view question
+// and does not reach here.
+//
+// The loader asserts the corridor is well formed rather than trusting this
+// comment: every corridor cell has one or two corridor neighbours, exactly
+// two have one, those two are S and E, and the walk from S to E visits all
+// forty-seven of them.
+
+...............
+.S##########...
+............#..
+..##########...
+..#............
+..###########..
+.............#.
+.E###########..
+...............

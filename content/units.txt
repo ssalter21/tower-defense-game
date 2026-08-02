@@ -1,0 +1,37 @@
+# The unit type table.
+#
+# ONE GLOBAL ID SPACE. Towers and creeps are the same kind of thing here, so
+# an id is unique across every unit that has ever existed, is never reused,
+# and is never an index into anything. A record that pins type 2 today still
+# means this row in five years. The label beside it is for people reading this
+# file and for error messages; nothing in the simulation branches on it, and
+# renaming one does not move the content hash.
+#
+# INTEGERS ONLY, AND NO DECIMAL POINT. The parser refuses a '.' or a ',' on a
+# data line before it even tokenises, so a designer typing 1.5 gets a load
+# error rather than a float in the tick loop. Fractions are authored as the
+# two integers they are made of, in units named by the column: thousandths of
+# a hex, or ticks.
+#
+# FIELD ORDER IS WHAT THE CONTENT HASH FOLDS. Reindent a column, rewrap this
+# comment or convert the line endings and the hash does not move, so no stored
+# record is falsely retired. Change one number and it does. Moving a column is
+# a layout change and bumps the version digit in the hash label inside
+# UnitTypeTable, which retires every record pinned to the old layout loudly.
+#
+# Ids ascend strictly down the file, which is what makes a duplicate a
+# comparison against the row above rather than a lookup nobody performed.
+#
+#      id  label   role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying
+#
+# role     : moving (walks the corridor) | placed (stands where it was put)
+# maxHp    : zero means the unit has no health pool and cannot be damaged
+# speed    : thousandths of a hex per tick
+# range    : thousandths of a hex
+# flight   : ticks a projectile spends travelling; zero unless delivery is projectile
+# dying    : ticks spent dying, so seeking into a death shows a death
+
+unit   1   grunt   moving  240    34     0      0         0       0          0       0       none        0       12
+unit   2   runner  moving  130    61     0      0         0       0          0       0       none        0       12
+unit   3   bolt    placed  0      0      3200   14        3       2          9       15      hitscan     0       0
+unit   4   mortar  placed  0      0      4600   38        7       5          21      34      projectile  11      0

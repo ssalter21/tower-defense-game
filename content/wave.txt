@@ -1,0 +1,26 @@
+# The wave the skeleton's one match is fought against.
+#
+# Same rules as units.txt: integers only, no decimal point, comments free.
+#
+# Orders ascend by tick and then by type id, and are unique on that pair with
+# repeats merged into a count. THAT ORDER IS ASSERTED, NOT SORTED ON LOAD.
+# Sorting would stabilise iteration and leave two identical waves with two
+# different sets of bytes, at which point content-addressing a wave stops
+# meaning anything.
+#
+# A type id this file names that units.txt does not define is a load error,
+# not a skipped row. Tolerating what you do not understand is right for a
+# network message and exactly wrong for a replay, which would otherwise
+# produce a confidently wrong result that still validates.
+#
+#       tick  type  count  corridor
+#
+# tick     : ticks after the wave starts
+# corridor : which lane; the skeleton has one, and it is zero
+
+order   0     1     10     0
+order   120   2     8      0
+order   240   1     8      0
+order   300   2     6      0
+order   420   1     5      0
+order   480   2     3      0
