@@ -21,11 +21,15 @@ namespace Sim.Tests;
 /// anything a human would notice while dragging a slider.
 /// </para>
 /// <para>
-/// It measures the <b>best</b> of several runs rather than one run or an
-/// average. A timing test whose number can be spoiled by one unrelated process
-/// is a test that gets muted, and the fastest observed run is the closest thing
-/// available to "what this costs when nothing else is happening" -- which is
-/// the quantity the budget is about.
+/// It measures the <b>median</b> of several runs rather than the best of them.
+/// A timing test whose number can be spoiled by one unrelated process is a test
+/// that gets muted, so one run on its own will not do -- but the fastest of
+/// twelve is the wrong correction. The ten milliseconds is already ten times the
+/// estimate precisely so a loaded machine does not make this flaky; taking the
+/// best as well stacks a second margin on top of that one, and lets a single
+/// lucky run hide a regression the other eleven can all see. The median needs
+/// half the runs to be inside the budget, which survives a noisy neighbour and
+/// still goes red when the tick loop has genuinely got slower.
 /// </para>
 /// </remarks>
 public class BudgetTests
@@ -41,7 +45,7 @@ public class BudgetTests
         // the twentieth scrub of the slider rather than the first.
         Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, TheMatch.Fresh().Resolve().FinalTick);
 
-        double best = double.MaxValue;
+        double[] milliseconds = new double[Runs];
 
         for (int run = 0; run < Runs; run++)
         {
@@ -51,15 +55,21 @@ public class BudgetTests
             watch.Stop();
 
             Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
-            best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
+            milliseconds[run] = watch.Elapsed.TotalMilliseconds;
         }
 
+        Array.Sort(milliseconds);
+
+        // With an even number of runs there are two middles; take the slower of
+        // them, so the tie is broken against the simulation rather than for it.
+        double median = milliseconds[Runs / 2];
+
         Assert.True(
-            best < BudgetMilliseconds,
-            $"Re-simulating the match took {best:0.00} ms at best over {Runs} runs, and the budget is "
-            + $"{BudgetMilliseconds} ms. This is the signal that seeking has become expensive enough for "
-            + "somebody to want the snapshot cache back. Make the tick loop cheaper rather than raising "
-            + "this number.");
+            median < BudgetMilliseconds,
+            $"Re-simulating the match took {median:0.00} ms at the median of {Runs} runs, and the budget "
+            + $"is {BudgetMilliseconds} ms. This is the signal that seeking has become expensive enough "
+            + "for somebody to want the snapshot cache back. Make the tick loop cheaper rather than "
+            + "raising this number.");
     }
 
     [Fact]
