@@ -15,12 +15,18 @@
 # Sim content: byte-stable on every machine
 content/**  text eol=lf
 
-# ...except the replay bundle, which is a record and not a line of text. The
+# ...except the replay bundles, which are records and not lines of text. The
 # rule above would have git normalise line endings inside a run of bytes whose
 # id is the hash of those bytes, so a checkout on the wrong platform would
 # produce a record that no longer is the record it says it is. This line comes
 # after that one on purpose: the last matching pattern wins.
-content/*.replay  binary
+#
+# UNANCHORED, AND THAT IS THE FIX RATHER THAN THE SHORTHAND. It used to read
+# `content/*.replay`, which contains a slash and is therefore anchored at the
+# content directory -- so the golden bundles in content/golden/ matched the
+# `content/**` line above instead and would have been line-ending normalised on
+# checkout. A record whose bytes a checkout may rewrite is not a record.
+*.replay  binary
 
 # Binaries -- never diff, never merge
 *.dll binary

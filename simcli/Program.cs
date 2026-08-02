@@ -177,8 +177,8 @@ public static class Program
             run.Bundle.Header.ToString()
             + "\nseed       "
             + run.Bundle.Seed.ToString(PlainText.Culture)
-            + "\ndefense    "
-            + run.Bundle.GhostId.ToString()
+            + "\n"
+            + run.DefenseLine()
             + "\nwave       "
             + run.Bundle.WaveId.ToString()
             + "\n"

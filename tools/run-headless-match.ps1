@@ -24,6 +24,14 @@
     copies are still what a run produces; -Regenerate makes them so again after
     a deliberate content change.
 
+    IT ALSO REPLAYS EVERY HISTORICAL FORMAT VERSION. content/golden/ holds one
+    tiny bundle per defense record format version that has ever shipped, each
+    beside the result a real run of it produced. Those files are kept forever:
+    the writer emits only the current version, so the older ones can never be
+    made again, and they are the only evidence that the reader branch for a
+    version still works. Deleting a reader branch turns the golden for that
+    version red, and the runner's refusal names the version.
+
 .EXAMPLE
     ./tools/run-headless-match.ps1
     Play the committed match and print what happened.
@@ -70,6 +78,11 @@ $units = Join-Path $content 'units.txt'
 $traceName = 'golden-trace.txt'
 $landmarkName = 'landmarks.txt'
 
+# One tiny bundle per defense record format version that has ever shipped, and
+# the result a real run of each produced. Committed forever: the writer emits
+# only the current version, so nothing can ever make an older one again.
+$golden = Join-Path $content 'golden'
+
 # Built into scratch space rather than into the project's own bin/, so that a
 # run of this script cannot leave the working tree dirtier than it found it --
 # which is a thing the headless test runner asserts and this one respects.
@@ -97,6 +110,40 @@ function Invoke-SimCli {
     }
 }
 
+# The same run, with what it printed handed back instead of shown. The golden
+# results are compared byte for byte, so they have to be the runner's own
+# output and not a transcription of it.
+function Get-SimCliOutput {
+    param([string[]]$CliArgs)
+
+    $lines = & dotnet $program @CliArgs 2>&1
+
+    if ($LASTEXITCODE -ne 0) {
+        $lines | Out-Host
+        Write-Host ""
+        Write-Host "simcli $($CliArgs[0]) refused (exit $LASTEXITCODE); its reason is above." -ForegroundColor Red
+        exit $LASTEXITCODE
+    }
+
+    return (($lines | ForEach-Object { $_.ToString() }) -join "`n") + "`n"
+}
+
+# The committed bundles, oldest format version first. The name carries the
+# version because that is the thing each file exists to keep alive.
+function Get-GoldenBundles {
+    if (-not (Test-Path $golden)) {
+        return @()
+    }
+
+    return Get-ChildItem -Path $golden -Filter 'defense-*.replay' | Sort-Object Name
+}
+
+function Get-GoldenResultPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    return Join-Path $golden ($Bundle.BaseName + '.result')
+}
+
 if ($Regenerate) {
     Invoke-SimCli @(
         'record',
@@ -108,6 +155,34 @@ if ($Regenerate) {
         '--out', $bundle)
 
     Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--out', $content)
+
+    # The freshly recorded bundle becomes the golden for whatever version the
+    # writer emits, and the version is read off the run rather than written in
+    # here -- a number hard-coded in this script would go on naming version 1
+    # after the writer moved to 2, and would overwrite the wrong file.
+    New-Item -ItemType Directory -Force -Path $golden | Out-Null
+
+    $fresh = Get-SimCliOutput @('run', '--bundle', $bundle, '--units', $units)
+    $match = [regex]::Match($fresh, 'read at defense record format (\d+)')
+
+    if (-not $match.Success) {
+        throw "The runner did not say which defense format version it read; this script cannot name the golden."
+    }
+
+    $currentGolden = Join-Path $golden ("defense-" + $match.Groups[1].Value + ".replay")
+    Copy-Item -Path $bundle -Destination $currentGolden -Force
+    Write-Host "wrote      $currentGolden" -ForegroundColor Green
+
+    # Every golden's result is rewritten, the old versions included: a rule
+    # change moves what all of them do, and a stale result beside a live one is
+    # the failure this whole arrangement exists to make loud.
+    foreach ($goldenBundle in Get-GoldenBundles) {
+        $text = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $units)
+        $resultPath = Get-GoldenResultPath $goldenBundle
+        [System.IO.File]::WriteAllText($resultPath, $text)
+        Write-Host "wrote      $resultPath" -ForegroundColor Green
+    }
+
     exit 0
 }
 
@@ -136,25 +211,22 @@ Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--out', $scratch
 
 $differences = 0
 
-foreach ($name in @($traceName, $landmarkName)) {
-    $committedPath = Join-Path $content $name
-    $freshPath = Join-Path $scratch $name
+# The first line the two disagree on, named. A whole-file "they differ" is a
+# message nobody can act on, and the first difference is nearly always the only
+# one that was not caused by the ones above it.
+function Test-SameText {
+    param([string]$What, [string]$Committed, [string]$Fresh)
 
-    $committed = [System.IO.File]::ReadAllText($committedPath)
-    $fresh = [System.IO.File]::ReadAllText($freshPath)
-
-    if ($committed -eq $fresh) {
-        Write-Host "content/$name is what the run produced." -ForegroundColor Green
-        continue
+    if ($Committed -eq $Fresh) {
+        Write-Host "$What is what the run produced." -ForegroundColor Green
+        return $true
     }
 
-    $differences++
-
-    $committedLines = $committed -split "`n"
-    $freshLines = $fresh -split "`n"
+    $committedLines = $Committed -split "`n"
+    $freshLines = $Fresh -split "`n"
     $limit = [Math]::Max($committedLines.Count, $freshLines.Count)
 
-    Write-Host "content/$name is NOT what the run produced." -ForegroundColor Red
+    Write-Host "$What is NOT what the run produced." -ForegroundColor Red
 
     for ($index = 0; $index -lt $limit; $index++) {
         $left = if ($index -lt $committedLines.Count) { $committedLines[$index] } else { '<end of file>' }
@@ -166,6 +238,45 @@ foreach ($name in @($traceName, $landmarkName)) {
             Write-Host ("    this run : {0}" -f $right)
             break
         }
+    }
+
+    return $false
+}
+
+foreach ($name in @($traceName, $landmarkName)) {
+    $committed = [System.IO.File]::ReadAllText((Join-Path $content $name))
+    $fresh = [System.IO.File]::ReadAllText((Join-Path $scratch $name))
+
+    if (-not (Test-SameText "content/$name" $committed $fresh)) {
+        $differences++
+    }
+}
+
+# Every historical format version, replayed. The writer emits one version and
+# only one, so these bundles can never be produced again -- they are the entire
+# evidence that the reader branch for each retired version still reads. A
+# deleted branch fails here, and the runner's refusal names the version.
+$goldens = Get-GoldenBundles
+
+if ($goldens.Count -eq 0) {
+    Write-Host "content/golden/ holds no bundles at all; every historical format version is unproven." -ForegroundColor Red
+    $differences++
+}
+
+foreach ($goldenBundle in $goldens) {
+    $resultPath = Get-GoldenResultPath $goldenBundle
+
+    if (-not (Test-Path $resultPath)) {
+        Write-Host "content/golden/$($goldenBundle.Name) has no committed result beside it." -ForegroundColor Red
+        $differences++
+        continue
+    }
+
+    $fresh = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $units)
+    $committed = [System.IO.File]::ReadAllText($resultPath)
+
+    if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {
+        $differences++
     }
 }
 

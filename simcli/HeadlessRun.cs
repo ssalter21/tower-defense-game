@@ -79,6 +79,22 @@ internal sealed class HeadlessRun
         return new HeadlessRun(bundle, match.Result(), trace.ToString(), landmarks);
     }
 
+    /// <summary>
+    /// The defense's id and the reader branch its bytes actually went through.
+    /// </summary>
+    /// <remarks>
+    /// The format version is printed rather than assumed because the historical
+    /// versions are replayed forever: <c>content/golden/</c> holds one bundle per
+    /// defense format version that ever shipped, and this line is how the file a
+    /// run produces says which branch read it. A golden that quietly started
+    /// being read through a different branch would otherwise look identical.
+    /// </remarks>
+    public string DefenseLine() =>
+        "defense    "
+        + Bundle.GhostId.ToString()
+        + ", read at defense record format "
+        + Bundle.Ghost.Header.FormatVersion.ToString(PlainText.Culture);
+
     /// <summary>What a person reads: the result triple and the final hash.</summary>
     public string Summary() =>
         "result     "
@@ -132,7 +148,7 @@ internal sealed class HeadlessRun
                 string.Empty,
                 "  " + Bundle.Header.ToString(),
                 "  seed       " + Bundle.Seed.ToString(PlainText.Culture),
-                "  defense    " + Bundle.GhostId.ToString(),
+                "  " + DefenseLine(),
                 "  wave       " + Bundle.WaveId.ToString(),
                 "  " + Summary(),
                 string.Empty,
@@ -167,7 +183,7 @@ internal sealed class HeadlessRun
                 string.Empty,
                 "  " + Bundle.Header.ToString(),
                 "  seed       " + Bundle.Seed.ToString(PlainText.Culture),
-                "  defense    " + Bundle.GhostId.ToString(),
+                "  " + DefenseLine(),
                 "  wave       " + Bundle.WaveId.ToString(),
                 "  " + Summary(),
                 string.Empty,
