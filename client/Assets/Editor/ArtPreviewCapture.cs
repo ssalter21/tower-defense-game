@@ -145,6 +145,12 @@ namespace View.Editor
             /// how a weapon is looked at: in a hand, at the game's own angles,
             /// rather than floating on its own where nothing about the fit shows.
             /// </summary>
+            /// <remarks>
+            /// It applies to a clip candidate too, and there it answers a
+            /// different question: a draw-and-loose animation with nothing in
+            /// the hand is a mime, and whether the three clips read as one
+            /// sequence can only be judged with the weapon present.
+            /// </remarks>
             public string attachBone;
 
             /// <summary>Clip used to pose the rig behind an attached model.</summary>
@@ -362,6 +368,7 @@ namespace View.Editor
                 clip = LoadClip(candidate.bank, candidate.clip);
                 GameObject rig = InstantiateModel(candidate.rig, candidate.rigTexture);
                 rig.transform.rotation = Quaternion.Euler(0f, ClipRigYawDegrees, 0f);
+                AttachHeldModel(rig, candidate);
                 sampler = AttachSampler(rig, clip);
 
                 return rig;
@@ -377,30 +384,9 @@ namespace View.Editor
                 ? InstantiateModel(candidate.rig, candidate.rigTexture)
                 : InstantiateModel(candidate.model, candidate.texture);
 
-            if (hasRig && !string.IsNullOrEmpty(candidate.model))
+            if (hasRig)
             {
-                if (string.IsNullOrEmpty(candidate.attachBone))
-                {
-                    UnityEngine.Object.DestroyImmediate(host);
-
-                    throw new InvalidDataException("A candidate naming both a rig and a model must name an attachBone.");
-                }
-
-                Transform bone = host.GetComponentsInChildren<Transform>(true)
-                    .FirstOrDefault(t => t.name == candidate.attachBone);
-
-                if (bone == null)
-                {
-                    UnityEngine.Object.DestroyImmediate(host);
-
-                    throw new InvalidDataException("No bone named '" + candidate.attachBone + "' on " + candidate.rig);
-                }
-
-                GameObject held = InstantiateModel(candidate.model, candidate.texture);
-                held.name = AttachmentName;
-                held.transform.SetParent(bone, worldPositionStays: false);
-                held.transform.localPosition = Vector3.zero;
-                held.transform.localRotation = Quaternion.identity;
+                AttachHeldModel(host, candidate);
             }
 
             if (!string.IsNullOrEmpty(candidate.poseClip))
@@ -411,6 +397,49 @@ namespace View.Editor
             }
 
             return host;
+        }
+
+        /// <summary>
+        /// Hangs <see cref="CandidateSpec.model"/> off the named bone of a rig
+        /// that has already been instantiated, at zero local offset. Does
+        /// nothing when the candidate names no model, so both the turntable and
+        /// the clip path can call it unconditionally.
+        /// </summary>
+        /// <remarks>
+        /// Zero offset on purpose. The pack authors a bone whose whole job is
+        /// to be where the held thing goes, and a hand-tuned nudge here would
+        /// make the sheet flatter the fit — hiding exactly the import failure
+        /// the sheet is being rendered to catch.
+        /// </remarks>
+        private static void AttachHeldModel(GameObject host, CandidateSpec candidate)
+        {
+            if (string.IsNullOrEmpty(candidate.model))
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(candidate.attachBone))
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+
+                throw new InvalidDataException("A candidate naming both a rig and a model must name an attachBone.");
+            }
+
+            Transform bone = host.GetComponentsInChildren<Transform>(true)
+                .FirstOrDefault(t => t.name == candidate.attachBone);
+
+            if (bone == null)
+            {
+                UnityEngine.Object.DestroyImmediate(host);
+
+                throw new InvalidDataException("No bone named '" + candidate.attachBone + "' on " + candidate.rig);
+            }
+
+            GameObject held = InstantiateModel(candidate.model, candidate.texture);
+            held.name = AttachmentName;
+            held.transform.SetParent(bone, worldPositionStays: false);
+            held.transform.localPosition = Vector3.zero;
+            held.transform.localRotation = Quaternion.identity;
         }
 
         /// <summary>
@@ -742,6 +771,15 @@ namespace View.Editor
                 {
                     parts.Add("attached to bone '" + candidate.attachBone + "'");
                 }
+            }
+
+            // A clip strip reports the clip, but which weapon was in the hand
+            // while it played is the other half of what the strip is showing --
+            // and unlike a turntable, it is not obvious from the slot's title.
+            if (clip != null && !string.IsNullOrEmpty(candidate.attachBone))
+            {
+                parts.Add("holding " + Path.GetFileNameWithoutExtension(candidate.model) +
+                          " on bone '" + candidate.attachBone + "'");
             }
 
             if (!string.IsNullOrEmpty(candidate.notes))
