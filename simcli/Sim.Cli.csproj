@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The headless runner: it loads a replay bundle, plays the match with nobody
+    watching, and writes down what happened.
+
+    THE REFERENCE BELOW IS A HintPath TO THE COMMITTED ASSEMBLY, NOT A
+    ProjectReference, FOR THE SAME REASON THE TEST PROJECT'S IS. A project
+    reference would have MSBuild rebuild sim/ on the way in, so the trace this
+    produces would come from bytes that exist only on whatever machine ran it,
+    and a source change committed without its rebuild would be papered over by
+    the build ordering instead of going red. With a HintPath, the run is a run
+    of the image in the repository. That is the image the engine loads as a
+    plug-in, and therefore the only image the parity run is worth diffing
+    against.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <RootNamespace>Sim.Cli</RootNamespace>
+    <AssemblyName>Sim.Cli</AssemblyName>
+
+    <!--
+      No implicit entry point. The working agreements ask for a static
+      command-line entry point that a shell can reach from nothing, and a
+      top-level-statements file compiles to one that is generated rather than
+      written, so it cannot be found by looking and nothing stops a second file
+      quietly becoming the program.
+    -->
+    <GenerateProgramFile>false</GenerateProgramFile>
+
+    <!--
+      The output of this program is a committed file that a build gate compares
+      byte for byte. A machine whose locale renders a digit differently would
+      produce a different file and a red gate nobody could reproduce; the
+      simulation refuses to consult a culture at all, and this makes the same
+      true of the program that prints its numbers.
+    -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Sim">
+      <HintPath>$(MSBuildThisFileDirectory)../client/Packages/com.ssalter.sim/Runtime/Sim.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

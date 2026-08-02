@@ -1,10 +1,11 @@
-# The rolling per-tick state hash of the skeleton's one match, as a real run
-# produced it. Regenerate it by running the match; never edit it by hand.
+# The rolling per-tick state hash of one match, as a real run produced it.
+# Regenerate it with tools/run-headless-match.ps1 -Regenerate; never edit it by hand.
 #
 # THIS IS A GENERATED FILE AND IT IS COMMITTED ON PURPOSE. It is the oracle the
-# build gate compares a live run against, one tick at a time, and it is
-# deliberately not produced by whatever is checking it -- a trace written by the
-# run it validates is a test that cannot fail.
+# build gate compares a live run against, one tick at a time, and it is the trace
+# the engine-side parity run diffs its own against. It is deliberately not produced
+# by whatever is checking it -- a trace written by the run it validates is a test
+# that cannot fail.
 #
 # WHAT IS HASHED IS INTERNAL SIMULATION STATE, NOT THE SNAPSHOT. The fold covers
 # the raw Q32.32 remainder under every creep's distance, the position of the one
@@ -19,12 +20,11 @@
 #
 # The run this came from:
 #
-#   map        content/map.txt
-#   units      content/units.txt
-#   defense    content/defense.txt
-#   wave       content/wave.txt
+#   replay bundle format 0, simulation version 1, content 39B848CEFDDCC9CF
 #   seed       20260801
-#   result     12 of 40 leaked, tick 1852 (61 seconds at 30 ticks a second)
+#   defense    7A59F7466CBECD7F
+#   wave       44C52C885C1A75C2
+#   result     12 of 40 leaked, tick 1852 (61 seconds at 30 ticks a second), state CA3F66473C4B975D
 #
 # Any of those moving moves every line below it. That is the point: the trace is
 # retired loudly rather than silently comparing a run against a different match.

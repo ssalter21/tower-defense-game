@@ -119,6 +119,41 @@ public class ReplayBundleTests
     }
 
     [Fact]
+    public void The_committed_bundle_on_disk_is_the_committed_content_recorded()
+    {
+        // The fixture the command line loads, and the one the version bump will
+        // be rehearsed against. It came out of the record verb rather than out
+        // of a hex editor, and this is what says so: the same writer, over the
+        // same content, at the same seed, produces the same bytes.
+        byte[] onDisk = File.ReadAllBytes(RepoLayout.BundleFile);
+
+        Assert.Equal(TheMatch.Bundle().ToBytes(), onDisk);
+
+        ReplayBundle read = ReplayBundle.FromBytes(onDisk);
+
+        Assert.Equal(TheMatch.Seed, read.Seed);
+        Assert.Equal(0, read.Header.FormatVersion);
+        Assert.Equal(SimulationVersion.Current, read.Header.SimVersion);
+        Assert.Equal(TheMatch.Types().ContentHash, read.Header.ContentHash);
+    }
+
+    [Fact]
+    public void The_committed_bundle_replays_to_the_committed_result()
+    {
+        // Through the replay gate, not around it: the file on disk is a record
+        // this build is allowed to simulate, and simulating it is the match the
+        // whole skeleton is built around.
+        UnitTypeTable types = TheMatch.Types();
+        MatchResult result = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.BundleFile))
+            .Replay(types)
+            .Resolve();
+
+        Assert.Equal(TheMatch.LeakedInTheCommittedRun, result.Leaked);
+        Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
+        Assert.Equal(TheMatch.Trace().At(TheMatch.FinalTickOfTheCommittedRun), result.RollingStateHash);
+    }
+
+    [Fact]
     public void A_grid_whose_shape_and_contents_disagree_refuses()
     {
         ContentException thrown = Assert.Throws<ContentException>(

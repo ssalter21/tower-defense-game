@@ -15,6 +15,13 @@
 # Sim content: byte-stable on every machine
 content/**  text eol=lf
 
+# ...except the replay bundle, which is a record and not a line of text. The
+# rule above would have git normalise line endings inside a run of bytes whose
+# id is the hash of those bytes, so a checkout on the wrong platform would
+# produce a record that no longer is the record it says it is. This line comes
+# after that one on purpose: the last matching pattern wins.
+content/*.replay  binary
+
 # Binaries -- never diff, never merge
 *.dll binary
 *.pdb binary

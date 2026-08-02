@@ -24,9 +24,11 @@
 # THE TICKS ARE TUNED, and two things are being tuned for. A runner order is
 # placed while the grunt order before it is still walking, so the fast group
 # visibly catches the slow one -- the first overtake in the committed run is at
-# tick 366. And the last order is grunts rather than runners, so the tail of
-# the match is the slowest thing on the map and the match lasts sixty-two
-# seconds rather than ending the moment the quick ones are dealt with.
+# tick 366, which landmarks.txt beside this file carries because a real run
+# reported it, not because anybody worked it out. And the last order is grunts
+# rather than runners, so the tail of the match is the slowest thing on the map
+# and the match lasts sixty-two seconds rather than ending the moment the quick
+# ones are dealt with.
 #
 #       tick  type  count  corridor
 #

@@ -36,7 +36,8 @@ either accepted or engineered away.
 ### 3. Every automation has a static command-line entry point
 
 Anything an agent needs to run lives in `tools/` and runs from a shell:
-`tools/run-playmode-tests.ps1`, `tools/adopt-unity-project.ps1`. **Nothing may
+`tools/run-playmode-tests.ps1`, `tools/adopt-unity-project.ps1`,
+`tools/run-headless-match.ps1`. **Nothing may
 depend on an editor bridge being installed** — no plug-in that has to be present
 in a running editor, no socket to a live Unity, no "first open the project and
 press the button".

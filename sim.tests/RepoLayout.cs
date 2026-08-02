@@ -54,6 +54,23 @@ public static class RepoLayout
     /// </summary>
     public static string GoldenTraceFile => Path.Combine(ContentDirectory, "golden-trace.txt");
 
+    /// <summary>
+    /// The interesting ticks of the committed match, as the command line
+    /// reported them from the event stream. Committed for the same reason the
+    /// trace is: the sit-down checklist is written against these numbers, and
+    /// nobody knows them until the match runs.
+    /// </summary>
+    public static string LandmarksFile => Path.Combine(ContentDirectory, "landmarks.txt");
+
+    /// <summary>
+    /// The committed replay bundle: the whole match in one run of bytes,
+    /// written by the record verb of the command line and not by hand.
+    /// </summary>
+    public static string BundleFile => Path.Combine(ContentDirectory, "match.replay");
+
+    /// <summary>The headless runner's project.</summary>
+    public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
+
     /// <summary>Every committed data file that holds numbers, and must therefore hold no decimal point.</summary>
     public static IEnumerable<string> NumericContentFiles
     {
