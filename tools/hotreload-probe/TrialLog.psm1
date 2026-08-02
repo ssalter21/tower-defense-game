@@ -13,6 +13,10 @@ $script:ReloadPattern  = '^\[hot-reload probe\] (?<clock>\d{2}:\d{2}:\d{2}\.\d{3
 $script:BuiltAtPattern = ' at (?<built>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s*$'
 # Asset Pipeline Refresh (id=87fa...): Total: 26.731 seconds - Initiated by RefreshV2(AllowForceSynchronousImport)
 $script:RefreshPattern = '^Asset Pipeline Refresh \(id=(?<id>[0-9a-fA-F]+)\): Total: (?<total>\d+(?:\.\d+)?) seconds - Initiated by (?<by>.+?)\s*$'
+# Top-level phases of the refresh that run after the domain reload, and so after
+# the probe has logged. One tab exactly: the nested children are already counted
+# in their parent, and adding them would subtract the same time twice.
+$script:TailPhasePattern = '^\t(?:ImportOutOfDateAssets|PostProcessAllAssets): (?<ms>\d+(?:\.\d+)?)ms'
 
 # Unity writes the log with the invariant forms above whatever the machine's
 # locale is, so the parse has to be invariant too -- otherwise the same log
@@ -101,11 +105,28 @@ function Get-RefreshAfter {
         $m = [regex]::Match($Lines[$i], $script:RefreshPattern)
         if (-not $m.Success) { continue }
 
+        # The record may be followed by a tab-indented phase breakdown. The two
+        # phases below run AFTER the domain reload -- so after the probe has
+        # already logged -- and they are the reason `reload - Total` lands
+        # earlier than the refresh really started. Not every record carries the
+        # breakdown; when it does not, the tail is unknown and reported as zero.
+        $tailMs = 0.0
+        $hasPhases = $false
+        for ($j = $i + 1; $j -lt $Lines.Count -and $Lines[$j].StartsWith("`t"); $j++) {
+            $p = [regex]::Match($Lines[$j], $script:TailPhasePattern)
+            if ($p.Success) {
+                $tailMs += [double]::Parse($p.Groups['ms'].Value, $script:Invariant)
+                $hasPhases = $true
+            }
+        }
+
         return [pscustomobject]@{
-            LineIndex    = $i
-            Id           = $m.Groups['id'].Value
-            TotalSeconds = [double]::Parse($m.Groups['total'].Value, $script:Invariant)
-            InitiatedBy  = $m.Groups['by'].Value
+            LineIndex          = $i
+            Id                 = $m.Groups['id'].Value
+            TotalSeconds       = [double]::Parse($m.Groups['total'].Value, $script:Invariant)
+            InitiatedBy        = $m.Groups['by'].Value
+            TailSeconds        = $tailMs / 1000.0
+            HasPhaseBreakdown  = $hasPhases
         }
     }
 
@@ -129,13 +150,18 @@ function Resolve-TrialOutcome {
         [Parameter(Mandatory)][datetime]$ReloadAt,
         [Parameter(Mandatory)][double]$RefreshSeconds,
         [Parameter(Mandatory)][datetime]$BuiltAt,
-        [AllowNull()][Nullable[datetime]]$AltTabAt
+        [AllowNull()][Nullable[datetime]]$AltTabAt,
+        # Seconds of the refresh that ran after the reload was logged. Left at
+        # zero the refresh start comes out too early -- which biases every
+        # trial towards void, and voids exactly the prompt alt-tab this is
+        # trying to catch.
+        [double]$TailSeconds = 0
     )
 
     # Both clocks in the log carry milliseconds and no more, so the subtraction
     # is done in whole milliseconds. AddSeconds on a double leaves a tick or so
     # of residue, which is not precision -- it is noise that reads as precision.
-    $refreshMs = [long][math]::Round($RefreshSeconds * 1000)
+    $refreshMs = [long][math]::Round(($RefreshSeconds - $TailSeconds) * 1000)
     $refreshStartedAt = $ReloadAt.AddTicks(-$refreshMs * [timespan]::TicksPerMillisecond)
 
     $verdict = 'valid'
@@ -154,6 +180,7 @@ function Resolve-TrialOutcome {
         RefreshStartedAt       = $refreshStartedAt
         ReloadAt               = $ReloadAt
         RefreshSeconds         = $RefreshSeconds
+        TailSeconds            = $TailSeconds
         AltTabToRefreshSeconds = $altTabToRefresh
         RebuildToReloadSeconds = ($ReloadAt - $BuiltAt).TotalSeconds
     }

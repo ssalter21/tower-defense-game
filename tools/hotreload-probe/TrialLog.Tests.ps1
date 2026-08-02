@@ -133,6 +133,57 @@ Test-Case 'a reload logged after midnight belongs to the next day' {
     Assert-Equal ([datetime]'2026-08-01 23:59:50.000') $r.BuiltAt 'build stamp time'
 }
 
+$phased = Get-Content (Join-Path $PSScriptRoot 'fixtures/refresh-with-phases.log')
+
+Test-Case 'sums the phases that ran after the reload was logged' {
+    $r = @(Get-ProbeReload -Lines $phased)[0]
+    $refresh = Get-RefreshAfter -Lines $phased -FromIndex $r.LineIndex
+    Assert-Equal $true $refresh.HasPhaseBreakdown 'has a phase breakdown'
+    # ImportOutOfDateAssets 1198.104ms + PostProcessAllAssets 164.898ms
+    Assert-Close 1.363002 $refresh.TailSeconds 0.0000005 'tail seconds'
+}
+
+Test-Case 'counts each tail phase once, not its children as well' {
+    # ImportOutOfDateAssets has indented children summing to ~24ms. Matching
+    # them too would subtract the same time twice and drag the start later.
+    $r = @(Get-ProbeReload -Lines $phased)[0]
+    $refresh = Get-RefreshAfter -Lines $phased -FromIndex $r.LineIndex
+    if ($refresh.TailSeconds -ge 1.4) {
+        throw "tail $($refresh.TailSeconds) looks like it double-counted nested children"
+    }
+}
+
+Test-Case 'a record with no breakdown reports no tail rather than guessing one' {
+    $second = @(Get-ProbeReload -Lines $fixture)[1]
+    $refresh = Get-RefreshAfter -Lines $fixture -FromIndex $second.LineIndex
+    Assert-Equal $false $refresh.HasPhaseBreakdown 'has a phase breakdown'
+    Assert-Equal 0 $refresh.TailSeconds 'tail seconds'
+}
+
+Test-Case 'the tail moves the refresh start later, not the reload' {
+    $r = @(Get-ProbeReload -Lines $phased)[0]
+    $refresh = Get-RefreshAfter -Lines $phased -FromIndex $r.LineIndex
+    $outcome = Resolve-TrialOutcome -ReloadAt $r.ReloadAt -BuiltAt $r.BuiltAt `
+        -RefreshSeconds $refresh.TotalSeconds -TailSeconds $refresh.TailSeconds -AltTabAt $null
+    # 21:42:23.750 less (14.955 - 1.363) = 13.592 s
+    Assert-Equal ([datetime]'2026-08-02 21:42:10.158') $outcome.RefreshStartedAt 'refresh start'
+}
+
+Test-Case 'an alt-tab inside the tail window counts instead of being voided' {
+    # The exact failure the run hit: alt-tab 6 s after the rebuild, refresh
+    # started 6.8 s after it. Ignoring the tail puts the start at 5.4 s and
+    # throws the trial away.
+    $r = @(Get-ProbeReload -Lines $phased)[0]
+    $refresh = Get-RefreshAfter -Lines $phased -FromIndex $r.LineIndex
+    $altTab = $r.BuiltAt.AddSeconds(6)
+    $withTail = Resolve-TrialOutcome -ReloadAt $r.ReloadAt -BuiltAt $r.BuiltAt `
+        -RefreshSeconds $refresh.TotalSeconds -TailSeconds $refresh.TailSeconds -AltTabAt $altTab
+    $withoutTail = Resolve-TrialOutcome -ReloadAt $r.ReloadAt -BuiltAt $r.BuiltAt `
+        -RefreshSeconds $refresh.TotalSeconds -AltTabAt $altTab
+    Assert-Equal 'valid' $withTail.Verdict 'verdict with the tail subtracted'
+    Assert-Equal 'void'  $withoutTail.Verdict 'verdict without it'
+}
+
 Write-Host ''
 if ($script:Failures -gt 0) {
     Write-Host "$($script:Failures) of $($script:Ran) failed." -ForegroundColor Red

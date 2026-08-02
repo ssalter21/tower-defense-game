@@ -326,7 +326,9 @@ public static class TrialWin32 {
 
         Write-Host ""
         Write-Host ">>> ALT-TAB ONTO THE UNITY EDITOR NOW <<<" -ForegroundColor Green
-        Write-Host "    (the moment it takes the foreground is recorded for you -- do not time it)" -ForegroundColor DarkGray
+        Write-Host "    IMMEDIATELY -- do not read this line first. The editor can start" -ForegroundColor DarkGray
+        Write-Host "    refreshing on its own within a few seconds, and once it has, the" -ForegroundColor DarkGray
+        Write-Host "    trial is void. Hold alt-tab ready before you run this." -ForegroundColor DarkGray
 
         # Watch for two things at once: the human arriving, and the editor
         # noticing on its own. Whichever happens first decides what this is.
@@ -399,15 +401,25 @@ public static class TrialWin32 {
         }
 
         $outcome = Resolve-TrialOutcome -ReloadAt $reload.ReloadAt -BuiltAt $reload.BuiltAt `
-            -RefreshSeconds $refresh.TotalSeconds -AltTabAt $altTabAt
+            -RefreshSeconds $refresh.TotalSeconds -TailSeconds $refresh.TailSeconds -AltTabAt $altTabAt
 
         Write-Host ("  reload at        {0:HH:mm:ss.fff}   (editor's own clock)" -f $outcome.ReloadAt)
         Write-Host ("  refresh ran      {0:N3} s, initiated by {1}" -f $refresh.TotalSeconds, $refresh.InitiatedBy)
-        Write-Host ("  refresh STARTED  {0:HH:mm:ss.fff}" -f $outcome.RefreshStartedAt)
+        if ($refresh.HasPhaseBreakdown) {
+            Write-Host ("  of which {0:N3} s ran after the reload was logged" -f $refresh.TailSeconds)
+        } else {
+            Write-Host "  no phase breakdown in the record -- the start is an upper bound" -ForegroundColor DarkYellow
+        }
+        Write-Host ("  refresh STARTED  {0:HH:mm:ss.fff}   ({1:N1} s after the rebuild)" -f `
+            $outcome.RefreshStartedAt, ($outcome.RefreshStartedAt - $outcome.BuiltAt).TotalSeconds)
+        Write-Host ("  you alt-tabbed   {0:N1} s after the rebuild" -f ($altTabAt - $outcome.BuiltAt).TotalSeconds)
 
         if ($outcome.Verdict -eq 'void') {
             Write-Host ("VOID -- the refresh had already started {0:N1} s before you alt-tabbed." -f `
                 [math]::Abs($outcome.AltTabToRefreshSeconds)) -ForegroundColor Yellow
+            Write-Host ("       You had about {0:N0} s and used {1:N0} s. Alt-tab the INSTANT the prompt appears." -f `
+                ($outcome.RefreshStartedAt - $outcome.BuiltAt).TotalSeconds,
+                ($altTabAt - $outcome.BuiltAt).TotalSeconds) -ForegroundColor Yellow
             Write-Host "       Not a negative result. Retrying." -ForegroundColor Yellow
         } else {
             $valid++
