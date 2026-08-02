@@ -2,24 +2,34 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-namespace Spikes.Playables
+namespace View
 {
     /// <summary>
-    /// The production-shaped thing this spike is measuring: a view component that
-    /// samples animation clips at a time the simulation dictates, with no playback
-    /// head of its own.
+    /// The view component that samples animation clips at a time the simulation
+    /// dictates, with no playback head of its own.
     ///
     /// The whole point is that <see cref="Sample"/> is a pure function of its
     /// arguments. Call it with the same phase twice and you get the same pose;
     /// call it with a decreasing phase and the animation runs backwards. Nothing
     /// here accumulates, so nothing here can desync from the sim.
+    ///
+    /// This is why there is no <c>RuntimeAnimatorController</c> anywhere near it.
+    /// A state-machine animator is a playback head that advances in wall-clock
+    /// time — exactly the view-side accumulator the architecture forbids — and it
+    /// is banned outright rather than configured carefully.
     /// </summary>
     public sealed class SimDrivenAnimator : MonoBehaviour
     {
         /// <summary>
         /// The two independent ways to stop the graph growing a playback head.
-        /// Exposed so the spike can poison each one and prove it is load-bearing —
-        /// a guard nobody has watched fail is not known to be doing anything.
+        /// Each was measured to be independently sufficient; both are kept
+        /// precisely because they fail independently.
+        ///
+        /// This is exposed rather than hard-coded so the poison suite can rebuild
+        /// the subject with each guard removed and watch the pose drift. A guard
+        /// nobody has watched fail is not known to be doing anything. Production
+        /// code never passes anything but <see cref="HeadGuard.Both"/> — that is
+        /// what the <see cref="Build(Animator, AnimationClip[])"/> overload is.
         /// </summary>
         [System.Flags]
         public enum HeadGuard
@@ -40,6 +50,10 @@ namespace Spikes.Playables
         public void Build(Animator animator, params AnimationClip[] clips)
             => Build(animator, HeadGuard.Both, clips);
 
+        /// <summary>
+        /// The same graph with a chosen subset of the head-guards. Only the poison
+        /// suite calls this with anything other than <see cref="HeadGuard.Both"/>.
+        /// </summary>
         public void Build(Animator animator, HeadGuard guard, params AnimationClip[] clips)
         {
             _graph = PlayableGraph.Create(name + ".anim");
