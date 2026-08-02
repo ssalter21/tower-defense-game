@@ -28,38 +28,9 @@ namespace Tests.PlayMode
     /// what broken looks like.
     /// </para>
     /// </remarks>
-    public class MatchViewTests
+    public class MatchViewTests : ViewTest
     {
-        private readonly List<GameObject> _spawned = new List<GameObject>();
-
-        [TearDown]
-        public void TearDown()
-        {
-            foreach (GameObject go in _spawned)
-            {
-                if (go != null) Object.DestroyImmediate(go);
-            }
-
-            _spawned.Clear();
-        }
-
 #if UNITY_EDITOR
-        /// <summary>A match, drawn, with nobody watching it.</summary>
-        private MatchView Begin()
-        {
-            var host = new GameObject("MatchViewTest");
-            _spawned.Add(host);
-
-            return TheMatchOnScreen.Begin(host);
-        }
-
-        /// <summary>
-        /// Steps the match, drawing every tick, until <paramref name="stop"/>
-        /// says so or the match ends.
-        /// </summary>
-        private static void RunUntil(MatchView view, System.Func<bool> stop) =>
-            TheMatchOnScreen.RunUntil(view, stop);
-
         // ---------------------------------------------------------------
         // Pulling and matching
         // ---------------------------------------------------------------

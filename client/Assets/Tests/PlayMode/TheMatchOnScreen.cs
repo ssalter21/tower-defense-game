@@ -51,24 +51,6 @@ namespace Tests.PlayMode
             return view;
         }
 
-        /// <summary>
-        /// Steps the match, drawing every tick, until <paramref name="stop"/>
-        /// says so or the match ends.
-        /// </summary>
-        public static void RunUntil(MatchView view, System.Func<bool> stop)
-        {
-            while (!view.IsFinished)
-            {
-                view.StepOneTick();
-                view.Draw(1f);
-
-                if (stop())
-                {
-                    return;
-                }
-            }
-        }
-
         /// <summary>The models and clips the match is drawn with.</summary>
         public static MatchArt Art() =>
             MatchArt.Of(

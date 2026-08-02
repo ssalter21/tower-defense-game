@@ -55,9 +55,6 @@ namespace View
         /// </remarks>
         public const int MaxTicksPerFrame = 8;
 
-        /// <summary>The slowest the match may be watched at.</summary>
-        public const float SlowestSpeed = 0.25f;
-
         /// <summary>The fastest the match may be watched at.</summary>
         public const float FastestSpeed = 8f;
 
@@ -87,15 +84,33 @@ namespace View
         public MatchView View => _view;
 
         /// <summary>
-        /// How many times faster than real time the match runs. Clamped to
-        /// <see cref="SlowestSpeed"/>..<see cref="FastestSpeed"/>; negative
-        /// speeds are not a thing, because running backwards is re-simulating
-        /// from the beginning and that is <see cref="SeekTo"/>.
+        /// How many times faster than real time the match runs.
         /// </summary>
+        /// <remarks>
+        /// Throws rather than clamps. A clamped speed is a control that looks
+        /// like it worked and did not, and the two ways to get one wrong are
+        /// both worth hearing about: zero or less is a match that never
+        /// advances again — running backwards is re-simulating from the
+        /// beginning, which is <see cref="SeekTo"/> and not a negative speed —
+        /// and past the ceiling is a frame doing more re-simulation than it can
+        /// afford.
+        /// </remarks>
         public float Speed
         {
             get => _speed;
-            set => _speed = Mathf.Clamp(value, SlowestSpeed, FastestSpeed);
+
+            set
+            {
+                if (value <= 0f || value > FastestSpeed)
+                {
+                    throw new ArgumentOutOfRangeException(
+                        nameof(value),
+                        value,
+                        "A watching speed has to be above zero and no more than " + FastestSpeed + ".");
+                }
+
+                _speed = value;
+            }
         }
 
         /// <summary>Whether the clock is stopped. A paused match still draws.</summary>
@@ -160,13 +175,9 @@ namespace View
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>This re-simulates from tick zero. There is no snapshot cache, and
-        /// that is the decision the whole scrub bar is here to exercise:</b> a
-        /// cache can never disagree with itself, so scrubbing one would prove
-        /// nothing, while re-simulating makes every drag of the slider a free
-        /// determinism check. The re-sim budget in the build gate is what keeps
-        /// it affordable, and that budget going red is the only legitimate
-        /// reason to revisit this.
+        /// This is the discontinuity, and being called at all is the whole of
+        /// how it is signalled. What it costs and why it is worth it are on
+        /// <see cref="MatchView.ReSimulateTo"/>, which does the work.
         /// </para>
         /// <para>
         /// Seeking past the end lands on the end: the simulation stops
@@ -176,12 +187,6 @@ namespace View
         /// </remarks>
         public void SeekTo(int tick)
         {
-            if (tick < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(tick), "There is no tick before the first one.");
-            }
-
             _view.ReSimulateTo(tick);
 
             // The partial tick belonged to where playback was, not to where it

@@ -33,11 +33,12 @@ namespace View
     /// <b>Interpolation is a pure function of three arguments</b> — the two
     /// snapshots and an alpha — so it is not a playback head. It cannot drift,
     /// it holds no accumulated position, and drawing the same alpha twice draws
-    /// the same picture. <b>There is no clock in this class at all</b>: which
-    /// tick is on screen is decided entirely by
-    /// <see cref="PlaybackController"/>, which calls <see cref="StepOneTick"/>,
-    /// <see cref="ReSimulateTo"/> and <see cref="Draw"/> and is the only thing
-    /// that does.
+    /// the same picture. <b>There is no clock in this class at all</b>: it
+    /// offers <see cref="StepOneTick"/>, <see cref="ReSimulateTo"/> and
+    /// <see cref="Draw"/>, and something else decides when to call them. In the
+    /// running client that is <see cref="PlaybackController"/> and nothing
+    /// else; the frame capture and the tests drive the same three by hand,
+    /// which is the point of their being three separate calls.
     /// </para>
     /// <para>
     /// <b>Draw order is by construction, not by sorting.</b> Everything on the
@@ -185,13 +186,10 @@ namespace View
             // construct, run, and never pull a snapshot.
             FinalTick = new Match(map, layout, wave, seed).Resolve().FinalTick;
 
-            Match = new Match(map, layout, wave, seed);
-
-            Previous = null;
-            Current = Match.PullSnapshot();
-            RememberPrevious(Current);
-
-            Draw(0f);
+            // Starting a match and seeking to its first tick are the same
+            // thing, so they are the same code. Nothing about a seek is a
+            // special case of anything.
+            RunFromTheBeginningTo(0);
         }
 
         /// <summary>
@@ -299,6 +297,16 @@ namespace View
                     "There is no match to seek in. Begin one first.");
             }
 
+            RunFromTheBeginningTo(tick);
+        }
+
+        /// <summary>
+        /// Builds the match again from the four things <see cref="Begin"/>
+        /// remembered, runs it to <paramref name="tick"/> in silence, and draws
+        /// the result. The one place a match ever starts.
+        /// </summary>
+        private void RunFromTheBeginningTo(int tick)
+        {
             if (tick < 0)
             {
                 throw new ArgumentOutOfRangeException(

@@ -181,6 +181,19 @@ namespace View
                     "BeginMatch was called before Build, so there is no playfield to draw a match on.");
             }
 
+            // One root draws one match, and a second call is loud rather than
+            // quietly wrong. The controls are wired to the view that exists
+            // when they are built; replacing that view underneath them leaves a
+            // scrub bar driving a match nobody is looking at, which looks
+            // exactly like a scrub bar that does not work.
+            if (MatchView != null)
+            {
+                throw new System.InvalidOperationException(
+                    "This root is already drawing a match. Beginning a second one would leave the "
+                    + "playback controls pointed at the first, which is a scrub bar that moves and "
+                    + "changes nothing on screen.");
+            }
+
             var host = new GameObject("Match");
             host.transform.SetParent(transform, worldPositionStays: false);
 

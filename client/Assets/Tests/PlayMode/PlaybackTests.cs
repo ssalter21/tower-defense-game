@@ -31,7 +31,7 @@ namespace Tests.PlayMode
     /// anybody clearing it.
     /// </para>
     /// </remarks>
-    public class PlaybackTests
+    public class PlaybackTests : ViewTest
     {
         /// <summary>
         /// Far enough in that the match is busy: creeps walking, towers firing,
@@ -39,27 +39,6 @@ namespace Tests.PlayMode
         /// into the middle of something rather than onto an empty playfield.
         /// </summary>
         private const int BusyTick = 600;
-
-        private readonly List<GameObject> _spawned = new List<GameObject>();
-
-        [TearDown]
-        public void TearDown()
-        {
-            foreach (GameObject go in _spawned)
-            {
-                if (go != null) Object.DestroyImmediate(go);
-            }
-
-            _spawned.Clear();
-        }
-
-        private MatchView Begin()
-        {
-            var host = new GameObject("PlaybackTest");
-            _spawned.Add(host);
-
-            return TheMatchOnScreen.Begin(host);
-        }
 
         private PlaybackController Playback() => new PlaybackController(Begin());
 
@@ -91,9 +70,10 @@ namespace Tests.PlayMode
         {
             // Played, the same ticks say a great deal.
             PlaybackController played = Playback();
-            TheMatchOnScreen.RunUntil(played.View, () => played.View.Current.Tick >= BusyTick);
+            RunUntil(played.View, () => played.View.Current.Tick >= BusyTick);
 
-            Assert.That(played.View.Current.Tick, Is.EqualTo(BusyTick));
+            Assert.That(played.View.Current.Tick, Is.EqualTo(BusyTick),
+                "the match ended before it got busy enough to say anything");
             Assert.That(played.View.Decorations.EventsHeard, Is.GreaterThan(100),
                 "the match said almost nothing in six hundred ticks, so this proves nothing");
 
@@ -110,7 +90,8 @@ namespace Tests.PlayMode
                 "the ticks the seek re-ran emitted their events into the decorations, so seeking to the "
                 + "end would detonate the whole match's effects in one frame");
 
-            Assert.That(sought.View.Decorations.ActiveCount, Is.Zero);
+            Assert.That(sought.View.Decorations.ActiveCount, Is.Zero,
+                "a seek from a standing start put an effect on screen");
         }
 
         /// <summary>
@@ -144,7 +125,7 @@ namespace Tests.PlayMode
             // only means something while it is large next to what one frame can
             // draw from scratch: tracers arrive on a tower's cooldown, so a
             // frame's worth of ticks is worth about one of them.
-            TheMatchOnScreen.RunUntil(view, () => view.Current.Tick >= BusyTick);
+            RunUntil(view, () => view.Current.Tick >= BusyTick);
 
             int tickBefore = view.Current.Tick;
             int drawnBefore = view.Decorations.TracersDrawn;
@@ -168,7 +149,7 @@ namespace Tests.PlayMode
 
             // And the seek, signalled, clears — with something on screen to
             // clear, which after a fast-forward is not automatic.
-            TheMatchOnScreen.RunUntil(view, () => view.Decorations.ActiveCount > 0);
+            RunUntil(view, () => view.Decorations.ActiveCount > 0);
 
             Assert.That(view.Decorations.ActiveCount, Is.GreaterThan(0),
                 "nothing was on screen, so there was never anything to clear");
@@ -178,7 +159,8 @@ namespace Tests.PlayMode
             Assert.That(view.Decorations.ActiveCount, Is.Zero,
                 "an effect survived a seek, so it belongs to a tick that has not happened yet");
 
-            Assert.That(view.Decorations.TracersDrawn, Is.Zero);
+            Assert.That(view.Decorations.TracersDrawn, Is.Zero,
+                "the drawn count survived the clear");
         }
 
         /// <summary>
@@ -200,7 +182,7 @@ namespace Tests.PlayMode
             PlaybackController playback = Playback();
             MatchView view = playback.View;
 
-            TheMatchOnScreen.RunUntil(view, () => view.Creeps.LiveCount > 3);
+            RunUntil(view, () => view.Creeps.LiveCount > 3);
 
             int liveBefore = view.Creeps.LiveCount;
             int builtBefore = view.Creeps.EverCreated;
@@ -288,13 +270,12 @@ namespace Tests.PlayMode
         [Test]
         public void TheControlsCanBeDraggedPressedAndRead()
         {
-            var host = new GameObject("ControlsTest");
-            _spawned.Add(host);
+            GameObject host = Spawn("ControlsTest");
 
             PlaybackController playback = new PlaybackController(TheMatchOnScreen.Begin(host));
             PlaybackControls controls = PlaybackControls.Build(host.transform, playback);
 
-            Assert.That(controls.Scrubber.minValue, Is.Zero);
+            Assert.That(controls.Scrubber.minValue, Is.Zero, "the scrub bar does not start at tick zero");
             Assert.That(controls.Scrubber.maxValue, Is.EqualTo(playback.FinalTick),
                 "the scrub bar's end is not the end of the match");
             Assert.That(playback.FinalTick, Is.GreaterThan(60 * Sim.Match.TicksPerSecond),
@@ -303,7 +284,8 @@ namespace Tests.PlayMode
             Assert.That(controls.Readout.font, Is.Not.Null, "a label with no font draws nothing");
             Assert.That(EventSystem.current, Is.Not.Null,
                 "nothing in the scene can be clicked without an event system");
-            Assert.That(host.GetComponentInChildren<GraphicRaycaster>(), Is.Not.Null);
+            Assert.That(host.GetComponentInChildren<GraphicRaycaster>(), Is.Not.Null,
+                "a canvas with no raycaster is drawn and cannot be clicked");
             Assert.That(controls.Buttons.Count, Is.GreaterThan(2),
                 "fast-forward and jump-to-the-end are buttons, and pause is the third");
 
@@ -323,7 +305,7 @@ namespace Tests.PlayMode
             playback.Advance(1f);
             controls.Follow();
 
-            Assert.That(playback.Tick, Is.GreaterThan(BusyTick));
+            Assert.That(playback.Tick, Is.GreaterThan(BusyTick), "the match did not advance after play");
             Assert.That(controls.Scrubber.value, Is.EqualTo(playback.Tick).Within(1f),
                 "the scrub bar did not follow the match");
         }

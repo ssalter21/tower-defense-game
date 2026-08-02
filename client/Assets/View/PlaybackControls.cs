@@ -105,9 +105,6 @@ namespace View
         /// <summary>Every button on the bar, in the order they are laid out.</summary>
         public IReadOnlyList<Button> Buttons => _buttons;
 
-        /// <summary>The playback this bar drives.</summary>
-        public PlaybackController Playback => _playback;
-
         /// <summary>
         /// Builds the bar under <paramref name="parent"/>, driving
         /// <paramref name="playback"/>.
@@ -215,7 +212,7 @@ namespace View
 
         private RectTransform Bar()
         {
-            RectTransform bar = Rect("Bar", transform);
+            RectTransform bar = Child("Bar", transform);
             bar.anchorMin = new Vector2(0f, 0f);
             bar.anchorMax = new Vector2(1f, 0f);
             bar.pivot = new Vector2(0.5f, 0f);
@@ -224,7 +221,7 @@ namespace View
 
             // Opaque to the raycaster, so a click on the bar stops at the bar
             // rather than falling through onto the playfield behind it.
-            Fill(bar, BarColor);
+            Paint(bar, BarColor);
 
             return bar;
         }
@@ -235,7 +232,7 @@ namespace View
         /// </summary>
         private float AddButton(RectTransform bar, string label, float x, out Text text, Action pressed)
         {
-            RectTransform host = Rect("Button " + label, bar);
+            RectTransform host = Child("Button " + label, bar);
             host.anchorMin = new Vector2(0f, 0.5f);
             host.anchorMax = new Vector2(0f, 0.5f);
             host.pivot = new Vector2(0f, 0.5f);
@@ -243,7 +240,7 @@ namespace View
             host.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
 
             var button = host.gameObject.AddComponent<Button>();
-            button.targetGraphic = Fill(host, ButtonColor);
+            button.targetGraphic = Paint(host, ButtonColor);
             button.onClick.AddListener(() => pressed());
 
             text = Label(host, label, TextAnchor.MiddleCenter);
@@ -255,7 +252,7 @@ namespace View
 
         private Text AddReadout(RectTransform bar)
         {
-            RectTransform host = Rect("Readout", bar);
+            RectTransform host = Child("Readout", bar);
             host.anchorMin = new Vector2(1f, 0.5f);
             host.anchorMax = new Vector2(1f, 0.5f);
             host.pivot = new Vector2(1f, 0.5f);
@@ -277,24 +274,24 @@ namespace View
         /// </remarks>
         private Slider AddScrubber(RectTransform bar, float left, float right)
         {
-            RectTransform host = Rect("Scrubber", bar);
+            RectTransform host = Child("Scrubber", bar);
             host.anchorMin = new Vector2(0f, 0.5f);
             host.anchorMax = new Vector2(1f, 0.5f);
             host.pivot = new Vector2(0.5f, 0.5f);
             host.offsetMin = new Vector2(left, -ScrubberHeight * 0.5f);
             host.offsetMax = new Vector2(-right, ScrubberHeight * 0.5f);
 
-            Fill(host, TrackColor);
+            Paint(host, TrackColor);
 
-            RectTransform fillArea = Stretch(Rect("Fill Area", host), ScrubberHeight * 0.5f);
-            RectTransform fill = Rect("Fill", fillArea);
+            RectTransform fillArea = Stretch(Child("Fill Area", host), ScrubberHeight * 0.5f);
+            RectTransform fill = Child("Fill", fillArea);
             fill.sizeDelta = Vector2.zero;
-            Fill(fill, PlayedColor);
+            Paint(fill, PlayedColor);
 
-            RectTransform handleArea = Stretch(Rect("Handle Slide Area", host), ScrubberHeight * 0.5f);
-            RectTransform handle = Rect("Handle", handleArea);
+            RectTransform handleArea = Stretch(Child("Handle Slide Area", host), ScrubberHeight * 0.5f);
+            RectTransform handle = Child("Handle", handleArea);
             handle.sizeDelta = new Vector2(ScrubberHeight, 0f);
-            Image handleImage = Fill(handle, HandleColor);
+            Image handleImage = Paint(handle, HandleColor);
 
             var slider = host.gameObject.AddComponent<Slider>();
             slider.fillRect = fill;
@@ -367,7 +364,7 @@ namespace View
         // Plumbing
         // ---------------------------------------------------------------
 
-        private static RectTransform Rect(string name, Transform parent)
+        private static RectTransform Child(string name, Transform parent)
         {
             var host = new GameObject(name, typeof(RectTransform));
             host.transform.SetParent(parent, worldPositionStays: false);
@@ -386,7 +383,7 @@ namespace View
             return rect;
         }
 
-        private static Image Fill(RectTransform rect, Color color)
+        private static Image Paint(RectTransform rect, Color color)
         {
             var image = rect.gameObject.AddComponent<Image>();
             image.color = color;
@@ -401,7 +398,7 @@ namespace View
         /// </summary>
         private static Text Label(RectTransform parent, string content, TextAnchor alignment)
         {
-            RectTransform rect = Stretch(Rect("Label", parent), 0f);
+            RectTransform rect = Stretch(Child("Label", parent), 0f);
 
             var text = rect.gameObject.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
