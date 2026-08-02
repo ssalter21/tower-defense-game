@@ -44,6 +44,8 @@ public static class RepoLayout
 
     public static string MapFile => Path.Combine(ContentDirectory, "map.txt");
 
+    public static string DefenseFile => Path.Combine(ContentDirectory, "defense.txt");
+
     /// <summary>Every committed data file that holds numbers, and must therefore hold no decimal point.</summary>
     public static IEnumerable<string> NumericContentFiles
     {
@@ -51,6 +53,7 @@ public static class RepoLayout
         {
             yield return UnitsFile;
             yield return WaveFile;
+            yield return DefenseFile;
         }
     }
 
