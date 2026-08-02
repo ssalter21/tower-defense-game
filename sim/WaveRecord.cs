@@ -5,8 +5,8 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// One order as the record carries it: <c>u32 tick_offset · u16 type_id ·
-    /// u16 count · u8 corridor</c>, nine bytes.
+    /// One order as the record carries it: <c>u32 tick_offset + u16 type_id +
+    /// u16 count + u8 corridor</c>, nine bytes.
     /// </summary>
     public readonly struct RecordOrder : IEquatable<RecordOrder>
     {
@@ -238,7 +238,7 @@ namespace Sim
         }
 
         /// <summary>
-        /// Version 0: <c>u16 order_count · UnitOrder[]</c>. This branch never
+        /// Version 0: <c>u16 order_count + UnitOrder[]</c>. This branch never
         /// goes away; a later version gets a branch beside it.
         /// </summary>
         private static WaveRecord ReadVersion0(ByteCursor cursor, RecordHeader header)

@@ -56,8 +56,8 @@ namespace Sim
     /// <para>
     /// Every one of these names <b>which gate failed and both values</b>. "This
     /// record is incompatible" is a message that sends somebody to a debugger;
-    /// "the content hash gate failed -- the record says 3F2A… and this ruleset is
-    /// 91C4…" is a message they can act on without one.
+    /// "the content hash gate failed -- the record says 3F2A... and this ruleset is
+    /// 91C4..." is a message they can act on without one.
     /// </para>
     /// </remarks>
     public sealed class RetiredRecordException : Exception

@@ -276,7 +276,7 @@ namespace Sim
         }
 
         /// <summary>
-        /// Version 0: <c>u64 map_hash · u16 tower_count · Tower[]</c>.
+        /// Version 0: <c>u64 map_hash + u16 tower_count + Tower[]</c>.
         /// </summary>
         /// <remarks>
         /// This branch never goes away. When version 1 arrives it gets its own

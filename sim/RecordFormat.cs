@@ -56,12 +56,12 @@ namespace Sim
         /// </summary>
         public const int HeaderBytes = 18;
 
-        /// <summary>Bytes per tower in a defense: <c>u16 type_id · i16 q · i16 r</c>.</summary>
+        /// <summary>Bytes per tower in a defense: <c>u16 type_id + i16 q + i16 r</c>.</summary>
         public const int TowerBytes = 6;
 
         /// <summary>
-        /// Bytes per order in a wave: <c>u32 tick_offset · u16 type_id ·
-        /// u16 count · u8 corridor</c>.
+        /// Bytes per order in a wave: <c>u32 tick_offset + u16 type_id +
+        /// u16 count + u8 corridor</c>.
         /// </summary>
         public const int OrderBytes = 9;
 
