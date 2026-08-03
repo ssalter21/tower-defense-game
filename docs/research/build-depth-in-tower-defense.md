@@ -2,7 +2,7 @@
 
 **Research note** · 3 August 2026 · commissioned by
 [The Vision §10 — research in flight](../vision.md#research-in-flight); input to
-[seam 1 — the match format](../vision.md#1--the-match-format--next-once-the-research-lands),
+[seam 1 — the match format](../vision.md#1--the-match-format--next-and-now-unblocked),
 [seam 3 — the roster](../vision.md#3--the-roster) and [seam 7 — the interface](../vision.md#7--the-interface)
 
 **Question:** how do tower defense games manufacture extreme, combinatorial *build* depth; which of those
@@ -59,7 +59,8 @@ earlier in this note's own drafting. What
 [§4 — what persists](../vision.md#4-what-persists) removes is not depth at all; it is the *onboarding ramp*. The
 replacement is shipped and well-tested: **move the disclosure ramp inside the run.** Element TD 2 meters eleven
 picks across fifty waves; Super Auto Pets unlocks shop tier *X* on turn 2*X*−1 [[14]](#s14); Legion TD 2 shows
-you ten fighters out of ~116 [[5]](#s5)[[4]](#s4). Each is progressive disclosure that resets at the start of
+you ten of its forty-eight draftable fighters [[5]](#s5)[[27]](#s27); YouTD makes you *buy* the width of the
+distribution your offers are drawn from [[7]](#s7). Each is progressive disclosure that resets at the start of
 every run — which is exactly the shape §4 permits.
 
 **Four. Bloons TD 6 is the existence proof that meta-progression is not what carries depth.** Its hardest mode,
@@ -78,8 +79,8 @@ Three different quantities get called "depth" and conflating them is how a roste
 
 | Quantity | What it measures | Who maxes it |
 |---|---|---|
-| **Width** | How many distinct things exist | YouTD 2 — 200+ towers, 300+ items, 21 builders [[7]](#s7) |
-| **Reachable configurations** | How many distinct legal builds the rules admit | Bloons TD 6 — 25 towers × 64 legal upgrade states each = **1,600 tower configurations** from 375 authored upgrades [[6]](#s6) |
+| **Width** | How many distinct things exist | YouTD 2 — **235 tower families over 690 tower/tier rows**, 315 items, 21 builders, counted from the shipped CSVs [[7]](#s7) |
+| **Reachable configurations** | How many distinct legal builds the rules admit | Bloons TD 6 — 25 towers × 64 legal upgrade states = **1,600 tower configurations** from 375 authored upgrades [[6]](#s6). Legion TD 2 markets its own version of this number: *"12 million possible combinations"*, which is C(48,6) [[27]](#s27) |
 | **Interaction degree** | How much one piece's value depends on the other pieces you chose | Mazebert TD, Legion TD 2 |
 
 Width alone is a catalogue. **Depth is width × interaction × opportunity cost**, and the third term is the one
@@ -369,17 +370,15 @@ tower* rather than *between towers* — which matters below.
 
 ### 3.3 M3 — randomised offering buys scarcity, and pays for it in variance
 
-Legion TD 2 is the best-documented version because it ships **three different shapes of the same idea** in one
-game [[4]](#s4):
-
-| Playstyle | The offering |
-|---|---|
-| **Mastermind** | 10 random fighters at the start; **pick 6**. One reroll per game, which re-offers your 6 plus 4 new |
-| **Chaos** | **6 new random units every wave**, one from each tier |
-| **Hybrid** | You choose a *tier* to build; the unit you get from that tier is random |
+Legion TD 2 is the best-documented version, because it ships **ten different shapes of the same idea in one game**
+and lets the player pick between them — see the playstyle table below, which is the most interesting thing in this
+section. Ranked play is Mastermind-only, and Mastermind is not a legion at all: *"Mastermind is a special legion,
+which has no fighters of its own. Instead, you draft a set of fighters (called a 'roll') from all legions"*
+[[4]](#s4). The baseline is **10 offered, 6 kept**, with one reroll that *"swap[s] out up to 4 fighters"*
+[[4]](#s4)[[26]](#s26).
 
 Against **8 legions of 6 base fighters each — 48 draftable bases, 145 entries once upgrade forms are counted**
-[[5]](#s5) — a Mastermind player ever sees ten. Ninja-precise corroboration comes from the store page's own
+[[5]](#s5) — a Mastermind player ever sees ten. Precise corroboration comes from the store page's own
 marketing arithmetic: *"Select fighters from each legion for **12 million possible combinations**"* [[27]](#s27),
 and C(48,6) = **12,271,512** exactly. That is the entire trick, and the publisher counts it the same way:
 **an offering converts a pool nobody could learn into a hand anybody can read, and the reachable-configuration
@@ -734,17 +733,19 @@ That is the dependence index from §3, and here is its cardinality.
 | **M11** In-run levelling | The run's own history | A trajectory, like M9 — but **20 rows of table** describe the whole unit | ⚠️ Same cost as M9, paid once for both |
 | **M10** Counter-reading | The opponent's composition | The matrix is types², **16–25 cells**; the composition is not enumerable | ⚠️ The matrix is; the composition is sampled |
 | **M4** Item layering | The item multiset on that unit | 30 towers × C(50,3) = **588,000** equipped towers; against defenses, ~10¹¹ | ☠️ Sampling only |
-| **M3** Randomised offering | The hand | C(200,6) ≈ **8.2 × 10¹⁰** hands; C(100,6) ≈ 1.2 × 10⁹ | ☠️ Sampling only |
+| **M3** Randomised offering | The hand | Steeply pool-dependent: **C(48,6) = 12,271,512** (Legion TD 2's actual scale [[27]](#s27)); C(100,6) ≈ 1.2 × 10⁹; C(200,6) ≈ 8.2 × 10¹⁰ | ⚠️ **At a 48-unit pool, borderline** — 1.2 × 10⁷ hands is ~34 hours at 10 ms, so hands alone are enumerable and hands-against-defenses are not. ☠️ Beyond ~60 units, sampling only |
 | **M6** Sacrifice | The consumed set | Depends; unbounded if the recipe is open | ⚠️ Check the fixed point analytically instead — it is cheaper and stronger |
 
 **Read the table as a ranking, because it is one.** M1, M2, M7 and corridor-bounded M5 all leave a surface in the
-low thousands — a rounding error against an overnight sweep. M3 and M4 push it past 10⁸ and convert the harness's
-promise from *"a red cell names what is mispriced"* to *"a sampled estimate suggests something might be"*. That is
-not fatal — sampling is a legitimate method — but it is a **downgrade of the one balance method
-[§5](../vision.md#5-how-it-is-balanced) says is the only one that works at this scale**, and it should be paid for
-knowingly.
+low thousands — a rounding error against an overnight sweep. M4, and M3 above a pool of roughly sixty, push past
+10⁸ and convert the harness's promise from *"a red cell names what is mispriced"* to *"a sampled estimate suggests
+something might be"*. That is not fatal — sampling is a legitimate method — but it is a **downgrade of the one
+balance method [§5](../vision.md#5-how-it-is-balanced) says is the only one that works at this scale**, and it
+should be paid for knowingly.
 
-One number for scale: at 10 ms per headless match, 10⁶ matches is under three hours and 10⁹ is four months.
+Two numbers for scale: at 10 ms per headless match, **10⁶ matches is under three hours, 10⁷ is a day and a bit,
+10⁹ is four months.** That day-and-a-bit is the practical ceiling for an overnight-plus-weekend sweep, and it is
+the number that decides where M3's pool size can sit.
 
 ---
 
@@ -762,6 +763,12 @@ subset up to size *k*. Meter the ingredients across the run: one pick at the sta
 pick menu also offering income so that the tech axis and the purse meet on the same button (§2.2). Gate each pick
 behind a wave you have to survive, not a timer. At *n*=5, *k*=3 that is 25 units; at *n*=6, *k*=3 it is 41; at
 *n*=6, *k*=4 it is 56 and you have signed up for Element TD 2's authoring obligation.
+
+**Take the whole mechanism, not just the recipe table.** Element TD's picks buy a position on an
+*n* × *levels* grid, not a set of flags (§2.2), and the budget is deliberately too small to fill it — the
+breadth-versus-depth trade *is* the build. Layer the gold economy's own version on top: tier-up available only
+from a level-1 unit, with the level cap falling as the tier rises. Two scarcities, each with the same trade
+inside it, out of one recipe table and one predicate.
 
 **The trade-off: you buy learnability and an enumerable balance surface with a fixed, non-negotiable content
 bill.** The rule decides how many units exist, not taste — the fifteenth dual gets authored whether or not anyone
@@ -821,9 +828,11 @@ a legality predicate is free content and it does not touch the roster.
 
 ### Direction C — the metered offering · **recommended third**
 
-Author a pool of sixty to a hundred units with no generative rule, and hand each player a small random hand each
-run — ten offered, six kept, one reroll, in Legion TD 2's Mastermind shape. Depth comes from making a coherent
-defense out of what you were dealt, plus what you can read off the opponent.
+Author a pool of units with no generative rule, and hand each player a small random hand each run — ten offered,
+six kept, one reroll, in Legion TD 2's Mastermind shape. Depth comes from making a coherent defense out of what
+you were dealt, plus what you can read off the opponent. **Size the pool at roughly fifty**, not a hundred:
+Legion TD 2 drafts from 48 bases [[27]](#s27), and 48 is also, by luck, right at the point where the harness can
+still enumerate every hand ([§6](#6-how-big-the-balance-surface-actually-gets)).
 
 **The trade-off: the cheapest accessibility win on offer, bought at the cost of the harness's best trick.**
 Nobody ever faces more than ten choices, the pool can grow forever without making the game harder to start, and
@@ -837,10 +846,12 @@ Rerolls"* against *"Lock-In: +4 Income / Lock a fighter"*) [[28]](#s28), or let 
 distribution (YouTD's element research) [[7]](#s7). Either turns "the game rolled badly for me" into "I chose the
 risk", which is a different complaint entirely and one a one-purse economy is well shaped to hold.
 
-What does **not** soften is the harness. A hand drawn from a pool of 100 is C(100,6) ≈ **1.2 × 10⁹** hands, and
+What does **not** soften is the harness, and it is the reason for the fifty-unit ceiling above. At C(48,6) the
+hand space is 1.2 × 10⁷ and enumerable in about a day; at a hundred units it is 1.2 × 10⁹ and
 [§5's](../vision.md#5-how-it-is-balanced) promise degrades from *"a red cell names what is mispriced"* to *"a
-sampled estimate suggests something might be"*. That is the real price, and it is paid in the one thing this
-project has decided is not optional. Second, more quietly: it sits awkwardly with
+sampled estimate suggests something might be"*. **Direction C is the only one of the three whose content budget
+is capped by the balance method rather than by authoring effort** — grow the pool and you lose the harness. Second,
+more quietly: it sits awkwardly with
 [§1's](../vision.md#1-the-destination) "the reward is the build," because a hand you were dealt is a puzzle you
 solved rather than a defense you designed. That is a taste judgement, stated as one.
 
@@ -882,9 +893,12 @@ search-result summary rather than a fetched page, it is marked ⚠️ below.
 | Ninja Kiwi on onboarding / new-player design | ⚠️ **Almost nothing public.** No NK statement found. The unexploited lead is NK's *"Insider Session #3"* with a BTD6 design co-lead, which is video-only |
 | BTD6 reach | ⚠️ **No official figure exists** — NK says only *"a favorite game for millions of players"*. Third-party: 228,647 Steam reviews at 97% positive, 345K App Store ratings at 4.9, all-time Steam peak 53,891 concurrent. The review volume at a paid price point is the defensible framing; concurrents are not, since BTD6 is mobile-first |
 | Legion TD 2 — 8 legions, 12–15 fighters each, reroll, 75–125% spread | **First-party** manual [[4]](#s4). The ~116 total is my count off the official unit guide [[5]](#s5) and does not match Part V's 159, which counts mercenaries and wave creatures too |
-| Legion TD 2's three random-builder playstyles | ⚠️ Community wiki, but the manual corroborates the Mastermind draft [[4]](#s4) |
-| YouTD 2 content counts (200+/300+/21) | **Fair** — the developer's own itch.io page [[7]](#s7). The **WC3 original's tower count is not established**, and neither is how towers are offered during play — an acknowledged hole, since YouTD is this note's exemplar of extreme width |
-| Mazebert TD (210 cards, drop-and-equip, tower XP) | **Fair** — the developer's own site [[8]](#s8). Item/aura specifics were not verified |
+| **Legion TD 2's "10 offered, select 6"** | ⚠️ **Community wiki only** [[26]](#s26) — no first-party page states the roll size, though the manual describes the draft [[4]](#s4) and the store page's *"12 million possible combinations"* = C(48,6) corroborates the pool half [[27]](#s27). Flagged because it is load-bearing for Direction C |
+| Legion TD 2's ten playstyles and their income prices | **First-party** — the official Mastermind page [[28]](#s28) |
+| **Legion TD 2 has essentially no blocking geometry** | ⚠️ **Community wiki, quoting what reads as developer knowledge** [[26]](#s26). This corrects an earlier claim in this note's own drafting (§5.2) and it is important enough that **a human should confirm it in-game before seam 1 leans on it** |
+| YouTD 2 — 235 tower families / 690 rows, 315 items, 21 builders, the roll algorithm, research-widens-the-distribution, reroll-deals-fewer | **Shipped source, exact** — the MIT repo's CSVs and `tower_distribution.gd` [[7]](#s7), whose own comment says it *"attempts to accurately reproduce the algorithm from the original game"*. The **WC3 original's tower count remains unestablished** (a community database implies ~676 tower tiers; nobody publishes a figure) |
+| Mazebert TD — 210 cards as 61/98/33/18, 4–6 slots, 3% drop, 2 elements, 1 card per round, **fixed path** | **Shipped source** — the developer open-sourced the simulation core [[25]](#s25), and the counts reconcile against the official site independently. ⚠️ The fixed-path claim is inferred from source structure, not quoted |
+| **Mazebert: difficulty → better loot** | ☠️ **Verified false.** Difficulty changes creep HP and wizard XP only; a full search of the shipped loot system finds no difficulty term [[25]](#s25). A widely repeated claim that this note does not make |
 | Gem TD — 8 colours × 6 qualities, the combine DAG, the dual "straight flush" routes | ⚠️ **Medium.** Stats and names come from a community site that generated them by extracting the shipped `vpk`; recipes from a community wiki [[24]](#s24) |
 | Gem TD — random-roll odds, reroll rule, the keep-one-maze-the-rest loop | ⚠️ **NOT VERIFIED AT ALL.** No citable source found. Mitigated only by the fact that the mazing half is dead here anyway (M8) |
 | **"Gem TD+" as a product** | ⚠️ **Could not be found on Steam.** The verifiable modern remake is a Dota 2 custom game by Drodo Studio [[24]](#s24). Treat the name as unconfirmed |
@@ -893,14 +907,17 @@ search-result summary rather than a fetched page, it is marked ⚠️ below.
 | Super Auto Pets tier-unlock schedule (tier *X* on turn 2*X*−1) | ⚠️ Community wiki [[14]](#s14). Used only as one worked example of A5 |
 | That an adjacency lever is bounded-degree on this playfield | ⚠️ **Depends on an unstated design fact** — where towers sit relative to the corridor. §3.5 |
 
-**What is not in this note.** Defender's Quest, Kingdom Rush, Sanctum, Rogue Tower, Infinitode 2 and the Dota 2
-custom-map lineage were all considered and contribute nothing to the taxonomy that
-[Part V](../variance-levers-and-unit-schema.md) has not already catalogued at the *lever* level — Defender's
-Quest's flavour tags (§4.1), Kingdom Rush's blocking bodies (§3.9), Sanctum's maze/gun split (§3.9, and dead by
-M8), Rogue Tower's count-scaled pricing and diversity bounty (§3.11), Infinitode 2's adaptive Light enemy (§4.5).
-Rogue Tower's count-scaled pricing and diversity bounty deserve a second look under any of the three directions,
-because they buy build variety without a balance patch, and a stored-ghost pool that everyone copies is exactly
-the problem they solve.
+**Considered, and what each contributes.** Six more games were surveyed. Only one added a taxonomy row (Sanctum 2,
+into M7); the rest are recorded here so nobody has to survey them again.
+
+| Game | Its one structural contribution | Verdict |
+|---|---|---|
+| **Sanctum 1 → 2** | The **loadout constraint.** Sanctum 1 sold mazing (*"Don't just build towers. Build mazes!"*); Sanctum 2 replaced open access with a pre-mission loadout of towers, weapons and perks [[29]](#s29) — deliberately shrinking the available set to force commitment. The exact inverse of YouTD's approach, and the only franchise here that made the move *away* from geometry on purpose | **Folded into M7.** The most directly relevant precedent for a game that has given up mazing |
+| **Rogue Tower** | Player-steered **procedural path growth** plus in-run upgrade card draws, over *"400 unique cards and upgrades"*, with elevation making some sites premium | ☠️ The path-growth half is M8 and dead. The card-draw half is M3. Its economy levers (count-scaled pricing, diversity bounty) are already in [Part V §3.11](../variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology) and **deserve a second look under any of the three directions** — a stored-ghost pool that everyone copies is exactly the problem they solve |
+| **Infinitode 2** | Only *"15+ different types of towers"* but *"300+ unique upgrades, almost every one of which can be improved to infinity"*, plus per-tower RPG levelling | ☠️ **Depth by vertical meta-progression.** M12, dead by §4. Useful as the clearest example of the road not taken |
+| **Kingdom Rush** | The **fixed branching specialisation tree** — the same tree every run, variance only from map and enemy composition | The control case. This is the baseline every combinatorial game in §3 is departing *from* |
+| **Defender's Quest** | Towers as persistent RPG characters carried **across battles**, levelled and equipped individually | ☠️ Campaign-scoped persistence — dead by §4. Its damage-*flavour* tag system is already in [Part V §4.1](../variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one) |
+| **Legion TD Reborn** (Dota 2) | Symmetric PvP send-economy with a **duel every five waves** — the opponent chooses your difficulty curve rather than your own tower pool | Structurally close to this project's match format, but its depth is economic rather than combinatorial. Nothing new for the taxonomy |
 
 ---
 

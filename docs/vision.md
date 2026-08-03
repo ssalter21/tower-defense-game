@@ -211,10 +211,23 @@ And the creeps themselves get **a roster with classes and roles** — tanks, dam
 — rather than a stat ladder. Part V's *one unit schema, two roles* is the structure this fills, and whether it
 survives contact with a role-based roster is a question the roster seam inherits.
 
-> ⚠️ **None of this is a mechanism yet, and it is not to be built from this section.** It is a direction with
-> three research notes commissioned against it — see [§10](#10-not-yet-specified). The developer's stated
-> position is that he wants to see how other games achieved this depth before choosing a concrete
-> direction, and that is the correct order.
+> **None of this is a mechanism yet, and it is not to be built from this section.** It is a direction, and
+> [the three research notes](#10-not-yet-specified) commissioned against it have now landed. Seam 1 chooses
+> from what they found; this section only says what the game is reaching for.
+
+Two findings from [the depth research](research/build-depth-in-tower-defense.md) belong here, because they
+change what "combinatorial" can mean rather than merely how to build it:
+
+- **There are two structurally different ways to manufacture it, and only one is also an accessibility
+  mechanism.** Either a **generative rule** mints a large roster from a small vocabulary — Element TD's six
+  element names predicting fifty-six towers — or a **large authored pool** is metered out by a random offering,
+  as in YouTD, Mazebert and Legion TD 2. Only the generative route reduces what has to be *learned*, and only
+  it leaves a balance surface the harness can enumerate rather than sample.
+- **Element TD's depth is not the combinations. It is the picks.** The combination table is what makes the
+  towers memorable; the eleven metered picks across fifty waves are what make a run a decision — and every pick
+  after the first **summons a boss you must kill before the element unlocks**. The tech choice is paid for
+  inside the simulation rather than chosen in a menu. The note calls this the most transferable mechanism in
+  the whole survey, and the thing nobody cites about the game.
 
 ---
 
@@ -259,6 +272,14 @@ The known limit, stated plainly: **a harness measures what you tell it to measur
 tower and it will never tell you a unit is boring. Play remains the oracle for whether something is *fun* to
 lose to.
 
+> ⚠️ **And a second limit the research found, which is sharper: computed balance is a budget, not a licence.**
+> Every mechanism that manufactures depth does it by making one unit's value depend on the other units you
+> chose — and that dependence is precisely what stops a harness pricing a unit in isolation. So "balance is
+> computed" does not buy unlimited interaction. **Depth and computed balance are the same axis pointing
+> opposite ways**, and what matters is not *whether* a mechanism creates dependence but what the dependence is
+> **indexed by**, because that index has a cardinality you can write down in advance. Seam 1 is spending a
+> budget here whether or not it knows it.
+
 ---
 
 ## 6. What it looks like
@@ -277,13 +298,25 @@ Bloons TD 6 is the standing proof that a game can be legible to a child and stil
 it is a **tension that has to be actively managed**, and one settled decision makes it harder than it is for
 anybody else:
 
-> ⚠️ **The usual accessibility ramp is unavailable.** Almost every deep game onboards by *withholding* — you
-> start with four options and the space widens over weeks. [§4](#4-what-persists) rules that out: nothing
-> persists between runs, so the full space is present on run one and a newcomer meets all of it at once.
+> **The usual accessibility ramp is unavailable — but the ramp is not gone, it has moved.** Almost every deep
+> game onboards by *withholding*: you start with four options and the space widens over weeks.
+> [§4](#4-what-persists) rules that out, so the full space is present on run one.
 >
-> Accessibility therefore has to be bought entirely with **legibility** — silhouette, colour, motion, tooltips,
-> in-run pacing and safe defaults — and never with progression. That constraint is deliberate and it is not
-> being relaxed; what it means in practice is a live question for the research and for the interface seam.
+> ✅ **[The research](research/build-depth-in-tower-defense.md) found the replacement already shipped in three
+> games: put the disclosure ramp *inside the run*.** Element TD 2 meters eleven element picks across fifty
+> waves — each one gated behind an elemental boss you must kill first. Super Auto Pets unlocks shop tier *X* on
+> turn 2*X*−1. Bloons TD 6's hero starts at level 1 **every game** and climbs to 20 during it. Each is
+> progressive disclosure that **resets at the start of every run**, which is exactly the shape §4 permits — and
+> a strictly better place for it here, because it never advantages the player who has been at it longest.
+>
+> *This corrects an earlier claim in this section that accessibility had to be bought "entirely with legibility
+> and never with progression". Legibility still carries most of the load, but in-run pacing is not progression
+> in §4's sense and was never ruled out.*
+>
+> The note's sharper finding: of eight accessibility mechanisms in shipped games, four need persistence and are
+> dead here — but the strongest survivor is **a generative, compressible roster**, because it is the only one
+> that reduces what a player must *remember* rather than what they must *see*. Six element names predicting
+> fifty-six towers is a tutorial and a content strategy in the same lever.
 
 Two consequences for what gets built:
 
@@ -364,7 +397,7 @@ its own sessions. They are not a build order for one effort; they are the effort
 | 7 | **The interface** | Reading two boards, an economy and a build menu at once | 1 |
 | 8 | **The presentation** | The art pipeline, and what makes it look composed | — |
 
-### 1 · The match format — *next, once the research lands*
+### 1 · The match format — *next, and now unblocked*
 
 What one wave actually is. Two boards resolving at once, one purse, the build-phase rhythm, what a build phase
 offers, how a wave is composed, what a wave is worth and what winning one means.
@@ -378,9 +411,10 @@ the record format cannot be fixed and the interface cannot be laid out until the
 cheapest seam to be wrong about now and the most expensive later — and it needs no server, no art and no
 friends to answer.
 
-⚠️ **It waits on the three research notes**, because the developer's stated position is that he wants to see how
-other games achieved this depth before choosing a direction. Charting this map before they land would be
-charting it twice.
+**All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
+candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
+inherits three obligations they surfaced: make the attack purchase pay back under one purse, spend the
+computed-balance budget knowingly, and decide whether there is a baseline wave at all.
 
 ### 2 · The submission barrier
 
@@ -473,13 +507,15 @@ In scope, headed toward the destination, not yet sharp enough to seam.
 
 ### Research in flight
 
+### Research landed
+
 Three notes were commissioned against [§3's](#3-what-a-match-is) depth direction and the open question below.
-They are decision inputs for seams 1, 3 and 7, and **the match-format session should not start until they
-land.**
+**All three are in.** They are decision inputs for seams 1, 3 and 7, and the match-format session is now
+unblocked.
 
 | Note | The question it answers |
 |---|---|
-| `docs/research/build-depth-in-tower-defense.md` | How TD games produce combinatorial build depth — Element TD's combination lineage, Bloons' cross-pathing, gem and item layering — which mechanisms survive a one-hex corridor and no meta-progression, and how the games that are both deep *and* accessible actually pull it off without an unlock ramp |
+| ✅ **[Build depth](research/build-depth-in-tower-defense.md)** — *landed* | How TD games produce combinatorial depth. Verdict: two structurally different routes, and **only the generative one is simultaneously a depth mechanism, an accessibility mechanism, and enumerable by the harness**. The corridor kills **one of eleven** mechanisms, far less than feared; what "nothing persists" removes is the onboarding ramp, and the fix is to move it *inside the run* |
 | ✅ **[The attacking half](research/attack-composition-and-sending.md)** — *landed* | How sending is made deep. Verdict: seven mechanisms, five survive, **ordering is *strengthened* by the hex corridor**, and the income loop the genre is built on is the one the single purse takes away. The gating idea has **one thin precedent, since removed** |
 | ✅ **[Towers, or placed squads?](research/towers-versus-placed-squads.md)** — *landed* | The open question below. Verdict: the aesthetic half is free and mostly already decided by Part IV §5; the mechanical half is one number, projectile volume, and it lands on `FlyProjectiles` rather than on target acquisition |
 
