@@ -21,20 +21,11 @@ namespace Tests.PlayMode
     /// </summary>
     public class PlayableHeadPoisonTests
     {
-        private const float ClipLength = 1.0f;
-        private const float TravelPerSecond = 10.0f;
-
         private GameObject _root;
         private Transform _bone;
         private SimDrivenAnimator _view;
 
-        private static AnimationClip LinearClip()
-        {
-            var clip = new AnimationClip { legacy = false };
-            clip.SetCurve("Bone", typeof(Transform), "localPosition.x",
-                AnimationCurve.Linear(0f, 0f, ClipLength, TravelPerSecond));
-            return clip;
-        }
+        private static AnimationClip LinearClip() => OracleClips.Load(OracleClips.Linear);
 
         private void BuildRig(SimDrivenAnimator.HeadGuard guard)
         {
@@ -42,7 +33,7 @@ namespace Tests.PlayMode
             var animator = _root.AddComponent<Animator>();
             animator.applyRootMotion = false;
 
-            var bone = new GameObject("Bone");
+            var bone = new GameObject(OracleClips.BoneName);
             bone.transform.SetParent(_root.transform, false);
             _bone = bone.transform;
 
@@ -60,7 +51,7 @@ namespace Tests.PlayMode
         private IEnumerator MeasureDrift(SimDrivenAnimator.HeadGuard guard, System.Action<float> report)
         {
             BuildRig(guard);
-            _view.SampleSingle(0, 0.5f, ClipLength);
+            _view.Pose(0, 0.5f);
             var settled = _bone.localPosition.x;
 
             for (var i = 0; i < 30; i++) yield return null;

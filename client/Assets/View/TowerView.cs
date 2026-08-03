@@ -49,12 +49,6 @@ namespace View
         /// <summary>The mixer slot the backswing clip is connected to.</summary>
         public const int BackswingSlot = 2;
 
-        private readonly double[] _times = new double[3];
-
-        private readonly float[] _weights = new float[3];
-
-        private readonly float[] _lengths = new float[3];
-
         private SimDrivenAnimator _animator;
 
         private Quaternion _restingRotation = Quaternion.identity;
@@ -151,22 +145,10 @@ namespace View
             // first pose the tower is ever drawn in already has it in hand.
             Weapon = WeaponSocket.Attach(Model, weapon, WeaponSocket.BowHand);
 
-            Animator animator = Model.GetComponent<Animator>();
-
-            if (animator == null)
-            {
-                animator = Model.AddComponent<Animator>();
-            }
-
-            animator.runtimeAnimatorController = null;
-            animator.applyRootMotion = false;
-
-            _lengths[IdleSlot] = idle.length;
-            _lengths[WindupSlot] = windup.length;
-            _lengths[BackswingSlot] = backswing.length;
-
-            _animator = gameObject.AddComponent<SimDrivenAnimator>();
-            _animator.Build(animator, idle, windup, backswing);
+            // Binding is SimDrivenAnimator's business, including the ban on a
+            // RuntimeAnimatorController, and the clip lengths stay over there
+            // with the clips.
+            _animator = SimDrivenAnimator.Bind(Model, idle, windup, backswing);
 
             transform.rotation = resting;
         }
@@ -196,18 +178,15 @@ namespace View
             }
 
             int slot = SlotFor(state);
-            float time = ClipTimeFor(state, ticksInState, slot);
 
             LastSlot = slot;
-            LastClipTime = time;
 
-            for (int index = 0; index < _times.Length; index++)
-            {
-                _times[index] = index == slot ? time : 0.0;
-                _weights[index] = index == slot ? 1f : 0f;
-            }
-
-            _animator.Sample(_times, _weights);
+            // Idle is the one state the simulation gives no duration to, so it
+            // is the one that loops on its clip's own length rather than being
+            // stretched to fit a number of ticks. See StretchedPhase.
+            LastClipTime = state == TowerState.Idle
+                ? _animator.PoseLooping(slot, ticksInState / (float)Match.TicksPerSecond)
+                : _animator.Pose(slot, StretchedPhase(state, ticksInState));
         }
 
         /// <summary>
@@ -236,8 +215,8 @@ namespace View
         }
 
         /// <summary>
-        /// Where in its clip the tower is, derived from simulation ticks and
-        /// nothing else.
+        /// How far through its clip a winding-up or recovering tower is, in
+        /// [0,1], derived from simulation ticks and nothing else.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -251,32 +230,20 @@ namespace View
         /// criteria are about.
         /// </para>
         /// <para>
-        /// Idle is the exception, because the simulation gives it no duration:
-        /// a tower is idle until something walks into range. It wraps on
-        /// <c>ticksInState</c>, which is still simulation state and still runs
-        /// backwards under a scrub — it is a loop driven by the simulation's
-        /// clock, not a playback head running on the view's.
+        /// Idle is not here, because the simulation gives it no duration to be
+        /// stretched to: a tower is idle until something walks into range, so
+        /// the only length its phase can be measured against is the clip's own.
+        /// That wrap belongs to whatever holds the clip, which is why
+        /// <see cref="SimDrivenAnimator.PoseLooping"/> takes seconds and this
+        /// takes ticks. Both are simulation state and both run backwards under a
+        /// scrub; neither is a playback head on the view's clock.
         /// </para>
         /// </remarks>
-        private float ClipTimeFor(TowerState state, int ticksInState, int slot)
+        private float StretchedPhase(TowerState state, int ticksInState)
         {
-            float length = _lengths[slot];
-
-            if (state == TowerState.Idle)
-            {
-                float seconds = ticksInState / (float)Match.TicksPerSecond;
-
-                return length <= 0f ? 0f : Mathf.Repeat(seconds, length);
-            }
-
             int duration = state == TowerState.Windup ? Type.WindupTicks : Type.BackswingTicks;
 
-            if (duration <= 0)
-            {
-                return 0f;
-            }
-
-            return Mathf.Clamp01(ticksInState / (float)duration) * length;
+            return duration <= 0 ? 0f : Mathf.Clamp01(ticksInState / (float)duration);
         }
     }
 }

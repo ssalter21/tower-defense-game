@@ -46,15 +46,7 @@ namespace View
         /// <summary>The mixer slot the death clip is connected to.</summary>
         public const int DeathSlot = 1;
 
-        private readonly double[] _times = new double[2];
-
-        private readonly float[] _weights = new float[2];
-
         private SimDrivenAnimator _animator;
-
-        private float _walkLength;
-
-        private float _deathLength;
 
         /// <summary>The instantiated model, once built.</summary>
         public GameObject Model { get; private set; }
@@ -93,24 +85,10 @@ namespace View
             // perfectly and hid the bug.
 
             // Generic transform curves and no avatar -- the path the Playables
-            // validation proved. An Animator is still the component a graph
-            // outputs through; what matters is that it carries no
-            // RuntimeAnimatorController, which is the banned playback head.
-            Animator animator = Model.GetComponent<Animator>();
-
-            if (animator == null)
-            {
-                animator = Model.AddComponent<Animator>();
-            }
-
-            animator.runtimeAnimatorController = null;
-            animator.applyRootMotion = false;
-
-            _walkLength = walk.length;
-            _deathLength = death.length;
-
-            _animator = gameObject.AddComponent<SimDrivenAnimator>();
-            _animator.Build(animator, walk, death);
+            // validation proved. Binding is SimDrivenAnimator's business,
+            // including the ban on a RuntimeAnimatorController, and the clip
+            // lengths stay over there with the clips.
+            _animator = SimDrivenAnimator.Bind(Model, walk, death);
         }
 
         /// <summary>
@@ -147,13 +125,8 @@ namespace View
                 // simulation said dying takes. Clamped rather than wrapped: a
                 // death that overran its budget should hold on its last frame,
                 // not start again.
-                LastDeathTime = Mathf.Clamp01(dyingFraction) * _deathLength;
+                LastDeathTime = _animator.Pose(DeathSlot, Mathf.Clamp01(dyingFraction));
                 LastWalkTime = 0f;
-
-                _times[WalkSlot] = 0.0;
-                _times[DeathSlot] = LastDeathTime;
-                _weights[WalkSlot] = 0f;
-                _weights[DeathSlot] = 1f;
             }
             else
             {
@@ -162,16 +135,9 @@ namespace View
                 // a phase in [0,1) and not a mirrored one.
                 float cycles = distanceHexes / MatchTuning.HexesPerWalkCycle;
 
-                LastWalkTime = Mathf.Repeat(cycles, 1f) * _walkLength;
+                LastWalkTime = _animator.Pose(WalkSlot, Mathf.Repeat(cycles, 1f));
                 LastDeathTime = 0f;
-
-                _times[WalkSlot] = LastWalkTime;
-                _times[DeathSlot] = 0.0;
-                _weights[WalkSlot] = 1f;
-                _weights[DeathSlot] = 0f;
             }
-
-            _animator.Sample(_times, _weights);
         }
     }
 }

@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using UnityEngine;
-#if UNITY_EDITOR
+using Tests.Fixtures;
 using UnityEditor;
-#endif
+using UnityEngine;
 
-namespace Tests.PlayMode
+namespace Tests.EditMode
 {
     /// <summary>
     /// What the art import actually produced, asserted rather than assumed.
@@ -23,23 +22,31 @@ namespace Tests.PlayMode
     /// pipeline problem and a shader problem, and is none of them. It is the
     /// single most common import failure there is, and it is invisible to every
     /// other test in this project because nothing else looks at a material.
+    ///
+    /// <b>Edit mode, because every question here is a question for the
+    /// importer.</b> These sat in the play-mode suite behind
+    /// <c>#if UNITY_EDITOR</c>, which is to say they were compiled out of every
+    /// build that was not an editor, leaving a class that yielded no tests at
+    /// all. An assertion about <see cref="AssetImporter"/> settings cannot be
+    /// made anywhere but an editor, so it belongs in the suite that is honestly
+    /// editor-only rather than in the one that was pretending not to be.
     /// </summary>
     public class ImportedArtTests
     {
         /// <summary>The skinned character half of the pipeline: the projectile tower.</summary>
-        public const string RangerPath = "Assets/Art/Characters/Ranger.fbx";
+        public const string RangerPath = ChosenArt.ProjectileTowerModelPath;
 
         /// <summary>The weapon, imported separately and hung off a bone at runtime.</summary>
-        public const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
+        public const string BowPath = ChosenArt.BowModelPath;
 
         /// <summary>The static mesh half of the pipeline: the hitscan tower.</summary>
-        public const string TowerPath = "Assets/Art/Buildings/building_tower_A_blue.fbx";
+        public const string TowerPath = ChosenArt.HitscanTowerModelPath;
 
         /// <summary>The creeps, already in the repo before this import.</summary>
-        public const string WarriorPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
+        public const string WarriorPath = ChosenArt.CreepModelPath;
 
         /// <summary>The bank the three tower-state clips come out of.</summary>
-        public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
+        public const string RangedBankPath = ChosenArt.RangedBankPath;
 
         /// <summary>
         /// Model to atlas. One rig with two atlases is a deliberate exception,
@@ -70,9 +77,32 @@ namespace Tests.PlayMode
         /// <summary>The tower's three states, one clip each. See #44.</summary>
         private static readonly string[] TowerClipNames =
         {
-            "Ranged_Bow_Idle",      // Idle
-            "Ranged_Bow_Draw",      // Windup
-            "Ranged_Bow_Release",   // Backswing
+            ChosenArt.TowerIdleClipName,       // Idle
+            ChosenArt.TowerWindupClipName,     // Windup
+            ChosenArt.TowerBackswingClipName,  // Backswing
+        };
+
+        /// <summary>
+        /// Every FBX in this project that carries a rig or clips. The two import
+        /// checks at the bottom walk all of them rather than the two the spike
+        /// happened to start with, so an import added later is covered by being
+        /// imported rather than by somebody remembering to add it here.
+        /// </summary>
+        private static readonly string[] RiggedPaths =
+        {
+            WarriorPath,
+            RangerPath,
+            ChosenArt.MovementBankPath,
+            ChosenArt.GeneralBankPath,
+            ChosenArt.RangedBankPath,
+        };
+
+        /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
+        private static readonly string[] ClipBankPaths =
+        {
+            ChosenArt.MovementBankPath,
+            ChosenArt.GeneralBankPath,
+            ChosenArt.RangedBankPath,
         };
 
         private readonly List<GameObject> _spawned = new List<GameObject>();
@@ -87,7 +117,6 @@ namespace Tests.PlayMode
             _spawned.Clear();
         }
 
-#if UNITY_EDITOR
         private GameObject Instantiate(string path)
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
@@ -258,6 +287,51 @@ namespace Tests.PlayMode
                     $"'{wanted}' is not in {RangedBankPath}. Found: {string.Join(", ", names)}");
             }
         }
-#endif
+
+        /// <summary>
+        /// No clip owns any translation of its own.
+        /// </summary>
+        /// <remarks>
+        /// Locomotion phase is driven from distance travelled in the simulation,
+        /// so a clip carrying root motion would be authoritative progress living
+        /// in the view — the exact thing the architecture forbids.
+        /// </remarks>
+        [Test]
+        public void RealClipsCarryNoRootMotion()
+        {
+            foreach (var path in ClipBankPaths)
+            {
+                foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>())
+                {
+                    Assert.IsFalse(clip.hasRootCurves, $"{clip.name} carries root curves");
+                    Assert.IsFalse(clip.hasMotionCurves, $"{clip.name} carries motion curves");
+                    Assert.IsFalse(clip.hasGenericRootTransform, $"{clip.name} carries a generic root transform");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Every rig arrived Generic, with no avatar.
+        /// </summary>
+        /// <remarks>
+        /// The proven path is generic transform curves: the clip animates named
+        /// transforms in this hierarchy directly. Humanoid would put a
+        /// retargeting solver between the clip and the bones — one more thing
+        /// between sim time and the pose, on a rig that never needed retargeting
+        /// in the first place.
+        /// </remarks>
+        [Test]
+        public void TheRigIsImportedGenericWithNoAvatar()
+        {
+            foreach (var path in RiggedPaths)
+            {
+                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
+                Assert.IsNotNull(importer, $"no model importer for {path}");
+                Assert.AreEqual(ModelImporterAnimationType.Generic, importer.animationType,
+                    $"{path} is not imported as Generic");
+                Assert.AreEqual(ModelImporterAvatarSetup.NoAvatar, importer.avatarSetup,
+                    $"{path} was given an avatar");
+            }
+        }
     }
 }

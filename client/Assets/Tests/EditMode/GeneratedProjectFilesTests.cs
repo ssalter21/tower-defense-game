@@ -1,5 +1,6 @@
 using System.IO;
 using NUnit.Framework;
+using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
 using View;
@@ -86,6 +87,54 @@ namespace Tests.EditMode
             Assert.That(actual.r, Is.EqualTo(expected.r).Within(0.002f), path + " red");
             Assert.That(actual.g, Is.EqualTo(expected.g).Within(0.002f), path + " green");
             Assert.That(actual.b, Is.EqualTo(expected.b).Within(0.002f), path + " blue");
+        }
+
+        /// <summary>
+        /// The generated art manifest still names the assets it was generated
+        /// from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <c>Resources/MatchArt.asset</c> is what the play-mode suite reads
+        /// when there is no editor to ask — a player, where
+        /// <c>AssetDatabase</c> does not exist. It is generated from
+        /// <see cref="ChosenArt"/> by <c>tools/build-test-assets.ps1</c> and
+        /// committed, so like every other generated file here it can drift from
+        /// its source between somebody changing one and remembering to run the
+        /// other. This is what replaces remembering.
+        /// </para>
+        /// <para>
+        /// Compared by reference identity rather than by name: two clips called
+        /// <c>Walking_A</c> out of two different banks are the same string and
+        /// different animations, and it is exactly that substitution a stale
+        /// manifest would make.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheGeneratedArtManifestMatchesTheArtItWasGeneratedFrom()
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<MatchArtAsset>(GeneratedTestAssets.ManifestPath);
+
+            Assert.That(asset, Is.Not.Null,
+                "No manifest at " + GeneratedTestAssets.ManifestPath + ". Run tools/build-test-assets.ps1.");
+
+            MatchArt generated = asset.Art;
+            MatchArt chosen = ChosenArt.Load();
+
+            void Same(Object inManifest, Object inChosenArt, string field) =>
+                Assert.That(inManifest, Is.SameAs(inChosenArt),
+                    GeneratedTestAssets.ManifestPath + " names a different " + field
+                    + " than ChosenArt does. Run tools/build-test-assets.ps1 and commit what it writes.");
+
+            Same(generated.CreepModel, chosen.CreepModel, nameof(chosen.CreepModel));
+            Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
+            Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
+            Same(generated.ProjectileTowerModel, chosen.ProjectileTowerModel, nameof(chosen.ProjectileTowerModel));
+            Same(generated.BowModel, chosen.BowModel, nameof(chosen.BowModel));
+            Same(generated.TowerIdleClip, chosen.TowerIdleClip, nameof(chosen.TowerIdleClip));
+            Same(generated.TowerWindupClip, chosen.TowerWindupClip, nameof(chosen.TowerWindupClip));
+            Same(generated.TowerBackswingClip, chosen.TowerBackswingClip, nameof(chosen.TowerBackswingClip));
+            Same(generated.HitscanTowerModel, chosen.HitscanTowerModel, nameof(chosen.HitscanTowerModel));
         }
 
         /// <summary>

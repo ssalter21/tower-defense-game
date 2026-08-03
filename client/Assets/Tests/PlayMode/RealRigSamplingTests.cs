@@ -3,9 +3,6 @@ using System.Linq;
 using NUnit.Framework;
 using View;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Tests.PlayMode
 {
@@ -16,30 +13,13 @@ namespace Tests.PlayMode
     /// The synthetic tests prove the API samples a curve purely. These prove the claim
     /// survives an asset-pack import — a skinned mesh, a bone hierarchy, and clips that
     /// arrived from an FBX authored in Blender.
+    ///
+    /// What the import <i>settings</i> are is a different question, and it is asserted
+    /// in the edit-mode suite where the importer can actually be asked. These three are
+    /// about the pose, and a pose is a runtime fact.
     /// </summary>
     public class RealRigSamplingTests
     {
-        private const string CharacterPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
-        private const string RangerPath = "Assets/Art/Characters/Ranger.fbx";
-        private const string MovementPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
-        private const string GeneralPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
-        private const string RangedPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
-        private const string ClipName = "Walking_A";
-
-        /// <summary>
-        /// Every FBX in this project that carries a rig or clips. Both lists
-        /// below walk all of them rather than the two the spike happened to
-        /// start with, so an import added later is covered by being imported
-        /// rather than by somebody remembering to add it here.
-        /// </summary>
-        private static readonly string[] RiggedPaths =
-        {
-            CharacterPath, RangerPath, MovementPath, GeneralPath, RangedPath,
-        };
-
-        /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
-        private static readonly string[] ClipBankPaths = { MovementPath, GeneralPath, RangedPath };
-
         private GameObject _instance;
 
         [TearDown]
@@ -47,12 +27,6 @@ namespace Tests.PlayMode
         {
             if (_instance != null) Object.DestroyImmediate(_instance);
         }
-
-#if UNITY_EDITOR
-        private static AnimationClip LoadClip(string path, string name) =>
-            AssetDatabase.LoadAllAssetsAtPath(path)
-                .OfType<AnimationClip>()
-                .FirstOrDefault(c => c.name == name);
 
         /// <summary>Poses the rig and snapshots every bone, so purity can be compared over the whole skeleton.</summary>
         private static Vector3[] Snapshot(IReadOnlyList<Transform> bones)
@@ -66,37 +40,27 @@ namespace Tests.PlayMode
             return pose;
         }
 
-        private (SimDrivenAnimator view, List<Transform> bones, float length) BuildRealRig()
+        private (SimDrivenAnimator view, List<Transform> bones) BuildRealRig()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(CharacterPath);
-            Assert.IsNotNull(prefab, $"could not load {CharacterPath}");
+            MatchArt art = MatchArtSource.Load();
 
-            var clip = LoadClip(MovementPath, ClipName);
-            Assert.IsNotNull(clip, $"could not find clip '{ClipName}' in {MovementPath}");
+            _instance = Object.Instantiate(art.CreepModel);
 
-            _instance = Object.Instantiate(prefab);
-            // Deliberately not `??`: Unity's fake-null overrides == but not the null-coalescing
-            // operator, so `GetComponent() ?? AddComponent()` hands back the fake-null.
-            var animator = _instance.GetComponent<Animator>();
-            if (animator == null) animator = _instance.AddComponent<Animator>();
-            animator.applyRootMotion = false;
-
-            var view = _instance.AddComponent<SimDrivenAnimator>();
-            view.Build(animator, clip);
-
+            SimDrivenAnimator view = SimDrivenAnimator.Bind(_instance, art.CreepWalkClip);
             var bones = _instance.GetComponentsInChildren<Transform>(true).ToList();
-            return (view, bones, clip.length);
+
+            return (view, bones);
         }
 
         [Test]
         public void TheClipActuallyDrivesTheImportedRig()
         {
-            var (view, bones, length) = BuildRealRig();
+            var (view, bones) = BuildRealRig();
 
-            view.SampleSingle(0, 0f, length);
+            view.Pose(0, 0f);
             var atStart = Snapshot(bones);
 
-            view.SampleSingle(0, 0.5f, length);
+            view.Pose(0, 0.5f);
             var atMiddle = Snapshot(bones);
 
             var moved = atStart.Where((v, i) => (v - atMiddle[i]).sqrMagnitude > 1e-8f).Count();
@@ -111,12 +75,12 @@ namespace Tests.PlayMode
         [Test]
         public void SamplingTheRealClip_IsPathIndependent()
         {
-            var (view, bones, length) = BuildRealRig();
+            var (view, bones) = BuildRealRig();
 
-            foreach (var p in new[] { 0f, 0.1f, 0.25f, 0.4f }) view.SampleSingle(0, p, length);
+            foreach (var p in new[] { 0f, 0.1f, 0.25f, 0.4f }) view.Pose(0, p);
             var fromBelow = Snapshot(bones);
 
-            foreach (var p in new[] { 1f, 0.8f, 0.6f, 0.4f }) view.SampleSingle(0, p, length);
+            foreach (var p in new[] { 1f, 0.8f, 0.6f, 0.4f }) view.Pose(0, p);
             var fromAbove = Snapshot(bones);
 
             for (var i = 0; i < fromBelow.Length; i++)
@@ -130,20 +94,20 @@ namespace Tests.PlayMode
         [Test]
         public void ScrubbingTheRealClipBackwards_RetracesTheSamePoses()
         {
-            var (view, bones, length) = BuildRealRig();
+            var (view, bones) = BuildRealRig();
 
             var phases = new[] { 0f, 0.2f, 0.4f, 0.6f, 0.8f };
             var forward = new List<Vector3[]>();
             foreach (var p in phases)
             {
-                view.SampleSingle(0, p, length);
+                view.Pose(0, p);
                 forward.Add(Snapshot(bones));
             }
 
             // Walk the same phases in reverse; each pose must match what it was going forwards.
             for (var i = phases.Length - 1; i >= 0; i--)
             {
-                view.SampleSingle(0, phases[i], length);
+                view.Pose(0, phases[i]);
                 var back = Snapshot(bones);
                 for (var c = 0; c < back.Length; c++)
                 {
@@ -153,40 +117,5 @@ namespace Tests.PlayMode
                 }
             }
         }
-
-        [Test]
-        public void RealClipsCarryNoRootMotion()
-        {
-            // Locomotion phase is driven from distance travelled in the sim, so any
-            // clip-owned translation would be authoritative progress living in the view.
-            foreach (var path in ClipBankPaths)
-            {
-                foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>())
-                {
-                    Assert.IsFalse(clip.hasRootCurves, $"{clip.name} carries root curves");
-                    Assert.IsFalse(clip.hasMotionCurves, $"{clip.name} carries motion curves");
-                    Assert.IsFalse(clip.hasGenericRootTransform, $"{clip.name} carries a generic root transform");
-                }
-            }
-        }
-
-        [Test]
-        public void TheRigIsImportedGenericWithNoAvatar()
-        {
-            // The proven path is generic transform curves: the clip animates named
-            // transforms in this hierarchy directly. Humanoid would put a retargeting
-            // solver between the clip and the bones -- one more thing between sim time
-            // and the pose, on a rig that never needed retargeting in the first place.
-            foreach (var path in RiggedPaths)
-            {
-                var importer = (ModelImporter)AssetImporter.GetAtPath(path);
-                Assert.IsNotNull(importer, $"no model importer for {path}");
-                Assert.AreEqual(ModelImporterAnimationType.Generic, importer.animationType,
-                    $"{path} is not imported as Generic");
-                Assert.AreEqual(ModelImporterAvatarSetup.NoAvatar, importer.avatarSetup,
-                    $"{path} was given an avatar");
-            }
-        }
-#endif
     }
 }

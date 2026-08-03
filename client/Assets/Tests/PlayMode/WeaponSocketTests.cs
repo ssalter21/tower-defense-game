@@ -1,10 +1,6 @@
-using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 using View;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Tests.PlayMode
 {
@@ -22,13 +18,6 @@ namespace Tests.PlayMode
     /// </summary>
     public class WeaponSocketTests
     {
-        private const string RangerPath = ImportedArtTests.RangerPath;
-        private const string BowPath = ImportedArtTests.BowPath;
-        private const string RangedBankPath = ImportedArtTests.RangedBankPath;
-
-        /// <summary>The wind-up clip: the hand travels furthest during this one.</summary>
-        private const string DrawClip = "Ranged_Bow_Draw";
-
         private GameObject _ranger;
 
         [TearDown]
@@ -37,17 +26,12 @@ namespace Tests.PlayMode
             if (_ranger != null) Object.DestroyImmediate(_ranger);
         }
 
-#if UNITY_EDITOR
         private GameObject BuildArmedRanger(out GameObject bow, out Transform hand)
         {
-            var rangerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RangerPath);
-            Assert.IsNotNull(rangerPrefab, $"could not load {RangerPath}");
+            MatchArt art = TheMatchOnScreen.Art();
 
-            var bowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(BowPath);
-            Assert.IsNotNull(bowPrefab, $"could not load {BowPath}");
-
-            _ranger = Object.Instantiate(rangerPrefab);
-            bow = WeaponSocket.Attach(_ranger, bowPrefab, WeaponSocket.BowHand);
+            _ranger = Object.Instantiate(art.ProjectileTowerModel);
+            bow = WeaponSocket.Attach(_ranger, art.BowModel, WeaponSocket.BowHand);
             hand = WeaponSocket.FindBone(_ranger, WeaponSocket.BowHand);
 
             return _ranger;
@@ -91,19 +75,10 @@ namespace Tests.PlayMode
         {
             BuildArmedRanger(out GameObject bow, out Transform hand);
 
-            AnimationClip draw = AssetDatabase.LoadAllAssetsAtPath(RangedBankPath)
-                .OfType<AnimationClip>()
-                .FirstOrDefault(c => c.name == DrawClip);
-            Assert.IsNotNull(draw, $"no '{DrawClip}' clip in {RangedBankPath}");
+            // The wind-up clip: the hand travels furthest during this one.
+            AnimationClip draw = TheMatchOnScreen.Art().TowerWindupClip;
 
-            // Deliberately not `??`: Unity's fake-null overrides == but not the
-            // null-coalescing operator.
-            var animator = _ranger.GetComponent<Animator>();
-            if (animator == null) animator = _ranger.AddComponent<Animator>();
-            animator.applyRootMotion = false;
-
-            var poser = _ranger.AddComponent<SimDrivenAnimator>();
-            poser.Build(animator, draw);
+            SimDrivenAnimator poser = SimDrivenAnimator.Bind(_ranger, draw);
 
             var handWorld = new Vector3[3];
             var bowWorld = new Vector3[3];
@@ -111,7 +86,7 @@ namespace Tests.PlayMode
 
             for (var i = 0; i < phases.Length; i++)
             {
-                poser.SampleSingle(0, phases[i], draw.length);
+                poser.Pose(0, phases[i]);
                 handWorld[i] = hand.position;
                 bowWorld[i] = bow.transform.position;
 
@@ -127,19 +102,17 @@ namespace Tests.PlayMode
             Assert.Greater(travelled, 0.05f,
                 "the bow did not move at all across the draw — it is not riding a bone that the clip animates");
 
-            Debug.Log($"[weapon] bow travelled {travelled:F3} m across '{DrawClip}' on {WeaponSocket.BowHand}");
+            Debug.Log($"[weapon] bow travelled {travelled:F3} m across '{draw.name}' on {WeaponSocket.BowHand}");
         }
 
         [Test]
         public void AttachingToABoneThatIsNotThereThrowsRatherThanHangingItOffTheRoot()
         {
-            var rangerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RangerPath);
-            var bowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(BowPath);
-            _ranger = Object.Instantiate(rangerPrefab);
+            MatchArt art = TheMatchOnScreen.Art();
+            _ranger = Object.Instantiate(art.ProjectileTowerModel);
 
             Assert.Throws<System.InvalidOperationException>(
-                () => WeaponSocket.Attach(_ranger, bowPrefab, "handslot.left"));
+                () => WeaponSocket.Attach(_ranger, art.BowModel, "handslot.left"));
         }
-#endif
     }
 }

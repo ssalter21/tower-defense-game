@@ -320,7 +320,7 @@ namespace View.Editor
 
                     string file = slot.slot + "__" + candidate.id + ".png";
                     Texture2D sheet = isClip
-                        ? CaptureClipStrip(subject, animator, clip, spec, bounds.center, orthographicSize)
+                        ? CaptureClipStrip(animator, spec, bounds.center, orthographicSize)
                         : CaptureTurntable(spec, bounds.center, orthographicSize);
 
                     File.WriteAllBytes(Path.Combine(spec.outDir, file), sheet.EncodeToPNG());
@@ -369,7 +369,14 @@ namespace View.Editor
                 GameObject rig = InstantiateModel(candidate.rig, candidate.rigTexture);
                 rig.transform.rotation = Quaternion.Euler(0f, ClipRigYawDegrees, 0f);
                 AttachHeldModel(rig, candidate);
-                sampler = AttachSampler(rig, clip);
+
+                // Posed through the shipped component, and bound through the
+                // shipped binder. The whole claim a contact sheet makes is
+                // "this is what the game will look like", and it is only true
+                // if the sheet went through the same graph on a rig configured
+                // the same way. This used to bind its own animator and was the
+                // one copy of that preamble that forgot to null the controller.
+                sampler = SimDrivenAnimator.Bind(rig, clip);
 
                 return rig;
             }
@@ -392,8 +399,8 @@ namespace View.Editor
             if (!string.IsNullOrEmpty(candidate.poseClip))
             {
                 AnimationClip pose = LoadClip(candidate.poseBank, candidate.poseClip);
-                SimDrivenAnimator poser = AttachSampler(host, pose);
-                poser.SampleSingle(0, candidate.posePhase, pose.length);
+                SimDrivenAnimator poser = SimDrivenAnimator.Bind(host, pose);
+                poser.Pose(0, candidate.posePhase);
             }
 
             return host;
@@ -440,29 +447,6 @@ namespace View.Editor
             held.transform.SetParent(bone, worldPositionStays: false);
             held.transform.localPosition = Vector3.zero;
             held.transform.localRotation = Quaternion.identity;
-        }
-
-        /// <summary>
-        /// Poses through the shipped component rather than through
-        /// <c>AnimationMode</c> or a clip's own <c>SampleAnimation</c>. The whole
-        /// claim being made by a contact sheet is "this is what the game will
-        /// look like", and it is only true if the sheet went through the same
-        /// graph the game does.
-        /// </summary>
-        private static SimDrivenAnimator AttachSampler(GameObject rig, AnimationClip clip)
-        {
-            Animator animator = rig.GetComponent<Animator>();
-
-            if (animator == null)
-            {
-                animator = rig.AddComponent<Animator>();
-            }
-
-            animator.applyRootMotion = false;
-            var sampler = rig.AddComponent<SimDrivenAnimator>();
-            sampler.Build(animator, clip);
-
-            return sampler;
         }
 
         private static AnimationClip LoadClip(string bankPath, string clipName)
@@ -586,7 +570,7 @@ namespace View.Editor
             {
                 if (sampler != null && clip != null)
                 {
-                    sampler.SampleSingle(0, Phase(frame, frames), clip.length);
+                    sampler.Pose(0, Phase(frame, frames));
                 }
 
                 foreach (Renderer renderer in subject.GetComponentsInChildren<Renderer>(true))
@@ -615,8 +599,7 @@ namespace View.Editor
         private static float Phase(int frame, int frames) => frames <= 1 ? 0f : frame / (float)frames;
 
         private static Texture2D CaptureClipStrip(
-            GameObject subject, SimDrivenAnimator sampler, AnimationClip clip,
-            Spec spec, Vector3 pivot, float orthographicSize)
+            SimDrivenAnimator sampler, Spec spec, Vector3 pivot, float orthographicSize)
         {
             var tiles = new List<Texture2D>();
             GameObject camera = BuildCamera(pivot, orthographicSize, SceneFraming.CameraRotation(0));
@@ -625,7 +608,7 @@ namespace View.Editor
             {
                 for (var frame = 0; frame < spec.stripFrames; frame++)
                 {
-                    sampler.SampleSingle(0, Phase(frame, spec.stripFrames), clip.length);
+                    sampler.Pose(0, Phase(frame, spec.stripFrames));
                     tiles.Add(Grab(camera.GetComponent<Camera>(), spec.frameSize));
                 }
             }

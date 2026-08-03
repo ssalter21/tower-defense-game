@@ -1,12 +1,9 @@
 {
-    "name": "Tests.EditMode",
-    "rootNamespace": "Tests.EditMode",
+    "name": "Tests.Fixtures.Editor",
+    "rootNamespace": "Tests.Fixtures",
     "references": [
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
         "View",
-        "View.Editor",
-        "Tests.Fixtures.Editor"
+        "Tests.PlayMode"
     ],
     "includePlatforms": [
         "Editor"
@@ -15,7 +12,6 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll",
         "Sim.dll"
     ],
     "autoReferenced": false,

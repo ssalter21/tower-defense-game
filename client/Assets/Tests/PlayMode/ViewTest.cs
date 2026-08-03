@@ -47,7 +47,6 @@ namespace Tests.PlayMode
             return host;
         }
 
-#if UNITY_EDITOR
         /// <summary>A match, drawn, with nobody watching it.</summary>
         protected MatchView Begin() => TheMatchOnScreen.Begin(Spawn(GetType().Name));
 
@@ -74,6 +73,5 @@ namespace Tests.PlayMode
                 }
             }
         }
-#endif
     }
 }
