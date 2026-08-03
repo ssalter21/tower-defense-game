@@ -17,11 +17,18 @@
 
 ### A technically excellent tower defense, built for the pleasure of building it, whose multiplayer is real — and every mode of it is the same machine at a different latency.
 
-Three claims carry the whole document.
+Four claims carry the whole document.
 
 **It is not a commercial product.** No store page, no pricing, no wishlists, no monetisation, no marketing.
 The reward is the build. That deletes more scope than any other decision here, and it is what makes the rest
 affordable.
+
+**Shallow to look at, extreme to play.** Anyone should be able to pick it up and read what is happening on
+screen inside a minute. Underneath that, the build depth is meant to be enormous — Element TD's
+element-combination lineage rather than a list of towers — and the attacking half is meant to be as deep as the
+defending one, with the creeps you can send determined by the towers you chose. Juice and legibility on the
+surface; combinatorics underneath. §3 is the design claim, §6 is the presentation claim, and neither is
+allowed to be traded for the other.
 
 **The multiplayer is not a garnish.** Async round-robin against a shared pool of every player, a live lobby of
 friends, co-operative play, and a social layer of replays and named rivalries. All four, and none of them
@@ -146,6 +153,37 @@ off them. Greeding into offense while your line thins is a real and readable gam
 It is also the hardest of the four options to balance, which is why [§5](#5-how-it-is-balanced) is not
 optional.
 
+### Depth is the point
+
+The ambition, stated as a target rather than a design: **the build space should be combinatorial, not a menu.**
+
+The named reference is **Element TD**, the Warcraft 3 mod, where picking elements unlocked dual-element tower
+combinations and the interesting play lived in the synergies between them rather than in any single tower. That
+is the class of depth wanted here — a space you can still be discovering after fifty runs, out of a roster
+small enough for one person to build and for a harness to sweep.
+
+Three commitments follow, all of them direction rather than mechanism:
+
+- **The attacking half is as deep as the defending half.** This is the corollary of both boards being live
+  every round. A game where you build a rich defense and then pick creeps off a flat list is only half
+  designed.
+- **Your defense decides your offense.** The stated idea: a tower of a given type unlocks a skill tree for the
+  creeps you can buy, so the pool you send from is a consequence of what you built. One coherent identity per
+  run rather than two unrelated shopping trips — and, with one purse, a third tension on top of the two that
+  already exist.
+- **You choose the order they come out in.** A wave is a sequence, not a bag. What that ordering has to
+  interact with for it to be a real decision rather than a fiddly one is exactly the sort of thing research
+  should settle before it is built.
+
+And the creeps themselves get **a roster with classes and roles** — tanks, damage, support, swarm, specialists
+— rather than a stat ladder. Part V's *one unit schema, two roles* is the structure this fills, and whether it
+survives contact with a role-based roster is a question the roster seam inherits.
+
+> ⚠️ **None of this is a mechanism yet, and it is not to be built from this section.** It is a direction with
+> three research notes commissioned against it — see [§10](#10-not-yet-specified). The developer's stated
+> position is that he wants to see how other games achieved this depth before choosing a concrete
+> direction, and that is the correct order.
+
 ---
 
 ## 4. What persists
@@ -195,6 +233,34 @@ lose to.
 
 Part IV's art direction stands unchanged — stylized low-poly 3D, hex corridor one cell wide, fixed isometric
 orthographic orbit with 60° yaw snapping, and **no billboards, no flat cards, no painted-on shadows**.
+
+### Juicy, and readable by a stranger
+
+The stated goal is that it should be **juicy and accessible — anyone could pick it up.** Every hit lands with
+weight, every purchase feels good, and a person who has never seen it can tell what is happening within a
+minute of looking at it.
+
+This sits directly on top of [§3's](#3-what-a-match-is) extreme depth, and the pair is not a contradiction —
+Bloons TD 6 is the standing proof that a game can be legible to a child and still have a competitive meta. But
+it is a **tension that has to be actively managed**, and one settled decision makes it harder than it is for
+anybody else:
+
+> ⚠️ **The usual accessibility ramp is unavailable.** Almost every deep game onboards by *withholding* — you
+> start with four options and the space widens over weeks. [§4](#4-what-persists) rules that out: nothing
+> persists between runs, so the full space is present on run one and a newcomer meets all of it at once.
+>
+> Accessibility therefore has to be bought entirely with **legibility** — silhouette, colour, motion, tooltips,
+> in-run pacing and safe defaults — and never with progression. That constraint is deliberate and it is not
+> being relaxed; what it means in practice is a live question for the research and for the interface seam.
+
+Two consequences for what gets built:
+
+- **Juice is a feature with a budget, not a polish pass.** Hit reactions, death weight, muzzle flashes, impact
+  effects, number popups, screen shake, easing on every UI transition. It is the majority of what "feels good"
+  is made of, and none of it requires an artist.
+- **Legibility is a design constraint on the depth, not just on the art.** If a mechanism cannot be read off
+  the screen, it fails the accessibility pillar however deep it is. That is a real veto and it should be used
+  as one.
 
 ### The pipeline
 
@@ -257,7 +323,7 @@ its own sessions. They are not a build order for one effort; they are the effort
 
 | # | Seam | The destination it finds its way to | Depends on |
 |---|---|---|---|
-| 1 | **The match format** | A decided-in-full ruleset for a single match | — |
+| 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | The three research notes ([§10](#10-not-yet-specified)) |
 | 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | 1 |
 | 3 | **The roster** | What towers and attacking units exist, and what they vary by | 1 |
 | 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | 1, 3 |
@@ -266,15 +332,23 @@ its own sessions. They are not a build order for one effort; they are the effort
 | 7 | **The interface** | Reading two boards, an economy and a build menu at once | 1 |
 | 8 | **The presentation** | The art pipeline, and what makes it look composed | — |
 
-### 1 · The match format — *next*
+### 1 · The match format — *next, once the research lands*
 
 What one wave actually is. Two boards resolving at once, one purse, the build-phase rhythm, what a build phase
 offers, how a wave is composed, what a wave is worth and what winning one means.
+
+It also owns the **shape of the depth** from [§3](#3-what-a-match-is), and that is the larger half of it: what
+the combination system actually is, whether the creep pool is gated on your towers and how, whether send order
+is a real decision, and — from [§10](#10-not-yet-specified) — whether the defending side is towers at all.
 
 **Everything is downstream of this.** The roster cannot be designed, the harness cannot be pointed at anything,
 the record format cannot be fixed and the interface cannot be laid out until these rules exist. It is also the
 cheapest seam to be wrong about now and the most expensive later — and it needs no server, no art and no
 friends to answer.
+
+⚠️ **It waits on the three research notes**, because the developer's stated position is that he wants to see how
+other games achieved this depth before choosing a direction. Charting this map before they land would be
+charting it twice.
 
 ### 2 · The submission barrier
 
@@ -292,8 +366,14 @@ fills: **one unit schema, two roles**, levers as components, the vocabulary vers
 numbers. Six of Part V's levers are already dead — the ones that depended on mazing, which the hex corridor
 settled permanently.
 
+Now also owns the **creep roster's classes and roles** from [§3](#3-what-a-match-is) — tanks, damage, support,
+swarm, specialists — and the open question that comes with them: whether Part V's *one unit schema, two roles*
+still holds once the attacking side has genuine internal structure, or whether roles are a third thing the
+schema has to carry.
+
 Constrained hard by [§4](#4-what-persists): nothing is unlocked, so **every unit must be interesting from the
-first run.**
+first run** — and by [§6](#6-what-it-looks-like), because a unit whose role cannot be read off its silhouette
+fails the accessibility pillar however well it plays.
 
 ### 4 · The balance harness
 
@@ -320,9 +400,12 @@ Part II §5's UGC-discovery failure mode does not apply.
 
 ### 7 · The interface
 
-The hardest unsolved problem in the design. Two live battles, one economy, a build menu, and a readable account
-of what the opponent just did — on one screen, legible at a glance. Includes the faction-colour scheme from
-[§6](#6-what-it-looks-like), which is as much an information-design decision as an art one.
+The hardest unsolved problem in the design, and [§6's](#6-what-it-looks-like) accessibility pillar makes it
+harder still. Two live battles, one economy, a build menu, and a readable account of what the opponent just did
+— on one screen, legible at a glance, to somebody who has never played it, with **no unlock ramp available to
+stagger the options**. Includes the faction-colour scheme, which is as much an information-design decision as
+an art one, and the presentation of whatever combination system seam 1 chooses — a combinatorial build space
+that cannot be read is a menu with extra steps.
 
 ### 8 · The presentation
 
@@ -356,6 +439,31 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 
 In scope, headed toward the destination, not yet sharp enough to seam.
 
+### Research in flight
+
+Three notes were commissioned against [§3's](#3-what-a-match-is) depth direction and the open question below.
+They are decision inputs for seams 1, 3 and 7, and **the match-format session should not start until they
+land.**
+
+| Note | The question it answers |
+|---|---|
+| `docs/research/build-depth-in-tower-defense.md` | How TD games produce combinatorial build depth — Element TD's combination lineage, Bloons' cross-pathing, gem and item layering — which mechanisms survive a one-hex corridor and no meta-progression, and how the games that are both deep *and* accessible actually pull it off without an unlock ramp |
+| `docs/research/attack-composition-and-sending.md` | How the attacking half is made deep — sending, timing, ordering, roster roles — and whether **gating the creep pool on your tower choices has any precedent at all**, or is unexplored rather than known-bad |
+| `docs/research/towers-versus-placed-squads.md` | The open question below, as a pros-and-cons analysis against precedent and against this repository's own code |
+
+### The open questions
+
+- **Does the defending side have to be towers?** The alternative floated: walls and placeable archer squads
+  that all shoot, upgrade and get augmented — an RTS-ish read rather than a tower-defense one. Genuinely open,
+  and it is the one piece of direction that could reopen a closed decision, so it gets stated sharply:
+
+  > ⚠️ **Two settled things are in its blast radius.** *No mazing, ever* — the corridor is one hex wide and
+  > never branches, which is what keeps pathfinding out of the simulation permanently — and **walls imply
+  > blocking, which implies a path that can be blocked.** Separately, a squad that *holds position* is a tower
+  > with a different silhouette and costs nothing, while a squad that *repositions* puts movement decisions
+  > back into the deterministic sim. The analysis has to separate those cases and price them individually
+  > rather than answering "squads: yes or no".
+
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
   is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
@@ -373,8 +481,10 @@ Ruled beyond the destination. These do not graduate; they return only if the des
 
 - **Monetisation, pricing, store presence, wishlists, marketing, launch windows, demo cadence.** Consequences
   of §1, all of them.
-- **Progression systems.** Unlocks, collections, account levels, roster development, seasons, battle passes.
-  Consequences of §4.
+- **Progression systems *between* runs.** Unlocks, collections, account levels, roster development, seasons,
+  battle passes. Consequences of §4. **In-run progression is not ruled out and never was** — the skill tree a
+  tower opens onto your creep pool ([§3](#3-what-a-match-is)) lives and dies inside one run, which is exactly
+  what makes it legal.
 - **Realtime netcode.** Lockstep, rollback, tick synchronisation, prediction. Consequence of §2 — no mode needs
   it.
 - **Mazing and pathfinding.** Settled before this document: the corridor is one hex wide and never branches, so
@@ -402,6 +512,10 @@ Everything factual here is either established in Parts I to V, verifiable in thi
 4. **CC0 1.0** — [Creative Commons deed](https://creativecommons.org/publicdomain/zero/1.0/): copy, modify,
    distribute and perform, including commercially, without permission.
 5. **Legion TD 2** — the both-boards-at-once match structure and the one-purse tension it is built on.
+6. **Element TD** (Warcraft 3 mod) — the named reference for §3's combinatorial build depth. Its element
+   combination system is the target class of depth, not a specification. Under research.
+7. **Bloons TD 6** — the standing proof that legible-to-a-child and competitively deep are compatible, which
+   §6's accessibility pillar depends on being true. Under research.
 6. **Super Auto Pets / Backpack Battles** — the per-round draw against a snapshot at the same stage, and the
    AI-fill answer to an empty pool.
 7. **Supercell** — "Builder Base 2: Balancing Attacking, Defending and Builders", the source of the
