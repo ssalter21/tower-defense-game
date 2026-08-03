@@ -66,6 +66,10 @@ venv/
 /playmode-results.xml
 /editmode-results.xml
 
+# Same, for tools/run-player-tests.ps1 -- the run that builds a player and runs
+# the PlayMode suite in it, where UNITY_EDITOR is undefined.
+/player-tests.xml
+
 # Spike render output — regenerate with ScrubStripCapture
 /scrub-strip/
 /client/fbx-clip-report.md

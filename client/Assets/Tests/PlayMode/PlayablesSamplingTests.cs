@@ -11,36 +11,31 @@ namespace Tests.PlayMode
     /// can be driven from simulation time via the Playables API, with no view-side
     /// playback head that could desync from the sim.
     ///
-    /// Every test here uses a procedurally-built clip with an exact analytic oracle
+    /// Every test here uses a synthetic clip with an exact analytic oracle
     /// (bone x == 10 * t), so "is the pose correct" is an assertion rather than a
     /// judgement. No art asset is involved: the questions these tests answer are
     /// about the graph, not about any particular model.
+    ///
+    /// The clips are loaded rather than built here — see <see cref="OracleClips"/>
+    /// for why, which is that building one is an editor-only trick that fails
+    /// silently everywhere else.
     /// </summary>
     public class PlayablesSamplingTests
     {
-        private const float ClipLength = 1.0f;
-        private const float TravelPerSecond = 10.0f;
+        private const float ClipLength = OracleClips.Length;
+        private const float TravelPerSecond = OracleClips.Travel;
 
         private GameObject _root;
         private Transform _bone;
         private SimDrivenAnimator _view;
 
         /// <summary>A clip whose only channel is a straight line, so the correct pose at t is known exactly.</summary>
-        private static AnimationClip LinearClip(float from, float to)
-        {
-            var clip = new AnimationClip { legacy = false };
-            clip.SetCurve("Bone", typeof(Transform), "localPosition.x",
-                AnimationCurve.Linear(0f, from, ClipLength, to));
-            return clip;
-        }
+        private static AnimationClip LinearClip() => OracleClips.Load(OracleClips.Linear);
 
-        private static AnimationClip ConstantClip(float value)
-        {
-            var clip = new AnimationClip { legacy = false };
-            clip.SetCurve("Bone", typeof(Transform), "localPosition.x",
-                AnimationCurve.Constant(0f, ClipLength, value));
-            return clip;
-        }
+        /// <summary>The two ends a mixer blend is measured between.</summary>
+        private static AnimationClip ConstantAtZero() => OracleClips.Load(OracleClips.ConstantZero);
+
+        private static AnimationClip ConstantAtTravel() => OracleClips.Load(OracleClips.ConstantTravel);
 
         private void BuildRig(params AnimationClip[] clips)
         {
@@ -48,7 +43,7 @@ namespace Tests.PlayMode
             var animator = _root.AddComponent<Animator>();
             animator.applyRootMotion = false;
 
-            var bone = new GameObject("Bone");
+            var bone = new GameObject(OracleClips.BoneName);
             bone.transform.SetParent(_root.transform, false);
             _bone = bone.transform;
 
@@ -74,11 +69,11 @@ namespace Tests.PlayMode
         [Test]
         public void SamplingAtArbitraryTime_MatchesAnalyticOracle()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
+            BuildRig(LinearClip());
 
             foreach (var phase in new[] { 0f, 0.25f, 0.5f, 0.75f, 1f })
             {
-                _view.SampleSingle(0, phase, ClipLength);
+                _view.Pose(0, phase);
                 Assert.AreEqual(phase * TravelPerSecond, X, 1e-4f,
                     $"pose at phase {phase} does not match the oracle");
             }
@@ -87,20 +82,20 @@ namespace Tests.PlayMode
         [Test]
         public void SamplingOutOfOrder_IsPathIndependent()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
+            BuildRig(LinearClip());
 
             // Arrive at 0.3 from below.
-            foreach (var p in new[] { 0f, 0.1f, 0.2f, 0.3f }) _view.SampleSingle(0, p, ClipLength);
+            foreach (var p in new[] { 0f, 0.1f, 0.2f, 0.3f }) _view.Pose(0, p);
             var fromBelow = X;
 
             // Arrive at the same 0.3 from above.
-            foreach (var p in new[] { 1f, 0.9f, 0.6f, 0.3f }) _view.SampleSingle(0, p, ClipLength);
+            foreach (var p in new[] { 1f, 0.9f, 0.6f, 0.3f }) _view.Pose(0, p);
             var fromAbove = X;
 
             // Arrive at it cold, with a fresh graph.
             TearDown();
-            BuildRig(LinearClip(0f, TravelPerSecond));
-            _view.SampleSingle(0, 0.3f, ClipLength);
+            BuildRig(LinearClip());
+            _view.Pose(0, 0.3f);
             var cold = X;
 
             Assert.AreEqual(fromBelow, fromAbove,
@@ -112,12 +107,12 @@ namespace Tests.PlayMode
         [Test]
         public void ScrubbingBackwards_MovesThePoseBackwards()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
+            BuildRig(LinearClip());
 
             var previous = float.MaxValue;
             for (var phase = 1f; phase >= 0f; phase -= 0.05f)
             {
-                _view.SampleSingle(0, phase, ClipLength);
+                _view.Pose(0, phase);
                 Assert.Less(X, previous, $"pose did not move backwards at phase {phase}");
                 previous = X;
             }
@@ -126,13 +121,13 @@ namespace Tests.PlayMode
         [Test]
         public void RandomAccessFuzz_AlwaysMatchesTheOracle()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
+            BuildRig(LinearClip());
 
             var rng = new System.Random(12345);
             for (var i = 0; i < 500; i++)
             {
                 var phase = (float)rng.NextDouble();
-                _view.SampleSingle(0, phase, ClipLength);
+                _view.Pose(0, phase);
                 Assert.AreEqual(phase * TravelPerSecond, X, 1e-4f,
                     $"random-access sample {i} at phase {phase} drifted from the oracle");
             }
@@ -145,13 +140,13 @@ namespace Tests.PlayMode
         [Test]
         public void RepeatedEvaluationWithoutSettingTime_DoesNotAdvance()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
-            _view.SampleSingle(0, 0.5f, ClipLength);
+            BuildRig(LinearClip());
+            _view.Pose(0, 0.5f);
             var settled = X;
 
             for (var i = 0; i < 100; i++)
             {
-                _view.Sample(new double[] { 0.5 * ClipLength }, new[] { 1f });
+                _view.Pose(0, 0.5f);
             }
 
             Assert.AreEqual(settled, X, "the pose drifted under repeated evaluation — something is accumulating");
@@ -160,12 +155,12 @@ namespace Tests.PlayMode
         [UnityTest]
         public IEnumerator PoseDoesNotDriftAcrossRealFrames()
         {
-            BuildRig(LinearClip(0f, TravelPerSecond));
-            _view.SampleSingle(0, 0.5f, ClipLength);
+            BuildRig(LinearClip());
+            _view.Pose(0, 0.5f);
             var settled = X;
 
             // Let Unity tick for real. Nothing should move the rig, because the
-            // graph is in Manual mode and only Sample() evaluates it.
+            // graph is in Manual mode and only a Pose call evaluates it.
             for (var i = 0; i < 30; i++)
             {
                 yield return null;
@@ -182,11 +177,11 @@ namespace Tests.PlayMode
         [Test]
         public void MixerWeights_BlendLinearlyBetweenClips()
         {
-            BuildRig(ConstantClip(0f), ConstantClip(TravelPerSecond));
+            BuildRig(ConstantAtZero(), ConstantAtTravel());
 
             foreach (var w in new[] { 0f, 0.25f, 0.5f, 0.75f, 1f })
             {
-                _view.Sample(new double[] { 0.0, 0.0 }, new[] { 1f - w, w });
+                _view.PoseBlend(0, 0f, 1, 0f, w);
                 Assert.AreEqual(w * TravelPerSecond, X, 1e-4f,
                     $"blend at weight {w} is not the linear combination of the two clips");
             }
@@ -195,13 +190,13 @@ namespace Tests.PlayMode
         [Test]
         public void SwitchingClipsViaWeights_IsAlsoPathIndependent()
         {
-            BuildRig(ConstantClip(0f), ConstantClip(TravelPerSecond));
+            BuildRig(ConstantAtZero(), ConstantAtTravel());
 
             // Walk the weight up, then back down to the same place.
-            foreach (var w in new[] { 0f, 0.5f, 1f, 0.5f }) _view.Sample(new double[] { 0.0, 0.0 }, new[] { 1f - w, w });
+            foreach (var w in new[] { 0f, 0.5f, 1f, 0.5f }) _view.PoseBlend(0, 0f, 1, 0f, w);
             var afterRoundTrip = X;
 
-            _view.Sample(new double[] { 0.0, 0.0 }, new[] { 0.5f, 0.5f });
+            _view.PoseBlend(0, 0f, 1, 0f, 0.5f);
             Assert.AreEqual(afterRoundTrip, X, "switching left residue behind in the mixer");
         }
 
@@ -209,12 +204,15 @@ namespace Tests.PlayMode
         public void ClipsInOneGraph_HaveIndependentTimes()
         {
             // walk on slot 0, "hit" on slot 1 — the two clips must not share a head.
-            BuildRig(LinearClip(0f, TravelPerSecond), LinearClip(0f, TravelPerSecond));
+            BuildRig(LinearClip(), LinearClip());
 
-            _view.Sample(new double[] { 0.2 * ClipLength, 0.9 * ClipLength }, new[] { 1f, 0f });
+            // Both slots given a time, then all the weight put on one and all of
+            // it on the other. A slot reading the wrong clip's head would show
+            // up as the other slot's answer.
+            _view.PoseBlend(0, 0.2f, 1, 0.9f, 0f);
             var slot0Only = X;
 
-            _view.Sample(new double[] { 0.2 * ClipLength, 0.9 * ClipLength }, new[] { 0f, 1f });
+            _view.PoseBlend(0, 0.2f, 1, 0.9f, 1f);
             var slot1Only = X;
 
             Assert.AreEqual(2f, slot0Only, 1e-4f, "slot 0 did not read its own time");
@@ -228,7 +226,7 @@ namespace Tests.PlayMode
         [Test]
         public void RootMotionCurves_AreDetectableOnAClip()
         {
-            var clip = LinearClip(0f, TravelPerSecond);
+            var clip = LinearClip();
 
             // These are the flags the asset-import half of this ticket inspects on
             // the real FBX clips. On a synthetic clip that animates a child bone

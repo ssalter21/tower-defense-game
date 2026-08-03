@@ -37,9 +37,11 @@ either accepted or engineered away.
 
 Anything an agent needs to run lives in `tools/` and runs from a shell:
 `tools/run-playmode-tests.ps1`, `tools/run-editmode-tests.ps1`,
-`tools/run-unity-tests.ps1`, `tools/adopt-unity-project.ps1`,
+`tools/run-unity-tests.ps1`, `tools/run-player-tests.ps1`,
+`tools/adopt-unity-project.ps1`,
 `tools/run-headless-match.ps1`, `tools/run-parity-run.ps1`,
-`tools/build-match-scene.ps1`, `tools/sync-streaming-content.ps1`,
+`tools/build-match-scene.ps1`, `tools/build-test-assets.ps1`,
+`tools/sync-streaming-content.ps1`,
 `tools/capture-match-frames.ps1`, `tools/capture-art-previews.ps1`,
 `tools/check-file-sizes.ps1`, `tools/check-project-settings.ps1`,
 `tools/build-player.ps1`.

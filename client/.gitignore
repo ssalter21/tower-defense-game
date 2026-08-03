@@ -171,13 +171,15 @@ InitTestScene*.unity*
 # THE FOLDER ITSELF IS DELIBERATELY NOT IGNORED. A bare `/Assets/Resources/`
 # would match a real Resources folder the day anybody adds one, and content
 # vanishing silently is the failure the root .gitignore was anchored to prevent.
-# Resources.meta is named here only because nothing else in that folder is
-# tracked; the day something is, this line has to go -- an ignored .meta beside
-# a tracked folder is the hazard the Sim.pdb.meta negation above exists to
-# avoid.
+#
+# THAT DAY CAME (issue #57). Assets/Resources/MatchArt.asset is a generated,
+# committed file -- the art the play-mode suite reads where there is no
+# AssetDatabase to ask -- so Resources.meta is tracked now and the line that
+# used to ignore it is gone. It was only ever there because nothing else in the
+# folder was tracked, and an ignored .meta beside a tracked folder is the hazard
+# the Sim.pdb.meta negation above exists to avoid.
 /Assets/Resources/PerformanceTestRun*.json
 /Assets/Resources/PerformanceTestRun*.json.meta
-/Assets/Resources.meta
 
 # Scene-template state: Unity writes this into ProjectSettings/, but its
 # contents are UserSettings/-class -- per-user template pin states plus a

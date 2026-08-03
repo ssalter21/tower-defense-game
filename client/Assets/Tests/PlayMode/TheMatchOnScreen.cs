@@ -1,8 +1,4 @@
-#if UNITY_EDITOR
-using System.Linq;
-using NUnit.Framework;
 using Sim;
-using UnityEditor;
 using UnityEngine;
 using View;
 
@@ -14,16 +10,19 @@ namespace Tests.PlayMode
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The art is loaded here the way the scene builder loads it, and is
-    /// deliberately <b>not</b> asked of the builder. A test that asked the
-    /// builder which clips it chose could not catch the builder choosing the
-    /// wrong ones, so the two lists are written out twice on purpose and a
-    /// disagreement between them is a failure rather than a coincidence.
+    /// The art comes through <see cref="MatchArtSource"/>, and is deliberately
+    /// <b>not</b> asked of the scene builder. A test that asked the builder
+    /// which clips it chose could not catch the builder choosing the wrong ones,
+    /// so the two lists are written out twice on purpose — the fixture's is
+    /// <c>Tests.ArtSource.ChosenArt</c> — and a disagreement between them is a
+    /// failure rather than a coincidence.
     /// </para>
     /// <para>
-    /// Editor-only, because loading the art goes through
-    /// <see cref="AssetDatabase"/>. Every test that uses it is editor-only for
-    /// the same reason.
+    /// <b>Not editor-only, and that is the point.</b> This used to load the art
+    /// through <c>AssetDatabase</c>, which put the whole file behind
+    /// <c>#if UNITY_EDITOR</c> and every fixture that used it with it. Built for
+    /// anything but the editor those classes yielded no tests and the run
+    /// reported green.
     /// </para>
     /// </remarks>
     public static class TheMatchOnScreen
@@ -79,37 +78,6 @@ namespace Tests.PlayMode
         }
 
         /// <summary>The models and clips the match is drawn with.</summary>
-        public static MatchArt Art() =>
-            MatchArt.Of(
-                Load<GameObject>("Assets/Art/Characters/Skeleton_Warrior.fbx"),
-                Clip("Assets/Art/Animations/Rig_Medium_MovementBasic.fbx", "Walking_A"),
-                Clip("Assets/Art/Animations/Rig_Medium_General.fbx", "Death_A"),
-                Load<GameObject>("Assets/Art/Characters/Ranger.fbx"),
-                Load<GameObject>("Assets/Art/Weapons/bow_withString.fbx"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Idle"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Draw"),
-                Clip("Assets/Art/Animations/Rig_Medium_CombatRanged.fbx", "Ranged_Bow_Release"),
-                Load<GameObject>("Assets/Art/Buildings/building_tower_A_blue.fbx"));
-
-        private static T Load<T>(string path)
-            where T : Object
-        {
-            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
-            Assert.IsNotNull(asset, $"nothing imported at {path}");
-
-            return asset;
-        }
-
-        private static AnimationClip Clip(string bank, string name)
-        {
-            AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(bank)
-                .OfType<AnimationClip>()
-                .FirstOrDefault(c => c.name == name);
-
-            Assert.IsNotNull(clip, $"no clip '{name}' in {bank}");
-
-            return clip;
-        }
+        public static MatchArt Art() => MatchArtSource.Load();
     }
 }
-#endif

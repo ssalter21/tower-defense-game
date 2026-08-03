@@ -4,9 +4,6 @@ using NUnit.Framework;
 using Sim;
 using UnityEngine;
 using View;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Tests.PlayMode
 {
@@ -30,7 +27,6 @@ namespace Tests.PlayMode
     /// </remarks>
     public class MatchViewTests : ViewTest
     {
-#if UNITY_EDITOR
         // ---------------------------------------------------------------
         // Pulling and matching
         // ---------------------------------------------------------------
@@ -343,37 +339,37 @@ namespace Tests.PlayMode
         public void EveryModelStandsTheWayItWasImported()
         {
             MatchView view = Begin();
+            MatchArt art = TheMatchOnScreen.Art();
 
             RunUntil(view, () => view.Creeps.LiveCount > 0);
 
             foreach (TowerView tower in view.Towers.Values)
             {
-                AssertAuthoredRotation(tower.Model, ModelPathOf(tower));
+                AssertAuthoredRotation(tower.Model, AuthoredModelOf(art, tower));
             }
 
             CreepView creep = view.Creeps.Live.Values.First();
-            AssertAuthoredRotation(creep.Model, "Assets/Art/Characters/Skeleton_Warrior.fbx");
+            AssertAuthoredRotation(creep.Model, art.CreepModel);
         }
 
-        private static string ModelPathOf(TowerView tower) =>
+        private static GameObject AuthoredModelOf(MatchArt art, TowerView tower) =>
             tower.Type.Delivery == Delivery.Projectile
-                ? "Assets/Art/Characters/Ranger.fbx"
-                : "Assets/Art/Buildings/building_tower_A_blue.fbx";
+                ? art.ProjectileTowerModel
+                : art.HitscanTowerModel;
 
         /// <summary>
         /// The instantiated model carries the same local rotation the imported
         /// asset does — measured off the asset rather than written down here,
         /// so the assertion cannot disagree with the import it describes.
         /// </summary>
-        private static void AssertAuthoredRotation(GameObject instance, string assetPath)
+        private static void AssertAuthoredRotation(GameObject instance, GameObject authored)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
-            Assert.IsNotNull(prefab, $"nothing imported at {assetPath}");
+            Assert.IsNotNull(authored, "the art source handed over no model to compare against");
 
             Assert.That(
-                Quaternion.Angle(instance.transform.localRotation, prefab.transform.localRotation),
+                Quaternion.Angle(instance.transform.localRotation, authored.transform.localRotation),
                 Is.LessThan(0.01f),
-                $"{assetPath} is being drawn rotated {Quaternion.Angle(instance.transform.localRotation, prefab.transform.localRotation):F1} "
+                $"{authored.name} is being drawn rotated {Quaternion.Angle(instance.transform.localRotation, authored.transform.localRotation):F1} "
                 + "degrees away from how it was imported — a model whose root rotation was overwritten "
                 + "lies on its side and nothing else in this suite notices");
         }
@@ -853,6 +849,5 @@ namespace Tests.PlayMode
             Assert.That(most, Is.LessThan(40),
                 $"{most} effects were on screen at once — decoration is accumulating rather than ageing");
         }
-#endif
     }
 }

@@ -62,13 +62,17 @@ namespace Tests.PlayMode
     /// go red for a reason that had nothing to do with parity.
     /// </para>
     /// <para>
-    /// Editor-only, like every fixture here that loads art through the
-    /// <c>AssetDatabase</c>.
+    /// <b>Needs the repository on disk</b>, and it is the only fixture here that
+    /// does. The art comes through <see cref="MatchArtSource"/> like everything
+    /// else, but the trace and the record are read out of <c>content/</c>
+    /// relative to the project — deliberately not shipped through streaming
+    /// assets, because a test oracle is not content a player reads. Run
+    /// somewhere without a checkout, these two skip themselves by name rather
+    /// than failing on a path that was never going to be there.
     /// </para>
     /// </remarks>
     public class ParityRunTests : ViewTest
     {
-#if UNITY_EDITOR
         /// <summary>The bolt tower, whose damage the poison changes.</summary>
         private const int BoltTowerTypeId = 3;
 
@@ -291,9 +295,16 @@ namespace Tests.PlayMode
         /// Deliberately not shipped through <c>StreamingAssets</c>. The trace
         /// and the record are a test oracle, not content a player reads, and
         /// putting fifty kilobytes of hashes in the build to be read by nothing
-        /// would be paying for the wrong thing. This fixture is editor-only
-        /// anyway — it loads art through the <c>AssetDatabase</c> — so the
-        /// repository is somewhere it can always reach.
+        /// would be paying for the wrong thing.
+        /// </para>
+        /// <para>
+        /// <b>Skipped rather than failed where there is no repository</b> — a
+        /// player built out of this project has no path back to the checkout it
+        /// came from, and never did. Ignoring by name says that; a red assertion
+        /// about a missing file would send somebody looking for a bug in the
+        /// parity run. The skip is on <c>Application.isEditor</c> and not on
+        /// whether the file happens to be there, because "the oracle is missing"
+        /// inside a checkout is a real failure and has to stay one.
         /// </para>
         /// <para>
         /// The simulation is handed bytes and never a path, here as everywhere:
@@ -303,6 +314,13 @@ namespace Tests.PlayMode
         /// </remarks>
         private static byte[] InTheRepository(string fileName)
         {
+            if (!Application.isEditor)
+            {
+                Assert.Ignore(
+                    "the parity oracle lives in the repository's content/ folder, and a player has no "
+                    + "path back to the checkout it was built from");
+            }
+
             string root = Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
             string path = Path.Combine(root, "content", fileName);
 
@@ -358,6 +376,5 @@ namespace Tests.PlayMode
 
             return rebuilt.ToString();
         }
-#endif
     }
 }
