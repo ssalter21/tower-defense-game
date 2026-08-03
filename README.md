@@ -1,10 +1,20 @@
 # tower-defense-game
 
-A tower defense game. Currently just the scaffolding — stack not chosen yet.
+A tower defense game whose multiplayer is real and whose every mode is the same
+machine at a different latency. What it is and where it is going lives in
+**[The Vision](docs/vision.md)**.
 
 ## Status
 
+The walking skeleton is built: a deterministic integer simulation, a ghost
+record format, a headless CLI, and a Unity 6 view that scrubs a recorded match
+from snapshots. What comes next is
+[the eight seams](docs/vision.md#8-the-seams), each planned as its own map.
+
 ## Ideas / scope
+
+[The Vision](docs/vision.md) fixes the destination; the
+[five deep dives](docs/README.md) behind it are the reading it was built on.
 
 ## Getting started
 
