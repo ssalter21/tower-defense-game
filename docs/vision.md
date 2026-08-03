@@ -449,20 +449,29 @@ land.**
 |---|---|
 | `docs/research/build-depth-in-tower-defense.md` | How TD games produce combinatorial build depth — Element TD's combination lineage, Bloons' cross-pathing, gem and item layering — which mechanisms survive a one-hex corridor and no meta-progression, and how the games that are both deep *and* accessible actually pull it off without an unlock ramp |
 | `docs/research/attack-composition-and-sending.md` | How the attacking half is made deep — sending, timing, ordering, roster roles — and whether **gating the creep pool on your tower choices has any precedent at all**, or is unexplored rather than known-bad |
-| `docs/research/towers-versus-placed-squads.md` | The open question below, as a pros-and-cons analysis against precedent and against this repository's own code |
+| `docs/research/towers-versus-placed-squads.md` | The open question below — squads versus towers, priced against this repository's own code, and whether a flanking rampart reads better than discrete silhouettes |
 
 ### The open questions
 
-- **Does the defending side have to be towers?** The alternative floated: walls and placeable archer squads
-  that all shoot, upgrade and get augmented — an RTS-ish read rather than a tower-defense one. Genuinely open,
-  and it is the one piece of direction that could reopen a closed decision, so it gets stated sharply:
+- **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
+  placement surface** — archers on a rampart running alongside the corridor — with squads that shoot, upgrade
+  and get augmented. An RTS-ish read rather than a tower-defense one.
 
-  > ⚠️ **Two settled things are in its blast radius.** *No mazing, ever* — the corridor is one hex wide and
-  > never branches, which is what keeps pathfinding out of the simulation permanently — and **walls imply
-  > blocking, which implies a path that can be blocked.** Separately, a squad that *holds position* is a tower
-  > with a different silhouette and costs nothing, while a squad that *repositions* puts movement decisions
-  > back into the deterministic sim. The analysis has to separate those cases and price them individually
-  > rather than answering "squads: yes or no".
+  > **The walls do not block, and that is the developer's own clarification.** They are a surface you place
+  > defenders *onto*, beside the corridor, chosen for how it looks. They do not sit in the path, do not alter
+  > the route, and **do not threaten "no mazing, ever"** — recorded here because "walls" reads as "blocking" to
+  > anyone arriving cold, and this question should not have to be re-litigated every time somebody does.
+
+  > ⚠️ **One architectural question does survive, and it is the whole question.** A squad that *holds position*
+  > is a tower with a different silhouette and costs nothing. A squad that *repositions* — chases, retreats,
+  > re-blocks — puts movement decisions back inside a deterministic fixed-point simulation. Those two are
+  > priced separately or not at all.
+
+  What remains beyond that is a **placement-geometry and legibility question**, not a structural one: whether a
+  flanking rampart is an edge or just a cell the view draws differently, and whether a continuous wall of
+  defenders reads better or worse than discrete tower silhouettes — at a fixed isometric camera, while watching
+  two boards at once, for somebody who has never played it. That last test is [§6's](#6-what-it-looks-like)
+  accessibility pillar doing its job as a veto.
 
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
