@@ -462,16 +462,31 @@ land.**
   > the route, and **do not threaten "no mazing, ever"** — recorded here because "walls" reads as "blocking" to
   > anyone arriving cold, and this question should not have to be re-litigated every time somebody does.
 
-  > ⚠️ **One architectural question does survive, and it is the whole question.** A squad that *holds position*
-  > is a tower with a different silhouette and costs nothing. A squad that *repositions* — chases, retreats,
-  > re-blocks — puts movement decisions back inside a deterministic fixed-point simulation. Those two are
-  > priced separately or not at all.
+  > **Squads are static — settled.** A stationary squad is a tower with a different silhouette. No movement
+  > decisions enter the simulation and pathfinding stays out permanently. The moving-squad branch — chasing,
+  > retreating, re-blocking — was priced and closed: it would have reopened a settled decision, and it is not
+  > being taken.
 
-  What remains beyond that is a **placement-geometry and legibility question**, not a structural one: whether a
-  flanking rampart is an edge or just a cell the view draws differently, and whether a continuous wall of
-  defenders reads better or worse than discrete tower silhouettes — at a fixed isometric camera, while watching
-  two boards at once, for somebody who has never played it. That last test is [§6's](#6-what-it-looks-like)
-  accessibility pillar doing its job as a veto.
+  > ⚠️ **What survives is projectile volume, and it is a real cost rather than a detail.** Projectiles are
+  > genuine simulation entities today: `sim/Match.cs` flies every one of them every tick, each carrying an id,
+  > a target, a flight countdown and its damage, and every in-flight projectile is copied into a freshly
+  > allocated array in every snapshot (`sim/Snapshot.cs`). A squad of N shooters is therefore N× the
+  > projectiles, N× the snapshot, N× the replay, N× the animation instances — **and N× again across the
+  > thousands of matches the balance harness sweeps.**
+  >
+  > It is also not one question but three: whether each archer targets and fires independently, whether one
+  > squad fires once but emits N real projectiles, or whether the sim resolves one damage event and the view
+  > merely *draws* N arrows. The third is nearly free and the arrows become decoration — which collides with
+  > this project's standing refusal to let the view hold truth the simulation does not, and with the
+  > `projectile-orphaned` landmark that exists precisely because per-projectile identity is load-bearing and
+  > scrubbable.
+
+  What remains beyond that is **placement geometry and legibility**, not structure: whether a flanking rampart
+  is genuinely an edge in the spatial model or just a cell the view draws differently, and whether a continuous
+  wall of defenders reads better or worse than discrete tower silhouettes — at a fixed isometric camera, while
+  watching two boards at once, for somebody who has never played it. Add to that whether a sky full of arrows
+  is maximum juice or maximum noise. Those are [§6's](#6-what-it-looks-like) two pillars pulling against each
+  other, which is exactly the case the accessibility veto exists for.
 
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
