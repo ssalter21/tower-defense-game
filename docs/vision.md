@@ -153,6 +153,19 @@ off them. Greeding into offense while your line thins is a real and readable gam
 It is also the hardest of the four options to balance, which is why [§5](#5-how-it-is-balanced) is not
 optional.
 
+> ⚠️ **One purse takes away the tension every deep send system in the genre is built on, and this needs an
+> answer.** [The sending research](research/attack-composition-and-sending.md) found that Legion TD 2's send
+> loop is *two-currency*: gold buys workers, workers make mythium, mythium buys mercenaries, and spending
+> mythium **permanently raises your income**. Every send is an investment that pays you back.
+>
+> Under one purse a coin spent on an attacker is simply gone — so attacking is a pure tempo loss and, at
+> equilibrium, **dominated**. The one-purse precedent is not Legion TD 2 at all; it is Bloons TD Battles 2,
+> where the send and the income are *the same purchase on one continuous dial*.
+>
+> One purse is not being reopened here — it is the sharp decision this game is built around. But it obliges
+> seam 1 to make the attack purchase pay back some other way, and the note says there are three available
+> answers and no fourth.
+
 ### Depth is the point
 
 The ambition, stated as a target rather than a design: **the build space should be combinatorial, not a menu.**
@@ -169,11 +182,30 @@ Three commitments follow, all of them direction rather than mechanism:
   designed.
 - **Your defense decides your offense.** The stated idea: a tower of a given type unlocks a skill tree for the
   creeps you can buy, so the pool you send from is a consequence of what you built. One coherent identity per
-  run rather than two unrelated shopping trips — and, with one purse, a third tension on top of the two that
-  already exist.
-- **You choose the order they come out in.** A wave is a sequence, not a bag. What that ordering has to
-  interact with for it to be a real decision rather than a fiddly one is exactly the sort of thing research
-  should settle before it is built.
+  run rather than two unrelated shopping trips.
+
+  > ⚠️ **This is the one piece of direction the research pushed back on.** It found **exactly one shipped
+  > precedent** — a single tower upgrade in Bloons TD Battles 1 that let you send a tier *earlier*, gating the
+  > schedule rather than the pool; it shipped with a carve-out, and the sequel removed it. **Every other game
+  > surveyed gates the opposite way round**: constrain the defense, keep the attacking vocabulary universal —
+  > and deliberately, because *a send is only a read if both players already know the whole menu.*
+  >
+  > That is not a verdict of "known bad" — it is closer to unexplored, and the note offers three graded
+  > versions that keep the upside. But it names four specific failure modes, of which two bite hardest here:
+  > **double-dominance under one purse** (one build wins both halves), and **counter-picking collapsing to a
+  > lookup**, because the stored ghost already shows you the defense before you compose. Seam 1 owns the call.
+
+- **You choose the order they come out in.** A wave is a sequence, not a bag.
+
+  > ✅ **The research came back positive on this one, and it is already half-built.** Ordering is usually a trap
+  > that adds interface burden without depth — but the one-hex corridor is what rescues it: a corridor exactly
+  > one hex wide that never branches **is** a single-file column, with no route decision left to dilute it. Six
+  > of Part V's levers died to that corridor; ordering is the compensation.
+  >
+  > [`content/wave.txt`](../content/wave.txt) is already an ordered list of `(tick, type, count)`, and the
+  > skeleton already found both preconditions the hard way and wrote them down: ordering is unobservable when
+  > units share a speed, and unobservable again when a count spawns as one pile — *"a count is a column, not a
+  > pile."*
 
 And the creeps themselves get **a roster with classes and roles** — tanks, damage, support, swarm, specialists
 — rather than a stat ladder. Part V's *one unit schema, two roles* is the structure this fills, and whether it
@@ -448,8 +480,8 @@ land.**
 | Note | The question it answers |
 |---|---|
 | `docs/research/build-depth-in-tower-defense.md` | How TD games produce combinatorial build depth — Element TD's combination lineage, Bloons' cross-pathing, gem and item layering — which mechanisms survive a one-hex corridor and no meta-progression, and how the games that are both deep *and* accessible actually pull it off without an unlock ramp |
-| `docs/research/attack-composition-and-sending.md` | How the attacking half is made deep — sending, timing, ordering, roster roles — and whether **gating the creep pool on your tower choices has any precedent at all**, or is unexplored rather than known-bad |
-| `docs/research/towers-versus-placed-squads.md` | The open question below — squads versus towers, priced against this repository's own code, and whether a flanking rampart reads better than discrete silhouettes |
+| ✅ **[The attacking half](research/attack-composition-and-sending.md)** — *landed* | How sending is made deep. Verdict: seven mechanisms, five survive, **ordering is *strengthened* by the hex corridor**, and the income loop the genre is built on is the one the single purse takes away. The gating idea has **one thin precedent, since removed** |
+| ✅ **[Towers, or placed squads?](research/towers-versus-placed-squads.md)** — *landed* | The open question below. Verdict: the aesthetic half is free and mostly already decided by Part IV §5; the mechanical half is one number, projectile volume, and it lands on `FlyProjectiles` rather than on target acquisition |
 
 ### The open questions
 
@@ -467,35 +499,50 @@ land.**
   > retreating, re-blocking — was priced and closed: it would have reopened a settled decision, and it is not
   > being taken.
 
-  > ⚠️ **What survives is projectile volume, and it is a real cost rather than a detail.** Projectiles are
-  > genuine simulation entities today: `sim/Match.cs` flies every one of them every tick, each carrying an id,
-  > a target, a flight countdown and its damage, and every in-flight projectile is copied into a freshly
-  > allocated array in every snapshot (`sim/Snapshot.cs`). A squad of N shooters is therefore N× the
-  > projectiles, N× the snapshot, N× the replay, N× the animation instances — **and N× again across the
-  > thousands of matches the balance harness sweeps.**
+  > ⚠️ **What survives is projectile volume**, and
+  > [the research note](research/towers-versus-placed-squads.md) has now priced it. Three findings from it
+  > matter at vision level:
   >
-  > It is also not one question but three: whether each archer targets and fires independently, whether one
-  > squad fires once but emits N real projectiles, or whether the sim resolves one damage event and the view
-  > merely *draws* N arrows. The third is nearly free and the arrows become decoration — which collides with
-  > this project's standing refusal to let the view hold truth the simulation does not, and with the
-  > `projectile-orphaned` landmark that exists precisely because per-projectile identity is load-bearing and
-  > scrubbable.
+  > - **The ghost record costs nothing.** A record stores *inputs*; projectiles are output. `GhostRecord`,
+  >   `ReplayBundle`, `TowerLayout` and `RecordFormat` do not mention projectiles at all, so squad size is free
+  >   in stored bytes. *(This corrects an earlier claim here that a squad cost N× the replay. It does not.)*
+  > - **The cost lands on the simulation's hottest loop, and it is not the one you would guess.** Not target
+  >   acquisition — `FlyProjectiles`. Every projectile resolves its target by a deliberate linear scan of the
+  >   creep array, every tick it is in flight, so the term is **O(projectiles × creeps)** and a squad
+  >   multiplies it directly. It is then multiplied again by every match the balance harness sweeps.
+  > - **Modelling each archer as its own shooter buys nothing.** N identical archers on one cell share one
+  >   coverage interval, are handed the same target, start in the same state and never drift apart. A squad of
+  >   N independent shooters is *behaviourally identical* to one shooter firing N arrows — **unless the bodies
+  >   can die independently.** Attrition is therefore the only thing that justifies the expensive model, which
+  >   turns a performance question into a design one.
 
-  What remains beyond that is **placement geometry and legibility**, not structure: whether a flanking rampart
-  is genuinely an edge in the spatial model or just a cell the view draws differently, and whether a continuous
-  wall of defenders reads better or worse than discrete tower silhouettes — at a fixed isometric camera, while
-  watching two boards at once, for somebody who has never played it. Add to that whether a sky full of arrows
-  is maximum juice or maximum noise. Those are [§6's](#6-what-it-looks-like) two pillars pulling against each
-  other, which is exactly the case the accessibility veto exists for.
+  The note's recommendation is a scenery rampart with squads as one simulation entity drawn as N bodies, and
+  hitscan for the fast squad weapons — with the escape hatch that delivery is a *column in `content/units.txt`*,
+  so projectile volume stays reversible per unit type from a data file rather than a rewrite. **Two independent
+  lines — silhouette legibility, and the attention budget of watching two boards — converge on squads being an
+  archetype rather than the model for the whole defense.** None of that is decided here; it is seam 1's to take
+  or leave.
 
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
   is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
-- **How wide the damage-type matrix should be.** Carried forward from Part V §4.1, still open, still cheap to
-  set on paper. Legion TD 2 runs 1.67:1, Element TD 2 runs 4:1, Warcraft 3 runs 40:1. Belongs to seam 3 or 4
-  when one of them reaches it.
+- **How wide the damage-type matrix should be, and what the armour formula is.** Carried forward from Part V
+  §4.1, still open, still cheap to set on paper. Legion TD 2 runs 1.67:1, Element TD 2 runs 4:1, Warcraft 3
+  runs 40:1. Belongs to seam 3 or 4 when one of them reaches it — but the squad research has already
+  constrained it from an unexpected direction: **many-small-hits is punished quadratically by flat-subtraction
+  armour**, so that formula should be ruled out if squads exist at all, and the same finding argues for the
+  narrow end of the matrix. A presentation choice reaching back into the damage model is exactly the kind of
+  coupling seam 1 exists to catch early.
 - **What a run is.** How many waves, how long a session lasts, and whether a run ends in a loss condition or
   simply ends. Touched by seam 1 but may outgrow it.
+
+- **Whether there is a baseline wave at all — a risk no surveyed game carries.** In Legion TD 2 the wave is a
+  memorised public constant, which is exactly what makes a sent mercenary legible: it is *the part that is not
+  the wave*. Here the player composes the **whole** wave, so there is no constant to read it against. The
+  sending research suggests a shared baseline wave per stage as cheap insurance, and flags it as needing a
+  decision regardless of which direction seam 1 takes. It also bears directly on
+  [§6's](#6-what-it-looks-like) accessibility pillar: a newcomer with no baseline has nothing to compare
+  against.
 - **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those
   are one ladder or two is unresolved.
 

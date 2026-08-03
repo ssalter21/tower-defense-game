@@ -75,9 +75,19 @@ they are evidence, not design documents, and where the map has since moved past 
 | [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? | **Unity 6.3 LTS · Universal 3D (URP) · Linear · Input System · .NET Standard/Mono.** Only two dialog fields are expensive to get wrong — Editor version and template. URP stopped being a judgement call: Built-In is deprecated from 6.5 and HDRP is in maintenance. Resolves [#6](https://github.com/ssalter21/tower-defense-game/issues/6). |
 | [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL or sources inside Unity? | **Build outside Unity with `dotnet build`; consume the compiled `netstandard2.1` DLL as a managed plug-in.** Decisive reason: Unity compiles with its own bundled Roslyn, so any source-in-Unity layout ships a *different IL image* than the determinism run hashed. Also found **two bugs in Part III's banned-API enforcement**. ⚠️ Carries [amendments](research/unity-sim-library-integration.md#amendments) — four supporting arguments were superseded by [#15](https://github.com/ssalter21/tower-defense-game/issues/15); the headline recommendation stands. Resolves [#5](https://github.com/ssalter21/tower-defense-game/issues/5). |
 
-**One caveat all three carry.** `unity.com` returns 403 to automated fetching, so every licence and pricing claim in
-them was read via a browser user-agent as extracted text. A human should confirm those in a real browser before
-relying on them commercially.
+**One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence and
+pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those in a real
+browser before relying on them commercially.
+
+### Design research
+
+Commissioned against [The Vision](vision.md) §3's depth direction and §10's open questions. These are decision
+inputs for the match-format seam, which waits on them.
+
+| Note | Question it answers | Finding |
+|---|---|---|
+| [The attacking half](research/attack-composition-and-sending.md) | How is sending made deep — and has anyone gated the attacking options on the player's defensive build? | Seven distinct depth mechanisms; five survive this project's constraints. **Ordering is the one the hex corridor *strengthens*** — a one-hex corridor is already a single-file column — and `content/wave.txt` has already built it. ⚠️ **The single purse deletes the income loop every deep send system in the genre rests on**: under one purse a coin spent attacking is simply gone, so attacking is dominated unless the purchase pays back some other way. The one-purse precedent is Bloons TD Battles 2, not Legion TD 2. The **gating idea has one thin precedent** — a Bloons TD Battles 1 tower upgrade that moved the *schedule*, not the pool, and the sequel removed it; every other game gates the opposite way, because a send is only a *read* if both players know the whole menu. |
+| [Towers, or placed squads?](research/towers-versus-placed-squads.md) | Does the defending side have to be towers, or could placements be flanking walls with archer squads on them? | **The aesthetic half is free and mostly already decided** — Part IV §5 already ruled towers are rooted animated characters, so a rampart is a picture drawn over placements that exist. The mechanical half is one number, **projectile volume**, and it lands on `FlyProjectiles` — **O(projectiles × creeps)** — not on target acquisition. Costs the ghost record **nothing**, since a record stores inputs and projectiles are output. The sharp finding: **N independent shooters is behaviourally identical to one shooter firing N arrows**, because identical archers on one cell never desynchronise — so attrition is the only thing that justifies the expensive model. Recommends squads as an *archetype*, not the model for the whole defense. |
 
 ## Status
 
