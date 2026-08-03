@@ -14,8 +14,10 @@ namespace Tests.PlayMode
     /// <b>not</b> asked of the scene builder. A test that asked the builder
     /// which clips it chose could not catch the builder choosing the wrong ones,
     /// so the two lists are written out twice on purpose — the fixture's is
-    /// <c>Tests.ArtSource.ChosenArt</c> — and a disagreement between them is a
-    /// failure rather than a coincidence.
+    /// <c>Tests.Fixtures.ChosenArt</c> — and a disagreement between them is a
+    /// failure rather than a coincidence. Named in <c>&lt;c&gt;</c> rather than
+    /// <c>&lt;see cref&gt;</c> because it lives in an editor-only assembly this
+    /// one deliberately cannot reference; that is the whole shape of the seam.
     /// </para>
     /// <para>
     /// <b>Not editor-only, and that is the point.</b> This used to load the art

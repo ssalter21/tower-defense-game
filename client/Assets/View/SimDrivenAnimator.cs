@@ -69,7 +69,8 @@ namespace View
 
         /// <summary>
         /// Binds a rig and returns the sampler on it. <b>The one place a rig is
-        /// wired up</b>, used by every caller that poses one.
+        /// wired up</b> — every caller that has a model and wants it posed comes
+        /// through here.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -85,21 +86,23 @@ namespace View
         /// wherever a rig is bound.
         /// </para>
         /// <para>
-        /// The sampler component goes on <paramref name="rig"/> itself, beside
-        /// the animator it drives, so the two cannot be separated by a caller
-        /// that parented one of them somewhere else.
+        /// <b>The sampler goes on <paramref name="rig"/> itself</b>, beside the
+        /// animator it drives, rather than on whatever object asked for it. The
+        /// two cannot then be separated by a caller that parented one of them
+        /// somewhere else, and the graph is destroyed with the rig it was built
+        /// for — which is the object that stops existing when the model is
+        /// swapped or thrown away.
+        /// </para>
+        /// <para>
+        /// <see cref="Build(Animator, HeadGuard, AnimationClip[])"/> is the
+        /// primitive underneath, and stays available for a caller holding an
+        /// animator it configured itself — the sampling fixtures, which build a
+        /// bare hierarchy with no model in it and are not binding a rig at all.
         /// </para>
         /// </remarks>
         /// <param name="rig">The instantiated model whose bones the clips drive.</param>
         /// <param name="clips">One clip per slot; slots are addressed by index.</param>
         public static SimDrivenAnimator Bind(GameObject rig, params AnimationClip[] clips)
-            => Bind(rig, HeadGuard.Both, clips);
-
-        /// <summary>
-        /// The same binding with a chosen subset of the head-guards. Only the
-        /// poison suite passes anything other than <see cref="HeadGuard.Both"/>.
-        /// </summary>
-        public static SimDrivenAnimator Bind(GameObject rig, HeadGuard guard, params AnimationClip[] clips)
         {
             if (rig == null) throw new ArgumentNullException(nameof(rig));
 
@@ -117,7 +120,7 @@ namespace View
             animator.applyRootMotion = false;
 
             var sampler = rig.AddComponent<SimDrivenAnimator>();
-            sampler.Build(animator, guard, clips);
+            sampler.Build(animator, clips);
 
             return sampler;
         }
@@ -127,7 +130,7 @@ namespace View
         /// slot; slots are addressed by index.
         /// </summary>
         /// <remarks>
-        /// <see cref="Bind"/> is what production code calls — this is the
+        /// <see cref="Bind"/> is what anything with a model calls — this is the
         /// primitive underneath it, for a caller holding an animator it
         /// configured itself. A caller reaching for this instead of
         /// <see cref="Bind"/> is opting out of the head-guard on the animator,
@@ -172,18 +175,6 @@ namespace View
         }
 
         /// <summary>
-        /// How long the clip in <paramref name="slot"/> runs, in seconds.
-        /// </summary>
-        /// <remarks>
-        /// For the caller that has to wrap in clip time rather than in phase — a
-        /// tower idling for however many ticks nothing walks into range, which
-        /// loops on the clip's own length and has no other duration to divide
-        /// by. Everything else converts to a phase from its own units and never
-        /// needs this.
-        /// </remarks>
-        public float ClipLength(int slot) => _lengths[slot];
-
-        /// <summary>
         /// Poses the rig from one clip, at <paramref name="phase"/> of its
         /// length, and returns the clip time that came to.
         /// </summary>
@@ -221,6 +212,37 @@ namespace View
         }
 
         /// <summary>
+        /// Poses the rig from one clip looping on its own length, at
+        /// <paramref name="seconds"/> of clip time, and returns where that
+        /// wrapped to.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// For the caller with no duration of its own to divide by: a tower is
+        /// idle until something walks into range, so the only length its phase
+        /// can be measured against is the clip's. The wrap happens here rather
+        /// than the length being handed out, because a second copy of a clip's
+        /// length is a second thing that can be wrong about it — and this
+        /// component holds the clips, so it is the one thing that cannot be.
+        /// </para>
+        /// <para>
+        /// Still a pure function of a number the simulation supplied, and still
+        /// runs backwards under a scrub: a loop over sim time, not a playback
+        /// head on the view's clock.
+        /// </para>
+        /// </remarks>
+        /// <returns>The absolute clip time sampled, in seconds.</returns>
+        public float PoseLooping(int slot, float seconds)
+        {
+            float length = _lengths[slot];
+
+            // A zero-length clip has no cycle to be anywhere in. Posed at zero
+            // rather than divided by, which is a NaN that reaches the screen as
+            // a rig folded into the origin.
+            return length <= 0f ? Pose(slot, 0f) : Pose(slot, Mathf.Repeat(seconds / length, 1f));
+        }
+
+        /// <summary>
         /// Poses the rig from two clips at once, <paramref name="blend"/> of the
         /// way from <paramref name="from"/> to <paramref name="to"/>.
         /// </summary>
@@ -236,6 +258,15 @@ namespace View
         /// <param name="blend">Weight of <paramref name="to"/>; <c>from</c> gets the rest.</param>
         public void PoseBlend(int from, float fromPhase, int to, float toPhase, float blend)
         {
+            // Blending a slot with itself has two answers -- which weight wins?
+            // -- and the loop below would silently pick one. A caller that wrote
+            // the same slot twice meant something it did not say.
+            if (from == to)
+            {
+                throw new ArgumentException(
+                    "A blend needs two different slots; both were " + from + ".", nameof(to));
+            }
+
             double fromTime = fromPhase * _lengths[from];
             double toTime = toPhase * _lengths[to];
 

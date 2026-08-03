@@ -180,7 +180,13 @@ namespace View
             int slot = SlotFor(state);
 
             LastSlot = slot;
-            LastClipTime = _animator.Pose(slot, PhaseFor(state, ticksInState, slot));
+
+            // Idle is the one state the simulation gives no duration to, so it
+            // is the one that loops on its clip's own length rather than being
+            // stretched to fit a number of ticks. See StretchedPhase.
+            LastClipTime = state == TowerState.Idle
+                ? _animator.PoseLooping(slot, ticksInState / (float)Match.TicksPerSecond)
+                : _animator.Pose(slot, StretchedPhase(state, ticksInState));
         }
 
         /// <summary>
@@ -209,8 +215,8 @@ namespace View
         }
 
         /// <summary>
-        /// How far through its clip the tower is, in [0,1], derived from
-        /// simulation ticks and nothing else.
+        /// How far through its clip a winding-up or recovering tower is, in
+        /// [0,1], derived from simulation ticks and nothing else.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -224,28 +230,17 @@ namespace View
         /// criteria are about.
         /// </para>
         /// <para>
-        /// Idle is the exception, because the simulation gives it no duration:
-        /// a tower is idle until something walks into range. It wraps on
-        /// <c>ticksInState</c>, which is still simulation state and still runs
-        /// backwards under a scrub — it is a loop driven by the simulation's
-        /// clock, not a playback head running on the view's.
+        /// Idle is not here, because the simulation gives it no duration to be
+        /// stretched to: a tower is idle until something walks into range, so
+        /// the only length its phase can be measured against is the clip's own.
+        /// That wrap belongs to whatever holds the clip, which is why
+        /// <see cref="SimDrivenAnimator.PoseLooping"/> takes seconds and this
+        /// takes ticks. Both are simulation state and both run backwards under a
+        /// scrub; neither is a playback head on the view's clock.
         /// </para>
         /// </remarks>
-        private float PhaseFor(TowerState state, int ticksInState, int slot)
+        private float StretchedPhase(TowerState state, int ticksInState)
         {
-            if (state == TowerState.Idle)
-            {
-                float seconds = ticksInState / (float)Match.TicksPerSecond;
-                float length = _animator.ClipLength(slot);
-
-                // Asked of the component rather than of a table here, because a
-                // second copy of a clip's length is a second thing that can be
-                // wrong about it. This is the one caller that needs it at all:
-                // idle has no simulation duration to divide by, so it wraps on
-                // the clip's own.
-                return length <= 0f ? 0f : Mathf.Repeat(seconds / length, 1f);
-            }
-
             int duration = state == TowerState.Windup ? Type.WindupTicks : Type.BackswingTicks;
 
             return duration <= 0 ? 0f : Mathf.Clamp01(ticksInState / (float)duration);
