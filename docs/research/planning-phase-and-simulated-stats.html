@@ -1,0 +1,1024 @@
+<title>Making the plan the game</title>
+
+<style>
+  :root {
+    color-scheme: light dark;
+
+    --paper:    #E8EAEE;
+    --surface:  #F3F5F7;
+    --sunken:   #DEE2E7;
+    --ink:      #14181D;
+    --ink-2:    #3C444E;
+    --ink-3:    #6C757F;
+    --rule:     #C6CCD3;
+    --rule-2:   #DCE0E5;
+
+    --defense:  #0F7B7C;
+    --attack:   #B2591B;
+    --dead:     #9F2E24;
+    --risk:     #96700F;
+
+    --shadow: 0 1px 0 rgba(20,24,29,.05), 0 1px 3px rgba(20,24,29,.06);
+
+    --display: ui-monospace, "Cascadia Mono", "SF Mono", "Menlo", "Consolas", monospace;
+    --body: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#0E1216; --surface:#161B21; --sunken:#0A0D10;
+      --ink:#E4E8EC; --ink-2:#ADB7C0; --ink-3:#7C8792;
+      --rule:#2A333C; --rule-2:#1E262D;
+      --defense:#4FC9C1; --attack:#EC964F; --dead:#E56C5F; --risk:#DCB44F;
+      --shadow: 0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0E1216; --surface:#161B21; --sunken:#0A0D10;
+    --ink:#E4E8EC; --ink-2:#ADB7C0; --ink-3:#7C8792;
+    --rule:#2A333C; --rule-2:#1E262D;
+    --defense:#4FC9C1; --attack:#EC964F; --dead:#E56C5F; --risk:#DCB44F;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --paper:#E8EAEE; --surface:#F3F5F7; --sunken:#DEE2E7;
+    --ink:#14181D; --ink-2:#3C444E; --ink-3:#6C757F;
+    --rule:#C6CCD3; --rule-2:#DCE0E5;
+    --defense:#0F7B7C; --attack:#B2591B; --dead:#9F2E24; --risk:#96700F;
+    --shadow: 0 1px 0 rgba(20,24,29,.05), 0 1px 3px rgba(20,24,29,.06);
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 1.25rem 6rem;
+  }
+
+  .wrap { max-width: 47rem; margin: 0 auto; display: flex; flex-direction: column; gap: 2.75rem; }
+
+  a { color: inherit; text-decoration-color: var(--attack); text-underline-offset: 2px; }
+  a:hover { color: var(--attack); }
+  a:focus-visible { outline: 2px solid var(--attack); outline-offset: 3px; border-radius: 2px; }
+  p { margin: 0; }
+  strong { font-weight: 700; color: var(--ink); }
+  code { font-family: var(--display); font-size: .87em; background: var(--sunken); padding: .08em .3em; border-radius: 2px; }
+
+  .masthead { display: flex; flex-direction: column; gap: 1.1rem; padding: 3.5rem 0 0; }
+  .eyebrow {
+    font-family: var(--display); font-size: .70rem; letter-spacing: .17em;
+    text-transform: uppercase; color: var(--ink-3);
+    display: flex; flex-wrap: wrap; gap: .55rem 1.1rem;
+  }
+  .eyebrow .mark { color: var(--attack); }
+  h1 {
+    font-family: var(--display); font-size: clamp(1.85rem, 4.6vw, 2.9rem);
+    line-height: 1.08; letter-spacing: -.025em; font-weight: 600;
+    text-wrap: balance; margin: 0;
+  }
+  h1 .split { color: var(--defense); }
+  .standfirst { font-size: 1.13rem; color: var(--ink-2); max-width: 40rem; text-wrap: pretty; }
+  .byline {
+    font-family: var(--display); font-size: .72rem; letter-spacing: .09em;
+    color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: .9rem;
+  }
+
+  .bottomline {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-left: 3px solid var(--attack); border-radius: 3px;
+    padding: 1.6rem 1.7rem; display: flex; flex-direction: column; gap: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .bottomline h2 {
+    font-family: var(--display); font-size: .70rem; letter-spacing: .17em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: 0;
+  }
+  .bottomline .claim { font-size: 1.24rem; line-height: 1.42; font-weight: 600; text-wrap: pretty; }
+  .bottomline .claim + .claim { font-size: 1.05rem; font-weight: 400; color: var(--ink-2); }
+
+  nav.toc {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: .35rem 1.6rem; font-family: var(--display); font-size: .78rem;
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.1rem 0;
+  }
+  nav.toc a { display: block; color: var(--ink-2); text-decoration: none; padding: .12rem 0; }
+  nav.toc a:hover { color: var(--attack); }
+  nav.toc a .n { color: var(--ink-3); margin-right: .6rem; }
+
+  section { display: flex; flex-direction: column; gap: 1.05rem; scroll-margin-top: 1.5rem; }
+
+  h2.head {
+    font-family: var(--display); font-size: 1.32rem; line-height: 1.22;
+    letter-spacing: -.015em; font-weight: 600; margin: 1.6rem 0 0;
+    padding-bottom: .55rem; border-bottom: 2px solid var(--ink); text-wrap: balance;
+  }
+  h2.head .n { color: var(--attack); margin-right: .65rem; }
+
+  h3 {
+    font-family: var(--display); font-size: .96rem; font-weight: 600;
+    margin: 1.1rem 0 -.3rem; color: var(--ink); text-wrap: balance;
+  }
+  h3 .n { color: var(--ink-3); margin-right: .5rem; font-weight: 400; }
+
+  h4 {
+    font-family: var(--display); font-size: .72rem; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin: .8rem 0 -.4rem;
+  }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .5rem; }
+  li { padding-left: .2rem; }
+  li::marker { color: var(--ink-3); }
+
+  .chip {
+    display: inline-block; font-family: var(--display); font-size: .64rem;
+    letter-spacing: .13em; text-transform: uppercase; font-weight: 600;
+    padding: .2rem .5rem; border-radius: 2px; border: 1px solid currentColor;
+    white-space: nowrap; vertical-align: .09em;
+  }
+  .chip.cheap { color: var(--defense); }
+  .chip.mid   { color: var(--risk); }
+  .chip.dear  { color: var(--dead); }
+  .chip.novel { color: var(--attack); }
+
+  .mech {
+    display: flex; flex-direction: column; gap: .6rem;
+    padding: 1.15rem 1.25rem; background: var(--surface);
+    border: 1px solid var(--rule-2); border-radius: 3px;
+  }
+  .mech > .mech-head {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: .5rem .8rem; justify-content: space-between;
+  }
+  .mech .name { font-family: var(--display); font-weight: 600; font-size: .97rem; }
+  .mech .name .id { color: var(--ink-3); font-weight: 400; margin-right: .5rem; }
+  .mech .precedent { font-size: .93rem; color: var(--ink-2); border-left: 2px solid var(--rule); padding-left: .85rem; }
+  .mech .cost { font-size: .93rem; color: var(--ink-2); }
+  .mech .cost::before {
+    content: "Cost → "; font-family: var(--display); font-size: .68rem;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+  }
+
+  .note {
+    border-left: 3px solid var(--rule); padding: .1rem 0 .1rem 1.1rem;
+    color: var(--ink-2); display: flex; flex-direction: column; gap: .6rem;
+  }
+  .note.warn { border-left-color: var(--dead); }
+  .note.good { border-left-color: var(--defense); }
+
+  .finding {
+    background: var(--surface); border: 1px solid var(--rule-2);
+    border-top: 3px solid var(--attack); border-radius: 3px;
+    padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: .65rem;
+  }
+  .finding .tag {
+    font-family: var(--display); font-size: .66rem; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--attack); font-weight: 600;
+  }
+  .finding .title { font-size: 1.06rem; font-weight: 700; line-height: 1.38; text-wrap: pretty; }
+
+  blockquote {
+    margin: 0; display: flex; flex-direction: column; gap: .45rem;
+    padding: .9rem 1.1rem; background: var(--sunken); border-radius: 3px; font-size: .96rem;
+  }
+  blockquote p { color: var(--ink-2); }
+  blockquote cite {
+    font-family: var(--display); font-size: .68rem; letter-spacing: .11em;
+    text-transform: uppercase; font-style: normal; color: var(--ink-3);
+  }
+
+  .scroller { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 40rem; font-size: .89rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: .62rem .85rem; border-bottom: 1px solid var(--rule-2); vertical-align: top; }
+  thead th {
+    font-family: var(--display); font-size: .66rem; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--ink-3); font-weight: 600;
+    border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mname { font-family: var(--display); font-size: .82rem; font-weight: 600; white-space: nowrap; }
+  td.mname .id { color: var(--ink-3); font-weight: 400; }
+  td.st { white-space: nowrap; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  figure .scroller { padding: 1.4rem 1rem; }
+  figcaption { font-family: var(--display); font-size: .74rem; line-height: 1.5; color: var(--ink-3); }
+  svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  svg text { font-family: var(--display); }
+
+  ol.sources { font-size: .89rem; gap: .55rem; color: var(--ink-2); }
+  ol.sources li::marker { font-family: var(--display); font-size: .78rem; }
+
+  .footer {
+    font-family: var(--display); font-size: .72rem; letter-spacing: .06em;
+    color: var(--ink-3); border-top: 1px solid var(--rule); padding-top: 1.1rem; line-height: 1.7;
+  }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    .bottomline, .mech, .finding { padding: 1.1rem 1rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span class="mark">Research note</span>
+      <span>Feeds vision §12</span>
+      <span>6 August 2026</span>
+    </div>
+    <h1>Making the plan the game,<br><span class="split">and spending the simulation</span></h1>
+    <p class="standfirst">
+      How other games make a preparation phase carry the whole experience, and what a deterministic
+      simulation that resolves a match in 2.75 milliseconds can be spent on as design material rather
+      than as tooling.
+    </p>
+    <p class="byline">
+      Companion to <a href="fun-and-skill-expression.html">Why tower defense is fun, and where the skill is</a>,
+      which found that every surviving skill axis in this design lands in one phase. This note is about what to
+      put in that phase. It decides nothing.
+    </p>
+  </header>
+
+  <div class="bottomline">
+    <h2>Bottom line</h2>
+    <p class="claim">
+      The games that make a planning phase carry everything all do the same two things: they give away
+      the <em>mechanism</em> completely, and they withhold the <em>outcome</em>. Perfect information about how
+      the world works is what makes a plan a plan; perfect information about how it ends is what makes it data
+      entry.
+    </p>
+    <p class="claim">
+      A 2.75 ms deterministic match is not a faster test suite. It is a mechanic. Fourteen are catalogued
+      below, of which <strong>six have no equivalent anywhere in tower defense</strong> — the retrospective
+      review, the computed highlight reel, the field distribution, the paid oracle, the measured solvability
+      of a map, and par. The scarce resource in all of them is not compute. It is the player's attention, and
+      the discipline is spending simulation on the three matches that were close rather than on the
+      ninety-seven that were not.
+    </p>
+  </div>
+
+  <nav class="toc">
+    <a href="#s1"><span class="n">1</span>The genre this actually is</a>
+    <a href="#s2"><span class="n">2</span>Eight ways a plan phase sings</a>
+    <a href="#s3"><span class="n">3</span>The sim as design material</a>
+    <a href="#s4"><span class="n">4</span>The non-interactive run</a>
+    <a href="#s5"><span class="n">5</span>The oracle problem</a>
+    <a href="#s6"><span class="n">6</span>Ranked, and where each lands</a>
+    <a href="#s7"><span class="n">7</span>What could not be verified</a>
+  </nav>
+
+  <!-- ============ 1 ============ -->
+  <section id="s1">
+    <h2 class="head"><span class="n">1</span>The genre this actually is</h2>
+
+    <p>
+      Once the build phase carries all the skill and the resolution carries none, the useful comparisons stop
+      being tower defense games. Four other things are doing this job already, and each has solved a different
+      part of it.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>The neighbour</th><th>What it solved</th><th>What it takes from here</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mname">Path of Building</td>
+            <td>Theorycrafting as the activity — a full offline calculator for damage, defences and tree choices</td>
+            <td>The community built it themselves because the game's own tools were worse. <strong>This project can ship the planner as the game</strong> rather than watch someone else write it</td>
+          </tr>
+          <tr>
+            <td class="mname">Zachtronics</td>
+            <td>Turning a finished solution into a comparison — histograms across cost, cycles and space</td>
+            <td>Competing metrics, deliberately in tension; and comparison without a leaderboard</td>
+          </tr>
+          <tr>
+            <td class="mname">Football Manager</td>
+            <td>A match you configure and then watch, with highlight density and a post-match apparatus</td>
+            <td>The entire problem of §4 — how a non-interactive resolution stays worth attending</td>
+          </tr>
+          <tr>
+            <td class="mname">Into the Breach</td>
+            <td>Perfect information about enemy intent, so a turn becomes a puzzle rather than a gamble</td>
+            <td>The rule about <em>which</em> information is safe to give away — §5</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      None of them is a tower defense. All of them are planning games with a computed resolution, which is what
+      this design has become.
+    </p>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section id="s2">
+    <h2 class="head"><span class="n">2</span>Eight ways a plan phase sings</h2>
+
+    <p>
+      Mechanisms, each with the shipped precedent that proves it works. These are about making the decision
+      good. §3 is about making the <em>information</em> good, and they are different problems.
+    </p>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P1</span>Give away the mechanism entirely</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p class="precedent">
+        Into the Breach telegraphs every enemy attack and every damage number; the player knows turn order,
+        resource state and map completely. The designers describe it as a puzzle game wrapped in a strategy
+        game, and the argument for why it works is about blame: when everything was knowable,
+        <em>"the only cause of failure becomes the players themselves"</em>, which is what makes a loss feel
+        earned instead of arbitrary.
+      </p>
+      <p class="cost">
+        Nearly nothing, and it is the single highest-value thing on this list. Range overlays, damage previews,
+        the arithmetic done for the player, the purchase shown against what it replaces. It moves difficulty
+        from arithmetic to judgement, which is where it belongs.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P2</span>The public shared offering</span>
+        <span class="chip cheap">Cheap · adopted</span>
+      </div>
+      <p class="precedent">
+        Mechabellum offers four reinforcements a round — unit, specialist, equipment, skill — take one or skip
+        for supplies, and already-taken cards never return. The load-bearing detail is that
+        <strong>both players see the same four</strong>; its own community's phrasing is that this
+        <em>"becomes a bit of a mind game"</em>. Choosing what your opponent also needs is a strictly better
+        decision than choosing what you need.
+      </p>
+      <p class="cost">
+        A shared seed and an exclusion list. The vision adopted this on 6 August 2026; what remains is the
+        offering's width and whether skipping pays.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P3</span>Scouting, and stale scouting</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p class="precedent">
+        Teamfight Tactics makes scouting a taught skill with its own hotkeys: you read boards to decide
+        itemisation, positioning and whether to commit to a composition, and the guidance is explicitly about
+        contest — take the units your opponents need, build the defence their damage type does not beat.
+      </p>
+      <p class="cost">
+        Free in the lobby, where the board is already on the server. <strong>The stale variant is the more
+        interesting design</strong>: showing the opponent's board as of the previous round prices change, so
+        what they had is evidence rather than truth, and shifting your build to deny a read becomes possible.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P4</span>Metered picks paid for inside the simulation</span>
+        <span class="chip mid">Medium</span>
+      </div>
+      <p class="precedent">
+        Element TD meters eleven element picks across fifty waves, and every pick after the first summons a
+        boss you must kill before the element unlocks. The depth research called this the most transferable
+        mechanism in its whole survey and the thing nobody cites about the game: the tech choice is paid for
+        <em>in the match</em>, not chosen in a menu.
+      </p>
+      <p class="cost">
+        A wave type and an unlock gate. It composes directly with the vision's variance anchor schedule — an
+        anchor wave that both unlocks something and demands something is one mechanism, not two.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P5</span>Commit under a clock, resolve without one</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p class="precedent">
+        Every simultaneous-turn game in the survey runs a build timer. It is what converts an optimisation
+        problem into a decision — the difference between chess and correspondence chess. It is also the direct
+        antidote to the analysis paralysis that §3's information richness will otherwise cause.
+      </p>
+      <p class="cost">
+        A timer, and in the async mode a deliberate absence of one. The two modes should differ here as they
+        differ on information.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P6</span>The plan is a document you can hold</span>
+        <span class="chip mid">Medium</span>
+      </div>
+      <p class="precedent">
+        Path of Building's whole existence is the evidence: players plan in an offline calculator, away from
+        the game, because it gives breakdowns the game does not — and then share the plan as a link. The
+        planning artefact became the community's unit of currency.
+      </p>
+      <p class="cost">
+        This project's records are already content-addressed and self-contained. <strong>A build is therefore
+        already a shareable object</strong>; what is missing is a screen that treats it as one. Named builds,
+        saved openings, a line you can send a friend.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P7</span>Two things to spend, and they compete</span>
+        <span class="chip cheap">Cheap · adopted</span>
+      </div>
+      <p class="precedent">
+        The reversal to two purses is what makes the build phase two builds rather than one build and a tax.
+        The competitive precedent is unanimous — Legion TD 2 and Bloons TD Battles 2 both make the attacking
+        purchase return something — and the point for <em>this</em> section is narrower: a phase with one
+        budget has one shape of decision in it, and a phase carrying an entire game needs more than one.
+      </p>
+      <p class="cost">
+        Adopted 6 August 2026. The open part is the cross-feed.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">P8</span>Placement that is a decision, not a location</span>
+        <span class="chip dear">Expensive · adopted</span>
+      </div>
+      <p class="precedent">
+        The mazing literature is blunt about the size of this: a creep crossing a board in a straight line
+        spends about two seconds under fire, and the same board folded into a switchback puts it under fire for
+        twelve, from both sides, with no extra gold spent. Elevation compounds it — the common shipped form is
+        <em>+1 range per elevation level</em>, which makes <em>where</em> and <em>what</em> one decision.
+      </p>
+      <p class="cost">
+        Real. Deterministic pathfinding in the hot loop, a third coordinate in the record, a format version and
+        a retired ghost pool. Adopted anyway, because it restores the axis the genre was popularised on.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section id="s3">
+    <h2 class="head"><span class="n">3</span>The sim as design material</h2>
+
+    <p>
+      <code>BudgetTests</code> times the committed match at <strong>2.75 ms</strong> — about 360 matches a
+      second on one core. Everything below follows from taking that number seriously as a <em>content</em>
+      budget rather than a test budget. A run against a hundred stored defenses is under a second. A
+      counterfactual is one match. A thousand-sample forecast is three seconds.
+    </p>
+    <p>
+      Six of these have no equivalent in tower defense, marked accordingly. That is not because nobody thought
+      of them; it is because a genre built on floating-point, frame-rate-dependent simulations cannot re-run
+      anything and get the same answer twice.
+    </p>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D1</span>A distribution instead of a result</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        Your composed wave is run against a sample of the field, and you are told its mean and its spread — not
+        a verdict against one opponent. <strong>Reward the best you achieved and the average separately</strong>,
+        because peak play and robust play are different skills and a player optimising one will do worse at the
+        other.
+      </p>
+      <p class="precedent">
+        That tension is SpaceChem's, deliberately: it shipped three competing metrics because
+        <em>"players optimizing for one criterion often do poorly in the others"</em>, which is what stops a
+        single dominant solution. Two metrics in tension is a meta all by itself — a greedy spike build and a
+        boring reliable one can both be correct, and they are not the same player.
+      </p>
+      <p class="cost">A sweep and two columns. It is the cheapest genuinely new thing on this list.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D2</span>Retrospective review — a chess engine for tower defense</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        Re-running a finished match with one purchase changed costs one match. So after a run, every build
+        phase can be re-resolved against every alternative that was affordable at the time, and the swing
+        reported: <em>wave 7, the sniper instead of the tank was worth fourteen points of clear
+        probability.</em> Move classification, an accuracy figure, a marked blunder.
+      </p>
+      <p class="precedent">
+        Chess.com's Game Review is the model and also the warning — its accuracy metric is contested, has been
+        silently recalibrated, and occasionally decorates ordinary moves as brilliant. <strong>The lesson is to
+        report the swing and let the player judge it</strong>, rather than to grade them with a number whose
+        derivation they cannot see.
+      </p>
+      <p class="cost">
+        Compute is trivial. The design cost is real: this is the most powerful teaching tool available here and
+        the fastest possible route to a solved meta, because a tool that names the best move every time
+        eventually publishes the book. Ship it for your own runs; think hard before ranking with it.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D3</span>The computed highlight reel</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        Because the whole match resolves before anything is drawn, <strong>the moments worth watching can be
+        chosen rather than recorded.</strong> Salience is a computation over a finished match: the tick where
+        the outcome was closest to flipping, the first leak, the largest single swing in remaining health, the
+        shot with the highest marginal contribution to the result.
+      </p>
+      <p>
+        This is the single most valuable consequence of determinism for presentation, and it inverts the normal
+        relationship between a camera and a match. Nothing has to be captured. The director knows the ending.
+      </p>
+      <p class="precedent">
+        Football Manager 26's Dynamic Highlight Mode does the human version — it varies how many highlights it
+        shows based on the context of the match, and lets the viewer pick extended action or key moments only.
+        It cannot compute salience, because its match engine is not re-runnable. This one can.
+      </p>
+      <p class="cost">A salience function over an existing event stream, and a camera that reads it.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D4</span>The paid oracle</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        Simulation offered to the player as a <em>resource</em>. Three test runs per build phase; a fourth
+        costs gold. A cheap forecast returns a coarse answer — <em>likely to clear</em> — and an expensive one
+        returns the distribution. Suddenly <em>how much do I need to know before I commit?</em> is a purchase
+        competing with a tower.
+      </p>
+      <p>
+        This is the most interesting idea in the note and the one with no precedent at all, because no other
+        game can afford to sell simulation by the unit. It also solves §5 by construction: the forecast is
+        partial because the player chose not to pay for more of it.
+      </p>
+      <p class="cost">
+        A currency sink, a sampling rule, and a UI that shows an uncertain answer honestly. Design risk is
+        analysis paralysis; P5's clock is the counterweight.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D5</span>Placement against the aggregate</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p>
+        Your result shown as a histogram against everybody who reached the same stage, rather than as a rank.
+      </p>
+      <p class="precedent">
+        SpaceChem replaced global leaderboards with histograms for two stated reasons, both of which apply
+        here exactly. Cheating: <em>"getting your name at the top of the leaderboards is a fantastic incentive
+        for cheating"</em> — and a server that re-simulates every claim has already paid for the other half of
+        that problem. And morale: <em>"for most players, the only thing a global leaderboard manages to tell
+        you is that you suck (and not even by how much)."</em> Zachtronics found players set themselves
+        improvement targets off the histogram unprompted.
+      </p>
+      <p class="cost">A count per bucket per stage. Trivially small, and it composes with D1's two metrics.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D6</span>Par, computed</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        The harness can sweep a stage and report what the best line it found achieves. That is a par — a
+        difficulty rating derived from the game rather than asserted about it, refreshed automatically when
+        content changes, and available on day one when no player population exists to derive it from.
+      </p>
+      <p class="cost">
+        A sweep mode and a search. The honest caveat is that a harness's best line is only as good as its
+        search, so par is a floor on difficulty rather than a truth.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D7</span>Solvability, measured</span>
+        <span class="chip novel">No genre equivalent</span>
+      </div>
+      <p>
+        "A maze that is far less solvable" is a design goal that sounds like taste and is not. Sweep many good
+        plans against a map and report the <strong>spread of outcomes across them</strong>. A map where every
+        competent plan scores the same is solved. A map where competent plans diverge has decisions in it.
+      </p>
+      <p>
+        This is the instrument the maze reversal needs, and it should exist before the map content does — the
+        same argument that pulled the balance harness forward to step 4.
+      </p>
+      <p class="cost">The existing sweep, pointed at maps instead of units. One more CSV column.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D8</span>The eval bar</span>
+        <span class="chip mid">Medium</span>
+      </div>
+      <p>
+        Chess's win-probability strip, for a wave. Re-simulate forward from each tick against the sampled
+        field and draw the result as a curve under the board — so a wave that looked calm but was one unit from
+        collapsing <em>looks</em> like that.
+      </p>
+      <p class="cost">
+        Real compute during watch, and a genuine hazard: an eval bar tells the viewer the ending early and can
+        drain the tension it was meant to show. Better as a post-match overlay than a live one.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D9</span>The ghost of your own best</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p>
+        Trackmania's medal ghost, applied to a stage: your own best defense at that stage, stored, as an
+        opponent. It gives the solo player a graded ladder with no service behind it, and it gives the pool a
+        useful floor of hand-shaped opponents at every stage — which the cold-start problem needs anyway.
+      </p>
+      <p class="cost">Nothing new. A ghost record is a ghost record.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D10</span>The position as a puzzle you can send</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p>
+        Records are content-addressed and self-contained, so any position is already a portable challenge:
+        <em>here is the board and the budget I had at wave 12 — beat my result.</em> A daily seeded stage is
+        the same object with a schedule attached, and it is Slay the Spire's daily, which the vision already
+        cites for a different reason.
+      </p>
+      <p class="cost">A share button and a route. The format work is done.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D11</span>Counterfactual scrubbing in the plan phase</span>
+        <span class="chip mid">Medium</span>
+      </div>
+      <p>
+        Seeking already re-simulates rather than caching, which means the machinery for
+        <em>"show me this again with one thing different"</em> is present. Hovering a purchase could show the
+        wave you are about to face resolved both ways, side by side.
+      </p>
+      <p class="cost">
+        Interface, mostly. Also the closest thing here to the oracle problem in §5 — this is the feature that
+        most needs to be sampled or paid for rather than free.
+      </p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D12</span>Commentary derived from events</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p>
+        Match events are already decorative and already emitted. A line of text attached to the three salient
+        moments — <em>"the third wall held for four ticks longer than it needed to"</em> — is the cheapest
+        possible presence layer, and presence is what the social seam exists to manufacture.
+      </p>
+      <p class="cost">A template table over an event stream that exists.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D13</span>Attribution — which purchase actually did the work</span>
+        <span class="chip mid">Medium</span>
+      </div>
+      <p>
+        Damage dealt per tower is a DPS meter and mostly a lie, because it rewards whoever landed the last hit
+        on something that was already dying. The re-runnable version is honest:
+        <strong>remove one tower and re-simulate.</strong> The difference is that tower's actual contribution,
+        and it will disagree with the damage numbers in ways that teach.
+      </p>
+      <p class="cost">One match per tower. On a twelve-tower board that is 33 ms.</p>
+    </div>
+
+    <div class="mech">
+      <div class="mech-head">
+        <span class="name"><span class="id">D14</span>The sweep as a content check, not a balance check</span>
+        <span class="chip cheap">Cheap</span>
+      </div>
+      <p>
+        The companion note's warning applies here too: a sweep finds outliers, and removing outliers
+        repeatedly converges on a roster where nothing matters. <strong>The target is not a flat win-rate
+        table but one where every unit has both a strong and a weak column</strong> — a unit with no bad
+        matchup is as much a failure as one with no good matchup.
+      </p>
+      <p class="cost">Two columns on a CSV that already exists.</p>
+    </div>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section id="s4">
+    <h2 class="head"><span class="n">4</span>The non-interactive run</h2>
+
+    <p>
+      The criticism is real and it is levelled at every auto-battler: the player places units and then watches
+      a fight they cannot affect, and the standard complaint is that battles need more to look at and more to
+      decide. The genre's own answer is circular — make the preparation good enough that the resolution is
+      satisfying to watch — and it is only half true. The other half is that the resolution has a job, and the
+      job is to <em>pay</em> the player for having thought.
+    </p>
+
+    <figure>
+      <div class="scroller">
+        <svg viewBox="0 0 760 210" role="img" aria-label="Diagram: one hundred matches resolve in under a second, a salience filter selects three, and only those three are shown to the player, followed by a dashboard.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <g fill="none" stroke-width="1.5">
+            <rect x="20" y="60" width="150" height="66" rx="3" style="stroke:var(--rule)" fill="var(--surface)"/>
+            <rect x="236" y="60" width="150" height="66" rx="3" style="stroke:var(--attack)" fill="var(--surface)"/>
+            <rect x="452" y="60" width="140" height="66" rx="3" style="stroke:var(--defense)" fill="var(--surface)"/>
+            <rect x="640" y="60" width="100" height="66" rx="3" style="stroke:var(--rule)" fill="var(--surface)"/>
+          </g>
+
+          <g style="color:var(--rule)" stroke="currentColor" stroke-width="1.5" fill="none">
+            <line x1="170" y1="93" x2="228" y2="93" marker-end="url(#a2)"/>
+            <line x1="386" y1="93" x2="444" y2="93" marker-end="url(#a2)"/>
+            <line x1="592" y1="93" x2="632" y2="93" marker-end="url(#a2)"/>
+          </g>
+
+          <g font-size="12.5" font-weight="600" text-anchor="middle" style="fill:var(--ink)">
+            <text x="95"  y="88">RESOLVE 100</text>
+            <text x="311" y="88">RANK BY SALIENCE</text>
+            <text x="522" y="88">SHOW 3</text>
+            <text x="690" y="88">DASHBOARD</text>
+          </g>
+          <g font-size="10.5" text-anchor="middle" style="fill:var(--ink-3)">
+            <text x="95"  y="107">&lt; 1 second, unseen</text>
+            <text x="311" y="107">closest call · first leak</text>
+            <text x="311" y="120">biggest swing</text>
+            <text x="522" y="107">the ones decided</text>
+            <text x="522" y="120">by one unit</text>
+            <text x="690" y="107">mean · spread</text>
+            <text x="690" y="120">placement</text>
+          </g>
+
+          <g font-size="10.5" letter-spacing="1.3" font-weight="600" text-anchor="middle">
+            <text x="95"  y="40" style="fill:var(--ink-3)">COMPUTE</text>
+            <text x="311" y="40" style="fill:var(--attack)">THE DIRECTOR KNOWS THE ENDING</text>
+            <text x="600" y="40" style="fill:var(--defense)">ATTENTION</text>
+          </g>
+
+          <g style="color:var(--rule-2)" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3">
+            <line x1="418" y1="24" x2="418" y2="160"/>
+          </g>
+          <g font-size="10" style="fill:var(--ink-3)">
+            <text x="24" y="178">Cheap and unlimited</text>
+            <text x="430" y="178">Scarce — the only real budget</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        The inversion determinism buys. Every other game records a match and then decides what to show;
+        this one can resolve the whole field first and show only what turned out to matter. Compute sits on the
+        left of the dashed line and is effectively free. The player's attention sits on the right and is not.
+      </figcaption>
+    </figure>
+
+    <h3>Five things to do with the watch phase</h3>
+
+    <ul>
+      <li>
+        <strong>Do not show ninety-seven of them.</strong> Resolve the field instantly, then spend the watching
+        time only on the matches that were close — the two that came down to one unit, and the one you lost
+        worst. This is the whole idea, and it needs D3 to pick them.
+      </li>
+      <li>
+        <strong>Let the viewer set the density.</strong> Football Manager 26 varies highlight count by match
+        context and lets the viewer choose extended or key-moments-only. A run that is going well should be
+        watchable in twenty seconds; a run on a knife edge should be watchable in five minutes. Same match,
+        same record.
+      </li>
+      <li>
+        <strong>Show the near-miss explicitly.</strong> The most interesting fact about a wave you cleared is
+        often how nearly you did not. That is a computable quantity — how much less would have been needed —
+        and displaying it converts a boring win into a story.
+      </li>
+      <li>
+        <strong>Make the dashboard the destination, not the consolation.</strong> Mean and spread against the
+        field, placement histogram, per-tower true contribution from D13, and the two rewards from D1. If the
+        watching is optional, the dashboard has to be worth arriving at on its own.
+      </li>
+      <li>
+        <strong>Keep the scrub.</strong> Seeking already re-simulates, which means the player can already
+        rewind and answer <em>why did that happen</em> at their own pace. That is a rare capability and it
+        turns the resolution from a cutscene into an inspectable object.
+      </li>
+    </ul>
+
+    <div class="note good">
+      <p>
+        Nothing here asks for in-wave input, so none of it threatens the submission barrier or the stored
+        ghost. The run stays non-interactive; what changes is that it stops being a fixed-length video and
+        becomes a <em>queryable result</em> with a recommended viewing.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section id="s5">
+    <h2 class="head"><span class="n">5</span>The oracle problem</h2>
+
+    <div class="finding">
+      <span class="tag">The one real hazard</span>
+      <p class="title">A simulation that answers everything deletes the game.</p>
+      <p>
+        Every mechanism in §3 gives the player more certainty before they commit. Taken to its limit that is
+        not a strategy game; it is data entry against a solver. The failure would arrive quietly and look like
+        a feature the whole way in.
+      </p>
+      <p>
+        Into the Breach is the calibration point and the distinction is exact: it gives perfect information
+        about <strong>mechanism</strong> — what each enemy will do next turn, what every number is — and none
+        at all about <strong>outcome</strong>. You know precisely what happens if you do X. You do not know
+        whether the run survives.
+      </p>
+    </div>
+
+    <p>
+      That yields a usable rule, and it is the thing this note most wants to hand to seam 1:
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Kind of information</th><th>Give it away</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mname">Mechanism</td>
+            <td class="st"><span class="chip cheap">Freely</span></td>
+            <td>Ranges, damage, armour, tick order, what a unit does. Hiding these buys difficulty made of ignorance, which is the worst kind</td>
+          </tr>
+          <tr>
+            <td class="mname">The field</td>
+            <td class="st"><span class="chip mid">Sampled</span></td>
+            <td>Mean and spread against many defenses, never the specific opponents. Uncertainty comes from breadth, not from dice</td>
+          </tr>
+          <tr>
+            <td class="mname">A specific outcome</td>
+            <td class="st"><span class="chip dear">Paid or never</span></td>
+            <td>"Does this exact wave beat that exact defense" is the solver query. Sell it (D4) or withhold it</td>
+          </tr>
+          <tr>
+            <td class="mname">The best line</td>
+            <td class="st"><span class="chip dear">After, not during</span></td>
+            <td>D2's review is a teaching tool in retrospect and a cheat sheet in advance. The tense is the whole design</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note good">
+      <p>
+        <strong>The design already contains its own antidote, and it should be recognised as one.</strong> The
+        round-robin measures a wave against many defenses, so the honest answer to <em>what does this do?</em>
+        is a distribution rather than a number — not because anything is hidden or random, but because the
+        question has many answers. That is the only form of uncertainty compatible with a deterministic,
+        re-simulable, server-verifiable game, and it is worth protecting deliberately rather than by accident.
+      </p>
+    </div>
+
+    <h3>Three smaller risks, named</h3>
+    <ul>
+      <li>
+        <strong>Analysis paralysis.</strong> Rich information plus no clock is a build phase that takes eleven
+        minutes. P5's timer is the counterweight, and the async mode deliberately not having one is a choice
+        that should be made rather than defaulted into.
+      </li>
+      <li>
+        <strong>The review publishes the book.</strong> D2 is the fastest route to a solved meta anyone has
+        ever handed a community. Shipping it for your own runs is a teaching tool; wiring it into the ladder is
+        a speedrun to the one correct opening.
+      </li>
+      <li>
+        <strong>Dashboards can crowd out the game.</strong> Everything in §3 is an interface, and
+        <a href="fun-and-skill-expression.html">the skill note's</a> two-board finding already says attention
+        is the constraint. A screen that shows all fourteen is worse than one that shows three.
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section id="s6">
+    <h2 class="head"><span class="n">6</span>Ranked, and where each lands</h2>
+
+    <p>
+      Ordered by value per unit of cost, against the build order the vision already sequences. Nothing here
+      needs an engine until the row says so.
+    </p>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Mechanism</th><th>Why this rank</th><th>Lands at</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="mname"><span class="id">D14</span> Both-columns sweep</td><td>Two CSV columns; stops the flattening failure before the roster exists</td><td>Step 4 — the harness</td></tr>
+          <tr><td>2</td><td class="mname"><span class="id">D7</span> Solvability</td><td>The instrument the maze reversal needs, and it should exist before the maps do</td><td>Step 4 — the harness</td></tr>
+          <tr><td>3</td><td class="mname"><span class="id">D1</span> Field distribution</td><td>A sweep and two rewards; makes the async mode a different game from the lobby</td><td>Step 4, used at step 6</td></tr>
+          <tr><td>4</td><td class="mname"><span class="id">P1</span> Give away mechanism</td><td>Highest value per unit of effort on the list; nearly free once there is a screen</td><td>Step 5 — the client</td></tr>
+          <tr><td>5</td><td class="mname"><span class="id">D13</span> True attribution</td><td>33 ms; disagrees usefully with damage numbers; teaches immediately</td><td>Step 4 or 5</td></tr>
+          <tr><td>6</td><td class="mname"><span class="id">D3</span> Computed highlights</td><td>The presentation payoff of determinism, and what makes 100 opponents watchable</td><td>Step 6 onward</td></tr>
+          <tr><td>7</td><td class="mname"><span class="id">D5</span> Histograms</td><td>Cheap, cheat-resistant, motivating; needs a population, so it waits on the service</td><td>Seam 5</td></tr>
+          <tr><td>8</td><td class="mname"><span class="id">D2</span> Retrospective review</td><td>The most distinctive thing available; also the one with a real downside</td><td>After step 6, deliberately</td></tr>
+          <tr><td>9</td><td class="mname"><span class="id">D4</span> The paid oracle</td><td>The best untested idea here. Needs a purse and a clock first</td><td>Seam 1 decides; step 5 builds</td></tr>
+          <tr><td>10</td><td class="mname"><span class="id">D6</span>/<span class="id">D9</span>/<span class="id">D10</span></td><td>Par, self-ghosts and shareable positions — all near-free, none urgent</td><td>Opportunistic</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h4>The two decisions this note would put in front of seam 1</h4>
+    <ol>
+      <li>
+        <strong>What can the player compute before committing, and what does it cost them?</strong> This is now
+        question 5 on the step 1 checklist. The answer determines whether §3 is a set of mechanics or a solver.
+      </li>
+      <li>
+        <strong>Is the round-robin's reward the best, the average, or both?</strong> Both is the interesting
+        answer and it is SpaceChem's, but it defines what the ladder measures — and therefore what everyone
+        optimises — so it is not a UI decision.
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section id="s7">
+    <h2 class="head"><span class="n">7</span>What could not be verified</h2>
+    <ul>
+      <li>
+        <strong>The 2.75 ms figure is inherited, not re-measured here</strong>, and every compute claim in §3
+        is arithmetic on it. It was measured on the committed match, on the development laptop, with four unit
+        types and one wave. A maze, pathfinding, elevation and a ten-unit roster will all make it worse, and
+        <code>FlyProjectiles</code> is already known to be <strong>O(projectiles × creeps)</strong>. Nothing
+        here should be planned against 2.75 ms without re-measuring after the maze lands.
+      </li>
+      <li>
+        <strong>Mechabellum's card system was read from community wikis and guides, not from the game.</strong>
+        The load-bearing claim — that both players see the same reinforcement options — comes from a player
+        description rather than a developer statement, and it should be confirmed before the shared offering is
+        built on it.
+      </li>
+      <li>
+        <strong>"No genre equivalent" is a claim about what searching found</strong>, across tower defense and
+        auto-battlers. It is a weaker claim than it sounds: a mechanic can exist in a game nobody wrote about.
+      </li>
+      <li>
+        <strong>D4, the paid oracle, has no precedent at all</strong>, which is the reason it is interesting
+        and the reason it is ranked ninth rather than first. Nothing in this survey tells you whether selling
+        simulation by the unit is fun; only a prototype does.
+      </li>
+      <li>
+        <strong>The Football Manager and chess.com material came from search extracts and support pages</strong>
+        rather than from playing either. The highlight-density and review-accuracy claims are directionally
+        safe and numerically unverified.
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ sources ============ -->
+  <section id="sources">
+    <h2 class="head">Sources</h2>
+    <ol class="sources">
+      <li><a href="https://www.gamedeveloper.com/design/postmortem-zachtronics-industries-i-spacechem-i-">Postmortem: Zachtronics Industries' SpaceChem</a>. Why global leaderboards were rejected, what histograms solve, and why three competing metrics were shipped on purpose.</li>
+      <li><a href="https://steamcommunity.com/app/558990/discussions/0/2381701715716278004/">Opus Magnum — the three optimisation categories</a>: cost, cycles and space, shown as histograms against the aggregate.</li>
+      <li><a href="https://jeremiahgames.com/2019/03/04/perfect-information-the-killer-feature-of-slay-the-spire-and-into-the-breach/">Perfect information: the killer feature of Slay the Spire and Into the Breach</a>. Why telegraphing turns a turn into a puzzle, and what it does to blame.</li>
+      <li><a href="https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i-">Road to the IGF: Subset Games' Into the Breach</a>, and <a href="https://blogofarcanesecrets.wordpress.com/2018/03/09/into-the-breach-and-dynamic-puzzles/">a design reading of it</a>. Exactly what the player is told and what they are not.</li>
+      <li><a href="https://wiki.mbxmas.com/cards/">Mechabellum — reinforcements</a> and <a href="https://mechamonarch.com/guide/mechabellum-card-guide/">a card guide</a>. Four choices a round, skip for supplies, exclusion on taken cards — and the same options shown to both sides.</li>
+      <li><a href="https://mobalytics.gg/blog/tft/how-to-improve-scouting-tft/">Teamfight Tactics — improving your scouting</a> and <a href="https://www.thegamer.com/teamfight-tactics-scout-system-explained-guide/">the scout system explained</a>. Between-round reads driving itemisation, positioning and contest.</li>
+      <li><a href="https://www.footballmanager.com/fm26/features/where-storytelling-evolves-fm26s-match-day-experience">Football Manager 26 — match day</a> and <a href="https://community.sports-interactive.com/sigames-manual/football-manager-2024-touch-and-console/playing-a-match-r4990/">the FM24 match manual</a>. Dynamic Highlight Mode, extended versus key moments, and what fills the gaps.</li>
+      <li><a href="https://github.com/PathOfBuildingCommunity/PathOfBuilding">Path of Building</a> and <a href="https://pathofbuilding.net/what-is-the-path-of-building/">what it is for</a>. A community-built offline planner that outgrew the game's own tools.</li>
+      <li><a href="https://support.chess.com/en/articles/8584089-how-does-game-review-work">Chess.com — how Game Review works</a> and <a href="https://www.chess.com/blog/DSTirana1/why-the-game-review-is-not-very-helpful">a critique of it</a>. The model for D2, and the warning about grading with an opaque number.</li>
+      <li><a href="https://maultactics.gg/articles/mazing-guide">Maul Tactics — the complete guide to maze tower-defense</a>. The two-seconds-to-twelve switchback figure behind P8.</li>
+      <li><a href="https://steamcommunity.com/sharedfiles/filedetails/?id=637133974">Combat basics: elevation</a>, and the tower-defense elevation patterns surveyed alongside it. The <em>+1 range per elevation level</em> shape.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Auto_battler">Auto battler</a>, plus the developer and player critiques gathered with it. The non-interactive-resolution complaint, stated by the people making it.</li>
+      <li>This repository — <code>docs/vision.md</code> §12, <code>sim/</code>, <code>simcli/</code>, the ADRs on seeking, records and match events, and the <code>BudgetTests</code> 2.75 ms measurement every compute claim in §3 rests on.</li>
+      <li><a href="fun-and-skill-expression.html">Why tower defense is fun, and where the skill is</a> — the companion note, and the source of the finding that every surviving skill axis lands in one phase.</li>
+    </ol>
+  </section>
+
+  <p class="footer">
+    Decision input for seams 1, 4 and 7 · decides nothing · feeds
+    <a href="../vision.md">§12 of the vision</a>, which is current where this disagrees with it.
+  </p>
+
+</div>
