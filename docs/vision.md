@@ -156,34 +156,56 @@ ghosts only because of the per-wave draw above. A defense in the pool is a snaps
 to play itself, never has to replay a build order chosen against a different wave, and never has to follow a
 policy you authored. **It is finished, at that stage, forever.**
 
-### Two purses — *reversed 6 August 2026*
+### One purse — *restored 6 August 2026*
 
-**Two currencies, one for the defense and one for the offense.** Both halves are a build you develop across a
-run, and neither is funded by starving the other.
+**One currency, called sauce. Every coin of income lands as sauce, and sauce buys the defense and the offense
+alike.**
 
-This reverses the single purse, which stood until now as "the sharp decision this game is built around". The
-reasons it fell are on file and they converged:
+This reverses the two purses adopted earlier the same day, and restores the single purse — but **not the
+argument the single purse used to rest on.** It stands now for a reason it did not have that morning, and the
+distinction is the whole of this section.
 
-- **The research said the genre is two-currency for a reason.**
-  [The sending research](research/attack-composition-and-sending.md) found Legion TD 2's send loop is
-  *two-currency* — gold buys workers, workers make mythium, mythium buys mercenaries, and spending mythium
-  **permanently raises your income** — so every send is an investment that pays you back. Under one purse a
-  coin spent attacking is simply gone, which makes attacking a pure tempo loss and, at equilibrium,
-  **dominated**.
-- **Restated as skill expression, it was worse than a balance problem.**
-  [The skill note](research/fun-and-skill-expression.html) found that economy is the axis competitive tower
-  defense is actually built on, and that **a purchase which only ever subtracts has no timing question
-  attached to it — and timing is what players practise.** One purse did not make the economy hard to balance;
-  it removed the dial players get good at.
-- **It contradicted the ambition of an offense as deep as the defense.** §3 asks for the attacking half to be
-  a build. A build needs its own budget, or it is a tax on the other build.
+**Why two purses were adopted.** [The sending research](research/attack-composition-and-sending.md) found the
+genre's deep send systems are two-currency, and that under one purse a coin spent attacking is simply gone —
+which makes attacking a pure tempo loss and, at equilibrium, **dominated**.
+[The skill note](research/fun-and-skill-expression.html) restated it as something worse than a balance problem:
+**a purchase which only ever subtracts has no timing question attached to it, and timing is what players
+practise.**
 
-What is *lost* is real and should be named: one purse made each build phase one sharp decision rather than two
-small independent ones, and it made *what an opponent spent on* legible at a glance. Two purses buy that back
-only if the two economies interact — so **the cross-feed is now the design question**, and it replaces the
-payback question that used to block step 1. The known-good shapes are Legion TD 2's (one currency buys the
-generator for the other) and Bloons TD Battles 2's (the send is the income). A pair of fully independent
-wallets is the failure mode to avoid: that really is two unrelated shopping trips.
+**Why one purse survives anyway.** Read closely, neither objection is to the single wallet. Both are to a
+*missing payback*. A second currency was one way to supply it. It is not the only way, and it is not the
+cheapest:
+
+- **Attacking pays back through performance, not through a second wallet.** Income is a flat base per wave,
+  **plus a bonus on top of that base** paid in non-linear percentile bands, measured over two distributions:
+  how your creep wave performed, and how your defense performed, each against the field. A wave that does well
+  pays you for having sent it. The payback the research demanded is present; the currency it was going to
+  arrive in is not.
+- **The offense is separated by a gate, not by a budget.** Each round offers a selection of choices, and taking
+  one **unlocks a creep permanently for the run** — free to unlock, paid to buy. What you may field is bounded
+  by what you have unlocked, not by which wallet you remembered to save into.
+- **Scarcity comes from wave slots.** A wave has a limited number of slots, and that number grows each round. A
+  slot is one creep type plus a count, and slots may be left empty. **A slot spent on a cheap column is a slot
+  not spent on a heavy unit** — which is precisely the opportunity cost the second wallet was there to
+  manufacture.
+- **Timing comes from interest.** Unspent sauce banks and earns **10% a wave, rounded up**, uncapped for now.
+  Every purchase is therefore measured against compounding, and leaving a slot empty is not waste but
+  investment. That is the dial the skill note said one purse had removed, and it is now attached to every
+  purchase in the game rather than to one of two wallets.
+
+**And it buys back what two purses cost.** Each build phase is one decision over one wallet again, rather than
+two small independent ones — the loss named on the morning the two purses were adopted.
+
+**No money moves between players.** Denial — Legion TD 2's rule that leaking pays the attacker — is
+deliberately rejected. The coupling between players is **statistical**: you are paid against the field's
+distribution, never against a named opponent, and that reads the same whether the field is one lobby or a
+global population. The bands are **progressive and never negative**: performing below average earns a smaller
+bonus, never a penalty.
+
+Decided in [#72](https://github.com/ssalter21/tower-defense-game/issues/72), which holds the detail. The
+numbers — base, band thresholds, slot count and growth, creep costs — are step 4 sweeps rather than arguments.
+One consequence worth carrying: **the bonus is not computable until step 4**, because a distribution needs a
+field, so steps 1 to 3 pay the base alone and should not read a zero bonus as a fault.
 
 ### Depth is the point
 
@@ -591,7 +613,7 @@ Steps 1 to 4 need no engine, no licence and no editor. They run from a shell.
 
 | # | Step | What it delivers | Size |
 |---|---|---|---|
-| 1 | **Cost column, ~~one purse~~ two purses and their cross-feed, income between waves** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file | Small |
+| 1 | **Cost column, one purse, wave slots, and income between waves** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file | Small |
 | 2 | **A run is N waves, with a build phase between, recorded as a command stream** | `Match` gains a lifecycle; the record gains `(wave index, decision)` pairs, which is what a build phase *is* from the record's point of view; `simcli` gains a mode that plays a command file | Medium — the real structural work |
 | 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small — see [§5](#5-how-it-is-balanced) |
@@ -607,12 +629,14 @@ which are worth nothing if the answer to the cheap ones was no.
 
 ### Three obligations the sequence carries
 
-- **Step 1 must decide how the two purses feed each other**, on the day they are added rather than after.
-  *(Superseded 6 August 2026: this obligation used to read "how an attack purchase pays back", which was the
-  one-purse form of the same problem.)* Two wallets that never touch is two unrelated shopping trips; the
-  known-good shapes are Legion TD 2's — one currency buys the *generator* for the other — and Bloons TD
-  Battles 2's, where the send and the income are the same purchase on one dial.
-  [The sending research](research/attack-composition-and-sending.md) still holds the survey.
+- **Step 1 inherits a decided economy, and must build the whole of it rather than the easy half.**
+  *(Discharged 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72). This
+  obligation has now read three ways — "how an attack purchase pays back", then "how the two purses feed each
+  other", now this — and the churn is the point of settling it on paper before content exists.)* The economy is
+  one purse, a flat base plus percentile-band bonuses on top of it, 10% interest on the bank, an unlock gate
+  and scarce wave slots. **The trap is shipping the cost column and the base income and calling step 1 done**,
+  because the base is the only part computable without a field — and the parts that are not computable yet are
+  the parts that stop attacking being dominated. See [§3](#one-purse--restored-6-august-2026).
 - **Step 2 opens the input seam, and it is the one place in this sequence worth being slow.** There are ADRs
   *and tests* asserting that no input reaches the simulation, and that discipline is why determinism holds.
   The shape that preserves it: **the view emits a command, the command goes into the record, the record is
@@ -642,15 +666,16 @@ which are worth nothing if the answer to the cheap ones was no.
   accounts, matchmaking, rating, anti-cheat re-simulation and the two-board interface from the critical path
   to *is this fun*. **It defers them; it does not repeal them.**
 
-### The four decisions that block step 1
+### The five decisions that block step 1
 
-Small, on paper, blocking, and all four get more expensive the more content exists when they are answered.
+Small, on paper, blocking, and all of them get more expensive the more content exists when they are answered.
 None needs an engine, a server or an asset. This is a **checklist**; the full description of each lives where
-it already did, and the right-hand column links to it rather than restating it.
+it already did, and the right-hand column links to it rather than restating it. They are charted as
+[map #70](https://github.com/ssalter21/tower-defense-game/issues/70), one ticket each.
 
 | # | Question | What is already known |
 |---|---|---|
-| 1 | ~~How does an attack purchase pay back under one purse?~~ **How do the two purses feed each other?** | **Superseded 6 August 2026 by the two-purse reversal.** The question is no longer payback but cross-feed: two fully independent wallets is the failure mode. Known-good shapes are Legion TD 2's (one currency buys the other's generator) and Bloons TD Battles 2's (the send *is* the income). Detail in [§3](#two-purses--reversed-6-august-2026) |
+| 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called sauce. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
 | 2 | ~~Is there a shared, public baseline wave?~~ **What is on the variance anchor schedule?** | **Answered in principle 6 August 2026.** There is a public constant, and it is an anchor schedule rather than a baseline wave — fixed waves at which a major variance event unlocks for everyone. What remains is which waves and which events. Detail in [§3](#wave-variance-is-anchored-not-emergent) |
 | 3 | **What is a run?** | How many waves, and whether it ends in a loss condition or simply ends. Step 2 needs at least a provisional answer. The skill note adds a preference: **a graded loss condition deep enough that conceding a wave on purpose can be correct**, because that is what makes health a resource rather than a wall. Detail in [§10](#the-open-questions) |
 | 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
@@ -674,8 +699,9 @@ of its own wayfinder map** — its own destination, its own decision tickets, it
 
 ### 1 · The match format — *its first half is steps 1 to 3*
 
-What one wave actually is. Two boards resolving at once, two purses and their cross-feed, the build-phase rhythm, what a build phase
-offers, how a wave is composed, what a wave is worth and what winning one means.
+What one wave actually is. Two boards resolving at once, the build-phase rhythm, what a build phase
+offers, how a wave is composed, what a wave is worth and what winning one means. *(The economy is no longer
+part of this list — [§3](#one-purse--restored-6-august-2026) settled it.)*
 
 It also owns the **shape of the depth** from [§3](#3-what-a-match-is), and that is the larger half of it: what
 the combination system actually is, whether the creep pool is gated on your towers and how, whether send order
@@ -692,9 +718,10 @@ and no friends to answer.
 
 **All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
 candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
-inherits three obligations they surfaced: cross-feed the two purses, spend the
+inherits three obligations they surfaced: make attacking pay for itself, spend the
 computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third are
-now [step 1's blocking decisions](#the-four-decisions-that-block-step-1).
+now [step 1's blocking decisions](#the-five-decisions-that-block-step-1) — **and the first is discharged**, by
+[§3](#one-purse--restored-6-august-2026).
 
 **The cheapest coherent starting point is already identified in the research**, and it is what steps 1 to 3
 build. [The sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave
@@ -732,8 +759,13 @@ fails the accessibility pillar however well it plays.
 ### 4 · The balance harness — *pulled forward to step 4*
 
 The tool, and the definitions underneath it. What a sweep is, what it measures, what a red cell means, what
-"cost-efficient" is in a two-purse economy, and how the harness's verdict gets back into `content/` without
-invalidating a pool of stored ghosts.
+"cost-efficient" is in a one-purse economy where a unit competes with a tower, a wave slot and 10% interest all
+at once, and how the harness's verdict gets back into `content/` without invalidating a pool of stored ghosts.
+
+**It also owes step 1 a debt it does not obviously owe.** The percentile bands in
+[§3](#one-purse--restored-6-august-2026) are measured against a field, and there is no field until step 6 — so
+**the sweep's canned set is what the economy measures against in the meantime.** That makes the harness part of
+the economy rather than a tool pointed at it, and it is why the bonus is uncomputable before step 4.
 
 **It used to depend on seams 1 and 3 and now it does not wait for either.** The measurement in
 [§5](#5-how-it-is-balanced) is why: at 2.75 ms a match, a sweep is a minute of compute, so the harness is a
@@ -815,7 +847,7 @@ had deleted or inverted.
 
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
-| **§3** — one purse | A single currency; the sharp decision the game is built around | **Reversed. Two purses**, and the cross-feed between them is the new open question | A purchase that only subtracts has no timing question attached, and timing is what players practise |
+| **§3** — one purse | A single currency; the sharp decision the game is built around | **Reversed, then reversed back the same day — see the note below.** Two purses stood for a matter of hours; the settled answer is **one purse**, with the payback supplied by performance rather than by a second currency | A purchase that only subtracts has no timing question attached, and timing is what players practise |
 | **§3 / §11** — the corridor | One hex wide, never branches; mazing and pathfinding permanently out of scope | **Reversed. A maze, deliberately hard to solve, at several elevation levels**, with elevation granting range | Geometry is the axis the genre was popularised on, and it was the largest deletion in the design |
 | **§3** — send ordering | Rescued by the corridor, which *is* a single-file column | **Weakened, not repealed.** A branching map dilutes order; the map must now be designed to preserve it | Consequence of the reversal above, recorded rather than discovered later |
 | **§3** — wave composition | The player composes the whole wave; a baseline wave was an open question | **Anchored.** A public schedule injects major variance at fixed, known waves | Without a public constant, preparation had nothing to be a skill about |
@@ -823,6 +855,23 @@ had deleted or inverted.
 | **§2 / §3** — the async ghost | Opponents are drawn and their stored defense is what you compose against | **The round-robin no longer shows you a board.** It pays you in statistics over the field instead | A frozen defense cannot react or lie, so inspecting it produces a lookup rather than a read |
 | **§2 / §3** — the map | One authored corridor, implicitly permanent | **Generated, and rotating daily or weekly**, selected by sweeping candidates for outcome spread | A hard map buys time; an unseen one buys it permanently — and the harness can already measure which is which |
 | **Bottom line** | "the creeps you can send determined by the towers you chose" | **Dropped from the bottom line, still live in §3 as a direction.** A public shared offering is in tension with a private tower-gated pool, and seam 1 now owns the reconciliation | Recorded rather than silently cut |
+
+#### And the purse went back, later the same day
+
+The first row above is a round trip, and it is left visible on purpose. One purse was reversed to two in the
+morning and back to one by evening, decided in
+[#72](https://github.com/ssalter21/tower-defense-game/issues/72).
+
+**Nothing was wrong with the reasoning that produced two purses; it was answering a question that turned out to
+have a cheaper answer.** The objection on file was never "one wallet is bad" — it was "attacking must pay you
+back". A second currency pays that back through the economy's *structure*. Percentile bands pay it back through
+the wave's *result*, and they cost one income rule instead of a whole parallel wallet with its own generator,
+its own prices and its own balance surface.
+
+Worth keeping for its own sake: **the two-purse decision survived less than a day of being written down, and
+cost nothing but a section.** That is the sequence in [§8](#8-the-build-order) working exactly as designed — a
+decision made on paper before any content exists is a decision that can be unmade for the price of editing a
+paragraph. Had it been reversed after step 3, it would have cost a roster, a cost column and a record format.
 
 ---
 
@@ -850,8 +899,8 @@ unblocked.
 
 > **Three of these are no longer unscheduled — they block step 1.** *How wide the damage-type matrix is*,
 > *what a run is*, and *whether there is a baseline wave* are marked **→ blocks step 1** below, and appear as a
-> checklist alongside the cross-feed question from [§3](#two-purses--reversed-6-august-2026) in
-> [§8's four decisions](#the-four-decisions-that-block-step-1). **The detail stays here** and the checklist
+> checklist alongside the settled economy question from [§3](#one-purse--restored-6-august-2026) in
+> [§8's five decisions](#the-five-decisions-that-block-step-1). **The detail stays here** and the checklist
 > there points back to it, so there is one description of each question and not two that can drift apart.
 
 - **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
@@ -911,7 +960,7 @@ unblocked.
   rather than a baseline wave.** An anchor supplies what a baseline was wanted for — something for a send, and
   a newcomer, to be read against — without also supplying the content of the wave, which is the part the
   player is meant to author. What remains open is *which* waves and *which* events, which is now question 2 on
-  [the step 1 checklist](#the-four-decisions-that-block-step-1). The original statement of the problem is kept
+  [the step 1 checklist](#the-five-decisions-that-block-step-1). The original statement of the problem is kept
   below because the reasoning is what justifies the anchor.
 
   In Legion TD 2 the wave is a
@@ -1044,7 +1093,7 @@ tower defense has because no tower defense could afford it:
 > re-simulable, cheat-proof game.
 >
 > Whatever else seam 1 grants the player, the forecast must stay *partial, sampled, or paid for*. That is
-> [question 5 on the step 1 checklist](#the-four-decisions-that-block-step-1).
+> [question 5 on the step 1 checklist](#the-five-decisions-that-block-step-1).
 
 ---
 
@@ -1062,8 +1111,9 @@ Everything factual here is either established in Parts I to V, verifiable in thi
    [#56](https://github.com/ssalter21/tower-defense-game/issues/56).
 4. **CC0 1.0** — [Creative Commons deed](https://creativecommons.org/publicdomain/zero/1.0/): copy, modify,
    distribute and perform, including commercially, without permission.
-5. **Legion TD 2** — the both-boards-at-once match structure, and the two-currency cross-feed that
-   [§3](#two-purses--reversed-6-august-2026) now takes as its model.
+5. **Legion TD 2** — the both-boards-at-once match structure, and the two-currency loop whose *problem
+   statement* [§3](#one-purse--restored-6-august-2026) adopts even though it declines the solution: attacking
+   must pay you back.
 6. **Element TD** (Warcraft 3 mod) — the named reference for §3's combinatorial build depth. Its element
    combination system is the target class of depth, not a specification. Under research.
 7. **Bloons TD 6** — the standing proof that legible-to-a-child and competitively deep are compatible, which
