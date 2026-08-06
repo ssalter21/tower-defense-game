@@ -5,25 +5,10 @@ namespace Sim
 {
     /// <summary>
     /// Thrown when the simulation itself has gone wrong, as opposed to when
-    /// authored content will not load.
+    /// authored content will not load. One of the two types this assembly's
+    /// invariants throw; the throw is unconditional in every build
+    /// configuration. See <c>docs/adr/0025-invariants-are-unconditional-throws.md</c>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Every invariant in this assembly is an unconditional throw</b>, and
-    /// this is one of the two types they throw. Not an assertion, not a
-    /// conditional-compilation macro, not a logged warning: the whole point of
-    /// the arrangement is that there is no configuration in which the loud
-    /// failure everything else rests on is switched off. An assertion compiles
-    /// out of the build that ships, which is precisely the build a desync will
-    /// be found in months later with nothing left to point at.
-    /// </para>
-    /// <para>
-    /// The banned-API scan enforces the other half of this: <c>Debug.Assert</c>,
-    /// <c>Trace</c> and <c>[Conditional]</c> are all refused inside this
-    /// assembly, so the easy way to write a check that quietly disappears is not
-    /// available.
-    /// </para>
-    /// </remarks>
     public class SimulationException : Exception
     {
         public SimulationException(string message)
@@ -34,17 +19,8 @@ namespace Sim
 
     /// <summary>
     /// Thrown when a rolling per-tick state hash does not match the trace it was
-    /// checked against, naming the tick it happened on.
+    /// checked against, naming the first tick the two disagreed on.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>The tick is the point.</b> An end-of-match hash tells you that
-    /// something diverged; this tells you when, which is the difference between
-    /// a bug you can bisect and a bug you can only stare at. The comparison is
-    /// per tick precisely so the first tick that disagrees is the one that gets
-    /// named, before the divergence has propagated into everything else.
-    /// </para>
-    /// </remarks>
     public sealed class DesyncException : SimulationException
     {
         public DesyncException(int tick, Hash64 expected, Hash64 actual)
@@ -64,6 +40,10 @@ namespace Sim
         /// <summary>What this run's state actually was.</summary>
         public Hash64 Actual { get; }
 
+        /// <summary>
+        /// Formats the tick, both hashes, and what the hash covers that the
+        /// snapshot does not.
+        /// </summary>
         private static string Describe(int tick, Hash64 expected, Hash64 actual) =>
             "The simulation diverged from the golden trace at tick "
             + tick.ToString(CultureInfo.InvariantCulture)
