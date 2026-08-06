@@ -2,14 +2,14 @@
 
 **The standing document** · 3 August 2026
 
-> **What this game is, what it is not, and the eight seams that build it.**
+> **What this game is, what it is not, and the order it gets built in.**
 >
 > Parts I to V were written to answer whether this game was worth making and what to make it with. They were
 > right about the machinery and wrong about the audience. This document fixes the destination, and where it
 > disagrees with any of the five, this document is current.
 >
-> It is deliberately larger than one effort. Each seam in [§8](#8-the-seams) is the subject of its own
-> wayfinder map.
+> It is deliberately larger than one effort. [§8](#8-the-build-order) sequences it, and each seam named there
+> is the subject of its own wayfinder map.
 
 ---
 
@@ -130,7 +130,7 @@ around it. Both halves are live every round, in front of you, with nothing needi
 matter. **Part II's recommended fix — two currencies, each earned by doing the other thing — is therefore not
 needed, and is explicitly not adopted.**
 
-The cost is real and lands on [the interface seam](#8-the-seams): the player is reading two boards at once, and
+The cost is real and lands on [the interface seam](#8-the-build-order): the player is reading two boards at once, and
 that is the hardest unsolved presentation problem in this design.
 
 ### Build phases between waves, and nothing during one
@@ -257,11 +257,21 @@ in this document after "not commercial".
 
 The deterministic integer sim and headless CLI already exist (`sim/`, `simcli/`,
 `tools/run-headless-match.ps1`). The balance harness is built on top of them: sweep every unit against every
-defense across thousands of matches overnight, produce win-rate and cost-efficiency matrices, and let a red
-cell name what is mispriced before a human notices.
+defense across thousands of matches, produce win-rate and cost-efficiency matrices, and let a red cell name
+what is mispriced before a human notices.
 
 This is the payoff Part III promised when it claimed a deterministic sim turns balance into a computation. It
 was a claim on credit until now; this document is where it gets spent.
+
+> **It is not an overnight job, and that changes when it gets built.** This section used to say "across
+> thousands of matches overnight". The skeleton has since measured the thing that sentence was guessing at:
+> `BudgetTests` times the committed match at **2.75 ms** on the development laptop, which is roughly **360
+> matches per second on one core**, so a ten-thousand-matchup sweep is under a minute rather than a night.
+>
+> A harness that costs a minute is a **`simcli` mode and a CSV**, not a project — and a tool that cheap is
+> worth building *before* the roster is large, not after. A red cell naming a mispriced unit while there are
+> only eight units makes every subsequent unit cheaper to author, which is why the build order in
+> [§8](#8-the-build-order) puts the harness fourth instead of leaving it downstream of a finished roster.
 
 **It is not a luxury at this scale — it is the only option that works.** Telemetry balancing needs player
 volume that a personal build will never have. Hand balancing finds only the loudest problems and reliably
@@ -381,23 +391,111 @@ under a hundred megabytes.
 
 ---
 
-## 8. The seams
+## 8. The build order
 
-Eight seams. **Each is the subject of its own wayfinder map** — its own destination, its own decision tickets,
-its own sessions. They are not a build order for one effort; they are the efforts.
+**This section used to be a list of eight seams ordered by what depends on what. It is now a sequence, and the
+sequence is ordered by what is cheapest to *learn*.** The eight destinations below are unchanged and none of
+them has been dropped — what changed is which one is approached first, and why.
 
-| # | Seam | The destination it finds its way to | Depends on |
+The reason for the change is a reading of the repository as it actually stands, and it is short enough to
+state here. The walking skeleton is finished and its machinery is excellent: a deterministic integer
+simulation, hand-rolled records, an IL scan over both the committed and a freshly built assembly, an
+eight-case poison suite, and a six-row determinism matrix across three operating systems and two processor
+architectures. **What none of it does is take an input from a player.** Today's build is a replay viewer of
+one fixed defense against one fixed wave, over a roster of four unit types, with no currency, no build phase
+and one wave per run.
+
+A dependency order tells you what must exist before what. It does not tell you what to find out first — and
+the one thing this project has never tested is **whether any of it is fun**. That question is answerable far
+earlier and far more cheaply than the dependency order implies, and it is the question with the power to
+invalidate everything downstream of it. So the order below asks it first.
+
+### The sequence
+
+Steps 1 to 4 need no engine, no licence and no editor. They run from a shell.
+
+| # | Step | What it delivers | Size |
 |---|---|---|---|
-| 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | The three research notes ([§10](#10-not-yet-specified)) |
-| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | 1 |
-| 3 | **The roster** | What towers and attacking units exist, and what they vary by | 1 |
-| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | 1, 3 |
-| 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | 1, 2 |
-| 6 | **The social layer** | What makes an absent opponent feel like a person | 5 |
-| 7 | **The interface** | Reading two boards, an economy and a build menu at once | 1 |
-| 8 | **The presentation** | The art pipeline, and what makes it look composed | — |
+| 1 | **Cost column, one purse, income between waves** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file | Small |
+| 2 | **A run is N waves, with a build phase between, recorded as a command stream** | `Match` gains a lifecycle; the record gains `(wave index, decision)` pairs, which is what a build phase *is* from the record's point of view; `simcli` gains a mode that plays a command file | Medium — the real structural work |
+| 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
+| 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small — see [§5](#5-how-it-is-balanced) |
+| 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
+| 6 | **Opponent defenses read from a folder of ghost records** | The whole loop at zero latency, with no service in it | Small — `GhostRecord` already round-trips |
+| 7 | **Then** the generative depth, the two-board interface, and the service | | |
 
-### 1 · The match format — *next, and now unblocked*
+**Step 5 is fifth deliberately, and that is the load-bearing claim of this section.** Is the economy tense? Is
+composing a wave interesting? Does send order matter? Is the roster varied? Every one of those is answerable
+from a command line and a spreadsheet, at a fraction of the wall-clock cost of asking it through an engine.
+The engine is where you find out whether it *reads* and whether it *feels* — which are real questions, and
+which are worth nothing if the answer to the cheap ones was no.
+
+### Three obligations the sequence carries
+
+- **Step 1 must decide how an attack purchase pays back**, on the day the purse is added rather than after.
+  [§3's one-purse warning](#one-purse) is not deferrable past this point: under a single currency a coin spent
+  attacking is simply gone, so attacking is a pure tempo loss and at equilibrium **dominated**.
+  [The sending research](research/attack-composition-and-sending.md) says there are three available answers
+  and no fourth; the cheapest is an outcome transfer — breaking a defense pays you, leaking pays them.
+- **Step 2 opens the input seam, and it is the one place in this sequence worth being slow.** There are ADRs
+  *and tests* asserting that no input reaches the simulation, and that discipline is why determinism holds.
+  The shape that preserves it: **the view emits a command, the command goes into the record, the record is
+  what the match consumes.** Done that way every playtest is also a determinism test — exactly as scrubbing is
+  today — and [seam 2](#2--the-submission-barrier) comes nearly free later, because a submitted turn *is* a
+  command batch. Done the other way it contaminates the one guarantee everything here rests on.
+- **Step 3 exhausts rows before it touches the schema.** `UnitType` already carries eleven integer levers —
+  HP, speed, range, cooldown, windup, backswing, damage min, damage max, delivery, projectile flight, dying
+  ticks — and the four committed unit types use about half of that space. A slow sieger is a cooldown and a
+  damage range; a swarm is HP and speed; a sniper is range and windup. Adding a **row** costs a line. Adding a
+  **field** costs a format version, a hash-layout bump and a retired ghost pool.
+
+### What this sequence deliberately does not do
+
+- **It does not decide the match format in full before building anything.** Seam 1's ruleset is still owed, and
+  §3's depth direction is still where the game is going. What the sequence rejects is the idea that it must be
+  *finished* first. Steps 1 to 3 are the smallest form of that ruleset that can be played, chosen so that being
+  wrong about them costs a text file rather than an effort.
+- **It does not commit to the generative roster yet.**
+  [The depth research](research/build-depth-in-tower-defense.md) ranks Direction A first and the reasoning
+  holds — but it signs a content bill of **25 to 56 authored units** that the rule decides rather than taste.
+  That bill should be signed after the loop is proven, not before, and the note itself says Direction B
+  composes onto A later at no cost, so nothing is lost by starting flat.
+- **It does not build the multiplayer.** Async round-robin is the same loop at a different latency — which is
+  [§2's](#2-the-loop--one-machine-at-three-latencies) own claim — so the loop can be found and tuned at zero
+  latency against defenses read from a folder. This is the largest scope deletion available and it removes
+  accounts, matchmaking, rating, anti-cheat re-simulation and the two-board interface from the critical path
+  to *is this fun*. **It defers them; it does not repeal them.**
+
+### The four decisions that block step 1
+
+Small, on paper, blocking, and all four get more expensive the more content exists when they are answered.
+None needs an engine, a server or an asset. This is a **checklist**; the full description of each lives where
+it already did, and the right-hand column links to it rather than restating it.
+
+| # | Question | What is already known |
+|---|---|---|
+| 1 | **How does an attack purchase pay back under one purse?** | Three answers exist and no fourth; outcome transfer is the cheapest. Detail in [§3](#one-purse) |
+| 2 | **Is there a shared, public baseline wave?** | Without one there is no constant for an opponent — or a newcomer — to read a send against. Detail in [§10](#the-open-questions) |
+| 3 | **What is a run?** | How many waves, and whether it ends in a loss condition or simply ends. Step 2 needs at least a provisional answer. Detail in [§10](#the-open-questions) |
+| 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
+
+### The eight seams, and where they land
+
+The destinations are unchanged. This is where each one meets the sequence above. **Each is still the subject
+of its own wayfinder map** — its own destination, its own decision tickets, its own sessions.
+
+| # | Seam | The destination it finds its way to | Where it lands |
+|---|---|---|---|
+| 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments rather than as a finished ruleset |
+| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | After step 6, and half-paid by step 2's command stream |
+| 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat, then revisited at step 7 |
+| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | **Pulled forward to step 4** — it is a minute's compute, not a night's |
+| 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6. Nothing before it needs a server |
+| 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5, unchanged |
+| 7 | **The interface** | Reading two boards, an economy and a build menu at once | Step 5 is its single-board half; the two-board problem is step 7 |
+| 8 | **The presentation** | The art pipeline, and what makes it look composed | Independent, whenever there is appetite |
+
+### 1 · The match format — *its first half is steps 1 to 3*
 
 What one wave actually is. Two boards resolving at once, one purse, the build-phase rhythm, what a build phase
 offers, how a wave is composed, what a wave is worth and what winning one means.
@@ -406,15 +504,27 @@ It also owns the **shape of the depth** from [§3](#3-what-a-match-is), and that
 the combination system actually is, whether the creep pool is gated on your towers and how, whether send order
 is a real decision, and — from [§10](#10-not-yet-specified) — whether the defending side is towers at all.
 
-**Everything is downstream of this.** The roster cannot be designed, the harness cannot be pointed at anything,
-the record format cannot be fixed and the interface cannot be laid out until these rules exist. It is also the
-cheapest seam to be wrong about now and the most expensive later — and it needs no server, no art and no
-friends to answer.
+**Everything is downstream of this** — but not of a *finished* version of it, and that distinction is the whole
+change in this section. The roster cannot be designed, the harness cannot be pointed at anything, the record
+format cannot be fixed and the interface cannot be laid out until *some* rules exist. It does not follow that
+all of them must be decided before any of them are played, and the sequence above takes the other reading:
+build the smallest ruleset that can be played, at a standard where being wrong costs a text file.
+
+It remains the cheapest seam to be wrong about now and the most expensive later, and it needs no server, no art
+and no friends to answer.
 
 **All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
 candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
 inherits three obligations they surfaced: make the attack purchase pay back under one purse, spend the
-computed-balance budget knowingly, and decide whether there is a baseline wave at all.
+computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third are
+now [step 1's blocking decisions](#the-four-decisions-that-block-step-1).
+
+**The cheapest coherent starting point is already identified in the research**, and it is what steps 1 to 3
+build. [The sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave
+**is** the order and the clock* first, explicitly because its cost is approximately zero: the ordered wave, the
+tie-break rule and the overtake landmark all exist and are tested. It is also the direction that asks *is
+composing a wave against a fixed, non-reacting defense fun?* with the fewest confounds — which is the question
+the build order above exists to reach.
 
 ### 2 · The submission barrier
 
@@ -441,11 +551,19 @@ Constrained hard by [§4](#4-what-persists): nothing is unlocked, so **every uni
 first run** — and by [§6](#6-what-it-looks-like), because a unit whose role cannot be read off its silhouette
 fails the accessibility pillar however well it plays.
 
-### 4 · The balance harness
+### 4 · The balance harness — *pulled forward to step 4*
 
 The tool, and the definitions underneath it. What a sweep is, what it measures, what a red cell means, what
 "cost-efficient" is in a one-purse economy, and how the harness's verdict gets back into `content/` without
 invalidating a pool of stored ghosts.
+
+**It used to depend on seams 1 and 3 and now it does not wait for either.** The measurement in
+[§5](#5-how-it-is-balanced) is why: at 2.75 ms a match, a sweep is a minute of compute, so the harness is a
+`simcli` mode and a CSV rather than a project. Building it against a ten-unit roster is what makes the eleventh
+unit cheap to author — and if Direction A is ever adopted, its one documented failure mode (a U-shaped meta
+where the widest and narrowest builds dominate) is caught by a report of win rate **binned by number of
+ingredients taken**, which is a column in a sweep that already exists rather than a tool built in response to a
+problem two studios took years to notice.
 
 ### 5 · The service
 
@@ -499,6 +617,18 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 | **IV** — can the dev rig and animate? | The KayKit-versus-Synty recommendation turns on this | **Closed by irrelevance.** KayKit ships animations; the question only mattered for Synty. |
 | **V** — the unit schema | One unit, two roles; levers as components; versioned vocabulary | **Stands, and is now load-bearing.** Seam 3 fills it in. |
 
+### And what this document overturns in itself
+
+Three claims made above were written before the walking skeleton existed, and reading the finished skeleton
+changed them. Recorded here rather than quietly edited, because a standing document that revises itself
+silently is one nobody can trust the age of.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§5** — the harness | Sweep thousands of matches **overnight** | **Off by orders of magnitude.** `BudgetTests` measures the committed match at 2.75 ms — ~360 matches a second on one core. A sweep is a minute, so the harness is a `simcli` mode and a CSV, and it moves *before* the roster instead of after it. |
+| **§8** — the seams | Eight seams ordered by what depends on what; the match format decided in full first | **Reordered, not repealed.** A dependency order does not say what is cheapest to *learn*, and the one untested claim in the whole design is that this is fun. The seams stand as destinations; the sequence in §8 is how they are approached. |
+| **§8 seam 4** — the harness again | Depends on seams 1 and 3 | **Independent of both.** It needs a purse and a roster of any size, not a finished ruleset. |
+
 ---
 
 ## 10. Not yet specified
@@ -520,6 +650,12 @@ unblocked.
 | ✅ **[Towers, or placed squads?](research/towers-versus-placed-squads.md)** — *landed* | The open question below. Verdict: the aesthetic half is free and mostly already decided by Part IV §5; the mechanical half is one number, projectile volume, and it lands on `FlyProjectiles` rather than on target acquisition |
 
 ### The open questions
+
+> **Three of these are no longer unscheduled — they block step 1.** *How wide the damage-type matrix is*,
+> *what a run is*, and *whether there is a baseline wave* are marked **→ blocks step 1** below, and appear as a
+> checklist alongside the one-purse payback question from [§3](#one-purse) in
+> [§8's four decisions](#the-four-decisions-that-block-step-1). **The detail stays here** and the checklist
+> there points back to it, so there is one description of each question and not two that can drift apart.
 
 - **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
   placement surface** — archers on a rampart running alongside the corridor — with squads that shoot, upgrade
@@ -562,17 +698,18 @@ unblocked.
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
   is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
-- **How wide the damage-type matrix should be, and what the armour formula is.** Carried forward from Part V
+- **How wide the damage-type matrix should be, and what the armour formula is.** **→ blocks step 1.** Carried forward from Part V
   §4.1, still open, still cheap to set on paper. Legion TD 2 runs 1.67:1, Element TD 2 runs 4:1, Warcraft 3
   runs 40:1. Belongs to seam 3 or 4 when one of them reaches it — but the squad research has already
   constrained it from an unexpected direction: **many-small-hits is punished quadratically by flat-subtraction
   armour**, so that formula should be ruled out if squads exist at all, and the same finding argues for the
   narrow end of the matrix. A presentation choice reaching back into the damage model is exactly the kind of
   coupling seam 1 exists to catch early.
-- **What a run is.** How many waves, how long a session lasts, and whether a run ends in a loss condition or
-  simply ends. Touched by seam 1 but may outgrow it.
+- **What a run is.** **→ blocks step 1.** How many waves, how long a session lasts, and whether a run ends in a
+  loss condition or simply ends. Touched by seam 1 but may outgrow it. Step 2 cannot be built without at least
+  a provisional answer, since "N waves" is the thing it makes real.
 
-- **Whether there is a baseline wave at all — a risk no surveyed game carries.** In Legion TD 2 the wave is a
+- **Whether there is a baseline wave at all — a risk no surveyed game carries.** **→ blocks step 1.** In Legion TD 2 the wave is a
   memorised public constant, which is exactly what makes a sent mercenary legible: it is *the part that is not
   the wave*. Here the player composes the **whole** wave, so there is no constant to read it against. The
   sending research suggests a shared baseline wave per stage as cheap insurance, and flags it as needing a

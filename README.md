@@ -8,8 +8,14 @@ machine at a different latency. What it is and where it is going lives in
 
 The walking skeleton is built: a deterministic integer simulation, a ghost
 record format, a headless CLI, and a Unity 6 view that scrubs a recorded match
-from snapshots. What comes next is
-[the eight seams](docs/vision.md#8-the-seams), each planned as its own map.
+from snapshots. It is a replay viewer — nothing a player does reaches the
+simulation, and the content it plays is four unit types, one fixed defense and
+one fixed wave.
+
+What comes next is an **economy**, and then a run that is more than one wave.
+[The build order](docs/vision.md#8-the-build-order) sequences it by what is
+cheapest to learn rather than by what depends on what: its first four steps run
+from a shell with no engine in them, and interaction is the fifth.
 
 ## Ideas / scope
 
