@@ -1,0 +1,1137 @@
+<title>Why tower defense is fun, and where the skill is</title>
+
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    color-scheme: light dark;
+
+    --paper:    #E8EAEE;
+    --surface:  #F3F5F7;
+    --sunken:   #DEE2E7;
+    --ink:      #14181D;
+    --ink-2:    #3C444E;
+    --ink-3:    #6C757F;
+    --rule:     #C6CCD3;
+    --rule-2:   #DCE0E5;
+
+    --defense:  #0F7B7C;   /* the defending board */
+    --attack:   #B2591B;   /* the attacking board */
+    --dead:     #9F2E24;
+    --risk:     #96700F;
+
+    --shadow: 0 1px 0 rgba(20,24,29,.05), 0 1px 3px rgba(20,24,29,.06);
+
+    --display: ui-monospace, "Cascadia Mono", "SF Mono", "Menlo", "Consolas", monospace;
+    --body: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --data: ui-monospace, "Cascadia Mono", "SF Mono", "Menlo", "Consolas", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:    #0E1216;
+      --surface:  #161B21;
+      --sunken:   #0A0D10;
+      --ink:      #E4E8EC;
+      --ink-2:    #ADB7C0;
+      --ink-3:    #7C8792;
+      --rule:     #2A333C;
+      --rule-2:   #1E262D;
+
+      --defense:  #4FC9C1;
+      --attack:   #EC964F;
+      --dead:     #E56C5F;
+      --risk:     #DCB44F;
+
+      --shadow: 0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:    #0E1216;
+    --surface:  #161B21;
+    --sunken:   #0A0D10;
+    --ink:      #E4E8EC;
+    --ink-2:    #ADB7C0;
+    --ink-3:    #7C8792;
+    --rule:     #2A333C;
+    --rule-2:   #1E262D;
+    --defense:  #4FC9C1;
+    --attack:   #EC964F;
+    --dead:     #E56C5F;
+    --risk:     #DCB44F;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+  }
+
+  :root[data-theme="light"] {
+    --paper:    #E8EAEE;
+    --surface:  #F3F5F7;
+    --sunken:   #DEE2E7;
+    --ink:      #14181D;
+    --ink-2:    #3C444E;
+    --ink-3:    #6C757F;
+    --rule:     #C6CCD3;
+    --rule-2:   #DCE0E5;
+    --defense:  #0F7B7C;
+    --attack:   #B2591B;
+    --dead:     #9F2E24;
+    --risk:     #96700F;
+    --shadow: 0 1px 0 rgba(20,24,29,.05), 0 1px 3px rgba(20,24,29,.06);
+  }
+
+  /* ---------- base ---------- */
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 1.25rem 6rem;
+  }
+
+  .wrap {
+    max-width: 47rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+  }
+
+  a { color: inherit; text-decoration-color: var(--attack); text-underline-offset: 2px; }
+  a:hover { color: var(--attack); }
+  a:focus-visible { outline: 2px solid var(--attack); outline-offset: 3px; border-radius: 2px; }
+
+  p { margin: 0; }
+  strong { font-weight: 700; color: var(--ink); }
+  em { font-style: italic; }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 3.5rem 0 0;
+  }
+
+  .eyebrow {
+    font-family: var(--display);
+    font-size: .70rem;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem 1.1rem;
+  }
+  .eyebrow .mark { color: var(--attack); }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(1.85rem, 4.6vw, 2.9rem);
+    line-height: 1.08;
+    letter-spacing: -.025em;
+    font-weight: 600;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 .split { color: var(--defense); }
+
+  .standfirst {
+    font-size: 1.13rem;
+    color: var(--ink-2);
+    max-width: 40rem;
+    text-wrap: pretty;
+  }
+
+  .byline {
+    font-family: var(--display);
+    font-size: .72rem;
+    letter-spacing: .09em;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule);
+    padding-top: .9rem;
+  }
+
+  /* ---------- bottom line ---------- */
+  .bottomline {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--attack);
+    border-radius: 3px;
+    padding: 1.6rem 1.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .bottomline h2 {
+    font-family: var(--display);
+    font-size: .70rem;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 0;
+  }
+  .bottomline .claim {
+    font-size: 1.24rem;
+    line-height: 1.42;
+    font-weight: 600;
+    text-wrap: pretty;
+  }
+  .bottomline .claim + .claim {
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--ink-2);
+  }
+
+  /* ---------- toc ---------- */
+  nav.toc {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: .35rem 1.6rem;
+    font-family: var(--display);
+    font-size: .78rem;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: 1.1rem 0;
+  }
+  nav.toc a { display: block; color: var(--ink-2); text-decoration: none; padding: .12rem 0; }
+  nav.toc a:hover { color: var(--attack); }
+  nav.toc a .n { color: var(--ink-3); margin-right: .6rem; }
+
+  /* ---------- sections ---------- */
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.05rem;
+    scroll-margin-top: 1.5rem;
+  }
+
+  h2.head {
+    font-family: var(--display);
+    font-size: 1.32rem;
+    line-height: 1.22;
+    letter-spacing: -.015em;
+    font-weight: 600;
+    margin: 1.6rem 0 0;
+    padding-bottom: .55rem;
+    border-bottom: 2px solid var(--ink);
+    text-wrap: balance;
+  }
+  h2.head .n {
+    color: var(--attack);
+    margin-right: .65rem;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-size: .96rem;
+    letter-spacing: -.005em;
+    font-weight: 600;
+    margin: 1.1rem 0 -.3rem;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  h3 .n { color: var(--ink-3); margin-right: .5rem; font-weight: 400; }
+
+  h4 {
+    font-family: var(--display);
+    font-size: .72rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: .8rem 0 -.4rem;
+  }
+
+  ul, ol { margin: 0; padding-left: 1.35rem; display: flex; flex-direction: column; gap: .5rem; }
+  li { padding-left: .2rem; }
+  li::marker { color: var(--ink-3); }
+
+  /* ---------- chips ---------- */
+  .chip {
+    display: inline-block;
+    font-family: var(--display);
+    font-size: .64rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: .2rem .5rem;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    vertical-align: .09em;
+  }
+  .chip.live    { color: var(--defense); }
+  .chip.dead    { color: var(--dead); }
+  .chip.risk    { color: var(--risk); }
+  .chip.invert  { color: var(--attack); }
+
+  /* ---------- axis blocks ---------- */
+  .axis {
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1.15rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-radius: 3px;
+  }
+  .axis > .axis-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: .5rem .8rem;
+    justify-content: space-between;
+  }
+  .axis .name {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: .97rem;
+  }
+  .axis .name .id {
+    color: var(--ink-3);
+    font-weight: 400;
+    margin-right: .5rem;
+  }
+  .axis .evidence {
+    font-size: .93rem;
+    color: var(--ink-2);
+    border-left: 2px solid var(--rule);
+    padding-left: .85rem;
+  }
+  .axis .verdict { font-size: .97rem; }
+  .axis .verdict::before {
+    content: "Here → ";
+    font-family: var(--display);
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ---------- callouts ---------- */
+  .note {
+    border-left: 3px solid var(--rule);
+    padding: .1rem 0 .1rem 1.1rem;
+    color: var(--ink-2);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+  .note.warn { border-left-color: var(--dead); }
+  .note.good { border-left-color: var(--defense); }
+
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--rule-2);
+    border-top: 3px solid var(--attack);
+    border-radius: 3px;
+    padding: 1.2rem 1.3rem;
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+  }
+  .finding .tag {
+    font-family: var(--display);
+    font-size: .66rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--attack);
+    font-weight: 600;
+  }
+  .finding .title { font-size: 1.06rem; font-weight: 700; line-height: 1.38; text-wrap: pretty; }
+
+  /* ---------- quotes ---------- */
+  blockquote {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    padding: .9rem 1.1rem;
+    background: var(--sunken);
+    border-radius: 3px;
+    font-size: .96rem;
+  }
+  blockquote p { color: var(--ink-2); }
+  blockquote cite {
+    font-family: var(--display);
+    font-size: .68rem;
+    letter-spacing: .11em;
+    text-transform: uppercase;
+    font-style: normal;
+    color: var(--ink-3);
+  }
+
+  /* ---------- tables ---------- */
+  .scroller { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--surface); }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 40rem;
+    font-size: .89rem;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td {
+    text-align: left;
+    padding: .62rem .85rem;
+    border-bottom: 1px solid var(--rule-2);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: var(--display);
+    font-size: .66rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.axisname { font-family: var(--display); font-size: .82rem; font-weight: 600; white-space: nowrap; }
+  td.axisname .id { color: var(--ink-3); font-weight: 400; }
+  td.st { white-space: nowrap; }
+
+  /* ---------- diagram ---------- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: .7rem; }
+  figure .scroller { padding: 1.4rem 1rem; }
+  figcaption {
+    font-family: var(--display);
+    font-size: .74rem;
+    line-height: 1.5;
+    color: var(--ink-3);
+  }
+  svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  svg text { font-family: var(--display); }
+
+  /* ---------- sources ---------- */
+  ol.sources { font-size: .89rem; gap: .55rem; color: var(--ink-2); }
+  ol.sources li::marker { font-family: var(--display); font-size: .78rem; }
+
+  .footer {
+    font-family: var(--display);
+    font-size: .72rem;
+    letter-spacing: .06em;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule);
+    padding-top: 1.1rem;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 34rem) {
+    body { font-size: 16px; padding: 0 1rem 4rem; }
+    .bottomline, .axis, .finding { padding: 1.1rem 1rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span class="mark">Research note</span>
+      <span>Read against docs/vision.md</span>
+      <span>6 August 2026</span>
+    </div>
+    <h1>Why tower defense is fun,<br><span class="split">and where the skill is</span></h1>
+    <p class="standfirst">
+      A survey of what the genre's durable games actually charge the player for, and an audit of which of
+      those charges this design is still able to make.
+    </p>
+    <p class="byline">
+      Scope: the two questions as asked — why the genre is fun, and where its skill expression lives — then
+      the same taxonomy run past this project's settled decisions. It decides nothing. It is a decision input
+      for seams 1, 3 and 7.
+    </p>
+  </header>
+
+  <div class="bottomline">
+    <h2>Bottom line</h2>
+    <p class="claim">
+      Tower defense is fun because it converts a plan into a spectacle you are the author of. The plan is the
+      move; the wave is the verdict; and unlike almost every other strategy genre, the verdict is legible
+      enough that losing teaches you something.
+    </p>
+    <p class="claim">
+      Skill in the genre comes from eight structurally distinct axes. <strong>This design deletes two of them
+      outright, inverts a third, and leaves a fourth with nothing to attach to.</strong> The four that survive
+      are real and they are enough for a game — but every one of them is collected in the build phase, so a
+      design that spreads skill across two phases in every shipped comparison spends all of it in one here.
+    </p>
+  </div>
+
+  <nav class="toc">
+    <a href="#s1"><span class="n">1</span>Why it is fun</a>
+    <a href="#s2"><span class="n">2</span>The eight skill axes</a>
+    <a href="#s3"><span class="n">3</span>The matrix</a>
+    <a href="#s4"><span class="n">4</span>What this design is left holding</a>
+    <a href="#s5"><span class="n">5</span>Where the fun could fail</a>
+    <a href="#s6"><span class="n">6</span>What to measure, and when</a>
+    <a href="#s7"><span class="n">7</span>What could not be verified</a>
+  </nav>
+
+  <!-- ============ 1 ============ -->
+  <section id="s1">
+    <h2 class="head"><span class="n">1</span>Why it is fun</h2>
+
+    <p>
+      Six mechanisms recur across every game in the survey. They are not a list of features; they are the
+      reasons the loop holds a person. The seventh entry is the same list read backwards, because each of these
+      properties has an inverse that is exactly how tower defense games fail.
+    </p>
+
+    <h3><span class="n">1.1</span>The plan is the move, and the wave is the verdict</h3>
+    <p>
+      The defining structure of the genre is that <strong>your input and its consequence are separated in
+      time.</strong> You commit, then you stop, then you find out. Nothing else in strategy games does this so
+      cleanly — an RTS lets you correct mid-engagement, a card game resolves your move immediately.
+    </p>
+    <p>
+      The pleasure this produces is authorship of an automation: the towers do the killing, but the thing that
+      killed was designed by you thirty seconds ago. It is the same satisfaction as a factory line or a good
+      regex — a machine acting out your intent without further instruction. It is also why the genre survives
+      at very low input rates, and why an idle-adjacent subgenre grew out of it rather than out of anything
+      else.
+    </p>
+
+    <h3><span class="n">1.2</span>Losing is legible</h3>
+    <p>
+      When you lose a wave you can point at the leak. The unit that got through, the tower that could not reach
+      it, the gold you spent on the wrong thing. Very few genres offer a post-mortem that specific; in most,
+      defeat arrives as a general sense of having been outplayed.
+    </p>
+    <p>
+      This is what makes a retry feel like a correction rather than another roll of the dice, and it is the
+      quiet engine under the genre's famous replay compulsion. It also raises the presentation stakes: an
+      illegible loss converts the genre's best property into its worst.
+    </p>
+
+    <h3><span class="n">1.3</span>A wave table is a curriculum</h3>
+    <p>
+      Koster's claim — that fun is what learning feels like from the inside, and that a game dies at the moment
+      its pattern is fully learned — describes tower defense unusually well, because a wave schedule
+      <em>is</em> a syllabus with a fixed order.
+    </p>
+    <blockquote>
+      <p>Games get boring when the player has learned the pattern and there is nothing new to learn.</p>
+      <cite>A Theory of Fun for Game Design — Raph Koster</cite>
+    </blockquote>
+    <p>
+      Bloons TD 6 makes this concrete: in its restricted mode the difficulty is carried by a handful of
+      memorised landmarks — camo at round 24, lead at 28, the first MOAB at 40, grouped ceramics at 63,
+      fortified MOABs at 98. The skill being tested is not reaction. It is <em>having prepared for round 40 on
+      round 30.</em>
+    </p>
+
+    <h3><span class="n">1.4</span>Two curves, racing</h3>
+    <p>
+      Your defense compounds; the threat escalates. The tension in a run is entirely the gap between those two
+      curves, and the fun is that the gap is <em>readable in advance</em> — you can feel a wave coming that you
+      are not ready for, several waves before it arrives. Dread is a design output here, not an accident.
+    </p>
+
+    <h3><span class="n">1.5</span>Few actions, heavy actions</h3>
+    <p>
+      The genre's mass appeal comes from an unusual ratio: a small number of decisions, each of which matters a
+      lot. Plants vs. Zombies is the canonical proof — its designer's stated goal was to strip tower defense
+      down until anyone could play it, keeping the field small and cutting the conventions that were
+      unintuitive rather than load-bearing, with each unit's function readable off its silhouette.
+    </p>
+    <p>
+      This is the same claim the vision's accessibility pillar makes, and the survey supports it: legibility is
+      not a concession that costs depth. It is what lets depth be perceived at all.
+    </p>
+
+    <h3><span class="n">1.6</span>The spectacle is the payment</h3>
+    <p>
+      The wave is not dead time between decisions. It is the reward the decision was made for. Every durable
+      game in the genre spends heavily here — impact, numbers, death weight — because the watching phase is
+      where the player is <em>paid</em> for having thought.
+    </p>
+
+    <h3><span class="n">1.7</span>And each of those inverts</h3>
+    <div class="note warn">
+      <p>
+        The genre's failure modes are not separate from its pleasures; they are the same properties with the
+        sign flipped. Deferred agency becomes passivity — the standing critique is that if the player acts once
+        every thirty seconds the game is mostly watching and waiting. Legible causality becomes an
+        <em>obvious</em> answer, and a level with one correct solution is a chore, not a puzzle. A learned
+        curriculum becomes a memorised script. Two racing curves become a solved arithmetic problem. Few heavy
+        actions become no actions.
+      </p>
+      <p>
+        Every design decision in the sections below should be read as choosing which side of this line it lands
+        on. There is no third option.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 2 ============ -->
+  <section id="s2">
+    <h2 class="head"><span class="n">2</span>The eight skill axes</h2>
+
+    <p>
+      A game's skill expression is the set of things a strong player does that a weak player does not. Across
+      the survey those reduce to eight, and they are structurally distinct: each can be present or absent
+      independently of the others, and each fails in its own way.
+    </p>
+    <p>
+      For each: what it tests, the strongest shipped evidence that it is real, and what this project's settled
+      decisions do to it.
+    </p>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S1</span>Geometry — placement, coverage, mazing</span>
+        <span class="chip dead">Deleted</span>
+      </div>
+      <p>Getting more shots out of the same gold by controlling where the fighting happens.</p>
+      <p class="evidence">
+        The purest expression of it, and the one the genre was popularised on. Desktop Tower Defense (2007) was
+        built specifically because its author found no game that let you properly maze; it was played over 15
+        million times inside four months. The skill is quantifiable: a creep crossing a board in a straight
+        line spends about two seconds under fire, and the same board folded into a switchback puts it under
+        fire for twelve — a sixfold damage multiplier bought with no gold at all. Two players with identical
+        towers and identical gold post wildly different results purely on how they folded the path.
+      </p>
+      <p class="verdict">
+        <strong>Gone, permanently and deliberately.</strong> The corridor is one hex wide and never branches,
+        so no unit chooses a path and no placement lengthens one. This is the single largest deletion in the
+        design and it is already settled. What remains of the axis is a thin residue — which hexes along a
+        fixed corridor a unit covers — and that is a range number, not a spatial skill.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S2</span>Wave knowledge — knowing what is coming</span>
+        <span class="chip risk">Nothing to attach to</span>
+      </div>
+      <p>Preparation as a skill: holding the schedule in your head and buying for a threat that is not on screen yet.</p>
+      <p class="evidence">
+        Bloons TD 6's restricted mode is almost entirely this axis. The round landmarks are public, memorised,
+        and identical every attempt; the mode's difficulty comes from removing every safety net — no continues,
+        no income, no powers, no selling — so a purchase made forty rounds early has to have been correct.
+        Element TD's fixed public wave list does the same work, which is why its element picks read as
+        commitments rather than shopping.
+      </p>
+      <p class="verdict">
+        <strong>The mechanism is available but the object it needs does not exist yet.</strong> Here the player
+        composes the whole opposing wave, so there is no shared constant to prepare against and no schedule to
+        memorise. This is the vision's open <em>baseline wave</em> question — and this survey reframes it.
+        It is not cheap insurance for legibility. <strong>Without a public constant, an entire skill axis has
+        nothing to be a skill about.</strong>
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S3</span>Economy and tempo — greed against safety</span>
+        <span class="chip risk">At risk</span>
+      </div>
+      <p>Choosing between strength now and strength later, repeatedly, under threat.</p>
+      <p class="evidence">
+        This is the axis competitive tower defense is actually built on, and both surviving PvP games in the
+        genre make the same structural move: <strong>they make the attack purchase pay you back.</strong> In
+        Legion TD 2, gold buys workers, workers make mythium at 1 per 10 seconds, mythium buys mercenaries, and
+        income rises <em>permanently</em> whenever mythium is spent — so every send is an investment. In Bloons
+        TD Battles 2 the same idea is compressed onto a single continuous dial: sends grant eco, eco pays out
+        every six seconds, and the low tiers pay best while the high tiers cost you income to throw. Sending is
+        simultaneously the attack and the economy, and the whole skill is knowing which of the two you are
+        buying this round.
+      </p>
+      <p class="verdict">
+        <strong>Live, and this is where one purse bites.</strong> The vision already flags it: under a single
+        currency a coin spent attacking is simply gone, so attacking is a pure tempo loss and at equilibrium
+        dominated. Restated as skill expression the problem is sharper than a balance problem —
+        <strong>if attacking never pays back, there is no dial, and a dial is the thing players get good
+        at.</strong> The outcome transfer the sending research recommends is not merely the cheapest fix; it is
+        the one that restores the axis rather than flattening it.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S4</span>Risk budgeting — spending your health</span>
+        <span class="chip live">Live</span>
+      </div>
+      <p>Treating the loss condition as a currency with an exchange rate, not a wall to stand behind.</p>
+      <p class="evidence">
+        The clearest statement of it in the genre comes from Legion TD 2's advanced play, where deliberately
+        conceding a wave to fund a stronger position later is standard: <em>"King HP is a resource, to a
+        certain extent. Sacrificing some HP to generate a better pressure point against your opponent can be
+        valuable if properly executed."</em> The corresponding beginner error is trying to clear every wave —
+        which is to say, valuing the resource at infinity and therefore never spending it.
+      </p>
+      <p class="verdict">
+        <strong>Live, cheap, and largely free.</strong> It needs a graded loss condition rather than a binary
+        one — something that can be spent in fractions. This lands squarely on the vision's open <em>what is a
+        run</em> question, and the answer with the most skill expression in it is a health pool deep enough
+        that losing a wave on purpose can be correct.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S5</span>Reading the opponent — inference under hidden information</span>
+        <span class="chip invert">Inverted</span>
+      </div>
+      <p>Working out what the other player has, what they will do, and what they think you have.</p>
+      <p class="evidence">
+        In Legion TD 2 this is an explicit, taught skill on both sides of the screen: identifying an opponent's
+        build and their weak waves, then timing pressure onto them — and equally, concealing your own line.
+        Its advanced guide is blunt that <em>"hiding information in Legion TD 2 can be quite an effective
+        weapon"</em>, and describes shifting a build precisely to deny a read.
+      </p>
+      <p class="verdict">
+        <strong>Not deleted — inverted, and this is the finding this note most wants to hand to seam 1.</strong>
+        A stored ghost is a frozen, fully-inspectable opponent. There is no bluff, no shift, no concealment,
+        because the defense you are composing against cannot react and cannot lie. Perfect information about a
+        static target does not produce reading; it produces <em>optimisation</em>. That is a real skill, but it
+        is a different one — closer to a puzzle solve — and it degrades toward a lookup as soon as the roster
+        is small enough to memorise. The sending research named this exact failure (<em>counter-picking
+        collapsing to a lookup</em>) as a hazard of gating; the ghost causes it independently of any gating
+        decision.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S6</span>Composition — synergy and combinatorics</span>
+        <span class="chip live">Live · load-bearing</span>
+      </div>
+      <p>Knowing which pieces multiply each other, and committing to an identity before you know what you will face.</p>
+      <p class="evidence">
+        Element TD is the vision's named anchor and the survey agrees with the choice, but with an important
+        correction the depth research already landed: the combination table is what makes towers
+        <em>memorable</em>, while the metered element picks are what make a run a <em>decision</em>. Super Auto
+        Pets is the other clean case — its skill is almost entirely composition, played against stored
+        opponents, and it is the closest structural relative this design has.
+      </p>
+      <p class="verdict">
+        <strong>Live, and it now has to carry more weight than the vision assumed.</strong> With S1 and S8
+        deleted, S5 inverted and S2 unanchored, composition is not one axis among eight — it is the majority of
+        the remaining skill surface. The vision's instinct to spend the depth budget here is correct; what this
+        note adds is that it is not optional.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S7</span>Sequencing — order and timing</span>
+        <span class="chip live">Live</span>
+      </div>
+      <p>Same pieces, different order, different outcome.</p>
+      <p class="evidence">
+        Usually the genre's weakest axis, because in most games ordering is diluted by routing — a wave that
+        can split across paths does not really have an order. The exceptions prove the rule: where the lane is
+        single-file, order becomes a genuine lever, deciding which unit soaks the opening volley and which
+        arrives while a cooldown is down.
+      </p>
+      <p class="verdict">
+        <strong>Live, strengthened, and already half-built.</strong> The one-hex corridor that deletes S1 is
+        precisely what rescues S7 — a corridor that never branches <em>is</em> a single-file column, so there is
+        no routing left to dilute the order. The sending research reached the same conclusion independently and
+        recorded the two preconditions the skeleton already found: order is unobservable when units share a
+        speed, and unobservable again when a count spawns as one pile.
+      </p>
+    </div>
+
+    <div class="axis">
+      <div class="axis-head">
+        <span class="name"><span class="id">S8</span>Execution — acting during the wave</span>
+        <span class="chip dead">Deleted</span>
+      </div>
+      <p>Ability timing, target priority, and the manual interventions that rescue a wave in progress.</p>
+      <p class="evidence">
+        Present in most of the genre and load-bearing in some of it: ability chaining in Bloons TD 6, targeting
+        priority toggles, and at the extreme, Desktop Tower Defense's <em>juggling</em> — deliberately opening
+        and sealing alternate exits to walk a wave back and forth through the same maze indefinitely.
+      </p>
+      <p class="verdict">
+        <strong>Gone by design, and the deletion is correct.</strong> Nothing happens during a wave; that is
+        what makes a stored ghost a valid opponent and a submission barrier a substitute for netcode. The whole
+        multiplayer architecture rests on it. It is not reopenable and should not be reopened — but its cost
+        should be stated in the same breath, and it is the subject of §4.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 3 ============ -->
+  <section id="s3">
+    <h2 class="head"><span class="n">3</span>The matrix</h2>
+
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr>
+            <th>Axis</th>
+            <th>Tests</th>
+            <th>Strongest shipped case</th>
+            <th>Status here</th>
+            <th>Cause</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="axisname"><span class="id">S1</span> Geometry</td>
+            <td>Spatial reasoning</td>
+            <td>Desktop Tower Defense; Warcraft 3 mazes</td>
+            <td class="st"><span class="chip dead">Deleted</span></td>
+            <td>One-hex corridor, never branches</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S2</span> Wave knowledge</td>
+            <td>Preparation, recall</td>
+            <td>Bloons TD 6 restricted mode; Element TD</td>
+            <td class="st"><span class="chip risk">Unanchored</span></td>
+            <td>No baseline wave decided</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S3</span> Economy</td>
+            <td>Greed vs safety</td>
+            <td>Legion TD 2 income; BTDB2 eco dial</td>
+            <td class="st"><span class="chip risk">At risk</span></td>
+            <td>One purse removes the payback</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S4</span> Risk budgeting</td>
+            <td>Pricing your own loss</td>
+            <td>Legion TD 2 king HP</td>
+            <td class="st"><span class="chip live">Live</span></td>
+            <td>Needs a graded loss condition</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S5</span> Reading</td>
+            <td>Inference, concealment</td>
+            <td>Legion TD 2 build-hiding</td>
+            <td class="st"><span class="chip invert">Inverted</span></td>
+            <td>The ghost cannot react or lie</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S6</span> Composition</td>
+            <td>Synergy, commitment</td>
+            <td>Element TD; Super Auto Pets</td>
+            <td class="st"><span class="chip live">Live</span></td>
+            <td>The design's chosen depth</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S7</span> Sequencing</td>
+            <td>Order and timing</td>
+            <td>Single-file send lanes</td>
+            <td class="st"><span class="chip live">Live</span></td>
+            <td>Strengthened by the corridor</td>
+          </tr>
+          <tr>
+            <td class="axisname"><span class="id">S8</span> Execution</td>
+            <td>In-wave action</td>
+            <td>BTD6 abilities; DTD juggling</td>
+            <td class="st"><span class="chip dead">Deleted</span></td>
+            <td>No input during a wave</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.88rem;color:var(--ink-3)">
+      Four live, two deleted, one inverted, one unanchored. The two deletions are settled and correct. The
+      inversion and the unanchoring are open, and both are decidable on paper.
+    </p>
+  </section>
+
+  <!-- ============ 4 ============ -->
+  <section id="s4">
+    <h2 class="head"><span class="n">4</span>What this design is left holding</h2>
+
+    <div class="finding">
+      <span class="tag">Finding 1 · structural</span>
+      <p class="title">Every surviving axis is collected in the same phase.</p>
+      <p>
+        In every comparison game, skill is spread across two phases: you plan between waves <em>and</em> you act
+        during them. This design has no during. S8 is deleted outright, and S1 — the other axis that classically
+        pays off while the wave is running — is deleted too. Everything that is left is submitted before the
+        wave starts and is then unalterable.
+      </p>
+      <p>
+        That is a coherent architecture and it is what buys the whole multiplayer plan. But it means the build
+        phase is not <em>a</em> place skill lives; it is <em>the</em> place, and it has to be as dense as two
+        phases were elsewhere. A build phase that offers three clicks and a confirm button is not a smaller
+        version of Legion TD 2's build phase. It is the entire game.
+      </p>
+    </div>
+
+    <figure>
+      <div class="scroller">
+        <svg viewBox="0 0 760 250" role="img" aria-label="The submit, wait, resolve, watch loop with the eight skill axes attached. Seven of eight attach to the submit phase; the eighth, execution, attaches to resolve and is deleted.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <g style="color:var(--rule)" stroke="currentColor" stroke-width="1.5" fill="none">
+            <line x1="150" y1="180" x2="222" y2="180" marker-end="url(#ar)"/>
+            <line x1="318" y1="180" x2="390" y2="180" marker-end="url(#ar)"/>
+            <line x1="486" y1="180" x2="558" y2="180" marker-end="url(#ar)"/>
+            <path d="M690 205 L690 232 L90 232 L90 205" marker-end="url(#ar)"/>
+          </g>
+
+          <g fill="none" stroke-width="1.5">
+            <rect x="30" y="155" width="120" height="50" rx="3" style="stroke:var(--attack)" fill="var(--surface)"/>
+            <rect x="222" y="155" width="96" height="50" rx="3" style="stroke:var(--rule)" fill="var(--surface)"/>
+            <rect x="390" y="155" width="96" height="50" rx="3" style="stroke:var(--rule)" fill="var(--surface)"/>
+            <rect x="558" y="155" width="132" height="50" rx="3" style="stroke:var(--rule)" fill="var(--surface)"/>
+          </g>
+
+          <g font-size="13" font-weight="600" text-anchor="middle" style="fill:var(--ink)">
+            <text x="90"  y="185">SUBMIT</text>
+            <text x="270" y="185">WAIT</text>
+            <text x="438" y="185">RESOLVE</text>
+            <text x="624" y="185">WATCH</text>
+          </g>
+          <g font-size="10" text-anchor="middle" style="fill:var(--ink-3)">
+            <text x="270" y="252">the loop, at three latencies</text>
+          </g>
+
+          <g style="color:var(--rule)" stroke="currentColor" stroke-width="1" fill="none" stroke-dasharray="3 3">
+            <line x1="90" y1="128" x2="90" y2="155"/>
+            <line x1="438" y1="128" x2="438" y2="155"/>
+          </g>
+
+          <g fill="none" stroke-width="1.5">
+            <rect x="18" y="28" width="290" height="100" rx="3" style="stroke:var(--defense)" fill="none"/>
+            <rect x="368" y="88" width="140" height="40" rx="3" style="stroke:var(--dead)" fill="none" stroke-dasharray="4 3"/>
+          </g>
+
+          <g font-size="10" letter-spacing="1.4" font-weight="600">
+            <text x="30" y="20" style="fill:var(--defense)">SEVEN OF EIGHT AXES ATTACH HERE</text>
+            <text x="380" y="80" style="fill:var(--dead)">DELETED</text>
+          </g>
+
+          <g font-size="11.5" style="fill:var(--ink-2)">
+            <text x="34" y="52">S2 wave knowledge   S3 economy</text>
+            <text x="34" y="72">S4 risk budgeting   S5 reading (inverted)</text>
+            <text x="34" y="92">S6 composition      S7 sequencing</text>
+            <text x="34" y="112" style="fill:var(--ink-3)">S1 geometry — deleted by the corridor</text>
+            <text x="380" y="113" style="fill:var(--ink-3)">S8 execution</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>
+        The vision's own loop, annotated with where skill can attach. In Legion TD 2, Bloons TD 6 and Desktop
+        Tower Defense, the resolve phase is a second place to be good at the game. Here it is empty by
+        construction — which is what makes a stored ghost a legal opponent, and what concentrates the entire
+        skill surface into a single box on the left.
+      </figcaption>
+    </figure>
+
+    <div class="finding">
+      <span class="tag">Finding 2 · the ghost</span>
+      <p class="title">The async ghost turns the genre's richest PvP skill into a lookup.</p>
+      <p>
+        Reading an opponent is inference under uncertainty. A stored defense removes the uncertainty: it is
+        visible, static, and cannot respond to being read. What is left is an optimisation problem with a known
+        input — genuinely skilful the first fifty times, and then a table.
+      </p>
+      <p>
+        The vision already anticipated the symptom in a different context, warning that counter-picking could
+        collapse to a lookup if the ghost is shown before composition. This note's contribution is that
+        <strong>the cause is not the gating idea. It is the ghost itself</strong>, and it applies whichever way
+        seam 1 decides gating.
+      </p>
+      <p>
+        Three mitigations exist and they are all cheap, because they are ordering rules over a record that
+        already exists — <em>compose before the draw</em>, <em>show a summary rather than a layout</em>, or
+        <em>commit and then reveal</em>. All three trade the optimisation puzzle back for a genuine read. None
+        of them needs an engine, and the right time to choose is step 6, when opponent defenses first come from
+        a folder.
+      </p>
+    </div>
+
+    <div class="finding">
+      <span class="tag">Finding 3 · one purse</span>
+      <p class="title">The economy axis is not merely hard to balance — without a payback it is not an axis.</p>
+      <p>
+        The vision treats one purse as a balance problem with three known answers. Read through skill
+        expression it is a bigger claim than that. Both surviving competitive tower defense games put their
+        highest skill ceiling on the same lever, and in both cases the lever exists because the attack purchase
+        <em>returns</em> something: permanent income in Legion TD 2, eco per six seconds in Bloons TD Battles 2.
+        A purchase that only ever subtracts has no timing question attached to it, and timing is what players
+        practise.
+      </p>
+      <p>
+        This does not argue against one purse. It argues that <strong>step 1's payback decision is the single
+        highest-leverage decision in the entire build order for skill expression</strong>, higher than the
+        roster, and it is due on the day the purse is added rather than after.
+      </p>
+    </div>
+
+    <div class="finding">
+      <span class="tag">Finding 4 · the baseline</span>
+      <p class="title">With no public wave, there is nothing for preparation to be preparation about.</p>
+      <p>
+        A memorised schedule is a skill. It is also, in Legion TD 2 and Element TD alike, the constant that
+        makes everything else legible: a send reads as aggressive only against a wave both players already
+        know. Here the player composes the entire wave, so the constant is absent and S2 has no object.
+      </p>
+      <p>
+        The vision lists the baseline wave as an open question blocking step 1, justified as cheap insurance
+        for a newcomer's legibility. The stronger justification is that <strong>it is the only thing that
+        makes preparation a skill at all</strong>, and it doubles as the fix for Finding 2 — a public constant
+        is something to read a send <em>against</em> without needing to inspect an opponent's board.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 5 ============ -->
+  <section id="s5">
+    <h2 class="head"><span class="n">5</span>Where the fun could fail</h2>
+
+    <p>
+      §1's six mechanisms, run past this design's specific commitments. Three of them are at risk in ways that
+      are particular to this game rather than to the genre.
+    </p>
+
+    <h3>Two boards halve the payment</h3>
+    <p>
+      §1.6 says the watching phase is where the player is paid. This design runs two resolutions at once and
+      asks the player to watch both. Attention is not additive: a player watching two boards sees each of them
+      about half as well, and the moment that pays — <em>your</em> tower killing <em>that</em> unit because you
+      bought it three waves ago — is exactly the moment that gets lost when the eye is elsewhere.
+    </p>
+    <p>
+      The vision already names the two-board interface as the hardest unsolved problem in the design, on
+      legibility grounds. This adds a second reason, and it argues for the boards being staged rather than
+      simultaneous — resolve one, then the other — unless the interface work proves that simultaneity reads.
+    </p>
+
+    <h3>An absent opponent has no face</h3>
+    <p>
+      §1.2 says legible loss is the genre's best property, but a legible loss to <em>nobody</em> is thinner
+      than a legible loss to a person. Super Auto Pets is the direct precedent and it works, which is
+      reassuring; the vision's social layer seam exists for exactly this reason and should be read as a fun
+      requirement rather than a nicety.
+    </p>
+
+    <h3>A computed roster tends to flat</h3>
+    <p>
+      The balance harness is a genuine asset and the vision's argument for it holds. The risk it carries for
+      fun is specific: a sweep finds outliers, and the natural response to a red cell is to remove the outlier.
+      Repeat that enough times and you converge on a roster where everything is equally good — which is to say,
+      where composition does not matter, which deletes S6.
+    </p>
+    <div class="note good">
+      <p>
+        The vision already has half of this in hand — it notes that depth and computed balance are the same
+        axis pointing opposite ways. The practical version for the harness is that <strong>the target is not a
+        flat win-rate table. It is a table where every unit has both a strong and a weak column.</strong> A unit
+        with no bad matchup is as much a failure as one with no good matchup, and the sweep can report both
+        from the same CSV.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ 6 ============ -->
+  <section id="s6">
+    <h2 class="head"><span class="n">6</span>What to measure, and when</h2>
+
+    <p>
+      The build order asks <em>is this fun</em> first, deliberately, and steps 1 to 4 run from a shell. The
+      useful observation is that a sweep harness pointed at skill expression rather than at balance answers
+      several of the questions above without an engine and without a player.
+    </p>
+
+    <h4>Three measurements the harness can already produce</h4>
+    <ol>
+      <li>
+        <strong>Strategy spread.</strong> Sweep every composition against every stored defense and report the
+        win-rate range across compositions. A narrow range means the decisions do not matter — the S6 failure
+        in §5 — and it is visible long before a human would feel it.
+      </li>
+      <li>
+        <strong>Order sensitivity.</strong> Take one wave, permute its send order, and report the outcome
+        spread. If permuting the order changes nothing, S7 is not live yet, and the two known preconditions
+        (shared speeds, piled counts) are the first place to look. This is a direct test of a claimed axis and
+        it costs a loop.
+      </li>
+      <li>
+        <strong>Both-columns check.</strong> For each unit, report its best and worst matchup rather than its
+        mean. A unit with no weak column is the flatness failure; a unit with no strong column is dead weight.
+        Same CSV, one extra pair of columns.
+      </li>
+    </ol>
+
+    <h4>Two decisions this note would move earlier</h4>
+    <ul>
+      <li>
+        <strong>The baseline wave, from open question to step 1.</strong> It already blocks step 1 in the
+        vision. Finding 4 upgrades the reason: it is not insurance, it is the anchor an entire skill axis
+        hangs from, and it is a text file.
+      </li>
+      <li>
+        <strong>Ghost-reveal ordering, at step 6.</strong> Whether the opponent's defense is visible before or
+        after composition is a one-line rule with a large effect on whether S5 is a read or a lookup. It costs
+        nothing to decide at the moment defenses first come from a folder, and a great deal to revisit after a
+        pool exists.
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ 7 ============ -->
+  <section id="s7">
+    <h2 class="head"><span class="n">7</span>What could not be verified</h2>
+
+    <ul>
+      <li>
+        <strong>Sourcing depth is uneven.</strong> The Legion TD 2 manual and advanced guide, the mazing guide,
+        the Stardock design journal, the Kingdom Rush level analysis, the Positech post and the reinforcement-learning
+        paper were read directly. The Bloons TD 6 round landmarks, the Bloons TD Battles 2 eco figures, the
+        Desktop Tower Defense history, the Plants vs. Zombies design account and the Koster summary come from
+        search result extracts rather than the primary pages, and the eco numbers in particular should be
+        re-checked against the wiki before any of them is used to set a rate.
+      </li>
+      <li>
+        <strong>No GDC talk or first-party postmortem on tower defense design was found.</strong> Searches for
+        Ironhide, Defense Grid and Anomaly returned nothing of that kind. The designer-side sources here are
+        blog posts and dev journals, which is a weaker class of evidence than the vision's other notes rest on.
+      </li>
+      <li>
+        <strong>The eight-axis taxonomy is mine, not a citation.</strong> It is a reading of the survey, and
+        the boundaries between S3 and S4, and between S6 and S2, are arguable. It is offered because it makes
+        the audit in §3 possible, not because the genre agrees on it.
+      </li>
+      <li>
+        <strong>Nothing here was tested in this build.</strong> Every claim about what this design deletes is
+        read off the vision and the settled decisions, not off play. The three measurements in §6 exist
+        precisely because none of this has been observed.
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ sources ============ -->
+  <section id="sources">
+    <h2 class="head">Sources</h2>
+    <ol class="sources">
+      <li><a href="https://beta.legiontd2.com/manual/">Legion TD 2 — game manual</a>. Twenty-one waves, worker mythium at 1 per 10 seconds, income rising permanently on mythium spend, leak and clear rules.</li>
+      <li><a href="https://gameplay.tips/guides/legion-td-2-advanced-game-guide.html">Legion TD 2 — advanced game guide</a>. "King HP is a resource, to a certain extent"; information hiding as a weapon; power spikes and income sends.</li>
+      <li><a href="https://maultactics.gg/articles/mazing-guide">Maul Tactics — the complete guide to maze tower-defense</a>. The two-seconds-to-twelve switchback figure, kill-box concentration, the anti-block line.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Desktop_Tower_Defense">Desktop Tower Defense</a> and its <a href="http://desktoptowerdefense.blogspot.com/2007/05/desktop-tower-defense-tip-juggling.html">juggling tip, 2007</a>. Paul Preece, March 2007, 15.7 million plays by July; juggling as in-wave execution.</li>
+      <li><a href="https://www.bloonswiki.com/CHIMPS">Bloons TD 6 — restricted mode</a> and <a href="https://bloons.fandom.com/wiki/C.H.I.M.P.S./Strategies">its strategies</a>. The round landmarks at 24, 28, 40, 63 and 98; the restriction set.</li>
+      <li><a href="https://bloons.fandom.com/wiki/Eco_(BTDB2)">Bloons TD Battles 2 — eco</a>. Income every six seconds; low tiers grant eco, high tiers penalise it; sends as the single continuous dial between pressure and economy.</li>
+      <li><a href="https://www.stardock.com/games/article/495008/siege-of-centauri-dev-journal-what-makes-a-good-tower-defense-game">Stardock — what makes a good tower defense game</a>. Variety across creeps, towers and missions; the watching-and-waiting problem; interface clarity as a decision prerequisite.</li>
+      <li><a href="https://www.positech.co.uk/cliffsblog/2012/10/18/tower-defense-game-design/">Positech — tower defense game design</a>. Genre conventions as arbitrary starting points rather than rules.</li>
+      <li><a href="https://www.gamedeveloper.com/design/gdc-2012-10-tutorial-tips-from-i-plants-vs-zombies-i-creator-george-fan">Game Developer — George Fan's tutorial tips</a> and <a href="https://www.gamedeveloper.com/design/video-how-i-plants-vs-zombies-i-designer-got-his-mom-to-play">the accessibility talk</a>. Silhouette-readable function; stripping the genre to its intuitive parts.</li>
+      <li><a href="https://www.gamedeveloper.com/design/kingdom-rush---the-wonderful-campaign-level-design">Game Developer — Kingdom Rush campaign level design</a>. Restricted placement points, pacing through breather levels, mastery-based replay.</li>
+      <li><a href="https://arxiv.org/html/2406.07980v1">Reinforcement learning for high-level strategic control in tower defense games</a>. The four high-level strategy classes; a 5×9×6 = 270 action space; strategy selection as level-dependent.</li>
+      <li><a href="https://www.shortform.com/summary/a-theory-of-fun-for-game-design-summary-raph-koster">Raph Koster — A Theory of Fun for Game Design</a>. Fun as mastery; boredom as the exhaustion of a pattern.</li>
+      <li><a href="https://store.steampowered.com/app/1714040/Super_Auto_Pets/">Super Auto Pets</a> and <a href="https://indiehellzone.com/2021/10/26/super-auto-pets/">a design account of it</a>. Composition skill against stored player-built opponents.</li>
+      <li>This repository — <code>docs/vision.md</code>, and the landed notes on <code>build-depth-in-tower-defense</code>, <code>attack-composition-and-sending</code>, <code>creep-wave-variety-and-creep-upgrade-systems</code>, <code>element-td-ancestry-and-wc3-tower-mechanics</code> and <code>towers-versus-placed-squads</code>. Every claim about what this design has settled is read off these.</li>
+    </ol>
+  </section>
+
+  <p class="footer">
+    Decision input for seams 1, 3 and 7 · decides nothing · where it disagrees with docs/vision.md, the vision
+    is current until a seam says otherwise.
+  </p>
+
+</div>
