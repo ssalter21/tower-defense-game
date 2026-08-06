@@ -2,15 +2,16 @@
 
 ## Start here
 
-**[The Vision](vision.md)** is the standing document — what this game is, what it is not, and the eight seams
-that build it. It fixes the destination the five deep dives below were written to find, and **where it
-disagrees with any of them, it is current**; its [§9](vision.md#9-what-this-overturns) lists every place it
-replaces one.
+**[The Vision](vision.md)** is the standing document — what this game is, what it is not, and the order it gets
+built in. It fixes the destination the five deep dives below were written to find, and **where it disagrees
+with any of them, it is current**; its [§9](vision.md#9-what-this-overturns) lists every place it replaces one.
 
 In one line: *a technically excellent tower defense, built for the pleasure of building it, whose multiplayer
 is real — and every mode of it is the same machine at a different latency.*
 
-Each of its eight seams is the subject of its own wayfinder map, planned and worked separately.
+[§8](vision.md#8-the-build-order) is the build order: a seven-step sequence ordered by what is cheapest to
+learn rather than by what depends on what, with the eight seams it serves mapped onto it. Each seam is still
+the subject of its own wayfinder map, planned and worked separately.
 
 ## The five deep dives
 
@@ -102,8 +103,14 @@ record format, a headless CLI (`simcli/`), and a Unity 6 URP view that scrubs a 
 Part II §6's build order is no longer the plan. It sequenced a *commercial* game, and steps 4 through 7 —
 ship it, turn on submission, add rating, then friend lobbies last — do not survive
 [the destination the vision fixes](vision.md#1-the-destination). What replaces it is
-[the eight seams](vision.md#8-the-seams), each planned as its own wayfinder map. **The match format is next**,
-because everything else is downstream of it.
+[the vision's build order](vision.md#8-the-build-order).
+
+**What is next is an economy.** The skeleton's machinery is excellent and it takes no input from a player:
+four unit types, one fixed defense, one fixed wave, no currency, no build phase, one wave per run. So the
+build order is sequenced by what is cheapest to *learn* rather than by what depends on what, and the first
+four steps — a purse, a run of N waves recorded as a command stream, a ten-unit roster, and a sweep harness —
+run from a shell with no engine in them. The match format seam is still where the game is going; what changed
+is that its first half is now played rather than finished on paper.
 
 ## What has been settled since
 
