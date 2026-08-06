@@ -1,18 +1,15 @@
 namespace Sim
 {
     /// <summary>
-    /// A record's id: the hash of the record's own bytes. Computed from the
-    /// bytes in hand, never stored inside the record it identifies.
+    /// A record's id: the hash of the record's own bytes, computed from the
+    /// bytes in hand rather than stored inside the record.
+    /// See <c>docs/adr/0030-record-ids-are-content-addressed.md</c>.
     /// </summary>
     public static class RecordId
     {
-        /// <summary>
-        /// Names the fold. The digit is part of the hash input, so changing it
-        /// gives the same bytes a different id.
-        /// </summary>
+        // Part of the hash input, so changing it gives the same bytes a different id.
         private const string HashLabel = "record-id/1";
 
-        /// <summary>The id of these bytes.</summary>
         public static Hash64 Of(byte[] bytes) => Of(bytes, 0, bytes.Length);
 
         /// <summary>The id of a range of bytes -- an inner record inside a bundle.</summary>

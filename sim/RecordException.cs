@@ -3,11 +3,9 @@ using System;
 namespace Sim
 {
     /// <summary>
-    /// Thrown when a stored record cannot be read: wrong magic, a format version
-    /// this reader does not know, a truncation, an array out of canonical order,
-    /// or a bundle that contradicts itself. Reading is all-or-nothing -- there is
-    /// no partial read and no skipping an unrecognised field. Derives straight
-    /// from <see cref="Exception"/> and shares no base with
+    /// Thrown when a stored record cannot be read: wrong magic, an unknown
+    /// format version, a truncation, an array out of canonical order, or a
+    /// bundle that contradicts itself. Shares no base with
     /// <see cref="RetiredRecordException"/>, so neither can be caught as the
     /// other. See <c>docs/adr/0013-record-reading-is-an-all-or-nothing-gate.md</c>.
     /// </summary>
@@ -19,10 +17,7 @@ namespace Sim
             Record = record;
         }
 
-        /// <summary>
-        /// What the bytes were called, for the message. Never a file path: this
-        /// assembly is handed bytes and is not told where they came from.
-        /// </summary>
+        /// <summary>What the bytes were called. Never a file path.</summary>
         public string Record { get; }
     }
 
@@ -30,7 +25,7 @@ namespace Sim
     /// Thrown when a record that read perfectly well cannot be replayed, because
     /// the ruleset, the numbers or the geometry it was made under are not the
     /// ones in front of it. The record remains readable and can still be listed,
-    /// drawn and shown as historical. Names which gate refused and both values.
+    /// drawn and shown as historical.
     /// See <c>docs/adr/0014-reading-and-replaying-are-separate-gates.md</c>.
     /// </summary>
     public sealed class RetiredRecordException : Exception
@@ -43,7 +38,7 @@ namespace Sim
             Live = live;
         }
 
-        /// <summary>Which of the three replay gates refused: see the message.</summary>
+        /// <summary>Which of the three replay gates refused.</summary>
         public string Gate { get; }
 
         /// <summary>What the record says, rendered for a person.</summary>
@@ -52,7 +47,6 @@ namespace Sim
         /// <summary>What is actually in front of it, rendered the same way.</summary>
         public string Live { get; }
 
-        /// <summary>Formats the failing gate name alongside both values.</summary>
         private static string Describe(string gate, string recorded, string live) =>
             "This record will not replay: the "
             + gate

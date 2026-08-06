@@ -26,14 +26,9 @@ namespace Sim
         /// <summary>The tick the last of them stopped existing on.</summary>
         public int FinalTick { get; }
 
-        /// <summary>
-        /// The rolling hash of internal simulation state, folded once per tick
-        /// from the first tick to this one. Always computed; there is no
-        /// configuration in which it is not.
-        /// </summary>
+        /// <summary>Internal simulation state, folded once per tick from the first tick to this one.</summary>
         public Hash64 RollingStateHash { get; }
 
-        /// <summary>Renders as <c>"L of T leaked by tick N, state H"</c>.</summary>
         public override string ToString() =>
             Leaked.ToString(CultureInfo.InvariantCulture)
             + " of "

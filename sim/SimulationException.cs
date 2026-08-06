@@ -5,9 +5,9 @@ namespace Sim
 {
     /// <summary>
     /// Thrown when the simulation itself has gone wrong, as opposed to when
-    /// authored content will not load. One of the two types this assembly's
-    /// invariants throw; the throw is unconditional in every build
-    /// configuration. See <c>docs/adr/0025-invariants-are-unconditional-throws.md</c>.
+    /// authored content will not load. The throw is unconditional in every build
+    /// configuration.
+    /// See <c>docs/adr/0025-invariants-are-unconditional-throws.md</c>.
     /// </summary>
     public class SimulationException : Exception
     {
@@ -31,7 +31,6 @@ namespace Sim
             Actual = actual;
         }
 
-        /// <summary>The tick the two runs first disagreed on.</summary>
         public int Tick { get; }
 
         /// <summary>What the trace said the state was.</summary>
@@ -40,10 +39,6 @@ namespace Sim
         /// <summary>What this run's state actually was.</summary>
         public Hash64 Actual { get; }
 
-        /// <summary>
-        /// Formats the tick, both hashes, and what the hash covers that the
-        /// snapshot does not.
-        /// </summary>
         private static string Describe(int tick, Hash64 expected, Hash64 actual) =>
             "The simulation diverged from the golden trace at tick "
             + tick.ToString(CultureInfo.InvariantCulture)
