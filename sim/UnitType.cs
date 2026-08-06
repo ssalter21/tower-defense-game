@@ -2,12 +2,10 @@ using System.Globalization;
 
 namespace Sim
 {
-    /// <summary>Which half of the loop a unit type plays. A filter, not a class.</summary>
-    /// <remarks>
-    /// Towers and creeps are one kind of thing here. A placed unit that moves
-    /// and a moving unit that shoots are both reachable without a new type,
-    /// which is the reason the id space is shared.
-    /// </remarks>
+    /// <summary>
+    /// Which half of the loop a unit type plays. A filter, not a class -- towers
+    /// and creeps share one id space.
+    /// </summary>
     public enum UnitRole
     {
         /// <summary>Stands where it was put. What everyone else calls a tower.</summary>
@@ -31,25 +29,11 @@ namespace Sim
     }
 
     /// <summary>
-    /// One row of the unit type table: a stable numeric id and the integers
-    /// that describe it.
+    /// One row of the unit type table: a stable numeric id and the integers that
+    /// describe it. Every number is an integer in a named unit -- milli-hexes,
+    /// ticks. The id is assigned once, never reused, and never an index;
+    /// <see cref="Label"/> carries no identity and nothing branches on it.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b><see cref="Id"/> is the identity and <see cref="Label"/> is not.</b>
-    /// The id is assigned once, is never reused, and is never an index into
-    /// anything -- so a record that pins type 2 can never come back years later
-    /// and resolve to whatever moved into slot 2. The label exists for humans
-    /// reading the data file and for messages; nothing in the simulation
-    /// branches on it, and renaming one does not move the content hash.
-    /// </para>
-    /// <para>
-    /// Every number here is an integer in an explicitly named unit --
-    /// milli-hexes, ticks -- because "0.3 hexes per second" has no
-    /// representation the simulation can hold and no parser here would accept
-    /// the text of one.
-    /// </para>
-    /// </remarks>
     public sealed class UnitType
     {
         internal UnitType(
@@ -84,13 +68,10 @@ namespace Sim
             DyingTicks = dyingTicks;
         }
 
-        /// <summary>The stable numeric id, unique across the one global id space.</summary>
         public int Id { get; }
 
-        /// <summary>A human-readable name. Never an identity, never branched on.</summary>
         public string Label { get; }
 
-        /// <summary>Placed or moving.</summary>
         public UnitRole Role { get; }
 
         /// <summary>Health pool. Zero means the unit has none and cannot be damaged.</summary>
@@ -117,22 +98,21 @@ namespace Sim
         /// <summary>Highest damage roll, inclusive.</summary>
         public int DamageMax { get; }
 
-        /// <summary>How the damage reaches the target.</summary>
         public Delivery Delivery { get; }
 
-        /// <summary>Ticks a projectile spends in flight. Zero unless <see cref="Delivery"/> is a projectile.</summary>
+        /// <summary>Ticks in flight. Zero unless <see cref="Delivery"/> is a projectile.</summary>
         public int ProjectileFlightTicks { get; }
 
-        /// <summary>Ticks spent dying, so a seek into a death shows a death.</summary>
+        /// <summary>Ticks spent in the dying state before the unit is cleared away.</summary>
         public int DyingTicks { get; }
 
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
         /// <summary>
-        /// Folds this row into a hash, in field order. The order of these calls
-        /// is the layout the content hash pins: moving one line is a layout
-        /// change and bumps the label's version digit.
+        /// Folds this row into a hash in field order. The order of these calls is
+        /// the layout the content hash pins, so moving a line bumps the label's
+        /// version digit.
         /// </summary>
         internal Hash64 Fold(Hash64 hash) =>
             hash

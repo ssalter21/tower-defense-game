@@ -5,26 +5,12 @@ namespace Sim
 {
     /// <summary>
     /// The eighteen bytes every record of every kind begins with: magic, format
-    /// version, simulation version, content hash.
+    /// version, simulation version, content hash. Magic comes first and the
+    /// format version second, so everything after those six bytes is read on the
+    /// authority of what they said. Unknown magic and an unknown format version
+    /// both refuse outright.
+    /// See <c>docs/adr/0013-record-reading-is-an-all-or-nothing-gate.md</c>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>The reader knows how to parse the header before it parses the
-    /// header.</b> Magic first, so "these are not the bytes you thought" is
-    /// answered before anything is interpreted at all; then the format version,
-    /// which is the field that says where every other field is. Everything after
-    /// those six bytes is read on the authority of what they said.
-    /// </para>
-    /// <para>
-    /// <b>Reading is the first gate and it is hard.</b> Unknown magic and an
-    /// unknown format version both refuse outright. A format version <i>newer</i>
-    /// than this reader knows refuses for a reason worth spelling out: the reader
-    /// cannot know what it is missing, so there is no such thing as reading it
-    /// partially and being right about the part. An <i>older, known</i> version
-    /// reads perfectly well through its own branch, and that is the normal case
-    /// forever.
-    /// </para>
-    /// </remarks>
     public readonly struct RecordHeader : IEquatable<RecordHeader>
     {
         public RecordHeader(RecordKind kind, int formatVersion, uint simVersion, Hash64 contentHash)
@@ -38,10 +24,9 @@ namespace Sim
         /// <summary>Which record kind these bytes claim to be.</summary>
         public RecordKind Kind { get; }
 
-        /// <summary>The layout version, counted per kind. See <see cref="RecordFormat"/>.</summary>
+        /// <summary>The layout version, counted per kind.</summary>
         public int FormatVersion { get; }
 
-        /// <summary>The behaviour version. See <see cref="SimulationVersion"/>.</summary>
         public uint SimVersion { get; }
 
         /// <summary>The hash of the parsed type tables this record was made against.</summary>
@@ -50,7 +35,7 @@ namespace Sim
         /// <summary>
         /// The header the writer emits: this kind's current format version, this
         /// build's simulation version, and the content hash of the tables in
-        /// front of it. There is no way to ask for an older format, on purpose.
+        /// front of it. There is no way to ask for an older format.
         /// </summary>
         public static RecordHeader Current(RecordKind kind, Hash64 contentHash) =>
             new RecordHeader(kind, RecordFormat.CurrentVersionOf(kind), SimulationVersion.Current, contentHash);
@@ -123,6 +108,7 @@ namespace Sim
             return new RecordHeader(expected, formatVersion, simVersion, Hash64.FromValue(contentHash));
         }
 
+        // Separate messages for a version newer than this reader and one it has no branch for.
         private static string Unknown(RecordKind kind, int formatVersion)
         {
             int current = RecordFormat.CurrentVersionOf(kind);
@@ -149,6 +135,7 @@ namespace Sim
                 + "rather than a record that is wrong.";
         }
 
+        // Names the kind the magic actually belongs to, when it belongs to one.
         private static string WhatItLooksLike(string magic)
         {
             if (!RecordFormat.TryKindOfMagic(magic, out RecordKind actual))
@@ -159,7 +146,7 @@ namespace Sim
             return ". Those are the bytes of a " + RecordFormat.NameOf(actual);
         }
 
-        /// <summary>Four bytes as a person would want to see them in a message.</summary>
+        /// <summary>Four bytes quoted, with unprintable ones shown as question marks.</summary>
         private static string Render(string magic)
         {
             var shown = new char[magic.Length];

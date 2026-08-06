@@ -3,26 +3,12 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// The whole read side of the record format: a position in a byte array and
-    /// the same six little-endian primitives the writer has, each of which
-    /// refuses rather than running off the end.
+    /// The read side of the record format: a position in a byte array and the
+    /// same six little-endian primitives the writer has. Every read is
+    /// bounds-checked and every failure names the field; bytes left over at the
+    /// end are refused rather than ignored.
+    /// See <c>docs/adr/0013-record-reading-is-an-all-or-nothing-gate.md</c>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>Every read is bounds-checked and every failure names the field.</b>
-    /// The format has fixed-width fields and no length prefixes, so there is
-    /// nothing to skip by: a reader that ran past the end and got a zero would
-    /// not be degrading gracefully, it would be inventing a tower. "Ran out of
-    /// bytes reading tower 4 of 6" is the message that turns a truncated
-    /// download into a one-line diagnosis.
-    /// </para>
-    /// <para>
-    /// <see cref="ExpectEnd"/> is the other half of the same rule. Bytes left
-    /// over after a record has been read mean the reader and the writer disagree
-    /// about the layout, which is exactly the disagreement a format version
-    /// exists to make impossible -- so trailing bytes are a refusal, not slack.
-    /// </para>
-    /// </remarks>
     internal sealed class ByteCursor
     {
         private readonly string _record;
@@ -37,13 +23,10 @@ namespace Sim
             _bytes = bytes;
         }
 
-        /// <summary>What the bytes are called, for a message.</summary>
         internal string Record => _record;
 
-        /// <summary>How far in the cursor has got.</summary>
         internal int Position => _position;
 
-        /// <summary>How many bytes are left.</summary>
         internal int Remaining => _bytes.Length - _position;
 
         internal int U8(string field)
@@ -121,10 +104,8 @@ namespace Sim
         }
 
         /// <summary>
-        /// A copy of a range already read. This is how an inner record's own
-        /// bytes are kept so its id can be taken over them, rather than by
-        /// re-serialising a parsed record -- which would silently rewrite an
-        /// older format version into the current one and change the id.
+        /// A copy of a range already read, keeping an inner record's own bytes so
+        /// its id can be taken over them rather than over a re-serialised parse.
         /// </summary>
         internal byte[] Slice(int start, int count)
         {
@@ -138,7 +119,6 @@ namespace Sim
             return taken;
         }
 
-        /// <summary>Refuses if anything is left over. See the remarks on <see cref="ByteCursor"/>.</summary>
         internal void ExpectEnd(string what)
         {
             if (Remaining == 0)
@@ -157,7 +137,6 @@ namespace Sim
                 + "ignored.");
         }
 
-        /// <summary>Refuses with a message naming the field and the shortfall.</summary>
         internal RecordException Fault(string message) => new RecordException(_record, message);
 
         private void Need(string field, int count)
