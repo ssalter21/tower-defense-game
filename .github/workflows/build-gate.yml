@@ -77,8 +77,16 @@ jobs:
       # fresh build of the same sources; the poison suite, which builds
       # sim.poison and requires every banned row to fire from its own
       # violation; and the source-level ban on conditional compilation.
+      #
+      # Detailed verbosity so BudgetTests prints its measurement on the runs it
+      # PASSES, not only the ones it fails. The budget is a ratio against a
+      # reference workload timed on the same machine, and the whole point of
+      # that design is that the headroom is a number somebody can read off a
+      # green run and tune. At normal verbosity xUnit shows test output only
+      # for failures, which is how a budget spent three days at 1.35x its limit
+      # without anyone being able to see it coming.
       - name: Tests, IL scan on both images, poison suite, preprocessor ban
-        run: dotnet test sim.tests --configuration Debug --nologo
+        run: dotnet test sim.tests --configuration Debug --nologo --logger "console;verbosity=detailed"
 
       # The observation the headless runner exists for: play the committed
       # bundle and require the trace and the landmark table it produces to be
@@ -130,10 +138,20 @@ jobs:
   # WHY `dotnet test` IS NOT IN HERE. The IL scan, the poison suite, the
   # file-size check and the project-settings check are assertions about files,
   # and a file is the same file on three operating systems. Running them six
-  # ways would buy nothing and would put BudgetTests -- a wall-clock timing test
-  # with a ten-millisecond median -- onto three classes of runner, where it is a
-  # flake waiting to be muted. Determinism is what this job tests, and it is all
+  # ways would buy nothing. Determinism is what this job tests, and it is all
   # this job tests.
+  #
+  # This paragraph used to carry a second reason: that running the tests here
+  # would put BudgetTests -- then a wall-clock timing test with a hard-coded
+  # ten-millisecond median -- onto three classes of runner, "where it is a flake
+  # waiting to be muted". That reasoning was right, and it was right about the
+  # gate job above too, which is where the test actually lived: it went red on
+  # `main` from 3 to 6 Aug 2026 on a docs-only merge, twice, on a tick loop that
+  # had not changed. The budget is now a ratio against a reference workload
+  # timed on the same machine in the same run, so it no longer has a runner
+  # speed term and would survive this matrix. It is still not run here, for the
+  # first reason only: six runs of it would cost six times the wall clock to
+  # test the one thing this job does not care about.
   determinism:
     name: ${{ matrix.simulation }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
