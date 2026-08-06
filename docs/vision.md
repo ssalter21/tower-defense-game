@@ -123,6 +123,12 @@ The cost is that **the pool needs depth at every stage, not just at the end**, w
 cold-start problem rather than removing it. Hand-authored defenses at each stage are the answer, and they cost
 nothing architecturally: a hand-built defense and a stored one are the same object.
 
+> ⚠️ **And [map rotation](#the-map-rotates-and-it-is-generated) multiplies that cost by the rotation rate.**
+> A pool is now indexed by `(map, stage)` rather than by stage alone, so every turnover empties it. The
+> cold-start problem stops being something the project has *once* and becomes something it has *every cycle*.
+> This is the strongest argument in the document for a slow rotation, and it is why the cadence is an open
+> question rather than a preference.
+
 ---
 
 ## 3. What a match is
@@ -282,6 +288,54 @@ This is the single largest reversal in the document, and four things follow from
 > levers died to the corridor and now return, which is a gain — but the map has to be designed to keep the
 > column, not merely to be interesting.
 
+### The map rotates, and it is generated
+
+**The round-robin runs on one map at a time, and that map turns over on a schedule — daily or weekly.** Maps
+are generated rather than authored, and a map is identified by a seed rather than stored as a file.
+
+This is the second half of the answer to solvability, and it is the half that keeps working. A hard map buys
+time; **a map nobody has seen before buys it permanently.** The [maze reversal](#the-board-is-a-maze-again--reversed-6-august-2026)
+makes each map deep; rotation makes the depth renewable, which matters more here than in most games because
+[§4](#4-what-persists) has no unlock ramp to spread learning across weeks.
+
+Three properties come with it and each is load-bearing:
+
+- **Everyone in a cycle plays the same map.** This is what makes results comparable at all — the shared-seed
+  logic Slay the Spire's daily runs on, where an identical seed for every player worldwide is precisely what
+  makes the scoreboard mean something. It is also required by
+  [§3's both-boards structure](#both-boards-at-once): two resolutions on two different maps are not a match.
+- **A map is a seed, not an asset.** `HexMap.FromCells` already builds a grid without a filesystem, `Match`
+  already takes a `ulong seed`, and `HexMap.MapHash` already hashes the parsed grid. So a generated map is a
+  handful of bytes in a record and a hash the server can check — which means **rotation costs the ghost format
+  nothing and anti-cheat still falls out for free.**
+- **Generation is filtered by simulation, not by taste.** This is where the identity in
+  [§12](#12-the-planning-phase-is-the-game) pays for itself, and it gets its own paragraph below.
+
+> **The generator is the harness pointed backwards.** The standard method for this is *search-based procedural
+> content generation*: generate a large volume of candidates, score each with a fitness function, and let the
+> score steer the next generation. The literature's standing complaint about it is that a simulation-based
+> fitness function is too slow to run at scale — **which is the one problem this project does not have.** At
+> 2.75 ms a match, a candidate map can be swept by the same harness that prices units, and scored on the thing
+> that actually matters: how widely outcomes spread across good plans. A map where every competent plan scores
+> the same is solved; a map where they diverge has decisions in it. **Maps are therefore selected against a
+> measurement of their own solvability**, which no tower defense has been able to afford.
+
+⚠️ **Rotation partitions the ghost pool, and this is a real cost that needs an answer.**
+[§2](#2-the-loop--one-machine-at-three-latencies) already says the pool needs depth *at every stage*.
+`GhostRecord` already carries both a `MapHash` and a `MapHandle` — the format anticipated this — so a pool
+index keyed on `(map, stage)` needs no format change. What it needs is **population**, and a daily map means a
+cold pool at every stage every single day. Three ways out, none chosen here: rotate slowly enough that the pool
+fills, generate the hand-authored floor for each map with the map, or let the pool carry across maps and accept
+that a stored defense meets waves on geometry it was not built for. This is now an open question in
+[§10](#the-open-questions).
+
+⚠️ **Rotation must be generated, never curated.** [§7](#7-what-runs-it) permits exactly one permanent
+obligation and [§4](#4-what-persists) rules out live-service cadence in the strongest terms in the document. A
+map-of-the-week that a person authors is that cadence wearing a different hat. A scheduler drawing from a
+pre-generated archive is not: the archive is built once, offline, by the harness, and the schedule is
+arithmetic on a date. **The distinction is not pedantic — it is the difference between a rotation this project
+can keep and one it cannot.**
+
 ### Wave variance is anchored, not emergent
 
 **At fixed, known waves, the run injects a major variance event** — a choice, an upgrade, or a class of unit
@@ -386,6 +440,13 @@ was a claim on credit until now; this document is where it gets spent.
 > worth building *before* the roster is large, not after. A red cell naming a mispriced unit while there are
 > only eight units makes every subsequent unit cheaper to author, which is why the build order in
 > [§8](#8-the-build-order) puts the harness fourth instead of leaving it downstream of a finished roster.
+
+> **The harness has a second job now, and it was not foreseen when this section was written.** Pointed at
+> units it prices them; pointed at **maps** it scores them, which is what makes
+> [generated rotation](#the-map-rotates-and-it-is-generated) possible. Same sweep, same CSV, different axis —
+> and it is the component that turns "a maze that is far less solvable" from a wish into a filter. It should
+> be built with that second use in mind at step 4 rather than retrofitted, because the difference is whether
+> the sweep takes its map as a fixed input or as a parameter.
 
 **It is not a luxury at this scale — it is the only option that works.** Telemetry balancing needs player
 volume that a personal build will never have. Hand balancing finds only the loudest problems and reliably
@@ -760,6 +821,7 @@ had deleted or inverted.
 | **§3** — wave composition | The player composes the whole wave; a baseline wave was an open question | **Anchored.** A public schedule injects major variance at fixed, known waves | Without a public constant, preparation had nothing to be a skill about |
 | **§3** — the offering | Not specified; the depth research ranked a private random offering third | **Public. Everyone sees the same options**, Mechabellum-style | A send is only a read if both players know the menu — and it makes the shop a second-order decision |
 | **§2 / §3** — the async ghost | Opponents are drawn and their stored defense is what you compose against | **The round-robin no longer shows you a board.** It pays you in statistics over the field instead | A frozen defense cannot react or lie, so inspecting it produces a lookup rather than a read |
+| **§2 / §3** — the map | One authored corridor, implicitly permanent | **Generated, and rotating daily or weekly**, selected by sweeping candidates for outcome spread | A hard map buys time; an unseen one buys it permanently — and the harness can already measure which is which |
 | **Bottom line** | "the creeps you can send determined by the towers you chose" | **Dropped from the bottom line, still live in §3 as a direction.** A public shared offering is in tension with a private tower-gated pool, and seam 1 now owns the reconciliation | Recorded rather than silently cut |
 
 ---
@@ -859,6 +921,19 @@ unblocked.
   decision regardless of which direction seam 1 takes. It also bears directly on
   [§6's](#6-what-it-looks-like) accessibility pillar: a newcomer with no baseline has nothing to compare
   against.
+- **What the rotation cadence is, and how the pool survives it.** **Added 6 August 2026.** Daily and weekly
+  pull in opposite directions and the pool is the thing being pulled. Faster rotation buys freshness against
+  solving and gives the whole player base one shared map to be compared on — but it empties the
+  `(map, stage)` ghost pool every cycle, and the pool is what the async mode *is*. Slower rotation lets the
+  pool fill and lets a map be learned, which is most of where mastery would come from, at the cost of the map
+  being solved before it turns over. **The three candidate answers are in
+  [§3](#the-map-rotates-and-it-is-generated)**; the note that surveys them is
+  [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking
+  until step 6, since nothing before that reads a pool at all.
+- **How big the map archive has to be, and whether a map may ever repeat.** A generator plus a sweep produces
+  an archive; a scheduler draws from it. Whether the archive is large enough that no player sees a map twice,
+  or small enough that maps become known quantities with a metagame, is a design choice and not a capacity
+  one — and it is the same lever as the cadence, viewed from the other end.
 - **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those
   are one ladder or two is unresolved.
 
@@ -942,9 +1017,19 @@ tower defense has because no tower defense could afford it:
 - **A computed highlight reel.** Because the whole match is resolved before anything is drawn, the moments
   worth showing can be *chosen* rather than recorded — the closest call, the first leak, the shot that
   decided it. You should not watch a hundred matches. You should watch the three that came down to one unit.
-- **"Far less solvable" becomes measurable.** The harness already exists to price units; pointed at maps and
-  strategies instead it reports how wide the outcome spread is across good plans, which is what "solvable"
-  means when written down.
+- **"Far less solvable" becomes measurable, and then becomes a filter.** The harness already exists to price
+  units; pointed at maps and strategies instead it reports how wide the outcome spread is across good plans,
+  which is what "solvable" means when written down. Wire that score back into a generator and it stops being
+  a report and becomes **selection pressure** — the search-based generation loop
+  [§3](#the-map-rotates-and-it-is-generated) rests on. The standard objection to that method is that
+  simulating every candidate is too slow; at 2.75 ms it is not.
+- **Seeding has to be as cheap as running.** A generated, rotating, verifiable map is only affordable if
+  producing one is a pure function of a seed with no filesystem in it — which is what
+  [ADR 0018](adr/0018-the-simulation-never-touches-the-filesystem.md) already requires of everything else in
+  `sim/`. The pieces are in place: `HexMap.FromCells` builds a grid from bytes, `Match` already threads a
+  `ulong seed`, and `MapHash` hashes the parsed grid so a server can verify which map a client claims to have
+  played. **What is missing is a `simcli` mode that turns a seed into a map and a match, and it should be
+  built when the harness is** — a generator you cannot invoke from a shell is a generator no sweep can use.
 
 ### The constraint that makes all of it safe
 
