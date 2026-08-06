@@ -241,6 +241,16 @@ cross-platform matrix for free, which is itself a reason the repo lives there:
 - **The matrix.** `windows-latest`, `ubuntu-latest`, `macos-latest` (arm64), each in Debug and Release. Six
   runs, all must equal the committed golden. Catches the architecture and configuration divergence Fiedler
   catalogues, on every push.
+
+  > ✅ **Built 6 Aug 2026** as the `determinism` job in `.github/workflows/build-gate.yml`, closing
+  > [#63](https://github.com/ssalter21/tower-defense-game/issues/63). Six rows, `fail-fast` off, each playing
+  > the committed bundle and comparing the trace, the landmark table and every historical golden result byte
+  > for byte. **The Debug and Release axis needed a reading this bullet does not supply:** the simulation is
+  > consumed everywhere as the *committed* `Sim.dll`, which is a Debug build and is required to stay one, so
+  > `--configuration Release` would have built the test assembly in Release and gone on playing the same Debug
+  > simulation. Debug is therefore the committed image and Release is a fresh optimised build of `sim/`,
+  > selected by `tools/run-headless-match.ps1 -Simulation`, and the row asserts which image it actually loaded
+  > rather than trusting the property meant to point it there.
 - **Nightly fuzz.** 10,000 random layout/wave pairs asserting self-consistency across configurations. This is
   where sort-stability and iteration-order bugs surface, because they need unusual inputs to bite.
 - **One CLI, shared.** `simcli play --seed X --defense a.ghost --wave b.wave --hash-trace`. The same binary the

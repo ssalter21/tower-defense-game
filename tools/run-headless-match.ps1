@@ -18,6 +18,15 @@
     committed without its rebuild therefore goes red here rather than being
     papered over by MSBuild rebuilding sim/ on the way past.
 
+    -Simulation NAMES WHICH IMAGE IS PLAYED, and Committed is the default, so
+    every ordinary invocation is the paragraph above. The other two build sim/
+    from source at a named configuration and play that instead, which is what
+    the determinism matrix's Release rows need: the committed image is a Debug
+    build, deliberately and permanently, so a Release row that played it would
+    be a check that cannot fail. A fresh image is built into scratch space and
+    never into the committed plug-in folder -- overwriting the artefact under
+    test is the same mistake in a different coat.
+
     Two committed files fall out of a run: content/golden-trace.txt, the
     rolling per-tick state hash, and content/landmarks.txt, the handful of ticks
     the sit-down checklist is written against. -Verify proves the committed
@@ -47,6 +56,13 @@
     not. This is what the build gate runs.
 
 .EXAMPLE
+    ./tools/run-headless-match.ps1 -Verify -Simulation FreshRelease
+    Build sim/ from source with the optimiser on, play the committed bundle
+    with that image, and require the same trace, the same landmarks and the
+    same golden results as the Debug bytes in the repository produce. One row
+    of the determinism matrix; the build gate runs six.
+
+.EXAMPLE
     ./tools/run-headless-match.ps1 -Regenerate
     Re-record content/match.replay from the content files and rewrite both
     committed artefacts from a real run of it. The one thing to do after a
@@ -69,13 +85,29 @@ param(
     # computed from the parsed grid and checked at the replay gate. Handles are
     # assigned by whatever stores maps; zero means "this record does not say",
     # and content/map.txt is the one map the skeleton ships, so it is one.
-    [int]$MapHandle = 1
+    [int]$MapHandle = 1,
+
+    # Which simulation image to play. Committed is the bytes in the repository
+    # -- the ones the engine loads as a plug-in, and the only ones anybody has
+    # checked -- and it is the default for exactly that reason. The other two
+    # build sim/ from source and play the result, which is the only way to run
+    # a configuration the repository does not commit.
+    [ValidateSet('Committed', 'FreshDebug', 'FreshRelease')]
+    [string]$Simulation = 'Committed'
 )
 
 $ErrorActionPreference = 'Stop'
 
 if ($Verify -and $Regenerate) {
     throw "-Verify and -Regenerate are opposites: one checks the committed files, the other rewrites them."
+}
+
+# The committed artefacts are the output of the committed simulation, and they
+# have to stay that way. Regenerating them from a build that exists only in
+# somebody's scratch directory would put a number in the repository that
+# nothing in the repository produces.
+if ($Regenerate -and $Simulation -ne 'Committed') {
+    throw "-Regenerate rewrites the committed artefacts, so it only runs against the committed simulation."
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -93,14 +125,83 @@ $golden = Join-Path $content 'golden'
 # Built into scratch space rather than into the project's own bin/, so that a
 # run of this script cannot leave the working tree dirtier than it found it --
 # which is a thing the headless test runner asserts and this one respects.
-$build = Join-Path ([System.IO.Path]::GetTempPath()) 'simcli-build'
+#
+# The directory carries the image's name because two rows of the matrix run
+# from the same shell on a laptop, and MSBuild deciding a differently-referenced
+# build is up to date would silently play the previous row's simulation.
+$build = Join-Path ([System.IO.Path]::GetTempPath()) ('simcli-build-' + $Simulation.ToLowerInvariant())
 $program = Join-Path $build 'Sim.Cli.dll'
 
-& dotnet build (Join-Path $repoRoot 'simcli') --configuration Debug --nologo --output $build | Out-Host
+$committedSim = Join-Path $repoRoot 'client/Packages/com.ssalter.sim/Runtime/Sim.dll'
+
+# The image this run is meant to play, and the one the assertion below holds
+# the run to. Committed needs no build: those bytes are in the repository.
+$intendedSim = $committedSim
+$buildArguments = @('build', (Join-Path $repoRoot 'simcli'), '--configuration', 'Debug', '--nologo', '--output', $build)
+
+if ($Simulation -ne 'Committed') {
+    $configuration = if ($Simulation -eq 'FreshRelease') { 'Release' } else { 'Debug' }
+
+    # --output is not optional here. sim/Sim.csproj sends its build straight
+    # into client/Packages/com.ssalter.sim/Runtime/, so a build without it
+    # overwrites the committed plug-in -- the artefact this script exists to
+    # play -- and leaves the working tree dirty besides.
+    $simBuild = Join-Path ([System.IO.Path]::GetTempPath()) ('sim-' + $configuration.ToLowerInvariant())
+    $intendedSim = Join-Path $simBuild 'Sim.dll'
+
+    & dotnet build (Join-Path $repoRoot 'sim') --configuration $configuration --nologo --output $simBuild | Out-Host
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Building the simulation at $configuration failed (exit $LASTEXITCODE)."
+    }
+
+    $buildArguments += "-p:SimAssembly=$intendedSim"
+}
+
+& dotnet @buildArguments | Out-Host
 
 if ($LASTEXITCODE -ne 0) {
     throw "Building simcli failed (exit $LASTEXITCODE)."
 }
+
+# WHICH SIMULATION ACTUALLY GOT PLAYED, ASSERTED RATHER THAN ASSUMED. The
+# reference is a HintPath and the override is an MSBuild property, so the way
+# this goes wrong is silent: a property that does not reach the reference
+# leaves the committed Debug image beside the runner, the row goes green, and
+# what it proved is that the Debug image agrees with itself. Comparing the
+# bytes the runner will load against the bytes this script meant it to load
+# costs one hash and closes that hole.
+$playedSim = Join-Path $build 'Sim.dll'
+
+if (-not (Test-Path $playedSim)) {
+    throw "No Sim.dll landed beside the runner in $build; the reference did not resolve."
+}
+
+$playedHash = (Get-FileHash -Algorithm SHA256 $playedSim).Hash
+$intendedHash = (Get-FileHash -Algorithm SHA256 $intendedSim).Hash
+
+if ($playedHash -ne $intendedHash) {
+    throw ("The runner is about to play a different simulation than this run built.`n" +
+        "  intended: $intendedSim`n" +
+        "  playing : $playedSim`n" +
+        "The -p:SimAssembly override did not reach simcli's reference.")
+}
+
+if ($Simulation -eq 'FreshRelease') {
+    # And that it is optimised, which is the whole content of the word
+    # "Release" here. Debug and Release differ in this attribute and in
+    # nothing else the file name records, so a Release row whose build
+    # configuration silently fell back to Debug would otherwise be a row that
+    # measures nothing and says it measured the optimiser.
+    $loaded = [System.Reflection.Assembly]::LoadFrom($playedSim)
+    $debuggable = $loaded.GetCustomAttributes([System.Diagnostics.DebuggableAttribute], $false)
+
+    if ($debuggable.Count -gt 0 -and $debuggable[0].IsJITOptimizerDisabled) {
+        throw "The image built for the FreshRelease row has the optimiser disabled; it is a Debug build."
+    }
+}
+
+Write-Host ("simulation $Simulation, SHA-256 " + $playedHash.Substring(0, 16)) -ForegroundColor Cyan
 
 # The runner refuses by name and exits, rather than throwing: a record that
 # will not replay has already said why in its own sentence, and a PowerShell
@@ -209,7 +310,7 @@ if (-not $Verify) {
 # still produces the committed trace and the committed landmarks. It writes
 # into scratch space and compares, rather than writing over the committed files
 # and finding them equal -- which would be a check that cannot fail.
-$scratch = Join-Path ([System.IO.Path]::GetTempPath()) 'simcli-verify'
+$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ('simcli-verify-' + $Simulation.ToLowerInvariant())
 
 if (Test-Path $scratch) {
     Remove-Item $scratch -Recurse -Force
