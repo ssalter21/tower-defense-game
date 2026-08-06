@@ -13,6 +13,15 @@
     of the image in the repository. That is the image the engine loads as a
     plug-in, and therefore the only image the parity run is worth diffing
     against.
+
+    THE PATH IS OVERRIDABLE, AND THE DEFAULT IS THE ONLY THING ANY ORDINARY
+    INVOCATION GETS. Setting the SimAssembly property points the runner at some
+    other build of the simulation, which is what the determinism matrix's
+    Release rows need: the committed image is a Debug build, deliberately and
+    permanently, so a Release row that played it would be a check that cannot
+    fail. Nothing about the default changes, because the property is only set
+    when somebody names it, and `tools/run-headless-match.ps1` is the only
+    thing that does.
   -->
 
   <PropertyGroup>
@@ -43,11 +52,18 @@
       true of the program that prints its numbers.
     -->
     <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!--
+      The simulation image this runner plays. The condition is what keeps the
+      committed assembly the default: an invocation that does not name the
+      property gets exactly the path that was hard-coded here before.
+    -->
+    <SimAssembly Condition="'$(SimAssembly)' == ''">$(MSBuildThisFileDirectory)../client/Packages/com.ssalter.sim/Runtime/Sim.dll</SimAssembly>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Sim">
-      <HintPath>$(MSBuildThisFileDirectory)../client/Packages/com.ssalter.sim/Runtime/Sim.dll</HintPath>
+      <HintPath>$(SimAssembly)</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

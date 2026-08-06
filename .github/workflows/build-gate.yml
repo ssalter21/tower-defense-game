@@ -12,6 +12,12 @@
 # those live inside `dotnet test`, because they are assertions rather than
 # scripts and they have to be runnable from a shell on a laptop as well as
 # here.
+#
+# The second job is Part III section 6's determinism matrix: the same match,
+# played on three operating systems and two processor architectures, by two
+# differently compiled images of the same simulation, all six required to
+# produce the trace committed in this repository. It is separate from the gate
+# above rather than folded into it, and the reason is in the comment on the job.
 name: build gate
 
 on: push
@@ -100,3 +106,98 @@ jobs:
             git diff --stat
             exit 1
           fi
+
+  # Part III section 6's matrix, and the answer to the one question the gate
+  # above cannot ask: whether the simulation is the same simulation somewhere
+  # else. Six runs -- three operating systems, two of them x64 and one arm64,
+  # each playing two differently compiled images -- and every one of them has to
+  # produce the trace, the landmark table and the golden results committed in
+  # this repository, byte for byte.
+  #
+  # WHAT THE TWO IMAGES ARE, AND WHY IT IS NOT `--configuration Release`.
+  # Everything here references the committed Sim.dll by HintPath, deliberately,
+  # so the gate exercises the bytes in the repository rather than bytes a runner
+  # made. Those bytes are a Debug build and CommittedAssemblyTests requires them
+  # to stay one, because the conditional-diagnostics row of the IL scan can only
+  # fire against a Debug image. So `dotnet test --configuration Release` would
+  # build the test assembly in Release and go on playing the same committed
+  # Debug simulation: a Release row that cannot fail. The Debug row here is the
+  # committed image, which is what ships and what the engine loads; the Release
+  # row builds sim/ from source with the optimiser on and plays that. The runner
+  # asserts which image it actually loaded rather than trusting the property
+  # that was supposed to point it there.
+  #
+  # WHY `dotnet test` IS NOT IN HERE. The IL scan, the poison suite, the
+  # file-size check and the project-settings check are assertions about files,
+  # and a file is the same file on three operating systems. Running them six
+  # ways would buy nothing and would put BudgetTests -- a wall-clock timing test
+  # with a ten-millisecond median -- onto three classes of runner, where it is a
+  # flake waiting to be muted. Determinism is what this job tests, and it is all
+  # this job tests.
+  determinism:
+    name: ${{ matrix.simulation }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      # Every row runs even after one has gone red. "Something diverged" is not
+      # the finding; "these two platforms diverged and that one did not" is, and
+      # a matrix that stops at the first failure throws it away.
+      fail-fast: false
+
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        simulation: [Committed, FreshRelease]
+
+        # The architecture each row is claimed to be, so the claim is checked
+        # rather than inherited from documentation. macos-latest being arm64 is
+        # the only reason this matrix tests a second processor architecture at
+        # all, and it is a fact about GitHub's fleet rather than about this
+        # repository -- so if it ever changes, this should go red and say so,
+        # instead of quietly becoming three runs of x64.
+        include:
+          - os: ubuntu-latest
+            architecture: X64
+          - os: windows-latest
+            architecture: X64
+          - os: macos-latest
+            architecture: Arm64
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: This runner is the architecture the matrix says it is
+        shell: pwsh
+        run: |
+          $actual = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+          Write-Host "runner architecture $actual"
+          if ("$actual" -ne "${{ matrix.architecture }}") {
+            Write-Host "The matrix calls this row ${{ matrix.architecture }}; the runner is $actual."
+            exit 1
+          }
+
+      # The row itself. -Verify plays the committed bundle and compares the
+      # trace, the landmark table and every historical golden result against
+      # the committed copies, writing into scratch space rather than over them.
+      - name: This platform produces the committed trace, landmarks and goldens
+        shell: pwsh
+        run: ./tools/run-headless-match.ps1 -Verify -Simulation ${{ matrix.simulation }}
+
+      # The same assertion the gate makes, made again on a Windows working tree
+      # and a macOS one -- which is where it is actually interesting. The
+      # comparison above is byte for byte against files a Windows checkout is
+      # entitled to rewrite the line endings of, and .gitattributes pinning
+      # content/** to LF is the thing that stops it. This is what checks that.
+      - name: The row did not rewrite the repository
+        shell: pwsh
+        run: |
+          $dirty = git status --porcelain
+          if ($dirty) {
+            Write-Host "The row left the working tree dirty:"
+            $dirty
+            git diff --stat
+            exit 1
+          }
