@@ -3,33 +3,13 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// The whole write side of the record format: a growing byte array and six
-    /// little-endian primitives.
+    /// The write side of the record format: a growing byte array and six
+    /// little-endian primitives. Width checks throw
+    /// <see cref="SimulationException"/> rather than <see cref="RecordException"/>,
+    /// since a value that does not fit is a fault in this program rather than in
+    /// stored bytes.
+    /// See <c>docs/adr/0032-serialisation-is-hand-rolled-field-by-field.md</c>.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Hand-rolled, and that is the decision rather than an accident of having
-    /// no library available. A reflection serializer's output is a function of
-    /// the type definitions it was pointed at, so renaming a field or reordering
-    /// an enum silently changes what stored records mean years later. Here the
-    /// bytes are written out one field at a time in an order somebody chose, and
-    /// changing that order is a visible edit to this assembly that has to be
-    /// paid for with a format version.
-    /// </para>
-    /// <para>
-    /// <c>System.IO</c> is banned in this assembly and the IL scan enforces it,
-    /// so there is no <c>BinaryWriter</c> to reach for even if one were wanted.
-    /// That ban is why the writer is fifty lines instead of five, and it is also
-    /// why the byte order is stated here rather than inherited from whatever the
-    /// machine happens to be.
-    /// </para>
-    /// <para>
-    /// Every width check throws a <see cref="SimulationException"/> rather than
-    /// a <see cref="RecordException"/>, because a caller handing a
-    /// seventy-thousandth tower to a <c>u16</c> count is a fault in this program
-    /// and not in somebody's stored bytes.
-    /// </para>
-    /// </remarks>
     internal sealed class ByteWriter
     {
         private byte[] _bytes;
@@ -41,7 +21,6 @@ namespace Sim
             _bytes = new byte[capacity < 1 ? 1 : capacity];
         }
 
-        /// <summary>How many bytes have been written so far.</summary>
         internal int Length => _length;
 
         internal void U8(string field, int value)
@@ -99,7 +78,7 @@ namespace Sim
             }
         }
 
-        /// <summary>Writes a string's characters as one byte each. ASCII only, asserted.</summary>
+        /// <summary>Writes a string's characters as one byte each, rejecting anything outside printable ASCII.</summary>
         internal void Ascii(string field, string text)
         {
             Room(text.Length);
@@ -153,6 +132,7 @@ namespace Sim
                 + "). Widening a field is a format version bump, not a cast.");
         }
 
+        // Doubles capacity until the wanted bytes fit.
         private void Room(int wanted)
         {
             if (_length + wanted <= _bytes.Length)
