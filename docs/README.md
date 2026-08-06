@@ -10,7 +10,7 @@ In one line: *a technically excellent tower defense, built for the pleasure of b
 is real — and every mode of it is the same machine at a different latency.*
 
 [§8](vision.md#8-the-build-order) is the build order: a seven-step sequence ordered by what is cheapest to
-learn rather than by what depends on what, with the eight seams it serves mapped onto it. Each seam is still
+learn rather than by what depends on what, with the nine seams it serves mapped onto it. Each seam is still
 the subject of its own wayfinder map, planned and worked separately.
 
 ## The five deep dives

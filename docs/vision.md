@@ -569,8 +569,8 @@ under a hundred megabytes.
 ## 8. The build order
 
 **This section used to be a list of eight seams ordered by what depends on what. It is now a sequence, and the
-sequence is ordered by what is cheapest to *learn*.** The eight destinations below are unchanged and none of
-them has been dropped — what changed is which one is approached first, and why.
+sequence is ordered by what is cheapest to *learn*.** The destinations below are unchanged and none of
+them has been dropped — though a ninth was added on 6 August 2026 and four of the original eight grew — what changed is which one is approached first, and why.
 
 The reason for the change is a reading of the repository as it actually stands, and it is short enough to
 state here. The walking skeleton is finished and its machinery is excellent: a deterministic integer
@@ -656,21 +656,26 @@ it already did, and the right-hand column links to it rather than restating it.
 | 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
 | 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
 
-### The eight seams, and where they land
+### The nine seams, and where they land
 
-The destinations are unchanged. This is where each one meets the sequence above. **Each is still the subject
-of its own wayfinder map** — its own destination, its own decision tickets, its own sessions.
+This is where each one meets the sequence above. **Each is the subject of its own wayfinder map** — its own
+destination, its own decision tickets, its own sessions.
 
-| # | Seam | The destination it finds its way to | Where it lands |
-|---|---|---|---|
-| 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments rather than as a finished ruleset |
-| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | After step 6, and half-paid by step 2's command stream |
-| 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat, then revisited at step 7 |
-| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | **Pulled forward to step 4** — it is a minute's compute, not a night's |
-| 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6. Nothing before it needs a server |
-| 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5, unchanged |
-| 7 | **The interface** | Reading two boards, an economy and a build menu at once | Step 5 is its single-board half; the two-board problem is step 7 |
-| 8 | **The presentation** | The art pipeline, and what makes it look composed | Independent, whenever there is appetite |
+**Eight of these destinations are unchanged; the ninth is new, and four of the other eight grew.** The
+6 August 2026 reversals did not move any seam's boundary, but they did put work inside several of them that
+was not there before — which is exactly the thing a seam map is supposed to notice before it charts.
+
+| # | Seam | The destination it finds its way to | Where it lands | 6 Aug |
+|---|---|---|---|---|
+| 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments rather than as a finished ruleset | Changed |
+| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | After step 6, and half-paid by step 2's command stream | Grew |
+| 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat, then revisited at step 7 | Grew |
+| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | **Pulled forward to step 4** — it is a minute's compute, not a night's | Grew |
+| 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6. Nothing before it needs a server | Grew |
+| 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5 | Grew |
+| 7 | **The interface** | Reading two boards, an economy and a build menu at once | Step 5 is its single-board half; the two-board problem is step 7 | **Grew most** |
+| 8 | **The presentation** | The art pipeline, and what makes it look composed | Independent, whenever there is appetite | Grew |
+| 9 | **The board** | The maze, elevation, pathfinding, generation and rotation | **New.** Nothing before step 5 needs it; everything after step 5 is shaped by it | **New** |
 
 ### 1 · The match format — *its first half is steps 1 to 3*
 
@@ -690,11 +695,17 @@ build the smallest ruleset that can be played, at a standard where being wrong c
 It remains the cheapest seam to be wrong about now and the most expensive later, and it needs no server, no art
 and no friends to answer.
 
-**All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
-candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
-inherits three obligations they surfaced: cross-feed the two purses, spend the
-computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third are
-now [step 1's blocking decisions](#the-four-decisions-that-block-step-1).
+**All research notes have landed**, so it is ready to chart. Each ends with ranked candidate directions and
+none of them decides anything — that is deliberate, and it is seam 1's to do. It inherits four obligations
+they surfaced: cross-feed the two purses, spend the computed-balance budget knowingly, decide the variance
+anchor schedule, and **decide what the player may compute before committing and what it costs them**. The
+first, third and fourth are now [step 1's blocking decisions](#the-four-decisions-that-block-step-1).
+
+> **One reconciliation is new and belongs to nobody else.** [§3](#3-what-a-match-is) now holds two ideas that
+> pull against each other: *your defense decides your offense* — a private, tower-gated creep pool — and
+> *the options are the same for everyone*, a public shared offering. A pool that is both gated and public is
+> a contradiction unless the gate applies to something other than the offering. Seam 1 owns choosing which
+> one bends, and this is the sharpest single question on its map.
 
 **The cheapest coherent starting point is already identified in the research**, and it is what steps 1 to 3
 build. [The sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave
@@ -711,6 +722,17 @@ ghost. Includes stage matching, pool draw, and the hand-authored floor that keep
 
 If the unification is wrong, this project is building two games — and that is worth finding out before the
 rules are written into a service.
+
+**It grew on 6 August 2026, and the growth is a genuine threat to its own thesis.** The two modes now differ
+on *information*: the lobby shows the opponent's board and the round-robin deliberately does not, paying in
+statistics over the field instead. That is a design win — it is what stops the ghost from becoming a lookup —
+but it means the modes are no longer the same machine at a different latency in every respect. **They are the
+same *resolution* machine with two different information rules bolted to the front**, and this seam has to
+establish that the difference lives entirely above the barrier. If it turns out to reach into the record or
+the sim, the unification claim is weaker than §2 says.
+
+It also inherits the pool's new index. A draw is now `(map, stage)` rather than stage alone — see
+[seam 9](#9--the-board--new).
 
 ### 3 · The roster
 
@@ -743,12 +765,28 @@ where the widest and narrowest builds dominate) is caught by a report of win rat
 ingredients taken**, which is a column in a sweep that already exists rather than a tool built in response to a
 problem two studios took years to notice.
 
+**It grew a second job on 6 August 2026, and the shape of the tool changes because of it.** Pointed at units
+the sweep prices them; **pointed at maps it scores them**, which is what makes
+[generated rotation](#the-map-rotates-and-it-is-generated) possible and what turns "far less solvable" into a
+filter rather than a hope. The design consequence is one line and it is worth being deliberate about: **the
+sweep must take its map as a parameter, not as a fixed input**, and that is far cheaper to decide now than to
+retrofit across every call site. Three further columns are owed —
+[§12's](#12-the-planning-phase-is-the-game) both-columns check, outcome spread, and win rate binned by
+ingredient count.
+
 ### 5 · The service
 
 The permanent obligation from [§7](#7-what-runs-it). Accounts and identity, the pool and its stage index,
 submission and the barrier, standings and rating, replay storage and retrieval, and server-side re-simulation
 as anti-cheat. Also the questions Part II raised and this document has not closed: ghost expiry windows, pool
 re-validation on a content change, and rating under inactivity.
+
+**Map rotation lands here and makes this seam harder.** The pool index becomes `(map, stage)` rather than
+stage alone, so every rotation empties it at every stage — the cold-start problem stops being something the
+project has once and becomes something it has every cycle. The service also gains the rotation schedule, the
+generated map archive, and the obligation to verify a claimed `MapHash`. None of that is new machinery, but
+all of it is new state, and the [cadence question](#the-open-questions) is really a question about this seam
+wearing a design costume.
 
 ### 6 · The social layer
 
@@ -760,6 +798,14 @@ presented in a way that is relentlessly personal.
 Note what is *not* here: browsing, curation and discovery surfaces. Opponents are drawn, not shopped for, so
 Part II §5's UGC-discovery failure mode does not apply.
 
+**It inherits most of [§12](#12-the-planning-phase-is-the-game)'s output surface**, which is a larger
+inheritance than it sounds. Placement against the aggregate rather than a leaderboard, the two competing
+rewards, the computed highlight reel, and event-derived commentary are all *presence* mechanisms as much as
+they are information ones — "your defense held against seventy-three of a hundred" is the specific this seam
+exists to manufacture, and the sim produces it for free. A shared map cycle also gives this seam something it
+did not have: **everyone played the same board this week**, which is what makes a comparison feel like a
+conversation.
+
 ### 7 · The interface
 
 The hardest unsolved problem in the design, and [§6's](#6-what-it-looks-like) accessibility pillar makes it
@@ -769,11 +815,61 @@ stagger the options**. Includes the faction-colour scheme, which is as much an i
 an art one, and the presentation of whatever combination system seam 1 chooses — a combinatorial build space
 that cannot be read is a menu with extra steps.
 
+> **This seam grew more than any other on 6 August 2026, and it should probably be split.**
+> [§12](#12-the-planning-phase-is-the-game) makes the build phase the main event, which puts the entire
+> planning surface here: range and elevation overlays, damage previews, the purchase shown against what it
+> replaces, the forecast and whatever it costs, the scouting view in the lobby, the post-run dashboard and the
+> retrospective review. That is not the same problem as *reading two boards at once*. One is information
+> design for a decision; the other is legibility under simultaneity. **They share a screen and nothing else**,
+> and a map that tries to hold both will do neither well. The natural cut is *the planning surface* and *the
+> watching surface*, and it is worth taking before either is charted.
+
 ### 8 · The presentation
 
 The KayKit purchase and the licence confirmation ([#56](https://github.com/ssalter21/tower-defense-game/issues/56)),
 the atlas-recolour workflow, the `.blend` editing path, and the lighting, VFX and camera work that makes stock
 models look composed. Independent of the others — it can run whenever there is appetite for it.
+
+**Two things arrived on 6 August 2026 that stop it being purely an art seam.** The camera is now a *directed*
+camera: because the whole match resolves before anything is drawn, the moments worth showing can be chosen by
+a computed salience rather than captured — the closest call, the first leak, the shot that decided it. And a
+map with elevation is a lighting and readability problem that the flat corridor did not have, since height is
+now load-bearing information rather than decoration. **A player who cannot tell which tier a placement is on
+cannot read the range that comes with it**, which makes elevation legibility a veto in
+[§6's](#6-what-it-looks-like) sense rather than a nicety.
+
+### 9 · The board — *new*
+
+**The maze, elevation, pathfinding, generation and rotation.** Charted 6 August 2026, and new because none of
+the other eight is the right home for it: seam 1 owns the rules of a match, seam 3 the units, seam 4 the
+measuring tool, seam 5 the storage. The geometry the game is played on is none of those, and it was invisible
+as a seam for as long as the answer was a single authored corridor.
+
+Its destination: **a board that is generated, verifiable, deterministic, and demonstrably worth playing.**
+Four groups of work sit inside it, and they are not equally hard.
+
+- **The maze and elevation** — what the geometry actually is, how many tiers, what range a tier grants,
+  whether branches converge or diverge, and how the map preserves the send column that
+  [ordering](#depth-is-the-point) needs. A design question with a legibility veto on it.
+- **Pathfinding** — an integer pathfinder with a fixed, asserted tie-break, held to `sim/`'s existing
+  standards: one RNG stream, canonical order asserted rather than restored, IL-scanned, no floating point.
+  This is the highest-risk item in the seam because it lands in the hottest loop and touches the one guarantee
+  everything else rests on.
+- **The record** — elevation is a third coordinate, so `TowerLayout` and the hex map gain a level, which is a
+  format version, a hash-layout bump and a retired ghost pool. Cheap now, expensive later, and the reason this
+  seam wants charting before step 5 rather than after.
+- **Generation and rotation** — seed-to-map as a pure function, a `simcli` mode to invoke it, the sweep-scored
+  archive, and the schedule that draws from it. Surveyed in
+  [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html).
+
+**Where it lands: nothing before step 5 needs it, and everything after step 5 is shaped by it.** Steps 1 to 4
+run from a shell against the corridor that exists, and their whole value is that being wrong costs a text
+file. But a cost column priced on a flat corridor is priced against geometry that is going away — so **the
+numbers steps 1 to 4 produce are provisional by construction**, and that should be stated when they are set
+rather than discovered when they move.
+
+It shares one dependency with seam 4 and it is the cheapest thing on this page to get right: **the sweep must
+take its map as a parameter.**
 
 ---
 
