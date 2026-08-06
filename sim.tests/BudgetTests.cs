@@ -46,6 +46,36 @@ namespace Sim.Tests;
 /// change is to stop measuring the machine, not to loosen the gate.
 /// </para>
 /// <para>
+/// <b>Measured, rather than argued.</b> The same commit was run five times on
+/// <c>ubuntu-latest</c> on 6 Aug 2026, changing nothing between attempts:
+/// </para>
+/// <list type="table">
+///   <item><description>match 1.60 ms, reference 2.15 ms, ratio 0.74</description></item>
+///   <item><description>match 7.83 ms, reference 7.76 ms, ratio 1.01</description></item>
+///   <item><description>match 11.76 ms, reference 8.92 ms, ratio 1.32</description></item>
+///   <item><description>match 7.80 ms, reference 8.05 ms, ratio 0.97</description></item>
+///   <item><description>match 7.86 ms, reference 7.85 ms, ratio 1.00</description></item>
+/// </list>
+/// <para>
+/// The match time spans <b>7.4x</b> across those five runs, on identical bytes.
+/// The ratio spans 1.8x. That gap is the entire case for this design, and the
+/// third row is the case made concrete: 11.76 ms is over the old ten-millisecond
+/// ceiling, so that run would have been red, reported as the tick loop having
+/// got slower, on a commit whose simulation nobody had touched. Two of the
+/// other rows sat at 7.8 ms -- 78% of the old budget spent doing nothing wrong.
+/// Note also that the fastest runner beat the calibration laptop outright:
+/// <c>ubuntu-latest</c> is not reliably slower than a laptop, it is reliably
+/// <i>inconsistent</i>, which is the thing a fixed millisecond number cannot be
+/// written against.
+/// </para>
+/// <para>
+/// The ratio is much more stable than the clock, not perfectly stable: under
+/// load the match slowed somewhat more than the reference did (row three), so
+/// the two do not track exactly. 3.6x leaves 2.7x of headroom over the worst
+/// ratio yet seen, which is margin for that drift rather than margin for a
+/// regression.
+/// </para>
+/// <para>
 /// The measurements are <b>interleaved</b> rather than run in two blocks: one
 /// match, then one reference, twelve times. A runner that gets busy halfway
 /// through would otherwise land entirely on one of the two and show up as a
