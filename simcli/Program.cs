@@ -51,17 +51,41 @@ public static class Program
     private const int MaximumFieldSize = 65535;
 
     /// <summary>
-    /// The six content files a run is built from, and the two numbers that say
-    /// how long it lasts and how wide its field is. Every run verb takes all
-    /// eight, so the list is written once.
+    /// How many seeds a sweep plays each creep on unless the caller says
+    /// otherwise. Small enough that the default invocation answers while
+    /// somebody is still looking at the shell.
+    /// </summary>
+    private const int DefaultRunsPerCreep = 16;
+
+    /// <summary>
+    /// The most seeds one creep may be played on. There is no rule putting a
+    /// ceiling here; a bound there is stops a mistyped argument asking for a
+    /// billion runs and getting them.
+    /// </summary>
+    private const int MaximumRunsPerCreep = 100000;
+
+    /// <summary>The most rows of a roster a sweep may be bounded to. The unit table is a u16 id space.</summary>
+    private const int MaximumCreeps = 65535;
+
+    /// <summary>
+    /// The six content files a run is built from, and the three arguments that
+    /// say how long it lasts, how wide its field is and whether death ends it.
+    /// Every run verb takes all nine, so the list is written once.
     /// </summary>
     private static readonly string[] RunOptions =
-        { "map", "units", "rules", "schedule", "defense", "wave", "waves", "field-size" };
+        { "map", "units", "rules", "schedule", "defense", "wave", "waves", "field-size", "no-death" };
+
+    /// <summary>
+    /// The options across every verb that are switches rather than pairs. Named
+    /// here rather than beside each verb, because a switch that is a pair on one
+    /// verb and a switch on another is an argument nobody can spell twice.
+    /// </summary>
+    private static readonly string[] Switches = { "no-death" };
 
     private const string RunContentUsage =
         "--map <file> --units <file> --rules <file> --schedule <file> --defense <file> --wave <file>";
 
-    private const string RunShapeUsage = "[--waves <number>] [--field-size <number>]";
+    private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
 
     private static readonly string[] Usage =
     {
@@ -107,8 +131,26 @@ public static class Program
         "         kind and an id off one of these, so this is what a command",
         "         script is written from.",
         string.Empty,
+        "  sweep      --seed <number> [--runs <number>] [--out <file>]",
+        "             " + RunContentUsage,
+        "             " + RunShapeUsage,
+        "             [--ordinary-options <number>] [--game-changers <number>]",
+        "             [--free-snapshots <number>] [--snapshot-price <number>]",
+        "             [--most-creeps <number>]",
+        string.Empty,
+        "         Plays a population of runs per creep and writes the balance",
+        "         report as a comma-separated file -- to --out, or to standard",
+        "         output where there is no --out. --runs is how many seeds each",
+        "         creep is played on and --most-creeps bounds the roster; both",
+        "         bounds are reported in the file's own coverage rows.",
+        string.Empty,
+        "         The four dials retune the ruleset for the sweep alone. Left",
+        "         out, each is whatever --rules already says.",
+        string.Empty,
         "         --waves and --field-size are N and K: how many waves the run",
         "         lasts and how many opponents each round is resolved against.",
+        "         --no-death keeps a run going after its health reaches zero, so",
+        "         that a sweep gets N rounds of data out of every row.",
     };
 
     /// <summary>The entry point. Zero if the run happened, non-zero if it did not.</summary>
@@ -152,7 +194,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of five things.");
+            throw new UsageException("No verb. This program does one of six things.");
         }
 
         switch (args[0])
@@ -168,21 +210,35 @@ public static class Program
                     new[] { "map", "units", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
             case "play-run":
-                return PlayRun(Arguments.Parse("play-run", args, 1, With("commands", "out")));
+                return PlayRun(RunVerb("play-run", args, "commands", "out"));
 
             case "record-run":
-                return RecordRun(Arguments.Parse("record-run", args, 1, With("script", "seed", "out")));
+                return RecordRun(RunVerb("record-run", args, "script", "seed", "out"));
 
             case "offerings":
-                return ShowOfferings(Arguments.Parse("offerings", args, 1, With("seed")));
+                return ShowOfferings(RunVerb("offerings", args, "seed"));
+
+            case "sweep":
+                return RunSweep(RunVerb(
+                    "sweep",
+                    args,
+                    "seed",
+                    "runs",
+                    "out",
+                    "ordinary-options",
+                    "game-changers",
+                    "free-snapshots",
+                    "snapshot-price",
+                    "most-creeps"));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
         }
     }
 
-    /// <summary>The options every run verb takes, plus the ones only this verb does.</summary>
-    private static string[] With(params string[] extra) => RunOptions.Concat(extra).ToArray();
+    /// <summary>A run verb's command line: the options every one of them takes, plus its own.</summary>
+    private static Arguments RunVerb(string verb, string[] args, params string[] extra) =>
+        Arguments.Parse(verb, args, 1, RunOptions.Concat(extra).ToArray(), Switches);
 
     /// <summary>
     /// Plays a committed bundle and writes down what happened.
@@ -298,14 +354,65 @@ public static class Program
     }
 
     /// <summary>
-    /// N and K, read the same way for every verb that plays a run. Neither has
-    /// a record to come off, so both are arguments with the library's own
-    /// defaults behind them.
+    /// Plays a population of runs per creep and writes the balance report.
+    /// </summary>
+    /// <remarks>
+    /// <b>The harness computes and this writes.</b> Every number below comes off
+    /// <see cref="SweepReport"/>; the only decisions made here are which file the
+    /// text lands in and what an absent dial means, which is "whatever the
+    /// ruleset already says".
+    /// </remarks>
+    private static int RunSweep(Arguments arguments)
+    {
+        SweepPlan plan = ContentOf(arguments).Sweep(
+            ShapeOf(arguments),
+            arguments.RequiredUnsigned("seed"),
+            arguments.Optional("runs", DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
+            Dial(arguments, "ordinary-options"),
+            Dial(arguments, "game-changers"),
+            Dial(arguments, "free-snapshots"),
+            Dial(arguments, "snapshot-price"),
+            arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps));
+
+        SweepReport report = Sim.Sweep.Of(plan);
+        string csv = SweepCsv.Of(report);
+        string? path = arguments.Optional("out");
+
+        if (path is null)
+        {
+            Console.Out.Write(csv);
+
+            return 0;
+        }
+
+        Write(path, csv);
+        Console.Out.Write("swept      " + report.ToString() + "\n");
+
+        for (int index = 0; index < report.Coverage.Count; index++)
+        {
+            Console.Out.Write("coverage   " + report.Coverage[index].ToString() + "\n");
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// One of the ruleset's retunable numbers, or the value that says the
+    /// ruleset's own answer stands.
+    /// </summary>
+    private static int Dial(Arguments arguments, string name) =>
+        arguments.Optional(name, SweepPlan.AsAuthored, 0, int.MaxValue);
+
+    /// <summary>
+    /// N, K and the death flag, read the same way for every verb that plays a
+    /// run. None of them has a record to come off, so all three are arguments
+    /// with the library's own defaults behind them.
     /// </summary>
     private static RunShape ShapeOf(Arguments arguments) =>
         new RunShape(
             arguments.Optional("waves", Sim.Run.DefaultWaves, 1, MaximumWaves),
-            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize));
+            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize),
+            !arguments.Given("no-death"));
 
     /// <summary>The six files every run verb is handed, read here and parsed there.</summary>
     private static RunContent ContentOf(Arguments arguments) =>

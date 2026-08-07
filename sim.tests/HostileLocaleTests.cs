@@ -369,6 +369,79 @@ public class HostileLocaleTests
         }
     }
 
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void The_whole_canned_field_parses_identically_under_a_hostile_culture(string name)
+    {
+        // The wave the sweep's field sends, read under a culture chosen to break
+        // the parse. Four numeric columns a framework parser would consult a
+        // culture about -- the tick, the type id, the count and the corridor --
+        // in a file every row of the balance report is measured against.
+        string text = File.ReadAllText(RepoLayout.FieldFile);
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        WaveScript invariant = WaveScript.Parse(text, types);
+        WaveScript hostile;
+
+        using (Hostile(name))
+        {
+            hostile = WaveScript.Parse(text, types);
+        }
+
+        Assert.Equal(invariant.Count, hostile.Count);
+        Assert.Equal(invariant.TotalUnits, hostile.TotalUnits);
+
+        for (int index = 0; index < invariant.Count; index++)
+        {
+            Assert.Equal(invariant.Orders[index].TickOffset, hostile.Orders[index].TickOffset);
+            Assert.Equal(invariant.Orders[index].TypeId, hostile.Orders[index].TypeId);
+            Assert.Equal(invariant.Orders[index].Count, hostile.Orders[index].Count);
+        }
+    }
+
+    [Fact]
+    public void Not_one_number_in_the_committed_report_carries_a_group_separator()
+    {
+        // A COMMA DECIMAL SEPARATOR AGAINST A COMMA-DELIMITED FILE is the trap
+        // this repository tests for, and the balance report is the first file it
+        // has produced where the two meet. Under de-DE a framework formatter
+        // renders 15836 as "15.836" and, with a group separator configured the
+        // other way, as "15,836" -- which is a cell that has quietly become two
+        // and every column from there rightwards shifted by one.
+        //
+        // What the writer does instead is format under the invariant culture and
+        // refuse any cell carrying a separator at all. This is that claim as an
+        // observation about the committed file: every cell is digits, a word, or
+        // empty, and nothing in it is a formatted number.
+        //
+        // OBSERVED: format the report's numbers as "N0" in SweepCsv.Number,
+        // which is the grouped spelling any culture's own formatter reaches for.
+        // tools/run-sweep.ps1 -Regenerate refuses by name on the first
+        // four-figure cell -- "A sweep cell reads '2,500'" -- and writes nothing
+        // at all, which is why the committed file cannot arrive in that state.
+        //
+        // OBSERVED: doctor the committed file instead, so that a cell that got
+        // past a writer is what is under test. "2500" spelled "2.500" reddens
+        // the decimal-point assertion; spelled "2,500" it reddens the column
+        // count, 15 against the header's 14 -- which is the same number written
+        // by de-DE and by en-US, and the whole reason both are refused.
+        string[] rows = File.ReadAllText(RepoLayout.SweepFile)
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        for (int index = 0; index < rows.Length; index++)
+        {
+            string[] cells = rows[index].Split(',');
+
+            Assert.Equal(rows[0].Split(',').Length, cells.Length);
+
+            for (int cell = 0; cell < cells.Length; cell++)
+            {
+                Assert.DoesNotContain('.', cells[cell]);
+                Assert.DoesNotContain('"', cells[cell]);
+            }
+        }
+    }
+
     [Fact]
     public void The_turkish_culture_is_really_in_effect_and_really_is_hostile()
     {

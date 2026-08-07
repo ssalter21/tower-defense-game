@@ -24,7 +24,7 @@ from a shell with no engine in them, and interaction is the fifth.
 
 ## Getting started
 
-One thing runs today, and it needs nothing but the .NET SDK — no engine, no
+Two things run today, and they need nothing but the .NET SDK — no engine, no
 editor, no licence:
 
 ```
@@ -53,6 +53,25 @@ dotnet Sim.Cli.dll offerings --seed 20260807 --map content/map.txt --units conte
   --rules content/ruleset.txt --schedule content/schedule.txt --defense content/defense.txt \
   --wave content/wave.txt
 ```
+
+The second thing is the balance harness:
+
+```
+./tools/run-sweep.ps1
+```
+
+It plays every creep in the roster over a population of runs and writes what
+they came to as a comma-separated file — win rate, cost efficiency, and both of
+those binned by how many ingredients a run ended up holding. Ten thousand
+matchups is under ten seconds, which is the whole reason the tool is worth
+having before the roster is large. Every one of the six content files is an
+argument, so pointing it at another map to score it, or at another damage
+matrix, costs a flag rather than an edit.
+
+`content/sweep.csv` is the report a real sweep produced at the committed shape;
+`-Verify` checks it against a fresh one and `-Regenerate` rewrites it. Any bound
+the sweep placed on itself — a sampled seed count, a truncated roster — is a row
+of the file, so a partial report never reads as a complete one.
 
 ## Looking at it
 

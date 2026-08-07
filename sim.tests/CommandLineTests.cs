@@ -158,6 +158,140 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void The_sweep_verb_writes_the_report_the_harness_computed()
+    {
+        // The wiring, end to end: six content files and a shape in, a
+        // comma-separated file out, with the rows the library folded and the
+        // coverage it reached. The numbers are the harness's and are tested in
+        // SweepTests; what is only true out here is that they reach a file.
+        //
+        // A small sweep on purpose -- two creeps, three seeds, three waves and a
+        // field of two -- because what is under test is the wiring and a wide
+        // one would spend half a minute proving it.
+        //
+        // OBSERVED: pass SweepPlan.WholeRoster in place of the --most-creeps
+        // argument in Program.RunSweep. The coverage assertion goes red, having
+        // found no "coverage,creeps,...,2,6,yes" row among the six-of-six the
+        // file now carries -- a truncation argument that reaches nothing, and a
+        // file that correctly says so.
+        string scratch = TheCommandLine.Scratch("sweep");
+        string report = Path.Combine(scratch, "sweep.csv");
+
+        TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "3",
+                "--waves", "3",
+                "--field-size", "2",
+                "--most-creeps", "2",
+                "--no-death",
+                "--out", report,
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        string[] rows = File.ReadAllText(report).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Equal(
+            "kind,subject,ingredients,runs,rounds,wins,win_rate_bp",
+            string.Join(",", rows[0].Split(',').Take(7)));
+        Assert.Contains("coverage,creeps,,,,,,,,,,2,6,yes", rows, StringComparer.Ordinal);
+        Assert.Contains("parameter,death_ends_the_run,,,,,,,,,,no,,", rows, StringComparer.Ordinal);
+
+        // Two creeps scored, so two whole-population rows and at least one bin
+        // under each of them.
+        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)
+            && row.Split(',')[2] == "0"));
+
+        Assert.True(
+            rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)) > 2,
+            "The report carries no ingredient bins at all:\n" + string.Join("\n", rows));
+    }
+
+    [Fact]
+    public void The_sweep_verb_prints_the_report_where_there_is_no_out()
+    {
+        // A sweep is a mode and a spreadsheet rather than a project, so the
+        // shortest useful invocation of it pipes. With --out the program says
+        // what it wrote and where; without one, the file itself is what comes
+        // back and nothing else is on the stream to spoil it.
+        //
+        // OBSERVED: write the "swept" summary to standard output ahead of the
+        // report in Program.RunSweep. The header assertion goes red on the
+        // string it starts with, which is what a tool that cannot be piped looks
+        // like -- every number in the file is still correct and the first line
+        // of it is prose.
+        CommandLineResult swept = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "2",
+                "--waves", "2",
+                "--field-size", "1",
+                "--most-creeps", "1",
+                "--no-death",
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.StartsWith("kind,subject,", swept.Output, StringComparison.Ordinal);
+        Assert.Contains("\ncreep,grunt,0,2,", swept.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_death_flag_is_a_switch_and_it_reaches_the_run()
+    {
+        // Death is a flag rather than a rule so that a harness can ask for a
+        // round of data per wave instead of a short row wherever a build failed.
+        // Until this switch existed no shell could play a no-death run at all.
+        //
+        // The shape line is what says so, and it is printed into the outcome
+        // file as well -- which is where a diff sees that two runs of the same
+        // record were played under different rules.
+        //
+        // OBSERVED: read the flag as arguments.Given("no-death") rather than its
+        // negation in Program.ShapeOf. The first assertion goes red, having
+        // found the other's sentence -- and content/run-outcome.txt would
+        // regenerate saying death does not end a run that death ends.
+        string[] content = new[] { "play-run", "--commands", RepoLayout.CommandFile }
+            .Concat(TheCommandLine.RunContent)
+            .ToArray();
+
+        Assert.Contains(
+            ", death ends the run",
+            TheCommandLine.Invoke(content).Succeeded().Output,
+            StringComparison.Ordinal);
+
+        Assert.Contains(
+            ", death does not end the run",
+            TheCommandLine.Invoke(content.Append("--no-death")).Succeeded().Output,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_switch_given_a_value_is_refused_rather_than_swallowing_the_next_option()
+    {
+        // A switch takes no value, so the thing after it is the next option and
+        // not its argument. The failure being engineered out is the quiet one: a
+        // parser that consumed one would swallow --commands the first time
+        // somebody wrote --no-death in front of it, and complain about a missing
+        // argument rather than about the switch.
+        //
+        // OBSERVED: empty Program.Switches. The exit code stays 1 and the
+        // message assertion goes red, because what comes back names --commands
+        // rather than --nonsense: the switch ate the option after it and the
+        // program reported that option's absence. The death-flag test above goes
+        // red with it, refusing a run nobody mistyped.
+        CommandLineResult refused = TheCommandLine.Invoke(
+            new[] { "play-run", "--no-death", "--commands", RepoLayout.CommandFile, "--nonsense", "1" }
+                .Concat(TheCommandLine.RunContent));
+
+        Assert.Equal(1, refused.ExitCode);
+        Assert.Contains("'--nonsense' is not an option of 'play-run'", refused.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_misspelled_option_on_a_run_verb_is_refused_rather_than_defaulted()
     {
         // The property Arguments exists for, asserted on the verbs that were

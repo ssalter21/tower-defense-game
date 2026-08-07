@@ -375,4 +375,92 @@ public class RulesetTests
         Assert.NotEqual(TheRuleset.Committed().ContentHash, TheMatch.Types().ContentHash);
         Assert.NotEqual(TheRuleset.Committed().ContentHash, TheMatch.Map().MapHash);
     }
+
+    [Fact]
+    public void Retuning_the_offering_and_the_scouting_line_moves_the_hash_and_nothing_else()
+    {
+        // The sweep's four dials, turned through the one seam that turns them.
+        // Everything the retune did not name is carried across untouched --
+        // asserted rather than assumed, because a copy constructor over sixteen
+        // fields is exactly where a field goes missing quietly.
+        //
+        // OBSERVED: carry StartingPurseSauce across as HealthPoolSauce in
+        // Ruleset's retuning constructor. The purse assertion goes red, 1500
+        // where 100 was expected, and nothing else in the suite notices -- which
+        // is what a field crossed in a sixteen-line copy looks like.
+        Ruleset authored = TheRuleset.Committed();
+        Ruleset retuned = authored.With(2, 4, 6, 8);
+
+        Assert.Equal(2, retuned.OrdinaryOptionsPerRound);
+        Assert.Equal(4, retuned.GameChangersPerAnchor);
+        Assert.Equal(6, retuned.FreeSnapshotsPerRun);
+        Assert.Equal(8, retuned.SnapshotPriceSauce);
+        Assert.NotEqual(authored.ContentHash, retuned.ContentHash);
+
+        Assert.Equal(authored.Matrix.Cells, retuned.Matrix.Cells);
+        Assert.Equal(authored.ArmourPercentPerPoint, retuned.ArmourPercentPerPoint);
+        Assert.Equal(authored.ArmourDenominator, retuned.ArmourDenominator);
+        Assert.Equal(authored.DamageFloor, retuned.DamageFloor);
+        Assert.Equal(authored.InterestPercentPerWave, retuned.InterestPercentPerWave);
+        Assert.Equal(authored.InterestCapSauce, retuned.InterestCapSauce);
+        Assert.Equal(authored.IncomeBasePerWave, retuned.IncomeBasePerWave);
+        Assert.Equal(authored.StartingPurseSauce, retuned.StartingPurseSauce);
+        Assert.Equal(authored.HealthPoolSauce, retuned.HealthPoolSauce);
+        Assert.Equal(authored.StartingWaveSlots, retuned.StartingWaveSlots);
+        Assert.Equal(authored.WaveSlotsPerAnchor, retuned.WaveSlotsPerAnchor);
+        Assert.Equal(authored.Bands.Count, retuned.Bands.Count);
+    }
+
+    [Fact]
+    public void Retuning_to_the_numbers_already_authored_leaves_the_hash_where_it_was()
+    {
+        // The other half of a derivation, and the half that says the fold is
+        // over the values rather than over the act of retuning. A sweep left at
+        // AsAuthored plays the committed rules under the committed hash, so a
+        // record stamped against them still replays.
+        //
+        // OBSERVED: fold an extra Add(1) into the retuning constructor to mark a
+        // ruleset as retuned. This goes red, E18AD8CF7F53986D against the
+        // committed B8D395FFBCA5BCCC -- a hash that moved for no number anybody
+        // authored, which retires every stored record on a sweep having run.
+        Ruleset authored = TheRuleset.Committed();
+
+        Assert.Equal(
+            authored.ContentHash,
+            authored.With(
+                authored.OrdinaryOptionsPerRound,
+                authored.GameChangersPerAnchor,
+                authored.FreeSnapshotsPerRun,
+                authored.SnapshotPriceSauce).ContentHash);
+    }
+
+    [Theory]
+    [InlineData(0, 3, 10, 25, "the ordinary options")]
+    [InlineData(65, 3, 10, 25, "the ordinary options")]
+    [InlineData(3, 0, 10, 25, "the game changers an anchor adds")]
+    [InlineData(3, 65, 10, 25, "the game changers an anchor adds")]
+    [InlineData(3, 3, -1, 25, "the free snapshot count")]
+    [InlineData(3, 3, 10, -1, "the snapshot price")]
+    public void A_retuned_number_outside_the_authored_column_is_refused(
+        int ordinary,
+        int changers,
+        int free,
+        int price,
+        string named)
+    {
+        // A number that reaches the rules through the retuning door has had no
+        // file to be refused at, so it is held to the range the authored column
+        // is held to. Without that, a sweep is the one caller in the project
+        // able to build a ruleset no text file could express -- and every
+        // finding it produced would be about a game nobody can author.
+        //
+        // OBSERVED: drop the RequireInRange calls from Ruleset.With. Every one
+        // of the six rows goes red having thrown nothing at all -- an offering
+        // of zero options and a snapshot at minus one sauce both build a
+        // perfectly ordinary ruleset with a perfectly ordinary hash.
+        SimulationException refused = Assert.Throws<SimulationException>(
+            () => TheRuleset.Committed().With(ordinary, changers, free, price));
+
+        Assert.Contains(named, refused.Message, StringComparison.Ordinal);
+    }
 }
