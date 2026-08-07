@@ -167,10 +167,6 @@ namespace Sim
             FieldSize = fieldSize;
             DeathEndsTheRun = deathEndsTheRun;
             Costs = CostTable.From(rules, types);
-
-            // The run opens on what the ruleset says it opens on, so that the
-            // first build phase is a build phase rather than a round whose only
-            // affordable wave is the empty one.
             Purse = Purse.Holding(rules.StartingPurseSauce);
             Unlocks = Unlocks.None;
 
@@ -277,18 +273,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(orders));
             }
 
-            if (IsOver)
-            {
-                throw new SimulationException(
-                    "This run is over: "
-                    + Round.ToString(CultureInfo.InvariantCulture)
-                    + " rounds resolved and "
-                    + Health.ToString(CultureInfo.InvariantCulture)
-                    + " of "
-                    + _rules.HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
-                    + " health left. A round resolved past the end of a run is a round nobody was still in "
-                    + "the run to play, and folding it in moves an outcome that had already been settled.");
-            }
+            RequireUnfinished();
 
             int round = _rounds.Count;
             int[] field = FieldFor(round);
@@ -338,6 +323,13 @@ namespace Sim
         /// The defense arrives beside it because a build phase composes what is
         /// sent; what stands is the other half of a round's orders.
         /// </para>
+        /// <para>
+        /// <b>Everything that can refuse this round refuses before a coin
+        /// moves</b> -- the decision against the offering, the orders against
+        /// the defense, and the run against being over. A purse spent and an
+        /// unlock taken on a round that then threw would be paid for a wave
+        /// nobody was in the run to send.
+        /// </para>
         /// </remarks>
         /// <param name="phase">What this round took, and how it filled its slots.</param>
         /// <param name="defense">What stands against every wave the field sends this round.</param>
@@ -349,11 +341,14 @@ namespace Sim
             }
 
             Build build = phase.Resolve(Offering, Unlocks, Purse, Costs);
+            RoundOrders orders = RoundOrders.Of(defense, build.Wave);
+
+            RequireUnfinished();
 
             Unlocks = build.Unlocks;
             Purse = build.Purse;
 
-            return Advance(RoundOrders.Of(defense, build.Wave));
+            return Advance(orders);
         }
 
         /// <summary>
@@ -421,6 +416,29 @@ namespace Sim
             }
 
             return (int)cost;
+        }
+
+        /// <summary>
+        /// Refuses a round past the end of a run. One implementation, called
+        /// from both ways in, so that entering a round from a build phase
+        /// cannot reach a run the other way in would have turned away.
+        /// </summary>
+        private void RequireUnfinished()
+        {
+            if (!IsOver)
+            {
+                return;
+            }
+
+            throw new SimulationException(
+                "This run is over: "
+                + Round.ToString(CultureInfo.InvariantCulture)
+                + " rounds resolved and "
+                + Health.ToString(CultureInfo.InvariantCulture)
+                + " of "
+                + _rules.HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
+                + " health left. A round resolved past the end of a run is a round nobody was still in the "
+                + "run to play, and folding it in moves an outcome that had already been settled.");
         }
 
         /// <summary>Where a round's field is drawn from.</summary>

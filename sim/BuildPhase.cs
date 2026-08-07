@@ -287,7 +287,7 @@ namespace Sim
 
                 previousTypeId = slot.TypeId;
                 spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
-                orders.Add(new UnitOrder(ReleaseTick, TypeOf(after, slot.TypeId), slot.Count, Corridor));
+                orders.Add(new UnitOrder(ReleaseTick, after.TypeOf(slot.TypeId), slot.Count, Corridor));
             }
 
             if (spent > purse.Sauce)
@@ -322,30 +322,6 @@ namespace Sim
             + TakeId.ToString(CultureInfo.InvariantCulture)
             + ", "
             + string.Join(" | ", Array.ConvertAll(_slots, slot => slot.ToString()));
-
-        /// <summary>
-        /// The unit row behind an unlocked type id. An unlock carries the row it
-        /// was drawn against, so this resolves out of what was taken rather than
-        /// out of a table handed in beside it.
-        /// </summary>
-        private static UnitType TypeOf(Unlocks unlocks, int typeId)
-        {
-            IReadOnlyList<Option> taken = unlocks.Taken;
-
-            for (int index = 0; index < taken.Count; index++)
-            {
-                if (taken[index].TypeId == typeId)
-                {
-                    return taken[index].Type;
-                }
-            }
-
-            throw new SimulationException(
-                "Type id "
-                + typeId.ToString(CultureInfo.InvariantCulture)
-                + " is unlocked and has no unit row behind it, which cannot happen: an unlock is an option "
-                + "and an option carries the row it was drawn from.");
-        }
     }
 
     /// <summary>

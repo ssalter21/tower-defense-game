@@ -42,6 +42,11 @@ asserted "it threw" passes when the phase is refused for the wrong reason.
 reaching it means an unaffordable command was let through — so the affordability check belongs one layer up,
 over the summed slots, or a purse is left part-spent on a wave that was never legal.
 
+**And the same rule one layer up again.** `Run.Advance(BuildPhase, TowerLayout)` resolves the decision, composes
+the orders and checks the run is unfinished *before* it takes the new purse and unlocks back. A run that
+refused a round and paid for it anyway is indistinguishable afterwards from a run that played one, which is the
+same defect at the round's scale.
+
 **Filled slots ascend strictly by type id.** A slot becomes one line of a wave, and a wave's lines ascend and
 are unique on `(tick, type)` — asserted rather than sorted, because sorting would leave two identical waves
 with two different sets of bytes (ADR-0017). One rule then also makes two slots on one creep a refusal rather
@@ -98,6 +103,7 @@ let through.
 
 ## Where it lives
 
-`sim/Offering.cs`, `sim/Unlocks.cs`, `sim/BuildPhase.cs`, `sim/WaveScript.cs` — `FromSlots` — `sim/Run.cs` —
+`sim/Offering.cs`, `sim/Unlocks.cs`, `sim/BuildPhase.cs`, `sim/Draws.cs` — the partial Fisher-Yates an anchor's
+menu and a round's offering now share — `sim/WaveScript.cs` — `FromSlots` — `sim/Run.cs` —
 the `OfferingLabel` constant, `Unlocks`, `Offering`, `OfferingAt` and the `Advance` overload —
 `content/ruleset.txt`, and `sim.tests/BuildPhaseTests.cs`.

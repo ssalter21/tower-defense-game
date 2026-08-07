@@ -96,15 +96,7 @@ public class BuildPhaseTests
         // of the wave in Run.OfferingAt's Derived call. The first assertion
         // goes red saying ten waves of a run drew 7,5,6 every time, which is an
         // offering that is fresh per run rather than per round.
-        Run run = TheBuild.Wide();
-
-        string[] menus = Enumerable.Range(1, 10)
-            .Select(wave => string.Join(
-                ",",
-                run.OfferingAt(wave).Options
-                    .Where(option => option.Kind == OptionKind.Ordinary)
-                    .Select(option => option.Id.ToString(CultureInfo.InvariantCulture))))
-            .ToArray();
+        string[] menus = Menus(TheBuild.Wide());
 
         Assert.True(
             menus.Distinct().Count() > 1,
@@ -673,6 +665,59 @@ public class BuildPhaseTests
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.True(spent.Sum() > 0, "Ten build phases bought nothing at all.");
         Assert.All(spent, one => Assert.True(one >= 0, "A build phase gave sauce back."));
+    }
+
+    [Fact]
+    public void A_round_that_refuses_leaves_the_run_exactly_where_it_was()
+    {
+        // Everything that can refuse a round refuses before a coin moves. A
+        // purse spent and an unlock taken on a round that then threw would be
+        // paid for a wave nobody was in the run to send -- and nothing
+        // downstream could tell that from a round somebody played.
+        //
+        // OBSERVED: take the purse and the unlocks back before the round is
+        // checked rather than after -- move the two assignments in
+        // Run.Advance(BuildPhase, TowerLayout) above the RequireUnfinished
+        // call. The first half goes red, 210 against 190: a finished run pays
+        // for a wave it refused to send.
+        //
+        // OBSERVED: compose the orders after the two assignments instead of
+        // before them -- inline the RoundOrders.Of call into the Advance
+        // beneath it. The first half stays green and the second goes red, 0
+        // against 1, because the defense is the last thing that can refuse a
+        // round and it is the only one the earlier mutation leaves in place.
+        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
+        Run over = TheBuild.Wide(waves: 1);
+
+        over.Advance(TheBuild.TakeFirst(over.Offering), defense);
+        Assert.True(over.IsOver);
+
+        int purse = over.Purse.Sauce;
+        int unlocks = over.Unlocks.Count;
+
+        // A phase that would have been perfectly legal on a run with a round
+        // left in it: a take off wave two's menu, and a slot of the creep wave
+        // one unlocked.
+        Option next = over.Offering.Options[0];
+        BuildPhase past = BuildPhase.Of(
+            next.Kind, next.Id, WaveSlot.Of(over.Unlocks.Taken[0].TypeId, 1));
+
+        Assert.Throws<SimulationException>(() => over.Advance(past, defense));
+
+        Assert.Equal(purse, over.Purse.Sauce);
+        Assert.Equal(unlocks, over.Unlocks.Count);
+
+        // And a round with no defense standing is refused the same way.
+        Run alive = TheBuild.Wide(waves: 2);
+        Option first = alive.Offering.Options[0];
+
+        Assert.Throws<ArgumentNullException>(
+            () => alive.Advance(
+                BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)),
+                defense: null!));
+
+        Assert.Equal(0, alive.Unlocks.Count);
+        Assert.Equal(TheBuild.RulesOffering(TheBuild.WideOrdinary).StartingPurseSauce, alive.Purse.Sauce);
     }
 
     /// <summary>Every creep on a round's menu, unlocked, so a slot assertion is about the slot.</summary>

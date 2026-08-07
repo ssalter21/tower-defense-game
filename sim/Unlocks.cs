@@ -63,6 +63,30 @@ namespace Sim
         }
 
         /// <summary>
+        /// The unit row behind an unlocked creep. A take carries the row it was
+        /// drawn against, so nothing downstream re-resolves an id it was
+        /// already told is good.
+        /// </summary>
+        public UnitType TypeOf(int typeId)
+        {
+            for (int index = 0; index < _taken.Length; index++)
+            {
+                if (_taken[index].TypeId == typeId)
+                {
+                    return _taken[index].Type;
+                }
+            }
+
+            throw new SimulationException(
+                "Type id "
+                + typeId.ToString(CultureInfo.InvariantCulture)
+                + " has no unit row among "
+                + ToString()
+                + ". Every unlock is an option and every option carries the row it was drawn from, so this "
+                + "is a creep being priced out of a set that never took it.");
+        }
+
+        /// <summary>
         /// The game changer this run took that fields that creep, if it took
         /// one. What a prepared counter gets against it is the schedule's
         /// <see cref="AnchorSchedule.BonusVsTag"/>, which is keyed on the

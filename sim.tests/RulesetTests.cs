@@ -37,6 +37,11 @@ public class RulesetTests
         Assert.Equal(10, rules.InterestPercentPerWave);
         Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapSauce);
         Assert.Equal(100, rules.IncomeBasePerWave);
+
+        // What a run opens holding, which is one wave's base.
+        // OBSERVED: change "purse         100" to "purse         150" in
+        // content/ruleset.txt. This goes red, 100 against 150, which is what a
+        // retuned opening balance nobody re-read here looks like.
         Assert.Equal(100, rules.StartingPurseSauce);
         Assert.Equal(1500, rules.HealthPoolSauce);
         Assert.Equal(2, rules.StartingWaveSlots);

@@ -164,10 +164,8 @@ namespace Sim
         /// <remarks>
         /// <para>
         /// The ordinary options are drawn out of the roster's creeps without
-        /// replacement, by the partial Fisher-Yates
-        /// <see cref="AnchorSchedule.Fill"/> uses and for the same reason: a
-        /// menu that offers one creep twice is one option wearing two
-        /// positions, and no hashed collection enters the draw.
+        /// replacement, because a menu that offers one creep twice is one
+        /// option wearing two positions.
         /// </para>
         /// <para>
         /// <b>What is already unlocked is not taken out of the pool.</b> An
@@ -235,19 +233,12 @@ namespace Sim
                     + "same creep twice.");
             }
 
-            var dice = new Pcg32(seed);
+            int[] positions = Draws.Positions(
+                new Pcg32(seed), roster.Length, rules.OrdinaryOptionsPerRound);
             var drawn = new List<Option>();
-            int[] positions = Positions(roster.Length);
 
-            for (int index = 0; index < rules.OrdinaryOptionsPerRound; index++)
+            for (int index = 0; index < positions.Length; index++)
             {
-                int remaining = positions.Length - index;
-                int picked = index + (int)dice.NextBelow((uint)remaining);
-
-                int swap = positions[index];
-                positions[index] = positions[picked];
-                positions[picked] = swap;
-
                 UnitType creep = roster[positions[index]];
                 drawn.Add(new Option(OptionKind.Ordinary, creep.Id, creep, creep.Label, null));
             }
@@ -360,18 +351,6 @@ namespace Sim
                 + ", which is in no row of the unit table this offering was drawn against. A schedule and "
                 + "a roster that were loaded against each other cannot disagree about a body, so this is "
                 + "an offering drawn from two tables that were never checked together.");
-        }
-
-        private static int[] Positions(int count)
-        {
-            var positions = new int[count];
-
-            for (int index = 0; index < positions.Length; index++)
-            {
-                positions[index] = index;
-            }
-
-            return positions;
         }
 
         private string Describe() =>

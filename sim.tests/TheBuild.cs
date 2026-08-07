@@ -86,15 +86,4 @@ public static class TheBuild
     /// <summary>The first thing on a round's menu, which is always an ordinary option.</summary>
     public static BuildPhase TakeFirst(Offering offering, params WaveSlot[] slots) =>
         BuildPhase.Of(offering.Options[0].Kind, offering.Options[0].Id, slots);
-
-    /// <summary>A run driven to its end, taking the first option every round and sending nothing.</summary>
-    public static Run Banking(Run run, TowerLayout defense)
-    {
-        while (!run.IsOver)
-        {
-            run.Advance(TakeFirst(run.Offering), defense);
-        }
-
-        return run;
-    }
 }

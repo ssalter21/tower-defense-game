@@ -347,6 +347,11 @@ public class RunTests
 
         // Reading the offering is a read: it costs nothing, moves nothing and
         // answers the same thing twice.
+        //
+        // OBSERVED: pay the run a coin for reading -- open Run.OfferingAt with
+        // Purse = Purse.Holding(Purse.Sauce + 1). The purse assertion goes red,
+        // 104 against 108, which is a member on the movers list moving
+        // something while the list itself stays exactly as long.
         Run untouched = TheRun.Fresh(waves: 4, fieldSize: 3);
 
         Assert.Equal(untouched.Health, Drawn(untouched).Health);
