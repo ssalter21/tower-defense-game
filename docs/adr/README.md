@@ -14,6 +14,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0004](0004-rolling-state-hash-always-on.md) | The rolling state hash is always on, and folds per tick |
 | [0005](0005-one-match-surface-no-modes.md) | One match surface, every scenario — no modes, flags or branches |
 | [0025](0025-invariants-are-unconditional-throws.md) | Every invariant is an unconditional throw |
+| [0033](0033-one-fused-damage-expression-and-a-named-pipeline.md) | One fused damage expression, evaluated once, behind a named pipeline |
 
 ## The simulation/view boundary
 

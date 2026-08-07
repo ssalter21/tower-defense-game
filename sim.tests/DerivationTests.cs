@@ -108,15 +108,11 @@ public class DerivationTests
         string original = File.ReadAllText(RepoLayout.UnitsFile);
         Hash64 hash = UnitTypeTable.Parse(original).ContentHash;
 
-        // A number moved. One character, and every record pinned to the old
-        // ruleset is retired -- which is exactly what should happen.
-        string retuned = original.Replace(
-            "unit   1   grunt   moving  200",
-            "unit   1   grunt   moving  201",
-            StringComparison.Ordinal);
-
-        Assert.NotEqual(original, retuned);
-        Assert.NotEqual(hash, UnitTypeTable.Parse(retuned).ContentHash);
+        // A number moved. One digit, and every record pinned to the old
+        // ruleset is retired -- which is exactly what should happen. The edit
+        // is made by rewriting a parsed field rather than by replacing a
+        // literal run of characters; see TheMatch.RetunedUnitsText.
+        Assert.NotEqual(hash, UnitTypeTable.Parse(TheMatch.RetunedUnitsText()).ContentHash);
 
         // Nothing that is not a number moved. Every one of these changes the
         // file, and a hash over the file would retire every stored record for
@@ -133,6 +129,50 @@ public class DerivationTests
         Assert.Equal(
             hash,
             UnitTypeTable.Parse(original.Replace("grunt ", "goblin", StringComparison.Ordinal)).ContentHash);
+    }
+
+    [Fact]
+    public void Editing_the_ruleset_moves_its_content_hash_and_reformatting_it_does_not()
+    {
+        // The same pair as the unit table's, for the file that holds every
+        // number the rules are made of. Both halves matter and the second one
+        // is the one that separates a hash over the parsed integers from a hash
+        // over the file.
+        //
+        // OBSERVED: fold the characters of the text in Ruleset.Parse instead of
+        // the parsed fields. Every retune assertion still passes, because a
+        // changed number is also changed bytes. Every formatting assertion goes
+        // red -- the first of them 0292B3908133DF72 against F849109AC5C46BD7 --
+        // at which point the hash means "somebody touched ruleset.txt", which
+        // is a signal nobody can act on.
+        string original = TheRuleset.CommittedText();
+        Hash64 hash = Ruleset.Parse(original).ContentHash;
+
+        // A number moved, once per rule. Each of these retires every record
+        // pinned to the old ruleset, which is exactly what should happen.
+        // The matrix, twice: once widened and once permuted. A single cell
+        // cannot move on its own without the square stopping being a Latin
+        // square, so the retune that tests the fold is a whole value class
+        // moving, and the permutation is what proves a cell's position is
+        // folded rather than the multiset of nine numbers.
+        Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, "150    70       100", "70   100       150", "100   150        70")).ContentHash);
+        Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, " 70   100       140", "100   140        70", "140    70       100")).ContentHash);
+        Assert.NotEqual(hash, Retuned(original, "armour          1          100", "armour          2          100"));
+        Assert.NotEqual(hash, Retuned(original, "floor           1", "floor           2"));
+        Assert.NotEqual(hash, Retuned(original, "interest       10", "interest       11"));
+        Assert.NotEqual(hash, Retuned(original, "income        100", "income        101"));
+        Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
+        Assert.NotEqual(hash, Retuned(original, "health       1500", "health       1501"));
+        Assert.NotEqual(hash, Retuned(original, "slots           2         1", "slots           3         1"));
+        Assert.NotEqual(hash, Retuned(original, "offering        3         3", "offering        4         3"));
+        Assert.NotEqual(hash, Retuned(original, "snapshot       10        25", "snapshot       10        26"));
+
+        // Nothing that is not a number moved. Each of these changes the file
+        // and none of them changes a rule.
+        Assert.Equal(hash, Ruleset.Parse(WithCommentsRewritten(original)).ContentHash);
+        Assert.Equal(hash, Ruleset.Parse(WithColumnsRespaced(original)).ContentHash);
+        Assert.Equal(hash, Ruleset.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal)).ContentHash);
+        Assert.Equal(hash, Ruleset.Parse(original + "\n\n\n").ContentHash);
     }
 
     [Fact]
@@ -346,6 +386,46 @@ public class DerivationTests
             + "row here carrying what this build's rules actually do. Run this test, take the fingerprint "
             + "it computed, and add the pair -- that is the moment every record made under the old rules "
             + "is retired.");
+    }
+
+    /// <summary>
+    /// The committed ruleset with its three matrix rows replaced, keeping the
+    /// attack-type order the file authors them in.
+    /// </summary>
+    private static string WithMatrix(string original, string pierce, string impact, string magic)
+    {
+        string[] lines = original.Split('\n');
+        string[] cells = { pierce, impact, magic };
+        string[] attacks = { "pierce", "impact", "magic" };
+        int written = 0;
+
+        for (int index = 0; index < lines.Length; index++)
+        {
+            if (!lines[index].StartsWith("matrix ", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            lines[index] = "matrix " + attacks[written] + " " + cells[written];
+            written++;
+        }
+
+        Assert.Equal(3, written);
+
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>
+    /// The committed ruleset with one number moved, and the hash of what that
+    /// parses to. The substitution is asserted to have happened, because a
+    /// replacement that matched nothing would compare the file against itself
+    /// and agree.
+    /// </summary>
+    private static Hash64 Retuned(string original, string authored, string planted)
+    {
+        Assert.Contains(authored, original, StringComparison.Ordinal);
+
+        return Ruleset.Parse(original.Replace(authored, planted, StringComparison.Ordinal)).ContentHash;
     }
 
     /// <summary>The same table with every comment line replaced by a different one.</summary>
