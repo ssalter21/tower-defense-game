@@ -85,30 +85,6 @@ public static class TheCommands
     /// <summary>The defense that stands while each of a run's waves is sent.</summary>
     public static TowerLayout Defense() => TheMatch.Layout(TheMatch.Types());
 
-    /// <summary>The committed ruleset with one number moved and nothing else touched.</summary>
-    /// <remarks>
-    /// The income base, because it is a single number on its own row that no
-    /// load-time constraint couples to another: every record stamped with the
-    /// old ruleset is retired by it and nothing else about the run moves.
-    /// </remarks>
-    public static Ruleset RetunedRules() =>
-        Ruleset.Parse(TheRuleset.Replace(TheRuleset.CommittedText(), "income        100", "income        101"));
-
-    /// <summary>
-    /// The committed ruleset as a different file and the same rules: comments
-    /// rewritten, columns respaced, line endings turned over.
-    /// </summary>
-    public static string ReformattedRulesText() => Reformatted(TheRuleset.CommittedText());
-
-    /// <summary>That file, parsed.</summary>
-    public static Ruleset ReformattedRules() => Ruleset.Parse(ReformattedRulesText());
-
-    /// <summary>The committed schedule with one anchor's tier pool drawn from one wave earlier.</summary>
-    public static AnchorSchedule RetunedSchedule() =>
-        AnchorSchedule.Parse(
-            TheSchedule.Replace(TheSchedule.CommittedText(), "anchor        6     2", "anchor        5     2"),
-            TheMatch.Types());
-
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
     public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)
     {
@@ -124,21 +100,4 @@ public static class TheCommands
             waves,
             fieldSize: 2);
     }
-
-    /// <summary>
-    /// The same file, typed by somebody with different habits: no comments,
-    /// leading indentation, tabs between the columns, trailing spaces and CRLF
-    /// line endings.
-    /// </summary>
-    private static string Reformatted(string original) =>
-        "# a completely different comment\r\n\r\n"
-        + string.Join(
-            "\r\n",
-            original
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith("#", StringComparison.Ordinal))
-                .Where(line => line.Trim().Length > 0)
-                .Select(line => "  " + string.Join(
-                    "\t",
-                    line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "   "));
 }

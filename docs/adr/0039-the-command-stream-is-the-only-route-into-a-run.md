@@ -14,7 +14,10 @@ played run a replayable record, which makes every playtest a determinism test.
 That claim is asserted structurally rather than described: `Run`'s public surface is exactly two overloads of
 `Advance` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the only interface either
 accepts is the decorative event listener, whose every method returns void. A run cannot be asked a question it
-could answer with something a record does not carry.
+could answer with something a record does not carry. The direct overload — `Advance(BuildPhase, TowerLayout)` —
+is not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
+data surface is `Take`, `TakeId` and `Slots`, which are the three fields a stored command carries, so every
+decision reachable by handing one in is a decision a command could have made.
 
 **A build phase is stored as exactly what a decision is.** `u16 wave`, `u8 take kind`, `u16 take id`, and the
 slots as `(u16 type_id, u16 count)` pairs with `(0, 0)` meaning empty. Nothing else: the offering a take was
@@ -52,20 +55,24 @@ from its own output, taking them through the gate and playing them to the end �
 
 ## What it costs
 
-**`Run` exposes its `Ruleset` and its `UnitTypeTable`.** The gate compares the stream's stamps against the
-tables the run is actually playing rather than against tables a caller passed alongside, which is the whole
-difference between a gate and a courtesy. The cost is two more public properties on a type that was previously
-opaque about its inputs.
+**`Run` exposes its `Ruleset`, its `UnitTypeTable` and the field its waves are paid against.** The gate compares
+the stream's stamps against the tables the run is actually playing rather than against tables a caller passed
+alongside, which is the whole difference between a gate and a courtesy. The cost is three more public
+properties on a type that was previously opaque about its inputs.
 
-**The ordering rule is written twice.** `RecordCommand.Of` asserts that filled slots ascend strictly by type id
-and `ReadSlots` asserts it again. A writer that could emit bytes its own reader refuses is worse than the
-duplication, and each half fails with a message about the side it is on.
+**The ordering rule is written three times.** `BuildPhase.Resolve` refuses a repeated creep when a decision is
+resolved, `RecordCommand.Of` refuses one when a command is composed, and `ReadSlots` refuses one when bytes are
+read. The middle one is what stops a writer emitting bytes its own reader would refuse, and the outer two fail
+with different exception types on purpose — a fault in this program against a fault in stored bytes. The take's
+own bounds are not duplicated: the spelled-out `RecordCommand.Of` overload builds a `BuildPhase` and inherits
+that check rather than restating it.
 
-**The load walk's purse fold is the run's arithmetic, restated.** `Check` closes each wave against
-`PerformanceField.Absent`, exactly as `Run.Advance` does. A test pins the two together — the purse the walk
-predicts for the round after the last is the purse the run actually holds when it gets there — so the day a
-real field makes the payment depend on a round's result, that test goes red rather than the walk quietly
-drifting.
+**The load walk's purse fold is the run's arithmetic, restated.** `Check` closes each wave exactly as
+`Run.Advance` does, and both read the distribution from one place, `Run.Field`, so the field a wave is paid
+against and the field a walk predicts against cannot become two answers. The walk passes zero for what the wave
+dealt, because it has not played the round; against a field nobody is at a percentile of, that amount does not
+enter the sum. A test pins the two together — the purse the walk predicts for the round after the last is the
+purse the run actually holds when it gets there.
 
 ## What was rejected
 

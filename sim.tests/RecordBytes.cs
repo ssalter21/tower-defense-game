@@ -76,12 +76,13 @@ public static class RecordBytes
     public const int CommandSlotsOffset = RecordFormat.CommandBytes;
 
     /// <summary>
-    /// Where a build phase starts in a stream whose commands all fill the same
-    /// number of slots. Every command in <see cref="TheCommands"/> fills one,
-    /// which is what makes the stride a constant a test can name a byte inside.
+    /// Where a build phase starts in a stream out of <see cref="TheCommands"/>.
+    /// Every command in one fills a single slot, which is what makes the stride
+    /// a constant and lets a test name a byte inside a command by index.
     /// </summary>
-    public static int CommandAt(int index, int slots = TheCommands.SlotsPerCommand) =>
-        CommandsOffset + (index * (RecordFormat.CommandBytes + (slots * RecordFormat.SlotBytes)));
+    public static int CommandAt(int index) =>
+        CommandsOffset
+        + (index * (RecordFormat.CommandBytes + (TheCommands.SlotsPerCommand * RecordFormat.SlotBytes)));
 
     /// <summary>Where the defense inside a bundle starts.</summary>
     public static int GhostIn(ReplayBundle bundle) =>

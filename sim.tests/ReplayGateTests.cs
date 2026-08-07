@@ -209,7 +209,7 @@ public class ReplayGateTests
         // hands back an outcome. Two other assertions in the suite go with it,
         // which is what a stamp nobody compares costs.
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
-        Ruleset retuned = TheCommands.RetunedRules();
+        Ruleset retuned = TheRuleset.Retuned();
         Run against = TheCommands.Against(retuned);
 
         RetiredRecordException thrown =
@@ -244,9 +244,9 @@ public class ReplayGateTests
         // retired by a rewrapped comment -- at which point retiring a record
         // means "somebody touched ruleset.txt", which is a signal nobody can act
         // on.
-        Ruleset reformatted = TheCommands.ReformattedRules();
+        Ruleset reformatted = TheRuleset.Reformatted();
 
-        Assert.NotEqual(TheRuleset.CommittedText(), TheCommands.ReformattedRulesText());
+        Assert.NotEqual(TheRuleset.CommittedText(), TheRuleset.ReformattedText());
         Assert.Equal(TheRuleset.Committed().ContentHash, reformatted.ContentHash);
 
         RunOutcome committed = CommandStream
@@ -276,7 +276,7 @@ public class ReplayGateTests
         // exactly where they were, so a four-round stream plays through a
         // rotation it was never recorded against and nothing downstream can tell.
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
-        AnchorSchedule moved = TheCommands.RetunedSchedule();
+        AnchorSchedule moved = TheSchedule.Reshaped();
         Run against = TheCommands.Against(TheRuleset.Committed(), moved);
 
         RetiredRecordException thrown =
@@ -299,6 +299,10 @@ public class ReplayGateTests
         // CommandStream.Replay. This goes red having caught nothing -- no
         // exception was thrown -- and a stream recorded under another tick order
         // plays under this one and reports the result as its own.
+        //
+        // OBSERVED: drop the unit table comparison from CommandStream.Replay.
+        // The second half goes red the same way, and a stream plays four rounds
+        // of creeps whose health pools moved underneath it.
         byte[] stamped = RecordBytes.WithU32(
             TheCommands.Bytes(),
             RecordBytes.SimVersionOffset,
@@ -348,7 +352,7 @@ public class ReplayGateTests
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
 
         Exception thrown = Assert.ThrowsAny<Exception>(
-            () => stream.Replay(TheCommands.Against(TheCommands.RetunedRules()), TheCommands.Defense()));
+            () => stream.Replay(TheCommands.Against(TheRuleset.Retuned()), TheCommands.Defense()));
 
         Assert.IsType<RetiredRecordException>(thrown);
         Assert.IsNotType<RecordException>(thrown);

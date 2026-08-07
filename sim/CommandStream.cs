@@ -54,24 +54,6 @@ namespace Sim
                 throw new ArgumentNullException(nameof(decision));
             }
 
-            var slots = new WaveSlot[decision.Slots.Count];
-
-            for (int index = 0; index < slots.Length; index++)
-            {
-                slots[index] = decision.Slots[index];
-            }
-
-            return Of(wave, decision.Take, decision.TakeId, slots);
-        }
-
-        /// <summary>The same, spelled out, for whoever is reading a command file.</summary>
-        public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots)
-        {
-            if (slots is null)
-            {
-                throw new ArgumentNullException(nameof(slots));
-            }
-
             if (wave < 1)
             {
                 throw new SimulationException(
@@ -81,23 +63,12 @@ namespace Sim
                     + "into a wave number, and it names a round no run ever plays.");
             }
 
-            if (takeId < 1)
-            {
-                throw new SimulationException(
-                    "A command takes "
-                    + Option.NameOf(take)
-                    + " "
-                    + takeId.ToString(CultureInfo.InvariantCulture)
-                    + ". Every option on an offering carries an identity counted from one, so an id below "
-                    + "that is a take nothing on any menu can answer.");
-            }
-
-            var copied = new WaveSlot[slots.Length];
+            var slots = new WaveSlot[decision.Slots.Count];
             int previousTypeId = 0;
 
-            for (int index = 0; index < copied.Length; index++)
+            for (int index = 0; index < slots.Length; index++)
             {
-                WaveSlot slot = slots[index];
+                WaveSlot slot = decision.Slots[index];
 
                 if (!slot.IsEmpty)
                 {
@@ -120,11 +91,19 @@ namespace Sim
                     previousTypeId = slot.TypeId;
                 }
 
-                copied[index] = slot;
+                slots[index] = slot;
             }
 
-            return new RecordCommand(wave, take, takeId, copied);
+            return new RecordCommand(wave, decision.Take, decision.TakeId, slots);
         }
+
+        /// <summary>
+        /// The same, spelled out, for whoever is composing a decision rather
+        /// than recording one that was made. The take is checked by
+        /// <see cref="BuildPhase.Of"/>, which is where that rule lives.
+        /// </summary>
+        public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots) =>
+            Of(wave, BuildPhase.Of(take, takeId, slots));
 
         public static bool operator ==(RecordCommand? a, RecordCommand? b) =>
             a is null ? b is null : a.Equals(b);
@@ -446,8 +425,17 @@ namespace Sim
         /// <b>Nothing is applied.</b> The unlocks and the purse are folded
         /// forward through local values exactly as a round moves them: a build
         /// phase's take, then the wave's own purchases, then the payment a wave
-        /// closes on. The run is untouched, so a stream can be checked and then
-        /// refused without the run having moved.
+        /// closes on against <see cref="Run.Field"/>. The run is untouched, so a
+        /// stream can be checked and then refused without the run having moved,
+        /// and nothing here is handed a defense to play a round with even by
+        /// accident.
+        /// </para>
+        /// <para>
+        /// The wave a round dealt is passed to that payment as zero, because a
+        /// walk has not played the round and cannot know it. Against a field
+        /// nobody is at a percentile of, the bonus is nothing and the amount
+        /// does not enter the sum -- which is what makes the walk's purse the
+        /// run's own, asserted rather than assumed.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -486,12 +474,7 @@ namespace Sim
                 Build build = command.ToPhase().Resolve(run.OfferingAt(round), unlocks, purse, run.Costs);
 
                 unlocks = build.Unlocks;
-
-                // The payment a round closes on, against the field a run with no
-                // pool to be measured against is paid over -- so the bonus is
-                // nothing and what the wave dealt does not enter it.
-                purse = build.Purse.CloseWave(run.Rules, PerformanceField.Absent, 0).Purse;
-
+                purse = build.Purse.CloseWave(run.Rules, run.Field, 0).Purse;
                 builds.Add(build);
             }
 

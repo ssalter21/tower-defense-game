@@ -33,6 +33,15 @@ public static class TheSchedule
     public static AnchorSchedule Committed(UnitTypeTable? types = null) =>
         AnchorSchedule.Parse(CommittedText(), types ?? TheMatch.Types());
 
+    /// <summary>
+    /// The committed shape with its second anchor moved from wave six to wave
+    /// five, and nothing else touched. A rotation away from the committed one.
+    /// </summary>
+    public static AnchorSchedule Reshaped(UnitTypeTable? types = null) =>
+        AnchorSchedule.Parse(
+            Replace(CommittedText(), "anchor        6     2", "anchor        5     2"),
+            types ?? TheMatch.Types());
+
     /// <summary><see cref="Minimal"/>, parsed against the committed unit table.</summary>
     public static AnchorSchedule Small() => AnchorSchedule.Parse(Minimal, TheMatch.Types());
 

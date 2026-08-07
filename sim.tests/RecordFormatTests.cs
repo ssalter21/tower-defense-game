@@ -224,7 +224,7 @@ public class RecordFormatTests
         UnitTypeTable types = TheMatch.Types();
         HexMap map = TheMatch.Map();
         string original = File.ReadAllText(RepoLayout.DefenseFile);
-        string reauthored = Reauthored(original);
+        string reauthored = Reauthoring.Reauthored(original);
 
         Assert.NotEqual(original, reauthored);
 
@@ -308,21 +308,4 @@ public class RecordFormatTests
         // this field would retire every record made under an unchanged ruleset.
         Assert.Equal(SimulationVersion.Current, TheMatch.Ghost(retuned).Header.SimVersion);
     }
-
-    /// <summary>
-    /// The same defense, typed by somebody with different habits: no comments,
-    /// leading indentation, tabs between the columns, trailing spaces and CRLF
-    /// line endings.
-    /// </summary>
-    private static string Reauthored(string original) =>
-        "# a completely different comment\n\n"
-        + string.Join(
-            "\r\n",
-            original
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith("#", StringComparison.Ordinal))
-                .Where(line => line.Trim().Length > 0)
-                .Select(line => "  " + string.Join(
-                    "\t",
-                    line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "   "));
 }

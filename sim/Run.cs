@@ -186,6 +186,16 @@ namespace Sim
         /// <summary>The unit table every creep and every cost in this run is read out of.</summary>
         public UnitTypeTable Types { get; }
 
+        /// <summary>
+        /// The distribution every wave of this run is paid against.
+        /// <see cref="PerformanceField.Absent"/> until a pool of other players'
+        /// rounds exists, which is a build order rather than a fault -- see the
+        /// remarks there. One property rather than a value read at each of the
+        /// places that needs it, so that what a wave is measured against and
+        /// what a walk over a stored stream predicts cannot be two answers.
+        /// </summary>
+        public PerformanceField Field => PerformanceField.Absent;
+
         /// <summary>N, or <see cref="Purse.RoundCapLifted"/> for a run with no last wave.</summary>
         public int Waves { get; }
 
@@ -305,7 +315,7 @@ namespace Sim
             // The bonus is a percentile of a field of other players' rounds, and
             // no such pool exists yet, so every wave is paid the base alone. See
             // PerformanceField.Absent, which is where that is written down.
-            Purse = Purse.CloseWave(Rules, PerformanceField.Absent, outcome.LeakCostDealt).Purse;
+            Purse = Purse.CloseWave(Rules, Field, outcome.LeakCostDealt).Purse;
 
             _outcome = Folded();
 

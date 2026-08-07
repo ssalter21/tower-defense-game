@@ -33,8 +33,7 @@ namespace Sim
     /// layout would bump every stored defense's version too, so every defense
     /// would look newer than it is and readers would branch on versions that
     /// never changed anything about a defense. One counter per kind, one
-    /// history each, and each one only moves when its own bytes move -- which
-    /// is why adding the command stream left the other three where they were.
+    /// history each, and each one moves only when its own bytes move.
     /// </para>
     /// <para>
     /// <b>Magic before version, version before everything else.</b> Four bytes
@@ -133,9 +132,8 @@ namespace Sim
         public const int ReplayVersion = 0;
 
         /// <summary>
-        /// The command stream layout, version 0. Its own counter: the three
-        /// kinds that existed before it did not move when it arrived, so no
-        /// stored defense, wave or bundle looks newer than it is.
+        /// The command stream layout, version 0. Counted on its own, so a
+        /// stored defense, wave or bundle carries no version this kind moved.
         /// </summary>
         public const int CommandVersion = 0;
 

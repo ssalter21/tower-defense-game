@@ -171,6 +171,23 @@ public class CommandStreamTests
         // "Advance(Func`2, TowerLayout)" at position 1 -- and a run that asks a
         // caller what to do mid-round is a run whose input never went through a
         // record and never could.
+        //
+        // OBSERVED, on the decision surface below: add a fourth public property
+        // to BuildPhase. It goes red naming the new member, which is the case
+        // that matters -- a decision carrying something the record has no field
+        // for is a decision that reaches a run and cannot be written down.
+        string[] carried = typeof(BuildPhase)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Select(property => property.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        // Everything a build phase is, and every one of the three is a field of
+        // a stored command. So a decision handed straight to Advance is a
+        // decision a command could have carried, and the direct overload is the
+        // record's own shape rather than a way around it.
+        Assert.Equal(new[] { "Slots", "Take", "TakeId" }, carried);
+
         string[] moves = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(method => !method.IsSpecialName)
@@ -420,6 +437,12 @@ public class CommandStreamTests
         // FromBytes and Replay in between. The first assertion goes red, 4
         // against 0: the bytes come back having proved nothing, and the run they
         // were recorded into has not played a round.
+        //
+        // OBSERVED, on the second half: wrap Recorded's Replay in a catch that
+        // swallows a SimulationException. The good stream still plays, so the
+        // first three assertions stay green; Assert.Throws goes red having
+        // caught nothing, and a stream that refuses to play is written out
+        // anyway -- which is the whole failure this surface exists to prevent.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
 
@@ -472,7 +495,11 @@ public class CommandStreamTests
             walked[walked.Count - 1].Purse.CloseWave(run.Rules, PerformanceField.Absent, 0).Purse.Sauce);
 
         // The walk moved nothing. A stream can be checked and then refused
-        // without the run having taken a step.
+        // without the run having taken a step. No mutation is written above
+        // these three, and the reason is that they are guarded by construction:
+        // Check is handed no defense to play a round with, and a run's purse and
+        // unlocks have private setters, so nothing outside a run can move one.
+        // They are here to go red the day either of those stops being true.
         Run untouched = TheCommands.Fresh();
         stream.Check(untouched);
 

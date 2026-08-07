@@ -41,6 +41,23 @@ public static class TheRuleset
     public static Ruleset Committed() => Ruleset.Parse(CommittedText());
 
     /// <summary>
+    /// The committed ruleset with one number moved and nothing else touched.
+    /// </summary>
+    /// <remarks>
+    /// The income base, because it is a single number on its own row that no
+    /// load-time constraint couples to another: every record stamped with the
+    /// old ruleset is retired by it and nothing else about a run moves.
+    /// </remarks>
+    public static Ruleset Retuned() =>
+        Ruleset.Parse(Replace(CommittedText(), "income        100", "income        101"));
+
+    /// <summary>The committed ruleset as a different file and the same rules.</summary>
+    public static string ReformattedText() => Reauthoring.Reauthored(CommittedText());
+
+    /// <summary>That file, parsed.</summary>
+    public static Ruleset Reformatted() => Ruleset.Parse(ReformattedText());
+
+    /// <summary>
     /// The committed ruleset and the committed unit table, priced together:
     /// every unit's cost column and every line item that is not a unit, in the
     /// one table they share.
