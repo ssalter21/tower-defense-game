@@ -41,6 +41,16 @@
     version still works. Deleting a reader branch turns the golden for that
     version red, and the runner's refusal names the version.
 
+    EACH GOLDEN IS PLAYED AGAINST THE TABLE PINNED BESIDE IT, not against
+    content/units.txt. The replay gate refuses a record whose stamped content
+    hash is not the hash of the table handed in, so a golden played against the
+    live table is a golden the next retune retires -- and the only thing that
+    could replace it is a bundle at the current version, which is exactly what
+    an older version's golden is not. defense-N.units is the table defense-N
+    was recorded against; the gate is unchanged and only what it compares
+    against has stopped moving. -Regenerate pins a fresh copy beside the bundle
+    it re-records, and leaves the older ones alone.
+
 .EXAMPLE
     ./tools/run-headless-match.ps1
     Play the committed match and print what happened.
@@ -252,6 +262,15 @@ function Get-GoldenResultPath {
     return Join-Path $golden ($Bundle.BaseName + '.result')
 }
 
+# The ruleset that bundle was recorded against, and the one it is replayed
+# against for the rest of time. Its hash is the hash stamped in the bundle's
+# header, so this is the file the replay gate compares against.
+function Get-GoldenUnitsPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    return Join-Path $golden ($Bundle.BaseName + '.units')
+}
+
 if ($Regenerate) {
     Invoke-SimCli @(
         'record',
@@ -282,11 +301,22 @@ if ($Regenerate) {
     Copy-Item -Path $bundle -Destination $currentGolden -Force
     Write-Host "wrote      $currentGolden" -ForegroundColor Green
 
+    # And the table it was just recorded against, pinned beside it. The bundle
+    # carries that table's content hash and the replay gate compares the two, so
+    # a re-recorded bundle whose pinned copy stayed behind is a bundle nothing
+    # can replay. The older versions keep the copies they already have.
+    $currentGoldenUnits = Get-GoldenUnitsPath (Get-Item $currentGolden)
+    Copy-Item -Path $units -Destination $currentGoldenUnits -Force
+    Write-Host "wrote      $currentGoldenUnits" -ForegroundColor Green
+
     # Every golden's result is rewritten, the old versions included: a rule
     # change moves what all of them do, and a stale result beside a live one is
-    # the failure this whole arrangement exists to make loud.
+    # the failure this whole arrangement exists to make loud. Each is played
+    # against its own pinned table, so a retune leaves the older ones producing
+    # exactly the bytes they already have.
     foreach ($goldenBundle in Get-GoldenBundles) {
-        $text = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $units)
+        $goldenUnits = Get-GoldenUnitsPath $goldenBundle
+        $text = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
         Write-Host "wrote      $resultPath" -ForegroundColor Green
@@ -374,6 +404,7 @@ if ($goldens.Count -eq 0) {
 
 foreach ($goldenBundle in $goldens) {
     $resultPath = Get-GoldenResultPath $goldenBundle
+    $goldenUnits = Get-GoldenUnitsPath $goldenBundle
 
     if (-not (Test-Path $resultPath)) {
         Write-Host "content/golden/$($goldenBundle.Name) has no committed result beside it." -ForegroundColor Red
@@ -381,7 +412,17 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    $fresh = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $units)
+    # No falling back to content/units.txt. A golden played against a table that
+    # is not the one it was recorded against is either refused by the gate or,
+    # if the two happen to agree today, a check that will refuse tomorrow for a
+    # reason that has nothing to do with the reader branch it is testing.
+    if (-not (Test-Path $goldenUnits)) {
+        Write-Host "content/golden/$($goldenBundle.Name) has no pinned unit table beside it." -ForegroundColor Red
+        $differences++
+        continue
+    }
+
+    $fresh = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits)
     $committed = [System.IO.File]::ReadAllText($resultPath)
 
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {

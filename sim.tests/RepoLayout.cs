@@ -104,6 +104,23 @@ public static class RepoLayout
     public static string GoldenResultFile(int defenseFormatVersion) =>
         Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".result");
 
+    /// <summary>
+    /// The unit type table that bundle was recorded against, copied beside it
+    /// and never rewritten afterwards.
+    /// </summary>
+    /// <remarks>
+    /// The replay gate refuses a record whose stamped content hash is not the
+    /// hash of the table handed to it, so a golden checked against
+    /// <see cref="UnitsFile"/> is a golden the next retune retires -- and a
+    /// re-recorded one is a bundle at the current version, which is the one
+    /// thing an older version's golden cannot be. The copy here is the table
+    /// whose hash is in that bundle's header, so verifying against it leaves
+    /// the gate doing exactly what it always did and puts what it compares
+    /// against out of the reach of a content edit.
+    /// </remarks>
+    public static string GoldenUnitsFile(int defenseFormatVersion) =>
+        Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".units");
+
     /// <summary>The headless runner's project.</summary>
     public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
 
