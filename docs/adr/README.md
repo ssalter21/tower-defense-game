@@ -45,6 +45,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0015](0015-replay-bundles-are-self-contained.md) | A replay bundle is self-contained, and the seed lives in it |
 | [0017](0017-canonical-order-is-asserted-not-restored.md) | Canonical order is asserted at load, never restored |
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
+| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against |
 
 ## Drawing the match
 

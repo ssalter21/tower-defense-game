@@ -345,6 +345,299 @@ public class RecordNegativeTests
     }
 
     [Fact]
+    public void A_command_stream_handed_the_defense_reader_refuses_and_says_what_it_actually_is()
+    {
+        // The fourth magic tag, doing the same job the other three do: the
+        // commonest mistake anybody will make with a folder of records is
+        // opening one as another.
+        //
+        // OBSERVED: drop the Command branch from RecordFormat.TryKindOfMagic.
+        // The first assertion goes red -- "defense record: begins with 'CMDS'
+        // where ..." with nothing after it -- and the reader stops being able to
+        // say what the bytes actually are, which is the whole of what four bytes
+        // of magic buy.
+        RecordException thrown = Assert.Throws<RecordException>(
+            () => GhostRecord.FromBytes(TheCommands.Bytes()));
+
+        Assert.Contains("Those are the bytes of a command stream", thrown.Message, StringComparison.Ordinal);
+
+        // And the other way, which is the case a hexdump answers on its own.
+        byte[] corrupt = RecordBytes.With(TheCommands.Bytes(), 0, (byte)'X');
+        RecordException magic = Assert.Throws<RecordException>(() => CommandStream.FromBytes(corrupt));
+
+        Assert.Contains("'XMDS'", magic.Message, StringComparison.Ordinal);
+        Assert.Contains("'CMDS'", magic.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_command_stream_at_a_newer_format_version_refuses_independently_of_the_other_kinds()
+    {
+        // Format versions are counted per kind, so the command stream's gate is
+        // its own. A defense, a wave and a bundle beside it read perfectly well.
+        //
+        // OBSERVED: make IsKnown accept version 1 of the command stream. The
+        // "cannot know what it is missing" assertion goes red: the read gate
+        // waves the record through and the reader's own switch refuses it
+        // instead, with a message that says the fault is in this build rather
+        // than in the bytes.
+        UnitTypeTable types = TheMatch.Types();
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.FormatVersionOffset,
+            RecordFormat.CommandVersion + 1);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("command stream format version 1", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("cannot know what it is missing", thrown.Message, StringComparison.Ordinal);
+        Assert.Equal(6, GhostRecord.FromBytes(TheMatch.Ghost(types).ToBytes()).Count);
+        Assert.Equal(6, WaveRecord.FromBytes(TheMatch.WaveOf(types).ToBytes()).Count);
+    }
+
+    [Fact]
+    public void A_take_kind_no_offering_has_a_half_for_refuses()
+    {
+        // One byte, and it is the byte that scopes the take's id. A kind nothing
+        // declares names a menu that does not exist, so there is no offering the
+        // id could be looked up on.
+        //
+        // OBSERVED: drop the kind check from ReadVersion0. This goes red having
+        // caught nothing -- no exception was thrown -- because (OptionKind)2 is
+        // a perfectly constructible enum value, and it reaches Offering.TryFind
+        // as a kind that simply matches nothing.
+        byte[] bytes = RecordBytes.With(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(1) + RecordBytes.CommandTakeKindOffset,
+            2);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("takes option kind 2", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("build phase 2 of 4", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_take_id_of_zero_refuses()
+    {
+        // Options are counted from one, so zero is not an option nobody offered
+        // -- it is a hole where the take should be.
+        //
+        // OBSERVED: drop the take id check from ReadVersion0. This goes red on
+        // the exception type, SimulationException against RecordException:
+        // RecordCommand.Of catches it one layer later, so damaged bytes are
+        // reported as a fault in this program rather than in the record.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(0) + RecordBytes.CommandTakeIdOffset,
+            0);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("has take id 0", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_build_phase_stored_for_wave_zero_refuses()
+    {
+        // Waves are counted from one, so zero is a round no run ever plays
+        // rather than a round out of order -- and it is named as such.
+        //
+        // OBSERVED: drop the wave-zero check from ReadVersion0. The stream is
+        // still refused, by the canonical-order check below it, and the second
+        // half of the assertion is the clause that tells the two apart: without
+        // it this test stays green on "is stored for wave 0, at or below the 0
+        // above it", which is a first command being compared against a command
+        // above it that does not exist.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(0) + RecordBytes.CommandWaveOffset,
+            0);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains(
+            "is stored for wave 0, and waves are counted from one",
+            thrown.Message,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_phases_out_of_canonical_order_refuse()
+    {
+        // A run plays its build phases in the order they are stored, so the
+        // order is asserted rather than sorted -- for the reason a wave's orders
+        // are: sorting would leave two identical runs with two different sets of
+        // bytes, at which point content-addressing one stops meaning anything.
+        //
+        // OBSERVED: drop the wave-order check from ReadVersion0. This goes red
+        // having caught nothing -- no exception was thrown -- and a stream
+        // holding waves 1, 2, 1, 4 reads back as a stream, to be refused much
+        // later by a run that is about to play round three.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(2) + RecordBytes.CommandWaveOffset,
+            1);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("at or below the 2 above it", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("ascend strictly by wave", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Two_slots_of_one_build_phase_naming_one_creep_refuse()
+    {
+        // The same rule one level down. A command's filled slots become the
+        // orders of a wave, and a wave's orders are unique on (tick, type).
+        //
+        // OBSERVED: drop the slot-order check from ReadSlots. This goes red on
+        // the exception type, SimulationException against RecordException, and
+        // the message is RecordCommand.Of's -- the writer-side half of the same
+        // rule, catching bytes the reader waved through.
+        Run run = TheCommands.Fresh();
+        Option first = run.Offering.Options[0];
+        int[] creeps = run.Offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+
+        byte[] good = CommandStream.Of(
+            run,
+            new[]
+            {
+                RecordCommand.Of(
+                    1, first.Kind, first.Id, WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[1], 1)),
+            })
+            .ToBytes();
+
+        // The second slot dragged down onto the first slot's creep. One u16,
+        // and the whole wave becomes a slot spent twice on one thing.
+        byte[] bytes = RecordBytes.WithU16(
+            good,
+            RecordBytes.CommandsOffset + RecordBytes.CommandSlotsOffset + RecordFormat.SlotBytes,
+            creeps[0]);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("out of canonical order", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("asserted rather than sorted", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_slot_that_sends_none_of_a_creep_refuses()
+    {
+        // Leaving a slot empty already has exactly one spelling, (0, 0). A
+        // creep named zero times would be a second one, and two spellings of one
+        // wave is two sets of bytes for one run.
+        //
+        // OBSERVED: drop the zero-count check from ReadSlots. This goes red on
+        // the exception type, SimulationException against RecordException: what
+        // fires is WaveSlot.Of's own guard, which is a fault in this program
+        // rather than a report about damaged bytes.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(0) + RecordBytes.CommandSlotsOffset + 2,
+            0);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("sends none of type id", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_slot_counting_creeps_of_no_type_refuses()
+    {
+        // The other half of the same spelling: a count against type id 0 is a
+        // slot with a hole in it rather than an empty one.
+        //
+        // OBSERVED: drop the zero-type check from ReadSlots. The message
+        // assertion goes red: the slot is refused by the canonical-order check
+        // instead, for sending a type id at or below the zero above it, which
+        // says nothing about the hole that is actually in the record.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.Bytes(),
+            RecordBytes.CommandAt(0) + RecordBytes.CommandSlotsOffset,
+            0);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("of type id 0, and zero means no unit", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_truncation_in_the_middle_of_a_build_phase_refuses_and_names_the_element()
+    {
+        // Two bytes short: the last slot's type id was read and its count is not
+        // there. A reader that shrugged and took zero would be inventing an
+        // empty slot in a wave somebody paid for.
+        //
+        // OBSERVED: name the slot "a slot" in ReadSlots instead of building the
+        // name out of its index and its build phase. The element assertion goes
+        // red, and a truncated stream reports that it ran out of bytes without
+        // saying where -- which on a four-round record is four places to look.
+        byte[] bytes = RecordBytes.Truncated(TheCommands.Bytes(), 2);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("ran out of bytes", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("slot 1 of build phase 4 of 4", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Bytes_left_over_after_a_command_stream_refuses()
+    {
+        // Trailing bytes mean the reader and the writer disagree about the
+        // layout, which is what the format version exists to prevent.
+        //
+        // OBSERVED: drop the ExpectEnd call from CommandStream.FromBytes. This
+        // goes red having caught nothing -- no exception was thrown -- and a
+        // stream with a byte glued to the end of it reads as a stream.
+        RecordException thrown = Assert.Throws<RecordException>(
+            () => CommandStream.FromBytes([.. TheCommands.Bytes(), (byte)0]));
+
+        Assert.Contains("left over", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_command_stream_that_decides_nothing_refuses()
+    {
+        // A stream is what a run consumes, and a run of no build phases is a run
+        // nobody played.
+        //
+        // OBSERVED: drop the zero-count check from ReadVersion0. This goes red
+        // having caught nothing -- no exception was thrown -- and a header with
+        // a count of zero reads back as a valid record of nothing.
+        byte[] bytes = RecordBytes.Truncated(
+            RecordBytes.WithU16(TheCommands.Bytes(), RecordBytes.CommandCountOffset, 0),
+            TheCommands.Waves * (RecordFormat.CommandBytes + RecordFormat.SlotBytes));
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("decides nothing at all", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void One_byte_of_a_command_streams_ruleset_hash_retires_it()
+    {
+        // Not a read error -- the bytes are a perfectly well-formed stream, and
+        // it is still readable afterwards. This is the gate the ruleset's hash
+        // exists to make possible, reached by damaging the stamp rather than by
+        // retuning the file.
+        //
+        // OBSERVED: drop the ruleset comparison from CommandStream.Replay. This
+        // goes red having caught nothing -- no exception was thrown -- and a
+        // stream whose stamp says one ruleset plays four rounds against
+        // another.
+        byte[] bytes = RecordBytes.Flip(TheCommands.Bytes(), RecordBytes.CommandRulesetHashOffset);
+
+        CommandStream stream = CommandStream.FromBytes(bytes);
+
+        Assert.Equal(TheCommands.Waves, stream.Count);
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
+            () => stream.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+
+        Assert.Equal("ruleset hash", thrown.Gate);
+    }
+
+    [Fact]
     public void A_map_the_bundle_does_not_carry_enough_bytes_for_refuses()
     {
         // The width and the height are read before the cells are, so a record
