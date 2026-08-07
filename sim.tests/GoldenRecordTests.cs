@@ -26,10 +26,15 @@ namespace Sim.Tests;
 /// more can be noticed at all.
 /// </para>
 /// <para>
+/// <b>Each bundle is replayed against the table committed beside it, not
+/// against <c>content/units.txt</c>.</b> See
+/// <see cref="RepoLayout.GoldenUnitsFile"/> for what that buys.
+/// </para>
+/// <para>
 /// The end-to-end half of this lives in <c>tools/run-headless-match.ps1
-/// -Verify</c>, which replays every golden through the actual command line and
-/// compares what it printed against the committed <c>.result</c> beside it. The
-/// gate runs both.
+/// -Verify</c>, which replays every golden through the actual command line
+/// against that golden's pinned table and compares what it printed against the
+/// committed <c>.result</c> beside it. The gate runs both.
 /// </para>
 /// </remarks>
 public class GoldenRecordTests
@@ -110,34 +115,104 @@ public class GoldenRecordTests
 
     [Theory]
     [MemberData(nameof(EveryDefenseVersion))]
+    public void The_table_a_golden_was_recorded_against_is_committed_beside_it(int version)
+    {
+        // OBSERVED, both assertions, on this build.
+        //
+        // The file: rename content/golden/defense-0.units and the version-0 row
+        // goes red naming the path it looked for. Nothing else in this class
+        // notices, which is why the existence of the copy is asserted here
+        // rather than left to whatever happens to open it first.
+        //
+        // The hash: move grunt max hp from 200 to 201 in
+        // content/golden/defense-0.units and the second assertion goes red,
+        // 6546B150CB4FEC4A against the 39B848CEFDDCC9CF in the bundle's header.
+        // That is the whole content of "the table it was recorded against": a
+        // copy of some other table would sit here looking exactly as
+        // convincing.
+        string path = RepoLayout.GoldenUnitsFile(version);
+
+        Assert.True(
+            File.Exists(path),
+            "The golden bundle for defense format version "
+            + version.ToString(CultureInfo.InvariantCulture)
+            + " has no unit table beside it at "
+            + path
+            + ". A bundle is replayed against the table it was recorded against, and a bundle "
+            + "without one cannot be replayed at all -- nor re-recorded, because the writer emits "
+            + "only the current version.");
+
+        Assert.Equal(PinnedTypes(version).ContentHash, Golden(version).Header.ContentHash);
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryDefenseVersion))]
     public void The_golden_at_every_version_replays_to_the_committed_result(int version)
     {
         // Through the replay gate, not around it. The map handle is not a
         // simulation input, so a version-0 record whose handle was defaulted is
-        // still a record this build may simulate -- and it produces, tick for
-        // tick, the trace a real run committed.
+        // still a record this build may simulate.
         //
         // The oracle is the committed file rather than a second run made here:
         // a result the checker computes is a result that agrees with itself
-        // whatever it does.
-        UnitTypeTable types = TheMatch.Types();
-        ReplayBundle bundle = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.GoldenBundleFile(version)));
-        GoldenTrace trace = TheMatch.Trace();
+        // whatever it does. The rolling hash it carries is a fold over the state
+        // hash of every tick, so comparing that one number compares the whole
+        // run -- what a per-tick walk buys over it is the tick number a
+        // divergence started on, and content/golden-trace.txt is where that is
+        // bought, for the live match it is the trace of.
+        //
+        // Both substrings are anchored at both ends, and that is not
+        // fussiness: "1 of 40 leaked, tick 185" sits inside "11 of 40 leaked,
+        // tick 1852", so a leak count or a tick that lost a digit would be found
+        // in the committed line and pass.
+        //
+        // OBSERVED: doctor content/golden/defense-0.result. "12 of 40 leaked,
+        // tick 1852" to "11 of 40 leaked, tick 1852" reddens the first Contains,
+        // and "state CA3F66473C4B975D" to "state 0123456789ABCDEF" reddens the
+        // second. Without watching those, a Contains against a file nobody
+        // checks is a test that passes because the substring is short.
+        MatchResult result = Golden(version).Replay(PinnedTypes(version)).Resolve();
+        string committed = File.ReadAllText(RepoLayout.GoldenResultFile(version));
 
-        Match match = bundle.Replay(types);
-        trace.Check(0, match.StateHash);
+        Assert.Contains(
+            "result     "
+            + result.Leaked.ToString(CultureInfo.InvariantCulture)
+            + " of "
+            + result.Total.ToString(CultureInfo.InvariantCulture)
+            + " leaked, tick "
+            + result.FinalTick.ToString(CultureInfo.InvariantCulture)
+            + " (",
+            committed,
+            StringComparison.Ordinal);
 
-        while (!match.IsFinished)
-        {
-            match.Advance(1);
-            trace.Check(match.Tick, match.StateHash);
-        }
+        Assert.Contains("state " + result.RollingStateHash.ToString(), committed, StringComparison.Ordinal);
+    }
 
-        MatchResult result = match.Result();
+    [Theory]
+    [MemberData(nameof(EveryDefenseVersion))]
+    public void A_golden_whose_pinned_table_was_tampered_with_is_refused(int version)
+    {
+        // Pinning redirects a check; it softens none. A copy with a row taken
+        // out of it is not the table the bundle was recorded against, and it is
+        // refused by the same gate, by name. That the refusal also carries both
+        // hashes is ReplayGateTests' claim rather than this one's.
+        //
+        // A row rather than a digit because the fold covers the row count and
+        // every integer of every row, so dropping the last one moves the hash
+        // whatever columns the table has.
+        //
+        // OBSERVED: drop the last comment line instead of the last unit row.
+        // The hash is folded over the parsed integers, so it does not move, the
+        // bundle replays, and Assert.Throws goes red having caught nothing at
+        // all. That is what this assertion would look like if the pinned copy
+        // were compared against nothing.
+        string pinned = File.ReadAllText(RepoLayout.GoldenUnitsFile(version));
+        UnitTypeTable tampered = UnitTypeTable.Parse("tampered pinned table", WithoutItsLastType(pinned));
 
-        Assert.Equal(TheMatch.LeakedInTheCommittedRun, result.Leaked);
-        Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
-        Assert.Equal(trace.At(trace.FinalTick), result.RollingStateHash);
+        RetiredRecordException thrown =
+            Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered));
+
+        Assert.Equal("content hash", thrown.Gate);
     }
 
     [Fact]
@@ -152,18 +227,25 @@ public class GoldenRecordTests
         // for whether defaulting is legitimate: not "is the field small", not
         // "is a sensible value obvious", but "can a replay's result depend on
         // it". See RecordFormat.GhostVersion.
-        UnitTypeTable types = TheMatch.Types();
+        //
+        // Both records are run against ONE table, and that makes it a restaging
+        // rather than a replay. Isolating one field means holding everything
+        // else still, and the two bundles carry two pinned tables that are free
+        // to differ; each run under its own would compare two rulesets as well,
+        // and would report a retune as a map handle that changed the match. The
+        // gate the restaging does keep is the map hash, which asks whether the
+        // bytes agree with themselves rather than which ruleset made them.
+        UnitTypeTable types = PinnedTypes(RecordFormat.GhostVersion);
 
-        ReplayBundle old = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.GoldenBundleFile(0)));
-        ReplayBundle current = ReplayBundle.FromBytes(
-            File.ReadAllBytes(RepoLayout.GoldenBundleFile(RecordFormat.GhostVersion)));
+        ReplayBundle old = Golden(0);
+        ReplayBundle current = Golden(RecordFormat.GhostVersion);
 
         Assert.Equal(GhostRecord.NoMapHandle, old.Ghost.MapHandle);
         Assert.Equal(TheMatch.MapHandle, current.Ghost.MapHandle);
         Assert.NotEqual(old.GhostId, current.GhostId);
 
-        Match one = old.Replay(types);
-        Match other = current.Replay(types);
+        Match one = old.RestageUnderCurrentRules(types).Match;
+        Match other = current.RestageUnderCurrentRules(types).Match;
 
         while (!one.IsFinished || !other.IsFinished)
         {
@@ -212,5 +294,44 @@ public class GoldenRecordTests
             "read at defense record format " + version.ToString(CultureInfo.InvariantCulture),
             text,
             StringComparison.Ordinal);
+    }
+
+    /// <summary>The committed bundle whose defense is at this format version.</summary>
+    private static ReplayBundle Golden(int version) =>
+        ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.GoldenBundleFile(version)));
+
+    /// <summary>
+    /// The ruleset that bundle was recorded against, read from the copy
+    /// committed beside it. Named after the file so that a row that will not
+    /// parse says which of the pinned tables it was.
+    /// </summary>
+    private static UnitTypeTable PinnedTypes(int version) =>
+        UnitTypeTable.Parse(
+            "golden/defense-" + version.ToString(CultureInfo.InvariantCulture) + ".units",
+            File.ReadAllText(RepoLayout.GoldenUnitsFile(version)));
+
+    /// <summary>
+    /// The same table with its last unit row removed, whatever columns the rows
+    /// have and however they are spaced. Ids ascend down the file, so the row
+    /// that goes is the highest id -- one the committed defense builds towers
+    /// from. That is harmless, and it is worth knowing why: the replay gate
+    /// compares hashes before a single type is looked up, so what refuses the
+    /// record is the gate rather than the missing row behind it.
+    /// </summary>
+    private static string WithoutItsLastType(string text)
+    {
+        string[] lines = text.Split('\n');
+
+        for (int index = lines.Length - 1; index >= 0; index--)
+        {
+            string line = lines[index].Trim();
+
+            if (line.Length > 0 && !line.StartsWith('#'))
+            {
+                return string.Join("\n", lines.Where((_, at) => at != index));
+            }
+        }
+
+        throw new Xunit.Sdk.XunitException("The pinned table has no unit rows in it at all.");
     }
 }
