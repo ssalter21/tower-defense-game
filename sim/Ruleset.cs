@@ -61,7 +61,10 @@ namespace Sim
         /// Names this ruleset and its field layout inside the hash. The digit is
         /// the layout version: moving, adding or removing a field bumps it.
         /// </summary>
-        private const string HashLabel = "ruleset/1";
+        private const string HashLabel = "ruleset/2";
+
+        /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
+        private const int Percent = 100;
 
         /// <summary>
         /// The largest any factor of the damage expression may be -- a matrix
@@ -80,6 +83,7 @@ namespace Sim
             ArmourDenominator = draft.ArmourDenominator;
             DamageFloor = draft.DamageFloor;
             InterestPercentPerWave = draft.InterestPercentPerWave;
+            InterestCapSauce = draft.InterestCapSauce;
             IncomeBasePerWave = draft.IncomeBasePerWave;
             _bands = draft.Bands.ToArray();
             HealthPoolSauce = draft.HealthPoolSauce;
@@ -113,6 +117,18 @@ namespace Sim
 
         /// <summary>What the bank pays a wave, in percent, rounded up.</summary>
         public int InterestPercentPerWave { get; }
+
+        /// <summary>
+        /// The most interest one wave may pay, in sauce.
+        /// <see cref="NoInterestCeiling"/> means there is none, and compounding
+        /// is then bounded by the run's round cap alone -- which is why a run
+        /// with no round cap and no ceiling here is refused. See
+        /// <see cref="Purse.RequireBoundedCompounding"/>.
+        /// </summary>
+        public int InterestCapSauce { get; }
+
+        /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
+        public const int NoInterestCeiling = 0;
 
         /// <summary>The flat income a wave pays, in sauce, before any bonus.</summary>
         public int IncomeBasePerWave { get; }
@@ -198,6 +214,7 @@ namespace Sim
                 .Add(draft.ArmourDenominator)
                 .Add(draft.DamageFloor)
                 .Add(draft.InterestPercentPerWave)
+                .Add(draft.InterestCapSauce)
                 .Add(draft.IncomeBasePerWave)
                 .Add(draft.Bands.Count);
 
@@ -238,6 +255,45 @@ namespace Sim
             return StartingWaveSlots + (WaveSlotsPerAnchor * anchorsSoFar);
         }
 
+        /// <summary>
+        /// The band a wave that reached this percentile of the field falls in:
+        /// the last one whose threshold it reaches. Every band pays at least
+        /// what the one below it pays and none of them is negative, so falling
+        /// short of the field is a smaller bonus and never a penalty.
+        /// </summary>
+        /// <param name="percentile">
+        /// How much of the field the wave beat, 0 to 100. A hundred is a wave
+        /// nothing in the field matched, which is inside the top band rather
+        /// than past it.
+        /// </param>
+        public PerformanceBand BandFor(int percentile)
+        {
+            if (percentile < 0 || percentile > Percent)
+            {
+                throw new SimulationException(
+                    "A wave came in at the "
+                    + percentile.ToString(CultureInfo.InvariantCulture)
+                    + "th percentile of its field. A percentile is how much of the field the wave beat, "
+                    + "so it runs from 0 to "
+                    + Percent.ToString(CultureInfo.InvariantCulture)
+                    + " and a value outside that is a count that was never divided by the field's size.");
+            }
+
+            PerformanceBand reached = _bands[0];
+
+            for (int index = 1; index < _bands.Length; index++)
+            {
+                if (_bands[index].PercentileThreshold > percentile)
+                {
+                    break;
+                }
+
+                reached = _bands[index];
+            }
+
+            return reached;
+        }
+
         private static void ReadRow(string source, int line, string[] fields, Draft draft)
         {
             switch (fields[0])
@@ -270,10 +326,12 @@ namespace Sim
                     return;
 
                 case "interest":
-                    Expect(source, line, fields, "interest", 2);
+                    Expect(source, line, fields, "interest", 3);
                     draft.Once(source, line, "interest");
                     draft.InterestPercentPerWave =
                         DataText.IntegerInRange(source, line, "the interest rate", fields[1], 0, 1000);
+                    draft.InterestCapSauce =
+                        DataText.IntegerInRange(source, line, "the interest cap", fields[2], 0, int.MaxValue);
                     return;
 
                 case "income":
@@ -380,6 +438,8 @@ namespace Sim
             internal int DamageFloor { get; set; }
 
             internal int InterestPercentPerWave { get; set; }
+
+            internal int InterestCapSauce { get; set; }
 
             internal int IncomeBasePerWave { get; set; }
 

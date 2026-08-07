@@ -23,7 +23,7 @@ public static class TheRuleset
         matrix magic 100 140 70
         armour 1 100
         floor 1
-        interest 10
+        interest 10 0
         income 100
         band 0 0
         band 50 5

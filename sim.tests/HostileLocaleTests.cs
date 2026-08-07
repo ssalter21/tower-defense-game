@@ -121,9 +121,9 @@ public class HostileLocaleTests
     {
         // Every number the rules are made of, read under a culture chosen to
         // break the parse. The matrix cells, the armour expression, the floor,
-        // the interest rate, the income base, the bands, the health pool, the
-        // slot widths, the offering and the snapshot price are all integers a
-        // framework parser would consult a culture about.
+        // the interest rate and its ceiling, the income base, the bands, the
+        // health pool, the slot widths, the offering and the snapshot price are
+        // all integers a framework parser would consult a culture about.
         string text = File.ReadAllText(RepoLayout.RulesetFile);
         Ruleset invariant = Ruleset.Parse(text);
         Ruleset hostile;
@@ -139,6 +139,7 @@ public class HostileLocaleTests
         Assert.Equal(invariant.ArmourDenominator, hostile.ArmourDenominator);
         Assert.Equal(invariant.DamageFloor, hostile.DamageFloor);
         Assert.Equal(invariant.InterestPercentPerWave, hostile.InterestPercentPerWave);
+        Assert.Equal(invariant.InterestCapSauce, hostile.InterestCapSauce);
         Assert.Equal(invariant.IncomeBasePerWave, hostile.IncomeBasePerWave);
         Assert.Equal(invariant.HealthPoolSauce, hostile.HealthPoolSauce);
         Assert.Equal(invariant.StartingWaveSlots, hostile.StartingWaveSlots);
@@ -198,6 +199,14 @@ public class HostileLocaleTests
 
             Assert.Throws<ContentException>(
                 () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1.5 100")));
+
+            // The interest cap is the column this layout added, and a ceiling
+            // is exactly the shape a designer reaches for a fraction in.
+            Assert.Throws<ContentException>(
+                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 0,5")));
+
+            Assert.Throws<ContentException>(
+                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 1.5")));
         }
     }
 
