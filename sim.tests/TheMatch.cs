@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Sim.Tests;
 
 /// <summary>
@@ -20,10 +22,10 @@ public static class TheMatch
     public const ulong Seed = 20260801UL;
 
     /// <summary>How many creeps get through, in the committed run.</summary>
-    public const int LeakedInTheCommittedRun = 12;
+    public const int LeakedInTheCommittedRun = 13;
 
     /// <summary>The tick the committed run ends on.</summary>
-    public const int FinalTickOfTheCommittedRun = 1852;
+    public const int FinalTickOfTheCommittedRun = 1841;
 
     /// <summary>
     /// The handle the committed map is filed under, and the one
@@ -97,18 +99,70 @@ public static class TheMatch
     /// against it parse perfectly and only the content hash tells them apart,
     /// which is the whole situation the replay gate exists for.
     /// </summary>
-    public static UnitTypeTable RetunedTypes()
+    public static UnitTypeTable RetunedTypes() => UnitTypeTable.Parse(RetunedUnitsText());
+
+    /// <summary>
+    /// The committed unit table as text, with the first row's max hp one
+    /// higher and nothing else touched.
+    /// </summary>
+    /// <remarks>
+    /// The edit is made by rewriting a field of a parsed row rather than by
+    /// replacing a literal run of characters. A literal here is a spelling of
+    /// one row of one file at one moment: a rescale, a respacing or a fifth
+    /// column turns the replacement into a no-op, at which point every caller
+    /// is comparing a table against itself and every one of them is green. The
+    /// assertions below are what make that impossible -- the retuned table has
+    /// to differ from the committed one in exactly this field and in no other.
+    /// </remarks>
+    /// <remarks>
+    /// OBSERVED: make the field rewrite a no-op -- assign the field back to
+    /// itself instead of adding one. The assertion below goes red, 2001 against
+    /// 2000, and so do the three gate tests that consume this. Before the guard
+    /// was here the same no-op left every one of them green, comparing a table
+    /// against itself.
+    /// </remarks>
+    public static string RetunedUnitsText()
     {
-        string text = File.ReadAllText(RepoLayout.UnitsFile);
-        string retuned = text.Replace(
-            "unit   1   grunt   moving  200",
-            "unit   1   grunt   moving  201",
-            StringComparison.Ordinal);
+        string[] lines = File.ReadAllText(RepoLayout.UnitsFile).Split('\n');
+        int edited = -1;
 
-        Assert.NotEqual(text, retuned);
+        for (int index = 0; index < lines.Length && edited < 0; index++)
+        {
+            string[] fields = lines[index]
+                .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 
-        return UnitTypeTable.Parse(retuned);
+            if (fields.Length == 0 || fields[0] != "unit")
+            {
+                continue;
+            }
+
+            int maxHp = int.Parse(fields[MaxHpField], CultureInfo.InvariantCulture);
+            fields[MaxHpField] = (maxHp + 1).ToString(CultureInfo.InvariantCulture);
+            lines[index] = string.Join("   ", fields);
+            edited = index;
+        }
+
+        Assert.True(edited >= 0, "The committed unit table has no unit rows in it at all.");
+
+        string retuned = string.Join("\n", lines);
+        UnitTypeTable before = Types();
+        UnitTypeTable after = UnitTypeTable.Parse(retuned);
+
+        // Exactly one number moved, and it is a number the tick loop reads.
+        Assert.Equal(before.Count, after.Count);
+        Assert.Equal(before.Types[0].MaxHp + 1, after.Types[0].MaxHp);
+        Assert.NotEqual(before.ContentHash, after.ContentHash);
+
+        for (int index = 1; index < before.Count; index++)
+        {
+            Assert.Equal(before.Types[index].MaxHp, after.Types[index].MaxHp);
+        }
+
+        return retuned;
     }
+
+    /// <summary>Where max hp sits in the layout the committed table declares.</summary>
+    private const int MaxHpField = 4;
 
     /// <summary>Everything a match said happened, in the order it said it.</summary>
     public sealed class EventLog : IMatchEvents

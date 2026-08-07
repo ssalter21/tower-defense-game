@@ -83,6 +83,140 @@ public class HostileLocaleTests
         }
     }
 
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void Every_column_the_current_layout_added_parses_identically_under_a_hostile_culture(string name)
+    {
+        // The four columns the unit schema gained: a cost, two keywords matched
+        // ordinally and an armour value. Two of them are numbers a culture
+        // could reinterpret and two are words a culture could case-fold
+        // differently -- in Turkish, "pierce" does not round-trip through an
+        // upper-casing, which is why the keyword match is ordinal.
+        string units = File.ReadAllText(RepoLayout.UnitsFile);
+        UnitTypeTable invariant = UnitTypeTable.Parse(units);
+        UnitTypeTable hostile;
+
+        using (Hostile(name))
+        {
+            hostile = UnitTypeTable.Parse(units);
+        }
+
+        Assert.Equal(invariant.ContentHash, hostile.ContentHash);
+        Assert.Equal(invariant.Layout, hostile.Layout);
+
+        for (int index = 0; index < invariant.Count; index++)
+        {
+            Assert.Equal(invariant.Types[index].Cost, hostile.Types[index].Cost);
+            Assert.Equal(invariant.Types[index].AttackType, hostile.Types[index].AttackType);
+            Assert.Equal(invariant.Types[index].ArmourType, hostile.Types[index].ArmourType);
+            Assert.Equal(invariant.Types[index].Armour, hostile.Types[index].Armour);
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void The_whole_ruleset_parses_and_hashes_identically_under_a_hostile_culture(string name)
+    {
+        // Every number the rules are made of, read under a culture chosen to
+        // break the parse. The matrix cells, the armour expression, the floor,
+        // the interest rate, the income base, the bands, the health pool, the
+        // slot widths, the offering and the snapshot price are all integers a
+        // framework parser would consult a culture about.
+        string text = File.ReadAllText(RepoLayout.RulesetFile);
+        Ruleset invariant = Ruleset.Parse(text);
+        Ruleset hostile;
+
+        using (Hostile(name))
+        {
+            hostile = Ruleset.Parse(text);
+        }
+
+        Assert.Equal(invariant.ContentHash, hostile.ContentHash);
+        Assert.Equal(invariant.Matrix.Cells, hostile.Matrix.Cells);
+        Assert.Equal(invariant.ArmourPercentPerPoint, hostile.ArmourPercentPerPoint);
+        Assert.Equal(invariant.ArmourDenominator, hostile.ArmourDenominator);
+        Assert.Equal(invariant.DamageFloor, hostile.DamageFloor);
+        Assert.Equal(invariant.InterestPercentPerWave, hostile.InterestPercentPerWave);
+        Assert.Equal(invariant.IncomeBasePerWave, hostile.IncomeBasePerWave);
+        Assert.Equal(invariant.HealthPoolSauce, hostile.HealthPoolSauce);
+        Assert.Equal(invariant.StartingWaveSlots, hostile.StartingWaveSlots);
+        Assert.Equal(invariant.WaveSlotsPerAnchor, hostile.WaveSlotsPerAnchor);
+        Assert.Equal(invariant.OrdinaryOptionsPerRound, hostile.OrdinaryOptionsPerRound);
+        Assert.Equal(invariant.GameChangersPerAnchor, hostile.GameChangersPerAnchor);
+        Assert.Equal(invariant.FreeSnapshotsPerRun, hostile.FreeSnapshotsPerRun);
+        Assert.Equal(invariant.SnapshotPriceSauce, hostile.SnapshotPriceSauce);
+
+        Assert.Equal(invariant.Bands.Count, hostile.Bands.Count);
+
+        for (int index = 0; index < invariant.Bands.Count; index++)
+        {
+            Assert.Equal(invariant.Bands[index].PercentileThreshold, hostile.Bands[index].PercentileThreshold);
+            Assert.Equal(invariant.Bands[index].BonusPercentOfBase, hostile.Bands[index].BonusPercentOfBase);
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish, "10 none armoured 0", "1.5 none armoured 0")]
+    [InlineData(Turkish, "10 none armoured 0", "10 none armoured 0.5")]
+    [InlineData(CommaDecimal, "10 none armoured 0", "1,5 none armoured 0")]
+    [InlineData(CommaDecimal, "10 none armoured 0", "10 none armoured 0,5")]
+    public void A_fraction_in_a_column_the_current_layout_added_is_refused_under_a_hostile_culture(
+        string name,
+        string authored,
+        string planted)
+    {
+        // The cost and the armour value are the two new numbers, and both are
+        // exactly the shape a designer reaches for a fraction in. Under a
+        // comma-decimal culture the second spelling is the natural one, which
+        // is why both characters are refused rather than one.
+        const string Row = "layout 2\nunit 1 grunt moving 2000 85 0 0 0 0 0 0 none 0 12 10 none armoured 0";
+
+        using (Hostile(name))
+        {
+            Assert.Throws<ContentException>(
+                () => UnitTypeTable.Parse(Row.Replace(authored, planted, StringComparison.Ordinal)));
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void A_fraction_in_a_ruleset_column_is_refused_under_a_hostile_culture(string name)
+    {
+        using (Hostile(name))
+        {
+            Assert.Throws<ContentException>(
+                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10", "interest 10,5")));
+
+            Assert.Throws<ContentException>(
+                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1.5 100")));
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void A_type_keyword_in_the_wrong_case_is_refused_under_a_hostile_culture(string name)
+    {
+        // The Turkish trap, aimed at the columns that carry it. A parser that
+        // compared these case-insensitively would consult a culture, and in
+        // Turkish "pierce" does not upper-case to "PIERCE". The comparison is
+        // ordinal, so the wrong case is simply not the keyword.
+        const string Row = "layout 2\nunit 3 bolt placed 0 0 3200 6 3 2 90 150 hitscan 0 0 40 pierce none 0";
+
+        using (Hostile(name))
+        {
+            Assert.Throws<ContentException>(
+                () => UnitTypeTable.Parse(Row.Replace(" pierce ", " PIERCE ", StringComparison.Ordinal)));
+
+            Assert.Throws<ContentException>(
+                () => Ruleset.Parse(
+                    TheRuleset.Replace(TheRuleset.Minimal, "matrix magic", "matrix MAGIC")));
+        }
+    }
+
     [Fact]
     public void The_turkish_culture_is_really_in_effect_and_really_is_hostile()
     {

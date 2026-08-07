@@ -14,12 +14,32 @@ namespace Sim.Tests;
 /// </remarks>
 public class ContentTests
 {
+    /// <summary>
+    /// Three rows in column layout 1, which is what a table with no
+    /// <c>layout</c> row is. It has no cost column and no place in the damage
+    /// matrix, and that is the truth about every table written before those
+    /// columns existed.
+    /// </summary>
     private const string ThreeGoodRows = """
         # a comment, which changes nothing
         unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12
         unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12
         unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0
         """;
+
+    /// <summary>The same three rows in column layout 2, with the four columns it adds.</summary>
+    private const string ThreeCurrentRows = """
+        layout 2
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0
+        """;
+
+    /// <summary>
+    /// What the unit table pinned beside the version-0 golden bundle hashes to,
+    /// and what its bundle's header carries.
+    /// </summary>
+    private const ulong LayoutOneHashOfTheOldestPin = 0x39B848CEFDDCC9CFUL;
 
     [Fact]
     public void The_committed_unit_table_parses()
@@ -32,6 +52,283 @@ public class ContentTests
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
         Assert.Equal(Delivery.Projectile, table.ById(4).Delivery);
         Assert.Equal(11, table.ById(4).ProjectileFlightTicks);
+    }
+
+    [Fact]
+    public void The_committed_unit_table_is_in_the_current_column_layout_and_carries_its_columns()
+    {
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        Assert.Equal(UnitTypeTable.CurrentLayout, table.Layout);
+
+        // A creep: a cost, an armour type, and no attack type because it never
+        // attacks.
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Equal(ArmourType.Armoured, table.ById(1).ArmourType);
+        Assert.Equal(AttackType.None, table.ById(1).AttackType);
+        Assert.Equal(0, table.ById(1).Armour);
+        Assert.Equal(ArmourType.Swift, table.ById(2).ArmourType);
+
+        // A tower: an attack type, and no armour type because it has no health
+        // pool to be protected.
+        Assert.Equal(40, table.ById(3).Cost);
+        Assert.Equal(AttackType.Pierce, table.ById(3).AttackType);
+        Assert.Equal(ArmourType.None, table.ById(3).ArmourType);
+        Assert.Equal(AttackType.Impact, table.ById(4).AttackType);
+    }
+
+    [Fact]
+    public void Every_damage_and_health_number_in_the_committed_table_is_at_the_tenfold_scale()
+    {
+        // The rescale, as the numbers rather than as a sentence. Shots-to-kill
+        // is unchanged because both sides moved together, which is what makes
+        // this a resolution change rather than a balance change.
+        //
+        // OBSERVED: put grunt max hp back to 200 without touching the bolt's
+        // damage. This goes red, and so does every artefact downstream of it --
+        // which is the point: the two have to move together or shots-to-kill
+        // moves with them.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        Assert.Equal(2000, table.ById(1).MaxHp);
+        Assert.Equal(1100, table.ById(2).MaxHp);
+        Assert.Equal(90, table.ById(3).DamageMin);
+        Assert.Equal(150, table.ById(3).DamageMax);
+        Assert.Equal(210, table.ById(4).DamageMin);
+        Assert.Equal(340, table.ById(4).DamageMax);
+
+        // Shots to kill, at the top of each roll, before and after. The bolt
+        // needed 14 shots to fell a grunt and it still does.
+        Assert.Equal(200 / 15, table.ById(1).MaxHp / table.ById(3).DamageMax);
+        Assert.Equal(110 / 34, table.ById(2).MaxHp / table.ById(4).DamageMax);
+    }
+
+    [Fact]
+    public void A_table_with_no_layout_row_is_layout_one_and_keeps_the_hash_it_always_had()
+    {
+        // The load-bearing half of the layout branch. content/golden/ holds one
+        // unit table per golden bundle, each one the table that bundle was
+        // recorded against, and the bundle's header carries that table's hash.
+        // Adding columns to content/units.txt may not move it: nothing can
+        // re-record a retired format version, so a moved hash there deletes the
+        // only version-0 defense record that will ever exist.
+        //
+        // OBSERVED: fold layout 1 under HashLabelOf(2) -- one character in
+        // UnitTypeTable -- and this goes red, BED71DB9C933345E against
+        // 39B848CEFDDCC9CF, along with every golden in the runner. The literal
+        // is here rather than computed so that the number this asserts is the
+        // one a bundle written years ago is holding.
+        UnitTypeTable pinned = UnitTypeTable.Parse(
+            "golden/defense-0.units",
+            File.ReadAllText(RepoLayout.GoldenUnitsFile(0)));
+
+        Assert.Equal(UnitTypeTable.DefaultLayout, pinned.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutOneHashOfTheOldestPin), pinned.ContentHash);
+        Assert.Equal(4, pinned.Count);
+    }
+
+    [Fact]
+    public void A_layout_one_row_carries_no_cost_and_no_place_in_the_damage_matrix()
+    {
+        // There is no value this branch could supply that the table it is
+        // reading ever stated, so it supplies none. A cost of zero and a type
+        // of none are what a layout-1 row is, not defaults standing in for
+        // something.
+        UnitType grunt = UnitTypeTable.Parse(ThreeGoodRows).ById(1);
+
+        Assert.Equal(0, grunt.Cost);
+        Assert.Equal(AttackType.None, grunt.AttackType);
+        Assert.Equal(ArmourType.None, grunt.ArmourType);
+        Assert.Equal(0, grunt.Armour);
+
+        // And a layout-1 table's rows are refused by the matrix rather than
+        // resolved through a cell nobody authored.
+        Assert.Throws<SimulationException>(
+            () => TheRuleset.Committed().Matrix.Cell(grunt.AttackType, ArmourType.Swift));
+    }
+
+    [Fact]
+    public void The_two_layouts_hash_differently_even_where_every_shared_number_agrees()
+    {
+        // Both tables hold the same thirteen numbers per row. They fold under
+        // different labels, so a record pinned to one is retired by the other
+        // rather than being reinterpreted against shifted fields.
+        //
+        // OBSERVED: return the same label from both branches of HashLabelOf.
+        // This goes red, and a layout-1 record and a layout-2 record whose
+        // shared columns agree become indistinguishable at the replay gate.
+        UnitTypeTable one = UnitTypeTable.Parse(ThreeGoodRows);
+        UnitTypeTable two = UnitTypeTable.Parse(ThreeCurrentRows);
+
+        Assert.Equal(UnitTypeTable.DefaultLayout, one.Layout);
+        Assert.Equal(UnitTypeTable.CurrentLayout, two.Layout);
+        Assert.Equal(one.ById(1).MaxHp, two.ById(1).MaxHp);
+        Assert.NotEqual(one.ContentHash, two.ContentHash);
+    }
+
+    [Fact]
+    public void The_current_layout_folds_the_columns_it_added()
+    {
+        // A layout that declared four columns and folded none of them would let
+        // a retune of any of them pass every gate in the project.
+        //
+        // OBSERVED: fold a constant in place of the cost in UnitType.Fold's
+        // layout-2 branch. The first assertion goes red with both tables on
+        // 87926632A0DCC30A, which is a cost column that can be retuned without
+        // retiring anything pinned to the old number.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace(" 40 pierce", " 41 pierce")).ContentHash);
+
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("none armoured 0", "none arcane 0")).ContentHash);
+
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("none armoured 0", "none armoured 7")).ContentHash);
+
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("0 40 pierce", "0 40 magic")).ContentHash);
+    }
+
+    [Fact]
+    public void A_row_with_the_current_layouts_columns_and_no_layout_row_refuses_by_name()
+    {
+        // The mistake a designer makes: four columns added and the layout row
+        // forgotten. It is refused rather than read against layout 1's field
+        // order, and the message names both counts and the row that fixes it.
+        //
+        // OBSERVED: infer the layout from the field count instead of reading a
+        // declaration. This goes red having caught nothing, and a file whose
+        // columns were added in the wrong order parses as layout 2 with its
+        // fields transposed.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 2", "# the layout row, forgotten")));
+
+        Assert.Contains("column layout 1 has 15", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("'layout' row", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_ones_columns_under_a_layout_two_declaration_refuses_by_name()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse("layout 2\n" + ThreeGoodRows));
+
+        Assert.Contains("column layout 2 has 19", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_layout_this_reader_has_no_branch_for_refuses_by_name()
+    {
+        // Spelled out one layout at a time, so a layout that was skipped or a
+        // branch somebody deleted arrives here rather than passing an
+        // inequality and falling through a switch.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 2", "layout 3")));
+
+        Assert.Contains("declares column layout 3", thrown.Message, StringComparison.Ordinal);
+        Assert.False(UnitTypeTable.IsKnownLayout(0));
+        Assert.False(UnitTypeTable.IsKnownLayout(3));
+        Assert.True(UnitTypeTable.IsKnownLayout(1));
+        Assert.True(UnitTypeTable.IsKnownLayout(UnitTypeTable.CurrentLayout));
+    }
+
+    [Fact]
+    public void A_second_layout_row_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse("layout 2\n" + ThreeCurrentRows));
+
+        Assert.Contains("second 'layout' row", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_layout_row_after_the_first_unit_refuses_to_load()
+    {
+        // The layout says how to read a row, so it cannot arrive after rows
+        // have already been read against another one.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeGoodRows + "\nlayout 2"));
+
+        Assert.Contains("after 3 rows", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_unit_that_attacks_with_no_attack_type_refuses_to_load()
+    {
+        // OBSERVED: delete RequireTyping's first clause. This goes red having
+        // caught nothing, and a tower that fires every six ticks resolves its
+        // shots through a row of the matrix that does not exist.
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("hitscan 0 0 40 pierce", "hitscan 0 0 40 none")));
+
+        Assert.Contains("outside the damage matrix", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_unit_with_a_health_pool_and_no_armour_type_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("12 10 none armoured 0", "12 10 none none 0")));
+
+        Assert.Contains("outside the damage matrix", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_unit_that_never_attacks_carrying_an_attack_type_refuses_to_load()
+    {
+        // The mirror of the flight-ticks rule: a number read by nothing that
+        // would still move the content hash.
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("12 10 none armoured 0", "12 10 magic armoured 0")));
+
+        Assert.Contains("delivers no damage", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_unit_with_no_health_pool_carrying_an_armour_type_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("40 pierce none 0", "40 pierce swift 0")));
+
+        Assert.Contains("no health pool", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Armour_with_no_armour_type_to_apply_it_through_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("40 pierce none 0", "40 pierce none 12")));
+
+        Assert.Contains("no armour type", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_attack_type_outside_the_fixed_three_way_cycle_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("40 pierce none 0", "40 holy none 0")));
+
+        Assert.Contains("pierce, impact, magic, none", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_armour_type_outside_the_fixed_three_way_cycle_refuses_to_load()
+    {
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse(
+            ThreeCurrentRows.Replace("none armoured 0", "none ethereal 0")));
+
+        Assert.Contains("swift, armoured, arcane, none", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_negative_cost_refuses_to_load()
+    {
+        Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("0 12 10 none armoured", "0 12 -10 none armoured")));
     }
 
     [Fact]

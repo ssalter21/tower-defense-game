@@ -1,9 +1,9 @@
-replay bundle format 0, simulation version 1, content 39B848CEFDDCC9CF
+replay bundle format 0, simulation version 1, content 7226DE14812FDBEA
 seed       20260801
-defense    5FEF8A8296DACE87, read at defense record format 1
-wave       44C52C885C1A75C2
-result     12 of 40 leaked, tick 1852 (61 seconds at 30 ticks a second), state CA3F66473C4B975D
+defense    3FA5D8980F911AE8, read at defense record format 1
+wave       A7040BDE5CEE1D81
+result     13 of 40 leaked, tick 1841 (61 seconds at 30 ticks a second), state 38F08CA8C3AD93A8
 landmark  first-overtake            366     25     19
-landmark  projectile-orphaned       224     23      0
+landmark  projectile-orphaned       231     23      0
 landmark  first-leak                551     29      0
-landmark  last-creep-dies          1840    107      0
+landmark  last-creep-dies          1829    107      0

@@ -15,23 +15,39 @@
 #
 # FIELD ORDER IS WHAT THE CONTENT HASH FOLDS. Reindent a column, rewrap this
 # comment or convert the line endings and the hash does not move, so no stored
-# record is falsely retired. Change one number and it does. Moving a column is
-# a layout change and bumps the version digit in the hash label inside
-# UnitTypeTable, which retires every record pinned to the old layout loudly.
+# record is falsely retired. Change one number and it does.
+#
+# THE LAYOUT ROW BELOW SAYS WHICH COLUMNS THESE ARE. It comes before the first
+# unit row because it is what says how to read one, and there is a reader
+# branch per layout: a table written in the fifteen-column layout 1 still
+# loads, folds under its own hash label and keeps the hash it always had, which
+# is why the golden bundles pinned to one still replay. Adding or moving a
+# column is a new layout and a new label, and a row whose field count does not
+# match the layout it declared is refused rather than read against shifted
+# fields.
 #
 # Ids ascend strictly down the file, which is what makes a duplicate a
 # comparison against the row above rather than a lookup nobody performed.
 #
+# EVERY DAMAGE AND HEALTH NUMBER IS AT THE TENFOLD SCALE. Multiplying both
+# together leaves shots-to-kill where it was and buys resolution: armour and
+# the type chart have ten times as many distinct results to land on across
+# their range, which is what makes them tunable at all. It also widens the
+# damage roll's range tenfold, so the seeded stream produces different numbers
+# per shot and the golden trace beside these files is a different trace than
+# the one the pre-scale numbers produced.
+#
 # THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
-# the committed wave, twelve of forty creeps get through -- a third, near
-# enough -- over sixty-two seconds. That is the point of the tuning and not a
+# the committed wave, thirteen of forty creeps get through -- a third, near
+# enough -- over sixty-one seconds. That is the point of the tuning and not a
 # coincidence: a defense that holds tells you nothing when it changes, and a
 # defense that collapses tells you nothing either. A third leaking means the
 # leak count is a number a person can watch, and the golden trace beside these
 # files is the run that produced it.
 #
-# The two creep types differ in SPEED AND MAXIMUM HP ONLY, so that a later fast
-# group catches an earlier slow group and unit ordering stops being theoretical.
+# The two creep types differ in SPEED, MAXIMUM HP AND ARMOUR TYPE ONLY, so that
+# a later fast group catches an earlier slow group and unit ordering stops
+# being theoretical.
 #
 # THE RUNNER IS EXACTLY TWICE THE GRUNT'S SPEED, and that is load-bearing rather
 # than tidy. Two creeps are level for exactly one tick as one passes the other,
@@ -43,7 +59,7 @@
 # a grunt column and a runner column on the same tick, this makes the pass a
 # thing that happens repeatedly and visibly.
 #
-#      id  label   role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying
+#      id  label   role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue
 #
 # role     : moving (walks the corridor) | placed (stands where it was put)
 # maxHp    : zero means the unit has no health pool and cannot be damaged
@@ -51,8 +67,14 @@
 # range    : thousandths of a hex
 # flight   : ticks a projectile spends travelling; zero unless delivery is projectile
 # dying    : ticks spent dying, so seeking into a death shows a death
+# cost     : sauce, and the health a leak of this creep costs one for one
+# attack   : pierce | impact | magic, and none for a unit that never attacks
+# armour   : swift | armoured | arcane, and none for a unit with no health pool
+# armourValue : percent of base effective health added per point; none carries zero
 
-unit   1   grunt   moving  200    85     0      0         0       0          0       0       none        0       12
-unit   2   runner  moving  110    170    0      0         0       0          0       0       none        0       12
-unit   3   bolt    placed  0      0      3200   6         3       2          9       15      hitscan     0       0
-unit   4   mortar  placed  0      0      4600   18        7       5          21      34      projectile  11      0
+layout 2
+
+unit   1   grunt   moving  2000   85     0      0         0       0          0       0       none        0       12     10    none    armoured  0
+unit   2   runner  moving  1100   170    0      0         0       0          0       0       none        0       12     15    none    swift     0
+unit   3   bolt    placed  0      0      3200   6         3       2          90      150     hitscan     0       0      40    pierce  none      0
+unit   4   mortar  placed  0      0      4600   18        7       5          210     340     projectile  11      0      90    impact  none      0
