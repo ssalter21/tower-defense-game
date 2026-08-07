@@ -27,12 +27,12 @@ public class RunTests
     /// whether death ends it, whether anybody reads the outcome as it goes, and
     /// whether N and K were spelled out or left to their defaults.
     /// </summary>
-    public static TheoryData<string, bool, bool, bool> Scenarios => new()
+    public static TheoryData<string, bool, bool, bool, bool> Scenarios => new()
     {
-        { "normal play", true, true, false },
-        { "a sweep row", true, false, true },
-        { "a no-death harness run", false, false, true },
-        { "a server re-validating", true, false, false },
+        { "normal play", true, true, false, false },
+        { "a sweep row", true, false, true, false },
+        { "a no-death harness run", false, false, true, false },
+        { "a server re-validating", true, false, false, true },
     };
 
     [Theory]
@@ -41,26 +41,34 @@ public class RunTests
         string scenario,
         bool deathEndsTheRun,
         bool readsTheOutcomeAsItGoes,
-        bool spellsOutTheLengths)
+        bool spellsOutTheLengths,
+        bool replaysWhatWasSubmitted)
     {
         // If any of these needed its own code path the surface would be wrong.
         // They do not: the differences are a boolean, two arguments left to
-        // their defaults, and a property nobody reads until the end.
+        // their defaults, a property nobody reads until the end, and -- for the
+        // server -- building the whole run a second time out of the same
+        // arguments and playing it again.
         //
-        // The run survives its last wave, which is what makes the no-death row
-        // produce the same vector as the rest rather than a longer one -- the
-        // death flag is an argument here, not a different lifecycle.
+        // Every row is checked against a vector a real run produced rather than
+        // against a run this test computed, so a lifecycle regression cannot
+        // move both sides of the comparison at once.
+        //
+        // The run survives its last wave by 29 sauce of health, which is what
+        // makes the death flag inert here: the no-death row produces the same
+        // vector as the rest rather than a longer one, so the flag is an
+        // argument and not a different lifecycle.
         //
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on the health it finished with,
         // 29 against 1500, which is what a second code path hiding behind an
         // argument looks like from the outside.
+        RoundOrders orders = TheRun.Orders();
+
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
             : TheRun.Fresh(deathEndsTheRun: deathEndsTheRun);
-
-        RoundOrders orders = TheRun.Orders();
 
         while (!run.IsOver)
         {
@@ -73,20 +81,38 @@ public class RunTests
             }
         }
 
-        RunOutcome expected = Reference();
+        if (replaysWhatWasSubmitted)
+        {
+            // What a server does with a run somebody sent it: build the same run
+            // out of the same arguments and play it again. Not a mode -- the
+            // same two calls, made twice.
+            Run again = TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun);
+
+            while (!again.IsOver)
+            {
+                again.Advance(orders);
+            }
+
+            Assert.Equal(run.Outcome.LeakCostDealt, again.Outcome.LeakCostDealt);
+            Assert.Equal(run.Outcome.LeakCostTaken, again.Outcome.LeakCostTaken);
+            Assert.Equal(run.Outcome.HealthRemaining, again.Outcome.HealthRemaining);
+            run = again;
+        }
+
+        IReadOnlyList<RoundOutcome> expected = TheRun.TheCommittedRun;
         RunOutcome actual = run.Outcome;
 
         Assert.Equal(RunEnding.OutOfWaves, actual.Ending);
         Assert.Equal(Run.DefaultWaves, actual.Rounds.Count);
-        Assert.Equal(expected.HealthRemaining, actual.HealthRemaining);
-        Assert.Equal(expected.WavesSurvived, actual.WavesSurvived);
-        Assert.Equal(expected.LeakCostDealt, actual.LeakCostDealt);
-        Assert.Equal(expected.LeakCostTaken, actual.LeakCostTaken);
+        Assert.Equal(expected.Count, actual.Rounds.Count);
+        Assert.Equal(TheRun.HealthLeftInTheCommittedRun, actual.HealthRemaining);
+        Assert.Equal(Run.DefaultWaves, actual.WavesSurvived);
+        Assert.Equal(10, run.Sent.Count);
 
-        for (int round = 0; round < expected.Rounds.Count; round++)
+        for (int round = 0; round < expected.Count; round++)
         {
-            Assert.Equal(expected.Rounds[round].LeakCostDealt, actual.Rounds[round].LeakCostDealt);
-            Assert.Equal(expected.Rounds[round].LeakCostTaken, actual.Rounds[round].LeakCostTaken);
+            Assert.Equal(expected[round].LeakCostDealt, actual.Rounds[round].LeakCostDealt);
+            Assert.Equal(expected[round].LeakCostTaken, actual.Rounds[round].LeakCostTaken);
         }
 
         Assert.NotEqual(string.Empty, scenario);
@@ -670,9 +696,6 @@ public class RunTests
         Assert.True(priced > 0);
         Assert.NotEqual(result.Leaked * costs.PriceOf(Purchase.Unit(1)), priced);
     }
-
-    /// <summary>The run every scenario row is compared against, driven the plainest way there is.</summary>
-    private static RunOutcome Reference() => Played(TheRun.Fresh(), TheRun.Orders()).Outcome;
 
     /// <summary>A run driven to its end on one round's orders every round.</summary>
     private static Run Played(Run run, RoundOrders orders)

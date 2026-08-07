@@ -1,6 +1,8 @@
 # One RNG stream, seeded by the record, with no ambient nondeterminism
 
-The simulation has exactly one random stream, taking exactly one input: the seed carried by the record. There is no stream selector.
+A match has exactly one random stream, taking exactly one input: the seed carried by the record. There is no stream selector.
+
+The run above a match draws too — the field of a round, and later the offering and an anchor's filling. Those draws are outside this rule and inside [ADR-0034](0034-run-level-draws-are-derived-positions.md), which scopes this one to the match rather than widening it: a match's stream position is still a running count of the shots fired in it.
 
 ## Considered options
 

@@ -67,12 +67,6 @@ namespace Sim
         /// <summary>Names the derivation of one pairing's match seed.</summary>
         private const string MatchLabel = "run-match/1";
 
-        /// <summary>My wave against their defense: the direction that scores.</summary>
-        private const int Attacking = 0;
-
-        /// <summary>Their wave against my defense: the direction that costs health.</summary>
-        private const int Defending = 1;
-
         private readonly HexMap _map;
 
         private readonly Ruleset _rules;
@@ -246,8 +240,8 @@ namespace Sim
             {
                 RoundOrders against = _pool.At(field[index]);
 
-                dealt += LeakCost(orders.Wave, against.Defense, round, index, Attacking);
-                taken += LeakCost(against.Wave, orders.Defense, round, index, Defending);
+                dealt += LeakCost(orders.Wave, against.Defense, round, index, Side.Attacking);
+                taken += LeakCost(against.Wave, orders.Defense, round, index, Side.Defending);
             }
 
             // The average rather than the sum, on both sides. Summed, one round
@@ -282,7 +276,7 @@ namespace Sim
         /// </remarks>
         private int[] FieldFor(int round)
         {
-            var dice = new Pcg32(Derived(FieldLabel, round, 0, 0));
+            var dice = new Pcg32(FieldSeed(round));
             var drawn = new int[FieldSize];
 
             for (int index = 0; index < drawn.Length; index++)
@@ -298,9 +292,9 @@ namespace Sim
         /// to send, one for one, so what got past is the wave's own orders read
         /// off the cost table.
         /// </summary>
-        private int LeakCost(WaveScript wave, TowerLayout defense, int round, int opponent, int side)
+        private int LeakCost(WaveScript wave, TowerLayout defense, int round, int opponent, Side side)
         {
-            var match = new Match(_map, defense, wave, Derived(MatchLabel, round, opponent, side));
+            var match = new Match(_map, defense, wave, MatchSeed(round, opponent, side));
             match.Resolve();
 
             IReadOnlyList<int> leaked = match.LeakedByOrder;
@@ -324,10 +318,23 @@ namespace Sim
             return (int)cost;
         }
 
+        /// <summary>Where a round's field is drawn from.</summary>
+        private ulong FieldSeed(int round) => Derived(FieldLabel, round, 0, 0);
+
+        /// <summary>
+        /// What one pairing's match is seeded with. Derived from the pairing
+        /// rather than from who was drawn into it, so widening a field adds
+        /// matches without moving the ones already there.
+        /// </summary>
+        private ulong MatchSeed(int round, int opponent, Side side) =>
+            Derived(MatchLabel, round, opponent, (int)side);
+
         /// <summary>
         /// A stream position derived from the run's seed and from where in the
         /// run it is wanted, rather than taken from wherever the previous draw
-        /// happened to leave a stream.
+        /// happened to leave a stream. The label names the purpose, so two draws
+        /// at the same coordinates cannot collide; its digit is the layout of
+        /// what follows.
         /// </summary>
         private ulong Derived(string purpose, int round, int opponent, int side) =>
             Hash64.Start(purpose)
@@ -339,5 +346,18 @@ namespace Sim
         /// <summary>The vector, folded. The only place health and the ending come from.</summary>
         private RunOutcome Folded() =>
             RunOutcome.Of(_rules.HealthPoolSauce, _rounds, Waves, DeathEndsTheRun);
+
+        /// <summary>
+        /// Which direction of a pairing a match is: a round measures both
+        /// against every opponent, and the two must not share a seed.
+        /// </summary>
+        private enum Side
+        {
+            /// <summary>This round's wave against their defense. The direction that scores.</summary>
+            Attacking = 0,
+
+            /// <summary>Their wave against this round's defense. The direction that costs health.</summary>
+            Defending = 1,
+        }
     }
 }

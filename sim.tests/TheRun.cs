@@ -40,6 +40,42 @@ public static class TheRun
     /// </summary>
     private const int RuinousCost = 100000000;
 
+    /// <summary>
+    /// What the ten-wave run on the committed content came to: its per-round
+    /// pairs, in order, as a real run of it produced them.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Written down rather than recomputed</b>, for the reason the golden
+    /// trace beside <c>content/</c> is: an expected value computed by the code
+    /// under test moves with it, so a lifecycle regression would move both sides
+    /// of the comparison and nothing would go red. Nothing that checks these
+    /// regenerates them.
+    /// </para>
+    /// <para>
+    /// The run finishes its last wave on <see cref="HealthLeftInTheCommittedRun"/>
+    /// of the ruleset's 1500, which is what makes the death flag inert across
+    /// the scenario theory. If a content change ever takes that below zero, the
+    /// theory's no-death row is the one that says so.
+    /// </para>
+    /// </remarks>
+    public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
+    {
+        new RoundOutcome(324, 154),
+        new RoundOutcome(336, 154),
+        new RoundOutcome(384, 142),
+        new RoundOutcome(293, 155),
+        new RoundOutcome(300, 149),
+        new RoundOutcome(311, 152),
+        new RoundOutcome(395, 139),
+        new RoundOutcome(379, 147),
+        new RoundOutcome(386, 142),
+        new RoundOutcome(411, 137),
+    };
+
+    /// <summary>What that run had left of the pool when its last wave resolved.</summary>
+    public const int HealthLeftInTheCommittedRun = 29;
+
     /// <summary>The committed defense as one round's orders, sent at the committed wave.</summary>
     public static RoundOrders Orders(UnitTypeTable? types = null)
     {
