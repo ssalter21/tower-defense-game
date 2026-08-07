@@ -3,21 +3,30 @@ using Sim;
 namespace Sim.Cli;
 
 /// <summary>
-/// How long a run lasts and how wide its field is: N and K.
+/// How long a run lasts, how wide its field is and whether death ends it: N, K
+/// and the flag.
 /// </summary>
 /// <remarks>
+/// <para>
 /// <b>They are arguments and no record stamps them.</b> A command stream holds
 /// the decisions and the seed they were made under, and the same decisions
 /// played against a wider field are a different set of numbers -- so the shape
 /// is printed into whatever a run writes down, where a diff can see it, rather
 /// than being left to whoever spelled the invocation.
+/// </para>
+/// <para>
+/// <b>Death is a flag rather than a rule</b>, which is what lets a harness ask
+/// for N rounds of data out of every run instead of a short one wherever a
+/// build failed. It defaults to ending a run, because that is the game.
+/// </para>
 /// </remarks>
 internal readonly struct RunShape
 {
-    public RunShape(int waves, int fieldSize)
+    public RunShape(int waves, int fieldSize, bool deathEndsTheRun)
     {
         Waves = waves;
         FieldSize = fieldSize;
+        DeathEndsTheRun = deathEndsTheRun;
     }
 
     /// <summary>N: how many waves the run lasts.</summary>
@@ -25,6 +34,9 @@ internal readonly struct RunShape
 
     /// <summary>K: how many opponents each round is resolved against.</summary>
     public int FieldSize { get; }
+
+    /// <summary>Whether health reaching zero stops the run.</summary>
+    public bool DeathEndsTheRun { get; }
 }
 
 /// <summary>
@@ -105,5 +117,51 @@ internal sealed class RunContent
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>
     public Run Fresh(ulong seed, RunShape shape) =>
-        new Run(_map, _rules, Types, _schedule, _pool, seed, shape.Waves, shape.FieldSize);
+        new Run(
+            _map,
+            _rules,
+            Types,
+            _schedule,
+            _pool,
+            seed,
+            shape.Waves,
+            shape.FieldSize,
+            shape.DeathEndsTheRun);
+
+    /// <summary>
+    /// A sweep over this content: the same map, rules, roster, shape, defense
+    /// and canned field a run is played against, with the economy's dials and
+    /// the harness's own bounds on top.
+    /// </summary>
+    /// <remarks>
+    /// The dials arrive as <see cref="SweepPlan.AsAuthored"/> where the command
+    /// line was not told otherwise, so an unmentioned dial is the ruleset's own
+    /// number rather than one this program chose.
+    /// </remarks>
+    public SweepPlan Sweep(
+        RunShape shape,
+        ulong firstSeed,
+        int runsPerCreep,
+        int ordinaryOptionsPerRound,
+        int gameChangersPerAnchor,
+        int freeSnapshotsPerRun,
+        int snapshotPriceSauce,
+        int mostCreeps) =>
+        new SweepPlan(
+            _map,
+            _rules,
+            Types,
+            _schedule,
+            Defense,
+            _pool,
+            firstSeed,
+            runsPerCreep,
+            shape.Waves,
+            shape.FieldSize,
+            shape.DeathEndsTheRun,
+            ordinaryOptionsPerRound,
+            gameChangersPerAnchor,
+            freeSnapshotsPerRun,
+            snapshotPriceSauce,
+            mostCreeps);
 }

@@ -66,6 +66,12 @@ namespace Sim
         /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
         public const int NoInterestCeiling = 0;
 
+        /// <summary>
+        /// The most options either half of a round's menu may carry. A menu is
+        /// walked rather than looked up, and a take names a position on it.
+        /// </summary>
+        public const int MostOptions = 64;
+
         /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
         private const int Percent = 100;
 
@@ -79,7 +85,7 @@ namespace Sim
 
         private readonly PerformanceBand[] _bands;
 
-        private Ruleset(Draft draft, Hash64 contentHash)
+        private Ruleset(Draft draft)
         {
             Matrix = draft.Matrix!;
             ArmourPercentPerPoint = draft.ArmourPercentPerPoint;
@@ -97,7 +103,38 @@ namespace Sim
             GameChangersPerAnchor = draft.GameChangersPerAnchor;
             FreeSnapshotsPerRun = draft.FreeSnapshotsPerRun;
             SnapshotPriceSauce = draft.SnapshotPriceSauce;
-            ContentHash = contentHash;
+            ContentHash = Fold();
+        }
+
+        /// <summary>
+        /// The same rules with four of their numbers replaced. Every other
+        /// field is carried across by reference to the same values, so the two
+        /// rulesets differ in exactly what was asked for.
+        /// </summary>
+        private Ruleset(
+            Ruleset original,
+            int ordinaryOptionsPerRound,
+            int gameChangersPerAnchor,
+            int freeSnapshotsPerRun,
+            int snapshotPriceSauce)
+        {
+            Matrix = original.Matrix;
+            ArmourPercentPerPoint = original.ArmourPercentPerPoint;
+            ArmourDenominator = original.ArmourDenominator;
+            DamageFloor = original.DamageFloor;
+            InterestPercentPerWave = original.InterestPercentPerWave;
+            InterestCapSauce = original.InterestCapSauce;
+            IncomeBasePerWave = original.IncomeBasePerWave;
+            StartingPurseSauce = original.StartingPurseSauce;
+            _bands = original._bands;
+            HealthPoolSauce = original.HealthPoolSauce;
+            StartingWaveSlots = original.StartingWaveSlots;
+            WaveSlotsPerAnchor = original.WaveSlotsPerAnchor;
+            OrdinaryOptionsPerRound = ordinaryOptionsPerRound;
+            GameChangersPerAnchor = gameChangersPerAnchor;
+            FreeSnapshotsPerRun = freeSnapshotsPerRun;
+            SnapshotPriceSauce = snapshotPriceSauce;
+            ContentHash = Fold();
         }
 
         /// <summary>Three attack types against three armour types, as nine percentages.</summary>
@@ -215,33 +252,53 @@ namespace Sim
 
             draft.RequireEverything(source);
 
-            Hash64 hash = Hash64.Start(HashLabel);
-            hash = draft.Matrix!.Fold(hash);
-            hash = hash
-                .Add(draft.ArmourPercentPerPoint)
-                .Add(draft.ArmourDenominator)
-                .Add(draft.DamageFloor)
-                .Add(draft.InterestPercentPerWave)
-                .Add(draft.InterestCapSauce)
-                .Add(draft.IncomeBasePerWave)
-                .Add(draft.StartingPurseSauce)
-                .Add(draft.Bands.Count);
+            return new Ruleset(draft);
+        }
 
-            foreach (PerformanceBand band in draft.Bands)
-            {
-                hash = band.Fold(hash);
-            }
+        /// <summary>
+        /// These rules with the offering ratio and the scouting line retuned:
+        /// how many ordinary options a round carries, how many game changers an
+        /// anchor merges in, how many snapshots a run gets free and what one
+        /// costs after that.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>These four are the sweep's economy dials, and this is the seam
+        /// they turn on.</b> They decide whether a merged anchor menu is a real
+        /// trade and what scouting is worth, and both are numbers the harness is
+        /// meant to move rather than arguments somebody settled -- so a sweep
+        /// retunes them here instead of every caller reaching for a second
+        /// ruleset file.
+        /// </para>
+        /// <para>
+        /// <b>The content hash moves with them.</b> It is a fold over the parsed
+        /// integers in field order and these are four of those integers, so a
+        /// retuned ruleset is loudly a different ruleset and a record stamped
+        /// against the authored one will not replay against it.
+        /// </para>
+        /// <para>
+        /// Every bound here is the one the parser applies to the same column,
+        /// because a number that reaches the rules through this door has had no
+        /// file to be refused at.
+        /// </para>
+        /// </remarks>
+        public Ruleset With(
+            int ordinaryOptionsPerRound,
+            int gameChangersPerAnchor,
+            int freeSnapshotsPerRun,
+            int snapshotPriceSauce)
+        {
+            RequireInRange(ordinaryOptionsPerRound, "the ordinary options", 1, MostOptions);
+            RequireInRange(gameChangersPerAnchor, "the game changers an anchor adds", 1, MostOptions);
+            RequireInRange(freeSnapshotsPerRun, "the free snapshot count", 0, int.MaxValue);
+            RequireInRange(snapshotPriceSauce, "the snapshot price", 0, int.MaxValue);
 
-            hash = hash
-                .Add(draft.HealthPoolSauce)
-                .Add(draft.StartingWaveSlots)
-                .Add(draft.WaveSlotsPerAnchor)
-                .Add(draft.OrdinaryOptionsPerRound)
-                .Add(draft.GameChangersPerAnchor)
-                .Add(draft.FreeSnapshotsPerRun)
-                .Add(draft.SnapshotPriceSauce);
-
-            return new Ruleset(draft, hash);
+            return new Ruleset(
+                this,
+                ordinaryOptionsPerRound,
+                gameChangersPerAnchor,
+                freeSnapshotsPerRun,
+                snapshotPriceSauce);
         }
 
         /// <summary>
@@ -301,6 +358,61 @@ namespace Sim
             }
 
             return reached;
+        }
+
+        /// <summary>
+        /// The content hash: every parsed integer, in field order, under the
+        /// layout label. Computed from the fields rather than from whatever
+        /// built them, so a parsed ruleset and a retuned one are hashed by one
+        /// walk and cannot drift apart.
+        /// </summary>
+        private Hash64 Fold()
+        {
+            Hash64 hash = Matrix.Fold(Hash64.Start(HashLabel))
+                .Add(ArmourPercentPerPoint)
+                .Add(ArmourDenominator)
+                .Add(DamageFloor)
+                .Add(InterestPercentPerWave)
+                .Add(InterestCapSauce)
+                .Add(IncomeBasePerWave)
+                .Add(StartingPurseSauce)
+                .Add(_bands.Length);
+
+            for (int index = 0; index < _bands.Length; index++)
+            {
+                hash = _bands[index].Fold(hash);
+            }
+
+            return hash
+                .Add(HealthPoolSauce)
+                .Add(StartingWaveSlots)
+                .Add(WaveSlotsPerAnchor)
+                .Add(OrdinaryOptionsPerRound)
+                .Add(GameChangersPerAnchor)
+                .Add(FreeSnapshotsPerRun)
+                .Add(SnapshotPriceSauce);
+        }
+
+        /// <summary>A retuned number, refused where the authored column would have refused it.</summary>
+        private static void RequireInRange(int value, string what, int minimum, int maximum)
+        {
+            if (value >= minimum && value <= maximum)
+            {
+                return;
+            }
+
+            throw new SimulationException(
+                "A ruleset was retuned with "
+                + value.ToString(CultureInfo.InvariantCulture)
+                + " for "
+                + what
+                + ", which runs from "
+                + minimum.ToString(CultureInfo.InvariantCulture)
+                + " to "
+                + maximum.ToString(CultureInfo.InvariantCulture)
+                + ". A number handed in here has had no file to be refused at, so it is held to the range "
+                + "the authored column is held to -- otherwise a sweep is the one caller that can build a "
+                + "ruleset no text file could express.");
         }
 
         private static void ReadRow(string source, int line, string[] fields, Draft draft)
@@ -385,10 +497,10 @@ namespace Sim
                 case "offering":
                     Expect(source, line, fields, "offering", 3);
                     draft.Once(source, line, "offering");
-                    draft.OrdinaryOptionsPerRound =
-                        DataText.IntegerInRange(source, line, "the ordinary options", fields[1], 1, 64);
-                    draft.GameChangersPerAnchor =
-                        DataText.IntegerInRange(source, line, "the game changers an anchor adds", fields[2], 1, 64);
+                    draft.OrdinaryOptionsPerRound = DataText.IntegerInRange(
+                        source, line, "the ordinary options", fields[1], 1, MostOptions);
+                    draft.GameChangersPerAnchor = DataText.IntegerInRange(
+                        source, line, "the game changers an anchor adds", fields[2], 1, MostOptions);
                     return;
 
                 case "snapshot":
