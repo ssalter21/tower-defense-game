@@ -3,6 +3,31 @@ using Sim;
 namespace Sim.Cli;
 
 /// <summary>
+/// How long a run lasts and how wide its field is: N and K.
+/// </summary>
+/// <remarks>
+/// <b>They are arguments and no record stamps them.</b> A command stream holds
+/// the decisions and the seed they were made under, and the same decisions
+/// played against a wider field are a different set of numbers -- so the shape
+/// is printed into whatever a run writes down, where a diff can see it, rather
+/// than being left to whoever spelled the invocation.
+/// </remarks>
+internal readonly struct RunShape
+{
+    public RunShape(int waves, int fieldSize)
+    {
+        Waves = waves;
+        FieldSize = fieldSize;
+    }
+
+    /// <summary>N: how many waves the run lasts.</summary>
+    public int Waves { get; }
+
+    /// <summary>K: how many opponents each round is resolved against.</summary>
+    public int FieldSize { get; }
+}
+
+/// <summary>
 /// The authored content a run is built out of, parsed once: the board, the
 /// tables, the shape, the defense that stands and the wave the canned field
 /// sends back.
@@ -79,6 +104,6 @@ internal sealed class RunContent
     }
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>
-    public Run Fresh(ulong seed, int waves, int fieldSize) =>
-        new Run(_map, _rules, Types, _schedule, _pool, seed, waves, fieldSize);
+    public Run Fresh(ulong seed, RunShape shape) =>
+        new Run(_map, _rules, Types, _schedule, _pool, seed, shape.Waves, shape.FieldSize);
 }

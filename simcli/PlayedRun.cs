@@ -46,14 +46,14 @@ internal sealed class PlayedRun
     /// to the end.
     /// </summary>
     /// <param name="record">What the bytes are called in any error message. Never a path.</param>
-    public static PlayedRun Of(string record, byte[] bytes, RunContent content, int waves, int fieldSize)
+    public static PlayedRun Of(string record, byte[] bytes, RunContent content, RunShape shape)
     {
         CommandStream stream = CommandStream.FromBytes(record, bytes);
 
         // The read gate is behind FromBytes; the replay gate is behind Replay,
         // and it is where the simulation version and the three content hashes
         // are held against the run in front of them.
-        Run run = content.Fresh(stream.Seed, waves, fieldSize);
+        Run run = content.Fresh(stream.Seed, shape);
 
         return new PlayedRun(stream, run, stream.Replay(run, content.Defense));
     }
@@ -75,11 +75,10 @@ internal sealed class PlayedRun
         string scriptText,
         RunContent content,
         ulong seed,
-        int waves,
-        int fieldSize)
+        RunShape shape)
     {
         IReadOnlyList<RecordCommand> commands = CommandScript.Parse(source, scriptText);
-        Run run = content.Fresh(seed, waves, fieldSize);
+        Run run = content.Fresh(seed, shape);
         byte[] bytes = CommandStream.Recorded(run, content.Defense, commands);
 
         return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, run.Outcome));
@@ -130,11 +129,19 @@ internal sealed class PlayedRun
     /// run produced it, and then a line per round.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The run is named by what is intrinsic to it -- the stream's own header,
-    /// its three stamped hashes, its seed and the shape it was played at -- and
-    /// never by the paths it was invoked with. A file whose bytes depended on
-    /// how somebody spelled an argument could not be compared against a
-    /// committed copy by anything.
+    /// its three stamped hashes and its seed -- and never by the paths it was
+    /// invoked with. A file whose bytes depended on how somebody spelled an
+    /// argument could not be compared against a committed copy by anything.
+    /// </para>
+    /// <para>
+    /// <b>The shape is the exception, and it is here for the opposite
+    /// reason.</b> N and K are arguments that no record stamps, so the same
+    /// decisions played against a wider field are a legal run and a different
+    /// set of numbers. Printing the shape is what puts that where a diff can
+    /// see it.
+    /// </para>
     /// </remarks>
     public string OutcomeFile() =>
         PlainText.File(

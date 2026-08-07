@@ -91,10 +91,9 @@ public class CommandLineTests
     [Fact]
     public void A_script_that_will_not_replay_writes_no_command_file_at_all()
     {
-        // Story 70 at the command line: the bytes are read back, taken through
-        // the replay gate and played to the end before anything is written, so
-        // a run nobody could have played never becomes a file somebody finds
-        // out about later.
+        // The bytes are read back, taken through the replay gate and played to
+        // the end before anything is written, so a run nobody could have played
+        // never becomes a file somebody finds out about later.
         //
         // OBSERVED: take the FromBytes(bytes).Replay(...) line out of
         // CommandStream.Recorded, which is the whole of what "proved" means.
@@ -142,6 +141,12 @@ public class CommandLineTests
         // with the other half's word, and this goes red -- the anchor's swift
         // column is listed as an ordinary option, and a row copied off the
         // listing takes the wrong half of the menu or nothing at all.
+        //
+        // OBSERVED, on the two wave assertions: walk Run.DefaultWaves in
+        // Offerings.ToText instead of run.Waves. The last assertion goes red at
+        // position 629, having found "wave   4" -- a listing that ignores the
+        // length of the run it was asked about, and quietly shows menus for
+        // rounds nobody will play.
         CommandLineResult listed = TheCommandLine.Invoke(
             new[] { "offerings", "--seed", "20260807", "--waves", "3" }.Concat(TheCommandLine.RunContent))
             .Succeeded();

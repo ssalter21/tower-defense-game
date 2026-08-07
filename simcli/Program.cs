@@ -207,7 +207,6 @@ public static class Program
             return 0;
         }
 
-        Directory.CreateDirectory(directory);
         Write(Path.Combine(directory, TraceFileName), run.TraceFile());
         Write(Path.Combine(directory, LandmarkFileName), run.LandmarkFile());
 
@@ -228,18 +227,8 @@ public static class Program
             arguments.RequiredUnsigned("seed"),
             arguments.Optional("map-handle", GhostRecord.NoMapHandle, 0, MaximumMapHandle));
 
-        string path = arguments.Required("out");
-
-        MakeRoomFor(path);
-        File.WriteAllBytes(path, bytes);
-
         Report(proof);
-        Console.Out.Write(
-            "wrote      "
-            + path
-            + " ("
-            + bytes.Length.ToString(PlainText.Culture)
-            + " bytes, read back and replayed before writing)\n");
+        WriteRecord(arguments, bytes);
 
         return 0;
     }
@@ -258,8 +247,7 @@ public static class Program
             Path.GetFileName(path),
             File.ReadAllBytes(path),
             ContentOf(arguments),
-            arguments.Optional("waves", Sim.Run.DefaultWaves, 1, MaximumWaves),
-            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize));
+            ShapeOf(arguments));
 
         Report(run);
 
@@ -270,7 +258,6 @@ public static class Program
             return 0;
         }
 
-        MakeRoomFor(outcome);
         Write(outcome, run.OutcomeFile());
 
         return 0;
@@ -289,21 +276,10 @@ public static class Program
             File.ReadAllText(script),
             ContentOf(arguments),
             arguments.RequiredUnsigned("seed"),
-            arguments.Optional("waves", Sim.Run.DefaultWaves, 1, MaximumWaves),
-            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize));
-
-        string path = arguments.Required("out");
-
-        MakeRoomFor(path);
-        File.WriteAllBytes(path, bytes);
+            ShapeOf(arguments));
 
         Report(proof);
-        Console.Out.Write(
-            "wrote      "
-            + path
-            + " ("
-            + bytes.Length.ToString(PlainText.Culture)
-            + " bytes, read back and replayed before writing)\n");
+        WriteRecord(arguments, bytes);
 
         return 0;
     }
@@ -314,15 +290,22 @@ public static class Program
     /// </summary>
     private static int ShowOfferings(Arguments arguments)
     {
-        Sim.Run run = ContentOf(arguments).Fresh(
-            arguments.RequiredUnsigned("seed"),
-            arguments.Optional("waves", Sim.Run.DefaultWaves, 1, MaximumWaves),
-            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize));
+        Sim.Run run = ContentOf(arguments).Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
 
         Console.Out.Write(Offerings.ToText(run));
 
         return 0;
     }
+
+    /// <summary>
+    /// N and K, read the same way for every verb that plays a run. Neither has
+    /// a record to come off, so both are arguments with the library's own
+    /// defaults behind them.
+    /// </summary>
+    private static RunShape ShapeOf(Arguments arguments) =>
+        new RunShape(
+            arguments.Optional("waves", Sim.Run.DefaultWaves, 1, MaximumWaves),
+            arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize));
 
     /// <summary>The six files every run verb is handed, read here and parsed there.</summary>
     private static RunContent ContentOf(Arguments arguments) =>
@@ -348,15 +331,27 @@ public static class Program
             + "\n");
     }
 
-    /// <summary>The directory a file is about to be written into.</summary>
-    private static void MakeRoomFor(string path)
+    /// <summary>
+    /// A record, written where <c>--out</c> says and said to have been written.
+    /// </summary>
+    /// <remarks>
+    /// The sentence names the size and says the bytes were proved, because both
+    /// record verbs return bytes that have already been read back, gated and
+    /// played to the end -- a line saying only that a file appeared would read
+    /// the same for a writer that had done none of it.
+    /// </remarks>
+    private static void WriteRecord(Arguments arguments, byte[] bytes)
     {
-        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
+        string path = arguments.Required("out");
 
-        if (directory is not null)
-        {
-            Directory.CreateDirectory(directory);
-        }
+        MakeRoomFor(path);
+        File.WriteAllBytes(path, bytes);
+        Console.Out.Write(
+            "wrote      "
+            + path
+            + " ("
+            + bytes.Length.ToString(PlainText.Culture)
+            + " bytes, read back and replayed before writing)\n");
     }
 
     /// <summary>The result triple, the final hash, and the landmark table.</summary>
@@ -377,10 +372,23 @@ public static class Program
             + "\n");
     }
 
+    /// <summary>A generated text file, in the directory it asked for.</summary>
     private static void Write(string path, string text)
     {
+        MakeRoomFor(path);
         File.WriteAllText(path, text, PlainText.Utf8);
         Console.Out.Write("wrote      " + path + "\n");
+    }
+
+    /// <summary>The directory a file is about to be written into.</summary>
+    private static void MakeRoomFor(string path)
+    {
+        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
+
+        if (directory is not null)
+        {
+            Directory.CreateDirectory(directory);
+        }
     }
 
     private static int Refuse(string message, bool withUsage)

@@ -26,8 +26,12 @@ namespace Sim.Tests;
 /// </remarks>
 public class GoldenRunTests
 {
-    /// <summary>The seed the committed stream carries, and the run it is about.</summary>
-    private const ulong Seed = 20260807UL;
+    /// <summary>
+    /// The seed the committed stream carries, and the run it is about. One
+    /// constant for the whole suite: two copies of it would let a re-recorded
+    /// golden agree with half the tests.
+    /// </summary>
+    private const ulong Seed = TheCommandLine.RunSeed;
 
     [Fact]
     public void The_committed_command_file_is_stamped_with_the_committed_content()
@@ -42,6 +46,13 @@ public class GoldenRunTests
         // The ruleset assertion goes red, EECBA54CEEFAF7A9 against the record's
         // B8D395FFBCA5BCCC, and the replay below goes red too -- refused at the
         // gate by name rather than played into a confidently wrong answer.
+        //
+        // OBSERVED, on the unit table's half of it: move grunt's max hp in
+        // content/units.txt from 1550 to 1551. The content assertion goes red,
+        // CEC08139EC85B6B3 against the record's 3CDE522BEF0F334A. The three
+        // hashes are compared separately because each retires the record on its
+        // own, and a single combined comparison would say only that something
+        // moved.
         CommandStream stream = Committed();
         UnitTypeTable types = TheMatch.Types();
 
