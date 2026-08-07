@@ -617,22 +617,30 @@ of implementation.
 
 | | **Round-robin (async)** | **Lobby (live)** |
 |---|---|---|
-| Opponent's defense | Not shown as a board to compose against | **Shown** — live, or as of the previous round |
+| Opponent's defense | Not shown as a board to compose against | **Shown as of the end of the previous round** — never live *(decided 7 August 2026)* |
 | What you are optimising for | Performance across *many* defenses | Performance against *one known* defense |
 | The skill | Robustness, and reading the shared offering | Hedging and counter-picking, TFT-style |
 | Feedback | Mean and spread over the field (see [§12](#12-the-planning-phase-is-the-game)) | The board in front of you |
 
-**In the lobby you can scout.** Seeing the opponent's towers — live or one round stale — makes composing a
-wave a counter-pick, and the stale variant is the more interesting one because it prices *change*: what they
-had is evidence, not truth. This is Teamfight Tactics' loop, where scouting between rounds decides
-itemisation, positioning and whether to commit to a composition at all.
+**In the lobby you can scout, and only backwards** — *decided 7 August 2026 by
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76)*. Seeing the opponent's towers makes composing
+a wave a counter-pick, and the **stale** variant is the one taken, because it prices *change*: what they had is
+evidence, not truth. **What they are building right now is never shown.** This is Teamfight Tactics' loop,
+where scouting between rounds decides itemisation, positioning and whether to commit to a composition at all.
 
-**In the round-robin you cannot**, and this fixes a real defect rather than merely accepting a limitation.
-[The skill note](research/fun-and-skill-expression.html) found that a stored ghost inverts *reading the
-opponent* into a lookup: a frozen defense is fully inspectable and cannot react or lie, so perfect information
-about it produces optimisation, not inference, and degrades to a table. Withholding the board and paying the
-player in **statistics over the field instead** is the fix, and it also turns the async mode into a genuinely
-different game from the lobby rather than a slower copy of it.
+**In the round-robin you cannot scout a defense**, and this fixes a real defect rather than merely accepting a
+limitation. [The skill note](research/fun-and-skill-expression.html) found that a stored ghost inverts *reading
+the opponent* into a lookup: a frozen defense is fully inspectable and cannot react or lie, so perfect
+information about it produces optimisation, not inference, and degrades to a table. Withholding the board and
+paying the player in **statistics over the field instead** is the fix, and it also turns the async mode into a
+genuinely different game from the lobby rather than a slower copy of it.
+
+> **What you *can* see in the round-robin is the incoming waves, and that is a different object** — *added
+> 7 August 2026*. A snapshot shows a **wave being sent at your stage**, never a defense, so the lookup defect
+> above does not apply: a wave is a composition you build against, not a board you solve. **Ten snapshots are
+> free per run and further ones are bought with sauce.** Scouting is therefore one mechanic across all three
+> latencies — *pay to reduce the blur on what you are facing* — and only the source of the blur differs by
+> mode. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026).
 
 > **You do not know exactly what your wave will do — and the reason matters.** Not because the simulation is
 > hidden or random; it is neither. Because in the round-robin your wave is measured against *many* defenses,
@@ -906,7 +914,13 @@ it already did, and the right-hand column links to it rather than restating it. 
 | 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9 — *softened to a **steep** counter, 4.00×, by [#75](https://github.com/ssalter21/tower-defense-game/issues/75)*. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
 | 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in sauce and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
 | 4 | ~~How wide is the damage-type matrix, and what is the armour formula?~~ **✅ Decided** | **Resolved 7 August 2026 by [#75](https://github.com/ssalter21/tower-defense-game/issues/75).** A 3×3 Latin square with cells in {70, 100, 140} — a 2:1 spread — and `dealt = (base + bonus) × cell / (100 + armour)`, floor 1. `k` folds to 1, so one point of armour is one percent of base effective health. Hard counters live on a separate `bonusVsTag` layer, which is why the matrix could stay narrow. **Every damage and health number in the game is multiplied by ten**, because integer resolution is bought with the size of the numbers. Detail in [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) |
-| 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
+| 5 | ~~What does the player get to compute before they commit, and what does it cost them?~~ **✅ Decided** | **Resolved 7 August 2026 by [#76](https://github.com/ssalter21/tower-defense-game/issues/76).** **Nothing is forecast.** Mechanism is free, total and always on; outcome is not computed at all, in any mode, free or paid — the offense least of all. The one pre-commit channel is **scouting incoming waves**: free in the lobby as of the previous round, ten free snapshots per run in the round-robin and sauce beyond. The simulator's home is the **retrospective**, which is free, unlimited and exact. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026) |
+
+> **All five are now decided**, and the [map](https://github.com/ssalter21/tower-defense-game/issues/70) that
+> carried them has reached its destination. Step 1 is unblocked. **Two obligations fall out of question 5 and
+> belong to the execution effort:** the cost column needs a **non-unit line item**, because a scouting snapshot
+> beyond the free ten is bought with sauce out of the one purse; and the **free-snapshot count and the price
+> beyond it are step 4 sweep parameters**, not constants — ten is a starting point, not a decision.
 
 ### The eight seams, and where they land
 
@@ -1049,6 +1063,15 @@ stagger the options**. Includes the faction-colour scheme, which is as much an i
 an art one, and the presentation of whatever combination system seam 1 chooses — a combinatorial build space
 that cannot be read is a menu with extra steps.
 
+**And it inherits the whole of the post-round surface** — *added 7 August 2026 by
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76).* With no forecast anywhere in the planning
+phase, the retrospective is where the simulation's value is actually delivered to a player, and three things
+now land here rather than in §12's direction: the **computed highlight reel** that makes a field of 100+
+watchable at all, the **stats and histogram** that turn a result into a comparison, and the deferred **kill
+heatmap** that is the leading candidate for the game's paid predictor. That is a promotion, not a footnote:
+the seam that was hardest because of what happens *during* a round is now also carrying most of what happens
+*after* one.
+
 ### 8 · The presentation
 
 The KayKit purchase and the licence confirmation ([#56](https://github.com/ssalter21/tower-defense-game/issues/56)),
@@ -1124,6 +1147,26 @@ here is binary.** Not the type chart, not the counter, not the damage floor. A p
 is punished at a steep rate and keeps playing, which is the same bargain the round-robin strikes over a bad
 draw.
 
+**A second amendment the same day, and it narrows rather than overturns.**
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76) settled two things
+[§3's mode table](#what-you-see-of-your-opponent-depends-on-the-mode-and-that-is-deliberate) had left as a
+choice or stated absolutely:
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§3** — the lobby's scouting | The opponent's defense is shown "**live, or** as of the previous round" | **As of the previous round only.** What they are building now is never shown, in any mode |
+| **§3** — the round-robin | "**In the round-robin you cannot** [scout]" | You cannot scout a **defense**. You can buy snapshots of the **waves** being sent at your stage — ten free per run, sauce beyond |
+
+Neither disturbs [the skill note's](research/fun-and-skill-expression.html) finding, which is the reason that
+sentence was absolute in the first place: the defect it names is that a *frozen defense* is fully inspectable
+and therefore degrades reading an opponent into a lookup. A wave is a composition rather than a board, so it
+does not have that property, and the stale board prices *change* rather than revealing truth.
+
+**And what the same ticket declined is the larger statement.** §12 was written as an argument that a
+2.75 ms simulation should be spent making the plan phase answer questions. It is now spent on **rules and
+retrospect instead of prediction** — no forecast exists at all — which is a smaller planning surface and a much
+larger post-round one than this document originally imagined.
+
 ---
 
 ## 10. Not yet specified
@@ -1153,7 +1196,8 @@ unblocked.
 > alongside the settled economy question from [§3](#one-purse--restored-6-august-2026) in
 > [§8's five decisions](#the-five-decisions-that-block-step-1). **The detail stays here** and the checklist
 > there points back to it, so there is one description of each question and not two that can drift apart.
-> **One of the five remains open**: what the player gets to compute before they commit.
+> **All five closed on 7 August 2026**, the last of them being what the player gets to compute before they
+> commit.
 
 - **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
   placement surface** — archers on a rampart running alongside the corridor — with squads that shoot, upgrade
@@ -1217,6 +1261,20 @@ unblocked.
   possibly choosing where in the distribution to draw from. It is the antidote to averaging making every round
   tend toward the mean, and best-of-ten is its natural payoff. Not decidable before a real field exists at
   step 6.
+- ~~**What the player gets to compute before they commit, and what it costs them.**~~ **Closed 7 August 2026 by
+  [#76](https://github.com/ssalter21/tower-defense-game/issues/76) — nothing is forecast.** Mechanism is free
+  and total, outcome is not computed at all, and the only pre-commit channel is scouting **incoming waves**:
+  free in the lobby as of the previous round, ten free snapshots per run in the round-robin, sauce beyond. The
+  simulator's home is the retrospective. See
+  [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026). Two things it left open, and
+  deliberately:
+  - **The paid predictor.** Named so it is not reinvented: an **average heatmap of where creeps died, layered
+    onto your own build**, aggregated over the simulated games. It needs per-cell kill attribution and a board
+    to draw on, so it is [seam 7](#7--the-interface) and [seam 8](#8--the-presentation) rather than paperwork —
+    and it is explicitly a thing to feel out in play rather than settle on paper. Until it exists, the
+    round-robin's sauce sink beyond ten snapshots is the only paid information in the game.
+  - **The free-snapshot count and the price beyond it.** Ten is a starting point. Both are step 4 sweep
+    parameters, and the snapshot price is the first non-unit line in the cost column.
 
 - ~~**Whether there is a baseline wave at all — a risk no surveyed game carries.**~~ **Closed 6 August 2026 —
   there is a public constant, and it is [the variance anchor schedule](#wave-variance-is-anchored-not-emergent)
@@ -1323,6 +1381,13 @@ community plans in an offline calculator because it is better than the game's ow
 histograms, which turn a finished solution into a comparison; Football Manager, whose match is watched rather
 than played; and Into the Breach, which gives away the enemy's next move on purpose.
 
+> ⚠️ **The order of that list was wrong, and [#76](https://github.com/ssalter21/tower-defense-game/issues/76)
+> reordered it on 7 August 2026.** Path of Building was named first and it is the model this section
+> *declines*: the planning phase is not a calculator, and it forecasts nothing by default. **Football Manager
+> and the Zachtronics histogram are the model** — the match is watched, and the analysis lands *after* it. The
+> budget below is still spent on the plan phase; it is spent on making the **rules** legible and the
+> **retrospective** rich, not on predicting the result.
+
 ### Two things this buys, stated as direction
 
 **The plan phase should sing.** Perfect information about *mechanism* is a feature, not a leak — Into the
@@ -1330,6 +1395,12 @@ Breach telegraphs every enemy attack precisely so that failure belongs to the pl
 Range overlays, damage previews, the arithmetic done for you, the thing you are about to buy shown against the
 thing it replaces: none of that reduces the decision, and all of it moves the difficulty from *arithmetic* to
 *judgement*, which is where it should be.
+
+> **"Damage previews" means one shot, not one round** — *clarified 7 August 2026 by
+> [#76](https://github.com/ssalter21/tower-defense-game/issues/76).* Showing what
+> [the fused expression](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) does to a
+> given target is mechanism and it is free. Showing what your *wave* will do to a *field* is a forecast, and
+> there is no such thing in this game.
 
 **The stats the sim can compute are game design material, not a debug menu.** A run against a hundred stored
 defenses is under a second of compute. That is a mechanic, a reward structure and a presentation layer that no
@@ -1376,8 +1447,56 @@ tower defense has because no tower defense could afford it:
 > the field, not from hidden state or dice** — which is the only form of it compatible with a deterministic,
 > re-simulable, cheat-proof game.
 >
-> Whatever else seam 1 grants the player, the forecast must stay *partial, sampled, or paid for*. That is
-> [question 5 on the step 1 checklist](#the-five-decisions-that-block-step-1).
+> Whatever else seam 1 grants the player, the forecast must stay *partial, sampled, or paid for*. That was
+> [question 5 on the step 1 checklist](#the-five-decisions-that-block-step-1), and it is **answered below**
+> — considerably more starkly than this paragraph anticipated. There is no forecast at all.
+
+### What the player may compute before committing — *decided 7 August 2026*
+
+**Nothing is forecast.** The planning surface exposes the rules completely and predicts nothing, in any mode,
+free or paid. Decided by [#76](https://github.com/ssalter21/tower-defense-game/issues/76), the last of
+[the five decisions that block step 1](#the-five-decisions-that-block-step-1).
+
+**Mechanism is free, total and always on.** Range overlays, costs, interest, the offering, and the
+[fused expression](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) evaluated live for
+any attacker against any target. This is Into the Breach's calibration — perfect information about *rules*,
+none about *outcome* — and hiding any of it would only tax the players who do not keep a spreadsheet.
+
+**Outcome is not computed at all.** No preview, no dummy defense, no distribution, no band, no number that
+predicts a result. **The offense in particular gets nothing**: a wave is composed from the rules and from
+memory, which gives the two halves genuinely different textures — the defense is engineering, the offense is
+judgement.
+
+**The one pre-commit information channel is scouting, and it shows incoming waves.** Free in the lobby (the
+previous round's board, [never live](#what-you-see-of-your-opponent-depends-on-the-mode-and-that-is-deliberate));
+in the round-robin, **ten snapshots free per run and sauce for any beyond that**. It is one mechanic at three
+latencies — pay to reduce the blur on what you are facing — and only the source of the blur changes.
+
+**The simulator's home is the retrospective.** After a round, analysis is free, unlimited and exact against the
+real field: the waves that hit you are viewable in full, and re-running the match with one purchase changed is
+2.75 ms. **The direction is a field of 100+ with a computed highlight reel and stats in place of manual
+review** — nobody watches a hundred matches, they watch the three that came down to one unit. That raises `K`,
+which [#74](https://github.com/ssalter21/tower-defense-game/issues/74) already made a parameter rather than a
+constant, so nothing needs reopening.
+
+**Two findings this rests on, both of which constrain anything built later:**
+
+- **The price can only be charged on data, never on compute.** The simulation is deterministic, records store
+  inputs, and a match is 2.75 ms — so anything the client holds the *data* for, a third-party calculator
+  computes for free regardless of what the game charges. Query caps and per-simulation fees are unenforceable
+  by construction. What the server can withhold is the **pool**, and that is where every real lever in this
+  question turned out to be.
+- **Roughness has to come from unknown inputs, never from fuzzed arithmetic.** Your own towers are client-side,
+  so an external tool resolves them exactly against any *specified* wave. A prediction is only honestly rough
+  when the player does not know which waves are coming — which is the same structural trick as drawing the
+  field after the commit, and the reason a paid predictor must sell **information** rather than precision.
+
+> **Deferred, and named so it is not reinvented: the paid predictor.** The candidate is an **average heatmap of
+> where creeps died, layered onto your own build** — aggregated over the simulated games, showing which parts
+> of a defense are doing work and which are dead weight. It is not specced here. It needs per-cell kill
+> attribution aggregated across a field and rendered onto a board, which is [seam 7](#7--the-interface) and
+> [seam 8](#8--the-presentation) work, and steps 1 to 4 have no interface at all. **It is also the kind of
+> thing to be felt out in play rather than argued about on paper.**
 
 ---
 
