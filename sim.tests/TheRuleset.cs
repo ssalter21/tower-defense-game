@@ -25,6 +25,7 @@ public static class TheRuleset
         floor 1
         interest 10 0
         income 100
+        purse 100
         band 0 0
         band 50 5
         health 1500

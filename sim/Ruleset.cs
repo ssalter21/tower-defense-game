@@ -61,7 +61,7 @@ namespace Sim
         /// Names this ruleset and its field layout inside the hash. The digit is
         /// the layout version: moving, adding or removing a field bumps it.
         /// </summary>
-        private const string HashLabel = "ruleset/2";
+        private const string HashLabel = "ruleset/3";
 
         /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
         public const int NoInterestCeiling = 0;
@@ -88,6 +88,7 @@ namespace Sim
             InterestPercentPerWave = draft.InterestPercentPerWave;
             InterestCapSauce = draft.InterestCapSauce;
             IncomeBasePerWave = draft.IncomeBasePerWave;
+            StartingPurseSauce = draft.StartingPurseSauce;
             _bands = draft.Bands.ToArray();
             HealthPoolSauce = draft.HealthPoolSauce;
             StartingWaveSlots = draft.StartingWaveSlots;
@@ -132,6 +133,13 @@ namespace Sim
 
         /// <summary>The flat income a wave pays, in sauce, before any bonus.</summary>
         public int IncomeBasePerWave { get; }
+
+        /// <summary>
+        /// What a run's purse opens holding, in sauce. Nothing has been earned
+        /// yet when the first build phase stands, so without this the opening
+        /// round's only affordable wave is the empty one.
+        /// </summary>
+        public int StartingPurseSauce { get; }
 
         /// <summary>
         /// The performance bonus, as bands against the field's distribution.
@@ -216,6 +224,7 @@ namespace Sim
                 .Add(draft.InterestPercentPerWave)
                 .Add(draft.InterestCapSauce)
                 .Add(draft.IncomeBasePerWave)
+                .Add(draft.StartingPurseSauce)
                 .Add(draft.Bands.Count);
 
             foreach (PerformanceBand band in draft.Bands)
@@ -341,6 +350,13 @@ namespace Sim
                         DataText.IntegerInRange(source, line, "the income base", fields[1], 0, int.MaxValue);
                     return;
 
+                case "purse":
+                    Expect(source, line, fields, "purse", 2);
+                    draft.Once(source, line, "purse");
+                    draft.StartingPurseSauce =
+                        DataText.IntegerInRange(source, line, "the starting purse", fields[1], 0, int.MaxValue);
+                    return;
+
                 case "band":
                     Expect(source, line, fields, "band", 3);
                     draft.AddBand(
@@ -412,7 +428,7 @@ namespace Sim
         {
             internal static readonly string[] EveryKeyword =
             {
-                "matrix", "armour", "floor", "interest", "income", "band", "health", "slots",
+                "matrix", "armour", "floor", "interest", "income", "purse", "band", "health", "slots",
                 "offering", "snapshot",
             };
 
@@ -437,6 +453,8 @@ namespace Sim
             internal int InterestCapSauce { get; set; }
 
             internal int IncomeBasePerWave { get; set; }
+
+            internal int StartingPurseSauce { get; set; }
 
             internal int HealthPoolSauce { get; set; }
 

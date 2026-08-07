@@ -427,31 +427,14 @@ namespace Sim
             return new AnchorFilling(menus);
         }
 
-        /// <summary>
-        /// This many of the pool, without replacement, in the order they were
-        /// drawn. A partial Fisher-Yates over an array of positions: no hashed
-        /// collection, and one draw per item taken.
-        /// </summary>
+        /// <summary>This many of the pool, without replacement, in the order they were drawn.</summary>
         private static GameChanger[] Draw(Pcg32 dice, IReadOnlyList<GameChanger> pool, int count)
         {
-            var positions = new int[pool.Count];
-
-            for (int index = 0; index < positions.Length; index++)
-            {
-                positions[index] = index;
-            }
-
+            int[] positions = Draws.Positions(dice, pool.Count, count);
             var drawn = new GameChanger[count];
 
             for (int index = 0; index < count; index++)
             {
-                int remaining = positions.Length - index;
-                int picked = index + (int)dice.NextBelow((uint)remaining);
-
-                int swap = positions[index];
-                positions[index] = positions[picked];
-                positions[picked] = swap;
-
                 drawn[index] = pool[positions[index]];
             }
 

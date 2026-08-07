@@ -323,19 +323,40 @@ public class RunTests
         // member that moves anything at all.
         //
         // OBSERVED: add an empty `public void Repair(int sauce)` to Run. The
-        // first assertion goes red, ["Advance"] against ["Advance", "Repair"],
-        // which is the whole of what this test is here to notice -- and it
-        // notices a member that does not even do anything yet.
+        // first assertion goes red, ["Advance", "OfferingAt"] against
+        // ["Advance", "OfferingAt", "Repair"], which is the whole of what this
+        // test is here to notice -- and it notices a member that does not even
+        // do anything yet.
+        //
+        // Two names are on the list and only one of them moves anything.
+        // Advance is both of its overloads: the one handed orders and the one
+        // handed a build phase, which spends the purse and takes an unlock
+        // before delegating to it. OfferingAt is a draw over the run's seed and
+        // is asserted below to leave the run exactly where it found it.
         string[] movers = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(method => !method.IsSpecialName)
             .Select(method => method.Name)
+            .Distinct()
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(new[] { "Advance" }, movers);
+        Assert.Equal(new[] { "Advance", "OfferingAt" }, movers);
         Assert.Null(typeof(Run).GetProperty("Health")!.SetMethod);
         Assert.Null(typeof(RunOutcome).GetProperty("HealthRemaining")!.SetMethod);
+
+        // Reading the offering is a read: it costs nothing, moves nothing and
+        // answers the same thing twice.
+        //
+        // OBSERVED: pay the run a coin for reading -- open Run.OfferingAt with
+        // Purse = Purse.Holding(Purse.Sauce + 1). The purse assertion goes red,
+        // 104 against 108, which is a member on the movers list moving
+        // something while the list itself stays exactly as long.
+        Run untouched = TheRun.Fresh(waves: 4, fieldSize: 3);
+
+        Assert.Equal(untouched.Health, Drawn(untouched).Health);
+        Assert.Equal(untouched.Purse.Sauce, Drawn(untouched).Purse.Sauce);
+        Assert.Equal(0, Drawn(untouched).Unlocks.Count);
 
         // And across a run it only ever goes one way, however much the purse
         // grows alongside it.
@@ -698,6 +719,17 @@ public class RunTests
 
         Assert.True(priced > 0);
         Assert.NotEqual(result.Leaked * costs.PriceOf(Purchase.Unit(1)), priced);
+    }
+
+    /// <summary>The same run, after every offering of it has been read.</summary>
+    private static Run Drawn(Run run)
+    {
+        for (int wave = 1; wave <= run.Waves; wave++)
+        {
+            Assert.Equal(wave, run.OfferingAt(wave).Wave);
+        }
+
+        return run;
     }
 
     /// <summary>A run driven to its end on one round's orders every round.</summary>

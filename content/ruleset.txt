@@ -84,6 +84,17 @@ interest       10         0
 
 income        100
 
+#         purse  sauce
+#
+# What a run's purse opens holding. Nothing has been earned when the first build
+# phase stands, so a run that opened on nothing would have an opening round
+# whose only affordable wave is the empty one -- ten waves with nine build
+# phases in them. One wave's base is the smallest number that makes the first
+# round a round, and like every number here it is a sweep target rather than a
+# decision.
+
+purse         100
+
 #         band  percentile  percent
 #
 # The performance bonus, paid on top of the base in progressive percentile
@@ -135,8 +146,14 @@ slots           2         1
 # round's ordinary options and one thing is taken from the merged list. The
 # ratio between the two is what decides whether the merged menu is a real
 # trade, which is why it is a number here rather than an argument.
+#
+# THE ORDINARY COUNT IS BOUNDED BY THE ROSTER. An option unlocks a creep and
+# appears on a menu once, so an offering cannot be drawn out of fewer creeps
+# than it carries options, and asking it to is refused rather than answered with
+# the same creep twice. Two is what the roster of two walkers below supports;
+# this rises with the roster.
 
-offering        3         3
+offering        2         3
 
 #         snapshot  free  sauce
 #
