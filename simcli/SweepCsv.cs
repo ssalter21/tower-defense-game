@@ -23,6 +23,9 @@ namespace Sim.Cli;
 /// <list type="bullet">
 /// <item><c>parameter</c> -- what the sweep was played under, one row a number,
 /// so that two sweeps concatenated cannot be mistaken for one.</item>
+/// <item><c>note</c> -- what a column does not mean, where reading it the
+/// obvious way is wrong. There is one, and the remarks on <see cref="Notes"/>
+/// say why it travels with the file rather than living beside it.</item>
 /// <item><c>coverage</c> -- how far the sweep reached on each axis it could
 /// have bounded. <b>Always present, bounded or not</b>, because a truncated
 /// sweep that said nothing would read exactly like a complete one.</item>
@@ -46,7 +49,7 @@ internal static class SweepCsv
     private const string No = "no";
 
     /// <summary>The empty cell: a column this kind of row has no number for.</summary>
-    private const string Blank = "";
+    private static readonly string Blank = string.Empty;
 
     /// <summary>
     /// The columns, in order. <c>value</c>, <c>of</c> and <c>bounded</c> are the
@@ -77,6 +80,7 @@ internal static class SweepCsv
         var text = new StringBuilder();
 
         Row(text, Columns);
+        Notes(text);
         Parameters(text, report.Plan);
 
         for (int index = 0; index < report.Coverage.Count; index++)
@@ -91,6 +95,43 @@ internal static class SweepCsv
 
         return text.ToString();
     }
+
+    /// <summary>
+    /// What a column does not mean, where reading it the obvious way is wrong.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// There is exactly one, and it earns its row. Under a one-for-one leak
+    /// charge the price level cancels out of leak cost dealt over sauce spent
+    /// exactly -- halve a creep's price and a purse buys twice as many while
+    /// each leak charges half -- so the cost-efficiency column is the
+    /// cost-weighted leak rate of what was sent and it cannot say a creep is
+    /// overpriced. That is measured rather than argued, in
+    /// docs/research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md.
+    /// </para>
+    /// <para>
+    /// <b>It travels in the file rather than beside it</b> because this file is
+    /// what somebody opens six months from now in a spreadsheet, and a column
+    /// headed "cost efficiency" invites exactly the reading the research note
+    /// exists to prevent. A caveat that lives in a document nobody opened is a
+    /// caveat nobody read.
+    /// </para>
+    /// </remarks>
+    private static void Notes(StringBuilder text) =>
+        Note(
+            text,
+            "cost_efficiency_dealt_per_100_sauce",
+            "a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one "
+            + "so the price cancels out; see docs/adr/0041");
+
+    private static void Note(StringBuilder text, string column, string what) =>
+        Row(
+            text,
+            new[]
+            {
+                "note", column, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
+                what, Blank, Blank,
+            });
 
     /// <summary>
     /// What the sweep was played under, one row a number.

@@ -65,3 +65,4 @@ These were extracted from the source comments when the project moved to a commen
 | # | Decision |
 |---|---|
 | [0027](0027-a-landmark-table-with-a-hole-refuses-to-render.md) | A landmark table with a hole in it refuses to render |
+| [0041](0041-the-sweep-computes-rows-and-the-shell-writes-them.md) | The sweep computes rows and the shell writes them, and every rate arrives with its operands |

@@ -191,10 +191,14 @@ namespace Sim
     /// alongside one.
     /// </para>
     /// <para>
-    /// <b>Death defaults to not ending a run here</b>, which is the opposite of
-    /// everywhere else and is why it is a flag rather than a rule: a sweep wants
-    /// N rounds of data out of every row, not a short row wherever a build
-    /// failed. Nothing stops a caller asking for the other one.
+    /// <b>Death ends a run here by default, exactly as it does everywhere
+    /// else</b>, and a harness that wants otherwise asks. One knob with one
+    /// default is the point: a sweep that quietly played a different game from
+    /// the one the same content plays through <c>play-run</c> would be a report
+    /// about a rule nobody chose. What no-death mode buys is a round of data for
+    /// every wave rather than a short row wherever a build failed, which is why
+    /// the flag exists -- and how many rounds a row actually got is on the row,
+    /// so neither answer can be mistaken for the other.
     /// </para>
     /// </remarks>
     public sealed class SweepPlan
@@ -221,7 +225,8 @@ namespace Sim
         /// <param name="defense">What stands while each run's waves are sent.</param>
         /// <param name="field">
         /// The population a round's field of K is drawn from -- canned, until
-        /// step 6 stores real ghosts. See the remarks on <see cref="Sweep"/>.
+        /// runs are stored and a real pool of them exists. See the remarks on
+        /// <see cref="Sweep"/>.
         /// </param>
         /// <param name="firstSeed">What every run's seed in this sweep is derived from.</param>
         /// <param name="runsPerCreep">How many seeds each row of the roster is played on.</param>
@@ -247,7 +252,7 @@ namespace Sim
             int runsPerCreep,
             int waves = Run.DefaultWaves,
             int fieldSize = Run.DefaultFieldSize,
-            bool deathEndsTheRun = false,
+            bool deathEndsTheRun = true,
             int ordinaryOptionsPerRound = AsAuthored,
             int gameChangersPerAnchor = AsAuthored,
             int freeSnapshotsPerRun = AsAuthored,
@@ -499,7 +504,7 @@ namespace Sim
     /// it.</b> The percentile bands are measured against a distribution of other
     /// players' rounds, and no such pool exists until runs are stored, so the
     /// pool a sweep is handed is what the bands would be computed against. That
-    /// is why steps up to this one pay the income base alone.
+    /// is why a run pays the income base alone until this exists.
     /// </para>
     /// <para>
     /// <b>What <see cref="SweepRow.DealtPerHundredSauce"/> measures, and what it
@@ -593,6 +598,23 @@ namespace Sim
             for (int index = 0; index < plan.RunsPerCreep; index++)
             {
                 Played played = Play(plan, creep, plan.SeedOf(index));
+
+                // OBSERVED: return zero from Ingredients. Every sweep in the
+                // suite refuses by this name; without it the runs vanish out of
+                // every bin, stay in the population row, and the two "the bins
+                // add up" tests go red naming a shortfall nothing caused.
+                if (played.Ingredients < 1)
+                {
+                    throw new SimulationException(
+                        "A run of "
+                        + creep.Label
+                        + " ended holding "
+                        + played.Ingredients.ToString(CultureInfo.InvariantCulture)
+                        + " ingredients. A run's build phases take one option each and a run has at least "
+                        + "one of them, so a count below one is a bin sharing its index with the row over "
+                        + "the whole population -- which would drop the run out of every bin while leaving "
+                        + "it in the total, and the bins would stop adding up for a reason nothing reports.");
+                }
 
                 whole.Add(played);
                 bins[played.Ingredients] ??= new Cell();
@@ -805,7 +827,7 @@ namespace Sim
             return seen.Count;
         }
 
-        /// <summary>One played run, as the four numbers a row is folded out of.</summary>
+        /// <summary>One played run, as the numbers a row is folded out of.</summary>
         private readonly struct Played
         {
             internal Played(RunOutcome outcome, int ingredients, long spent, int waves, int rounds)

@@ -1,4 +1,5 @@
 kind,subject,ingredients,runs,rounds,wins,win_rate_bp,dealt_sauce,taken_sauce,spent_sauce,cost_efficiency_dealt_per_100_sauce,value,of,bounded
+note,cost_efficiency_dealt_per_100_sauce,,,,,,,,,,a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one so the price cancels out; see docs/adr/0041,,
 parameter,waves,,,,,,,,,,10,,
 parameter,field_size,,,,,,,,,,10,,
 parameter,death_ends_the_run,,,,,,,,,,no,,

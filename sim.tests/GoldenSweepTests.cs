@@ -89,18 +89,21 @@ public class GoldenSweepTests
     [Fact]
     public void The_committed_report_says_how_far_it_reached()
     {
-        // Story eighty, as an artefact. A sweep that sampled eight seeds a creep
-        // says so in its own rows, so nobody three months from now reads a
-        // sample as an enumeration -- and the roster row says whether the report
-        // is about the whole table or a prefix of it.
+        // The bound the sweep placed on itself, as an artefact. A report that
+        // sampled eight seeds a creep says so in its own rows, so nobody three
+        // months from now reads a sample as an enumeration -- and the roster row
+        // says whether it is about the whole table or a prefix of it.
         //
         // OBSERVED: run tools/run-sweep.ps1 -Regenerate with --most-creeps 3.
         // The creeps row goes red, "3,6,yes" against the "6,6,no" expected, and
         // nothing else in the file objects at all: it is a complete-looking
         // report about half a roster.
-        Assert.Equal(
-            Number(WalkersInTheCommittedRoster()) + "," + Number(WalkersInTheCommittedRoster()) + ",no",
-            Coverage("creeps"));
+        // The roster's width comes off a plan rather than being counted here,
+        // because the plan is what decides how many rows of a table a sweep can
+        // score and a second count of it is a second thing to be wrong.
+        string walkers = Number(TheSweep.Plan().Roster);
+
+        Assert.Equal(walkers + "," + walkers + ",no", Coverage("creeps"));
 
         // The seed axis is a sample whatever its size, so it is bounded and its
         // population is not a number.
@@ -173,23 +176,6 @@ public class GoldenSweepTests
 
         throw new Xunit.Sdk.XunitException(
             "The committed report has no " + kind + " row for " + subject + ".");
-    }
-
-    /// <summary>How many rows of the committed roster walk, which is what a sweep can score.</summary>
-    private static int WalkersInTheCommittedRoster()
-    {
-        UnitTypeTable types = TheMatch.Types();
-        int walkers = 0;
-
-        for (int index = 0; index < types.Count; index++)
-        {
-            if (types.Types[index].Role == UnitRole.Moving)
-            {
-                walkers++;
-            }
-        }
-
-        return walkers;
     }
 
     private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);

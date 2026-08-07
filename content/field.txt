@@ -25,20 +25,20 @@
 #
 # ONE COLUMN, AND THAT IS MEASURED RATHER THAN CHOSEN. A count is released one
 # unit every fifteen ticks, so the same hundred sauce spread across more
-# columns arrives at more bodies per tick over fewer ticks. Against the
-# committed defense that is nearly the whole story of whether anything leaks:
-# a hundred sauce in one column of ten grunts gets about a hundred and forty
-# sauce past a round, and the same hundred sauce as five grunts beside five
-# runners gets past two sauce over a whole ten-wave run. Two columns of five
-# are simply killed. A field member with the right total and the wrong number
-# of columns is not a slightly different opponent, it is a walkover.
+# columns arrives as more bodies per tick over fewer ticks, and whether the
+# towers saturate is nearly the whole story of whether anything leaks. Over
+# eight ten-wave runs against the committed defense, holding everything else
+# byte-identical: ten grunts in one column got 1406 sauce past, five grunts
+# beside five runners got 2, and four columns totalling ten bodies got none at
+# all. A field member with the right total and the wrong number of columns is
+# not a slightly different opponent, it is a walkover.
 #
 # WHICH IS ALSO WHY THIS ONE IS CALIBRATED AND NOT AVERAGED. It is the shape
-# that makes the report an instrument: against it the roster's six creeps come
-# in between nothing and thirty-seven percent of runs won, which is a column
-# that separates them. Against the two-column wave every creep wins every run
-# and against wave.txt none of them wins any, and neither of those reports says
-# anything about a creep.
+# that makes the report an instrument: over thirty-two runs a creep the
+# roster's six come in between sixteen and thirty-four percent of runs won,
+# which is a column that separates them. Against the two-column wave every
+# creep wins every run, and against wave.txt none of them wins any -- and
+# neither of those reports says anything about a creep.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 # Orders ascend by tick and then by type id, and that order is asserted rather

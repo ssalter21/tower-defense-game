@@ -242,9 +242,9 @@ public class CommandLineTests
     [Fact]
     public void The_death_flag_is_a_switch_and_it_reaches_the_run()
     {
-        // Story twenty-three, from a shell: death is a flag rather than a rule
-        // so that a harness can ask for N rounds of data out of every run. Until
-        // this verb carried it no shell could play a no-death run at all.
+        // Death is a flag rather than a rule so that a harness can ask for a
+        // round of data per wave instead of a short row wherever a build failed.
+        // Until this switch existed no shell could play a no-death run at all.
         //
         // The shape line is what says so, and it is printed into the outcome
         // file as well -- which is where a diff sees that two runs of the same

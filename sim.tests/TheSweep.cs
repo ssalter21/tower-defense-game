@@ -45,7 +45,6 @@ public static class TheSweep
         unit 4 mortar placed 0 0 4600 18 7 5 210 340 projectile 11 0 90 impact none 0
         """;
 
-
     /// <summary>Where the cost column sits in the committed table's column layout.</summary>
     private const int CostField = 15;
 

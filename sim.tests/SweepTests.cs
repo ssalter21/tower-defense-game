@@ -129,6 +129,30 @@ public class SweepTests
     }
 
     [Fact]
+    public void A_sweep_and_a_run_agree_about_what_death_does_by_default()
+    {
+        // One knob, one default. A harness that quietly played a different game
+        // from the one the same content plays through the run verbs would be a
+        // report about a rule nobody chose -- so no-death is asked for, on both
+        // surfaces, and never assumed on one of them.
+        //
+        // OBSERVED: default deathEndsTheRun to false in SweepPlan. This goes
+        // red, and nothing else in the suite does: every other sweep test names
+        // the flag, and the committed report is produced by a script that passes
+        // --no-death explicitly.
+        Assert.Equal(TheRun.Fresh().DeathEndsTheRun, TheSweep.Plan(deathEndsTheRun: true).DeathEndsTheRun);
+        Assert.True(new SweepPlan(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            TheMatch.Types(),
+            TheSchedule.Committed(),
+            TheMatch.Layout(TheMatch.Types()),
+            TheSweep.Field(TheMatch.Types()),
+            TheSweep.Seed,
+            TheSweep.Runs).DeathEndsTheRun);
+    }
+
+    [Fact]
     public void The_ingredient_bins_partition_the_creeps_whole_population()
     {
         // The U-shaped meta failure mode is read down this axis, so the axis has
@@ -300,10 +324,9 @@ public class SweepTests
         // a retuned sweep loudly a different sweep.
         //
         // NOTHING CONSUMES THE FREE COUNT YET and that is the build order rather
-        // than a fault: scouting lands as data in steps 1 to 4 and as an
-        // interface later, so what this asserts is that the parameter is present
-        // and reaches the ruleset, which is the whole of what it can assert
-        // today.
+        // than a fault: scouting lands as data first and as an interface later,
+        // so what this asserts is that the parameter is present and reaches the
+        // ruleset, which is the whole of what it can assert today.
         //
         // OBSERVED: swap the free-snapshot and snapshot-price arguments over in
         // SweepPlan's call to Ruleset.With. This goes red on the free count, 40
