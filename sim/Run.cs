@@ -88,10 +88,6 @@ namespace Sim
 
         private readonly HexMap _map;
 
-        private readonly Ruleset _rules;
-
-        private readonly UnitTypeTable _types;
-
         private readonly FieldPool _pool;
 
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
@@ -133,11 +129,10 @@ namespace Sim
             bool deathEndsTheRun = true)
         {
             _map = map ?? throw new ArgumentNullException(nameof(map));
-            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
+            Rules = rules ?? throw new ArgumentNullException(nameof(rules));
+            Types = types ?? throw new ArgumentNullException(nameof(types));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
-
-            _types = types ?? throw new ArgumentNullException(nameof(types));
 
             // Before a wave resolves rather than at the first overflow: a run
             // that has already produced numbers is a run whose numbers somebody
@@ -179,6 +174,17 @@ namespace Sim
 
         /// <summary>The seed every draw in this run is derived from.</summary>
         public ulong Seed { get; }
+
+        /// <summary>
+        /// The health pool, the interest, the base, the bands and the damage
+        /// matrix every round of this run is resolved under. Held rather than
+        /// only consumed, so that whatever checks a stored record against this
+        /// run reads the tables the run is actually playing.
+        /// </summary>
+        public Ruleset Rules { get; }
+
+        /// <summary>The unit table every creep and every cost in this run is read out of.</summary>
+        public UnitTypeTable Types { get; }
 
         /// <summary>N, or <see cref="Purse.RoundCapLifted"/> for a run with no last wave.</summary>
         public int Waves { get; }
@@ -299,7 +305,7 @@ namespace Sim
             // The bonus is a percentile of a field of other players' rounds, and
             // no such pool exists yet, so every wave is paid the base alone. See
             // PerformanceField.Absent, which is where that is written down.
-            Purse = Purse.CloseWave(_rules, PerformanceField.Absent, outcome.LeakCostDealt).Purse;
+            Purse = Purse.CloseWave(Rules, PerformanceField.Absent, outcome.LeakCostDealt).Purse;
 
             _outcome = Folded();
 
@@ -360,7 +366,7 @@ namespace Sim
         /// validated against without the run in front of it having been played.
         /// </remarks>
         public Offering OfferingAt(int wave) =>
-            Sim.Offering.Draw(_rules, _types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
+            Sim.Offering.Draw(Rules, Types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
 
         /// <summary>
         /// Which K of the pool this round is fought against.
@@ -402,7 +408,7 @@ namespace Sim
                 ? ShotBonus.Fielded(wave, defense, Unlocks, Schedule)
                 : ShotBonus.None;
 
-            var match = new Match(_map, _rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
+            var match = new Match(_map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
             match.Resolve();
 
             IReadOnlyList<int> leaked = match.LeakedByOrder;
@@ -444,7 +450,7 @@ namespace Sim
                 + " rounds resolved and "
                 + Health.ToString(CultureInfo.InvariantCulture)
                 + " of "
-                + _rules.HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
+                + Rules.HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
                 + " health left. A round resolved past the end of a run is a round nobody was still in the "
                 + "run to play, and folding it in moves an outcome that had already been settled.");
         }
@@ -476,7 +482,7 @@ namespace Sim
 
         /// <summary>The vector, folded. The only place health and the ending come from.</summary>
         private RunOutcome Folded() =>
-            RunOutcome.Of(_rules.HealthPoolSauce, _rounds, Waves, DeathEndsTheRun);
+            RunOutcome.Of(Rules.HealthPoolSauce, _rounds, Waves, DeathEndsTheRun);
 
         /// <summary>
         /// Which direction of a pairing a match is: a round measures both

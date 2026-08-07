@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Sim
 {
-    /// <summary>Which of the three record kinds a run of bytes is.</summary>
+    /// <summary>Which of the four record kinds a run of bytes is.</summary>
     public enum RecordKind
     {
         /// <summary>A defense: the towers, and the map they were placed on, by hash.</summary>
@@ -14,6 +14,12 @@ namespace Sim
 
         /// <summary>A replay: a seed, an inlined map, a defense and a wave, self-contained.</summary>
         Replay = 2,
+
+        /// <summary>
+        /// A command stream: a run's seed and its build phases as
+        /// <c>(wave index, decision)</c> pairs.
+        /// </summary>
+        Command = 3,
     }
 
     /// <summary>
@@ -26,8 +32,9 @@ namespace Sim
     /// counter was the obvious arrangement and it is wrong: editing the wave
     /// layout would bump every stored defense's version too, so every defense
     /// would look newer than it is and readers would branch on versions that
-    /// never changed anything about a defense. Three counters, three histories,
-    /// and each one only moves when its own bytes move.
+    /// never changed anything about a defense. One counter per kind, one
+    /// history each, and each one only moves when its own bytes move -- which
+    /// is why adding the command stream left the other three where they were.
     /// </para>
     /// <para>
     /// <b>Magic before version, version before everything else.</b> Four bytes
@@ -52,7 +59,7 @@ namespace Sim
     {
         /// <summary>
         /// The shared header: 4 magic + 2 format version + 4 simulation version
-        /// + 8 content hash. Identical in all three kinds.
+        /// + 8 content hash. Identical in all four kinds.
         /// </summary>
         public const int HeaderBytes = 18;
 
@@ -64,6 +71,19 @@ namespace Sim
         /// u16 count + u8 corridor</c>.
         /// </summary>
         public const int OrderBytes = 9;
+
+        /// <summary>
+        /// The fixed part of one build phase in a command stream:
+        /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>. The
+        /// slots follow it, <see cref="SlotBytes"/> each.
+        /// </summary>
+        public const int CommandBytes = 7;
+
+        /// <summary>
+        /// Bytes per wave slot in a command stream: <c>u16 type_id +
+        /// u16 count</c>, with <c>(0, 0)</c> meaning empty.
+        /// </summary>
+        public const int SlotBytes = 4;
 
         /// <summary>
         /// The defense layout, version 1: the version-0 fields with a
@@ -112,6 +132,13 @@ namespace Sim
         /// <summary>The replay bundle layout, version 0.</summary>
         public const int ReplayVersion = 0;
 
+        /// <summary>
+        /// The command stream layout, version 0. Its own counter: the three
+        /// kinds that existed before it did not move when it arrived, so no
+        /// stored defense, wave or bundle looks newer than it is.
+        /// </summary>
+        public const int CommandVersion = 0;
+
         /// <summary>The four bytes a record of this kind begins with.</summary>
         public static string MagicOf(RecordKind kind)
         {
@@ -125,6 +152,9 @@ namespace Sim
 
                 case RecordKind.Replay:
                     return "RPLY";
+
+                case RecordKind.Command:
+                    return "CMDS";
 
                 default:
                     throw NoSuchKind(kind);
@@ -144,6 +174,9 @@ namespace Sim
 
                 case RecordKind.Replay:
                     return "replay bundle";
+
+                case RecordKind.Command:
+                    return "command stream";
 
                 default:
                     throw NoSuchKind(kind);
@@ -166,6 +199,9 @@ namespace Sim
 
                 case RecordKind.Replay:
                     return ReplayVersion;
+
+                case RecordKind.Command:
+                    return CommandVersion;
 
                 default:
                     throw NoSuchKind(kind);
@@ -200,6 +236,9 @@ namespace Sim
                 case RecordKind.Replay:
                     return formatVersion == 0;
 
+                case RecordKind.Command:
+                    return formatVersion == 0;
+
                 default:
                     throw NoSuchKind(kind);
             }
@@ -226,6 +265,12 @@ namespace Sim
                 return true;
             }
 
+            if (string.Equals(magic, MagicOf(RecordKind.Command), StringComparison.Ordinal))
+            {
+                kind = RecordKind.Command;
+                return true;
+            }
+
             kind = RecordKind.Ghost;
             return false;
         }
@@ -233,7 +278,7 @@ namespace Sim
         private static ArgumentOutOfRangeException NoSuchKind(RecordKind kind) =>
             new ArgumentOutOfRangeException(
                 nameof(kind),
-                "There are three record kinds and "
+                "There are four record kinds and "
                 + ((int)kind).ToString(CultureInfo.InvariantCulture)
                 + " is not one of them.");
     }

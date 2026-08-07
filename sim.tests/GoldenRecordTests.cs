@@ -48,7 +48,10 @@ public class GoldenRecordTests
     {
         var data = new TheoryData<RecordKind, int>();
 
-        foreach (RecordKind kind in new[] { RecordKind.Ghost, RecordKind.Wave, RecordKind.Replay })
+        foreach (RecordKind kind in new[]
+        {
+            RecordKind.Ghost, RecordKind.Wave, RecordKind.Replay, RecordKind.Command,
+        })
         {
             for (int version = 0; version <= RecordFormat.CurrentVersionOf(kind); version++)
             {
@@ -271,6 +274,7 @@ public class GoldenRecordTests
         Assert.Equal(RecordFormat.GhostVersion, TheMatch.Ghost(types).Header.FormatVersion);
         Assert.Equal(RecordFormat.WaveVersion, TheMatch.WaveOf(types).Header.FormatVersion);
         Assert.Equal(RecordFormat.ReplayVersion, TheMatch.Bundle().Header.FormatVersion);
+        Assert.Equal(RecordFormat.CommandVersion, TheCommands.Stream().Header.FormatVersion);
 
         // And the golden for the current version is exactly those bytes, so a
         // format change that forgot to re-record it is caught here rather than
