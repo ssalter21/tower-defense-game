@@ -48,6 +48,7 @@ at its top rather than being rewritten.
 | [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? |
 | [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL, or sources inside Unity? Carries [amendments](research/unity-sim-library-integration.md#amendments) |
 | [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
+| [Dex Horthy's software factory, assessed against this repository](research/the-software-factory.md) | What is the software-factory approach, which of it applies here, and what should change as a result? |
 
 > **One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence
 > and pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those
