@@ -54,7 +54,7 @@ public class RunTests
         // against a run this test computed, so a lifecycle regression cannot
         // move both sides of the comparison at once.
         //
-        // The run survives its last wave by 29 sauce of health, which is what
+        // The run survives its last wave by 382 sauce of health, which is what
         // makes the death flag inert here: the no-death row produces the same
         // vector as the rest rather than a longer one, so the flag is an
         // argument and not a different lifecycle.
@@ -62,7 +62,7 @@ public class RunTests
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on the health it finished with,
-        // 29 against 1500, which is what a second code path hiding behind an
+        // 382 against 1500, which is what a second code path hiding behind an
         // argument looks like from the outside.
         RoundOrders orders = TheRun.Orders();
 
@@ -156,15 +156,15 @@ public class RunTests
         //
         // OBSERVED: charge a leak one health per creep rather than its price --
         // `cost += leaked[index]` in Run.LeakCost. The round assertion goes red,
-        // 485 against 40, and the pool that was meant to be worth three waves of
+        // 383 against 40, and the pool that was meant to be worth three waves of
         // average creep value becomes worth thirty-seven.
         UnitTypeTable types = TheRun.UnkillableTypes();
         Run run = TheRun.Unstoppable(fieldSize: 4);
         RoundOrders orders = TheRun.Orders(types);
         int wave = TheRun.FullLeakCost(run.Costs, orders.Wave);
 
-        Assert.Equal((23 * 10) + (17 * 15), wave);
-        Assert.Equal(485, wave);
+        Assert.Equal((23 * 10) + (17 * 9), wave);
+        Assert.Equal(383, wave);
 
         // The pool is worth about three waves of average creep value: the third
         // concession is affordable and the fourth is the end of the run.
@@ -179,7 +179,7 @@ public class RunTests
             health.Add(run.Health);
         }
 
-        Assert.Equal(new[] { 1015, 530, 45, 0 }, health);
+        Assert.Equal(new[] { 1117, 734, 351, 0 }, health);
         Assert.Equal(RunEnding.OutOfHealth, run.Ending);
         Assert.Equal(3, run.Outcome.WavesSurvived);
         Assert.Equal(4, run.Round);
@@ -195,18 +195,18 @@ public class RunTests
         //
         // Two fields of ten on one seed, fought with a table nothing can kill,
         // so every wave leaks in full and each pairing costs exactly what the
-        // wave it faced cost. Ten opponents sending the 485 wave cost 485; a
+        // wave it faced cost. Ten opponents sending the 383 wave cost 383; a
         // field split between that wave and a 100 wave costs something strictly
         // between the two, which is what neither the sum, the largest nor the
         // smallest of them can be.
         //
         // OBSERVED: drop the division in Run.Advance and record the sums. The
-        // uniform assertion goes red, 485 against 4850, and the unstoppable run
+        // uniform assertion goes red, 383 against 3830, and the unstoppable run
         // in the test above dies inside its first round instead of its fourth.
         //
         // OBSERVED: keep the largest of the K instead -- `taken = one *
         // field.Length > taken ? one * field.Length : taken;` in Run.Advance.
-        // The lopsided assertion goes red at 485, outside the range 101 to 484:
+        // The lopsided assertion goes red at 383, outside the range 101 to 382:
         // a field is only ever as costly as its worst member, and the nine
         // others in it stop counting for anything.
         UnitTypeTable types = TheRun.UnkillableTypes();
@@ -214,11 +214,11 @@ public class RunTests
         RoundOrders heavy = TheRun.Orders(types, 6, 6);
         RoundOrders light = TheRun.Orders(types, 6, 1);
 
-        Assert.Equal(485, TheRun.FullLeakCost(TheRuleset.Costs(), heavy.Wave));
+        Assert.Equal(383, TheRun.FullLeakCost(TheRuleset.Costs(), heavy.Wave));
         Assert.Equal(100, TheRun.FullLeakCost(TheRuleset.Costs(), light.Wave));
 
-        Assert.Equal(485, TheRun.Against(types, orders, heavy).LeakCostTaken);
-        Assert.InRange(TheRun.Against(types, orders, heavy, light).LeakCostTaken, 101, 484);
+        Assert.Equal(383, TheRun.Against(types, orders, heavy).LeakCostTaken);
+        Assert.InRange(TheRun.Against(types, orders, heavy, light).LeakCostTaken, 101, 382);
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public class RunTests
         Assert.Equal(RunEnding.OutOfWaves, run.Ending);
         Assert.Equal(0, run.Health);
         Assert.Equal(3, run.Outcome.WavesSurvived);
-        Assert.All(run.Outcome.Rounds, round => Assert.Equal(485, round.LeakCostTaken));
+        Assert.All(run.Outcome.Rounds, round => Assert.Equal(383, round.LeakCostTaken));
     }
 
     [Fact]

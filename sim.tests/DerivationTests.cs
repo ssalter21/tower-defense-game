@@ -179,7 +179,7 @@ public class DerivationTests
         Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
         Assert.NotEqual(hash, Retuned(original, "health       1500", "health       1501"));
         Assert.NotEqual(hash, Retuned(original, "slots           2         1", "slots           3         1"));
-        Assert.NotEqual(hash, Retuned(original, "offering        2         3", "offering        4         3"));
+        Assert.NotEqual(hash, Retuned(original, "offering        3         3", "offering        4         3"));
         Assert.NotEqual(hash, Retuned(original, "snapshot       10        25", "snapshot       10        26"));
 
         // Nothing that is not a number moved. Each of these changes the file
@@ -419,7 +419,7 @@ public class DerivationTests
         TowerLayout layout = TowerLayout.Parse("fingerprint defense", FingerprintDefense, types);
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
-        var match = new Match(map, layout, wave, FingerprintSeed);
+        var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
         Hash64 fingerprint = Hash64.Start("rule-fingerprint/1").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)

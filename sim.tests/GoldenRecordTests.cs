@@ -171,7 +171,7 @@ public class GoldenRecordTests
         // and "state CA3F66473C4B975D" to "state 0123456789ABCDEF" reddens the
         // second. Without watching those, a Contains against a file nobody
         // checks is a test that passes because the substring is short.
-        MatchResult result = Golden(version).Replay(PinnedTypes(version)).Resolve();
+        MatchResult result = Golden(version).Replay(PinnedTypes(version), TheRuleset.Committed()).Resolve();
         string committed = File.ReadAllText(RepoLayout.GoldenResultFile(version));
 
         Assert.Contains(
@@ -210,7 +210,7 @@ public class GoldenRecordTests
         UnitTypeTable tampered = UnitTypeTable.Parse("tampered pinned table", WithoutItsLastType(pinned));
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered));
+            Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered, TheRuleset.Committed()));
 
         Assert.Equal("content hash", thrown.Gate);
     }
@@ -244,8 +244,8 @@ public class GoldenRecordTests
         Assert.Equal(TheMatch.MapHandle, current.Ghost.MapHandle);
         Assert.NotEqual(old.GhostId, current.GhostId);
 
-        Match one = old.RestageUnderCurrentRules(types).Match;
-        Match other = current.RestageUnderCurrentRules(types).Match;
+        Match one = old.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
+        Match other = current.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
 
         while (!one.IsFinished || !other.IsFinished)
         {

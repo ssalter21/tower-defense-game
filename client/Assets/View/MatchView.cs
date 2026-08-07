@@ -74,6 +74,8 @@ namespace View
 
         private UnitTypeTable _types;
 
+        private Ruleset _rules;
+
         private Material _projectileMaterial;
 
         private Transform _creepParent;
@@ -147,6 +149,7 @@ namespace View
         /// </summary>
         public void Begin(
             HexMap map,
+            Ruleset rules,
             UnitTypeTable types,
             TowerLayout layout,
             WaveScript wave,
@@ -154,6 +157,7 @@ namespace View
             MatchArt art)
         {
             if (map is null) throw new ArgumentNullException(nameof(map));
+            if (rules is null) throw new ArgumentNullException(nameof(rules));
             if (layout is null) throw new ArgumentNullException(nameof(layout));
             if (wave is null) throw new ArgumentNullException(nameof(wave));
 
@@ -161,9 +165,10 @@ namespace View
             _art = art ?? throw new ArgumentNullException(nameof(art));
 
             // Kept so a seek can build the match again from nothing but these.
-            // A seek re-simulates, so these four are the whole of what the view
+            // A seek re-simulates, so these five are the whole of what the view
             // has to remember about a match -- there is no cache below them.
             _map = map;
+            _rules = rules;
             _layout = layout;
             _wave = wave;
             _seed = seed;
@@ -184,7 +189,7 @@ namespace View
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
-            FinalTick = new Match(map, layout, wave, seed).Resolve().FinalTick;
+            FinalTick = new Match(map, rules, layout, wave, seed).Resolve().FinalTick;
 
             // Starting a match and seeking to its first tick are the same
             // thing, so they are the same code. Nothing about a seek is a
@@ -301,7 +306,7 @@ namespace View
         }
 
         /// <summary>
-        /// Builds the match again from the four things <see cref="Begin"/>
+        /// Builds the match again from the five things <see cref="Begin"/>
         /// remembered, runs it to <paramref name="tick"/> in silence, and draws
         /// the result. The one place a match ever starts.
         /// </summary>
@@ -313,7 +318,7 @@ namespace View
                     nameof(tick), "There is no tick before the first one.");
             }
 
-            Match = new Match(_map, _layout, _wave, _seed);
+            Match = new Match(_map, _rules, _layout, _wave, _seed);
             Match.Advance(tick);
 
             // No previous snapshot, because the tick before this one was not

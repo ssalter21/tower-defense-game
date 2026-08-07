@@ -73,7 +73,8 @@ namespace Tests.EditMode
 
             // Constructing it is the assertion: every load-time invariant in the
             // simulation is an unconditional throw.
-            var match = new Sim.Match(StreamingContent.ReadMap(), defense, wave, 1);
+            var match = new Sim.Match(
+                StreamingContent.ReadMap(), StreamingContent.ReadRuleset(), defense, wave, 1);
 
             Assert.That(match.Tick, Is.EqualTo(0));
         }
@@ -107,7 +108,8 @@ namespace Tests.EditMode
             // fires. Asserting the returned match is on tick zero would be
             // asserting about a freshly constructed object, which is true
             // whatever the gate did — a check that cannot fail.
-            Assert.DoesNotThrow(() => record.Replay(StreamingContent.ReadUnitTypes()));
+            Assert.DoesNotThrow(
+                () => record.Replay(StreamingContent.ReadUnitTypes(), StreamingContent.ReadRuleset()));
 
             // The floor is drawn from the record's inlined grid, so this is the
             // check that the playfield a human looks at is still the one

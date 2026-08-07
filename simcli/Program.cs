@@ -37,13 +37,13 @@ public static class Program
     {
         "Sim.Cli -- one match, played headless.",
         string.Empty,
-        "  run    --bundle <file> --units <file> [--out <directory>]",
+        "  run    --bundle <file> --units <file> --rules <file> [--out <directory>]",
         string.Empty,
         "         Plays the bundle to the end and prints the result and the landmarks.",
         "         With --out, writes " + TraceFileName + " and " + LandmarkFileName + " there.",
         string.Empty,
-        "  record --map <file> --units <file> --defense <file> --wave <file>",
-        "         --seed <number> --out <file> [--map-handle <number>]",
+        "  record --map <file> --units <file> --rules <file> --defense <file>",
+        "         --wave <file> --seed <number> --out <file> [--map-handle <number>]",
         string.Empty,
         "         Records the content as one self-contained replay bundle, having",
         "         first read it back and played it. Nothing is written if it will",
@@ -101,14 +101,14 @@ public static class Program
         switch (args[0])
         {
             case "run":
-                return Run(Arguments.Parse("run", args, 1, new[] { "bundle", "units", "out" }));
+                return Run(Arguments.Parse("run", args, 1, new[] { "bundle", "units", "rules", "out" }));
 
             case "record":
                 return Record(Arguments.Parse(
                     "record",
                     args,
                     1,
-                    new[] { "map", "units", "defense", "wave", "seed", "out", "map-handle" }));
+                    new[] { "map", "units", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
@@ -125,8 +125,9 @@ public static class Program
         // compiled image to keep it that way.
         byte[] bundle = File.ReadAllBytes(arguments.Required("bundle"));
         string units = File.ReadAllText(arguments.Required("units"));
+        string rules = File.ReadAllText(arguments.Required("rules"));
 
-        HeadlessRun run = HeadlessRun.Of(bundle, units);
+        HeadlessRun run = HeadlessRun.Of(bundle, units, rules);
 
         Report(run);
 
@@ -152,6 +153,7 @@ public static class Program
         (byte[] bytes, HeadlessRun proof) = Recording.Of(
             File.ReadAllText(arguments.Required("map")),
             File.ReadAllText(arguments.Required("units")),
+            File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("defense")),
             File.ReadAllText(arguments.Required("wave")),
             arguments.RequiredUnsigned("seed"),

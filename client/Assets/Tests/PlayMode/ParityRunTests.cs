@@ -100,7 +100,7 @@ namespace Tests.PlayMode
             // dropped -- the view builds its own, because a view that cannot
             // build a match cannot seek -- so what this line buys is the
             // refusal, and the refusal is the point.
-            record.Replay(types);
+            record.Replay(types, StreamingContent.ReadRuleset());
 
             MatchView view = BeginTheRecordedMatch(record, types);
 
@@ -273,6 +273,7 @@ namespace Tests.PlayMode
             TheMatchOnScreen.Begin(
                 Spawn(GetType().Name),
                 record.Map,
+                StreamingContent.ReadRuleset(),
                 types,
                 record.Ghost.ToLayout(types),
                 record.Wave.ToScript(types),

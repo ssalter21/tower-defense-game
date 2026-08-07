@@ -394,7 +394,15 @@ namespace Sim
         /// </summary>
         private int LeakCost(WaveScript wave, TowerLayout defense, int round, int opponent, Side side)
         {
-            var match = new Match(_map, defense, wave, MatchSeed(round, opponent, side));
+            // Only this run's own wave can carry a game changer anybody here
+            // knows about: what is fielded is a fact about the sender's
+            // unlocks, and the pool is stored orders rather than stored runs,
+            // so nothing coming the other way says which of its bodies was one.
+            ShotBonus bonuses = side == Side.Attacking
+                ? ShotBonus.Fielded(wave, defense, Unlocks, Schedule)
+                : ShotBonus.None;
+
+            var match = new Match(_map, _rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
             match.Resolve();
 
             IReadOnlyList<int> leaked = match.LeakedByOrder;

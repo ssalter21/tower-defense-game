@@ -158,7 +158,7 @@ public class LandmarkTests
 
         Assert.Equal(4, hitscanOnly.Count);
 
-        var match = new Match(TheMatch.Map(), hitscanOnly, TheMatch.Wave(types), TheMatch.Seed);
+        var match = new Match(TheMatch.Map(), TheRuleset.Committed(), hitscanOnly, TheMatch.Wave(types), TheMatch.Seed);
         var landmarks = new Landmarks();
 
         while (!match.IsFinished)

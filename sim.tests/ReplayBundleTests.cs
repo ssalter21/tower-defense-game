@@ -145,7 +145,7 @@ public class ReplayBundleTests
         // whole skeleton is built around.
         UnitTypeTable types = TheMatch.Types();
         MatchResult result = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.BundleFile))
-            .Replay(types)
+            .Replay(types, TheRuleset.Committed())
             .Resolve();
 
         Assert.Equal(TheMatch.LeakedInTheCommittedRun, result.Leaked);

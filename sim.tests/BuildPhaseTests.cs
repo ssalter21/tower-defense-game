@@ -8,10 +8,9 @@ namespace Sim.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>The draw assertions are fought over a wider roster than the committed
-/// one.</b> Two creeps against two options makes every round's offering the
-/// whole roster, which is a claim about the content rather than about the draw
-/// -- see <see cref="TheBuild"/>.
+/// <b>The draw assertions are fought over the committed roster.</b> Six walkers
+/// against three ordinary options is what makes a menu a draw rather than the
+/// whole roster read back -- see <see cref="TheBuild"/>.
 /// </para>
 /// <para>
 /// <b>Every refusal is asserted by name</b>, because a suite that only asserted
@@ -50,9 +49,9 @@ public class BuildPhaseTests
         // a round's offering early is asserted here as well as reading it
         // late: two players of one match hold the same private quantities
         // often enough that comparing them only to each other would miss it.
-        Run mine = TheBuild.Wide(waves: 4);
-        Run theirs = TheBuild.Wide(waves: 4);
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
+        Run mine = TheBuild.Fresh(waves: 4);
+        Run theirs = TheBuild.Fresh(waves: 4);
+        TowerLayout defense = TheBuild.Defense();
 
         Assert.Equal(TheBuild.Named(mine.Offering), TheBuild.Named(theirs.Offering));
 
@@ -77,7 +76,7 @@ public class BuildPhaseTests
         // still the same menu. The offering is a function of the seed and the
         // wave, so where in the run it is read from cannot enter it.
         Assert.Equal(
-            TheBuild.Named(TheBuild.Wide(waves: 4).OfferingAt(3)),
+            TheBuild.Named(TheBuild.Fresh(waves: 4).OfferingAt(3)),
             TheBuild.Named(mine.OfferingAt(3)));
     }
 
@@ -96,15 +95,15 @@ public class BuildPhaseTests
         // of the wave in Run.OfferingAt's Derived call. The first assertion
         // goes red saying ten waves of a run drew 7,5,6 every time, which is an
         // offering that is fresh per run rather than per round.
-        string[] menus = Menus(TheBuild.Wide());
+        string[] menus = Menus(TheBuild.Fresh());
 
         Assert.True(
             menus.Distinct().Count() > 1,
             "Ten waves of a run drew the same ordinary options every time: " + menus[0] + ".");
 
         // Same seed, same menus. A different seed, different menus.
-        Assert.Equal(menus, Menus(TheBuild.Wide()));
-        Assert.NotEqual(menus, Menus(TheBuild.Wide(seed: TheRun.Seed + 1)));
+        Assert.Equal(menus, Menus(TheBuild.Fresh()));
+        Assert.NotEqual(menus, Menus(TheBuild.Fresh(seed: TheRun.Seed + 1)));
     }
 
     [Fact]
@@ -119,8 +118,8 @@ public class BuildPhaseTests
         // filling.Menus[0].Anchor.Wave instead of wave in Offering.Draw. The
         // ordinary-round assertion goes red on IsAnchor, and every wave of the
         // run becomes an anchor with six things on it.
-        Run run = TheBuild.Wide();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.WideOrdinary);
+        Run run = TheBuild.Fresh();
+        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
         Assert.Equal(3, rules.OrdinaryOptionsPerRound);
         Assert.Equal(3, rules.GameChangersPerAnchor);
@@ -152,7 +151,7 @@ public class BuildPhaseTests
 
         // And a game changer is takeable off the merged list, which is the
         // whole of what "competes head to head" means.
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
+        TowerLayout defense = TheBuild.Defense();
 
         run.Advance(TheBuild.TakeFirst(run.Offering), defense);
         run.Advance(TheBuild.TakeFirst(run.Offering), defense);
@@ -178,9 +177,9 @@ public class BuildPhaseTests
         // 188, and unlocking becomes a second price nobody authored -- charged
         // on top of the wave, out of the same wallet, at the cost of a creep
         // nobody sent.
-        Run run = TheBuild.Wide(waves: 4);
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.WideOrdinary);
+        Run run = TheBuild.Fresh(waves: 4);
+        TowerLayout defense = TheBuild.Defense();
+        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
         Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
         Assert.Equal(0, run.Unlocks.Count);
@@ -218,9 +217,9 @@ public class BuildPhaseTests
         // assertion goes red, [2, 2, 3, 3, 3, ...] against
         // [2, 2, 2, 2, 2, ...], and the scarcity that stands in for a second
         // wallet stops widening at an anchor at all.
-        Run run = TheBuild.Wide();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.WideOrdinary);
-        AnchorSchedule schedule = TheSchedule.Committed(TheBuild.WideTypes());
+        Run run = TheBuild.Fresh();
+        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
+        AnchorSchedule schedule = TheSchedule.Committed();
 
         int[] widths = Enumerable.Range(1, 10).Select(wave => run.OfferingAt(wave).WaveSlots).ToArray();
 
@@ -253,8 +252,8 @@ public class BuildPhaseTests
         // refusal, and with it every round in this file that banked rather than
         // sent: leaving a slot empty stops being a position and becomes a
         // command nobody may write down.
-        Run run = TheBuild.Wide(waves: 3);
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
+        Run run = TheBuild.Fresh(waves: 3);
+        TowerLayout defense = TheBuild.Defense();
         Option first = run.Offering.Options[0];
 
         // One filled, one empty.
@@ -292,7 +291,7 @@ public class BuildPhaseTests
         // nothing -- no exception was thrown -- and every command naming an
         // option that was never offered silently unlocks whatever happened to
         // be drawn first.
-        Run run = TheBuild.Wide();
+        Run run = TheBuild.Fresh();
         Offering offering = run.Offering;
         int absent = offering.Options.Max(option => option.Id) + 1;
 
@@ -323,10 +322,10 @@ public class BuildPhaseTests
         // case is impossible. That is why the refusal is asserted by name --
         // the gate being gone reads as an internal contradiction rather than as
         // a creep the run never took.
-        Run run = TheBuild.Wide();
+        Run run = TheBuild.Fresh();
         Offering offering = run.Offering;
         Option taken = offering.Options[0];
-        int never = TheBuild.WideTypes().Types
+        int never = TheMatch.Types().Types
             .First(type => type.Role == UnitRole.Moving && type.Id != taken.TypeId)
             .Id;
 
@@ -354,7 +353,7 @@ public class BuildPhaseTests
         // OBSERVED: drop the width check in BuildPhase.Resolve. This goes red
         // having caught nothing -- no exception was thrown -- and a wave-1
         // build phase fills three slots in a round the schedule gave two.
-        Run run = TheBuild.Wide();
+        Run run = TheBuild.Fresh();
         Offering offering = run.Offering;
         Unlocks everything = Everything(offering);
 
@@ -399,7 +398,7 @@ public class BuildPhaseTests
         // 100", from a purse already part-spent on the earlier slots of a wave
         // that was never legal -- and its own text says that reaching there
         // means an unaffordable command was let through.
-        Run run = TheBuild.Wide();
+        Run run = TheBuild.Fresh();
         Offering offering = run.Offering;
         Unlocks everything = Everything(offering);
         int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
@@ -443,7 +442,7 @@ public class BuildPhaseTests
         // repeated-creep phase builds a wave with two orders on the same
         // (tick 0, type) key, which is a wave no loader in this repository
         // would accept back.
-        Run run = TheBuild.Wide();
+        Run run = TheBuild.Fresh();
         Offering offering = run.Offering;
         Unlocks everything = Everything(offering);
         int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
@@ -508,18 +507,20 @@ public class BuildPhaseTests
         // about the ratio, the roster or the file either was authored in.
         SimulationException thrown = Assert.Throws<SimulationException>(
             () => Offering.Draw(
-                TheBuild.RulesOffering(3),
+                TheBuild.RulesOffering(7),
                 TheMatch.Types(),
                 TheSchedule.Committed(),
                 TheRun.Fresh(waves: 1).Filling,
                 1,
                 TheRun.Seed));
 
-        Assert.Contains("out of a roster of 2 creeps", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("out of a roster of 6 creeps", thrown.Message, StringComparison.Ordinal);
 
-        // Two options out of two creeps is exactly enough, which is what the
-        // committed content is authored at.
-        Assert.Equal(2, TheBuild.Committed(waves: 1).Offering.Count);
+        // Six options out of six walkers is exactly enough, and it is the whole
+        // roster on one menu -- which is the bound rather than the tuning. The
+        // committed ratio sits at half of it.
+        Assert.Equal(6, TheBuild.Fresh(waves: 1, ordinary: 6).Offering.Count);
+        Assert.Equal(TheBuild.Ordinary, TheRuleset.Committed().OrdinaryOptionsPerRound);
     }
 
     [Fact]
@@ -532,14 +533,14 @@ public class BuildPhaseTests
         // instead of rules.OrdinaryOptionsPerRound. The ratio assertion goes
         // red, 4 against 3, and the number that decides whether the merged menu
         // is a real trade stops being a sweep target.
-        Assert.Equal(3, TheBuild.Wide(waves: 1, ordinary: 3).Offering.Count);
-        Assert.Equal(4, TheBuild.Wide(waves: 1, ordinary: 4).Offering.Count);
-        Assert.Equal(5, TheBuild.Wide(waves: 1, ordinary: 5).Offering.Count);
+        Assert.Equal(3, TheBuild.Fresh(waves: 1, ordinary: 3).Offering.Count);
+        Assert.Equal(4, TheBuild.Fresh(waves: 1, ordinary: 4).Offering.Count);
+        Assert.Equal(5, TheBuild.Fresh(waves: 1, ordinary: 5).Offering.Count);
 
         // And the widths move with the schedule's anchors rather than with a
         // series authored beside them.
-        UnitTypeTable types = TheBuild.WideTypes();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.WideOrdinary);
+        UnitTypeTable types = TheMatch.Types();
+        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
         AnchorSchedule moved = AnchorSchedule.Parse(
             TheSchedule.Replace(TheSchedule.CommittedText(), "anchor        6     2", "anchor        5     2"),
@@ -570,14 +571,14 @@ public class BuildPhaseTests
         // OBSERVED: open the purse at Purse.Empty in the Run constructor. The
         // opening assertion goes red, 100 against 0, and the wave-1 build phase
         // below is refused for having no credit in this economy.
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.WideOrdinary);
-        Run run = TheBuild.Wide(waves: 2);
+        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
+        Run run = TheBuild.Fresh(waves: 2);
 
         Assert.Equal(100, rules.StartingPurseSauce);
         Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
 
         Option first = run.Offering.Options[0];
-        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense: TheBuild.Defense(TheBuild.WideTypes()));
+        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense: TheBuild.Defense());
 
         Assert.Equal(1, run.Sent[0].Wave.TotalUnits);
     }
@@ -596,9 +597,9 @@ public class BuildPhaseTests
         // assertion goes red, and what a run took becomes indistinguishable
         // from the list of creeps it may send -- at which point nothing can say
         // which of two game changers over one body is on the map.
-        Run run = TheBuild.Wide();
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
-        AnchorSchedule schedule = TheSchedule.Committed(TheBuild.WideTypes());
+        Run run = TheBuild.Fresh();
+        TowerLayout defense = TheBuild.Defense();
+        AnchorSchedule schedule = TheSchedule.Committed();
 
         run.Advance(TheBuild.TakeFirst(run.Offering), defense);
         run.Advance(TheBuild.TakeFirst(run.Offering), defense);
@@ -637,8 +638,8 @@ public class BuildPhaseTests
         // Run.Advance(BuildPhase, TowerLayout). The unlock-count assertion goes
         // red, 10 against 0, and every round of the run decides against a run
         // that has never taken anything and never spent a coin.
-        Run run = TheBuild.Wide();
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
+        Run run = TheBuild.Fresh();
+        TowerLayout defense = TheBuild.Defense();
         var spent = new List<int>();
 
         while (!run.IsOver)
@@ -686,8 +687,8 @@ public class BuildPhaseTests
         // beneath it. The first half stays green and the second goes red, 0
         // against 1, because the defense is the last thing that can refuse a
         // round and it is the only one the earlier mutation leaves in place.
-        TowerLayout defense = TheBuild.Defense(TheBuild.WideTypes());
-        Run over = TheBuild.Wide(waves: 1);
+        TowerLayout defense = TheBuild.Defense();
+        Run over = TheBuild.Fresh(waves: 1);
 
         over.Advance(TheBuild.TakeFirst(over.Offering), defense);
         Assert.True(over.IsOver);
@@ -708,7 +709,7 @@ public class BuildPhaseTests
         Assert.Equal(unlocks, over.Unlocks.Count);
 
         // And a round with no defense standing is refused the same way.
-        Run alive = TheBuild.Wide(waves: 2);
+        Run alive = TheBuild.Fresh(waves: 2);
         Option first = alive.Offering.Options[0];
 
         Assert.Throws<ArgumentNullException>(
@@ -717,7 +718,7 @@ public class BuildPhaseTests
                 defense: null!));
 
         Assert.Equal(0, alive.Unlocks.Count);
-        Assert.Equal(TheBuild.RulesOffering(TheBuild.WideOrdinary).StartingPurseSauce, alive.Purse.Sauce);
+        Assert.Equal(TheBuild.RulesOffering(TheBuild.Ordinary).StartingPurseSauce, alive.Purse.Sauce);
     }
 
     /// <summary>Every creep on a round's menu, unlocked, so a slot assertion is about the slot.</summary>

@@ -98,15 +98,16 @@ public class GoldenTraceTests
         UnitTypeTable types = TheMatch.Types();
         UnitTypeTable slower = UnitTypeTable.Parse(
             File.ReadAllText(RepoLayout.UnitsFile).Replace(
-                "unit   3   bolt    placed  0      0      3200   6 ",
-                "unit   3   bolt    placed  0      0      3200   7 ",
+                "unit   3   bolt     placed  0      0      3200   6 ",
+                "unit   3   bolt     placed  0      0      3200   7 ",
                 StringComparison.Ordinal));
 
         Assert.Equal(6, types.ById(3).CooldownTicks);
         Assert.Equal(7, slower.ById(3).CooldownTicks);
 
-        Match one = new(TheMatch.Map(), TheMatch.Layout(types), TheMatch.Wave(types), TheMatch.Seed);
-        Match other = new(TheMatch.Map(), TheMatch.Layout(slower), TheMatch.Wave(slower), TheMatch.Seed);
+        Ruleset rules = TheRuleset.Committed();
+        Match one = new(TheMatch.Map(), rules, TheMatch.Layout(types), TheMatch.Wave(types), TheMatch.Seed);
+        Match other = new(TheMatch.Map(), rules, TheMatch.Layout(slower), TheMatch.Wave(slower), TheMatch.Seed);
 
         int agreed = 0;
         int caught = 0;

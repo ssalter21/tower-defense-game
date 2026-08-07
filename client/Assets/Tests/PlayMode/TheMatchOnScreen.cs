@@ -43,6 +43,7 @@ namespace Tests.PlayMode
             return Begin(
                 host,
                 StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
                 types,
                 StreamingContent.ReadDefense(types),
                 StreamingContent.ReadWave(types),
@@ -68,13 +69,14 @@ namespace Tests.PlayMode
         public static MatchView Begin(
             GameObject host,
             HexMap map,
+            Ruleset rules,
             UnitTypeTable types,
             TowerLayout defense,
             WaveScript wave,
             ulong seed)
         {
             var view = host.AddComponent<MatchView>();
-            view.Begin(map, types, defense, wave, seed, Art());
+            view.Begin(map, rules, types, defense, wave, seed, Art());
 
             return view;
         }

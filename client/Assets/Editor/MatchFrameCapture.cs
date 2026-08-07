@@ -94,6 +94,7 @@ namespace View.Editor
 
                 MatchView view = root.BeginMatch(
                     StreamingContent.ReadUnitTypes(),
+                    StreamingContent.ReadRuleset(),
                     record,
                     art: LoadArt());
 
