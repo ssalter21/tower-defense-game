@@ -496,11 +496,21 @@ than wave 3's, matching the wave widening and the sauce curve. A flat pool could
 unit at wave 3, where nothing yet answers it.
 
 **Exactly one anchor per shape opens a hard counter, and it is wave 9.** The other two are extreme points on
-axes that already exist — a very fast unit, a very tough one — answered by generally competent defense. Wave
-9's is the flying-units case: without the specific answer, existing towers do nothing at all. One is enough to
-make preparation sharp; three would make a run turn on a single missed buy. *How* a counter works — armour
-formula, matrix width — is [question 4's](#the-five-decisions-that-block-step-1), not this section's; all that
-is settled here is that the schedule may **require** one.
+axes that already exist — a very fast unit, a very tough one — answered by generally competent defense. One is
+enough to make preparation sharp; three would make a run turn on a single missed buy. *How* a counter works —
+armour formula, matrix width — is [question 4's](#the-five-decisions-that-block-step-1), not this section's;
+all that is settled here is that the schedule may **require** one.
+
+> ⚠️ **Amended 7 August 2026: "hard" now reads "steep".** This section wrote wave 9's anchor as the
+> flying-units case — *without the specific answer, existing towers do nothing at all*.
+> [Question 4](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) then declined the
+> binary gate that would have made that literally true, and put counters on a `bonusVsTag` layer instead, so
+> the anchor is a **steep gradient rather than a wall**: on the decided ruleset a prepared tower kills it in
+> nine shots and an unprepared one in thirty-six. **4.00×.**
+>
+> The schedule is unchanged in every other respect. What moved is only that a player who mis-prepares for
+> wave 9 is *punished* rather than *eliminated* — which is the same argument the round-robin makes about a bad
+> draw, and consistent with a ruleset in which **nothing is binary**.
 
 **Wave slots grow on the same cadence, and only there.** [§3](#one-purse--restored-6-august-2026) makes wave
 slots the scarcity that replaces a second wallet. They start at 2 and gain one at each anchor — **2, 2, 3, 3,
@@ -517,6 +527,71 @@ Decided in [#73](https://github.com/ssalter21/tower-defense-game/issues/73), whi
 number here — three anchors, three options, slot widths, the 3/6/9 placement — is priced against the one-hex
 corridor that [seam 9's board](#the-board-is-a-maze-again--reversed-6-august-2026) is removing, and is a step 4
 sweep target rather than an argument.
+
+### How a shot resolves — a cycle and one expression — *decided 7 August 2026*
+
+**Three attack types, three armour types, and one line of arithmetic.**
+
+| Attack ↓ / Armour → | Swift | Armoured | Arcane |
+|---|---|---|---|
+| **Pierce** | 140% | 70% | 100% |
+| **Impact** | 70% | 100% | 140% |
+| **Magic** | 100% | 140% | 70% |
+
+```
+dealt = (base + bonus) * cell / (100 + armour)      // one multiply, one divide
+if (dealt < 1) dealt = 1;                            // the floor
+```
+
+Every **row** and every **column** is a permutation of (70, 100, 140). That is what makes it a Latin square
+rather than merely a table: **no attack type is globally better and no armour type globally tougher**, every
+cell is reachable, and the whole thing fits in a player's head. A 2:1 spread means type moves shots-to-kill by
+exactly double — a real read, and never an unwinnable draw.
+
+**`k` is folded to 1, which is the part worth keeping.** The reduction shape is the one Warcraft 3 and League
+of Legends independently arrived at, whose property is that *effective health is linear in armour* so armour
+stacks without a cap. Setting its coefficient to 1 makes the authored number read as its own meaning: **one
+point of armour is one percent of base effective health.** Every bit of strength a larger coefficient would buy
+is bought instead by authoring a larger armour number, and the ruleset header loses a constant nobody can check
+by eye.
+
+**Hard counters do not come from this table.** They come from `bonusVsTag` — a per-anchor integer added to the
+base before typing and mitigation. That separation is why the matrix could stay narrow: *lean narrow* and *must
+express a counter* were never actually opposed, they were two constraints on two different layers that only
+looked opposed while both were pointed at the matrix. Because the bonus joins the hit rather than bypassing it,
+**a high-armour anchor blunts its own counter** — armour keeps meaning something against the thing built to
+kill it.
+
+> **The arithmetic eliminated more candidates than the argument did**, which is worth recording because it is
+> not how this document usually gets its answers.
+>
+> - **Warcraft 3's 40:1 is impossible here, not merely violent.** A 15-damage hit through a 5% cell is
+>   `15 × 5 / 100` = **zero** — the type chart deletes the hit before armour is consulted. A damage floor
+>   "rescues" that only by making every cell beneath it identical, at which point the table has stopped
+>   existing for small hits.
+> - **Flat subtraction is out with the number attached.** At armour 5 a five-archer volley of 5 damage each
+>   delivers **5** of its nominal 25; a single 25-damage cannon delivers **20**. Under the decided formula the
+>   volley and the cannon fall off *together* across the whole armour range. That is
+>   [the squad research's](research/towers-versus-placed-squads.md) quadratic, gone.
+> - **The two-step and fused forms of the same algebra are different functions.** `d × cell / 100` then
+>   `× 100 / (100 + armour)` composes to `d × cell / (100 + armour)` — but across 411,600 swept triples they
+>   disagree on **42.7%**, and the fused form is never lower because it truncates once instead of twice. This
+>   is [ADR-0001's](adr/0001-fixed-point-arithmetic.md) warning arriving in practice, and it is why the
+>   expression is written down here rather than left to whoever implements it.
+>
+> ⚠️ **And the finding nobody went looking for: resolution is bought with the size of the numbers.** At the
+> scale `content/units.txt` ships today, a 9-damage bolt deals **8 damage for eleven consecutive points of
+> armour** — armour a player cannot feel and a sweep cannot tune. That is the integer grid being coarser than
+> the design, not a flaw in any formula. **So every damage and health number in the game is multiplied by
+> ten**, which restores it without touching the arithmetic. It costs one commit and a regenerated golden trace
+> at step 1; after step 6 it would cost a content migration and a retired ghost pool.
+
+Decided in [#75](https://github.com/ssalter21/tower-defense-game/issues/75), which holds the detail and the
+[arithmetic that produced it](prototypes/damage-matrix-arithmetic.py). The **shape** here survives the maze;
+the **constants** do not. The Latin square, the fused expression, the ×10 scale and the floor are all
+independent of geometry, but the cell values and armour numbers are priced against the one-hex corridor that
+[seam 9's board](#the-board-is-a-maze-again--reversed-6-august-2026) is removing, and are step 4 sweep targets
+rather than arguments.
 
 ### The options are the same for everyone — *the Mechabellum move*
 
@@ -759,7 +834,7 @@ Steps 1 to 4 need no engine, no licence and no editor. They run from a shell.
 
 | # | Step | What it delivers | Size |
 |---|---|---|---|
-| 1 | **Cost column, one purse, wave slots, and income between waves** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file | Small |
+| 1 | **Cost column, one purse, wave slots, income between waves — and the damage model** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file. **The ×10 rescale and the attack/armour columns land here too** — one commit and a regenerated golden trace now, a content migration and a retired ghost pool after step 6. See [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) | Small |
 | 2 | **A run is N waves, with a build phase between, recorded as a command stream** | `Match` gains a lifecycle; the record gains `(wave index, decision)` pairs, which is what a build phase *is* from the record's point of view; `simcli` gains a mode that plays a command file | Medium — the real structural work |
 | 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small — see [§5](#5-how-it-is-balanced) |
@@ -828,9 +903,9 @@ it already did, and the right-hand column links to it rather than restating it. 
 | # | Question | What is already known |
 |---|---|---|
 | 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called sauce. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
-| 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
+| 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9 — *softened to a **steep** counter, 4.00×, by [#75](https://github.com/ssalter21/tower-defense-game/issues/75)*. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
 | 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in sauce and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
-| 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
+| 4 | ~~How wide is the damage-type matrix, and what is the armour formula?~~ **✅ Decided** | **Resolved 7 August 2026 by [#75](https://github.com/ssalter21/tower-defense-game/issues/75).** A 3×3 Latin square with cells in {70, 100, 140} — a 2:1 spread — and `dealt = (base + bonus) × cell / (100 + armour)`, floor 1. `k` folds to 1, so one point of armour is one percent of base effective health. Hard counters live on a separate `bonusVsTag` layer, which is why the matrix could stay narrow. **Every damage and health number in the game is multiplied by ten**, because integer resolution is bought with the size of the numbers. Detail in [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) |
 | 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
 
 ### The eight seams, and where they land
@@ -915,8 +990,15 @@ does not get to argue with.** *Added 7 August 2026.* First, a **counter must exi
 before the anchor that needs it** — a roster where the answer to wave 9 first appears at wave 9 turns
 preparation into a forced buy and deletes the axis the schedule was built to restore. Second, the schedule
 signs a content bill: **nine game changer creeps per shape**, tiered across the three anchors, of which one per
-shape must open a genuine hard counter rather than an extreme stat. That is on top of the flat roster step 3
+shape must open a genuine counter rather than an extreme stat. That is on top of the flat roster step 3
 builds, and it is the first place the roster's size is set by something other than taste.
+
+**And a third, from [question 4](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026).**
+*Added 7 August 2026.* Every unit the roster authors now carries an **attack type or an armour type** from a
+fixed three-way cycle, and a counter is a **`bonusVsTag` integer** rather than an immunity. Two consequences
+the roster does not get to argue with: the wave-9 anchor's counter is **steep, not absolute** — four times
+faster to kill, never impossible — and **every damage and health number is authored at ten times the scale the
+skeleton shipped**, because integer resolution is bought with the size of the numbers.
 
 ### 4 · The balance harness — *pulled forward to step 4*
 
@@ -1031,6 +1113,17 @@ answer to *"will this wave work"* is a **distribution rather than a result** sto
 becomes the literal shape of the data: the field of ten *is* the distribution, and it exists every round rather
 than being assembled out of a pool.
 
+**One amendment the same day, and it is not a reversal.**
+[#75](https://github.com/ssalter21/tower-defense-game/issues/75) softened
+[#73's](https://github.com/ssalter21/tower-defense-game/issues/73) *hard* counter at wave 9 to a **steep** one —
+4.00×, not infinite — by declining a binary damage gate and putting counters on a `bonusVsTag` layer instead.
+Recorded here rather than in the table above because nothing was overturned: the anchor schedule stands exactly
+as decided, and what changed is the strength of one thing it requires. It is listed because it makes a claim
+about the whole ruleset that is easier to see across three decisions than inside any one of them — **nothing
+here is binary.** Not the type chart, not the counter, not the damage floor. A player who reads the round wrong
+is punished at a steep rate and keeps playing, which is the same bargain the round-robin strikes over a bad
+draw.
+
 ---
 
 ## 10. Not yet specified
@@ -1055,11 +1148,12 @@ unblocked.
 
 ### The open questions
 
-> **Three of these are no longer unscheduled — they block step 1.** *How wide the damage-type matrix is*,
-> *what a run is*, and *whether there is a baseline wave* are marked **→ blocks step 1** below, and appear as a
-> checklist alongside the settled economy question from [§3](#one-purse--restored-6-august-2026) in
+> **Three of these were no longer unscheduled — they blocked step 1, and all three are now closed.** *How wide
+> the damage-type matrix is*, *what a run is*, and *whether there is a baseline wave* appeared as a checklist
+> alongside the settled economy question from [§3](#one-purse--restored-6-august-2026) in
 > [§8's five decisions](#the-five-decisions-that-block-step-1). **The detail stays here** and the checklist
 > there points back to it, so there is one description of each question and not two that can drift apart.
+> **One of the five remains open**: what the player gets to compute before they commit.
 
 - **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
   placement surface** — archers on a rampart running alongside the corridor — with squads that shoot, upgrade
@@ -1102,13 +1196,19 @@ unblocked.
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
   is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
-- **How wide the damage-type matrix should be, and what the armour formula is.** **→ blocks step 1.** Carried forward from Part V
-  §4.1, still open, still cheap to set on paper. Legion TD 2 runs 1.67:1, Element TD 2 runs 4:1, Warcraft 3
-  runs 40:1. Belongs to seam 3 or 4 when one of them reaches it — but the squad research has already
-  constrained it from an unexpected direction: **many-small-hits is punished quadratically by flat-subtraction
-  armour**, so that formula should be ruled out if squads exist at all, and the same finding argues for the
-  narrow end of the matrix. A presentation choice reaching back into the damage model is exactly the kind of
-  coupling seam 1 exists to catch early.
+- ~~**How wide the damage-type matrix should be, and what the armour formula is.**~~ **Closed 7 August 2026 by
+  [#75](https://github.com/ssalter21/tower-defense-game/issues/75) — a 3×3 Latin square at 2:1, and
+  `dealt = (base + bonus) × cell / (100 + armour)` with every number ×10.** See
+  [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026). Carried since Part V §4.1, and
+  it turned out to be the one question on the list that **arithmetic answered rather than argument**: Warcraft
+  3's 40:1 is impossible in an integer sim rather than merely violent, and flat subtraction is out with a
+  number attached. The squad research's steer — *lean narrow* — was followed, and the constraint that seemed to
+  oppose it (the anchor schedule needing a hard counter) turned out to be aimed at the wrong layer. What it
+  left open, and deliberately:
+  - **Which towers carry which attack type, and which creeps which armour type.** Content, and seam 3's. With
+    four unit types today the assignment is trivial and provisional.
+  - **The `bonusVsTag` magnitude per anchor.** 4.00× is a measured example, not a tuned value; it is a step 4
+    sweep target.
 - ~~**What a run is.**~~ **Closed 7 August 2026 by
   [#74](https://github.com/ssalter21/tower-defense-game/issues/74) — ten waves, a field of ten each round, a
   sauce-denominated health pool, and death.** See
