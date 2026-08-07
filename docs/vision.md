@@ -1,15 +1,17 @@
 # The Vision
 
-**The standing document** · 3 August 2026
+**The standing document** · 3 August 2026, last revised 7 August 2026
 
 > **What this game is, what it is not, and the order it gets built in.**
 >
 > Parts I to V were written to answer whether this game was worth making and what to make it with. They were
 > right about the machinery and wrong about the audience. This document fixes the destination, and where it
-> disagrees with any of the five, this document is current.
+> disagrees with any of the five — now archived in [`archive/`](archive/) — this document is current.
 >
 > It is deliberately larger than one effort. [§8](#8-the-build-order) sequences it, and each seam named there
 > is the subject of its own wayfinder map.
+>
+> **Every time it has changed its own mind is in [the decision log](decision-log.md)**, not edited away.
 
 ---
 
@@ -827,51 +829,16 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 | **IV** — can the dev rig and animate? | The KayKit-versus-Synty recommendation turns on this | **Closed by irrelevance.** KayKit ships animations; the question only mattered for Synty. |
 | **V** — the unit schema | One unit, two roles; levers as components; versioned vocabulary | **Stands, and is now load-bearing.** Seam 3 fills it in. |
 
-### And what this document overturns in itself
+The five live in [`archive/`](archive/) and each carries a banner saying what survived it.
 
-Three claims made above were written before the walking skeleton existed, and reading the finished skeleton
-changed them. Recorded here rather than quietly edited, because a standing document that revises itself
-silently is one nobody can trust the age of.
+### And where this document has changed its own mind
 
-| Where | What it said | What is true now |
-|---|---|---|
-| **§5** — the harness | Sweep thousands of matches **overnight** | **Off by orders of magnitude.** `BudgetTests` measures the committed match at 2.75 ms — ~360 matches a second on one core. A sweep is a minute, so the harness is a `simcli` mode and a CSV, and it moves *before* the roster instead of after it. |
-| **§8** — the seams | Eight seams ordered by what depends on what; the match format decided in full first | **Reordered, not repealed.** A dependency order does not say what is cheapest to *learn*, and the one untested claim in the whole design is that this is fun. The seams stand as destinations; the sequence in §8 is how they are approached. |
-| **§8 seam 4** — the harness again | Depends on seams 1 and 3 | **Independent of both.** It needs a purse and a roster of any size, not a finished ruleset. |
+**In [the decision log](decision-log.md)**, which is where every reversal is recorded rather than quietly
+edited away — including the six of 6 August 2026 that brought back the maze, made the map generated and
+rotating, anchored wave variance, made the offering public, stopped the round-robin showing you a board, and
+took the purse to two and back again inside a day.
 
-### And what was reversed on 6 August 2026
-
-Six changes, made after [the skill note](research/fun-and-skill-expression.html) audited which of the genre's
-skill axes this design could still charge the player for. Four of the six exist to buy back an axis the design
-had deleted or inverted.
-
-| Where | What it said | What is true now | Why |
-|---|---|---|---|
-| **§3** — one purse | A single currency; the sharp decision the game is built around | **Reversed, then reversed back the same day — see the note below.** Two purses stood for a matter of hours; the settled answer is **one purse**, with the payback supplied by performance rather than by a second currency | A purchase that only subtracts has no timing question attached, and timing is what players practise |
-| **§3 / §11** — the corridor | One hex wide, never branches; mazing and pathfinding permanently out of scope | **Reversed. A maze, deliberately hard to solve, at several elevation levels**, with elevation granting range | Geometry is the axis the genre was popularised on, and it was the largest deletion in the design |
-| **§3** — send ordering | Rescued by the corridor, which *is* a single-file column | **Weakened, not repealed.** A branching map dilutes order; the map must now be designed to preserve it | Consequence of the reversal above, recorded rather than discovered later |
-| **§3** — wave composition | The player composes the whole wave; a baseline wave was an open question | **Anchored.** A public schedule injects major variance at fixed, known waves | Without a public constant, preparation had nothing to be a skill about |
-| **§3** — the offering | Not specified; the depth research ranked a private random offering third | **Public. Everyone sees the same options**, Mechabellum-style | A send is only a read if both players know the menu — and it makes the shop a second-order decision |
-| **§2 / §3** — the async ghost | Opponents are drawn and their stored defense is what you compose against | **The round-robin no longer shows you a board.** It pays you in statistics over the field instead | A frozen defense cannot react or lie, so inspecting it produces a lookup rather than a read |
-| **§2 / §3** — the map | One authored corridor, implicitly permanent | **Generated, and rotating daily or weekly**, selected by sweeping candidates for outcome spread | A hard map buys time; an unseen one buys it permanently — and the harness can already measure which is which |
-| **Bottom line** | "the creeps you can send determined by the towers you chose" | **Dropped from the bottom line, still live in §3 as a direction.** A public shared offering is in tension with a private tower-gated pool, and seam 1 now owns the reconciliation | Recorded rather than silently cut |
-
-#### And the purse went back, later the same day
-
-The first row above is a round trip, and it is left visible on purpose. One purse was reversed to two in the
-morning and back to one by evening, decided in
-[#72](https://github.com/ssalter21/tower-defense-game/issues/72).
-
-**Nothing was wrong with the reasoning that produced two purses; it was answering a question that turned out to
-have a cheaper answer.** The objection on file was never "one wallet is bad" — it was "attacking must pay you
-back". A second currency pays that back through the economy's *structure*. Percentile bands pay it back through
-the wave's *result*, and they cost one income rule instead of a whole parallel wallet with its own generator,
-its own prices and its own balance surface.
-
-Worth keeping for its own sake: **the two-purse decision survived less than a day of being written down, and
-cost nothing but a section.** That is the sequence in [§8](#8-the-build-order) working exactly as designed — a
-decision made on paper before any content exists is a decision that can be unmade for the price of editing a
-paragraph. Had it been reversed after step 3, it would have cost a roster, a cost column and a record format.
+It is a separate file for one reason: it grows every time a decision moves, and this document should not.
 
 ---
 
@@ -879,9 +846,9 @@ paragraph. Had it been reversed after step 3, it would have cost a roster, a cos
 
 In scope, headed toward the destination, not yet sharp enough to seam.
 
-### Research in flight
-
 ### Research landed
+
+**Nothing is in flight.** Every note commissioned against this section has come back.
 
 Three notes were commissioned against [§3's](#3-what-a-match-is) depth direction and the open question below.
 **All three are in.** They are decision inputs for seams 1, 3 and 7, and the match-format session is now
@@ -891,7 +858,7 @@ unblocked.
 |---|---|
 | ✅ **[Build depth](research/build-depth-in-tower-defense.md)** — *landed* | How TD games produce combinatorial depth. Verdict: two structurally different routes, and **only the generative one is simultaneously a depth mechanism, an accessibility mechanism, and enumerable by the harness**. The corridor kills **one of eleven** mechanisms, far less than feared; what "nothing persists" removes is the onboarding ramp, and the fix is to move it *inside the run* |
 | ✅ **[The attacking half](research/attack-composition-and-sending.md)** — *landed* | How sending is made deep. Verdict: seven mechanisms, five survive, **ordering is *strengthened* by the hex corridor**, and the income loop the genre is built on is the one the single purse takes away. The gating idea has **one thin precedent, since removed** |
-| ✅ **[Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html)** — *landed 6 Aug 2026* | Why the genre is fun, and where its skill expression lives. Verdict: six fun mechanisms, each of which **inverts into a known failure mode**; skill comes from **eight axes**, of which this design was deleting two, inverting one and leaving a fourth unanchored. **Four of the six reversals recorded in [§9](#and-what-was-reversed-on-6-august-2026) are answers to this note** |
+| ✅ **[Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html)** — *landed 6 Aug 2026* | Why the genre is fun, and where its skill expression lives. Verdict: six fun mechanisms, each of which **inverts into a known failure mode**; skill comes from **eight axes**, of which this design was deleting two, inverting one and leaving a fourth unanchored. **Four of the six reversals recorded in [the decision log](decision-log.md#6-august-2026--six-reversals) are answers to this note** |
 | ✅ **[Making the plan the game](research/planning-phase-and-simulated-stats.html)** — *landed 6 Aug 2026* | How to elevate the build phase, and what a fast deterministic sim can be spent on as design material rather than as tooling. The direction it feeds is [§12](#12-the-planning-phase-is-the-game) |
 | ✅ **[Towers, or placed squads?](research/towers-versus-placed-squads.md)** — *landed* | The open question below. Verdict: the aesthetic half is free and mostly already decided by Part IV §5; the mechanical half is one number, projectile volume, and it lands on `FlyProjectiles` rather than on target acquisition |
 
@@ -985,6 +952,11 @@ unblocked.
   one — and it is the same lever as the cadence, viewed from the other end.
 - **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those
   are one ladder or two is unresolved.
+- **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** Raised in
+  [Part III](archive/tech-stack-assessment.md) and never closed. **Current assumption: no — C# throughout.**
+  It bears on [seam 6](#6--the-social-layer), since a replay you can send someone who does not have the game is
+  a different artefact from one you watch in the client. Recorded here because it was the last open question
+  living outside this section.
 
 ## 11. Out of scope
 
@@ -1101,8 +1073,8 @@ tower defense has because no tower defense could afford it:
 
 Everything factual here is either established in Parts I to V, verifiable in this repository, or listed below.
 
-1. **Parts I–V** — [`docs/`](README.md). Their claims are inherited except where [§9](#9-what-this-overturns)
-   replaces them.
+1. **Parts I–V** — [`docs/archive/`](archive/). Their claims are inherited except where
+   [§9](#9-what-this-overturns) replaces them.
 2. **This repository** — `sim/` (deterministic Fix64 simulation, hex map, ghost record), `simcli/`,
    `client/Assets/` (Unity 6 URP view, KayKit imports), `tools/` (headless entry points),
    [`docs/sit-down.md`](sit-down.md). The walking skeleton is landed on `main`.
@@ -1118,24 +1090,24 @@ Everything factual here is either established in Parts I to V, verifiable in thi
    combination system is the target class of depth, not a specification. Under research.
 7. **Bloons TD 6** — the standing proof that legible-to-a-child and competitively deep are compatible, which
    §6's accessibility pillar depends on being true. Under research.
-6. **Super Auto Pets / Backpack Battles** — the per-round draw against a snapshot at the same stage, and the
+8. **Super Auto Pets / Backpack Battles** — the per-round draw against a snapshot at the same stage, and the
    AI-fill answer to an empty pool.
-7. **Supercell** — "Builder Base 2: Balancing Attacking, Defending and Builders", the source of the
+9. **Supercell** — "Builder Base 2: Balancing Attacking, Defending and Builders", the source of the
    defense-feels-meaningless finding this document answers differently.
-8. **Slay the Spire daily** — the nothing-persists-but-rating model.
+10. **Slay the Spire daily** — the nothing-persists-but-rating model.
 
 Added 6 August 2026, for the reversals in [§3](#3-what-a-match-is) and the direction in
 [§12](#12-the-planning-phase-is-the-game). Each is surveyed properly in
 [Making the plan the game](research/planning-phase-and-simulated-stats.html) and
 [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html).
 
-9. **Mechabellum** — the public shared offering. Its reinforcements are the same on both sides, which is what
-   makes the shop a mind game rather than a private draw.
-10. **Teamfight Tactics** — between-round scouting as the loop the live lobby is modelled on.
-11. **Zachtronics** (SpaceChem, Opus Magnum) — histograms instead of leaderboards, and competing optimisation
+11. **Mechabellum** — the public shared offering. Its reinforcements are the same on both sides, which is what
+    makes the shop a mind game rather than a private draw.
+12. **Teamfight Tactics** — between-round scouting as the loop the live lobby is modelled on.
+13. **Zachtronics** (SpaceChem, Opus Magnum) — histograms instead of leaderboards, and competing optimisation
     metrics as a deliberate tension. The source of the best-and-average reward shape.
-12. **Into the Breach** — perfect information about mechanism, never about outcome. The safety rail on §12.
-13. **Path of Building** — the community's offline planner for Path of Exile, and the standing evidence that a
+14. **Into the Breach** — perfect information about mechanism, never about outcome. The safety rail on §12.
+15. **Path of Building** — the community's offline planner for Path of Exile, and the standing evidence that a
     planning tool can be the part of a game people love most.
-14. **Football Manager** — a match you watch rather than play, and the highlights-and-dashboard apparatus that
+16. **Football Manager** — a match you watch rather than play, and the highlights-and-dashboard apparatus that
     makes that work.

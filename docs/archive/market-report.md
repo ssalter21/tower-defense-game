@@ -3,6 +3,15 @@
 **Part I of III** · Market research · 30 July 2026
 Viability read for a multiplayer TD
 
+> ### 📦 Archived — superseded, kept as the reading
+>
+> **This is the most fully overturned of the five deep dives: the game is not a commercial product, so the
+> question this document exists to answer is no longer being asked.**
+> [The Vision §1](../vision.md#1-the-destination) settled that, and
+> [§9](../vision.md#9-what-this-overturns) records what survived — the 830-player synchronous ceiling is still
+> the number behind the async model, though [§1](../vision.md#1-the-destination) now justifies async by
+> schedule mismatch instead. Read for the market evidence, not for the plan.
+
 > **The genre is thriving. Multiplayer TD isn't.**
 >
 > Tower defense is one of the healthiest indie categories on Steam right now — and the head-to-head,

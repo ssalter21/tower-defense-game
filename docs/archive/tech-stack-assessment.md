@@ -6,6 +6,14 @@
 **Aesthetic north star:** Legion TD 2
 **Input:** [Async Ghost Round-Robin: A Design & Feasibility Deep Dive](async-ghost-round-robin.md) (Part II)
 
+> ### 📦 Archived — superseded as a plan, still current as a stack
+>
+> **Its verdict is what the repository is built out of** — Unity 6 client, plain C# integer sim library, no
+> realtime networking — and none of that has moved. What is archived is the framing: it sequenced a commercial
+> game, its "no realtime networking" now holds for a different reason (live PvP *is* in scope and still needs
+> none), and its fixed-camera rule was overturned by the isometric orbit. Its balance-as-computation claim is
+> the method [The Vision §5](../vision.md#5-how-it-is-balanced) adopts.
+
 ---
 
 ## Recommendation

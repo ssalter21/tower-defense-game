@@ -8,6 +8,15 @@
 Legion TD 2 look and explicitly ruled out "2D-first engines" on that basis. This document re-opens that
 assumption and then closes it.
 
+> ### 📦 Archived — superseded as a plan, still current as a pipeline
+>
+> **Its purchase recommendation is live**: [The Vision §6](../vision.md#6-what-it-looks-like) reactivates
+> KayKit Complete at $150, which had only been paused for the free-tier walking skeleton. The licence and price
+> still want a browser check ([#56](https://github.com/ssalter21/tower-defense-game/issues/56)). Two things
+> here are closed: the rig-and-animate question is moot because KayKit ships animations, and the fixed-camera
+> assumption was overturned by the isometric orbit. ⚠️ **Its art rules assume a one-hex corridor**, withdrawn
+> 6 August 2026 — see [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026).
+
 ---
 
 ## Recommendation
