@@ -64,13 +64,12 @@ namespace Sim
         private const string HashLabel = "ruleset/1";
 
         /// <summary>
-        /// The largest a matrix cell may be. It bounds the product of a hit and
-        /// a cell, which is what keeps the damage expression's intermediate
+        /// The largest any factor of the damage expression may be -- a matrix
+        /// cell, the armour denominator, the floor. It bounds the product of a
+        /// hit and a cell, which is what keeps that expression's intermediate
         /// inside a 64-bit integer.
         /// </summary>
-        private const int MaximumCell = 1000000;
-
-        private static readonly string[] AttackWords = { "pierce", "impact", "magic" };
+        private const int MaximumFactor = 1000000;
 
         private readonly PerformanceBand[] _bands;
 
@@ -248,7 +247,7 @@ namespace Sim
                     draft.AddMatrixRow(
                         source,
                         line,
-                        DataText.Keyword(source, line, "the attack type", fields[1], AttackWords),
+                        DataText.Keyword(source, line, "the attack type", fields[1], DamageMatrix.AttackWords),
                         Cell(source, line, "the swift cell", fields[2]),
                         Cell(source, line, "the armoured cell", fields[3]),
                         Cell(source, line, "the arcane cell", fields[4]));
@@ -260,14 +259,14 @@ namespace Sim
                     draft.ArmourPercentPerPoint =
                         DataText.IntegerInRange(source, line, "the armour coefficient", fields[1], 0, 1000);
                     draft.ArmourDenominator =
-                        DataText.IntegerInRange(source, line, "the armour denominator", fields[2], 1, MaximumCell);
+                        DataText.IntegerInRange(source, line, "the armour denominator", fields[2], 1, MaximumFactor);
                     return;
 
                 case "floor":
                     Expect(source, line, fields, "floor", 2);
                     draft.Once(source, line, "floor");
                     draft.DamageFloor =
-                        DataText.IntegerInRange(source, line, "the damage floor", fields[1], 1, MaximumCell);
+                        DataText.IntegerInRange(source, line, "the damage floor", fields[1], 1, MaximumFactor);
                     return;
 
                 case "interest":
@@ -341,7 +340,7 @@ namespace Sim
         }
 
         private static int Cell(string source, int line, string name, string field) =>
-            DataText.IntegerInRange(source, line, name, field, 1, MaximumCell);
+            DataText.IntegerInRange(source, line, name, field, 1, MaximumFactor);
 
         private static void Expect(string source, int line, string[] fields, string keyword, int count)
         {
@@ -441,9 +440,9 @@ namespace Sim
                         source,
                         line,
                         "gives the matrix row for "
-                        + AttackWords[attack]
+                        + DamageMatrix.AttackWords[attack]
                         + " where "
-                        + AttackWords[_matrixRows]
+                        + DamageMatrix.AttackWords[_matrixRows]
                         + " was expected. The rows are authored in attack-type order, which is what makes "
                         + "a repeated or a missing one impossible to read past.");
                 }
@@ -588,7 +587,7 @@ namespace Sim
                             source,
                             line,
                             "has a "
-                            + AttackWords[attack]
+                            + DamageMatrix.AttackWords[attack]
                             + " row of "
                             + Describe(row)
                             + " where the matrix is built from "

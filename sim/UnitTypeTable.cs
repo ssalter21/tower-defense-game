@@ -61,17 +61,20 @@ namespace Sim
 
         private static readonly string[] DeliveryWords = { "none", "hitscan", "projectile" };
 
+        /// <summary>The word a unit outside the damage matrix carries in either type column.</summary>
+        private const string NoTypeWord = "none";
+
         /// <summary>
         /// The three attack types, then the word a unit that never attacks
         /// carries. The index of each is its <see cref="AttackType"/>.
         /// </summary>
-        private static readonly string[] AttackWords = { "pierce", "impact", "magic", "none" };
+        private static readonly string[] AttackWords = WithNoType(DamageMatrix.AttackWords);
 
         /// <summary>
         /// The three armour types, then the word a unit with no health pool
         /// carries. The index of each is its <see cref="ArmourType"/>.
         /// </summary>
-        private static readonly string[] ArmourWords = { "swift", "armoured", "arcane", "none" };
+        private static readonly string[] ArmourWords = WithNoType(DamageMatrix.ArmourWords);
 
         private readonly UnitType[] _types;
 
@@ -218,10 +221,6 @@ namespace Sim
         /// </remarks>
         public static bool IsKnownLayout(int layout)
         {
-            // Layout 1 is not a legacy path being tolerated. It is the layout
-            // every table written before the cost and typing columns existed is
-            // in, the committed golden bundles are pinned to tables in it, and
-            // its branch is expected to be here for as long as any of them are.
             return layout == 1 || layout == 2;
         }
 
@@ -370,6 +369,19 @@ namespace Sim
                 + "' row above its first unit.");
         }
 
+        /// <summary>
+        /// The three type spellings with the out-of-matrix word appended, so
+        /// that a keyword's index in the result is the enum value it parses to.
+        /// </summary>
+        private static string[] WithNoType(string[] words)
+        {
+            var all = new string[words.Length + 1];
+            words.CopyTo(all, 0);
+            all[words.Length] = NoTypeWord;
+
+            return all;
+        }
+
         private static ArgumentOutOfRangeException NoSuchLayout(int layout) =>
             new ArgumentOutOfRangeException(
                 nameof(layout),
@@ -420,10 +432,7 @@ namespace Sim
                     + "be read by nothing and would still move the content hash.");
             }
 
-            // Layout 1 predates every column below. Its rows carry no cost and
-            // no place in the damage matrix, which is the truth about them:
-            // there is no value this branch could supply that the table it is
-            // reading ever stated.
+            // What a layout-1 row carries: no cost, and no place in the matrix.
             int cost = 0;
             var attack = AttackType.None;
             var armour = ArmourType.None;

@@ -171,6 +171,12 @@ public class HostileLocaleTests
         // exactly the shape a designer reaches for a fraction in. Under a
         // comma-decimal culture the second spelling is the natural one, which
         // is why both characters are refused rather than one.
+        //
+        // OBSERVED: stop refusing '.' and ',' in DataText.Fields and let
+        // DataText.Integer skip them the way int.Parse with AllowThousands
+        // does under both of these cultures. Every row of this theory and of
+        // the ruleset one below goes red having caught nothing, and 1.5 loads
+        // as fifteen.
         const string Row = "layout 2\nunit 1 grunt moving 2000 85 0 0 0 0 0 0 none 0 12 10 none armoured 0";
 
         using (Hostile(name))
@@ -204,6 +210,11 @@ public class HostileLocaleTests
         // compared these case-insensitively would consult a culture, and in
         // Turkish "pierce" does not upper-case to "PIERCE". The comparison is
         // ordinal, so the wrong case is simply not the keyword.
+        //
+        // OBSERVED: compare with StringComparison.CurrentCultureIgnoreCase in
+        // DataText.Keyword. The de-DE row goes red having caught nothing and
+        // the Turkish row stays green, which is the bug exactly: the same
+        // bytes are a keyword on one machine and not on another.
         const string Row = "layout 2\nunit 3 bolt placed 0 0 3200 6 3 2 90 150 hitscan 0 0 40 pierce none 0";
 
         using (Hostile(name))

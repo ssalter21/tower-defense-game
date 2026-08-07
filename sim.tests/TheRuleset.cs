@@ -33,13 +33,6 @@ public static class TheRuleset
         snapshot 10 25
         """;
 
-    /// <summary>Every keyword a ruleset row can start with.</summary>
-    public static readonly string[] EveryRow =
-    {
-        "matrix", "armour", "floor", "interest", "income", "band", "health", "slots", "offering",
-        "snapshot",
-    };
-
     /// <summary>The committed file, as text.</summary>
     public static string CommittedText() => File.ReadAllText(RepoLayout.RulesetFile);
 

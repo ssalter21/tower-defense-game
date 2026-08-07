@@ -82,9 +82,10 @@ public class DamageTests
             Assert.Equal(expected, column);
         }
 
-        // The spread, which is what makes type a real read: the best cell is
-        // exactly twice the worst, so type moves shots-to-kill by double.
-        Assert.Equal(2 * 70, 140);
+        // The spread, read off the matrix rather than off the file: the best
+        // cell is exactly twice the worst, so type moves shots-to-kill by
+        // double.
+        Assert.Equal(2 * rules.Matrix.Cells.Min(), rules.Matrix.Cells.Max());
     }
 
     [Fact]
@@ -92,22 +93,43 @@ public class DamageTests
     {
         // The claim the whole shape rests on. A keyed collection is a banned
         // type, and the index arithmetic is the thing a sweep walks.
-        Ruleset rules = TheRuleset.Committed();
+        //
+        // The index convention is pinned on a matrix that is NOT symmetric
+        // about its diagonal, and that is load-bearing. The committed one is
+        // symmetric -- pierce against armoured and impact against swift are
+        // both 70 -- so reading it armour-major instead of attack-major
+        // produces exactly the same nine numbers, and every assertion against
+        // it passes either way.
+        //
+        // OBSERVED, both ways round. Index DamageMatrix.Cell as
+        // `_cells[(column * AttackTypes) + row]` -- the transpose -- and the
+        // first assertion below goes red, 100 against 70. Point the same
+        // assertions at the committed matrix instead and the transposed index
+        // is green, which is what this test looked like before the asymmetric
+        // one was built.
+        Ruleset asymmetric = Ruleset.Parse(TheRuleset.Replace(
+            TheRuleset.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 100 140 70"),
+            "matrix magic 100 140 70",
+            "matrix magic 70 100 140"));
 
-        Assert.Equal(9, rules.Matrix.Cells.Count);
+        Assert.Equal(70, asymmetric.Matrix.Cell(AttackType.Pierce, ArmourType.Armoured));
+        Assert.Equal(100, asymmetric.Matrix.Cell(AttackType.Impact, ArmourType.Swift));
 
         for (int attack = 0; attack < DamageMatrix.AttackTypes; attack++)
         {
             for (int armour = 0; armour < DamageMatrix.ArmourTypes; armour++)
             {
                 Assert.Equal(
-                    rules.Matrix.Cells[(attack * DamageMatrix.ArmourTypes) + armour],
-                    rules.Matrix.Cell((AttackType)attack, (ArmourType)armour));
+                    asymmetric.Matrix.Cells[(attack * DamageMatrix.ArmourTypes) + armour],
+                    asymmetric.Matrix.Cell((AttackType)attack, (ArmourType)armour));
             }
         }
 
-        // And the authored table, cell by cell, so that a transposed matrix is
-        // a failure here rather than a balance question nobody can answer.
+        Ruleset rules = TheRuleset.Committed();
+
+        Assert.Equal(9, rules.Matrix.Cells.Count);
+
+        // And the authored table, cell by cell.
         Assert.Equal(140, rules.Matrix.Cell(AttackType.Pierce, ArmourType.Swift));
         Assert.Equal(70, rules.Matrix.Cell(AttackType.Pierce, ArmourType.Armoured));
         Assert.Equal(100, rules.Matrix.Cell(AttackType.Pierce, ArmourType.Arcane));
@@ -129,8 +151,9 @@ public class DamageTests
         // OBSERVED: write TwoStep as `damage * cell / (100 + armour)` -- the
         // fused form under the other name, which is what a reader who trusts
         // the algebra would write. The disagreement count goes to 0 and the
-        // first assertion goes red. That is what this test looks like when the
-        // distinction it exists for has been optimised away.
+        // count assertion goes red, 175,759 against 0. That is what this test
+        // looks like when the distinction it exists for has been optimised
+        // away.
         int swept = 0;
         int disagreements = 0;
         int fusedWasLower = 0;
@@ -176,7 +199,7 @@ public class DamageTests
     }
 
     [Fact]
-    public void The_expression_the_simulation_evaluates_is_the_fused_one()
+    public void The_expression_the_damage_model_evaluates_is_the_fused_one()
     {
         // The bridge from the arithmetic above to the shipped code: the same
         // sweep, run through the public surface, with the matrix cell moved by
@@ -188,8 +211,8 @@ public class DamageTests
         // OBSERVED: change DamageModel.Mitigate to
         // `amount * cell / rules.ArmourDenominator * rules.ArmourDenominator /
         // denominator` -- the two-step form, algebraically identical. This goes
-        // red naming damage 41, cell 5, armour 1, where the fused form deals 1
-        // and the two-step form deals 2.
+        // red naming damage 41, cell 5, armour 1, where the fused form deals 2
+        // and the two-step form deals 1.
         int differedAfterTheFloor = 0;
         string? firstMismatch = null;
 

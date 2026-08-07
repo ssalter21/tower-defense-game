@@ -70,6 +70,16 @@ namespace Sim
         /// <summary>Cells, which is rows times columns.</summary>
         public const int CellCount = AttackTypes * ArmourTypes;
 
+        /// <summary>
+        /// How the three attack types are spelled in authored text. The index of
+        /// each is its <see cref="AttackType"/>, and this is the one place the
+        /// spelling lives.
+        /// </summary>
+        internal static readonly string[] AttackWords = { "pierce", "impact", "magic" };
+
+        /// <summary>How the three armour types are spelled in authored text.</summary>
+        internal static readonly string[] ArmourWords = { "swift", "armoured", "arcane" };
+
         private readonly int[] _cells;
 
         internal DamageMatrix(int[] cells)

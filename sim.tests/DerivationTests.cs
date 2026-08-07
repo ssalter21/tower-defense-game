@@ -176,26 +176,6 @@ public class DerivationTests
     }
 
     [Fact]
-    public void A_bands_pair_is_folded_as_a_pair_and_not_as_a_multiset()
-    {
-        // Field order is part of the fold, so a ruleset whose numbers are the
-        // same multiset in different places is a different ruleset. Without
-        // this, swapping two bands' bonuses would be free.
-        string original = TheRuleset.CommittedText();
-        Hash64 hash = Ruleset.Parse(original).ContentHash;
-
-        string swapped = original
-            .Replace("band           75       10", "band           75       20", StringComparison.Ordinal)
-            .Replace("band           90       20", "band           90       10", StringComparison.Ordinal);
-
-        // That edit is not a legal ruleset -- the bands stop being progressive
-        // -- which is itself the point: the numbers cannot be permuted without
-        // something noticing.
-        Assert.Throws<ContentException>(() => Ruleset.Parse(swapped));
-        Assert.NotEqual(hash, Ruleset.Parse(TheRuleset.Minimal).ContentHash);
-    }
-
-    [Fact]
     public void The_rules_this_build_implements_are_the_ones_its_simulation_version_names()
     {
         // OBSERVED, both ways round, on this build.

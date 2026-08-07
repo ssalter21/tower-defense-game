@@ -188,8 +188,7 @@ namespace Sim
                     + "less than one.");
             }
 
-            // One multiply, one divide, one truncation. Splitting these into two
-            // divisions truncates twice and computes a different function.
+            // One multiply, one divide, one truncation.
             long dealt = (amount * rules.Matrix.Cell(attack, armour)) / denominator;
 
             if (dealt > int.MaxValue)
