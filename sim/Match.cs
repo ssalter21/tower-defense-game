@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Sim
@@ -126,6 +127,14 @@ namespace Sim
         /// <summary>One entry per wave order: how many of its units have been released.</summary>
         private readonly int[] _released;
 
+        /// <summary>
+        /// One entry per wave order: how many of its units reached the exit. A
+        /// total is not enough to price a leak, because what a leak costs is
+        /// what the thing that leaked cost -- so what is counted is which order
+        /// walked past, and the order is what carries the type.
+        /// </summary>
+        private readonly int[] _leakedByOrder;
+
         private readonly Tower[] _towers;
 
         private Creep[] _creeps;
@@ -194,6 +203,7 @@ namespace Sim
 
             _stepPerTick = new Fix64[wave.Count];
             _released = new int[wave.Count];
+            _leakedByOrder = new int[wave.Count];
 
             for (int index = 0; index < wave.Count; index++)
             {
@@ -270,6 +280,13 @@ namespace Sim
 
         /// <summary>How many creeps have reached the exit so far.</summary>
         public int Leaked => _leaked;
+
+        /// <summary>
+        /// The same leaks, split by the wave order that sent them. This is the
+        /// half of a leak a count cannot carry: a leak is charged at the price
+        /// of what leaked, and the order is what says which type that was.
+        /// </summary>
+        public IReadOnlyList<int> LeakedByOrder => _leakedByOrder;
 
         /// <summary>How many creeps have been killed so far.</summary>
         public int Killed => _killed;
@@ -490,6 +507,7 @@ namespace Sim
                 {
                     creep.Phase = CreepPhase.Gone;
                     _leaked++;
+                    _leakedByOrder[creep.OrderIndex]++;
                     events?.CreepLeaked(creep.Id);
                 }
             }
