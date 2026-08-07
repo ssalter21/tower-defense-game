@@ -161,6 +161,39 @@ public class HostileLocaleTests
     [Theory]
     [InlineData(Turkish)]
     [InlineData(CommaDecimal)]
+    public void The_whole_command_script_parses_identically_under_a_hostile_culture(string name)
+    {
+        // Four numeric columns a framework parser would consult a culture about
+        // -- the wave, the take id, and a type id and a count per slot -- and a
+        // fifth that is a keyword a culture could case-fold differently.
+        //
+        // The decisions are compared rather than a hash, because a script has
+        // no hash of its own: what it becomes is a record, and a record's
+        // stamps are hashes of the tables rather than of the decisions. The
+        // printed form is compared beside the values because that is what a
+        // committed outcome file is made of, and a number formatted under a
+        // culture would move that file without moving the run.
+        string text = File.ReadAllText(RepoLayout.CommandScriptFile);
+        IReadOnlyList<RecordCommand> invariant = CommandScript.Parse(text);
+        IReadOnlyList<RecordCommand> hostile;
+
+        using (Hostile(name))
+        {
+            hostile = CommandScript.Parse(text);
+        }
+
+        Assert.Equal(invariant.Count, hostile.Count);
+
+        for (int index = 0; index < invariant.Count; index++)
+        {
+            Assert.Equal(invariant[index], hostile[index]);
+            Assert.Equal(invariant[index].ToString(), hostile[index].ToString());
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
     public void The_whole_schedule_parses_and_hashes_identically_under_a_hostile_culture(string name)
     {
         // Every column the shape is made of, read under a culture chosen to

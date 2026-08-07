@@ -83,6 +83,27 @@ public static class RepoLayout
     public static string BundleFile => Path.Combine(ContentDirectory, "match.replay");
 
     /// <summary>
+    /// A run's build phases as somebody authored them: one row per round, in
+    /// the same integers-only text every other content file is written in.
+    /// </summary>
+    public static string CommandScriptFile => Path.Combine(ContentDirectory, "commands.txt");
+
+    /// <summary>
+    /// The committed command stream: a whole run in one run of bytes, compiled
+    /// from the script by the record-run verb of the command line and proved by
+    /// being played before it was written.
+    /// </summary>
+    public static string CommandFile => Path.Combine(ContentDirectory, "run.commands");
+
+    /// <summary>
+    /// What that run came to, round by round, as a real play of the committed
+    /// record produced it. Committed for the reason the golden trace is, one
+    /// level up: nobody knows a run's vector until the run is played, and
+    /// nothing that checks this file regenerates it.
+    /// </summary>
+    public static string RunOutcomeFile => Path.Combine(ContentDirectory, "run-outcome.txt");
+
+    /// <summary>
     /// The twelve-row eyeball checklist, and the one artefact in this
     /// repository whose correctness is a human's job.
     /// </summary>
@@ -148,6 +169,7 @@ public static class RepoLayout
             yield return DefenseFile;
             yield return RulesetFile;
             yield return ScheduleFile;
+            yield return CommandScriptFile;
         }
     }
 

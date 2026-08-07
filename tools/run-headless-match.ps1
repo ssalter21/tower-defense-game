@@ -1,12 +1,19 @@
 <#
 .SYNOPSIS
-    Plays the committed replay bundle with nobody watching, and writes down
-    what happened.
+    Plays the committed replay bundle and the committed command file with
+    nobody watching, and writes down what happened.
 
 .DESCRIPTION
     The shell end of simcli, which is the headless runner. It builds the
     command-line project, plays content/match.replay to the end, and prints the
     result triple, the final rolling hash and the landmark table.
+
+    IT ALSO PLAYS A WHOLE RUN. content/run.commands is a command stream -- ten
+    build phases, a seed and the hashes of the three tables the decisions were
+    made under -- and playing it resolves ten rounds against a canned field with
+    no engine, no licence and no session anywhere in it. Its authored source is
+    content/commands.txt and its outcome is content/run-outcome.txt, and both
+    -Verify and -Regenerate treat that trio exactly as they treat the match's.
 
     NOTHING HERE NEEDS AN EDITOR. No project open, no plug-in installed, no
     socket to a running Unity -- which is the third working agreement in
@@ -27,11 +34,13 @@
     never into the committed plug-in folder -- overwriting the artefact under
     test is the same mistake in a different coat.
 
-    Two committed files fall out of a run: content/golden-trace.txt, the
+    Two committed files fall out of a match: content/golden-trace.txt, the
     rolling per-tick state hash, and content/landmarks.txt, the handful of ticks
-    the sit-down checklist is written against. -Verify proves the committed
-    copies are still what a run produces; -Regenerate makes them so again after
-    a deliberate content change.
+    the sit-down checklist is written against. Two more fall out of the run:
+    content/run.commands, compiled from the authored script, and
+    content/run-outcome.txt, the round-by-round vector a real play of it
+    produced. -Verify proves the committed copies are still what a run produces;
+    -Regenerate makes them so again after a deliberate content change.
 
     IT ALSO REPLAYS EVERY HISTORICAL FORMAT VERSION. content/golden/ holds one
     tiny bundle per defense record format version that has ever shipped, each
@@ -94,6 +103,13 @@ param(
     # because every run after that reads it out of the bundle's own bytes.
     [ulong]$Seed = 20260801,
 
+    # The seed the committed command stream carries, and the same arrangement:
+    # every offering, filling and field in a run is derived from it, so it is
+    # needed only when re-recording and is read out of the record afterwards.
+    # A different number is a different set of menus, and every take in
+    # content/commands.txt then names an option nobody was offered.
+    [ulong]$RunSeed = 20260807,
+
     # Which map the recorded defense claims to be on. A handle for looking a
     # map up, and NOT what pins the geometry -- that is the map hash, which is
     # computed from the parsed grid and checked at the replay gate. Handles are
@@ -135,6 +151,25 @@ $units = Join-Path $content 'units.txt'
 $ruleset = Join-Path $content 'ruleset.txt'
 $traceName = 'golden-trace.txt'
 $landmarkName = 'landmarks.txt'
+
+# The run: the shape it is played against, the decisions as authored, the
+# record they compile to, and the vector a real play of that record produced.
+$schedule = Join-Path $content 'schedule.txt'
+$commandScript = Join-Path $content 'commands.txt'
+$commands = Join-Path $content 'run.commands'
+$outcomeName = 'run-outcome.txt'
+
+# The six files a run is built from. Every run verb takes all six, so the list
+# is written once and splatted -- a verb reading a different defense than the
+# one the record was made against is a run that refuses for a reason that has
+# nothing to do with what was being checked.
+$runContent = @(
+    '--map', (Join-Path $content 'map.txt'),
+    '--units', $units,
+    '--rules', $ruleset,
+    '--schedule', $schedule,
+    '--defense', (Join-Path $content 'defense.txt'),
+    '--wave', (Join-Path $content 'wave.txt'))
 
 # One tiny bundle per defense record format version that has ever shipped, and
 # the result a real run of each produced. Committed forever: the writer emits
@@ -336,17 +371,37 @@ if ($Regenerate) {
         Write-Host "wrote      $resultPath" -ForegroundColor Green
     }
 
+    # The run, compiled from its authored script. record-run reads the bytes
+    # back, takes them through the replay gate and plays them to the end before
+    # writing anything, so a script that will not replay never becomes a file.
+    Invoke-SimCli (@(
+        'record-run',
+        '--script', $commandScript,
+        '--seed', $RunSeed.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+        '--out', $commands) + $runContent)
+
+    # And the outcome, taken from a play of the RECORD rather than from the
+    # recording that produced it. The committed vector is then what the
+    # committed bytes do, which is the only thing anybody can check later.
+    Invoke-SimCli (@(
+        'play-run',
+        '--commands', $commands,
+        '--out', (Join-Path $content $outcomeName)) + $runContent)
+
     exit 0
 }
 
 if (-not $Verify) {
     $arguments = @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset)
+    $runArguments = @('play-run', '--commands', $commands) + $runContent
 
     if ($Out) {
         $arguments += @('--out', $Out)
+        $runArguments += @('--out', (Join-Path $Out $outcomeName))
     }
 
     Invoke-SimCli $arguments
+    Invoke-SimCli $runArguments
     exit 0
 }
 
@@ -442,6 +497,39 @@ foreach ($goldenBundle in $goldens) {
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {
         $differences++
     }
+}
+
+# THE WHOLE RUN, END TO END, THROUGH THE ACTUAL COMMAND LINE. Two committed
+# things are checked and neither is produced by what checks it: the record, by
+# recording the authored script again into scratch space and comparing the
+# bytes, and the vector, by playing the COMMITTED record and comparing what it
+# printed. Recording into content/ and finding it equal would be a check that
+# cannot fail.
+$scratchCommands = Join-Path $scratch 'run.commands'
+
+Invoke-SimCli (@(
+    'record-run',
+    '--script', $commandScript,
+    '--seed', $RunSeed.ToString([System.Globalization.CultureInfo]::InvariantCulture),
+    '--out', $scratchCommands) + $runContent)
+
+if ((Get-FileHash -Algorithm SHA256 $commands).Hash -ne (Get-FileHash -Algorithm SHA256 $scratchCommands).Hash) {
+    Write-Host "content/run.commands is NOT what a recording of content/commands.txt produces." -ForegroundColor Red
+    $differences++
+}
+else {
+    Write-Host "content/run.commands is what the recording produced." -ForegroundColor Green
+}
+
+Invoke-SimCli (@(
+    'play-run',
+    '--commands', $commands,
+    '--out', (Join-Path $scratch $outcomeName)) + $runContent)
+
+if (-not (Test-SameText "content/$outcomeName" `
+        ([System.IO.File]::ReadAllText((Join-Path $content $outcomeName))) `
+        ([System.IO.File]::ReadAllText((Join-Path $scratch $outcomeName))))) {
+    $differences++
 }
 
 if ($differences -gt 0) {
