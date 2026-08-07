@@ -136,12 +136,11 @@ public class MatchTests
         // dead and none is free money, not a pin on numbers a sweep is meant to
         // move.
         //
-        // OBSERVED: give the wisp back the 500 health an earlier draft had it
-        // at, at cost 3. It goes red -- "wisp returned 0 percent of the sauce a
-        // column of 133 cost" -- because five hundred effective health is under
-        // what this defense deals a creep while it crosses, so every one of
-        // them dies and a whole row of the menu is a dead option that still
-        // reads like a choice.
+        // OBSERVED: put the wisp at 500 health and 3 sauce. It goes red --
+        // "wisp returned 0 percent of the sauce a column of 133 cost" --
+        // because five hundred effective health is under what this defense
+        // deals a creep while it crosses, so every one of them dies and a whole
+        // row of the menu is a dead option that still reads like a choice.
         UnitTypeTable types = TheMatch.Types();
         Ruleset rules = TheRuleset.Committed();
         TowerLayout defense = TheMatch.Layout(types);
@@ -516,7 +515,8 @@ public class MatchTests
         // armour types, so a shot resolves to one of exactly two numbers -- the
         // cell against Armoured or the cell against Swift. Both are computed
         // from the same draw, which is what makes this an assertion about the
-        // stream rather than about the target.
+        // stream rather than about the target; the exact amount against a known
+        // target is DamageWiringTests' claim rather than this one's.
         //
         // OBSERVED: draw a second time inside Match.Fire -- roll the damage,
         // then roll it again and use the second number. This goes red on the

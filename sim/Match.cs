@@ -902,7 +902,7 @@ namespace Sim
                 return;
             }
 
-            int amount = Dealt(shooter, roll, ref target);
+            int amount = Resolved(shooter, roll, ref target);
 
             events?.CreepDamaged(target.Id, amount);
             target.Hp -= amount;
@@ -941,7 +941,7 @@ namespace Sim
         /// against each other, and there is no cell it could mean.
         /// </para>
         /// </remarks>
-        private int Dealt(UnitType shooter, int roll, ref Creep target)
+        private int Resolved(UnitType shooter, int roll, ref Creep target)
         {
             ArmourType armour = target.Type.ArmourType;
 

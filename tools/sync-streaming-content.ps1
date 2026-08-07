@@ -63,9 +63,9 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # these exact bytes. A player carrying its own seed instead had one eleven ticks
 # out from the committed landmark table, and nothing on screen looked wrong.
 #
-# ruleset.txt joined the list when the tick loop started resolving a shot
-# through the damage matrix. Every landing reads it, so a player without it
-# draws a floor and throws on the first hit.
+# The tick loop resolves every landing through ruleset.txt -- the damage matrix,
+# the armour expression and the floor -- so a player without it draws its floor
+# and throws on the first hit.
 $files = @(
     'map.txt',
     'units.txt',

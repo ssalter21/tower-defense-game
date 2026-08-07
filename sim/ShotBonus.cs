@@ -45,9 +45,6 @@ namespace Sim
 
         private ShotBonus(Entry[] entries) => _entries = entries;
 
-        /// <summary>Whether anything at all is countered in this match.</summary>
-        public bool IsEmpty => _entries.Length == 0;
-
         /// <summary>
         /// What this defense's shooters get against the game changers this wave
         /// fields.
@@ -96,7 +93,7 @@ namespace Sim
                     int shooter = defense.Towers[tower].Type.Id;
                     int bonus = schedule.BonusVsTag(shooter, changer!);
 
-                    if (bonus == 0 || Holds(entries, shooter, order))
+                    if (bonus == 0 || Find(entries, shooter, order) != 0)
                     {
                         continue;
                     }
@@ -118,18 +115,7 @@ namespace Sim
         /// implementation detail, and <see cref="None"/> leaves on the first
         /// line.
         /// </remarks>
-        public int Against(int shooterTypeId, int waveOrder)
-        {
-            for (int index = 0; index < _entries.Length; index++)
-            {
-                if (_entries[index].ShooterTypeId == shooterTypeId && _entries[index].WaveOrder == waveOrder)
-                {
-                    return _entries[index].Bonus;
-                }
-            }
-
-            return 0;
-        }
+        public int Against(int shooterTypeId, int waveOrder) => Find(_entries, shooterTypeId, waveOrder);
 
         public override string ToString()
         {
@@ -148,17 +134,22 @@ namespace Sim
             return string.Join(", ", described);
         }
 
-        private static bool Holds(List<Entry> entries, int shooterTypeId, int waveOrder)
+        /// <summary>
+        /// What this pairing is worth, or zero where there is no entry for it.
+        /// A bonus of zero is never stored, so an absent entry and a zero entry
+        /// are the same answer.
+        /// </summary>
+        private static int Find(IReadOnlyList<Entry> entries, int shooterTypeId, int waveOrder)
         {
             for (int index = 0; index < entries.Count; index++)
             {
                 if (entries[index].ShooterTypeId == shooterTypeId && entries[index].WaveOrder == waveOrder)
                 {
-                    return true;
+                    return entries[index].Bonus;
                 }
             }
 
-            return false;
+            return 0;
         }
 
         /// <summary>One shooter, one wave order, and what the pairing is worth.</summary>

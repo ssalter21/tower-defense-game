@@ -26,6 +26,9 @@ public class DamageWiringTests
     /// <summary>One mortar, which is the impact tower wave nine's anchor is answered by.</summary>
     private const string OneMortar = "tower 4 9 0";
 
+    /// <summary>The same mortar with a bolt beside it, which answers no anchor.</summary>
+    private const string MortarAndBolt = "tower 4 9 0\ntower 3 3 2";
+
     [Fact]
     public void A_shot_lands_the_roll_resolved_through_the_fused_expression()
     {
@@ -221,12 +224,23 @@ public class DamageWiringTests
         WaveScript wave = WaveScript.Parse("order 0 " + body.Id + " 6 0", types);
         ShotBonus bonuses = ShotBonus.Fielded(wave, defense, fielded, schedule);
 
-        Assert.Equal(schedule.Anchors[2].CounterTypeId, mortar.Id);
-        Assert.Equal(825, bonuses.Against(mortar.Id, 0));
+        // A mortar and a bolt standing side by side against the same creep: one
+        // of them answered wave nine's anchor and the other did not.
+        //
+        // OBSERVED: read the bonus off the game changer rather than off the
+        // schedule -- `changer.BonusVsTag` instead of
+        // `schedule.BonusVsTag(shooter, changer)` in ShotBonus.Fielded. The
+        // unprepared-shooter assertion goes red, 0 against 825, which is a
+        // counter paid to whoever happened to be standing there rather than to
+        // the unit type the anchor named.
+        ShotBonus beside = ShotBonus.Fielded(
+            wave, TowerLayout.Parse(MortarAndBolt, types), fielded, schedule);
 
-        // Anything else shooting the same creep is unprepared, and so is the
-        // same shooter against an order that fields nothing.
-        Assert.Equal(0, bonuses.Against(types.ById(3).Id, 0));
+        Assert.Equal(schedule.Anchors[2].CounterTypeId, mortar.Id);
+        Assert.Equal(825, beside.Against(mortar.Id, 0));
+        Assert.Equal(0, beside.Against(types.ById(3).Id, 0));
+
+        // And the same shooter against an order that fields nothing.
         Assert.Equal(0, ShotBonus.None.Against(mortar.Id, 0));
 
         int[] prepared = Landings(rules, defense, wave, bonuses);

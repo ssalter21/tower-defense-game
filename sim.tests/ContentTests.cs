@@ -54,8 +54,12 @@ public class ContentTests
         Assert.Equal(11, table.ById(4).ProjectileFlightTicks);
 
         // Six of them walk, which is what an offering is drawn out of, and four
-        // stand. The ratio is the reason the ruleset can ask for three ordinary
+        // stand. The ratio is what lets the ruleset ask for three ordinary
         // options a round.
+        //
+        // OBSERVED: change the bulwark's role from moving to placed in
+        // content/units.txt. The walker count goes red, 6 against 5, and the
+        // offering's own refusal follows it in BuildPhaseTests.
         Assert.Equal(6, table.Types.Count(row => row.Role == UnitRole.Moving));
         Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
     }
@@ -93,9 +97,14 @@ public class ContentTests
                 .OrderBy(type => (int)type));
 
         // The swarm is the cheapest body and the fastest; the wall is the
-        // dearest, the slowest and the only one carrying armour points beside
-        // the drifter; the sniper outranges every other tower; the sieger's
-        // shell spends the longest in the air.
+        // dearest and the only one carrying armour points beside the drifter;
+        // the sniper outranges every other tower; the sieger's shell spends the
+        // longest in the air.
+        //
+        // OBSERVED: take the bulwark's forty-five points of armour down to
+        // zero. Its own row goes red, 45 against 0, and the cost band above
+        // goes red with it -- 7200 effective health bought against the 5000 it
+        // would then carry -- because armour points are half of what a wall is.
         Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(5).Cost);
         Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(5).SpeedMilliHexPerTick);
         Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(6).Cost);
@@ -199,10 +208,17 @@ public class ContentTests
         Assert.Equal(210, table.ById(4).DamageMin);
         Assert.Equal(340, table.ById(4).DamageMax);
 
-        // Shots to kill, at the top of each roll, before and after the scale.
-        // Ten bolts to fell a grunt either way, and four mortars for a runner.
-        Assert.Equal(155 / 15, table.ById(1).MaxHp / table.ById(3).DamageMax);
-        Assert.Equal(150 / 34, table.ById(2).MaxHp / table.ById(4).DamageMax);
+        // The damage columns against the pre-scale numbers themselves, which
+        // are frozen in the table pinned beside the oldest golden bundle and
+        // cannot be rewritten by anything. The health pools are not compared:
+        // they were re-tuned against live typing after the scale and are
+        // deliberately not ten times what they were.
+        UnitTypeTable preScale = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.GoldenUnitsFile(0)));
+
+        Assert.Equal(preScale.ById(3).DamageMin * 10, table.ById(3).DamageMin);
+        Assert.Equal(preScale.ById(3).DamageMax * 10, table.ById(3).DamageMax);
+        Assert.Equal(preScale.ById(4).DamageMin * 10, table.ById(4).DamageMin);
+        Assert.Equal(preScale.ById(4).DamageMax * 10, table.ById(4).DamageMax);
     }
 
     [Fact]
