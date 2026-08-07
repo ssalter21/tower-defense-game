@@ -258,6 +258,118 @@ def check_no_overflow():
     print("  Safe with two orders of magnitude to spare on plain int.")
 
 
+# --------------------------------------------------------------------------
+# THE DECIDED RULESET (issue #75, 7 August 2026) and its validation
+# --------------------------------------------------------------------------
+
+# 3 attack types x 3 armour types, a Latin square. Every row and every column
+# carries exactly one 140, one 100 and one 70, so no type is globally better
+# and every cell is reachable.
+CYCLE = {
+    #            Swift  Armoured  Arcane
+    "Pierce": (140, 70, 100),
+    "Impact": (70, 100, 140),
+    "Magic": (100, 140, 70),
+}
+ARMOUR_NAMES = ("Swift", "Armoured", "Arcane")
+
+FLOOR = 1
+
+
+def dealt(base, bonus, cell, armour):
+    """The decided formula. One multiply, one divide, one truncation.
+
+    Armour is authored as percent of base effective health added per point,
+    so k is 1 and disappears from the expression entirely.
+    """
+    out = (base + bonus) * cell // (100 + armour)
+    return out if out > FLOOR else FLOOR
+
+
+def check_decided_ruleset():
+    rule("10. THE DECIDED RULESET -- validation")
+    print("  matrix   3x3 Latin square, cells in {70, 100, 140}, spread 2:1")
+    print("  armour   dealt = (base + bonus) * cell / (100 + armour)")
+    print("           k folded to 1; armour reads as % of base EHP per point")
+    print("  floor    1")
+    print("  scale    every damage and HP number x10")
+    print()
+
+    print("  --- the table is a Latin square ---")
+    print(f"    {'':<8}" + "".join(f"{n:>10}" for n in ARMOUR_NAMES))
+    for atk, row in CYCLE.items():
+        print(f"    {atk:<8}" + "".join(f"{v:>9}%" for v in row))
+    rows_ok = all(sorted(r) == [70, 100, 140] for r in CYCLE.values())
+    cols_ok = all(sorted(CYCLE[a][i] for a in CYCLE) == [70, 100, 140]
+                  for i in range(3))
+    print(f"    every row is a permutation of (70,100,140): {rows_ok}")
+    print(f"    every column is a permutation of (70,100,140): {cols_ok}")
+    print(f"    spread best:worst = {140 / 70:.2f}:1")
+    print(f"    distinct cell values = {len({v for r in CYCLE.values() for v in r})}"
+          f" of 9 positions -- every cell reachable")
+
+    print()
+    print("  --- nothing rounds to the floor at the x10 scale ---")
+    # shipped damage x10, plus headroom either side
+    bases = list(range(60, 401, 10))
+    bonuses = [0, 90, 180, 270, 360]
+    armours = list(range(0, 201, 5))
+    hit_floor = 0
+    lowest = None
+    total = 0
+    for b in bases:
+        for bo in bonuses:
+            for a in armours:
+                for cell in (70, 100, 140):
+                    total += 1
+                    d = dealt(b, bo, cell, a)
+                    if d <= FLOOR:
+                        hit_floor += 1
+                    if lowest is None or d < lowest[0]:
+                        lowest = (d, b, bo, cell, a)
+    print(f"    swept {total:,} (base, bonus, cell, armour) combinations")
+    print(f"    hit the floor: {hit_floor}")
+    d, b, bo, cell, a = lowest
+    print(f"    lowest result: {d}  (base={b} bonus={bo} cell={cell}% armour={a})")
+
+    print()
+    print("  --- armour still discriminates across its whole range ---")
+    for b in (90, 150, 340):
+        n = len({dealt(b, 0, 100, a) for a in range(0, 101)})
+        print(f"    base {b:>3}, armour 0..100 -> {n} distinct results of 101")
+
+    print()
+    print("  --- the counter is a steep gradient, not a wall ---")
+    print("    wave-9 anchor: 2000 EHP, armour 60, tagged.")
+    anchor_hp, anchor_armour = 2000, 60
+    for bonus, label in ((0, "no counter"), (180, "+180 bonus"), (270, "+270 bonus")):
+        per_shot = dealt(90, bonus, 100, anchor_armour)
+        shots = -(-anchor_hp // per_shot)
+        print(f"    {label:<12} {per_shot:>4} per shot, {shots:>4} shots to kill")
+    base_shots = -(-anchor_hp // dealt(90, 0, 100, anchor_armour))
+    ctr_shots = -(-anchor_hp // dealt(90, 270, 100, anchor_armour))
+    print(f"    ratio {base_shots / ctr_shots:.2f}x -- prepared beats unprepared")
+    print("    by a wide margin, and unprepared still finishes. Which is the")
+    print("    softening of #73's 'hard counter' that #75 chose deliberately.")
+
+    print()
+    print("  --- many-small vs few-big survives the final formula ---")
+    print(f"    {'profile':<22} " + " ".join(f"{f'a={a}':>6}" for a in (0, 20, 60, 120, 200)))
+    for pname, (count, each) in (("5 archers x 50", (5, 50)),
+                                 ("1 cannon x 250", (1, 250)),
+                                 ("3 mages x 80", (3, 80)),
+                                 ("1 siege x 600", (1, 600))):
+        row = " ".join(f"{count * dealt(each, 0, 100, a):>6}" for a in (0, 20, 60, 120, 200))
+        print(f"    {pname:<22} {row}")
+    print("    The volley and the cannon fall off together. No quadratic.")
+
+    print()
+    print("  --- overflow headroom on plain int ---")
+    worst = (400 + 400) * 140
+    print(f"    worst intermediate (base+bonus)*cell = {worst:,}")
+    print(f"    int.MaxValue = {2**31 - 1:,}  ->  {(2**31 - 1) // worst:,}x headroom")
+
+
 if __name__ == "__main__":
     check_fusion_differs()
     check_width_vs_volume()
@@ -268,4 +380,5 @@ if __name__ == "__main__":
     check_resolution_at_shipped_scale()
     check_k1_plateau()
     check_no_overflow()
+    check_decided_ruleset()
     print()
