@@ -42,14 +42,12 @@
     version red, and the runner's refusal names the version.
 
     EACH GOLDEN IS PLAYED AGAINST THE TABLE PINNED BESIDE IT, not against
-    content/units.txt. The replay gate refuses a record whose stamped content
-    hash is not the hash of the table handed in, so a golden played against the
-    live table is a golden the next retune retires -- and the only thing that
-    could replace it is a bundle at the current version, which is exactly what
-    an older version's golden is not. defense-N.units is the table defense-N
-    was recorded against; the gate is unchanged and only what it compares
-    against has stopped moving. -Regenerate pins a fresh copy beside the bundle
-    it re-records, and leaves the older ones alone.
+    content/units.txt. defense-N.units is the table defense-N was recorded
+    against, and its hash is the one stamped in that bundle's header, which is
+    what the replay gate compares. Played against the live table instead, every
+    one of these files would be refused by the first retune and none of them
+    could be made again. -Regenerate pins a fresh copy beside the bundle it
+    re-records and leaves the older ones alone.
 
 .EXAMPLE
     ./tools/run-headless-match.ps1
@@ -262,9 +260,8 @@ function Get-GoldenResultPath {
     return Join-Path $golden ($Bundle.BaseName + '.result')
 }
 
-# The ruleset that bundle was recorded against, and the one it is replayed
-# against for the rest of time. Its hash is the hash stamped in the bundle's
-# header, so this is the file the replay gate compares against.
+# The ruleset that bundle was recorded against, and the one it is played
+# against for the rest of time.
 function Get-GoldenUnitsPath {
     param([System.IO.FileInfo]$Bundle)
 
@@ -316,6 +313,11 @@ if ($Regenerate) {
     # exactly the bytes they already have.
     foreach ($goldenBundle in Get-GoldenBundles) {
         $goldenUnits = Get-GoldenUnitsPath $goldenBundle
+
+        if (-not (Test-Path $goldenUnits)) {
+            throw "content/golden/$($goldenBundle.Name) has no pinned unit table beside it, so there is nothing to replay it against."
+        }
+
         $text = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
@@ -412,10 +414,10 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    # No falling back to content/units.txt. A golden played against a table that
-    # is not the one it was recorded against is either refused by the gate or,
-    # if the two happen to agree today, a check that will refuse tomorrow for a
-    # reason that has nothing to do with the reader branch it is testing.
+    # There is no fallback to content/units.txt, and a missing pin is a
+    # difference rather than a substitution: a golden played against a table it
+    # was not recorded against is refused by the gate for a reason that has
+    # nothing to do with the reader branch it is here to prove.
     if (-not (Test-Path $goldenUnits)) {
         Write-Host "content/golden/$($goldenBundle.Name) has no pinned unit table beside it." -ForegroundColor Red
         $differences++

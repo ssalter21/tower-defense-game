@@ -114,9 +114,9 @@ public static class RepoLayout
     /// <see cref="UnitsFile"/> is a golden the next retune retires -- and a
     /// re-recorded one is a bundle at the current version, which is the one
     /// thing an older version's golden cannot be. The copy here is the table
-    /// whose hash is in that bundle's header, so verifying against it leaves
-    /// the gate doing exactly what it always did and puts what it compares
-    /// against out of the reach of a content edit.
+    /// whose hash is in that bundle's header. The gate compares the same two
+    /// things it always compares; what it compares against is now a file no
+    /// content edit reaches.
     /// </remarks>
     public static string GoldenUnitsFile(int defenseFormatVersion) =>
         Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".units");

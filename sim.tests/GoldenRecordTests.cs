@@ -26,14 +26,9 @@ namespace Sim.Tests;
 /// more can be noticed at all.
 /// </para>
 /// <para>
-/// <b>Each bundle is verified against the unit table committed beside it, not
-/// against <c>content/units.txt</c>.</b> A bundle stamps the content hash of
-/// the table it was recorded against and the replay gate refuses anything else,
-/// so a golden checked against the live table is a golden that any retune
-/// deletes -- and the writer emits only the current version, so an older one
-/// deleted is gone. The <c>.units</c> copy beside each bundle is that bundle's
-/// own ruleset, frozen; the gate is untouched and only what it is pointed at
-/// has moved.
+/// <b>Each bundle is replayed against the table committed beside it, not
+/// against <c>content/units.txt</c>.</b> See
+/// <see cref="RepoLayout.GoldenUnitsFile"/> for what that buys.
 /// </para>
 /// <para>
 /// The end-to-end half of this lives in <c>tools/run-headless-match.ps1
@@ -143,9 +138,9 @@ public class GoldenRecordTests
             + version.ToString(CultureInfo.InvariantCulture)
             + " has no unit table beside it at "
             + path
-            + ". Each bundle is replayed against the table it was recorded against, so a bundle "
-            + "without one cannot be verified at all -- and it cannot be re-recorded either, because "
-            + "the writer emits only the current version.");
+            + ". A bundle is replayed against the table it was recorded against, and a bundle "
+            + "without one cannot be replayed at all -- nor re-recorded, because the writer emits "
+            + "only the current version.");
 
         Assert.Equal(PinnedTypes(version).ContentHash, Golden(version).Header.ContentHash);
     }
@@ -160,38 +155,33 @@ public class GoldenRecordTests
         //
         // The oracle is the committed file rather than a second run made here:
         // a result the checker computes is a result that agrees with itself
-        // whatever it does.
+        // whatever it does. The rolling hash it carries is a fold over the state
+        // hash of every tick, so comparing that one number compares the whole
+        // run -- what a per-tick walk buys over it is the tick number a
+        // divergence started on, and content/golden-trace.txt is where that is
+        // bought, for the live match it is the trace of.
         //
-        // OBSERVED, all three assertions.
+        // Both substrings are anchored at both ends, and that is not
+        // fussiness: "1 of 40 leaked, tick 185" sits inside "11 of 40 leaked,
+        // tick 1852", so a leak count or a tick that lost a digit would be found
+        // in the committed line and pass.
         //
-        // Hand the refusal the pinned table instead of the retuned one and
-        // Assert.Throws goes red having caught nothing -- which is what the line
-        // would be worth if the gate had been softened to let a mismatched table
-        // through.
-        //
-        // Doctor content/golden/defense-0.result for the other two: "12 of 40
-        // leaked, tick 1852" to "11 of 40 leaked, tick 1852" reddens the first
-        // Contains, and "state CA3F66473C4B975D" to "state 0123456789ABCDEF"
-        // reddens the second. Without watching those, a Contains against a file
-        // nobody checks is a test that passes because the substring is short.
-        ReplayBundle bundle = Golden(version);
-
-        // The live table, retuned. This is what a balance patch does to these
-        // bytes, and what verifying against content/units.txt would make of
-        // every one of these files.
-        Assert.Equal(
-            "content hash",
-            Assert.Throws<RetiredRecordException>(() => bundle.Replay(TheMatch.RetunedTypes())).Gate);
-
-        MatchResult result = bundle.Replay(PinnedTypes(version)).Resolve();
+        // OBSERVED: doctor content/golden/defense-0.result. "12 of 40 leaked,
+        // tick 1852" to "11 of 40 leaked, tick 1852" reddens the first Contains,
+        // and "state CA3F66473C4B975D" to "state 0123456789ABCDEF" reddens the
+        // second. Without watching those, a Contains against a file nobody
+        // checks is a test that passes because the substring is short.
+        MatchResult result = Golden(version).Replay(PinnedTypes(version)).Resolve();
         string committed = File.ReadAllText(RepoLayout.GoldenResultFile(version));
 
         Assert.Contains(
-            result.Leaked.ToString(CultureInfo.InvariantCulture)
+            "result     "
+            + result.Leaked.ToString(CultureInfo.InvariantCulture)
             + " of "
             + result.Total.ToString(CultureInfo.InvariantCulture)
             + " leaked, tick "
-            + result.FinalTick.ToString(CultureInfo.InvariantCulture),
+            + result.FinalTick.ToString(CultureInfo.InvariantCulture)
+            + " (",
             committed,
             StringComparison.Ordinal);
 
@@ -203,9 +193,9 @@ public class GoldenRecordTests
     public void A_golden_whose_pinned_table_was_tampered_with_is_refused(int version)
     {
         // Pinning redirects a check; it softens none. A copy with a row taken
-        // out of it is not the table the bundle was recorded against, and the
-        // gate says so by name and with both hashes -- the same refusal any
-        // mismatched table earns, now coming from the file that decides.
+        // out of it is not the table the bundle was recorded against, and it is
+        // refused by the same gate, by name. That the refusal also carries both
+        // hashes is ReplayGateTests' claim rather than this one's.
         //
         // A row rather than a digit because the fold covers the row count and
         // every integer of every row, so dropping the last one moves the hash
@@ -218,14 +208,11 @@ public class GoldenRecordTests
         // were compared against nothing.
         string pinned = File.ReadAllText(RepoLayout.GoldenUnitsFile(version));
         UnitTypeTable tampered = UnitTypeTable.Parse("tampered pinned table", WithoutItsLastType(pinned));
-        ReplayBundle bundle = Golden(version);
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => bundle.Replay(tampered));
+            Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered));
 
         Assert.Equal("content hash", thrown.Gate);
-        Assert.Contains(bundle.Header.ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
-        Assert.Contains(tampered.ContentHash.ToString(), thrown.Live, StringComparison.Ordinal);
     }
 
     [Fact]
