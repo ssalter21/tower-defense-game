@@ -159,6 +159,105 @@ public class HostileLocaleTests
     }
 
     [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void The_whole_schedule_parses_and_hashes_identically_under_a_hostile_culture(string name)
+    {
+        // Every column the shape is made of, read under a culture chosen to
+        // break the parse. Five of them are integers a framework parser would
+        // consult a culture about -- the anchor's wave, its tier, the counter's
+        // type id, the wave that counter is purchasable from, and the bonus
+        // against a tag -- and the sixth is a keyword a culture could case-fold
+        // differently.
+        string text = File.ReadAllText(RepoLayout.ScheduleFile);
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        AnchorSchedule invariant = AnchorSchedule.Parse(text, types);
+        AnchorSchedule hostile;
+
+        using (Hostile(name))
+        {
+            hostile = AnchorSchedule.Parse(text, types);
+        }
+
+        Assert.Equal(invariant.ContentHash, hostile.ContentHash);
+        Assert.Equal(invariant.Anchors.Count, hostile.Anchors.Count);
+        Assert.Equal(invariant.GameChangers.Count, hostile.GameChangers.Count);
+
+        for (int index = 0; index < invariant.Anchors.Count; index++)
+        {
+            Assert.Equal(invariant.Anchors[index].Wave, hostile.Anchors[index].Wave);
+            Assert.Equal(invariant.Anchors[index].Tier, hostile.Anchors[index].Tier);
+            Assert.Equal(
+                invariant.Anchors[index].OpensTheSteepCounter,
+                hostile.Anchors[index].OpensTheSteepCounter);
+            Assert.Equal(invariant.Anchors[index].CounterTypeId, hostile.Anchors[index].CounterTypeId);
+            Assert.Equal(invariant.Anchors[index].CounterFromWave, hostile.Anchors[index].CounterFromWave);
+        }
+
+        for (int index = 0; index < invariant.GameChangers.Count; index++)
+        {
+            Assert.Equal(invariant.GameChangers[index].Id, hostile.GameChangers[index].Id);
+            Assert.Equal(invariant.GameChangers[index].Tier, hostile.GameChangers[index].Tier);
+            Assert.Equal(invariant.GameChangers[index].TypeId, hostile.GameChangers[index].TypeId);
+            Assert.Equal(invariant.GameChangers[index].BonusVsTag, hostile.GameChangers[index].BonusVsTag);
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish, "anchor 6 2 steep 3 5", "anchor 6 2 steep 3 5.0")]
+    [InlineData(Turkish, "changer 3 late-a 2 1 400", "changer 3 late-a 2 1 4.00")]
+    [InlineData(CommaDecimal, "anchor 6 2 steep 3 5", "anchor 6 2 steep 3 5,0")]
+    [InlineData(CommaDecimal, "changer 3 late-a 2 1 400", "changer 3 late-a 2 1 4,00")]
+    public void A_fraction_in_a_schedule_column_is_refused_under_a_hostile_culture(
+        string name,
+        string authored,
+        string planted)
+    {
+        // The wave a counter is purchasable from and the bonus against a tag
+        // are the two numbers a designer is most likely to reach for a fraction
+        // in. Under a comma-decimal culture the second spelling is the natural
+        // one, which is why both characters are refused rather than one.
+        //
+        // OBSERVED: stop refusing '.' and ',' in DataText.Fields and let
+        // DataText.Integer skip them the way int.Parse with AllowThousands
+        // does. The two bonus rows go red having caught nothing, and a counter
+        // authored as 4,00 loads as four hundred. The two wave rows stay green
+        // because 5,0 read that way is fifty, which the counter rule refuses
+        // for being after the anchor -- caught, but for the wrong reason.
+        using (Hostile(name))
+        {
+            Assert.Throws<ContentException>(
+                () => AnchorSchedule.Parse(
+                    TheSchedule.Planted(authored, planted),
+                    UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile))));
+        }
+    }
+
+    [Theory]
+    [InlineData(Turkish)]
+    [InlineData(CommaDecimal)]
+    public void The_steep_keyword_in_the_wrong_case_is_refused_under_a_hostile_culture(string name)
+    {
+        // The schedule's one keyword column, matched ordinally like every other
+        // one. A case-insensitive comparison would consult a culture, and the
+        // same bytes would then be a shape on one machine and a load error on
+        // another.
+        //
+        // OBSERVED: compare with StringComparison.CurrentCultureIgnoreCase in
+        // DataText.Keyword. Both rows go red having caught nothing -- "steep"
+        // carries none of the letters Turkish casing moves, so this one is the
+        // plain case-folding bug rather than the dotless-i one, and a shape
+        // written in the wrong case loads under both cultures.
+        using (Hostile(name))
+        {
+            Assert.Throws<ContentException>(
+                () => AnchorSchedule.Parse(
+                    TheSchedule.Planted("anchor 6 2 steep 3 5", "anchor 6 2 STEEP 3 5"),
+                    UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile))));
+        }
+    }
+
+    [Theory]
     [InlineData(Turkish, "10 none armoured 0", "1.5 none armoured 0")]
     [InlineData(Turkish, "10 none armoured 0", "10 none armoured 0.5")]
     [InlineData(CommaDecimal, "10 none armoured 0", "1,5 none armoured 0")]

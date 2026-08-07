@@ -400,13 +400,8 @@ namespace Sim
         private static int Cell(string source, int line, string name, string field) =>
             DataText.IntegerInRange(source, line, name, field, 1, MaximumFactor);
 
-        private static void Expect(string source, int line, string[] fields, string keyword, int count)
-        {
-            if (fields.Length != count)
-            {
-                throw DataText.WrongFieldCount(source, line, keyword, count, fields.Length);
-            }
-        }
+        private static void Expect(string source, int line, string[] fields, string keyword, int count) =>
+            DataText.RequireFieldCount(source, line, keyword, count, fields);
 
         /// <summary>
         /// The ruleset part-read: every field, plus which rows have been seen.

@@ -183,6 +183,58 @@ public class DerivationTests
     }
 
     [Fact]
+    public void Editing_the_schedule_moves_its_content_hash_and_reformatting_it_does_not()
+    {
+        // The same pair again, for the file that holds the shape. The second
+        // half is what separates a hash over the parsed integers from a hash
+        // over the file, and it matters more here than anywhere: the shape is
+        // the thing a rotation publishes, so "somebody touched schedule.txt" is
+        // a signal every player would learn to ignore.
+        //
+        // OBSERVED: fold the characters of the text in AnchorSchedule.Parse
+        // instead of the parsed fields. Every retune assertion still passes,
+        // because a changed number is also changed bytes. Every formatting
+        // assertion goes red -- the first of them E29E570DEDD45072 against
+        // 6546745EC46DCEE5 -- at which point renaming a game changer retires
+        // every run recorded against the shape.
+        UnitTypeTable types = TheMatch.Types();
+        string original = TheSchedule.CommittedText();
+        Hash64 hash = AnchorSchedule.Parse(original, types).ContentHash;
+
+        // A number moved, once per column the shape is made of. Each retires
+        // every run pinned to the old shape, which is exactly right.
+        Assert.NotEqual(hash, Reshaped(original, "anchor        3     1", "anchor        2     1"));
+        Assert.NotEqual(hash, Reshaped(original, "plain        3     1\nanchor        6", "plain        4     1\nanchor        6"));
+        Assert.NotEqual(hash, Reshaped(original, "steep        4     8", "steep        4     7"));
+        Assert.NotEqual(hash, Reshaped(original, "changer   12  thermal-riser", "changer   13  thermal-riser"));
+        Assert.NotEqual(hash, Reshaped(original, "swift-column     1     2", "swift-column     1     1"));
+
+        // The bonus, which is parsed and could be parsed and dropped.
+        // OBSERVED: delete .Add(BonusVsTag) from GameChanger.Fold. This line
+        // goes red with the 825 and the 830 shapes both hashing
+        // 9738D9F811E8A4B1, and a run pinned to one would replay against the
+        // other with the steep counter retuned underneath it.
+        Assert.NotEqual(hash, Reshaped(original, "thermal-riser    3     1    825", "thermal-riser    3     1    830"));
+
+        // Nothing that is not a number moved. Each of these changes the file
+        // and none of them changes the shape.
+        Assert.Equal(hash, AnchorSchedule.Parse(WithCommentsRewritten(original), types).ContentHash);
+        Assert.Equal(hash, AnchorSchedule.Parse(WithColumnsRespaced(original), types).ContentHash);
+        Assert.Equal(
+            hash,
+            AnchorSchedule.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal), types).ContentHash);
+        Assert.Equal(hash, AnchorSchedule.Parse(original + "\n\n\n", types).ContentHash);
+
+        // And a label, which is for people. The simulation branches on nothing
+        // in it, so renaming a game changer is not a shape change either.
+        Assert.Equal(
+            hash,
+            AnchorSchedule.Parse(
+                original.Replace("thermal-riser", "updraft", StringComparison.Ordinal),
+                types).ContentHash);
+    }
+
+    [Fact]
     public void The_rules_this_build_implements_are_the_ones_its_simulation_version_names()
     {
         // OBSERVED, both ways round, on this build.
@@ -433,6 +485,21 @@ public class DerivationTests
         Assert.Contains(authored, original, StringComparison.Ordinal);
 
         return Ruleset.Parse(original.Replace(authored, planted, StringComparison.Ordinal)).ContentHash;
+    }
+
+    /// <summary>
+    /// The committed schedule with one number moved, and the hash of what that
+    /// parses to. The substitution is asserted to have happened, because a
+    /// replacement that matched nothing would compare the file against itself
+    /// and agree.
+    /// </summary>
+    private static Hash64 Reshaped(string original, string authored, string planted)
+    {
+        Assert.Contains(authored, original, StringComparison.Ordinal);
+
+        return AnchorSchedule.Parse(
+            original.Replace(authored, planted, StringComparison.Ordinal),
+            TheMatch.Types()).ContentHash;
     }
 
     /// <summary>The same table with every comment line replaced by a different one.</summary>
