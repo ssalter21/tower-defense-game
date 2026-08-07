@@ -8,9 +8,9 @@ namespace Sim.Tests;
 /// </summary>
 /// <remarks>
 /// The tests open the files and hand the simulation text, exactly as
-/// <see cref="TheMatch"/> and <see cref="TheRuleset"/> do. Nothing here builds a
-/// placeholder anchor schedule or a command format -- a build phase's product is
-/// a defense and a wave, and that is what these hand over.
+/// <see cref="TheMatch"/>, <see cref="TheRuleset"/> and <see cref="TheSchedule"/>
+/// do. Nothing here builds a command format -- a build phase's product is a
+/// defense and a wave, and that is what these hand over.
 /// </remarks>
 public static class TheRun
 {
@@ -111,6 +111,7 @@ public static class TheRun
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
+            TheSchedule.Committed(types),
             FieldPool.Of(pool),
             Seed,
             waves: 1,
@@ -148,6 +149,7 @@ public static class TheRun
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
+            TheSchedule.Committed(types),
             Pool(types),
             seed,
             waves,
@@ -175,6 +177,7 @@ public static class TheRun
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
+            TheSchedule.Committed(types),
             FieldPool.Of(new[] { Orders(types) }),
             Seed,
             waves,

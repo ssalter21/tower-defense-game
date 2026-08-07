@@ -12,8 +12,8 @@ namespace Sim
     /// <para>
     /// <b>One surface, every scenario</b> -- the same claim <see cref="Match"/>
     /// makes, one level up. Construct from the map, the rules, the unit table,
-    /// the pool a field is drawn from, a seed, N, K and whether death ends it;
-    /// hand <see cref="Advance"/> what the build phase decided; read the
+    /// the shape, the pool a field is drawn from, a seed, N, K and whether death
+    /// ends it; hand <see cref="Advance"/> what the build phase decided; read the
     /// <see cref="Outcome"/>. Normal play, a sweep row, a no-death harness run
     /// and a server re-validating a submitted run are those calls with different
     /// arguments. <b>None of them is a mode, a flag or a branch.</b>
@@ -48,6 +48,13 @@ namespace Sim
     /// Round seven's field is therefore the same whatever rounds one to six did,
     /// which is what makes a run reproducible from its record.
     /// </para>
+    /// <para>
+    /// <b>The filling is one such draw, and nothing is keyed on what it drew.</b>
+    /// Which game changers reach each anchor's menu is drawn once, at run start,
+    /// from a position of its own. The field is drawn from the run and the round
+    /// alone -- a ghost pool sharded by filling would pay for variance with a
+    /// thinner pool, and rotation taxes that quite enough already.
+    /// </para>
     /// </remarks>
     public sealed class Run
     {
@@ -66,6 +73,12 @@ namespace Sim
 
         /// <summary>Names the derivation of one pairing's match seed.</summary>
         private const string MatchLabel = "run-match/1";
+
+        /// <summary>
+        /// Names the derivation of this run's filling: which game changers sit
+        /// on each anchor's menu. Drawn once, at run start.
+        /// </summary>
+        private const string FillingLabel = "run-filling/1";
 
         private readonly HexMap _map;
 
@@ -88,6 +101,10 @@ namespace Sim
         /// <param name="map">The board every match in the run is fought on.</param>
         /// <param name="rules">The health pool, the interest, the base and the bands.</param>
         /// <param name="types">The unit table every cost in the run is priced out of.</param>
+        /// <param name="schedule">
+        /// The shape: which waves are anchors, how wide each round's slots are,
+        /// and which tier pool each anchor's menu is filled from.
+        /// </param>
         /// <param name="pool">The population a round's field of K is drawn from.</param>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
         /// <param name="waves">
@@ -100,6 +117,7 @@ namespace Sim
             HexMap map,
             Ruleset rules,
             UnitTypeTable types,
+            AnchorSchedule schedule,
             FieldPool pool,
             ulong seed,
             int waves = DefaultWaves,
@@ -109,6 +127,7 @@ namespace Sim
             _map = map ?? throw new ArgumentNullException(nameof(map));
             _rules = rules ?? throw new ArgumentNullException(nameof(rules));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
+            Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
 
             if (types is null)
             {
@@ -145,6 +164,10 @@ namespace Sim
             Costs = CostTable.From(rules, types);
             Purse = Purse.Empty;
 
+            // Revealed at run start: the shape was public all week and the
+            // filling is what this run drew onto it.
+            Filling = schedule.Fill(rules.GameChangersPerAnchor, Derived(FillingLabel, 0, 0, 0));
+
             _outcome = Folded();
         }
 
@@ -162,6 +185,18 @@ namespace Sim
 
         /// <summary>What everything in this run is priced out of, units and snapshots alike.</summary>
         public CostTable Costs { get; }
+
+        /// <summary>
+        /// The shape this run is played against: where the anchors are, what
+        /// answers each, and how wide a round's slots are.
+        /// </summary>
+        public AnchorSchedule Schedule { get; }
+
+        /// <summary>
+        /// What this run drew onto each anchor's menu, at a position derived from
+        /// the seed and revealed here at run start.
+        /// </summary>
+        public AnchorFilling Filling { get; }
 
         /// <summary>
         /// The one wallet. Every wave pays it interest on what was banked plus
