@@ -314,7 +314,10 @@ namespace Tests.PlayMode
             var layout = TowerLayout.Parse("tower 3 3 2\n", types);
             var wave = WaveScript.Parse("order 0 1 4 0\n", types);
 
-            var match = new Match(map, layout, wave, seed: 0x5EED1234u);
+            // The rules are handed over and never consulted: this table is
+            // written in the column layout that has no types in it, so every
+            // shot in this match resolves to its roll.
+            var match = new Match(map, StreamingContent.ReadRuleset(), layout, wave, seed: 0x5EED1234u);
             var hashes = new List<ulong>();
 
             while (!match.IsFinished && hashes.Count < 4000)

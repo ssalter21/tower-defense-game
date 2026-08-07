@@ -123,14 +123,72 @@ public class MatchTests
     }
 
     [Fact]
+    public void Every_walking_row_returns_a_comparable_share_of_its_sauce_against_the_committed_defense()
+    {
+        // The roster's own tuning claim, measured rather than asserted. A leak
+        // charges health equal to what the creep cost to send, so what a column
+        // returns is its leak rate and cost cancels out of it entirely -- which
+        // makes survivability the only thing pricing can be wrong about, and
+        // makes a row that never leaks a row nobody would ever take.
+        //
+        // Four hundred sauce of one creep against the committed defense, per
+        // row. The band is deliberately wide: it is the claim that no row is
+        // dead and none is free money, not a pin on numbers a sweep is meant to
+        // move.
+        //
+        // OBSERVED: give the wisp back the 500 health an earlier draft had it
+        // at, at cost 3. It goes red -- "wisp returned 0 percent of the sauce a
+        // column of 133 cost" -- because five hundred effective health is under
+        // what this defense deals a creep while it crosses, so every one of
+        // them dies and a whole row of the menu is a dead option that still
+        // reads like a choice.
+        UnitTypeTable types = TheMatch.Types();
+        Ruleset rules = TheRuleset.Committed();
+        TowerLayout defense = TheMatch.Layout(types);
+
+        foreach (UnitType creep in types.Types.Where(row => row.Role == UnitRole.Moving))
+        {
+            int count = 400 / creep.Cost;
+            var match = new Match(
+                TheMatch.Map(),
+                rules,
+                defense,
+                WaveScript.Parse("order 0 " + creep.Id + " " + count + " 0", types),
+                TheMatch.Seed);
+
+            MatchResult result = match.Resolve();
+            int returned = result.Leaked * 100 / count;
+
+            Assert.True(
+                returned >= 60 && returned <= 95,
+                creep.Label
+                + " returned "
+                + returned
+                + " percent of the sauce a column of "
+                + count
+                + " cost, against a roster band of 60 to 95.");
+        }
+    }
+
+    [Fact]
     public void A_hitscan_shot_puts_nothing_in_the_snapshot_and_a_projectile_shot_puts_an_entity_in_it()
     {
         // The deliberate asymmetry, and the contrast is the test. Both towers
         // fire; only one of them is ever in a picture.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
-        int hitscanType = types.Types.Single(type => type.Delivery == Delivery.Hitscan).Id;
-        int projectileType = types.Types.Single(type => type.Delivery == Delivery.Projectile).Id;
+        // The two the committed defense actually stands, rather than the two the
+        // roster happens to carry: the roster has a sniper and a sieger on it as
+        // well, and neither of them is on this board.
+        int hitscanType = layout.Towers.Select(tower => tower.Type)
+            .Distinct()
+            .Single(type => type.Delivery == Delivery.Hitscan)
+            .Id;
+
+        int projectileType = layout.Towers.Select(tower => tower.Type)
+            .Distinct()
+            .Single(type => type.Delivery == Delivery.Projectile)
+            .Id;
 
         Match match = TheMatch.Fresh();
         var events = new TheMatch.EventLog();
@@ -450,11 +508,23 @@ public class MatchTests
         // The highest-frequency call site in the match, doubling as the most
         // sensitive detector of a unit-ordering desync. This reconstructs the
         // stream independently: draw once per shot, in the order the shots were
-        // fired, and every hitscan shot's damage has to be the number that comes
-        // next. A second draw anywhere, or a draw skipped, walks the two
-        // sequences out of step immediately.
+        // fired, and every hitscan shot's damage has to be that number resolved
+        // through the ruleset. A second draw anywhere, or a draw skipped, walks
+        // the two sequences out of step immediately.
+        //
+        // What lands is the roll through the matrix, and the wave sends two
+        // armour types, so a shot resolves to one of exactly two numbers -- the
+        // cell against Armoured or the cell against Swift. Both are computed
+        // from the same draw, which is what makes this an assertion about the
+        // stream rather than about the target.
+        //
+        // OBSERVED: draw a second time inside Match.Fire -- roll the damage,
+        // then roll it again and use the second number. This goes red on the
+        // first hitscan landing, 102 against the [81, 163] the reconstructed
+        // roll resolves to, and the reconstruction never recovers.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
+        Ruleset rules = TheRuleset.Committed();
 
         var events = new TheMatch.EventLog();
         TheMatch.Fresh().Resolve(events);
@@ -481,7 +551,14 @@ public class MatchTests
 
             if (type.Delivery == Delivery.Hitscan && landedImmediately)
             {
-                Assert.Equal(expected, events.Amounts[index + 1]);
+                Assert.Contains(
+                    events.Amounts[index + 1],
+                    new[]
+                    {
+                        DamageModel.Dealt(rules, expected, 0, type.AttackType, ArmourType.Armoured, 0),
+                        DamageModel.Dealt(rules, expected, 0, type.AttackType, ArmourType.Swift, 0),
+                    });
+
                 checkedLandings++;
             }
         }

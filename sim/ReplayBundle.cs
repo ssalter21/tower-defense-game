@@ -201,11 +201,16 @@ namespace Sim
         /// competitive record gets quietly corrupted.
         /// </para>
         /// </remarks>
-        public Match Replay(UnitTypeTable types)
+        public Match Replay(UnitTypeTable types, Ruleset rules)
         {
             if (types is null)
             {
                 throw new ArgumentNullException(nameof(types));
+            }
+
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
             }
 
             if (Header.SimVersion != SimulationVersion.Current)
@@ -232,7 +237,7 @@ namespace Sim
                     "map " + Map.MapHash.ToString());
             }
 
-            return ToMatch(types);
+            return ToMatch(types, rules);
         }
 
         /// <summary>
@@ -257,11 +262,16 @@ namespace Sim
         /// aside.
         /// </para>
         /// </remarks>
-        public Restaging RestageUnderCurrentRules(UnitTypeTable types)
+        public Restaging RestageUnderCurrentRules(UnitTypeTable types, Ruleset rules)
         {
             if (types is null)
             {
                 throw new ArgumentNullException(nameof(types));
+            }
+
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
             }
 
             if (Ghost.MapHash != Map.MapHash)
@@ -273,7 +283,7 @@ namespace Sim
             }
 
             return new Restaging(
-                ToMatch(types),
+                ToMatch(types, rules),
                 Header.SimVersion,
                 Header.ContentHash,
                 types.ContentHash);
@@ -376,8 +386,8 @@ namespace Sim
             }
         }
 
-        private Match ToMatch(UnitTypeTable types) =>
-            new Match(Map, Ghost.ToLayout(types), Wave.ToScript(types), Seed);
+        private Match ToMatch(UnitTypeTable types, Ruleset rules) =>
+            new Match(Map, rules, Ghost.ToLayout(types), Wave.ToScript(types), Seed);
     }
 
     /// <summary>

@@ -47,10 +47,10 @@ public class RulesetTests
         Assert.Equal(2, rules.StartingWaveSlots);
         Assert.Equal(1, rules.WaveSlotsPerAnchor);
 
-        // Two ordinary options against a roster of two walkers. An option
+        // Three ordinary options against a roster of six walkers. An option
         // unlocks a creep and appears on a menu once, so this number is bounded
         // by how many creeps there are to draw from, and it rises with them.
-        Assert.Equal(2, rules.OrdinaryOptionsPerRound);
+        Assert.Equal(3, rules.OrdinaryOptionsPerRound);
         Assert.Equal(3, rules.GameChangersPerAnchor);
         Assert.Equal(10, rules.FreeSnapshotsPerRun);
         Assert.Equal(25, rules.SnapshotPriceSauce);

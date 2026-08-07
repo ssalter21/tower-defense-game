@@ -46,12 +46,99 @@ public class ContentTests
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(4, table.Count);
+        Assert.Equal(10, table.Count);
         Assert.Equal("grunt", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
         Assert.Equal(Delivery.Projectile, table.ById(4).Delivery);
         Assert.Equal(11, table.ById(4).ProjectileFlightTicks);
+
+        // Six of them walk, which is what an offering is drawn out of, and four
+        // stand. The ratio is the reason the ruleset can ask for three ordinary
+        // options a round.
+        Assert.Equal(6, table.Types.Count(row => row.Role == UnitRole.Moving));
+        Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
+    }
+
+    [Fact]
+    public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
+    {
+        // Ten units and no eleventh column: a swarm, a wall, a sniper and a
+        // sieger are all authored out of the fields that were already here.
+        // Every attack type and every armour type is on the roster, so nothing
+        // in the matrix is a cell no committed unit can reach.
+        //
+        // OBSERVED: give the sieger `pierce` instead of `impact` -- one word in
+        // content/units.txt. The distinct-attack-types assertion still passes,
+        // because the sniper still carries magic; what goes red is the sieger's
+        // own row, Impact against Pierce. Both are here because the first says
+        // the matrix is covered and the second says which row covers what, and
+        // a roster that lost a whole attack type would go red on the first.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        Assert.Equal(UnitTypeTable.CurrentLayout, table.Layout);
+
+        Assert.Equal(
+            new[] { AttackType.Pierce, AttackType.Impact, AttackType.Magic },
+            table.Types.Where(row => row.Delivery != Delivery.None)
+                .Select(row => row.AttackType)
+                .Distinct()
+                .OrderBy(type => (int)type));
+
+        Assert.Equal(
+            new[] { ArmourType.Swift, ArmourType.Armoured, ArmourType.Arcane },
+            table.Types.Where(row => row.MaxHp > 0)
+                .Select(row => row.ArmourType)
+                .Distinct()
+                .OrderBy(type => (int)type));
+
+        // The swarm is the cheapest body and the fastest; the wall is the
+        // dearest, the slowest and the only one carrying armour points beside
+        // the drifter; the sniper outranges every other tower; the sieger's
+        // shell spends the longest in the air.
+        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(5).Cost);
+        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(5).SpeedMilliHexPerTick);
+        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(6).Cost);
+        Assert.Equal(45, table.ById(6).Armour);
+        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(9).RangeMilliHex);
+        Assert.Equal(AttackType.Magic, table.ById(9).AttackType);
+        Assert.Equal(AttackType.Impact, table.ById(10).AttackType);
+        Assert.Equal(table.Types.Max(row => row.ProjectileFlightTicks), table.ById(10).ProjectileFlightTicks);
+    }
+
+    [Fact]
+    public void Every_walking_row_costs_its_effective_health_over_a_hundred_and_sixty()
+    {
+        // What a sauce buys is health a defense has to spend, so the price of a
+        // creep is the pool it carries times its armour multiplier, over one
+        // constant. The type chart deliberately stays out of it: every row and
+        // every column of the matrix is a permutation of the same three cells,
+        // so averaged over the three attack types every armour type is worth
+        // exactly the same and an armour type that moved the price would be
+        // charging twice for a bet.
+        //
+        // OBSERVED: halve the bulwark's cost, 45 to 22, in content/units.txt.
+        // This goes red naming it -- "bulwark costs 22 sauce, which buys 3520
+        // effective health at the roster's rate, against the 7250 it actually
+        // carries" -- which is what the wall being twice the deal of everything
+        // else on the menu looks like before anybody plays a round of it.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        foreach (UnitType creep in table.Types.Where(row => row.Role == UnitRole.Moving))
+        {
+            int effective = creep.MaxHp * (100 + creep.Armour) / 100;
+
+            Assert.True(
+                Math.Abs(effective - (creep.Cost * 160)) * 10 <= effective,
+                creep.Label
+                + " costs "
+                + creep.Cost
+                + " sauce, which buys "
+                + (creep.Cost * 160)
+                + " effective health at the roster's rate, against the "
+                + effective
+                + " it actually carries. Every walking row is within a tenth of it.");
+        }
     }
 
     [Fact]
@@ -84,23 +171,38 @@ public class ContentTests
         // is unchanged because both sides moved together, which is what makes
         // this a resolution change rather than a balance change.
         //
-        // OBSERVED: put grunt max hp back to 200 without touching the bolt's
-        // damage. This goes red, and so does every artefact downstream of it --
-        // which is the point: the two have to move together or shots-to-kill
-        // moves with them.
+        // OBSERVED: put grunt max hp back to the pre-scale 155 without touching
+        // the bolt's damage. This goes red naming the row -- "grunt carries 155
+        // health and rolls 0 to 0" -- and so does every artefact downstream of
+        // it, which is the point: health and damage have to move together or
+        // shots-to-kill moves with them.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(2000, table.ById(1).MaxHp);
-        Assert.Equal(1100, table.ById(2).MaxHp);
+        foreach (UnitType row in table.Types)
+        {
+            Assert.True(
+                row.MaxHp % 10 == 0 && row.DamageMin % 10 == 0 && row.DamageMax % 10 == 0,
+                row.Label
+                + " carries "
+                + row.MaxHp
+                + " health and rolls "
+                + row.DamageMin
+                + " to "
+                + row.DamageMax
+                + ". Every health and damage number in this table is at the tenfold scale.");
+        }
+
+        Assert.Equal(1550, table.ById(1).MaxHp);
+        Assert.Equal(1500, table.ById(2).MaxHp);
         Assert.Equal(90, table.ById(3).DamageMin);
         Assert.Equal(150, table.ById(3).DamageMax);
         Assert.Equal(210, table.ById(4).DamageMin);
         Assert.Equal(340, table.ById(4).DamageMax);
 
-        // Shots to kill, at the top of each roll, before and after. The bolt
-        // needed 14 shots to fell a grunt and it still does.
-        Assert.Equal(200 / 15, table.ById(1).MaxHp / table.ById(3).DamageMax);
-        Assert.Equal(110 / 34, table.ById(2).MaxHp / table.ById(4).DamageMax);
+        // Shots to kill, at the top of each roll, before and after the scale.
+        // Ten bolts to fell a grunt either way, and four mortars for a runner.
+        Assert.Equal(155 / 15, table.ById(1).MaxHp / table.ById(3).DamageMax);
+        Assert.Equal(150 / 34, table.ById(2).MaxHp / table.ById(4).DamageMax);
     }
 
     [Fact]

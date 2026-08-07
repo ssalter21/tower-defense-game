@@ -160,7 +160,7 @@ namespace View
                 return;
             }
 
-            BeginMatch(StreamingContent.ReadUnitTypes(), record, art);
+            BeginMatch(StreamingContent.ReadUnitTypes(), StreamingContent.ReadRuleset(), record, art);
         }
 
         /// <summary>
@@ -183,14 +183,15 @@ namespace View
         /// that cannot build one cannot seek.
         /// </para>
         /// </remarks>
-        public MatchView BeginMatch(UnitTypeTable types, ReplayBundle record, MatchArt art)
+        public MatchView BeginMatch(UnitTypeTable types, Ruleset rules, ReplayBundle record, MatchArt art)
         {
             if (record == null) throw new System.ArgumentNullException(nameof(record));
 
-            record.Replay(types);
+            record.Replay(types, rules);
 
             return BeginMatch(
                 types,
+                rules,
                 record.Ghost.ToLayout(types),
                 record.Wave.ToScript(types),
                 record.Seed,
@@ -201,8 +202,13 @@ namespace View
         /// Starts a match from content already parsed. What a test calls, and
         /// what the frame capture calls with art of its own.
         /// </summary>
-        public MatchView BeginMatch(UnitTypeTable types, TowerLayout layout, WaveScript wave, ulong seed) =>
-            BeginMatch(types, layout, wave, seed, art);
+        public MatchView BeginMatch(
+            UnitTypeTable types,
+            Ruleset rules,
+            TowerLayout layout,
+            WaveScript wave,
+            ulong seed) =>
+            BeginMatch(types, rules, layout, wave, seed, art);
 
         /// <summary>
         /// The same, drawn with art the caller supplies rather than the art
@@ -217,6 +223,7 @@ namespace View
         /// </remarks>
         public MatchView BeginMatch(
             UnitTypeTable types,
+            Ruleset rules,
             TowerLayout layout,
             WaveScript wave,
             ulong seed,
@@ -245,7 +252,7 @@ namespace View
             host.transform.SetParent(transform, worldPositionStays: false);
 
             MatchView = host.AddComponent<MatchView>();
-            MatchView.Begin(Map, types, layout, wave, seed, art);
+            MatchView.Begin(Map, rules, types, layout, wave, seed, art);
 
             return MatchView;
         }

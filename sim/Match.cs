@@ -11,7 +11,7 @@ namespace Sim
     /// <remarks>
     /// <para>
     /// <b>One surface, every scenario.</b> Construct from
-    /// <c>(map, layout, wave, seed)</c>, call <see cref="Advance(int, IMatchEvents)"/>
+    /// <c>(map, rules, layout, wave, seed)</c>, call <see cref="Advance(int, IMatchEvents)"/>
     /// as many times as you like, pull a <see cref="Snapshot"/> when you want
     /// one, and take the <see cref="Result"/> at the end. Normal playback is
     /// one tick at a time with a snapshot pulled each time; fast-forward is more
@@ -40,6 +40,14 @@ namespace Sim
     /// should be able to reach. It costs a fold over a few dozen integers per
     /// tick, which is measured against the re-simulation budget alongside
     /// everything else.
+    /// </para>
+    /// <para>
+    /// <b>A shot resolves through the ruleset exactly once, where it lands.</b>
+    /// The dice give a roll; what that roll takes off a creep is the counter,
+    /// the type chart and the target's armour fused into one multiply and one
+    /// divide, evaluated once, in <see cref="DamageModel.Dealt"/>. A shot that
+    /// reaches nothing resolves nothing, which is why the expression is at the
+    /// landing and not at the trigger.
     /// </para>
     /// <para>
     /// <b>The dice are rolled exactly once per shot, for damage, and nowhere
@@ -113,6 +121,12 @@ namespace Sim
 
         private readonly WaveScript _wave;
 
+        /// <summary>The matrix, the armour expression and the floor every hit goes through.</summary>
+        private readonly Ruleset _rules;
+
+        /// <summary>What a prepared shooter adds against a fielded game changer.</summary>
+        private readonly ShotBonus _bonuses;
+
         private readonly TowerCoverage _coverage;
 
         private readonly Pcg32 _dice;
@@ -179,13 +193,34 @@ namespace Sim
         /// this assembly can open a file, read a clock or ask the machine
         /// anything.
         /// </summary>
-        public Match(HexMap map, TowerLayout layout, WaveScript wave, ulong seed)
+        /// <param name="map">The board, and the corridor the route is walked along.</param>
+        /// <param name="rules">
+        /// The matrix, the armour expression and the floor. Required even where
+        /// no row of the table carries a type: a match whose rules were optional
+        /// would be a match that could resolve a typed shot against nothing.
+        /// </param>
+        /// <param name="layout">The towers that stand.</param>
+        /// <param name="wave">The orders that walk.</param>
+        /// <param name="seed">What the one dice stream is started from.</param>
+        /// <param name="bonuses">
+        /// What a prepared shooter adds against a game changer this wave fields.
+        /// Nothing countered unless the caller says otherwise.
+        /// </param>
+        public Match(
+            HexMap map,
+            Ruleset rules,
+            TowerLayout layout,
+            WaveScript wave,
+            ulong seed,
+            ShotBonus? bonuses = null)
         {
             if (map is null)
             {
                 throw new ArgumentNullException(nameof(map));
             }
 
+            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+            _bonuses = bonuses ?? ShotBonus.None;
             _layout = layout ?? throw new ArgumentNullException(nameof(layout));
             _wave = wave ?? throw new ArgumentNullException(nameof(wave));
 
@@ -401,7 +436,7 @@ namespace Sim
 
                 projectiles[index] = new ProjectileSnapshot(
                     projectile.Id,
-                    projectile.TypeId,
+                    projectile.Type.Id,
                     projectile.Target,
                     projectile.TicksInFlight,
                     projectile.FlightDurationTicks);
@@ -635,7 +670,7 @@ namespace Sim
 
                 if (projectile.TicksInFlight >= projectile.FlightDurationTicks)
                 {
-                    Damage(target, projectile.Damage, events);
+                    Damage(target, projectile.Damage, projectile.Type, events);
                     projectile.Gone = true;
                 }
             }
@@ -785,7 +820,7 @@ namespace Sim
                     // No snapshot entity of any kind: a hitscan shot exists as an
                     // event and as whatever the view draws and forgets, and
                     // nothing else.
-                    Damage(FindWalkingCreep(TargetRef.Creep(tower.TargetId)), damage, events);
+                    Damage(FindWalkingCreep(TargetRef.Creep(tower.TargetId)), damage, type, events);
                     break;
 
                 case Delivery.Projectile:
@@ -829,7 +864,7 @@ namespace Sim
             ref Projectile projectile = ref _projectiles[_projectileCount];
 
             projectile.Id = _nextEntityId++;
-            projectile.TypeId = type.Id;
+            projectile.Type = type;
 
             // A reference and a countdown. No position, now or ever: where it
             // appears to be is a question the view answers from where its target
@@ -844,12 +879,16 @@ namespace Sim
         }
 
         /// <summary>
-        /// Lands damage on a creep, or does not. Damage aimed at a creep that is
+        /// Lands a shot on a creep, or does not. A shot aimed at a creep that is
         /// already dying, already gone, or never existed is discarded here, which
         /// is the single place overkill and every kind of stale reference are
-        /// dealt with.
+        /// dealt with -- and the single place a roll becomes an amount.
         /// </summary>
-        private void Damage(int creep, int amount, IMatchEvents? events)
+        /// <param name="creep">Where the target is in the live array, or -1 for nothing.</param>
+        /// <param name="roll">What the dice gave when the shot was fired.</param>
+        /// <param name="shooter">The row that fired it, which carries its attack type.</param>
+        /// <param name="events">Where to say what landed, or null.</param>
+        private void Damage(int creep, int roll, UnitType shooter, IMatchEvents? events)
         {
             if (creep < 0)
             {
@@ -862,6 +901,8 @@ namespace Sim
             {
                 return;
             }
+
+            int amount = Dealt(shooter, roll, ref target);
 
             events?.CreepDamaged(target.Id, amount);
             target.Hp -= amount;
@@ -876,6 +917,57 @@ namespace Sim
             target.TicksInState = 0;
             _killed++;
             events?.CreepDied(target.Id);
+        }
+
+        /// <summary>
+        /// What a roll actually takes off that creep: the counter, the type
+        /// chart and the target's armour, as the one fused expression the
+        /// ruleset is made of, evaluated once.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>An untyped shot resolves untyped.</b> A table written in the
+        /// column layout that has no type columns carries neither an attack type
+        /// nor an armour type, so there is no row and no column to resolve
+        /// through and the roll is what lands. That is what lets a record made
+        /// against such a table replay to the numbers it was recorded at,
+        /// forever, without the ruleset it never knew about reaching into it.
+        /// </para>
+        /// <para>
+        /// <b>Typed on one side only is a refusal.</b> One table cannot produce
+        /// it -- a unit that attacks carries an attack type and a unit that can
+        /// be damaged carries an armour type, both checked at load -- so it is a
+        /// defense and a wave parsed out of two tables that were never checked
+        /// against each other, and there is no cell it could mean.
+        /// </para>
+        /// </remarks>
+        private int Dealt(UnitType shooter, int roll, ref Creep target)
+        {
+            ArmourType armour = target.Type.ArmourType;
+
+            if (shooter.AttackType == AttackType.None && armour == ArmourType.None)
+            {
+                return roll;
+            }
+
+            if (shooter.AttackType == AttackType.None || armour == ArmourType.None)
+            {
+                throw new SimulationException(
+                    shooter.ToString()
+                    + " is shooting "
+                    + target.Type.ToString()
+                    + ", and exactly one of them is in the damage matrix. A table types both halves of a "
+                    + "shot or neither, so this is a defense and a wave read out of two tables that were "
+                    + "never checked against each other.");
+            }
+
+            return DamageModel.Dealt(
+                _rules,
+                roll,
+                _bonuses.Against(shooter.Id, target.OrderIndex),
+                shooter.AttackType,
+                armour,
+                target.Type.Armour);
         }
 
         /// <summary>
@@ -1079,7 +1171,12 @@ namespace Sim
         {
             internal int Id;
 
-            internal int TypeId;
+            /// <summary>
+            /// What fired it. Carried rather than looked up because the shot is
+            /// resolved where it lands, and the row is what says which row of
+            /// the damage matrix it lands through.
+            /// </summary>
+            internal UnitType Type;
 
             internal TargetRef Target;
 

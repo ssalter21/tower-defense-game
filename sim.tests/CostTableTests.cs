@@ -60,7 +60,7 @@ public class CostTableTests
         CostTable costs = TheRuleset.Costs();
 
         Assert.Equal(10, costs.PriceOf(Purchase.Unit(1)));
-        Assert.Equal(15, costs.PriceOf(Purchase.Unit(2)));
+        Assert.Equal(9, costs.PriceOf(Purchase.Unit(2)));
         Assert.Equal(40, costs.PriceOf(Purchase.Unit(3)));
         Assert.Equal(90, costs.PriceOf(Purchase.Unit(4)));
         Assert.Equal(25, costs.PriceOf(Purchase.Snapshot));

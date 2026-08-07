@@ -25,7 +25,7 @@ public static class TheMatch
     public const int LeakedInTheCommittedRun = 13;
 
     /// <summary>The tick the committed run ends on.</summary>
-    public const int FinalTickOfTheCommittedRun = 1841;
+    public const int FinalTickOfTheCommittedRun = 1840;
 
     /// <summary>
     /// The handle the committed map is filed under, and the one
@@ -51,7 +51,7 @@ public static class TheMatch
     public static Match Fresh(ulong seed = Seed)
     {
         UnitTypeTable types = Types();
-        return new Match(Map(), Layout(types), Wave(types), seed);
+        return new Match(Map(), TheRuleset.Committed(), Layout(types), Wave(types), seed);
     }
 
     /// <summary>The committed defense, recorded.</summary>

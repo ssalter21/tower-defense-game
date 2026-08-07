@@ -16,7 +16,7 @@ public class ReplayGateTests
         UnitTypeTable types = TheMatch.Types();
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
 
-        MatchResult fromRecord = bundle.Replay(types).Resolve();
+        MatchResult fromRecord = bundle.Replay(types, TheRuleset.Committed()).Resolve();
         MatchResult live = TheMatch.Fresh().Resolve();
 
         Assert.Equal(live.RollingStateHash, fromRecord.RollingStateHash);
@@ -30,7 +30,7 @@ public class ReplayGateTests
         UnitTypeTable types = TheMatch.Types();
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle(TheMatch.Seed + 1).ToBytes());
 
-        MatchResult fromRecord = bundle.Replay(types).Resolve();
+        MatchResult fromRecord = bundle.Replay(types, TheRuleset.Committed()).Resolve();
 
         Assert.Equal(TheMatch.Fresh(TheMatch.Seed + 1).Resolve().RollingStateHash, fromRecord.RollingStateHash);
         Assert.NotEqual(TheMatch.Fresh().Resolve().RollingStateHash, fromRecord.RollingStateHash);
@@ -53,7 +53,7 @@ public class ReplayGateTests
         Assert.Equal(SimulationVersion.Current + 1, bundle.Header.SimVersion);
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => bundle.Replay(types));
+            Assert.Throws<RetiredRecordException>(() => bundle.Replay(types, TheRuleset.Committed()));
 
         Assert.Equal("simulation version", thrown.Gate);
         Assert.Contains((SimulationVersion.Current + 1).ToString(), thrown.Recorded, StringComparison.Ordinal);
@@ -70,7 +70,7 @@ public class ReplayGateTests
         UnitTypeTable retuned = TheMatch.RetunedTypes();
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned));
+            Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned, TheRuleset.Committed()));
 
         Assert.Equal("content hash", thrown.Gate);
         Assert.Contains(TheMatch.Types().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
@@ -99,7 +99,7 @@ public class ReplayGateTests
         Assert.Equal(types.ContentHash, bundle.Header.ContentHash);
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => bundle.Replay(types));
+            Assert.Throws<RetiredRecordException>(() => bundle.Replay(types, TheRuleset.Committed()));
 
         Assert.Equal("map hash", thrown.Gate);
         Assert.Contains(bundle.Ghost.MapHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
@@ -115,7 +115,7 @@ public class ReplayGateTests
         // thing.
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
 
-        Exception thrown = Assert.ThrowsAny<Exception>(() => bundle.Replay(TheMatch.RetunedTypes()));
+        Exception thrown = Assert.ThrowsAny<Exception>(() => bundle.Replay(TheMatch.RetunedTypes(), TheRuleset.Committed()));
 
         Assert.IsType<RetiredRecordException>(thrown);
         Assert.IsNotType<RecordException>(thrown);
@@ -132,9 +132,9 @@ public class ReplayGateTests
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
         UnitTypeTable retuned = TheMatch.RetunedTypes();
 
-        Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned));
+        Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned, TheRuleset.Committed()));
 
-        Restaging restaged = bundle.RestageUnderCurrentRules(retuned);
+        Restaging restaged = bundle.RestageUnderCurrentRules(retuned, TheRuleset.Committed());
 
         Assert.False(restaged.RulesetsCoincide);
         Assert.Equal(TheMatch.Types().ContentHash, restaged.RecordedContentHash);
@@ -157,7 +157,7 @@ public class ReplayGateTests
         // as a replay on the days they agree.
         UnitTypeTable types = TheMatch.Types();
         Restaging restaged = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes())
-            .RestageUnderCurrentRules(types);
+            .RestageUnderCurrentRules(types, TheRuleset.Committed());
 
         Assert.True(restaged.RulesetsCoincide);
         Assert.Contains("Restaged, not replayed", restaged.ToString(), StringComparison.Ordinal);

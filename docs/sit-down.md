@@ -33,7 +33,7 @@ right arrow keys, yaw the camera between its six snaps.
 Dragging the scrubber pauses. That is deliberate, and it is not one of the
 things being tested.
 
-**Check the readout says the match ends on tick 1841 before you start.** That is
+**Check the readout says the match ends on tick 1840 before you start.** That is
 how you know this build is playing the match the rows below are written about,
 and it costs a glance. A build playing a match of its own would still look
 entirely reasonable — it would just end on a different tick, and every row here
@@ -52,12 +52,12 @@ than quietly sending somebody to the wrong second.
 
 | landmark | tick | what happens |
 |---|---|---|
-| `projectile-orphaned` | tick 231 | shell 23 loses the creep it was aimed at, mid-flight |
+| `projectile-orphaned` | tick 224 | shell 23 loses the creep it was aimed at, mid-flight |
 | `first-overtake` | tick 366 | creep 25 draws ahead of creep 19 |
 | `first-leak` | tick 551 | creep 29 reaches the exit |
-| `last-creep-dies` | tick 1829 | creep 107, the last one, starts dying |
+| `last-creep-dies` | tick 1828 | creep 107, the last one, starts dying |
 
-The match ends on tick 1841. Thirteen of forty creeps get through.
+The match ends on tick 1840. Thirteen of forty creeps get through.
 
 ## The twelve
 
@@ -68,10 +68,10 @@ The match ends on tick 1841. Thirteen of forty creeps get through.
 | 3 | A creep mid-corridor: play to tick 900 and watch one walk | Feet skating, or sunk into / floating above the road surface |
 | 4 | **Scrub backwards from the mid-match landmark: drag to tick 551, then drag slowly back to tick 520** | Legs keep walking *forwards* — the view holds its own playback head and the animation bet is lost |
 | 5 | Fast-forward: from tick 551, press the speed button through to 8x | Walk cycle does not speed up. Same failure as 4, different symptom |
-| 6 | Scrub back across the orphaned shell, which loses its target on tick 231: drag to tick 247, then back to tick 217 | Projectile still flying, or a stuck death pose |
-| 7 | Press To the end — tick 1841 — then drag the scrubber to tick 0 | A burst of effects all at once, or particles that never cleared |
-| 8 | The projectile tower as it fires: nudge a tick at a time from tick 212 to tick 231 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
-| 9 | A creep at death: drag to tick 1819 and play at 1x through tick 1829 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
+| 6 | Scrub back across the orphaned shell, which loses its target on tick 224: drag to tick 240, then back to tick 210 | Projectile still flying, or a stuck death pose |
+| 7 | Press To the end — tick 1840 — then drag the scrubber to tick 0 | A burst of effects all at once, or particles that never cleared |
+| 8 | The projectile tower as it fires: nudge a tick at a time from tick 205 to tick 224 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
+| 9 | A creep at death: drag to tick 1818 and play at 1x through tick 1828 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
 | 10 | Two creeps overtaking: drag to tick 350 and play at 1x to tick 380, watching for the pass on tick 366 | Draw order flickering, or the pass not visible at all |
 | 11 | **Yaw the camera through all six snaps** with Q and E, parked at tick 900 | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule |
 | 12 | Double-click the build on a clean machine — one that never cloned this repository and has no editor on it | Missing assembly, or a runtime prompt |

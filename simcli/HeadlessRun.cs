@@ -52,9 +52,10 @@ internal sealed class HeadlessRun
     /// Reads the bundle, checks it through the replay gate, and runs it to the
     /// end.
     /// </summary>
-    public static HeadlessRun Of(byte[] bundleBytes, string unitsText)
+    public static HeadlessRun Of(byte[] bundleBytes, string unitsText, string rulesText)
     {
         UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+        Ruleset rules = Ruleset.Parse(rulesText);
         ReplayBundle bundle = ReplayBundle.FromBytes(bundleBytes);
 
         // The replay gate, not the read gate: the simulation version, the
@@ -62,7 +63,7 @@ internal sealed class HeadlessRun
         // record is refused by name. A trace produced under a ruleset the
         // record was not made against would be a confidently wrong answer that
         // still validates.
-        Match match = bundle.Replay(types);
+        Match match = bundle.Replay(types, rules);
 
         var landmarks = new Landmarks();
         var trace = new StringBuilder();
