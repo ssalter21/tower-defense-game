@@ -23,15 +23,15 @@ public class CostTableTests
     [Fact]
     public void Every_kind_of_purchasable_thing_this_build_declares_is_priced_on_the_table()
     {
-        // The mechanism, asserted. A kind is declared in PurchaseKind, given a
-        // branch in CostTable.From and given an authored price, and all three or
-        // none -- a declared kind with no row is a thing taken for free out of
-        // the only wallet there is.
+        // The mechanism, asserted. A kind is declared in PurchaseKind, named in
+        // Purchase.NameOf and given a row in CostTable.From at an authored
+        // price, and all of that or none -- a declared kind with no row is a
+        // thing taken for free out of the only wallet there is.
         //
         // OBSERVED: add `Ghost = 2` to PurchaseKind and leave CostTable.From
         // alone. This goes red naming Ghost, which is exactly the failure a
         // line item added and never priced should produce.
-        CostTable costs = Costs();
+        CostTable costs = TheRuleset.Costs();
         var declared = (PurchaseKind[])Enum.GetValues(typeof(PurchaseKind));
 
         foreach (PurchaseKind kind in declared)
@@ -52,7 +52,12 @@ public class CostTableTests
         // unit at all, priced by one call each. That the third is on this table
         // is the whole design: a scouting snapshot competes for sauce with a
         // creep rather than living in a budget of its own.
-        CostTable costs = Costs();
+        //
+        // OBSERVED: size CostTable's arrays at types.Count and write the
+        // snapshot over the last unit's row. This goes red on the mortar --
+        // "Nothing on the cost table prices one unit of type 4" -- which is what
+        // a line item that displaced a unit instead of joining it looks like.
+        CostTable costs = TheRuleset.Costs();
 
         Assert.Equal(10, costs.PriceOf(Purchase.Unit(1)));
         Assert.Equal(15, costs.PriceOf(Purchase.Unit(2)));
@@ -95,7 +100,7 @@ public class CostTableTests
         // walk falls off the end -- the plausible-looking default. Both
         // assertions go red having caught nothing, and every unit id nobody
         // authored becomes free.
-        CostTable costs = Costs();
+        CostTable costs = TheRuleset.Costs();
 
         SimulationException unknown =
             Assert.Throws<SimulationException>(() => costs.PriceOf(Purchase.Unit(9999)));
@@ -126,8 +131,8 @@ public class CostTableTests
         Assert.Equal(Purchase.Unit(3), Purchase.Unit(3));
         Assert.Equal(Purchase.Snapshot, Purchase.Snapshot);
 
-        Assert.Equal(25, Costs().PriceOf(Purchase.Snapshot));
-        Assert.Throws<SimulationException>(() => Costs().PriceOf(default));
+        Assert.Equal(25, TheRuleset.Costs().PriceOf(Purchase.Snapshot));
+        Assert.Throws<SimulationException>(() => TheRuleset.Costs().PriceOf(default));
     }
 
     [Fact]
@@ -136,7 +141,7 @@ public class CostTableTests
         // OBSERVED: return the unit price from CostTable.PriceOf(what, count),
         // ignoring the count. The first assertion goes red, 0 against 10, and
         // buying nothing costs the same as buying one.
-        CostTable costs = Costs();
+        CostTable costs = TheRuleset.Costs();
 
         Assert.Equal(0, costs.PriceOf(Purchase.Unit(1), 0));
         Assert.Equal(70, costs.PriceOf(Purchase.Unit(2), 0) + costs.PriceOf(Purchase.Unit(1), 7));
@@ -150,7 +155,7 @@ public class CostTableTests
         // having caught nothing, and four grunts unbought come back as a bill of
         // -40 -- which a purse would take as being paid to spend.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Costs().PriceOf(Purchase.Unit(1), -4));
+            () => TheRuleset.Costs().PriceOf(Purchase.Unit(1), -4));
 
         Assert.Contains("negative count is a sale", thrown.Message, StringComparison.Ordinal);
     }
@@ -166,7 +171,7 @@ public class CostTableTests
         // the bill is nine billion -- a purse with a fifth of a billion in it
         // would buy a hundred million mortars.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Costs().PriceOf(Purchase.Unit(4), 100000000));
+            () => TheRuleset.Costs().PriceOf(Purchase.Unit(4), 100000000));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
     }
@@ -221,9 +226,6 @@ public class CostTableTests
 
         Assert.Contains("Purchase kind 9", thrown.Message, StringComparison.Ordinal);
     }
-
-    /// <summary>The committed ruleset and the committed unit table, priced together.</summary>
-    private static CostTable Costs() => CostTable.From(TheRuleset.Committed(), TheMatch.Types());
 
     /// <summary>A one-row unit table at the current layout, priced to order.</summary>
     private static string OneUnit(int cost) =>

@@ -87,7 +87,8 @@ namespace Sim
     {
         /// <summary>
         /// The round count that says the cap has been lifted: a run with no last
-        /// wave. See <see cref="RequireBoundedCompounding"/>.
+        /// wave. A run of no rounds at all is not a run and has no spelling
+        /// here. See <see cref="RequireBoundedCompounding"/>.
         /// </summary>
         public const int RoundCapLifted = 0;
 
@@ -131,9 +132,8 @@ namespace Sim
         /// geometrically and the only thing bounding it is the number of waves.
         /// Lifting the round cap therefore forces a ceiling on the interest, and
         /// a run configured with neither is a run whose sauce goes to infinity.
-        /// That consequence was recorded when the cap was made a parameter, and
-        /// this is where it announces itself instead of turning up later as an
-        /// exploding number in a sweep nobody was watching.
+        /// This is where that announces itself, rather than turning up later as
+        /// an exploding number in a sweep nobody was watching.
         /// </para>
         /// <para>
         /// <b>Call this where a run is constructed</b>, before a wave is
@@ -173,7 +173,7 @@ namespace Sim
                 "This run has no round cap and its ruleset has no interest cap, so the bank compounds at "
                 + rules.InterestPercentPerWave.ToString(CultureInfo.InvariantCulture)
                 + "% a wave with nothing to stop it. Compounding is bounded by the round cap and by "
-                + "nothing else, so lifting the cap forces a ceiling on the interest -- the second field "
+                + "nothing else, so lifting the cap forces a ceiling on the interest -- the cap column "
                 + "of the ruleset's 'interest' row. Refused before the run starts rather than discovered "
                 + "later as an exploding number.");
         }

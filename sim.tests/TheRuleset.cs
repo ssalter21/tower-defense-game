@@ -40,6 +40,13 @@ public static class TheRuleset
     public static Ruleset Committed() => Ruleset.Parse(CommittedText());
 
     /// <summary>
+    /// The committed ruleset and the committed unit table, priced together:
+    /// every unit's cost column and every line item that is not a unit, in the
+    /// one table they share.
+    /// </summary>
+    public static CostTable Costs() => CostTable.From(Committed(), TheMatch.Types());
+
+    /// <summary>
     /// <see cref="Minimal"/> with the matrix rebuilt from three cells, cycled
     /// so that every row and every column is a permutation of them. Pierce
     /// against Swift is always the first of the three, which is what lets a

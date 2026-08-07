@@ -22,6 +22,9 @@ namespace Sim
     /// </remarks>
     public sealed class PerformanceField
     {
+        /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
+        private const int Percent = 100;
+
         private static readonly PerformanceField NoField = new PerformanceField(new int[0]);
 
         private readonly int[] _dealt;
@@ -38,17 +41,16 @@ namespace Sim
         /// <remarks>
         /// <para>
         /// <b>A run measured against this is paid its base and a bonus of zero,
-        /// and that is the build order rather than a fault.</b> A band is a
-        /// percentile of a field, a field is a pool of other players' rounds,
-        /// and no such pool exists yet -- the sweep's canned one is the first,
-        /// and real opponents' rounds come later still. Until then this is what
-        /// every wave is measured against and every bonus is zero.
+        /// and that is a build order rather than a fault.</b> A band is a
+        /// percentile of a field and a field is a pool of other players' rounds,
+        /// so a run resolved before any such pool exists has nothing to be at a
+        /// percentile of and earns the base alone.
         /// </para>
         /// <para>
-        /// So: a zero bonus is not a missing multiplication, an unread ruleset
-        /// row or a band that failed to match. It is this value, named, and the
-        /// bands are already authored, already progressive and already never
-        /// negative for the run that gets a field.
+        /// So: a zero bonus here is not a missing multiplication, an unread
+        /// ruleset row or a band that failed to match. It is this value, named.
+        /// The bands are authored, progressive and never negative already, and
+        /// a run handed a field is paid out of them.
         /// </para>
         /// </remarks>
         public static PerformanceField Absent => NoField;
@@ -65,7 +67,7 @@ namespace Sim
 
             for (int index = 0; index < dealt.Length; index++)
             {
-                dealt[index] = Amount(leakCostsDealt[index], "A field");
+                dealt[index] = RequireAmount(leakCostsDealt[index], "A field");
             }
 
             return dealt.Length == 0 ? NoField : new PerformanceField(dealt);
@@ -84,7 +86,7 @@ namespace Sim
         /// </summary>
         public int PercentileOf(int leakCostDealt)
         {
-            Amount(leakCostDealt, "A wave");
+            RequireAmount(leakCostDealt, "A wave");
 
             if (!IsPresent)
             {
@@ -104,10 +106,11 @@ namespace Sim
                 }
             }
 
-            return (int)(100L * beaten / _dealt.Length);
+            return (int)((long)Percent * beaten / _dealt.Length);
         }
 
-        private static int Amount(int leakCostDealt, string who)
+        /// <summary>A leak cost, refused if it is not one.</summary>
+        private static int RequireAmount(int leakCostDealt, string who)
         {
             if (leakCostDealt < 0)
             {

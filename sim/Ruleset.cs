@@ -63,6 +63,9 @@ namespace Sim
         /// </summary>
         private const string HashLabel = "ruleset/2";
 
+        /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
+        public const int NoInterestCeiling = 0;
+
         /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
         private const int Percent = 100;
 
@@ -126,9 +129,6 @@ namespace Sim
         /// <see cref="Purse.RequireBoundedCompounding"/>.
         /// </summary>
         public int InterestCapSauce { get; }
-
-        /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
-        public const int NoInterestCeiling = 0;
 
         /// <summary>The flat income a wave pays, in sauce, before any bonus.</summary>
         public int IncomeBasePerWave { get; }

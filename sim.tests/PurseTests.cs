@@ -30,7 +30,7 @@ public class PurseTests
         // OBSERVED: price every unit at a literal 10 in CostTable.PriceOf. The
         // creeps assertion goes red, 20 against 50, because a tower that cost
         // the same as a grunt leaves a wallet nothing was traded out of.
-        CostTable costs = Costs();
+        CostTable costs = TheRuleset.Costs();
         Purse purse = Purse.Holding(100);
 
         Purse afterTower = purse.Spend(costs, Purchase.Unit(3), 1);
@@ -54,7 +54,7 @@ public class PurseTests
         // instead is Holding's -- one layer late, naming a negative purse rather
         // than the purchase that emptied it.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Purse.Holding(39).Spend(Costs(), Purchase.Unit(3), 1));
+            () => Purse.Holding(39).Spend(TheRuleset.Costs(), Purchase.Unit(3), 1));
 
         Assert.Contains("was spent 40", thrown.Message, StringComparison.Ordinal);
     }
@@ -175,11 +175,11 @@ public class PurseTests
     [Fact]
     public void A_wave_with_no_field_to_be_measured_against_is_paid_its_base_and_no_bonus()
     {
-        // STORY 9, ASSERTED. The bonus is a percentile band of a field, the
-        // field is a pool of other players' rounds, and there is no such pool
-        // yet -- so every wave in this build is paid the base alone. That is the
-        // build order and not a fault, and this test is where a reader who
-        // suspects a bug lands.
+        // THE ZERO BONUS, ASSERTED AS A FACT RATHER THAN LEFT SILENT. The bonus
+        // is a percentile band of a field, the field is a pool of other players'
+        // rounds, and no such pool exists in this build -- so every wave is paid
+        // the base alone. That is a build order and not a fault, and this test
+        // is where a reader who suspects a bug lands.
         //
         // The base still arrives in full, which is the half that distinguishes
         // "the bonus is zero" from "the payment is broken".
@@ -340,11 +340,11 @@ public class PurseTests
     [Fact]
     public void A_run_with_the_round_cap_lifted_and_no_interest_cap_is_refused_by_name()
     {
-        // STORY 11. Interest is a share of the bank paid every wave, so the bank
-        // grows geometrically and the only thing bounding it is how many waves
-        // there are. Lifting the round cap therefore forces a ceiling on the
-        // interest, and a run configured with neither is refused before it
-        // resolves anything rather than discovered later as an exploding number.
+        // Interest is a share of the bank paid every wave, so the bank grows
+        // geometrically and the only thing bounding it is how many waves there
+        // are. Lifting the round cap therefore forces a ceiling on the interest,
+        // and a run configured with neither is refused before it resolves
+        // anything rather than discovered later as an exploding number.
         //
         // OBSERVED: return early from Purse.RequireBoundedCompounding before the
         // throw. This goes red having caught nothing -- and one single sauce,
@@ -428,10 +428,10 @@ public class PurseTests
     [Fact]
     public void A_bank_that_compounds_out_of_a_purse_is_a_throw_and_not_a_wrap()
     {
-        // The hazard the whole of story 11 is about, met head on. The interest
-        // is taken in a long and the purse is an int, so this is the one place
-        // the arithmetic leaves its range -- and a wrapped balance is a purse
-        // that went bankrupt by getting rich.
+        // The hazard the compounding refusal above exists about, met head on.
+        // The interest is taken in a long and the purse is an int, so this is
+        // the one place the arithmetic leaves its range -- and a wrapped balance
+        // is a purse that went bankrupt by getting rich.
         //
         // OBSERVED: drop the range check and hand the closing balance to
         // Holding as an unchecked cast. The refusal fires one layer later, from
@@ -466,9 +466,6 @@ public class PurseTests
         Assert.Equal(154, paid.Total);
         Assert.Equal(paid.Opening + paid.Total, paid.Purse.Sauce);
     }
-
-    /// <summary>The committed ruleset and the committed unit table, priced together.</summary>
-    private static CostTable Costs() => CostTable.From(TheRuleset.Committed(), TheMatch.Types());
 
     /// <summary>What a wave that dealt this much is paid on top of the base.</summary>
     private static int Bonus(Ruleset rules, PerformanceField field, int leakCostDealt) =>

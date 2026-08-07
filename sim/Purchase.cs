@@ -9,9 +9,9 @@ namespace Sim
     /// unit and comes out of the same sauce.
     /// </summary>
     /// <remarks>
-    /// A kind is declared here, priced in <see cref="CostTable"/> and given its
-    /// price in the ruleset or the unit table, and all three or none. A kind
-    /// with no price is a thing bought for nothing.
+    /// A kind is declared here, named in <see cref="Purchase.NameOf"/> and given
+    /// a row in <see cref="CostTable"/>, and all three or none. A kind with no
+    /// row is a thing bought for nothing.
     /// </remarks>
     public enum PurchaseKind
     {
@@ -30,9 +30,9 @@ namespace Sim
     /// <b>This is the cost table's key, and it is deliberately not a unit type
     /// id.</b> A unit carries the id of its row in the unit table; a kind that
     /// has exactly one line item in it carries <see cref="NoId"/>. Adding the
-    /// third line item is a member of <see cref="PurchaseKind"/>, a branch in
-    /// <see cref="CostTable"/> and an authored price -- and never a second
-    /// table, because a second table is how a second wallet gets built.
+    /// third line item is a member of <see cref="PurchaseKind"/>, a row appended
+    /// in <see cref="CostTable.From"/> and an authored price -- and never a
+    /// second table, because a second table is how a second wallet gets built.
     /// </para>
     /// <para>
     /// A <c>default</c> value is a unit whose id is <see cref="NoId"/>, which is
@@ -71,7 +71,7 @@ namespace Sim
 
         public override bool Equals(object? obj) => obj is Purchase other && Equals(other);
 
-        public override int GetHashCode() => ((int)Kind * 397) ^ Id;
+        public override int GetHashCode() => ((int)Kind << 24) ^ Id;
 
         /// <summary>What a kind is called, in a message.</summary>
         public static string NameOf(PurchaseKind kind)
