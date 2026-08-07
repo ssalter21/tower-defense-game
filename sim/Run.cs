@@ -79,9 +79,18 @@ namespace Sim
         /// </summary>
         private const string FillingLabel = "run-filling/1";
 
+        /// <summary>
+        /// Names the derivation of one round's public offering. Drawn fresh
+        /// every round, from the run's seed and the wave alone -- which is what
+        /// lets everybody in a match be handed the same one.
+        /// </summary>
+        private const string OfferingLabel = "run-offering/1";
+
         private readonly HexMap _map;
 
         private readonly Ruleset _rules;
+
+        private readonly UnitTypeTable _types;
 
         private readonly FieldPool _pool;
 
@@ -128,10 +137,7 @@ namespace Sim
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
 
-            if (types is null)
-            {
-                throw new ArgumentNullException(nameof(types));
-            }
+            _types = types ?? throw new ArgumentNullException(nameof(types));
 
             // Before a wave resolves rather than at the first overflow: a run
             // that has already produced numbers is a run whose numbers somebody
@@ -161,7 +167,12 @@ namespace Sim
             FieldSize = fieldSize;
             DeathEndsTheRun = deathEndsTheRun;
             Costs = CostTable.From(rules, types);
-            Purse = Purse.Empty;
+
+            // The run opens on what the ruleset says it opens on, so that the
+            // first build phase is a build phase rather than a round whose only
+            // affordable wave is the empty one.
+            Purse = Purse.Holding(rules.StartingPurseSauce);
+            Unlocks = Unlocks.None;
 
             // Revealed at run start: the shape was public all week and the
             // filling is what this run drew onto it.
@@ -204,8 +215,22 @@ namespace Sim
         /// </summary>
         public Purse Purse { get; private set; }
 
+        /// <summary>
+        /// What this run may field. Every build phase takes one thing off the
+        /// offering and it is held for the rest of the run, free to unlock and
+        /// paid to buy.
+        /// </summary>
+        public Unlocks Unlocks { get; private set; }
+
         /// <summary>How many rounds have resolved.</summary>
         public int Round => _rounds.Count;
+
+        /// <summary>
+        /// The offering standing in front of the round about to be played.
+        /// Waves are counted from one, so it is the round after the ones that
+        /// have resolved.
+        /// </summary>
+        public Offering Offering => OfferingAt(Round + 1);
 
         /// <summary>
         /// What this run stood and sent, round by round. Stored unconditionally,
@@ -295,6 +320,52 @@ namespace Sim
 
             return outcome;
         }
+
+        /// <summary>
+        /// Resolves one round from the decision a build phase made rather than
+        /// from orders somebody composed by hand.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The same round, entered a step earlier. The decision is checked
+        /// against this round's offering, this run's unlocks, this round's slot
+        /// width and this run's purse -- by
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
+        /// which is the surface a stored command stream is validated against
+        /// too, so there is one implementation of the rules and not two.
+        /// </para>
+        /// <para>
+        /// The defense arrives beside it because a build phase composes what is
+        /// sent; what stands is the other half of a round's orders.
+        /// </para>
+        /// </remarks>
+        /// <param name="phase">What this round took, and how it filled its slots.</param>
+        /// <param name="defense">What stands against every wave the field sends this round.</param>
+        public RoundOutcome Advance(BuildPhase phase, TowerLayout defense)
+        {
+            if (phase is null)
+            {
+                throw new ArgumentNullException(nameof(phase));
+            }
+
+            Build build = phase.Resolve(Offering, Unlocks, Purse, Costs);
+
+            Unlocks = build.Unlocks;
+            Purse = build.Purse;
+
+            return Advance(RoundOrders.Of(defense, build.Wave));
+        }
+
+        /// <summary>
+        /// The public offering that stood in front of a wave of this run.
+        /// </summary>
+        /// <remarks>
+        /// Derived rather than remembered, so any wave's offering can be drawn
+        /// at any time -- which is what a stored command stream needs to be
+        /// validated against without the run in front of it having been played.
+        /// </remarks>
+        public Offering OfferingAt(int wave) =>
+            Sim.Offering.Draw(_rules, _types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
 
         /// <summary>
         /// Which K of the pool this round is fought against.

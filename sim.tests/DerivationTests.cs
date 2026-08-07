@@ -168,10 +168,18 @@ public class DerivationTests
         // against the other.
         Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       10       500"));
         Assert.NotEqual(hash, Retuned(original, "income        100", "income        101"));
+
+        // What a run opens holding, which decides whether the first build phase
+        // can buy anything at all.
+        // OBSERVED: delete .Add(draft.StartingPurseSauce) from the fold. This
+        // line goes red with a run that opens on 100 sauce and one that opens
+        // on 101 both hashing 6EBEF9AA88D5E2AA, so a stored run could be
+        // replayed against an opening balance it never had.
+        Assert.NotEqual(hash, Retuned(original, "purse         100", "purse         101"));
         Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
         Assert.NotEqual(hash, Retuned(original, "health       1500", "health       1501"));
         Assert.NotEqual(hash, Retuned(original, "slots           2         1", "slots           3         1"));
-        Assert.NotEqual(hash, Retuned(original, "offering        3         3", "offering        4         3"));
+        Assert.NotEqual(hash, Retuned(original, "offering        2         3", "offering        4         3"));
         Assert.NotEqual(hash, Retuned(original, "snapshot       10        25", "snapshot       10        26"));
 
         // Nothing that is not a number moved. Each of these changes the file

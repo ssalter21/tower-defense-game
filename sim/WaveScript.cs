@@ -222,6 +222,30 @@ namespace Sim
         }
 
         /// <summary>
+        /// The wave a build phase composed: one order per filled slot.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is the one wave that may send nothing.</b> A file or a record
+        /// with no orders in it is one somebody did not finish, and both refuse.
+        /// A build phase whose every slot was left empty is a player banking the
+        /// round at the ruleset's interest instead of attacking, which is a
+        /// position rather than an omission -- and a match resolves it as the
+        /// nothing it is, because a wave with no units in it has released
+        /// everything it will ever release on tick zero.
+        /// </remarks>
+        internal static WaveScript FromSlots(UnitOrder[] orders)
+        {
+            long total = 0;
+
+            for (int index = 0; index < orders.Length; index++)
+            {
+                total += orders[index].Count;
+            }
+
+            return new WaveScript(orders, (int)total);
+        }
+
+        /// <summary>
         /// The same wave, arriving from a stored record instead of from text.
         /// </summary>
         /// <remarks>
