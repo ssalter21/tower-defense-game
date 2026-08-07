@@ -159,7 +159,14 @@ public class DerivationTests
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, " 70   100       140", "100   140        70", "140    70       100")).ContentHash);
         Assert.NotEqual(hash, Retuned(original, "armour          1          100", "armour          2          100"));
         Assert.NotEqual(hash, Retuned(original, "floor           1", "floor           2"));
-        Assert.NotEqual(hash, Retuned(original, "interest       10", "interest       11"));
+        Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       11         0"));
+
+        // The interest cap, which is parsed and could be parsed and dropped.
+        // OBSERVED: delete .Add(draft.InterestCapSauce) from the fold. This line
+        // goes red with the capped and uncapped rulesets both hashing
+        // 1E384929C5F43BFB, and every record pinned to one would replay happily
+        // against the other.
+        Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       10       500"));
         Assert.NotEqual(hash, Retuned(original, "income        100", "income        101"));
         Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
         Assert.NotEqual(hash, Retuned(original, "health       1500", "health       1501"));

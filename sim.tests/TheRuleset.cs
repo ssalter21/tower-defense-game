@@ -23,7 +23,7 @@ public static class TheRuleset
         matrix magic 100 140 70
         armour 1 100
         floor 1
-        interest 10
+        interest 10 0
         income 100
         band 0 0
         band 50 5
@@ -38,6 +38,13 @@ public static class TheRuleset
 
     /// <summary>The committed file, parsed.</summary>
     public static Ruleset Committed() => Ruleset.Parse(CommittedText());
+
+    /// <summary>
+    /// The committed ruleset and the committed unit table, priced together:
+    /// every unit's cost column and every line item that is not a unit, in the
+    /// one table they share.
+    /// </summary>
+    public static CostTable Costs() => CostTable.From(Committed(), TheMatch.Types());
 
     /// <summary>
     /// <see cref="Minimal"/> with the matrix rebuilt from three cells, cycled

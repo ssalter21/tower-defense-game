@@ -35,6 +35,7 @@ public class RulesetTests
         Assert.Equal(100, rules.ArmourDenominator);
         Assert.Equal(1, rules.DamageFloor);
         Assert.Equal(10, rules.InterestPercentPerWave);
+        Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapSauce);
         Assert.Equal(100, rules.IncomeBasePerWave);
         Assert.Equal(1500, rules.HealthPoolSauce);
         Assert.Equal(2, rules.StartingWaveSlots);
@@ -128,7 +129,7 @@ public class RulesetTests
     [Theory]
     [InlineData("armour 1 100")]
     [InlineData("floor 1")]
-    [InlineData("interest 10")]
+    [InlineData("interest 10 0")]
     [InlineData("income 100")]
     [InlineData("health 1500")]
     [InlineData("slots 2 1")]
@@ -160,6 +161,35 @@ public class RulesetTests
             () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 100 7")));
 
         Assert.Contains("'armour' row has 4 fields", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_interest_row_that_states_a_rate_and_no_ceiling_refuses_to_load()
+    {
+        // Both fields or neither. A rate with no cap beside it would be read
+        // against shifted fields or defaulted to a ceiling nobody authored, and
+        // the ceiling is the whole answer to a run whose round cap was lifted.
+        //
+        // OBSERVED: read a two-field 'interest' row as a rate with a cap of
+        // zero. This goes red having caught nothing, and a file that never
+        // mentions a ceiling loads with "no ceiling" folded into its content
+        // hash as though somebody had chosen it.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10")));
+
+        Assert.Contains("'interest' row has 2 fields", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_negative_interest_cap_refuses_to_load()
+    {
+        // A ceiling below zero is interest that takes sauce out of the bank.
+        //
+        // OBSERVED: open the cap's range at int.MinValue. This goes red having
+        // caught nothing, and a bank that earns -1 a wave is authored without
+        // a word from the reader.
+        Assert.Throws<ContentException>(
+            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 -1")));
     }
 
     [Fact]
