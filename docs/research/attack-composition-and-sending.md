@@ -2,11 +2,27 @@
 
 **Research note** · 3 August 2026
 
+> ⚠️ **Two premises moved on 6 August 2026. The survey stands; two of its verdicts are now weaker.**
+>
+> - **The corridor is gone.** This note's strongest positive finding — that send *ordering* is rescued by a
+>   one-hex corridor, because a corridor that never branches already *is* a single-file column — lost its
+>   support when [the board became a maze again](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026).
+>   Ordering is not repealed, but it is now something the map must be *designed* to preserve rather than a free
+>   consequence of the geometry. [The Vision §3](../vision.md#depth-is-the-point) records the downgrade.
+> - **The one-purse problem has been answered.** The note's central warning — that under a single purse a coin
+>   spent attacking is simply gone, so attacking is dominated — was taken seriously and resolved by
+>   [#72](https://github.com/ssalter21/tower-defense-game/issues/72): the purse is still one, and the payback
+>   comes from percentile performance bands, an unlock gate and scarce wave slots rather than a second wallet.
+>   See [The Vision §3](../vision.md#one-purse--restored-6-august-2026).
+>
+> Everything else — the seven mechanisms, the five survivors, the thin precedent for defense-gated sending — is
+> unaffected.
+
 **Question:** how do tower defense games make *composing and sending a wave at another player* genuinely deep — and
 has anyone shipped a game where the player's **defensive build determines their attacking options**?
 **Inputs:** [The Vision](../vision.md) §3 (both boards, one purse), §4 (nothing persists), §8 seams 1 and 3;
-[Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) (the composition half of
-the lever catalogue) and §2 (one unit, two roles); [Part II §3](../async-ghost-round-robin.md#3-failure-modes--the-six-ways-this-goes-wrong).
+[Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) (the composition half of
+the lever catalogue) and §2 (one unit, two roles); [Part II §3](../archive/async-ghost-round-robin.md#3-failure-modes--the-six-ways-this-goes-wrong).
 
 ---
 
@@ -21,7 +37,7 @@ Four claims carry this note.
 **One. The north star's central tension is not available to copy.** Legion TD 2's send system is a two-currency
 loop: gold buys workers, workers make mythium, mythium buys mercenaries, and *spending mythium permanently raises
 your gold income* [[1]](#s1). Every send is an investment that pays you back. Under
-[one purse](../vision.md#one-purse) a coin spent on an attacker is simply gone, which makes attacking a pure tempo
+[one purse](../vision.md#one-purse--restored-6-august-2026) a coin spent on an attacker is simply gone, which makes attacking a pure tempo
 loss and — at equilibrium — dominated. **The one-purse precedent is Bloons TD Battles 2, not Legion TD 2**, and its
 answer is that the send and the income are *the same purchase on one continuous dial* [[10]](#s10)[[24]](#s24).
 §1.1 and §5 are about which of the three available answers this project takes; there is no fourth.
@@ -62,7 +78,7 @@ Each row is a structurally distinct source of decision, not a flavour of one. Th
 |---|---|---|---|---|---|
 | 1 | **Income vs. send** | Spend now on an attack that pays back later, or on defense that pays back now | Legion TD (lumber/wisps) [[15]](#s15)[[26]](#s26); Legion TD 2 (mythium/workers) [[1]](#s1); BTD Battles 1 & 2 (eco) [[10]](#s10)[[24]](#s24); Wintermaul Wars ⚠ [[27]](#s27) | An income ledger and a payout rule | **Only in a modified form** — §1.1 |
 | 2 | **Timing** | *When* the send lands, within a round and across the run | LTD2 build-phase vs battle-phase arrival [[16]](#s16); BTDB2 six-slot FIFO queue plus per-send cooldowns [[25]](#s25); Clash Royale elixir and cycle [[29]](#s29) | Already built — orders carry a tick | **Yes, but only the build-phase half** |
-| 3 | **Composition counters** | Pick attack types against what their defense is made of | LTD2's 75–125% matrix [[1]](#s1); Element TD 2's 4:1 cycle; Warcraft 3's 40:1 [[Part V §4.1]](../variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one) | Part V §4 already specifies it | **Yes** |
+| 3 | **Composition counters** | Pick attack types against what their defense is made of | LTD2's 75–125% matrix [[1]](#s1); Element TD 2's 4:1 cycle; Warcraft 3's 40:1 [[Part V §4.1]](../archive/variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one) | Part V §4 already specifies it | **Yes** |
 | 4 | **Ordering** | Who walks in front of whom | Anomaly convoy [[17]](#s17)[[18]](#s18); Super Auto Pets board [[19]](#s19); BTDB2 queue order [[25]](#s25) | Already built [[30]](#s30) | **Yes — and strengthened** |
 | 5 | **Stacking / overwhelm** | Save several rounds of purse for one break | LTD2 power mercs — *"only send power mercs if you think you can break your opponents on that wave"* [[16]](#s16); BTDB "layering" [[25]](#s25) | A carry-over rule on the purse | **Yes** |
 | 6 | **Denial** | Make the outcome move money between the two players | LTD2: leaking pays *the attacker* [[1]](#s1), and one Legion Spell pays the *leaker* instead — *"Every time you leak, gain 60 Mythium"* [[3]](#s3); BTDB: the defender earns **nothing** for popping what you sent [[24]](#s24) | A payout rule — not a currency | **Yes, and it is the one-purse lever** |
@@ -77,7 +93,7 @@ three shipped shapes for that payback:
 
 | Shape | Who | Mechanism | Compatible with one purse? |
 |---|---|---|---|
-| **Second currency that cross-feeds** | Legion TD (gold ⇄ lumber via wisps) [[15]](#s15); Legion TD 2 (gold → workers → mythium → income → gold) [[1]](#s1)[[4]](#s4) | Sending is an investment in a *different* pool | **No.** This is precisely what [§3 One purse](../vision.md#one-purse) rules out, and what Part II's cross-feed proposal was declined for |
+| **Second currency that cross-feeds** | Legion TD (gold ⇄ lumber via wisps) [[15]](#s15); Legion TD 2 (gold → workers → mythium → income → gold) [[1]](#s1)[[4]](#s4) | Sending is an investment in a *different* pool | **No.** This is precisely what [§3 One purse](../vision.md#one-purse--restored-6-august-2026) rules out, and what Part II's cross-feed proposal was declined for |
 | **One currency, income as a continuous dial** | Bloons TD Battles 2 — *"Money … is used to buy towers, upgrades, and Bloon sends"*, and each send carries an eco change from +$1.00 (Grouped Reds, $20) to −$400 (Tight ZOMGs, $12,000) [[10]](#s10)[[24]](#s24) | The rush and the eco send are the same button with a different coefficient | **Yes.** This is the only shipped one-purse answer |
 | **Outcome-driven transfer** | Legion TD 2 — when the defender leaks, *"You miss out on gold"* and *"Your opponents earn extra gold"* [[1]](#s1) | Attacking pays only if it *works* | **Yes.** It is a payout rule, not a currency |
 
@@ -182,7 +198,7 @@ the Dolphin"* [[19]](#s19).
 
 For this project that maps directly onto rules Part V already mandates: spawn order determines *who is in front of
 whom*, and the order of simultaneous events is *"broken by a stable integer key present in the data… never by object
-identity"* [[Part V §5.4]](../variance-levers-and-unit-schema.md). Those must stay two different things. A wave
+identity"* [[Part V §5.4]](../archive/variance-levers-and-unit-schema.md). Those must stay two different things. A wave
 whose spawn index quietly leaks into modifier application order is SAP's bug with this project's name on it.
 
 ### 2.4 Verdict on ordering
@@ -203,7 +219,7 @@ whose spawn index quietly leaks into modifier application order is SAP's bug wit
 The residual cost is honest and it is UI, not depth: an ordered list is a fourth thing on a screen that already has
 to hold two live battles, an economy and a build menu [[Vision §8 seam 7]](../vision.md#7--the-interface). Bound it
 by bounding the wave — BTDB2 caps the player at ten send options and six queue slots [[25]](#s25); Legion TD 2 shows
-four numbers per unit [[Part V §11]](../variance-levers-and-unit-schema.md#11-what-id-build-first).
+four numbers per unit [[Part V §11]](../archive/variance-levers-and-unit-schema.md#11-what-id-build-first).
 
 ---
 
@@ -277,10 +293,10 @@ legible:
 
 ### 3.5 The four failure modes, named
 
-**1. Double-dominance collapse — the serious one.** Under [one purse](../vision.md#one-purse), a build that is best
+**1. Double-dominance collapse — the serious one.** Under [one purse](../vision.md#one-purse--restored-6-august-2026), a build that is best
 on defense would also be the gate to the best offense. Any mispricing compounds instead of trading off: in a
 two-purse game an overtuned tower costs you mythium efficiency; here it wins both halves at once. This lands
-squarely on [seam 4](../vision.md#4--the-balance-harness), because the harness's method is to sweep every unit
+squarely on [seam 4](../vision.md#4--the-balance-harness--pulled-forward-to-step-4), because the harness's method is to sweep every unit
 against every defense and let a red cell name what is mispriced. **A gated pool makes a tower's contribution
 non-separable from the pool it unlocks**, so a red cell stops naming one thing and starts naming a bundle. That is a
 direct tax on the one balancing method [Vision §5](../vision.md#5-how-it-is-balanced) says is the only one that
@@ -307,7 +323,7 @@ that screen.
 ### 3.6 The upside, stated as strongly as it deserves
 
 **One coherent identity per run.** With one purse and two independent menus, a build phase is arguably two small
-decisions sharing a wallet — the exact failure [Vision §3](../vision.md#one-purse) chose one purse to avoid, arriving
+decisions sharing a wallet — the exact failure [Vision §3](../vision.md#one-purse--restored-6-august-2026) chose one purse to avoid, arriving
 by a different door. Gating makes it one decision with two consequences, and it gives a run a *name*: "I went frost."
 That matters more here than it would elsewhere, because [seam 6](../vision.md#6--the-social-layer) needs an absent
 opponent to feel like a person, and *"presence is made of specifics"*. A defense with a legible identity is a
@@ -442,7 +458,7 @@ Three directions. Each is a coherent whole, not a menu of features; the trade-of
 ### First — Universal roster, and the wave *is* the order and the clock
 
 Ship a small universal roster (LTD2's austerity is the target: *four numbers per unit* [[Part V
-§11]](../variance-levers-and-unit-schema.md#11-what-id-build-first)), role-tagged, with a type matrix, and put the
+§11]](../archive/variance-levers-and-unit-schema.md#11-what-id-build-first)), role-tagged, with a type matrix, and put the
 entire attacking decision into **which units, how many, in what order, at what ticks** — the exact shape
 [`content/wave.txt`](../../content/wave.txt) already has. Depth comes from mechanisms 2, 3, 4, 5 and 6 in §1;
 mechanism 1 arrives as an outcome transfer (breaking a defense pays you; leaking pays them), which keeps the purse

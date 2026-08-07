@@ -6,6 +6,22 @@
 **Input:** [Technology Stack Assessment](tech-stack-assessment.md) (Part III) — deterministic integer sim, no engine types
 **Output it feeds:** the unit schema, and the build helper that queries it
 
+> ### 📦 Archived — superseded as a plan, and the most load-bearing of the five
+>
+> **Its schema verdict stands and is now being built against**: one unit with two roles, levers as components,
+> the vocabulary versioned apart from the numbers.
+> [Seam 3](../vision.md#3--the-roster) fills it in. One thing has changed under it since it was written:
+>
+> - **The six mazing-dependent levers are alive again** — `Path policy`, `Repath trigger`, `blocksPath`, the
+>   maze/gun resource split, geometry-driven stats and route choice. They were written off when the corridor
+>   was one hex wide and never branched; that was withdrawn 6 August 2026. See
+>   [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026). Where the text below
+>   calls them dead weight, they are not.
+>
+> §3.11's Element TD 2 figures were corrected in place by
+> [#60](https://github.com/ssalter21/tower-defense-game/issues/60) — 59 towers, not combinatorially complete —
+> so no correction is outstanding.
+
 > **What makes one tower different from another tower?**
 >
 > Part III concluded that balance becomes a computation once the simulation is a separate integer library. That
@@ -87,7 +103,7 @@ of the design space, not edge cases to be excluded:
   walks through. It is the *minority* choice — Warcraft 3 does not do this by default at the engine level, it is
   a mapmaker's trigger — and it only arises at all if the player authors the geometry. **In a preset-path
   design it has no justification whatsoever.** See the mazing-versus-preset-path question in the
-  [index](README.md#status); this lever, `blocksPath` (3.9) and `Path policy` (3.5) all stand or fall with it.
+  [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026); this lever, `blocksPath` (3.9) and `Path policy` (3.5) all stand or fall with it.
 - A **tower with bounty** is a defense that pays its attacker for killing it.
 
 A schema that treats these as special cases will need surgery for each one. A schema where they are the natural

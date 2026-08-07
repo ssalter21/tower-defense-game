@@ -7,7 +7,7 @@
 
 **Inputs / prior art in this repo:** [The attacking half](attack-composition-and-sending.md) owns *sending as a
 competitive mechanism* (income loops, timing, ordering, denial) and is not repeated here.
-[Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) owns the lever
+[Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) owns the lever
 catalogue. **What is new here is the creep side as a *progression system*** — the enemy as something that gets
 upgraded, by someone, on purpose.
 
@@ -91,7 +91,7 @@ Six types with three composable booleans is 48 distinct enemies from nine author
 authored things and a manual. BTD6 sits at one end (few types, composable properties); CreepWars TD sits at the
 other (many types, no composition) — and CreepWars TD is not the one people cite for wave design.
 
-⚠️ For [Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half): this argues
+⚠️ For [Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half): this argues
 the creep schema wants a **flags/modifier list** alongside its type, not just a type. That is a schema shape
 decision and it is cheap now and expensive later.
 
@@ -204,7 +204,7 @@ That hole is real, and §0's fourth claim says why it stays open: the payout cur
 Stated as observations, not decisions — the match-format and roster seams own the calls.
 
 1. **Give creeps a property list, not just a type** (§2). BTD6's whole advantage is that three booleans multiply
-   against the type list. This is a [Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half)
+   against the type list. This is a [Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half)
    schema shape and it is cheap to add now.
 2. **The ability layer is the cheapest depth on the creep side, and it is orthogonal to the damage ring** (§1 row
    3). Element TD shipped four abilities in 2006 [[1]](#s1); Infinitode 2 gets an entire game out of eleven
@@ -213,7 +213,7 @@ Stated as observations, not decisions — the match-format and roster seams own 
 3. **If a creep upgrade tree is wanted, Tower Wars is the reference implementation and "Battle Point accrual" is
    the row to steal** (§4) — an income upgrade sitting on the attacking line, which is exactly the shape
    [the attacking half](attack-composition-and-sending.md) §1.1 found missing under
-   [one purse](../vision.md#one-purse).
+   [one purse](../vision.md#one-purse--restored-6-august-2026).
 4. **Sanctum 2's Feats are a shipped replacement for a difficulty selector** (§3b) — five toggles, +20% reward each,
    with the game auto-enabling one every four waves in endless. If this project ever wants an endless mode, that is
    the pattern, and it costs one multiplier.

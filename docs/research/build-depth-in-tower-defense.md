@@ -1,16 +1,25 @@
 # Where combinatorial build depth comes from, and which mechanisms survive a one-hex corridor
 
 **Research note** · 3 August 2026 · commissioned by
-[The Vision §10 — research in flight](../vision.md#research-in-flight); input to
-[seam 1 — the match format](../vision.md#1--the-match-format--next-and-now-unblocked),
+[The Vision §10](../vision.md#10-not-yet-specified); input to
+[seam 1 — the match format](../vision.md#1--the-match-format--its-first-half-is-steps-1-to-3),
 [seam 3 — the roster](../vision.md#3--the-roster) and [seam 7 — the interface](../vision.md#7--the-interface)
+
+> ⚠️ **The premise moved on 6 August 2026. The findings stand; the geometry does not.**
+> This note was written against a corridor exactly one hex wide that never branched, and it asks which
+> mechanisms survive it. That corridor was withdrawn —
+> [the board is a maze again](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026), at several
+> elevation levels. Read the survival verdicts as a *floor* rather than a filter: the one mechanism of eleven
+> the corridor killed is alive again, and nothing the note ruled *in* is affected. Its headline finding — that
+> only the generative route is simultaneously a depth mechanism, an accessibility mechanism and enumerable by
+> the harness — never depended on the geometry at all.
 
 **Question:** how do tower defense games manufacture extreme, combinatorial *build* depth; which of those
 mechanisms survive this project's settled decisions; and how do the games that are both deep *and* accessible
 pull it off without an unlock ramp?
 **Inputs:** [The Vision](../vision.md) §3 ([Depth is the point](../vision.md#depth-is-the-point)),
 §4, §5, §6 ([Juicy, and readable by a stranger](../vision.md#juicy-and-readable-by-a-stranger)), §11;
-[Part V — Tower & Creep Variance Levers](../variance-levers-and-unit-schema.md) §3.11, §4.1, §10.
+[Part V — Tower & Creep Variance Levers](../archive/variance-levers-and-unit-schema.md) §3.11, §4.1, §10.
 **The developer's stated anchor:** Element TD (Karawasa, Warcraft 3, 2006) and its successor Element TD 2.
 
 > **This note does not choose.** [§7](#7-three-directions-ranked) offers three directions, ranked, each with its
@@ -119,7 +128,7 @@ Element TD 2 has six elements — Light, Darkness, Water, Fire, Nature, Earth �
 both dealing Composite damage [[11]](#s11) — for **59**, which is exactly the number on the first-party store page
 and the official site: *"6 elements that combine to create 59 unique towers"* [[1]](#s1)[[2]](#s2).
 
-> **Correction to [Part V §3.11](../variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology).** Part V
+> **Correction to [Part V §3.11](../archive/variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology).** Part V
 > says *"six singles, fifteen duals, twenty triples, fifteen quads — plus one for the full set. Fifty-seven
 > towers, zero of them arbitrary."* The arithmetic is right and the framing is off by two: the shipped roster is
 > **59**, because Arrow and Cannon sit outside the combination scheme entirely. And it is **not** combinatorially
@@ -161,7 +170,7 @@ Three consequences land directly on this project.
 
 **The pick menu couples the tech axis to the purse.** Putting *Interest* on the same menu as *Fire* means the
 tech choice and the money choice are the same choice. That matters enormously here, because
-[§3 — one purse](../vision.md#one-purse) chose a single currency specifically so each build phase is *one sharp
+[§3 — one purse](../vision.md#one-purse--restored-6-august-2026) chose a single currency specifically so each build phase is *one sharp
 decision*. A pick schedule is not a second currency — nothing is bought with it, and it cannot be saved into or
 out of gold — but it *is* a second decision axis, and it would be a violation of §3's spirit if the two axes
 never met. Element TD 2's answer is to make them meet on the menu. Take the mechanism and the fix together or
@@ -300,7 +309,7 @@ nothing. What it saves is the **player's memory**, and that is a bigger prize th
   the missing quintuple tier (§2.1) is a genuine wart.
 - The upgrade graph falls out for free: *a level-1 single upgrades into any dual containing it; a level-1 dual
   into any triple containing both.* That is one rule, not fifty-six edges — precisely
-  [Part V §3.11's](../variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology) "an upgrade is an edge
+  [Part V §3.11's](../archive/variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology) "an upgrade is an edge
   in a directed graph, guarded by a predicate."
 
 The cost is an **authoring obligation**. Once Fire+Water exists, Fire+Earth must too, and the fifteenth dual gets
@@ -396,9 +405,9 @@ dealt 4 starting towers and **exactly one new tower card per round survived** [[
 
 The costs are three and they are all sharp:
 
-1. **Variance.** [Part II §3](../async-ghost-round-robin.md) built round-robin explicitly to control variance
+1. **Variance.** [Part II §3](../archive/async-ghost-round-robin.md) built round-robin explicitly to control variance
    across ten opponents. A bad roll is variance *inside* a run, where there is nothing left to average.
-   [Part V §10.2](../variance-levers-and-unit-schema.md#10-levers-not-to-build) argues the same case against
+   [Part V §10.2](../archive/variance-levers-and-unit-schema.md#10-levers-not-to-build) argues the same case against
    crit and evasion. A random offering is a much larger dose of the same medicine.
 2. **The harness can only sample.** See [§6](#6-how-big-the-balance-surface-actually-gets).
 3. **It fights "the reward is the build."** [The Vision §1](../vision.md#1-the-destination) says the point is the
@@ -407,7 +416,7 @@ The costs are three and they are all sharp:
 
 **Determinism is *not* one of the costs.** A build-time offering is an *input*, fixed once submitted, so it lands
 in the ghost record alongside everything else and replays exactly — provided it comes from a named RNG stream per
-[Part V §5.4](../variance-levers-and-unit-schema.md#54-determinism-constraints-the-schema-itself-must-carry). The
+[Part V §5.4](../archive/variance-levers-and-unit-schema.md#54-determinism-constraints-the-schema-itself-must-carry). The
 objection to M3 is competitive and aesthetic, never technical.
 
 **Two pieces of evidence that cut against M3.**
@@ -467,7 +476,7 @@ for two independent reasons that stack:
 - **Multiplicative surface.** A unit's value is indexed by *the multiset of items on it*. Thirty towers and fifty
   items with three slots is 30 × C(50,3) = **588,000** distinct equipped towers before anything is placed.
 - **Per-instance state.** Items dropped mid-run and towers that level are exactly
-  [Part V §10.5's](../variance-levers-and-unit-schema.md#10-levers-not-to-build) replay hazard: *"a ghost is no
+  [Part V §10.5's](../archive/variance-levers-and-unit-schema.md#10-levers-not-to-build) replay hazard: *"a ghost is no
   longer a layout — it is a layout plus a biography."*
 
 A **loadout** version — items chosen at build time from a fixed catalogue and paid for out of the purse — dodges
@@ -496,7 +505,7 @@ Which makes M5 unusually attractive here: it is the one mechanism in the taxonom
 > above is only as good as that answer, and it belongs to seam 1. If towers are placed on an open field with a
 > corridor drawn through it, M5's dependence index is board-global again and this paragraph is wrong.
 
-[Part V §3.9](../variance-levers-and-unit-schema.md#39-placement-and-space) also records the cheapest way to make
+[Part V §3.9](../archive/variance-levers-and-unit-schema.md#39-placement-and-space) also records the cheapest way to make
 a short corridor hold more towers without lengthening it — **surface classes** (Orcs Must Die!'s floor / wall /
 ceiling), three independent placement spaces occupying one corridor. That composes with adjacency and needs no
 geometry.
@@ -521,7 +530,7 @@ sweep already enumerates legal configurations because that is what "legal" means
 
 Called out separately because it is the one mechanism that is *simultaneously* a depth mechanism and an
 accessibility mechanism and **does not need persistence** — and because it is easy to confuse with the thing
-[Part V §10.5](../variance-levers-and-unit-schema.md#10-levers-not-to-build) rules out.
+[Part V §10.5](../archive/variance-levers-and-unit-schema.md#10-levers-not-to-build) rules out.
 
 A BTD6 hero is chosen before the run, starts at **level 1 every game**, and climbs to **20 during it**. The
 proof is in the shipped achievement list rather than in marketing: *"Epic Hero — Level any Hero to level 20"* and,
@@ -534,7 +543,7 @@ Two properties make it fit this project unusually well:
 - **It is a one-purse decision.** Heroes gain levels passively at end of round *and* can be levelled immediately
   by spending run cash — a patch-note line confirms the mechanic exists by fixing it (*"In Deflation, Hero 'cost
   to level up' should again update at the end of each round"*) [[16]](#s16). Money-for-tempo out of the same
-  purse is exactly the shape [§3](../vision.md#one-purse) chose.
+  purse is exactly the shape [§3](../vision.md#one-purse--restored-6-august-2026) chose.
 - **It is not Part V §10.5's hazard.** §10.5 rules out *per-instance experience on every tower*, because it makes
   a ghost "a layout plus a biography" and makes the build helper's "what does this tower do" unanswerable. **One**
   levelling unit whose trajectory is fully determined by the run's recorded inputs is a different object: it
@@ -574,7 +583,7 @@ because it resets.
 | **A5** | **Progressive disclosure *inside the run*** | ETD2: 11 picks over 50 waves, each gated behind an elemental boss. Super Auto Pets: shop tier *X* unlocks on turn 2*X*−1 [[14]](#s14). BTD6: a hero that starts at level 1 **every game** and climbs to 20 during it [[15]](#s15)[[17]](#s17); money gates upgrades | **No — resets every run** | ✅ **The replacement for A1, and it is strictly better here** |
 | **A6** | **A small offering out of a large pool** | LTD2 shows 10 of ~116 [[4]](#s4); Mazebert draws 1 card of 210 per round [[8]](#s8) | **No** | ✅ Works, at the variance cost in §3.3 |
 | **A7** | **A generative, compressible roster** | Six element names predict fifty-six towers | **No** | ✅ **The strongest mechanism available, and the only one that reduces what must be *learned* rather than what must be *seen*** |
-| **A8** | **Legibility furniture** — all upgrade options with prices and descriptions in one panel; safe defaults (BTD6's targeting priority ships set to *First*); a per-tower **performance readout** (BTD6 v54.0 added *"an extra button listing a performance summary with pops, damage, cash earned, value and lives earned"* [[16]](#s16)); counter-hints authored as data; colour-coded tells | BTD6's upgrade panel and info panel; ETD2's per-creep "weak to single-target / AoE / long range" annotations (recorded in [Part V §9](../variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this)) | **No** | ✅ Pure UI and data. Free, and it lands on [seam 7](../vision.md#7--the-interface). The performance readout is the cheapest of the lot and the one most likely to be skipped |
+| **A8** | **Legibility furniture** — all upgrade options with prices and descriptions in one panel; safe defaults (BTD6's targeting priority ships set to *First*); a per-tower **performance readout** (BTD6 v54.0 added *"an extra button listing a performance summary with pops, damage, cash earned, value and lives earned"* [[16]](#s16)); counter-hints authored as data; colour-coded tells | BTD6's upgrade panel and info panel; ETD2's per-creep "weak to single-target / AoE / long range" annotations (recorded in [Part V §9](../archive/variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this)) | **No** | ✅ Pure UI and data. Free, and it lands on [seam 7](../vision.md#7--the-interface). The performance readout is the cheapest of the lot and the one most likely to be skipped |
 
 **The sharp claim.** A1 through A4 are all mechanisms for controlling *how much a player sees at once*. A7 is the
 only one that controls *how much a player has to remember*, and it is the only one that scales the roster and the
@@ -606,7 +615,7 @@ mechanisms, at a fixed isometric camera, while watching two boards, by somebody 
 | **M7** Tiered exclusivity | ✅ A pick is a banner and a persistent header showing what you took | Near zero — UI |
 | **M9** Economy | ✅ It is a number that goes up | Zero |
 | **M3** Offering | ✅ It is a menu; the whole point is that it is small | Zero |
-| **M10** Counter-reading | ✅ if the matrix is colour-coded and the tell is on the creep | Low — [Part V §9's](../variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this) authored counter-hints |
+| **M10** Counter-reading | ✅ if the matrix is colour-coded and the tell is on the creep | Low — [Part V §9's](../archive/variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this) authored counter-hints |
 | **M11** In-run levelling | ✅ It is a number over one unit's head | Zero |
 | **M2** Cross-pathing | ⚠️ **Only if each configuration looks different.** BTD6 gives crosspaths distinct models — the community counts **52 unique models** for the Wizard Monkey alone [[12]](#s12) | **High, and it lands on the art pipeline.** 64 configurations × 12 towers is not a recolour job, and [§6](../vision.md#where-the-effort-goes) explicitly rules out custom character geometry as the default |
 | **M5** Adjacency | ⚠️ Needs an explicit drawn link between the units | Medium — a link VFX, plus it must survive being read at a glance on *two* boards |
@@ -628,21 +637,21 @@ plus palette swaps. Direction B in [§7](#7-three-directions-ranked) is priced a
 
 Graded against [the vision's](../vision.md) settled decisions. "Corridor" means the one-hex non-branching
 playfield with no mazing and no pathfinding, permanently
-([§11](../vision.md#11-out-of-scope), and closed in [`docs/README.md`](../README.md#what-has-been-settled-since)).
+([§11](../vision.md#11-out-of-scope), and closed in [The Vision §11](../vision.md#11-out-of-scope)).
 
 | Mechanism | Corridor | One purse | Nothing persists | Integer determinism | Verdict |
 |---|---|---|---|---|---|
 | **M1** Ingredient combination | ✅ Indifferent — recipes have no geometry | ✅ Prices in gold; the tech gate can be a boss wave, not a currency | ✅ The whole roster exists from run one, which §4 [demands](../vision.md#4-what-persists) | ✅ A recipe table is data | **Survives whole** |
 | **M2** Constrained upgrade topology | ✅ Indifferent | ✅ Tier costs are gold | ✅ | ✅ A legality predicate is data | **Survives whole** |
-| **M3** Randomised offering | ✅ Indifferent | ✅ | ✅ Rerolls per run, nothing carried | ✅ Seeded stream, recorded as ghost input | **Survives technically; fights [Part II §3's](../async-ghost-round-robin.md) variance control** |
-| **M4** Item layering | ✅ Indifferent | ✅ if items are bought, ☠️ if dropped | ⚠️ Drops are fine per-run; **tower XP is not** ([Part V §10.5](../variance-levers-and-unit-schema.md#10-levers-not-to-build)) | ✅ | **Survives only as a build-time loadout** |
-| **M5** Adjacency / aura | ✅ **Improved** — degree bounded by the corridor (⚠️ see §3.5) | ✅ | ✅ | ✅ Needs a declared stacking rule ([Part V §5.2](../variance-levers-and-unit-schema.md#52-stacking-rules)) | **Survives, cheaper than elsewhere** |
-| **M6** Sacrifice / consumption | ✅ Indifferent | ⚠️ Consuming towers is a gold sink with a refund question | ✅ | ⚠️ Check the fixed point ([Part V §3.11](../variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology)) | **Survives; carries GemCraft's known failure** |
+| **M3** Randomised offering | ✅ Indifferent | ✅ | ✅ Rerolls per run, nothing carried | ✅ Seeded stream, recorded as ghost input | **Survives technically; fights [Part II §3's](../archive/async-ghost-round-robin.md) variance control** |
+| **M4** Item layering | ✅ Indifferent | ✅ if items are bought, ☠️ if dropped | ⚠️ Drops are fine per-run; **tower XP is not** ([Part V §10.5](../archive/variance-levers-and-unit-schema.md#10-levers-not-to-build)) | ✅ | **Survives only as a build-time loadout** |
+| **M5** Adjacency / aura | ✅ **Improved** — degree bounded by the corridor (⚠️ see §3.5) | ✅ | ✅ | ✅ Needs a declared stacking rule ([Part V §5.2](../archive/variance-levers-and-unit-schema.md#52-stacking-rules)) | **Survives, cheaper than elsewhere** |
+| **M6** Sacrifice / consumption | ✅ Indifferent | ⚠️ Consuming towers is a gold sink with a refund question | ✅ | ⚠️ Check the fixed point ([Part V §3.11](../archive/variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology)) | **Survives; carries GemCraft's known failure** |
 | **M7** Tiered exclusivity | ✅ Indifferent | ⚠️ A second decision axis; ETD2's fix is to put income on the pick menu (§2.2) | ✅ Resets every run — this is the point | ✅ Free | **Survives whole. Best fit in the taxonomy** |
 | **M8** Geometry — mazing, path length, blocking, route choice, placement-vs-path | ☠️ **DEAD** | — | — | — | **Dead, permanently** |
-| **M9** Economy shape | ✅ Indifferent | ✅ **This is what one purse is *for*** | ✅ | ⚠️ Interest is integer division; specify rounding once ([Part V §4.2](../variance-levers-and-unit-schema.md#42-the-reduction-formula-and-the-integer-contract)) | **Survives whole** |
+| **M9** Economy shape | ✅ Indifferent | ✅ **This is what one purse is *for*** | ✅ | ⚠️ Interest is integer division; specify rounding once ([Part V §4.2](../archive/variance-levers-and-unit-schema.md#42-the-reduction-formula-and-the-integer-contract)) | **Survives whole** |
 | **M10** Counter-reading | ✅ Indifferent | ✅ | ✅ | ✅ | **Survives whole — and both boards at once makes it stronger here than in any surveyed game** |
-| **M11** In-run levelling | ✅ Indifferent | ✅ **Better than indifferent** — BTD6 lets run cash buy a hero level, which is a money-for-tempo decision out of the one purse | ✅ Resets to level 1 every run, by construction | ⚠️ Fine for **one** unit whose trajectory is determined by recorded inputs; **not** for every tower ([Part V §10.5](../variance-levers-and-unit-schema.md#10-levers-not-to-build)) | **Survives, bounded to one or two units** |
+| **M11** In-run levelling | ✅ Indifferent | ✅ **Better than indifferent** — BTD6 lets run cash buy a hero level, which is a money-for-tempo decision out of the one purse | ✅ Resets to level 1 every run, by construction | ⚠️ Fine for **one** unit whose trajectory is determined by recorded inputs; **not** for every tower ([Part V §10.5](../archive/variance-levers-and-unit-schema.md#10-levers-not-to-build)) | **Survives, bounded to one or two units** |
 | **M12** Meta-progression | — | — | ☠️ **DEAD** | — | **Dead** |
 
 ### 5.1 What the corridor actually kills, stated once
@@ -651,14 +660,14 @@ playfield with no mazing and no pathfinding, permanently
 
 - Maze construction and path lengthening (Gem TD's entire second half; the classic WC3 TD skill).
 - `blocksPath`, and every design decision downstream of "the player has fully blocked the path"
-  ([Part V §2](../variance-levers-and-unit-schema.md#2-the-decisive-move-one-unit-two-roles)).
-- Route choice as the attacker's mirror of mazing ([Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half)).
+  ([Part V §2](../archive/variance-levers-and-unit-schema.md#2-the-decisive-move-one-unit-two-roles)).
+- Route choice as the attacker's mirror of mazing ([Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half)).
 - Geometry-driven stats — a tower whose fire rate scales with how much path it overlooks
-  ([Part V §3.9](../variance-levers-and-unit-schema.md#39-placement-and-space)).
+  ([Part V §3.9](../archive/variance-levers-and-unit-schema.md#39-placement-and-space)).
 - The maze/gun resource split (Sanctum's base-versus-tower economy).
-- Path policy and repath triggers ([Part V §3.5](../variance-levers-and-unit-schema.md#35-movement)).
+- Path policy and repath triggers ([Part V §3.5](../archive/variance-levers-and-unit-schema.md#35-movement)).
 
-Those are the six levers [`docs/README.md`](../README.md#what-has-been-settled-since) already lists as dead, plus
+Those are the six levers [The Vision §11](../vision.md#11-out-of-scope) already lists as dead, plus
 the activity they existed to support. **This note adds no new ones and removes none** — which is the useful
 finding, because it means the corridor's cost was correctly priced when it was settled and nothing in this survey
 raises it.
@@ -683,7 +692,7 @@ one-lane corridor. Its positioning depth is **aggro ordering**, not path length:
 missing-health → closer-position → *"Further Forward Tower Position"*, which produces the advice *"position your
 DPS/carry unit on the side of your lane, while your tank is at least one column towards the centre"* [[26]](#s26).
 That is front-line/back-line ordering — which a corridor reproduces directly, and which
-[Part V §3.6](../variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) already has as
+[Part V §3.6](../archive/variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half) already has as
 Anomaly's convoy ordering pointed the other way.
 
 The game's own difficulty heuristic ranks its axes for you. **Recommended Value** tells a player how much gold to
@@ -702,7 +711,7 @@ tower defenses that greatly inspired me … It's by far the best balanced tower 
 ⚠️ The fixed-path claim is inferred from the source's structure rather than from a sentence the developer wrote;
 it is high confidence but not quoted.
 
-**And the compensation, restated.** [Part V §3.9's](../variance-levers-and-unit-schema.md#39-placement-and-space)
+**And the compensation, restated.** [Part V §3.9's](../archive/variance-levers-and-unit-schema.md#39-placement-and-space)
 surface classes (floor / wall / ceiling), **ordering along the corridor** — now known to be Legion TD 2's actual
 positional mechanic rather than a consolation prize — and bounded adjacency all give placement something to mean
 without geometry. A corridor is not a queue unless you make it one.
@@ -787,7 +796,7 @@ the creeps you can buy, so the pool you send from is a consequence of what you b
 ingredient scheme without being designed for. If the vocabulary is *n* ingredients and both roles are drawn from
 it, then picking Fire gates Fire towers **and** Fire creeps off the same pick, and "one coherent identity per
 run" is the default rather than an extra rule. That is also precisely
-[Part V §2's](../variance-levers-and-unit-schema.md#2-the-decisive-move-one-unit-two-roles) *one unit, two roles*
+[Part V §2's](../archive/variance-levers-and-unit-schema.md#2-the-decisive-move-one-unit-two-roles) *one unit, two roles*
 paying off in content rather than only in schema. ⚠️ **I found no shipped game that does this** — Element TD 2's
 waves are authored, not player-composed, and Legion TD 2's mercenaries are a separate list from its fighters —
 so it is *unexplored*, not *known-bad*, and settling which of those it is belongs to
@@ -913,10 +922,10 @@ into M7); the rest are recorded here so nobody has to survey them again.
 | Game | Its one structural contribution | Verdict |
 |---|---|---|
 | **Sanctum 1 → 2** | The **loadout constraint.** Sanctum 1 sold mazing (*"Don't just build towers. Build mazes!"*); Sanctum 2 replaced open access with a pre-mission loadout of towers, weapons and perks [[29]](#s29) — deliberately shrinking the available set to force commitment. The exact inverse of YouTD's approach, and the only franchise here that made the move *away* from geometry on purpose | **Folded into M7.** The most directly relevant precedent for a game that has given up mazing |
-| **Rogue Tower** | Player-steered **procedural path growth** plus in-run upgrade card draws, over *"400 unique cards and upgrades"*, with elevation making some sites premium | ☠️ The path-growth half is M8 and dead. The card-draw half is M3. Its economy levers (count-scaled pricing, diversity bounty) are already in [Part V §3.11](../variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology) and **deserve a second look under any of the three directions** — a stored-ghost pool that everyone copies is exactly the problem they solve |
+| **Rogue Tower** | Player-steered **procedural path growth** plus in-run upgrade card draws, over *"400 unique cards and upgrades"*, with elevation making some sites premium | ☠️ The path-growth half is M8 and dead. The card-draw half is M3. Its economy levers (count-scaled pricing, diversity bounty) are already in [Part V §3.11](../archive/variance-levers-and-unit-schema.md#311-economy-and-upgrade-topology) and **deserve a second look under any of the three directions** — a stored-ghost pool that everyone copies is exactly the problem they solve |
 | **Infinitode 2** | Only *"15+ different types of towers"* but *"300+ unique upgrades, almost every one of which can be improved to infinity"*, plus per-tower RPG levelling | ☠️ **Depth by vertical meta-progression.** M12, dead by §4. Useful as the clearest example of the road not taken |
 | **Kingdom Rush** | The **fixed branching specialisation tree** — the same tree every run, variance only from map and enemy composition | The control case. This is the baseline every combinatorial game in §3 is departing *from* |
-| **Defender's Quest** | Towers as persistent RPG characters carried **across battles**, levelled and equipped individually | ☠️ Campaign-scoped persistence — dead by §4. Its damage-*flavour* tag system is already in [Part V §4.1](../variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one) |
+| **Defender's Quest** | Towers as persistent RPG characters carried **across battles**, levelled and equipped individually | ☠️ Campaign-scoped persistence — dead by §4. Its damage-*flavour* tag system is already in [Part V §4.1](../archive/variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one) |
 | **Legion TD Reborn** (Dota 2) | Symmetric PvP send-economy with a **duel every five waves** — the opponent chooses your difficulty curve rather than your own tower pool | Structurally close to this project's match format, but its depth is economic rather than combinatorial. Nothing new for the taxonomy |
 
 ---
@@ -969,5 +978,5 @@ is badly under-documented first-party and several of its most-cited numbers are 
 
 **Inherited**
 
-30. **[Part V — Tower & Creep Variance Levers](../variance-levers-and-unit-schema.md)**, especially §3.9 (placement and surface classes), §3.11 (upgrade topology, GemCraft's supergemming, Rogue Tower's diversity levers), §4.1 (the matrix-width question and the 1.67 : 1 / 4 : 1 / 40 : 1 spreads), §4.3 (capability gates), §4.5 (adaptive counters), §5.4 (named RNG streams), §10.2 and §10.5 (variance and per-instance experience). This note is written to sit **above** Part V: Part V catalogues *levers*, this catalogues *mechanisms that combine levers into builds*. Where they overlap, Part V is the more detailed and is not repeated.
-31. **[The Vision](../vision.md)** §1, §3, §4, §5, §11 and [`docs/README.md`](../README.md#what-has-been-settled-since) — the settled decisions the filter in §5 grades against.
+30. **[Part V — Tower & Creep Variance Levers](../archive/variance-levers-and-unit-schema.md)**, especially §3.9 (placement and surface classes), §3.11 (upgrade topology, GemCraft's supergemming, Rogue Tower's diversity levers), §4.1 (the matrix-width question and the 1.67 : 1 / 4 : 1 / 40 : 1 spreads), §4.3 (capability gates), §4.5 (adaptive counters), §5.4 (named RNG streams), §10.2 and §10.5 (variance and per-instance experience). This note is written to sit **above** Part V: Part V catalogues *levers*, this catalogues *mechanisms that combine levers into builds*. Where they overlap, Part V is the more detailed and is not repeated.
+31. **[The Vision](../vision.md)** §1, §3, §4, §5, §11 and [The Vision §11](../vision.md#11-out-of-scope) — the settled decisions the filter in §5 grades against.

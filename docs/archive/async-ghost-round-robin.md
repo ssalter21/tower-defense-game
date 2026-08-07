@@ -2,6 +2,14 @@
 
 **Part II of III** · Design & feasibility · 30 July 2026
 
+> ### 📦 Archived — superseded, kept as the reading
+>
+> **The conclusion stands and the reason does not.** Async survives because players are never free at the same
+> time, not because of a population ceiling — which is a narrower justification and a stronger one, since it is
+> true at three players. Its cross-fed-currency fix, its matching axis and its build order are all replaced.
+> [The Vision §9](../vision.md#9-what-this-overturns) records each. The determinism argument in §4 is the part
+> that became load-bearing, and it is now built.
+
 > **Real opponents, no queue.**
 >
 > Part I concluded that synchronous PvP tower defense has a hard population ceiling, and that an asynchronous
