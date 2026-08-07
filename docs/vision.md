@@ -97,7 +97,7 @@ The unifying claim, stated precisely so the rest of the document can lean on it.
 
 | Mode | Who fills the other seats | Barrier clears when | Latency |
 |---|---|---|---|
-| **Round-robin** | The shared pool — a different stored defense every wave, drawn at your stage | Immediately; the pool is already there | Days, or none |
+| **Round-robin** | The shared pool — a **field of ten** stored defenses every wave, drawn at your stage | Immediately; the pool is already there | Days, or none |
 | **Lobby** | The friends in the lobby | Everyone present has submitted | Minutes |
 | **Co-op** | *Not yet specified* — see [§10](#10-not-yet-specified) | — | — |
 
@@ -113,11 +113,24 @@ submissions and broadcast the result.
 > *turn*. The deterministic sim that already exists resolves it, and the record format that already exists
 > transmits it. Live head-to-head costs a barrier and a lobby, not a netcode layer.
 
-**Round-robin draws a fresh opponent every wave, matched at the same stage.** Wave four meets somebody's
-wave-four defense. This dissolves the hardest problem in the async model: a stored defense never has to evolve
-mid-match, because you only ever meet it at one moment of its life. It is the Super Auto Pets structure, and it
-is also the variance control Part II §3 argued round-robin exists for — ten opponents per run means one bad
-draw is a dent, not a defeat.
+**Every round draws a fresh field of ten, matched at the same stage** — *changed 7 August 2026, see
+[§9](#and-what-was-reversed-on-7-august-2026).* Round four meets ten people's round-four defenses, and ten
+people's round-four waves. This dissolves the hardest problem in the async model: a stored defense never has to
+evolve mid-match, because you only ever meet it at one moment of its life. It is the Super Auto Pets structure.
+
+**The field is also the variance control** Part II §3 argued round-robin exists for, and it does that job far
+harder than the earlier one-opponent-per-wave draw did: a round's result is the *average* across ten, so a
+single bad matchup is a rounding error rather than a dent. The number is **K = 10, fixed, in every mode** — a
+lobby smaller than ten is topped up from the pool at that `(map, stage)`. Decided in
+[#74](https://github.com/ssalter21/tower-defense-game/issues/74).
+
+The cost of averaging is that a round tends toward the field mean, which risks rounds feeling alike. The
+antidote on file — deliberately undecided — is a **gamble**: opt out of the average and face a single opponent
+drawn from the distribution, with best-of-ten as its natural payoff. It cannot be tuned before a real field
+exists at step 6.
+
+Compute is not a constraint here. At the 2.75 ms a match `BudgetTests` measures, ten rounds against ten
+opponents on two sides is about half a second for an entire run.
 
 The cost is that **the pool needs depth at every stage, not just at the end**, which sharpens Part II's
 cold-start problem rather than removing it. Hand-authored defenses at each stage are the answer, and they cost
@@ -147,6 +160,11 @@ needed, and is explicitly not adopted.**
 The cost is real and lands on [the interface seam](#8-the-build-order): the player is reading two boards at once, and
 that is the hardest unsolved presentation problem in this design.
 
+> ⚠️ **And it got harder on 7 August 2026.** A round now resolves against
+> [a field of ten](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026), so the problem is no longer
+> reading two boards at once — it is reading *twenty*. **What the player actually watches is now the biggest
+> open thing in [seam 7](#7--the-interface)**, and nothing in this document answers it.
+
 ### Build phases between waves, and nothing during one
 
 The classic tower defense rhythm. A wave resolves with no input; then a build phase opens; then the next wave.
@@ -155,6 +173,62 @@ This is what makes the whole thing a *game* rather than an auto-battler, and it 
 ghosts only because of the per-wave draw above. A defense in the pool is a snapshot of one stage. It never has
 to play itself, never has to replay a build order chosen against a different wave, and never has to follow a
 policy you authored. **It is finished, at that stage, forever.**
+
+### A run is ten waves, and health is money — *decided 7 August 2026*
+
+**Ten waves. A round is one build phase plus the wave that follows it, so ten waves is ten rounds.** The
+length is fixed and public, and it is the number this document was already leaning on without deciding it.
+
+The reason for short over Element TD's fifty is not pacing but mercy: **a player who has fallen behind the
+curve should not be stuck in a long game.** Get them out and into the next run, where the thing they just
+learned is worth something. Ten also keeps 10% interest compounding to about 2.6x across a run, which is why
+the purse below needs no interest cap.
+
+> ⚠️ **The cap may be lifted later, so run length is a parameter and not a constant** — and **removing it
+> forces an interest cap**, because uncapped 10% a wave is bounded today only by the run being ten waves long.
+
+**Health is a pool denominated in sauce. A leaked creep costs health equal to its cost, one for one.** A
+10-cost creep does 10 damage.
+
+That single sentence is doing most of the work in this section, because it makes health and money the same
+unit:
+
+- **It gives conceding a wave a literal exchange rate.** Under one purse, underbuilding your defense to fund
+  your offense already *is* spending health. There is no sell-health button and none is needed — the shared
+  wallet is the dial, which is the same argument [#72](https://github.com/ssalter21/tower-defense-game/issues/72)
+  landed on for timing.
+- **Damage taken in a round is the field average, not the sum.** Summing ten opponents' leaks would kill
+  everybody immediately; averaging is the entire point of a field of ten.
+- **The pool is about three waves' worth of average creep value** — deep enough that one deliberate concession
+  is affordable and a second is a real decision, shallow enough that a losing player is out around wave six or
+  seven. A single number, and a step 4 sweep target rather than an argument.
+- **Sauce cannot repair health.** Permanent depletion is what makes the pool a clock, and the clock is the
+  thing that ejects a struggling player. A repair rate would sell them a way to stay in a run they are losing.
+
+**Death is in. Zero health ends the run there.** The wall sits at the bottom of a graded pool rather than in
+place of one — Legion TD 2's *"King HP is a resource, to a certain extent."* For the step 4 harness, death is a
+**flag** rather than a rule, so a sweep can run in no-death mode and always yield ten rounds of data.
+
+**Runs are ranked by waves survived first, then health remaining.** The graded pool therefore does double duty
+— the resource during the run and the placing at the end of it — so no third number has to be invented.
+
+**The offense never enters the placing. It pays in sauce and nothing else.**
+
+> ⚠️ **This is in tension with [*"the attacking half is as deep as the defending half"*](#depth-is-the-point)
+> below.** Secondary in *scoring* is not the same as shallow in *decision* — the wave slots, the unlock gate
+> and the percentile bands all still make composing a wave a real choice — but an attacking half that can never
+> win you a placing is a weaker claim than that section makes. **Seam 1 owns the reconciliation.**
+
+**A run's outcome is a vector, not a score:** per round, the pair `(leak cost dealt, leak cost taken)`, plus how
+the run terminated. Health remaining, waves survived and any score are folds over it. Recording a scalar
+instead would mean re-simulating to recover the two distributions the percentile bands are computed from. A
+round's **offense** score is the average of the ten rather than the best of them — the same rule as the damage,
+taken symmetrically.
+
+The simulation already produces the raw material. `sim/MatchResult.cs` returns `Leaked / Total / FinalTick` and
+says so in its own summary: *"Carries no win or loss verdict."* Health is a layer over a number that exists.
+
+Decided in [#74](https://github.com/ssalter21/tower-defense-game/issues/74), which holds the detail.
 
 ### One purse — *restored 6 August 2026*
 
@@ -643,6 +717,12 @@ which are worth nothing if the answer to the cheap ones was no.
   what the match consumes.** Done that way every playtest is also a determinism test — exactly as scrubbing is
   today — and [seam 2](#2--the-submission-barrier) comes nearly free later, because a submitted turn *is* a
   command batch. Done the other way it contaminates the one guarantee everything here rests on.
+
+  *Added 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74):* **run length N and
+  field size K are parameters of the lifecycle, not constants.** Ten and ten are the answers, and both are
+  expected to move — the round cap may be lifted entirely. Two signatures, cheap now and tedious across every
+  call site later, which is the same argument [seam 4](#4--the-balance-harness--pulled-forward-to-step-4) makes
+  for the sweep taking its map as a parameter.
 - **Step 3 exhausts rows before it touches the schema.** `UnitType` already carries eleven integer levers —
   HP, speed, range, cooldown, windup, backswing, damage min, damage max, delivery, projectile flight, dying
   ticks — and the four committed unit types use about half of that space. A slow sieger is a cooldown and a
@@ -677,7 +757,7 @@ it already did, and the right-hand column links to it rather than restating it. 
 |---|---|---|
 | 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called sauce. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
 | 2 | ~~Is there a shared, public baseline wave?~~ **What is on the variance anchor schedule?** | **Answered in principle 6 August 2026.** There is a public constant, and it is an anchor schedule rather than a baseline wave — fixed waves at which a major variance event unlocks for everyone. What remains is which waves and which events. Detail in [§3](#wave-variance-is-anchored-not-emergent) |
-| 3 | **What is a run?** | How many waves, and whether it ends in a loss condition or simply ends. Step 2 needs at least a provisional answer. The skill note adds a preference: **a graded loss condition deep enough that conceding a wave on purpose can be correct**, because that is what makes health a resource rather than a wall. Detail in [§10](#the-open-questions) |
+| 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in sauce and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
 | 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
 | 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
 
@@ -795,7 +875,11 @@ Part II §5's UGC-discovery failure mode does not apply.
 ### 7 · The interface
 
 The hardest unsolved problem in the design, and [§6's](#6-what-it-looks-like) accessibility pillar makes it
-harder still. Two live battles, one economy, a build menu, and a readable account of what the opponent just did
+harder still. **Harder again since 7 August 2026**, because a round now resolves against
+[a field of ten](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) rather than one opponent —
+so *what the player watches at all* is the seam's largest open question, and this document does not answer it.
+Twenty resolutions cannot each be watched, and a round that is only ever summarised is a round nobody sees.
+Two live battles, one economy, a build menu, and a readable account of what the opponent just did
 — on one screen, legible at a glance, to somebody who has never played it, with **no unlock ramp available to
 stagger the options**. Includes the faction-colour scheme, which is as much an information-design decision as
 an art one, and the presentation of whatever combination system seam 1 chooses — a combinatorial build space
@@ -818,7 +902,7 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 | **I** — whole document | Commercial viability is the question | **Superseded.** Not a commercial product. The market analysis is background, not a constraint. |
 | **II** — the async argument | Async is justified by the 830-player synchronous ceiling | **Reason replaced, conclusion kept.** Async is justified by schedule mismatch. True at three players. |
 | **II §3** — defense feels meaningless | Fix it with cross-fed currencies, per Supercell | **Not adopted.** Both boards are live every round, so nothing needs cross-feeding. One purse. |
-| **II §3** — matching axis | Match on progression state first, rating second | **Sharpened.** The draw is per *wave*, at the matching stage — so it is the only matching axis that exists. |
+| **II §3** — matching axis | Match on progression state first, rating second | **Sharpened twice.** The draw is per *round*, at the matching stage — so it is the only matching axis that exists — and since 7 Aug 2026 it draws a **field of ten** rather than one. |
 | **II §5** — UGC discovery | Curation is a feature, not a backlog item | **Does not apply.** Opponents are drawn, never browsed. No discovery surface exists to get wrong. |
 | **II §6** — build order | Private friend lobbies are step 7, the one synchronous mode | **Promoted and reclassified.** The lobby is not synchronous and is not last; it is the same loop at low latency. |
 | **III** — networking | No realtime networking | **Stands, for a new reason.** Live PvP is in scope and still needs none — a build phase with a barrier is a turn. |
@@ -872,6 +956,33 @@ Worth keeping for its own sake: **the two-purse decision survived less than a da
 cost nothing but a section.** That is the sequence in [§8](#8-the-build-order) working exactly as designed — a
 decision made on paper before any content exists is a decision that can be unmade for the price of editing a
 paragraph. Had it been reversed after step 3, it would have cost a roster, a cost column and a record format.
+
+### And what was reversed on 7 August 2026
+
+One change, and it is a structural one. It came out of
+[#74](https://github.com/ssalter21/tower-defense-game/issues/74) — a ticket asking only *what is a run* — which
+is worth noting, because the reversal was not the question being asked.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **§2** — the round-robin draw | A different stored defense **every wave**; ten opponents per run | **A field of ten every round.** Ten rounds against ten opponents each, with the round's result taken as the **average** across the field | The one-draw-per-wave rule was carrying the whole variance-control argument on ten samples across an entire run. Averaging ten *per round* does that job far harder — a bad matchup becomes a rounding error rather than a dent |
+
+**Two things this nearly broke, and how each was closed:**
+
+- **Mode symmetry.** In a lobby your wave is one of the ten in everybody else's field, so it takes real health
+  off real players; in round-robin the ten are stored ghosts, and a ghost has no run to lose. Same machine,
+  different consequence — precisely what [§2's](#2-the-loop--one-machine-at-three-latencies) *one machine at
+  three latencies* exists to preclude. **Closed by storing your wave and letting it enter other players' fields
+  later**, identically in all three modes: in a lobby that lands within the round, in round-robin whenever you
+  are drawn. Symmetry is restored across *time* instead of within a round, and it costs nothing, because a
+  stored wave and a stored defense are the same kind of object the pool already holds.
+- **The interface.** [Seam 7](#7--the-interface) was already the hardest unsolved problem in the design at two
+  boards. It is now twenty. **Not closed** — recorded, and handed to the seam.
+
+**And one thing that got quietly better.** [§12's](#12-the-planning-phase-is-the-game) argument that the honest
+answer to *"will this wave work"* is a **distribution rather than a result** stops being an aspiration and
+becomes the literal shape of the data: the field of ten *is* the distribution, and it exists every round rather
+than being assembled out of a pool.
 
 ---
 
@@ -951,9 +1062,14 @@ unblocked.
   armour**, so that formula should be ruled out if squads exist at all, and the same finding argues for the
   narrow end of the matrix. A presentation choice reaching back into the damage model is exactly the kind of
   coupling seam 1 exists to catch early.
-- **What a run is.** **→ blocks step 1.** How many waves, how long a session lasts, and whether a run ends in a
-  loss condition or simply ends. Touched by seam 1 but may outgrow it. Step 2 cannot be built without at least
-  a provisional answer, since "N waves" is the thing it makes real.
+- ~~**What a run is.**~~ **Closed 7 August 2026 by
+  [#74](https://github.com/ssalter21/tower-defense-game/issues/74) — ten waves, a field of ten each round, a
+  sauce-denominated health pool, and death.** See
+  [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026). What it left open, and deliberately:
+  **the gamble** — opting out of the field average to face a single opponent drawn from the distribution,
+  possibly choosing where in the distribution to draw from. It is the antidote to averaging making every round
+  tend toward the mean, and best-of-ten is its natural payoff. Not decidable before a real field exists at
+  step 6.
 
 - ~~**Whether there is a baseline wave at all — a risk no surveyed game carries.**~~ **Closed 6 August 2026 —
   there is a public constant, and it is [the variance anchor schedule](#wave-variance-is-anchored-not-emergent)
