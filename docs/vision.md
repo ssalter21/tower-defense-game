@@ -449,10 +449,80 @@ It also does the pacing job [§6](#6-what-it-looks-like) needs. Element TD meter
 fifty waves and gates each behind a boss; Super Auto Pets unlocks shop tier *X* on turn 2*X*−1. Both are
 progressive disclosure that resets every run, which is the only shape [§4](#4-what-persists) permits.
 
+### Three anchors, a shape and a filling — *decided 7 August 2026*
+
+**Anchors sit at waves 3, 6 and 9. At each one, three *game changer* creeps join that round's public offering,
+and the player takes one thing from the combined list.**
+
+Three-in-ten sits between the precedents — Element TD meters eleven picks across fifty waves, Super Auto Pets
+unlocks a tier every other turn. Wave 1 is the starting state and an anchor at wave 10 would have nothing after
+it, so the anchors live in the interior and **wave 10 is the payoff round**: the one where what you took gets
+spent.
+
+**Anchors open offense, never defense.** An anchor is a threat you can see coming, and the preparation happens
+on the other side of the board — you know what lands at wave 9, so you buy the answer by wave 8. An anchor that
+handed you a better *tower* would give preparation nothing to be about; it would just be a gift. This puts one
+hard constraint on [seam 3](#3--the-roster), which inherits it rather than choosing it: **for every anchor, its
+counter must already be purchasable strictly before it.** Otherwise the anchor is not preparation, it is a
+forced simultaneous buy.
+
+**The menu is merged, not additional.** The three game changers are added to the ordinary offering and the
+player takes *one thing* from the whole list, so a game changer competes head-to-head with an ordinary unlock.
+The alternative — a free extra pick at each anchor — was rejected because it ends every run with every player
+holding all three, which leaves only *when they field it* to be unknown. Merged, **who has what is unknown
+too**, which is the property the schedule exists to buy. What makes that trade real is the ratio of ordinary
+options to game changers, and that is a step 4 sweep parameter rather than an argument here.
+
+**The schedule has a shape and a filling, and they turn over at different rates.** This is the load-bearing
+distinction:
+
+| | What it is | How long it holds |
+|---|---|---|
+| **Shape** | Anchors at 3, 6, 9; which tier each is; which one is the hard-counter anchor | **Per [rotation](#the-map-rotates-and-it-is-generated)** — public, stable, learnable |
+| **Filling** | *Which* three creeps sit on each anchor's menu | **Per run** — drawn from that anchor's tier pool, revealed at run start |
+
+Preparation is a skill about the **shape**, which is why it survives being drawn at all: every run this week you
+know wave 9 will demand a specific answer. Replay value comes from the **filling**, which is why a fixed map
+does not go stale in a week. A single-layer schedule cannot have both — fixed everywhere is solved by Tuesday,
+drawn everywhere has nothing to prepare against.
+
+**The anchors are the constant; the ordinary offering is the churn.** The per-round offering is itself drawn
+per round and identical for everyone, which is where most of a week's variety actually comes from — ten draws a
+run against the anchors' three. One of the two layers has to move, and it is this one.
+
+**Anchors do not repeat, and they escalate.** A given game changer appears on exactly one anchor's menu — nine
+distinct creeps across a shape — so nobody doubles down on the same one twice, and wave 9's three are stronger
+than wave 3's, matching the wave widening and the sauce curve. A flat pool could hand someone a wave-9-grade
+unit at wave 3, where nothing yet answers it.
+
+**Exactly one anchor per shape opens a hard counter, and it is wave 9.** The other two are extreme points on
+axes that already exist — a very fast unit, a very tough one — answered by generally competent defense. Wave
+9's is the flying-units case: without the specific answer, existing towers do nothing at all. One is enough to
+make preparation sharp; three would make a run turn on a single missed buy. *How* a counter works — armour
+formula, matrix width — is [question 4's](#the-five-decisions-that-block-step-1), not this section's; all that
+is settled here is that the schedule may **require** one.
+
+**Wave slots grow on the same cadence, and only there.** [§3](#one-purse--restored-6-august-2026) makes wave
+slots the scarcity that replaces a second wallet. They start at 2 and gain one at each anchor — **2, 2, 3, 3,
+3, 4, 4, 4, 5, 5** — rather than one per round, which would reach ten slots by wave 10 and dissolve the
+scarcity entirely. One cadence governs the run instead of two, and an anchor becomes a single legible landmark:
+*the wave got wider, and something new arrived.*
+
+**The ghost pool does not shard.** Ghosts are drawn on `(map, stage)` alone, as before. A ghost from another
+run in this rotation was played under the same shape, so anything it fields is from the same tier on the same
+axis — unfamiliar, never unanticipatable. That is what makes a per-run filling safe, and it avoids paying for
+variance with a thinner pool, which [rotation already taxes](#the-map-rotates-and-it-is-generated) quite enough.
+
+Decided in [#73](https://github.com/ssalter21/tower-defense-game/issues/73), which holds the detail. Every
+number here — three anchors, three options, slot widths, the 3/6/9 placement — is priced against the one-hex
+corridor that [seam 9's board](#the-board-is-a-maze-again--reversed-6-august-2026) is removing, and is a step 4
+sweep target rather than an argument.
+
 ### The options are the same for everyone — *the Mechabellum move*
 
 **Each build phase offers the same small set of choices to every player in the match.** Not a private random
-draw; one public offering that everybody sees.
+draw; one public offering that everybody sees. The offering is **drawn fresh each round** — identical across the
+match, different between runs — and on an anchor round the three game changers are drawn into it.
 
 This is Mechabellum's reinforcement system, and its own players describe the consequence exactly right: the
 opponent sees the same choices, *so it becomes a mind game*. It buys three things at once, which is why it
@@ -758,7 +828,7 @@ it already did, and the right-hand column links to it rather than restating it. 
 | # | Question | What is already known |
 |---|---|---|
 | 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called sauce. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
-| 2 | ~~Is there a shared, public baseline wave?~~ **What is on the variance anchor schedule?** | **Answered in principle 6 August 2026.** There is a public constant, and it is an anchor schedule rather than a baseline wave — fixed waves at which a major variance event unlocks for everyone. What remains is which waves and which events. Detail in [§3](#wave-variance-is-anchored-not-emergent) |
+| 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
 | 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in sauce and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
 | 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
 | 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
@@ -801,9 +871,11 @@ and no friends to answer.
 **All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
 candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
 inherits three obligations they surfaced: make attacking pay for itself, spend the
-computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third are
-now [step 1's blocking decisions](#the-five-decisions-that-block-step-1) — **and the first is discharged**, by
-[§3](#one-purse--restored-6-august-2026).
+computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third were
+[step 1's blocking decisions](#the-five-decisions-that-block-step-1) — **and both are now discharged**, the
+first by [§3's one purse](#one-purse--restored-6-august-2026) and the third by
+[§3's anchor schedule](#three-anchors-a-shape-and-a-filling--decided-7-august-2026). Only the
+computed-balance budget is still seam 1's to spend.
 
 **The cheapest coherent starting point is already identified in the research**, and it is what steps 1 to 3
 build. [The sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave
@@ -837,6 +909,14 @@ schema has to carry.
 Constrained hard by [§4](#4-what-persists): nothing is unlocked, so **every unit must be interesting from the
 first run** — and by [§6](#6-what-it-looks-like), because a unit whose role cannot be read off its silhouette
 fails the accessibility pillar however well it plays.
+
+**And now by [the anchor schedule](#three-anchors-a-shape-and-a-filling--decided-7-august-2026), in two ways it
+does not get to argue with.** *Added 7 August 2026.* First, a **counter must exist and be purchasable strictly
+before the anchor that needs it** — a roster where the answer to wave 9 first appears at wave 9 turns
+preparation into a forced buy and deletes the axis the schedule was built to restore. Second, the schedule
+signs a content bill: **nine game changer creeps per shape**, tiered across the three anchors, of which one per
+shape must open a genuine hard counter rather than an extreme stat. That is on top of the flat roster step 3
+builds, and it is the first place the roster's size is set by something other than taste.
 
 ### 4 · The balance harness — *pulled forward to step 4*
 
@@ -1042,9 +1122,11 @@ unblocked.
   there is a public constant, and it is [the variance anchor schedule](#wave-variance-is-anchored-not-emergent)
   rather than a baseline wave.** An anchor supplies what a baseline was wanted for — something for a send, and
   a newcomer, to be read against — without also supplying the content of the wave, which is the part the
-  player is meant to author. What remains open is *which* waves and *which* events, which is now question 2 on
-  [the step 1 checklist](#the-five-decisions-that-block-step-1). The original statement of the problem is kept
-  below because the reasoning is what justifies the anchor.
+  player is meant to author. **Fully closed 7 August 2026 by
+  [#73](https://github.com/ssalter21/tower-defense-game/issues/73)** — the waves are 3, 6 and 9 and the events
+  are game changer creeps entering that round's merged offering, in
+  [a shape that holds per rotation and a filling drawn per run](#three-anchors-a-shape-and-a-filling--decided-7-august-2026).
+  The original statement of the problem is kept below because the reasoning is what justifies the anchor.
 
   In Legion TD 2 the wave is a
   memorised public constant, which is exactly what makes a sent mercenary legible: it is *the part that is not
@@ -1061,7 +1143,21 @@ unblocked.
   being solved before it turns over. **The three candidate answers are in
   [§3](#the-map-rotates-and-it-is-generated)**; the note that surveys them is
   [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking
-  until step 6, since nothing before that reads a pool at all.
+  until step 6, since nothing before that reads a pool at all. ⚠️ **Raised 7 August 2026: the rotation now
+  carries more than the map.** [#73](https://github.com/ssalter21/tower-defense-game/issues/73) put the
+  [anchor schedule's *shape*](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) on the same clock,
+  so a cadence choice now sets how long a *preparation* problem stays learnable as well as how long a map does.
+  The two want the same answer — long enough to learn — which is a mild argument for slow, and one more thing
+  the cadence decision has to be right about.
+
+- **Whether a run carries a modifier, and what one would be.** **Added 7 August 2026 by
+  [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** A per-run mutator drawn at run start,
+  changing one rule for the whole run — the standard roguelike lever, and the obvious next source of variety
+  once the map, the shape and the filling have each been placed on their own clock. Deliberately not opened:
+  the field of ten is already the primary replay engine, since your ten opponents differ every run and what
+  works therefore differs every run. A modifier pool is a whole system — balance interactions with everything
+  else, and a step 4 sweep that gains a dimension per modifier — and none of it is needed to say what the
+  anchor schedule is.
 - **How big the map archive has to be, and whether a map may ever repeat.** A generator plus a sweep produces
   an archive; a scheduler draws from it. Whether the archive is large enough that no player sees a map twice,
   or small enough that maps become known quantities with a metagame, is a design choice and not a capacity
