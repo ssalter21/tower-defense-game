@@ -89,6 +89,10 @@ reflection assertion that `Advance` is the only member that moves anything keeps
 sweep row against the ten-wave shape a load error. N is a parameter and a short run is a truncated run, not a
 broken one, so the anchors past its end simply never arrive.
 
+**A separate lower bound refusing an anchor at wave 1.** It was written, and then no planted text could reach
+it: an anchor at wave 1 needs a counter purchasable before wave 1, and there is no such wave. A guard that
+cannot be watched failing is a guard nobody can check, so wave 1 is refused by the counter rule alone.
+
 ## Where it lives
 
 `sim/AnchorSchedule.cs`, `sim/AnchorFilling.cs`, `content/schedule.txt`, `sim/Run.cs` — the `FillingLabel`

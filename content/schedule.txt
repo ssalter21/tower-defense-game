@@ -33,9 +33,14 @@
 #
 #         anchor  wave  tier  opens  counter  from
 #
-# wave    : which wave of the run this anchor falls on. ANCHORS ASCEND STRICTLY
-#           and live in the interior: wave 1 is the starting state, and the last
-#           wave is the payoff round where what was taken gets spent.
+# wave    : which wave of the run this anchor falls on. ANCHORS ASCEND STRICTLY.
+#           Wave 1 is the starting state and no anchor can sit there, because
+#           the counter rule below leaves no earlier wave for the answer to be
+#           purchasable in. The other end is the run's business rather than this
+#           file's -- how many waves a run lasts is an argument, and a short run
+#           simply never reaches its late anchors. The shape below leaves wave
+#           10 clear because the last wave is the payoff round, where what was
+#           taken gets spent.
 # tier    : which pool this anchor's three game changers are drawn from. TIERS
 #           ASCEND STRICTLY WITH THE WAVES, so nothing hands out a late-grade
 #           creep at wave 3 where nothing yet answers it.

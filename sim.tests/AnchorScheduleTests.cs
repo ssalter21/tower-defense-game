@@ -44,9 +44,27 @@ public class AnchorScheduleTests
         Assert.Equal(new[] { 1, 1, 8 }, schedule.Anchors.Select(anchor => anchor.CounterFromWave));
         Assert.Equal(new[] { 3, 3, 4 }, schedule.Anchors.Select(anchor => anchor.CounterTypeId));
 
-        Assert.True(schedule.IsAnchor(3));
-        Assert.False(schedule.IsAnchor(4));
-        Assert.False(schedule.IsAnchor(10));
+    }
+
+    [Fact]
+    public void The_steep_column_says_nothing_the_anchors_own_position_does_not()
+    {
+        // Which anchor opens the steep counter is the last one, always, so the
+        // column carries no value the shape does not already have and it is not
+        // folded into the content hash. That is only safe while both spellings
+        // of a disagreement are unloadable, which is what these are.
+        //
+        // OBSERVED: fold the flag in Anchor.Fold. Nothing goes red anywhere in
+        // the suite, in either direction, because no schedule that loads can
+        // carry it any other way -- which is the whole argument for leaving it
+        // out, stated as a run of the tests rather than as a sentence.
+        string text = TheSchedule.CommittedText();
+
+        Assert.Throws<ContentException>(
+            () => TheSchedule.Of(TheSchedule.Replace(text, "9     3  steep", "9     3  plain")));
+
+        Assert.Throws<ContentException>(
+            () => TheSchedule.Of(TheSchedule.Replace(text, "3     1  plain", "3     1  steep")));
     }
 
     [Fact]
@@ -213,6 +231,11 @@ public class AnchorScheduleTests
     {
         // Ids ascend strictly, which is what makes the pools canonical and a
         // duplicate a comparison against the row above rather than a scan.
+        //
+        // OBSERVED: drop the ascent check in Draft.AddChanger. This goes red
+        // having caught nothing, and a file whose ids read 1, 2, 3, 6, 5 loads
+        // -- at which point two files stating one shape in two orders are two
+        // different content hashes.
         ContentException thrown = Assert.Throws<ContentException>(() => TheSchedule.Of(
             TheSchedule.Planted("changer 4 late-b 2 2 400", "changer 6 late-b 2 2 400")
             + "\nchanger 5 late-c 2 1 400"));
@@ -325,6 +348,11 @@ public class AnchorScheduleTests
         // The other side of the same rule. What answers an anchor stands where
         // it was put, because that is the side of the board preparation happens
         // on.
+        //
+        // OBSERVED: drop the counter's role check in Draft.AddAnchor. This goes
+        // red having caught nothing, and a shape that answers wave 3 with a
+        // grunt loads -- an anchor whose preparation is another wave, which is
+        // the arms race the offense-only rule exists to keep off the board.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 3 1 plain 1 1")));
 
@@ -358,6 +386,11 @@ public class AnchorScheduleTests
     {
         // Content nobody can be offered, whose numbers would still move the
         // content hash.
+        //
+        // OBSERVED: delete the second loop of RequireEveryTierPaired. This goes
+        // red having caught nothing, and a shape carrying a whole tier nobody
+        // reaches loads -- retiring every run pinned to the shape before it for
+        // rows no menu will ever draw.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Minimal + "\nchanger 5 orphan 7 1 0"));
 
@@ -367,6 +400,15 @@ public class AnchorScheduleTests
     [Fact]
     public void An_anchor_whose_tier_has_no_pool_refuses_to_load()
     {
+        // The other direction of the same pairing, and the one that would
+        // otherwise surface as a run refusing to start rather than a file
+        // refusing to load.
+        //
+        // OBSERVED: delete the first loop of RequireEveryTierPaired. This goes
+        // red on the message: the second loop catches the same file from the
+        // other end, saying "puts late-a (#3) in tier 2, which no anchor draws
+        // from" and naming a pool the author never touched instead of the
+        // anchor they moved.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 6 2 steep 3 5", "anchor 6 5 steep 3 5")));
 
@@ -374,12 +416,21 @@ public class AnchorScheduleTests
     }
 
     [Fact]
-    public void An_anchor_at_the_wave_a_run_starts_on_refuses_to_load()
+    public void An_anchor_at_the_wave_a_run_starts_on_cannot_be_authored_at_all()
     {
-        // Wave one is the starting state: an anchor there widens nothing and
-        // prepares nobody, because there is no round before it to prepare in.
-        Assert.Throws<ContentException>(
+        // Wave one is the starting state, and nothing separately forbids an
+        // anchor there: the counter rule already does it, because a wave before
+        // wave one is not a wave. That is the whole of why there is no second
+        // bound on the column -- one rule, and the range that would have
+        // duplicated it would be a guard no planted text could ever reach.
+        //
+        // OBSERVED: set the anchor wave's lower bound to 2 as well. Nothing
+        // anywhere goes red, in this test or the suite, because every shape the
+        // bound would refuse is a shape the counter rule refused first.
+        ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 1 1 plain 3 1")));
+
+        Assert.Contains("STRICTLY BEFORE the anchor that needs it", thrown.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -387,6 +438,15 @@ public class AnchorScheduleTests
     [InlineData("changer 1 early-a 1 1 0", "changer 1 early-a 1 99 0")]
     public void A_type_id_no_unit_table_has_refuses_to_load(string authored, string planted)
     {
+        // The schedule names units and the unit table owns them, so a shape
+        // read against the wrong table is refused rather than carrying an id
+        // that resolves to nothing at the wave it matters.
+        //
+        // OBSERVED: replace the TryById checks in Draft.AddAnchor and
+        // Draft.AddChanger with ById, which throws its own ContentException.
+        // Both rows go red on the message -- "unit types: has no type with id
+        // 99" -- so the refusal names the roster and the line it came from is
+        // the roster's line 0, pointing a designer at the wrong file entirely.
         ContentException thrown =
             Assert.Throws<ContentException>(() => TheSchedule.Of(TheSchedule.Planted(authored, planted)));
 
@@ -570,7 +630,7 @@ public class AnchorScheduleTests
         UnitTypeTable types = TheMatch.Types();
 
         Anchor steep = schedule.Anchors[schedule.Anchors.Count - 1];
-        GameChanger changer = schedule.PoolFor(steep).First(c => types.ById(c.TypeId).Id == 1);
+        GameChanger changer = schedule.PoolFor(steep).First(candidate => candidate.TypeId == 1);
         UnitType answer = types.ById(steep.CounterTypeId);
         UnitType body = types.ById(changer.TypeId);
 

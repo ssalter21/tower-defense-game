@@ -217,6 +217,13 @@ public class HostileLocaleTests
         // are the two numbers a designer is most likely to reach for a fraction
         // in. Under a comma-decimal culture the second spelling is the natural
         // one, which is why both characters are refused rather than one.
+        //
+        // OBSERVED: stop refusing '.' and ',' in DataText.Fields and let
+        // DataText.Integer skip them the way int.Parse with AllowThousands
+        // does. The two bonus rows go red having caught nothing, and a counter
+        // authored as 4,00 loads as four hundred. The two wave rows stay green
+        // because 5,0 read that way is fifty, which the counter rule refuses
+        // for being after the anchor -- caught, but for the wrong reason.
         using (Hostile(name))
         {
             Assert.Throws<ContentException>(
@@ -235,6 +242,12 @@ public class HostileLocaleTests
         // one. A case-insensitive comparison would consult a culture, and the
         // same bytes would then be a shape on one machine and a load error on
         // another.
+        //
+        // OBSERVED: compare with StringComparison.CurrentCultureIgnoreCase in
+        // DataText.Keyword. Both rows go red having caught nothing -- "steep"
+        // carries none of the letters Turkish casing moves, so this one is the
+        // plain case-folding bug rather than the dotless-i one, and a shape
+        // written in the wrong case loads under both cultures.
         using (Hostile(name))
         {
             Assert.Throws<ContentException>(

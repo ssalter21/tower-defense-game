@@ -40,19 +40,10 @@ namespace Sim
     /// One run's filling: which game changers sit on each anchor's menu.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <b>Drawn once, at run start, and revealed there.</b> The shape is fixed
-    /// per rotation so that preparation is learnable; the filling moves per run
-    /// so that a map fixed for a week does not go stale in it. One layer has to
-    /// move or the week is solved by Tuesday, and both moving leaves nothing to
-    /// prepare against.
-    /// </para>
-    /// <para>
-    /// <b>Nothing else in a run is keyed on it.</b> A field, and later a ghost
-    /// pool, are drawn on the run and the stage alone: sharding a pool by which
-    /// filling a run got would pay for variance with a thinner pool, and
-    /// rotation taxes that quite enough already.
-    /// </para>
+    /// <b>Drawn once, at run start, and revealed there.</b> The shape it fills
+    /// holds for a rotation; this moves every run. Nothing else in a run is
+    /// keyed on what it drew: a field, and later a ghost pool, are drawn on the
+    /// run and the stage alone.
     /// </remarks>
     public sealed class AnchorFilling
     {

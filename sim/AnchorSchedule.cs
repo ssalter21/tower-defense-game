@@ -156,17 +156,29 @@ namespace Sim
         /// <summary>The row this file refuses on sight. See the remarks on the type.</summary>
         private const string SlotsKeyword = "slots";
 
-        /// <summary>
-        /// The earliest wave an anchor may fall on. Wave one is the starting
-        /// state, so an anchor there widens nothing and prepares nobody.
-        /// </summary>
-        private const int EarliestAnchorWave = 2;
+        /// <summary>Both rows carry the same number of columns, keyword included.</summary>
+        private const int FieldsPerRow = 6;
 
-        private const int LatestAnchorWave = 65535;
+        /// <summary>Where <c>steep</c> sits in <see cref="OpensWords"/>.</summary>
+        private const int SteepWord = 1;
+
+        /// <summary>
+        /// Waves are counted from one. There is no upper bound here: how many
+        /// waves a run lasts is the run's argument, and a shape whose late
+        /// anchors fall past the end of a short one is a truncated run rather
+        /// than a broken schedule.
+        /// </summary>
+        private const int FirstWave = 1;
+
+        private const int LastWave = 65535;
 
         private const int HighestTier = 1000;
 
-        /// <summary>Ids are the same width as a unit type's, and zero means "no game changer".</summary>
+        /// <summary>
+        /// Every id in this file -- a game changer's own, and the unit type ids
+        /// it and its anchor's counter name -- is a <c>u16</c>, and zero means
+        /// "nothing" rather than naming a row.
+        /// </summary>
         private const int MinimumId = 1;
 
         private const int MaximumId = 65535;
@@ -287,20 +299,6 @@ namespace Sim
             }
 
             return count;
-        }
-
-        /// <summary>Whether this wave is an anchor.</summary>
-        public bool IsAnchor(int wave)
-        {
-            for (int index = 0; index < _anchors.Length; index++)
-            {
-                if (_anchors[index].Wave == wave)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -465,23 +463,28 @@ namespace Sim
             switch (fields[0])
             {
                 case AnchorKeyword:
-                    Expect(source, line, fields, AnchorKeyword, 6);
+                    DataText.RequireFieldCount(source, line, AnchorKeyword, FieldsPerRow, fields);
                     draft.AddAnchor(
                         source,
                         line,
                         types,
                         DataText.IntegerInRange(
-                            source, line, "the anchor's wave", fields[1], EarliestAnchorWave, LatestAnchorWave),
+                            source, line, "the anchor's wave", fields[1], FirstWave, LastWave),
                         DataText.IntegerInRange(source, line, "the anchor's tier", fields[2], 1, HighestTier),
-                        DataText.Keyword(source, line, "what the anchor opens", fields[3], OpensWords) == 1,
+                        DataText.Keyword(source, line, "what the anchor opens", fields[3], OpensWords) == SteepWord,
                         DataText.IntegerInRange(
                             source, line, "the counter's type id", fields[4], MinimumId, MaximumId),
                         DataText.IntegerInRange(
-                            source, line, "the wave the counter is purchasable from", fields[5], 1, LatestAnchorWave));
+                            source,
+                            line,
+                            "the wave the counter is purchasable from",
+                            fields[5],
+                            FirstWave,
+                            LastWave));
                     return;
 
                 case ChangerKeyword:
-                    Expect(source, line, fields, ChangerKeyword, 6);
+                    DataText.RequireFieldCount(source, line, ChangerKeyword, FieldsPerRow, fields);
                     draft.AddChanger(
                         source,
                         line,
@@ -518,14 +521,6 @@ namespace Sim
                         + ChangerKeyword
                         + "'. An unrecognised row is refused rather than skipped, because a shape nobody "
                         + "read is a shape the defaults quietly supplied.");
-            }
-        }
-
-        private static void Expect(string source, int line, string[] fields, string keyword, int count)
-        {
-            if (fields.Length != count)
-            {
-                throw DataText.WrongFieldCount(source, line, keyword, count, fields.Length);
             }
         }
 

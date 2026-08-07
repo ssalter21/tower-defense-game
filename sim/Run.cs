@@ -51,9 +51,8 @@ namespace Sim
     /// <para>
     /// <b>The filling is one such draw, and nothing is keyed on what it drew.</b>
     /// Which game changers reach each anchor's menu is drawn once, at run start,
-    /// from a position of its own. The field is drawn from the run and the round
-    /// alone -- a ghost pool sharded by filling would pay for variance with a
-    /// thinner pool, and rotation taxes that quite enough already.
+    /// from a position of its own; the field is still drawn from the run and the
+    /// round alone.
     /// </para>
     /// </remarks>
     public sealed class Run
