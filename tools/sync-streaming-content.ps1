@@ -62,9 +62,14 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # docs/sit-down.md mean something in the build: they came from a real run of
 # these exact bytes. A player carrying its own seed instead had one eleven ticks
 # out from the committed landmark table, and nothing on screen looked wrong.
+#
+# The tick loop resolves every landing through ruleset.txt -- the damage matrix,
+# the armour expression and the floor -- so a player without it draws its floor
+# and throws on the first hit.
 $files = @(
     'map.txt',
     'units.txt',
+    'ruleset.txt',
     'defense.txt',
     'wave.txt',
     'match.replay'

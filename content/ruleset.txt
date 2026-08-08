@@ -1,0 +1,188 @@
+# The ruleset.
+#
+# EVERY NUMBER THE RULES ARE MADE OF, and not one of them in code. The damage
+# matrix, the armour expression, the floor, the purse, the offering and the
+# scouting price all live here, so tuning any of them is an edit to this file
+# and never a compile -- and a sweep can sweep them the way it already sweeps a
+# map.
+#
+# Same rules as units.txt: integers only, no decimal point, comments free. The
+# content hash folds the parsed integers in FIELD ORDER rather than the bytes,
+# so reindenting a column, rewrapping this comment or converting the line
+# endings moves nothing, and changing one number moves it.
+#
+# EVERY ROW IS REQUIRED AND NONE MAY APPEAR TWICE. A rule this file does not
+# state is refused by name rather than defaulted: a default is a number nobody
+# authored, folded into the content hash as though somebody had.
+#
+# THESE NUMBERS ARE PROVISIONAL BY CONSTRUCTION. They are priced against the
+# one-hex corridor, which is the only board that exists. Being wrong about one
+# of them costs this file. Being wrong about which of them are parameters costs
+# a sweep across every call site, which is why all of them are here.
+#
+# ---------------------------------------------------------------------------
+# HOW A SHOT RESOLVES
+#
+#         matrix  attack   swift  armoured  arcane
+#
+# Nine percentages, held as one flat array indexed cells[attack * 3 + armour]
+# and read as "this attack type deals this much of a hit to that armour type".
+# EVERY ROW AND EVERY COLUMN IS A PERMUTATION OF THE SAME THREE CELLS, and a
+# matrix that is not one refuses to load -- that property is what makes no
+# attack type globally better and no armour type globally tougher. The three
+# rows are authored in attack-type order, so a missing or repeated one is a
+# comparison against the row above rather than a lookup nobody performed.
+#
+# 140 against 70 moves shots-to-kill by exactly double: a real read, and never
+# an unwinnable draw.
+
+matrix     pierce    140    70       100
+matrix     impact     70   100       140
+matrix     magic     100   140        70
+
+#         armour  coefficient  denominator
+#
+# The armour expression, as the two integers its shape is made of:
+#
+#     dealt = (base + bonusVsTag) * cell / (denominator + coefficient * armour)
+#
+# ONE MULTIPLY, ONE DIVIDE, EVALUATED ONCE. The same algebra written as two
+# divisions truncates twice and is a different function on nearly half of all
+# inputs. A coefficient of 1 against a denominator of 100 is what makes a point
+# of armour read as one percent of base effective health per point, and a cell
+# of 100 the identity.
+
+armour          1          100
+
+#         floor  damage
+#
+# The least a hit may deal, applied after the whole expression. No combination
+# of type, armour and counter deletes a hit entirely.
+
+floor           1
+
+# ---------------------------------------------------------------------------
+# THE PURSE
+#
+#         interest  percent  cap
+#
+# What unspent gold earns a wave, ROUNDED UP -- one gold banked earns one and
+# never nothing. Leaving a wave slot empty is an investment rather than waste,
+# and every purchase is measured against it.
+#
+# The cap is the most interest a single wave may pay, and ZERO IS NO CEILING.
+# Compounding is bounded by the round cap and by nothing else, so a run whose
+# round cap has been lifted against a ruleset with no ceiling here is refused
+# before it starts rather than discovered later as an exploding number.
+
+interest       10         0
+
+#         income  gold
+#
+# The flat base a wave pays. It is paid whether or not there is a field to be
+# measured against, which is why a run resolves before there are ghosts.
+
+income        100
+
+#         purse  gold
+#
+# What a run's purse opens holding. Nothing has been earned when the first build
+# phase stands, so a run that opened on nothing would have an opening round
+# whose only affordable wave is the empty one -- ten waves with nine build
+# phases in them. One wave's base is the smallest number that makes the first
+# round a round, and like every number here it is a sweep target rather than a
+# decision.
+
+purse         100
+
+#         band  percentile  percent
+#
+# The performance bonus, paid on top of the base in progressive percentile
+# bands measured against the field. THE BANDS ARE NEVER NEGATIVE: performing
+# below average earns a smaller bonus and never a penalty. Thresholds ascend
+# strictly, the first is zero so every wave falls in a band, and no band pays
+# less than the one below it. Nothing here moves gold between players: a wave
+# is paid against the field's distribution and never against a named opponent,
+# so it reads the same whether the field is one lobby or a population.
+#
+# THESE BANDS PAY, AND WHAT THEY ARE MEASURED AGAINST IS THE POOL A RUN WAS
+# HANDED. A run prices ten of the pool's own rounds and reads its percentile off
+# that spread, so the canned opponent field.txt describes is the distribution
+# today and a stored population of real rounds is the same argument tomorrow.
+# Retuning a threshold or a percentage here is an edit to these four lines and
+# no compile.
+
+band            0        0
+band           50        5
+band           75       10
+band           90       20
+
+#         health  gold
+#
+# The pool a run starts with, denominated in gold. A leaked creep costs health
+# equal to its cost, one for one, so the exchange rate is legible without a
+# table. Gold cannot repair it -- the pool is a clock.
+#
+# WHAT 1500 BUYS, MEASURED. A wave is bought out of a purse the income row above
+# pays 100 a round into, so conceding one of them whole costs around a hundred
+# and the pool is some fifteen of those.
+#
+# THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND THIS NUMBER DID NOT MOVE
+# WITH IT. The committed ten-round run in content/run-outcome.txt used to
+# concede 1251 and finish on 249 with every wave survived. It now concedes the
+# whole 1500 and dies on the tenth wave: the canned field takes about 153 a
+# round where it took about 125, because the clock dilation left its one column
+# three times denser in space and a denser column saturates the towers.
+#
+# THAT RUN IS COMMITTED AS IT PLAYED, AND DELIBERATELY. It is a real record of
+# a real run, it exercises the out-of-health ending that nothing else committed
+# does, and the alternative was retuning a number nobody had decided to retune
+# in order to make a demo end more comfortably. The roster signature authorised
+# content/wave.txt as its only lever and this is not that file.
+#
+# WHICH LEAVES 1500 AS AN OPEN DECISION RATHER THAN A SETTLED ONE. Story 20
+# wants the pool worth about three waves of average creep value, so that one
+# deliberate concession is affordable and a second is a real decision. Fifteen
+# concessions was already far off that, and it is now nine and a half. Something
+# nearer 400 to 500 would restore the reading the story asked for. Nobody has
+# decided it, so nothing here has been changed to suit it.
+
+health       1500
+
+# ---------------------------------------------------------------------------
+# THE BUILD PHASE
+#
+#         slots  starting  per-anchor
+#
+# How many creep types a wave may carry. SLOT WIDTH IS DERIVED, NOT AUTHORED:
+# a round's width is the starting width plus the per-anchor step once for every
+# anchor at or before it. With anchors at waves 3, 6 and 9 that reads
+# 2 2 3 3 3 4 4 4 5 5 across a ten-wave run, and moving an anchor moves the
+# widths with it rather than leaving a second series behind to go stale.
+
+slots           2         1
+
+#         offering  ordinary  game-changers
+#
+# What the build phase puts in front of everybody. The same public selection
+# each round, drawn fresh; on an anchor round the game changers join that
+# round's ordinary options and one thing is taken from the merged list. The
+# ratio between the two is what decides whether the merged menu is a real
+# trade, which is why it is a number here rather than an argument.
+#
+# THE ORDINARY COUNT IS BOUNDED BY THE ROSTER. An option unlocks a creep and
+# appears on a menu once, so an offering cannot be drawn out of fewer creeps
+# than it carries options, and asking it to is refused rather than answered with
+# the same creep twice. Three of the unit table's six walkers is half the roster
+# on every menu, which leaves the draw enough room to be a draw; this rises with
+# the roster.
+
+offering        3         3
+
+#         snapshot  free  gold
+#
+# Scouting. A run gets this many snapshots of an incoming wave for nothing and
+# pays this much for every one after. The price is charged on data and never on
+# compute: the rules themselves are exposed completely and always.
+
+snapshot       10        25

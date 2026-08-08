@@ -29,21 +29,28 @@ namespace Sim
     /// rather than a lookup, and keeps the parser clear of the hashed
     /// collections the IL scan bans.
     /// </para>
+    /// <para>
+    /// <b>A file says which column layout it is written in, and there is a
+    /// reader branch per layout.</b> A <c>layout</c> row states the number
+    /// before any <c>unit</c> row is read, so the reader knows how many columns
+    /// to expect and where each one is before it reads a single field. A file
+    /// with no such row is layout 1, which is what every table written before
+    /// the row existed is. Each layout folds under its own hash label, so a
+    /// table read through one branch can never collide with a table read
+    /// through another.
+    /// </para>
     /// </remarks>
     public sealed class UnitTypeTable
     {
-        /// <summary>
-        /// Names this table and its field layout inside the hash. The digit is
-        /// the layout version: moving, adding or removing a column bumps it, so
-        /// records pinned to the old layout are retired loudly instead of being
-        /// silently reinterpreted against shifted fields.
-        /// </summary>
-        private const string HashLabel = "unit-types/1";
+        /// <summary>The layout a file that does not say is written in.</summary>
+        public const int DefaultLayout = 1;
+
+        /// <summary>The layout the columns documented on <see cref="UnitType"/> describe.</summary>
+        public const int CurrentLayout = 2;
 
         private const string Keyword = "unit";
 
-        /// <summary>Fields per row, keyword included. Checked before anything is read.</summary>
-        private const int FieldCount = 15;
+        private const string LayoutKeyword = "layout";
 
         /// <summary>Ids are <c>u16</c> in the record format, and zero means "no unit".</summary>
         private const int MinimumId = 1;
@@ -54,16 +61,35 @@ namespace Sim
 
         private static readonly string[] DeliveryWords = { "none", "hitscan", "projectile" };
 
+        /// <summary>The word a unit outside the damage matrix carries in either type column.</summary>
+        private const string NoTypeWord = "none";
+
+        /// <summary>
+        /// The three attack types, then the word a unit that never attacks
+        /// carries. The index of each is its <see cref="AttackType"/>.
+        /// </summary>
+        private static readonly string[] AttackWords = WithNoType(DamageMatrix.AttackWords);
+
+        /// <summary>
+        /// The three armour types, then the word a unit with no health pool
+        /// carries. The index of each is its <see cref="ArmourType"/>.
+        /// </summary>
+        private static readonly string[] ArmourWords = WithNoType(DamageMatrix.ArmourWords);
+
         private readonly UnitType[] _types;
 
-        private UnitTypeTable(UnitType[] types, Hash64 contentHash)
+        private UnitTypeTable(UnitType[] types, int layout, Hash64 contentHash)
         {
             _types = types;
+            Layout = layout;
             ContentHash = contentHash;
         }
 
         /// <summary>The rows, in file order -- which is ascending id order.</summary>
         public IReadOnlyList<UnitType> Types => _types;
+
+        /// <summary>Which column layout this table was written in and read through.</summary>
+        public int Layout { get; }
 
         /// <summary>How many types there are.</summary>
         public int Count => _types.Length;
@@ -95,6 +121,8 @@ namespace Sim
             string[] lines = DataText.SplitLines(text);
             var types = new List<UnitType>();
             int previousId = 0;
+            int layout = DefaultLayout;
+            bool declared = false;
 
             for (int index = 0; index < lines.Length; index++)
             {
@@ -108,20 +136,33 @@ namespace Sim
 
                 string[] fields = DataText.Fields(source, number, line);
 
+                if (string.Equals(fields[0], LayoutKeyword, StringComparison.Ordinal))
+                {
+                    layout = ReadLayout(source, number, fields, declared, types.Count);
+                    declared = true;
+                    continue;
+                }
+
                 if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
                 {
                     throw new ContentException(
                         source,
                         number,
-                        "starts with '" + fields[0] + "', but the only row this table has is '" + Keyword + "'.");
+                        "starts with '"
+                        + fields[0]
+                        + "', but the rows this table has are '"
+                        + Keyword
+                        + "' and '"
+                        + LayoutKeyword
+                        + "'.");
                 }
 
-                if (fields.Length != FieldCount)
+                if (fields.Length != FieldCountOf(layout))
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw WrongColumnCount(source, number, layout, fields.Length);
                 }
 
-                UnitType type = ReadRow(source, number, fields);
+                UnitType type = ReadRow(source, number, fields, layout);
 
                 if (type.Id == previousId)
                 {
@@ -157,14 +198,66 @@ namespace Sim
                 throw new ContentException(source, 0, "has no unit types in it at all.");
             }
 
-            Hash64 hash = Hash64.Start(HashLabel).Add(types.Count);
+            Hash64 hash = Hash64.Start(HashLabelOf(layout)).Add(types.Count);
 
             foreach (UnitType type in types)
             {
-                hash = type.Fold(hash);
+                hash = type.Fold(hash, layout);
             }
 
-            return new UnitTypeTable(types.ToArray(), hash);
+            return new UnitTypeTable(types.ToArray(), layout, hash);
+        }
+
+        /// <summary>
+        /// Whether this reader has a branch for that column layout.
+        /// </summary>
+        /// <remarks>
+        /// Spelled out one layout at a time rather than as
+        /// <c>layout &lt;= current</c>, for the same reason
+        /// <see cref="RecordFormat.IsKnown"/> is: these are the branches that
+        /// exist rather than the branches that ought to, and a layout somebody
+        /// skipped or deleted has to arrive here as a refusal instead of passing
+        /// an inequality and falling through a switch.
+        /// </remarks>
+        public static bool IsKnownLayout(int layout)
+        {
+            return layout == 1 || layout == 2;
+        }
+
+        /// <summary>Fields per row, keyword included, in that layout.</summary>
+        public static int FieldCountOf(int layout)
+        {
+            switch (layout)
+            {
+                case 1:
+                    return 15;
+
+                case 2:
+                    return 19;
+
+                default:
+                    throw NoSuchLayout(layout);
+            }
+        }
+
+        /// <summary>
+        /// The label that layout folds under. It names both the table and its
+        /// field layout, so a table read through one branch cannot hash equal to
+        /// a table read through another.
+        /// </summary>
+        private static string HashLabelOf(int layout)
+        {
+            switch (layout)
+            {
+                case 1:
+                    return "unit-types/1";
+
+                case 2:
+                    return "unit-types/2";
+
+                default:
+                    throw NoSuchLayout(layout);
+            }
         }
 
         /// <summary>The type with this id.</summary>
@@ -205,7 +298,98 @@ namespace Sim
             return false;
         }
 
-        private static UnitType ReadRow(string source, int line, string[] fields)
+        /// <summary>
+        /// Reads the layout a file declares. It comes before every row it
+        /// governs, because it is the field that says how to read them.
+        /// </summary>
+        private static int ReadLayout(string source, int line, string[] fields, bool declared, int rowsSoFar)
+        {
+            if (fields.Length != 2)
+            {
+                throw DataText.WrongFieldCount(source, line, LayoutKeyword, 2, fields.Length);
+            }
+
+            if (declared)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "is a second '"
+                    + LayoutKeyword
+                    + "' row. A table is written in one column layout, and two rows claiming two of them "
+                    + "means the rows above and below this line would be read against different field "
+                    + "orders.");
+            }
+
+            if (rowsSoFar > 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "declares the column layout after "
+                    + rowsSoFar.ToString(CultureInfo.InvariantCulture)
+                    + " rows have already been read against another one. The layout says how to read a "
+                    + "row, so it is stated before the first of them or not at all.");
+            }
+
+            int layout = DataText.Integer(source, line, "the column layout", fields[1]);
+
+            if (!IsKnownLayout(layout))
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "declares column layout "
+                    + layout.ToString(CultureInfo.InvariantCulture)
+                    + ", and this reader has branches for 1 and "
+                    + CurrentLayout.ToString(CultureInfo.InvariantCulture)
+                    + ". A layout that was skipped, or a branch somebody deleted, is refused here rather "
+                    + "than read against whichever field order happened to be nearest.");
+            }
+
+            return layout;
+        }
+
+        private static ContentException WrongColumnCount(string source, int line, int layout, int actual)
+        {
+            return new ContentException(
+                source,
+                line,
+                "a '"
+                + Keyword
+                + "' row has "
+                + actual.ToString(CultureInfo.InvariantCulture)
+                + " fields where column layout "
+                + layout.ToString(CultureInfo.InvariantCulture)
+                + " has "
+                + FieldCountOf(layout).ToString(CultureInfo.InvariantCulture)
+                + ". Field order is what the content hash folds, so a row with the wrong number of them "
+                + "cannot be read at all. A table with columns this reader does not expect says so with a '"
+                + LayoutKeyword
+                + "' row above its first unit.");
+        }
+
+        /// <summary>
+        /// The three type spellings with the out-of-matrix word appended, so
+        /// that a keyword's index in the result is the enum value it parses to.
+        /// </summary>
+        private static string[] WithNoType(string[] words)
+        {
+            var all = new string[words.Length + 1];
+            words.CopyTo(all, 0);
+            all[words.Length] = NoTypeWord;
+
+            return all;
+        }
+
+        private static ArgumentOutOfRangeException NoSuchLayout(int layout) =>
+            new ArgumentOutOfRangeException(
+                nameof(layout),
+                "Column layout "
+                + layout.ToString(CultureInfo.InvariantCulture)
+                + " has no reader branch in this table.");
+
+        private static UnitType ReadRow(string source, int line, string[] fields, int layout)
         {
             int id = DataText.IntegerInRange(source, line, "the type id", fields[1], MinimumId, MaximumId);
             string label = DataText.Label(source, line, "the label", fields[2]);
@@ -248,6 +432,22 @@ namespace Sim
                     + "be read by nothing and would still move the content hash.");
             }
 
+            // What a layout-1 row carries: no cost, and no place in the matrix.
+            int cost = 0;
+            var attack = AttackType.None;
+            var armour = ArmourType.None;
+            int armourPoints = 0;
+
+            if (layout == CurrentLayout)
+            {
+                cost = DataText.IntegerInRange(source, line, "the cost", fields[15], 0, int.MaxValue);
+                attack = (AttackType)DataText.Keyword(source, line, "the attack type", fields[16], AttackWords);
+                armour = (ArmourType)DataText.Keyword(source, line, "the armour type", fields[17], ArmourWords);
+                armourPoints = DataText.IntegerInRange(source, line, "the armour", fields[18], 0, int.MaxValue);
+
+                RequireTyping(source, line, delivery, attack, maxHp, armour, armourPoints);
+            }
+
             return new UnitType(
                 id,
                 label,
@@ -262,7 +462,74 @@ namespace Sim
                 damageMax,
                 delivery,
                 flight,
-                dying);
+                dying,
+                cost,
+                attack,
+                armour,
+                armourPoints);
+        }
+
+        /// <summary>
+        /// Every unit that attacks carries an attack type, every unit that can
+        /// be damaged carries an armour type, and neither carries one it has no
+        /// use for. Between them these are what stop a row falling outside the
+        /// three-by-three matrix.
+        /// </summary>
+        private static void RequireTyping(
+            string source,
+            int line,
+            Delivery delivery,
+            AttackType attack,
+            int maxHp,
+            ArmourType armour,
+            int armourPoints)
+        {
+            if (delivery != Delivery.None && attack == AttackType.None)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "delivers damage but carries no attack type, so its shots fall outside the damage "
+                    + "matrix and there is no cell to resolve one through.");
+            }
+
+            if (delivery == Delivery.None && attack != AttackType.None)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries an attack type but delivers no damage, so the type would be read by nothing "
+                    + "and would still move the content hash.");
+            }
+
+            if (maxHp > 0 && armour == ArmourType.None)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "has a health pool but carries no armour type, so a shot at it falls outside the "
+                    + "damage matrix and there is no cell to resolve one through.");
+            }
+
+            if (maxHp == 0 && armour != ArmourType.None)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries an armour type but has no health pool, so nothing can ever be resolved "
+                    + "against it and the type would still move the content hash.");
+            }
+
+            if (armour == ArmourType.None && armourPoints != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries "
+                    + armourPoints.ToString(CultureInfo.InvariantCulture)
+                    + " points of armour with no armour type to apply them through, so the number would "
+                    + "be read by nothing and would still move the content hash.");
+            }
         }
     }
 }

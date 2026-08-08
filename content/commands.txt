@@ -1,0 +1,81 @@
+# The command script: one whole run, decided in advance.
+#
+# THIS IS THE AUTHORED SOURCE OF content/run.commands, which is the record a run
+# is actually played from. Compile it with tools/run-headless-match.ps1
+# -Regenerate, which records the bytes, reads them back, plays them to the end
+# and only then writes them -- so a script that cannot be played never becomes a
+# file, and the committed record is one that provably came from a real run.
+#
+# Same rules as units.txt, ruleset.txt and schedule.txt: integers only, no
+# decimal point, comments free.
+#
+# ---------------------------------------------------------------------------
+# THE ROW
+#
+#         build  wave  take-kind  take-id   type-id count   type-id count  ...
+#
+# wave      : which round of the run this decision was made in, counted from
+#             one. WAVES ASCEND STRICTLY and there is one row per round: a run
+#             plays them in the order they are stored, and two decisions for one
+#             round is two runs written down as one.
+# take-kind : ordinary, or changer for one of an anchor's game changers. Which
+#             half of that round's menu the take came off, and what scopes the
+#             id -- an ordinary option is identified by the creep it unlocks, a
+#             game changer by its own id.
+# take-id   : which option of that kind. ONE TAKE PER ROUND AND IT IS NOT
+#             OPTIONAL: unlocking is free, so declining would be a decision
+#             nothing rewards.
+# slots     : a type id and a count for each of the round's wave slots, in the
+#             order they are filled. FILLED SLOTS ASCEND STRICTLY BY TYPE ID,
+#             asserted rather than sorted, so that two identical waves cannot
+#             have two different sets of bytes -- and so that two slots on one
+#             creep is a refusal rather than a slot silently spent twice. An
+#             EMPTY SLOT IS SPELLED 0 0, and it is a position rather than an
+#             omission: what is not sent is banked at the ruleset's interest.
+#             A row may fill fewer slots than the round has; it may not fill
+#             more, and the width comes from the anchor schedule.
+#
+# ---------------------------------------------------------------------------
+# HOW A ROW IS WRITTEN
+#
+# A take names something off that round's PUBLIC OFFERING, and an offering is
+# drawn from the run's seed and the wave -- so the menus have to be read before
+# a script can be written. That is what the offerings verb is for:
+#
+#   dotnet Sim.Cli.dll offerings --seed 20260807 --map content/map.txt \
+#     --units content/units.txt --rules content/ruleset.txt \
+#     --schedule content/schedule.txt --defense content/defense.txt \
+#     --wave content/wave.txt
+#
+# Every row it prints is a take-kind, a take-id and the type id that take
+# unlocks, spelled with the words a build row uses. THE SEED IS PART OF THE
+# SCRIPT even though it is not in this file: change it and every menu below
+# moves, so every take in here names an option nobody was offered. The seed
+# lives in the compiled record, where the replay gate can refuse a run that was
+# never the one these decisions were made in.
+#
+# ---------------------------------------------------------------------------
+# WHAT THIS PARTICULAR RUN DOES
+#
+# Ten waves against the canned field, taking a game changer at each of the three
+# anchors -- waves 3, 6 and 9 -- and an ordinary unlock everywhere else.
+#
+# THE OPENING BANKS AND THE MIDDLE SPENDS IT. Nothing is sent for three rounds,
+# which is the position an empty slot is: what is not spent compounds at the
+# ruleset's interest, and a wave big enough to get past a full defense costs
+# more than one round of income. Waves five and six are what that bought, and
+# every round after them is what a purse can sustain out of income alone.
+#
+# EVERY ROW FILLS EXACTLY THE ROUND'S WIDTH, empties included, so the widening
+# at each anchor is legible down the file: 2 2 3 3 3 4 4 4 5 5.
+
+build    1  ordinary   1     0 0   0 0
+build    2  ordinary   2     0 0   0 0
+build    3  changer    4     0 0   0 0   0 0
+build    4  ordinary  12     0 0   0 0   2 10
+build    5  ordinary  13     0 0   0 0   2 20
+build    6  changer    7     1 10  2 20  0 0   0 0
+build    7  ordinary   7     1 2   2 8   12 2  0 0
+build    8  ordinary  13     1 2   2 8   7 1   12 2
+build    9  changer    9     1 5   2 15  12 2  0 0   0 0
+build   10  ordinary   1     1 5   2 9   7 1   12 1  13 1

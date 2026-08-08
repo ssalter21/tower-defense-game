@@ -17,7 +17,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 32 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 35 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/) | The five deep dives the vision was built on. Superseded; kept as the reading |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
@@ -40,6 +40,15 @@ at its top rather than being rewritten.
 | [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? |
 | [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
 | [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
+
+**Simulation research**, measured in this repository rather than commissioned:
+
+| Note | The question it answers |
+|---|---|
+| [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
+| [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
+| [Cost is not a balance lever under a one-for-one leak](research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md) | If a leak charges what the creep cost, what does the cost column actually control? |
+| [A canned field of one collapses the bands](research/a-canned-field-of-one-collapses-the-bands.md) | Four authored performance bands behave as two. Is the mechanism wrong, or the stand-in field? |
 
 **Asset research**, on the art that is actually on the machine:
 

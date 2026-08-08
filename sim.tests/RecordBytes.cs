@@ -45,6 +45,45 @@ public static class RecordBytes
     /// <summary>Where a bundle's inlined map cells start.</summary>
     public const int BundleCellsOffset = RecordFormat.HeaderBytes + 8 + 2 + 2;
 
+    /// <summary>Where a command stream's ruleset hash sits.</summary>
+    public const int CommandRulesetHashOffset = RecordFormat.HeaderBytes;
+
+    /// <summary>Where a command stream's anchor schedule hash sits.</summary>
+    public const int CommandScheduleHashOffset = CommandRulesetHashOffset + 8;
+
+    /// <summary>Where a command stream's run seed sits.</summary>
+    public const int CommandSeedOffset = CommandScheduleHashOffset + 8;
+
+    /// <summary>Where a command stream's build phase count sits.</summary>
+    public const int CommandCountOffset = CommandSeedOffset + 8;
+
+    /// <summary>Where a command stream's first build phase starts.</summary>
+    public const int CommandsOffset = CommandCountOffset + 2;
+
+    /// <summary>Where the wave sits inside one build phase.</summary>
+    public const int CommandWaveOffset = 0;
+
+    /// <summary>Where the take's kind sits inside one build phase.</summary>
+    public const int CommandTakeKindOffset = 2;
+
+    /// <summary>Where the take's id sits inside one build phase.</summary>
+    public const int CommandTakeIdOffset = 3;
+
+    /// <summary>Where the slot count sits inside one build phase.</summary>
+    public const int CommandSlotCountOffset = 5;
+
+    /// <summary>Where a build phase's slots start inside it.</summary>
+    public const int CommandSlotsOffset = RecordFormat.CommandBytes;
+
+    /// <summary>
+    /// Where a build phase starts in a stream out of <see cref="TheCommands"/>.
+    /// Every command in one fills a single slot, which is what makes the stride
+    /// a constant and lets a test name a byte inside a command by index.
+    /// </summary>
+    public static int CommandAt(int index) =>
+        CommandsOffset
+        + (index * (RecordFormat.CommandBytes + (TheCommands.SlotsPerCommand * RecordFormat.SlotBytes)));
+
     /// <summary>Where the defense inside a bundle starts.</summary>
     public static int GhostIn(ReplayBundle bundle) =>
         BundleCellsOffset + (bundle.Map.Width * bundle.Map.Height);

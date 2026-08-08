@@ -38,7 +38,7 @@ namespace Sim
             Live = live;
         }
 
-        /// <summary>Which of the three replay gates refused.</summary>
+        /// <summary>Which replay gate refused, named for a person.</summary>
         public string Gate { get; }
 
         /// <summary>What the record says, rendered for a person.</summary>

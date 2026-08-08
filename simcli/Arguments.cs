@@ -26,8 +26,22 @@ internal sealed class Arguments
         _verb = verb;
     }
 
-    /// <summary>Parses <c>--name value</c> pairs, refusing anything else.</summary>
-    public static Arguments Parse(string verb, string[] args, int from, string[] allowed)
+    /// <summary>
+    /// Parses <c>--name value</c> pairs, refusing anything else.
+    /// </summary>
+    /// <param name="valueless">
+    /// Which of <paramref name="allowed"/> are switches: present or absent, and
+    /// never followed by a value. Read with <see cref="Given"/>. They are named
+    /// here rather than discovered at the point of use, because a parser that
+    /// guessed would swallow the next option as a switch's value the first time
+    /// a switch was written last.
+    /// </param>
+    public static Arguments Parse(
+        string verb,
+        string[] args,
+        int from,
+        string[] allowed,
+        string[]? valueless = null)
     {
         var arguments = new Arguments(verb);
 
@@ -55,18 +69,28 @@ internal sealed class Arguments
                 throw new UsageException($"'--{name}' was given twice, and only one of them can be meant.");
             }
 
+            arguments._names.Add(name);
+
+            if (valueless is not null && Array.IndexOf(valueless, name) >= 0)
+            {
+                arguments._values.Add(string.Empty);
+                continue;
+            }
+
             if (index + 1 == args.Length)
             {
                 throw new UsageException($"'--{name}' was given with nothing after it.");
             }
 
-            arguments._names.Add(name);
             arguments._values.Add(args[index + 1]);
             index++;
         }
 
         return arguments;
     }
+
+    /// <summary>Whether a switch was written on the command line.</summary>
+    public bool Given(string name) => _names.Contains(name);
 
     /// <summary>An option that has to be there.</summary>
     public string Required(string name)

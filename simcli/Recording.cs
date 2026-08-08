@@ -32,6 +32,7 @@ internal static class Recording
     public static (byte[] Bytes, HeadlessRun Proof) Of(
         string mapText,
         string unitsText,
+        string rulesText,
         string defenseText,
         string waveText,
         ulong seed,
@@ -44,6 +45,6 @@ internal static class Recording
 
         byte[] bytes = ReplayBundle.Of(map, layout, wave, types, seed, mapHandle).ToBytes();
 
-        return (bytes, HeadlessRun.Of(bytes, unitsText));
+        return (bytes, HeadlessRun.Of(bytes, unitsText, rulesText));
     }
 }

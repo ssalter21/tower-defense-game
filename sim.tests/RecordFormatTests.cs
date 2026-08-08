@@ -1,7 +1,7 @@
 namespace Sim.Tests;
 
 /// <summary>
-/// The format itself: the shared header, the two leaf record kinds, the round
+/// The format itself: the shared header, the leaf record kinds, the round
 /// trips, and the identity fields that own three non-overlapping things.
 /// </summary>
 public class RecordFormatTests
@@ -27,40 +27,53 @@ public class RecordFormatTests
     }
 
     [Fact]
-    public void The_three_kinds_have_three_different_magic_tags()
+    public void The_four_kinds_have_four_different_magic_tags()
     {
         Assert.Equal("GHST", RecordFormat.MagicOf(RecordKind.Ghost));
         Assert.Equal("WAVE", RecordFormat.MagicOf(RecordKind.Wave));
         Assert.Equal("RPLY", RecordFormat.MagicOf(RecordKind.Replay));
+        Assert.Equal("CMDS", RecordFormat.MagicOf(RecordKind.Command));
     }
 
     [Fact]
     public void Format_versions_are_counted_per_record_kind()
     {
-        // Three counters, three histories. A single global counter would mean
-        // editing the wave layout bumped every stored defense's version too, so
-        // every defense would look newer than it is and readers would branch on
-        // versions that never changed a defense at all. What makes it real,
-        // rather than three constants that happen to be equal, is that the gate
-        // is asked per kind: when one of them gains a version 1 the other two
-        // will still refuse it.
+        // One counter per kind, one history each. A single global counter would
+        // mean editing the wave layout bumped every stored defense's version
+        // too, so every defense would look newer than it is and readers would
+        // branch on versions that never changed a defense at all. What makes it
+        // real, rather than constants that happen to be equal, is that the gate
+        // is asked per kind: when one of them gains a version 1 the others will
+        // still refuse it.
+        //
+        // OBSERVED: move the wave, the bundle and the command stream to version
+        // 1 together and widen all three branches of IsKnown, which is what a
+        // single global counter does the moment a fourth kind arrives. The
+        // version assertions below go red, 0 against 1, and every stored wave
+        // and bundle starts claiming a version it was never written at.
         Assert.True(RecordFormat.IsKnown(RecordKind.Ghost, RecordFormat.GhostVersion));
         Assert.True(RecordFormat.IsKnown(RecordKind.Wave, RecordFormat.WaveVersion));
         Assert.True(RecordFormat.IsKnown(RecordKind.Replay, RecordFormat.ReplayVersion));
+        Assert.True(RecordFormat.IsKnown(RecordKind.Command, RecordFormat.CommandVersion));
 
         Assert.False(RecordFormat.IsKnown(RecordKind.Ghost, RecordFormat.GhostVersion + 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, RecordFormat.WaveVersion + 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Replay, RecordFormat.ReplayVersion + 1));
+        Assert.False(RecordFormat.IsKnown(RecordKind.Command, RecordFormat.CommandVersion + 1));
 
-        // And now it is not three constants that happen to be equal. The
-        // defense gained the map handle and moved to version 1; the other two
-        // kinds did not move, and a version 1 of either of them is a version
-        // that has never existed.
+        // And now they are not constants that happen to be equal. The defense
+        // gained the map handle and moved to version 1; the other three did not
+        // move, and a version 1 of any of them is a version that has never
+        // existed. The command stream is the fourth kind and it arrived at
+        // version 0 of its own counter, which is the whole of why the three
+        // that came before it are still where they were.
         Assert.Equal(1, RecordFormat.GhostVersion);
         Assert.Equal(0, RecordFormat.WaveVersion);
         Assert.Equal(0, RecordFormat.ReplayVersion);
+        Assert.Equal(0, RecordFormat.CommandVersion);
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Replay, 1));
+        Assert.False(RecordFormat.IsKnown(RecordKind.Command, 1));
     }
 
     [Fact]
@@ -102,12 +115,19 @@ public class RecordFormatTests
         // write(read(old_bytes)) deliberately produces different bytes -- the
         // historical formats get a semantic round trip instead, which is the
         // version-bump ticket's business.
+        //
+        // OBSERVED, on the command stream's line: have ToBytes write a zero
+        // where the seed goes. The byte round trip stays green -- a reader and a
+        // writer that agree on a wrong value agree -- and the value round trip
+        // in the test below goes red, which is why both are asserted.
         UnitTypeTable types = TheMatch.Types();
         byte[] ghost = TheMatch.Ghost(types).ToBytes();
         byte[] wave = TheMatch.WaveOf(types).ToBytes();
+        byte[] commands = TheCommands.Bytes();
 
         Assert.Equal(ghost, GhostRecord.FromBytes(ghost).ToBytes());
         Assert.Equal(wave, WaveRecord.FromBytes(wave).ToBytes());
+        Assert.Equal(commands, CommandStream.FromBytes(commands).ToBytes());
     }
 
     [Fact]
@@ -117,9 +137,11 @@ public class RecordFormatTests
         UnitTypeTable types = TheMatch.Types();
         GhostRecord ghost = TheMatch.Ghost(types);
         WaveRecord wave = TheMatch.WaveOf(types);
+        CommandStream commands = TheCommands.Stream();
 
         Assert.Equal(ghost, GhostRecord.FromBytes(ghost.ToBytes()));
         Assert.Equal(wave, WaveRecord.FromBytes(wave.ToBytes()));
+        Assert.Equal(commands, CommandStream.FromBytes(commands.ToBytes()));
     }
 
     [Fact]
@@ -202,7 +224,7 @@ public class RecordFormatTests
         UnitTypeTable types = TheMatch.Types();
         HexMap map = TheMatch.Map();
         string original = File.ReadAllText(RepoLayout.DefenseFile);
-        string reauthored = Reauthored(original);
+        string reauthored = Reauthoring.Reauthored(original);
 
         Assert.NotEqual(original, reauthored);
 
@@ -286,21 +308,4 @@ public class RecordFormatTests
         // this field would retire every record made under an unchanged ruleset.
         Assert.Equal(SimulationVersion.Current, TheMatch.Ghost(retuned).Header.SimVersion);
     }
-
-    /// <summary>
-    /// The same defense, typed by somebody with different habits: no comments,
-    /// leading indentation, tabs between the columns, trailing spaces and CRLF
-    /// line endings.
-    /// </summary>
-    private static string Reauthored(string original) =>
-        "# a completely different comment\n\n"
-        + string.Join(
-            "\r\n",
-            original
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith("#", StringComparison.Ordinal))
-                .Where(line => line.Trim().Length > 0)
-                .Select(line => "  " + string.Join(
-                    "\t",
-                    line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "   "));
 }

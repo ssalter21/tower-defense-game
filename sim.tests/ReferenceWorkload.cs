@@ -50,8 +50,8 @@ public static class ReferenceWorkload
     public const int Iterations = 440_000;
 
     /// <summary>
-    /// What <see cref="Run"/> returns for <see cref="Iterations"/>. Not a magic
-    /// number to be regenerated when it fails: if this moves, the workload
+    /// What <see cref="Churn"/> returns for <see cref="Iterations"/>. Not a
+    /// magic number to be regenerated when it fails: if this moves, the workload
     /// changed, and every calibration taken against the old one is void.
     /// </summary>
     public const long Checksum = -4390160875024291372L;
@@ -65,11 +65,16 @@ public static class ReferenceWorkload
     private const long Golden = unchecked((long)0x9E3779B97F4A7C15UL);
 
     /// <summary>
-    /// Runs the workload and returns its accumulator, which the caller is
-    /// expected to check. The return value is the whole reason the optimiser
+    /// Churns through the workload and returns its accumulator, which the caller
+    /// is expected to check. The return value is the whole reason the optimiser
     /// cannot remove the loop.
     /// </summary>
-    public static long Run(int iterations)
+    /// <remarks>
+    /// Not called <c>Run</c>, because the independence check above it matches
+    /// every exported simulation type name as a word against this file's source
+    /// -- and a run is one of the things the simulation exports.
+    /// </remarks>
+    public static long Churn(int iterations)
     {
         long[] lanes = new long[Lanes];
 

@@ -109,17 +109,73 @@ public class MatchTests
     }
 
     [Fact]
-    public void The_match_is_tuned_to_a_partial_break_over_a_minute_or_so()
+    public void The_match_is_tuned_to_a_partial_break_over_about_three_minutes()
     {
         // A defense that holds and a defense that collapses are both useless as
-        // signals. A third getting through means the leak count is a number a
-        // person can watch move.
+        // signals. A partial break means the leak count is a number a person
+        // can watch move.
+        //
+        // The band is a quarter to a half of the wave, which is the target the
+        // roster was signed against. Seventeen of forty is where it lands.
+        //
+        // OBSERVED: divide every order tick in content/wave.txt by three, which
+        // is what leaving that file alone through the clock dilation would have
+        // meant. The leak goes red at 25 of 40 -- the wave arriving three times
+        // faster than the towers now fire is most of what a leak rate is.
         MatchResult result = TheMatch.Fresh().Resolve();
         int seconds = result.FinalTick / Match.TicksPerSecond;
 
         Assert.Equal(40, result.Total);
-        Assert.InRange(result.Leaked, 12, 15);
-        Assert.InRange(seconds, 60, 90);
+        Assert.InRange(result.Leaked, 10, 20);
+        Assert.InRange(seconds, 150, 240);
+    }
+
+    [Fact]
+    public void Every_walking_row_returns_a_comparable_share_of_its_gold_against_the_committed_defense()
+    {
+        // The roster's own tuning claim, measured rather than asserted. A leak
+        // charges health equal to what the creep cost to send, so what a column
+        // returns is its leak rate and cost cancels out of it entirely -- which
+        // makes survivability the only thing pricing can be wrong about, and
+        // makes a row that never leaks a row nobody would ever take.
+        //
+        // Four hundred gold of one creep against the committed defense, per
+        // row. The band is deliberately wide: it is the claim that no row is
+        // dead and none is free money, not a pin on numbers a sweep is meant to
+        // move.
+        //
+        // OBSERVED: put the Skeleton Scout at 500 health and 3 gold. It goes
+        // red -- "skeleton-scout returned 0 percent of the gold a column of 133
+        // cost" -- because five hundred effective health is under what this
+        // defense deals a creep while it crosses, so every one of them dies and
+        // a whole row of the menu is a dead option that still reads like a
+        // choice.
+        UnitTypeTable types = TheMatch.Types();
+        Ruleset rules = TheRuleset.Committed();
+        TowerLayout defense = TheMatch.Layout(types);
+
+        foreach (UnitType creep in types.Types.Where(row => row.Role == UnitRole.Moving))
+        {
+            int count = 400 / creep.Cost;
+            var match = new Match(
+                TheMatch.Map(),
+                rules,
+                defense,
+                WaveScript.Parse("order 0 " + creep.Id + " " + count + " 0", types),
+                TheMatch.Seed);
+
+            MatchResult result = match.Resolve();
+            int returned = result.Leaked * 100 / count;
+
+            Assert.True(
+                returned >= 60 && returned <= 95,
+                creep.Label
+                + " returned "
+                + returned
+                + " percent of the gold a column of "
+                + count
+                + " cost, against a roster band of 60 to 95.");
+        }
     }
 
     [Fact]
@@ -129,8 +185,18 @@ public class MatchTests
         // fire; only one of them is ever in a picture.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
-        int hitscanType = types.Types.Single(type => type.Delivery == Delivery.Hitscan).Id;
-        int projectileType = types.Types.Single(type => type.Delivery == Delivery.Projectile).Id;
+        // The two the committed defense actually stands, rather than the two the
+        // roster happens to carry: the roster has a sniper and a sieger on it as
+        // well, and neither of them is on this board.
+        int hitscanType = layout.Towers.Select(tower => tower.Type)
+            .Distinct()
+            .Single(type => type.Delivery == Delivery.Hitscan)
+            .Id;
+
+        int projectileType = layout.Towers.Select(tower => tower.Type)
+            .Distinct()
+            .Single(type => type.Delivery == Delivery.Projectile)
+            .Id;
 
         Match match = TheMatch.Fresh();
         var events = new TheMatch.EventLog();
@@ -312,16 +378,53 @@ public class MatchTests
         // rule is "furthest along the corridor, lowest id if level", so the
         // snapshot alone says who each tower should have picked.
         //
-        // The tie half is the point. Two of the wave's orders release on the
-        // same tick, so creeps regularly sit at exactly the same distance --
-        // and "closest to the exit" on its own is not a rule that can be
-        // replayed, because it leaves the answer to whichever of them happened
-        // to be looked at first.
+        // The tie half is the point, and it is fought on a wave built here
+        // rather than on the committed one. That is a correction. The committed
+        // wave does still put creeps at the same distance -- fifty-one times
+        // over the match -- but a tie only tests anything if it lands on the
+        // tick a tower acquires, and whether those two schedules coincide is
+        // luck. It held until the clock dilation of 8 August 2026 moved
+        // content/wave.txt and cut tower acquisitions to a third of what they
+        // were, at which point the coincidence stopped happening and this
+        // assertion went red having quietly tested nothing about ties for as
+        // long as the coincidence had lasted.
+        //
+        // The wave below cannot stop tying. The Minion and the Skeleton walk at
+        // exactly the same speed under the signed roster -- 28 each -- so two
+        // orders released on the same tick stay level for the whole crossing
+        // and every acquisition in range is a tie. "Closest to the exit" on its
+        // own is not a rule that can be replayed, because it leaves the answer
+        // to whichever of them happened to be looked at first.
+        //
+        // OBSERVED: drop the lower-id clause from target selection in
+        // Match, leaving "furthest along". The tie run goes red naming the
+        // creep it picked instead; the committed run below stays green, which
+        // is exactly why the tie half could not be left to it.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
         var coverage = TowerCoverage.For(TheMatch.Map(), layout);
 
-        Match match = TheMatch.Fresh();
+        Assert.Equal(types.ById(12).SpeedMilliHexPerTick, types.ById(1).SpeedMilliHexPerTick);
+
+        CheckTargeting(
+            new Match(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                layout,
+                WaveScript.Parse("order 0 1 12 0\norder 0 12 12 0", types),
+                TheMatch.Seed),
+            coverage,
+            requireTies: true);
+
+        CheckTargeting(TheMatch.Fresh(), coverage, requireTies: false);
+    }
+
+    /// <summary>
+    /// Walks a match and holds every target acquisition against the analytic
+    /// rule: furthest along the corridor, lowest id where two are level.
+    /// </summary>
+    private static void CheckTargeting(Match match, TowerCoverage coverage, bool requireTies)
+    {
         int acquisitions = 0;
         int ties = 0;
 
@@ -371,7 +474,11 @@ public class MatchTests
         }
 
         Assert.True(acquisitions > 100, $"Only {acquisitions} target acquisitions were checked.");
-        Assert.True(ties > 0, "No tower ever had to break a tie, so the tiebreak rule went untested.");
+
+        if (requireTies)
+        {
+            Assert.True(ties > 0, "No tower ever had to break a tie, so the tiebreak rule went untested.");
+        }
     }
 
     [Fact]
@@ -450,11 +557,24 @@ public class MatchTests
         // The highest-frequency call site in the match, doubling as the most
         // sensitive detector of a unit-ordering desync. This reconstructs the
         // stream independently: draw once per shot, in the order the shots were
-        // fired, and every hitscan shot's damage has to be the number that comes
-        // next. A second draw anywhere, or a draw skipped, walks the two
-        // sequences out of step immediately.
+        // fired, and every hitscan shot's damage has to be that number resolved
+        // through the ruleset. A second draw anywhere, or a draw skipped, walks
+        // the two sequences out of step immediately.
+        //
+        // What lands is the roll through the matrix, and the wave sends two
+        // armour types, so a shot resolves to one of exactly two numbers -- the
+        // cell against Armoured or the cell against Swift. Both are computed
+        // from the same draw, which is what makes this an assertion about the
+        // stream rather than about the target; the exact amount against a known
+        // target is DamageWiringTests' claim rather than this one's.
+        //
+        // OBSERVED: draw a second time inside Match.Fire -- roll the damage,
+        // then roll it again and use the second number. This goes red on the
+        // first hitscan landing, 102 against the [81, 163] the reconstructed
+        // roll resolves to, and the reconstruction never recovers.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
+        Ruleset rules = TheRuleset.Committed();
 
         var events = new TheMatch.EventLog();
         TheMatch.Fresh().Resolve(events);
@@ -481,7 +601,14 @@ public class MatchTests
 
             if (type.Delivery == Delivery.Hitscan && landedImmediately)
             {
-                Assert.Equal(expected, events.Amounts[index + 1]);
+                Assert.Contains(
+                    events.Amounts[index + 1],
+                    new[]
+                    {
+                        DamageModel.Dealt(rules, expected, 0, type.AttackType, ArmourType.Armoured, 0),
+                        DamageModel.Dealt(rules, expected, 0, type.AttackType, ArmourType.Swift, 0),
+                    });
+
                 checkedLandings++;
             }
         }

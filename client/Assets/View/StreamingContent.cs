@@ -53,6 +53,18 @@ namespace View
         public const string WaveFileName = "wave.txt";
 
         /// <summary>
+        /// Every number a shot resolves through: the damage matrix, the armour
+        /// expression and the floor.
+        /// </summary>
+        /// <remarks>
+        /// The tick loop reads it on every landing, so a player without it can
+        /// draw a floor and never resolve a hit. It ships beside the unit table
+        /// for the same reason that one does: the record inlines a defense and a
+        /// wave, and neither of the two tables they are read against.
+        /// </remarks>
+        public const string RulesetFileName = "ruleset.txt";
+
+        /// <summary>
         /// The whole match in one run of bytes: the seed, the map, the defense
         /// and the wave. What the player actually plays.
         /// </summary>
@@ -61,7 +73,7 @@ namespace View
         /// <b>The player plays the record, not a seed of its own.</b> The
         /// committed landmark table — the ticks the sit-down checklist sends
         /// somebody to look at — is what a real run of <i>these bytes</i>
-        /// reported. A player that re-derived the same match from the four text
+        /// reported. A player that re-derived the same match from the text
         /// files would need the seed written down a second time, and a second
         /// copy of a number is a number that goes out of date: the two differ by
         /// eleven ticks on the last creep to die, which is not a difference
@@ -90,19 +102,22 @@ namespace View
         /// playfield in a build that worked perfectly in the editor.
         /// </para>
         /// <para>
-        /// The four text files ship alongside the record even though the record
-        /// inlines three of them. <see cref="UnitsFileName"/> has to: the type
-        /// table is what the replay gate checks the record's content hash
-        /// against, and it is not in the bundle. The other three are the
-        /// authored originals the bundle was recorded from, and they are what
-        /// the fixtures read; the record's own gate is what stops the match on
-        /// screen being drawn from anything else.
+        /// The five text files ship alongside the record even though the record
+        /// inlines three of them. <see cref="UnitsFileName"/> and
+        /// <see cref="RulesetFileName"/> have to: the type table is what the
+        /// replay gate checks the record's content hash against and the ruleset
+        /// is what every landing is resolved through, and neither is in the
+        /// bundle. The other three are the authored originals the bundle was
+        /// recorded from, and they are what the fixtures read; the record's own
+        /// gate is what stops the match on screen being drawn from anything
+        /// else.
         /// </para>
         /// </remarks>
         public static readonly string[] MatchFileNames =
         {
             MapFileName,
             UnitsFileName,
+            RulesetFileName,
             DefenseFileName,
             WaveFileName,
             ReplayFileName,
@@ -143,6 +158,10 @@ namespace View
         /// <summary>The unit type table, parsed by the simulation.</summary>
         public static UnitTypeTable ReadUnitTypes() =>
             UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
+
+        /// <summary>The rules every shot in a match is resolved through.</summary>
+        public static Ruleset ReadRuleset() =>
+            Ruleset.ParseUtf8(RulesetFileName, Read(RulesetFileName));
 
         /// <summary>The defense, parsed against <paramref name="types"/>.</summary>
         public static TowerLayout ReadDefense(UnitTypeTable types) =>

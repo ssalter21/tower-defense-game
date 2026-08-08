@@ -395,6 +395,20 @@ namespace Sim
             return field;
         }
 
+        /// <summary>A row required to carry exactly the fields its keyword has.</summary>
+        internal static void RequireFieldCount(
+            string source,
+            int line,
+            string keyword,
+            int expected,
+            string[] fields)
+        {
+            if (fields.Length != expected)
+            {
+                throw WrongFieldCount(source, line, keyword, expected, fields.Length);
+            }
+        }
+
         internal static ContentException WrongFieldCount(
             string source,
             int line,

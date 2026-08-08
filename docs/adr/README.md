@@ -14,6 +14,13 @@ These were extracted from the source comments when the project moved to a commen
 | [0004](0004-rolling-state-hash-always-on.md) | The rolling state hash is always on, and folds per tick |
 | [0005](0005-one-match-surface-no-modes.md) | One match surface, every scenario — no modes, flags or branches |
 | [0025](0025-invariants-are-unconditional-throws.md) | Every invariant is an unconditional throw |
+| [0033](0033-one-fused-damage-expression-and-a-named-pipeline.md) | One fused damage expression, evaluated once, behind a named pipeline |
+| [0034](0034-run-level-draws-are-derived-positions.md) | Run-level draws come from derived positions; the match keeps its one stream |
+| [0035](0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | A run's outcome is a vector, and health is a clock denominated in gold |
+| [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints |
+| [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once |
+| [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |
+| [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling |
 
 ## The simulation/view boundary
 
@@ -39,6 +46,8 @@ These were extracted from the source comments when the project moved to a commen
 | [0015](0015-replay-bundles-are-self-contained.md) | A replay bundle is self-contained, and the seed lives in it |
 | [0017](0017-canonical-order-is-asserted-not-restored.md) | Canonical order is asserted at load, never restored |
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
+| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against |
+| [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
 
 ## Drawing the match
 
@@ -57,3 +66,4 @@ These were extracted from the source comments when the project moved to a commen
 | # | Decision |
 |---|---|
 | [0027](0027-a-landmark-table-with-a-hole-refuses-to-render.md) | A landmark table with a hole in it refuses to render |
+| [0041](0041-the-sweep-computes-rows-and-the-shell-writes-them.md) | The sweep computes rows and the shell writes them, and every rate arrives with its operands |
