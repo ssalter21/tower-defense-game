@@ -88,6 +88,12 @@ public class RulesetTests
     [Fact]
     public void The_simulation_takes_the_ruleset_as_bytes_as_well_as_text_and_agrees_with_itself()
     {
+        // OBSERVED: strip a byte-order mark unconditionally in the byte path --
+        // a .Substring(1) on what DataText.FromUtf8 decoded, as though every
+        // file handed to it carried one. This goes red on the throw: the first
+        // line loses its '#', " The ruleset." reaches the field splitter and the
+        // parse refuses on the '.' at column 13. The text path is untouched,
+        // which is what a second entry point drifting from the first looks like.
         Assert.Equal(
             Ruleset.Parse(File.ReadAllText(RepoLayout.RulesetFile)).ContentHash,
             Ruleset.ParseUtf8(File.ReadAllBytes(RepoLayout.RulesetFile)).ContentHash);
@@ -96,6 +102,11 @@ public class RulesetTests
     [Fact]
     public void A_byte_order_mark_is_not_a_content_change_to_the_ruleset()
     {
+        // OBSERVED: delete the byte-order-mark strip in DataText.SplitLines.
+        // This goes red on the throw -- "carries a character outside printable
+        // ASCII at column 1 (code point 65279)" -- so a ruleset any Windows
+        // text writer produced refuses to load rather than parsing to what it
+        // says.
         string text = File.ReadAllText(RepoLayout.RulesetFile);
         byte[] withMark = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble()
             .Concat(Encoding.UTF8.GetBytes(text))
@@ -109,6 +120,10 @@ public class RulesetTests
     {
         // Without this, every refusal below could be firing on a fault the
         // fixture always had rather than on the one the test planted.
+        //
+        // OBSERVED: change "floor 1" to "floor 2" in TheRuleset.Minimal. This
+        // goes red, 1 against 2 -- the fixture read back, rather than the
+        // fixture assumed.
         Assert.Equal(1, Ruleset.Parse(TheRuleset.Minimal).DamageFloor);
     }
 
@@ -149,6 +164,10 @@ public class RulesetTests
     {
         // Two rows claiming one rule means the ruleset in force is whichever of
         // them was read last, which is a coin flip nobody can see in a diff.
+        //
+        // OBSERVED: delete the duplicate loop in Draft.Once, leaving the Add.
+        // All eight rows go red having caught nothing, and a file stating the
+        // health pool twice loads on the second one.
         ContentException thrown = Assert.Throws<ContentException>(
             () => Ruleset.Parse(TheRuleset.Minimal + "\n" + row));
 
@@ -158,6 +177,10 @@ public class RulesetTests
     [Fact]
     public void A_row_the_ruleset_does_not_have_refuses_to_load_rather_than_being_skipped()
     {
+        // OBSERVED: return from ReadRow's default branch instead of throwing.
+        // This goes red having caught nothing, and a row somebody misspelled is
+        // silently dropped -- the rule it was meant to state supplied by the
+        // reader and folded into the hash as though somebody had authored it.
         ContentException thrown = Assert.Throws<ContentException>(
             () => Ruleset.Parse(TheRuleset.Minimal + "\ncompounding 1"));
 
@@ -167,8 +190,12 @@ public class RulesetTests
     [Fact]
     public void A_row_with_the_wrong_number_of_fields_refuses_to_load()
     {
+        // OBSERVED: make DataText.RequireFieldCount a no-op. This goes red
+        // having caught nothing: "armour 1 100 7" is read off its first two
+        // fields and the extra one is dropped, so a row somebody added a column
+        // to loads as the row they meant to replace.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 100 7")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 100 7")));
 
         Assert.Contains("'armour' row has 4 fields", thrown.Message, StringComparison.Ordinal);
     }
@@ -185,7 +212,7 @@ public class RulesetTests
         // mentions a ceiling loads with "no ceiling" folded into its content
         // hash as though somebody had chosen it.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10")));
 
         Assert.Contains("'interest' row has 2 fields", thrown.Message, StringComparison.Ordinal);
     }
@@ -199,14 +226,19 @@ public class RulesetTests
         // caught nothing, and a bank that earns -1 a wave is authored without
         // a word from the reader.
         Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 -1")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 -1")));
     }
 
     [Fact]
     public void A_matrix_row_out_of_attack_type_order_refuses_to_load()
     {
+        // OBSERVED: drop the attack-against-row-count comparison in
+        // Draft.AddMatrixRow. This goes red on the message: each row is written
+        // at its own attack index, so pierce's cells are never written at all
+        // and the Latin square refuses "a first matrix row of (0, 0, 0)" --
+        // naming a repeat, and saying nothing about the row that went missing.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix magic 100 140 70")));
+            PlantedText.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix magic 100 140 70")));
 
         Assert.Contains("where pierce was expected", thrown.Message, StringComparison.Ordinal);
     }
@@ -214,6 +246,11 @@ public class RulesetTests
     [Fact]
     public void A_fourth_matrix_row_refuses_to_load()
     {
+        // OBSERVED: drop the row-count check at the top of Draft.AddMatrixRow.
+        // This goes red on the exception type: the order check underneath it
+        // reads DamageMatrix.AttackWords[3], which is off the end of a
+        // three-word array, and an IndexOutOfRangeException surfaces instead of
+        // a refusal a designer could act on.
         ContentException thrown = Assert.Throws<ContentException>(
             () => Ruleset.Parse(TheRuleset.Minimal + "\nmatrix pierce 140 70 100"));
 
@@ -223,8 +260,13 @@ public class RulesetTests
     [Fact]
     public void A_matrix_row_naming_an_attack_type_outside_the_cycle_refuses_to_load()
     {
+        // OBSERVED: have DataText.Keyword return 0 for a word it does not know,
+        // which is the plausible-looking default. This goes red having caught
+        // nothing: "matrix holy" reads as pierce, the three rows line up in
+        // order, and a ruleset naming an attack type the game does not have
+        // loads as though it named the first one.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix holy 140 70 100")));
+            PlantedText.Replace(TheRuleset.Minimal, "matrix pierce 140 70 100", "matrix holy 140 70 100")));
 
         Assert.Contains("pierce, impact, magic", thrown.Message, StringComparison.Ordinal);
     }
@@ -243,8 +285,8 @@ public class RulesetTests
         // caught nothing while the column test below stays green, which is the
         // whole reason both halves are here.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.Replace(
-                TheRuleset.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 70 140 140"),
+            PlantedText.Replace(
+                PlantedText.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 70 140 140"),
                 "matrix magic 100 140 70",
                 "matrix magic 100 100 70")));
 
@@ -263,7 +305,7 @@ public class RulesetTests
         // having caught nothing while the row test above stays green, which is
         // the whole reason both halves are here.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 140 70 100")));
+            PlantedText.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 140 70 100")));
 
         Assert.Contains("column", thrown.Message, StringComparison.Ordinal);
     }
@@ -273,6 +315,11 @@ public class RulesetTests
     {
         // Two armour types the attacker cannot tell apart is a smaller table
         // wearing a three-by-three one's clothes.
+        //
+        // OBSERVED: delete the repeat check at the top of RequireLatinSquare.
+        // This goes red having caught nothing: (100, 100, 140) cycled is a
+        // permutation of itself down every row and every column, so the square
+        // rule underneath waves it through.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
             TheRuleset.WithCells(100, 100, 140)));
 
@@ -284,8 +331,13 @@ public class RulesetTests
     {
         // A wave below the first threshold would fall in no band at all, and
         // what it earns would be whatever the reader supplied.
+        //
+        // OBSERVED: drop the first-band check in Draft.AddBand. This goes red
+        // having caught nothing, and a ruleset whose bands open at the tenth
+        // percentile loads -- BandFor then answers the bottom band for a wave
+        // that reached no band at all.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "band 0 0", "band 10 0")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 0 0", "band 10 0")));
 
         Assert.Contains("first band starts at zero", thrown.Message, StringComparison.Ordinal);
     }
@@ -293,8 +345,12 @@ public class RulesetTests
     [Fact]
     public void Bands_that_do_not_ascend_refuse_to_load()
     {
+        // OBSERVED: drop the threshold comparison against the band below it in
+        // Draft.AddBand. This goes red having caught nothing, and two bands
+        // both opening at the zeroth percentile load -- at which point the band
+        // a wave falls in is whichever of them the walk stopped on.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "band 50 5", "band 0 5")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 50 5", "band 0 5")));
 
         Assert.Contains("ascend strictly", thrown.Message, StringComparison.Ordinal);
     }
@@ -310,7 +366,7 @@ public class RulesetTests
         // Draft.AddBand. This goes red having caught nothing, and a ruleset in
         // which the 50th percentile pays less than the 0th loads quietly.
         ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Replace(TheRuleset.Minimal, "band 0 0", "band 0 10"), "band 50 5", "band 50 4")));
+            PlantedText.Replace(PlantedText.Replace(TheRuleset.Minimal, "band 0 0", "band 0 10"), "band 50 5", "band 50 4")));
 
         Assert.Contains("doing better never pays less", thrown.Message, StringComparison.Ordinal);
     }
@@ -318,8 +374,19 @@ public class RulesetTests
     [Fact]
     public void A_negative_band_bonus_refuses_to_load()
     {
-        Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "band 50 5", "band 50 -5")));
+        // Refused by the column's own range, and asserted by name because two
+        // rules can refuse this file: a bonus below zero is also a bonus below
+        // the band under it.
+        //
+        // OBSERVED: open the band bonus's range at int.MinValue. This goes red
+        // on the message, "pays -5 where the band below it pays 0" against the
+        // range's own refusal -- the progressive rule catching a negative bonus
+        // for a reason that says nothing about the column's floor, and the
+        // reason a bare Assert.Throws here stayed green under the same edit.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 50 5", "band 50 -5")));
+
+        Assert.Contains("outside the allowed range", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -327,29 +394,47 @@ public class RulesetTests
     {
         // A floor of zero is a hit the type chart is allowed to delete, which
         // is the one outcome the floor exists to make impossible.
+        //
+        // OBSERVED: open the damage floor's range at 0 in Ruleset.ReadRow. This
+        // goes red having caught nothing, and a ruleset that lets a hit come
+        // out at nothing loads.
         Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "floor 1", "floor 0")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "floor 1", "floor 0")));
     }
 
     [Fact]
     public void An_armour_denominator_of_zero_refuses_to_load()
     {
         // It is the divisor of every hit in the game.
+        //
+        // OBSERVED: open the armour denominator's range at 0 in
+        // Ruleset.ReadRow. This goes red having caught nothing, and the file
+        // loads carrying a denominator every unarmoured shot in the game would
+        // divide by.
         Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 0")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1 0")));
     }
 
     [Fact]
     public void A_matrix_cell_of_zero_refuses_to_load()
     {
+        // OBSERVED: open a cell's range at 0 in Ruleset.Cell. This goes red
+        // having caught nothing: the three cells are still distinct and every
+        // row and column is still a permutation of them, so a matrix with a
+        // cell that deletes a whole attack-armour pairing loads.
         Assert.Throws<ContentException>(() => Ruleset.Parse(TheRuleset.WithCells(0, 70, 140)));
     }
 
     [Fact]
     public void A_decimal_point_in_the_ruleset_refuses_to_load()
     {
+        // OBSERVED: drop the '.' and ',' refusal in DataText.Fields and have
+        // DataText.Integer stop at the first character that is not a digit
+        // rather than refuse it -- a fraction truncated to its whole part.
+        // This goes red having caught nothing, and "interest 10.5 0" loads as a
+        // rate of 10 with the half nobody can represent quietly discarded.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10", "interest 10.5")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10", "interest 10.5")));
 
         Assert.Contains("'.'", thrown.Message, StringComparison.Ordinal);
     }
@@ -357,13 +442,21 @@ public class RulesetTests
     [Fact]
     public void A_decimal_comma_in_the_ruleset_is_the_same_mistake_and_is_refused_too()
     {
+        // OBSERVED: the same edit the decimal point above was watched under.
+        // This goes red having caught nothing, and "interest 10,5 0" loads as a
+        // rate of 10 -- the spelling a comma-decimal locale produces, read as a
+        // number nobody typed.
         Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10", "interest 10,5")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10", "interest 10,5")));
     }
 
     [Fact]
     public void An_empty_ruleset_refuses_to_load()
     {
+        // OBSERVED: delete the RequireEverything call in Ruleset.Parse. This
+        // goes red on the exception type: a NullReferenceException out of
+        // Fold(), because the matrix nothing authored is null and the fold
+        // reaches it before anybody has been told which row was missing.
         Assert.Throws<ContentException>(() => Ruleset.Parse("# nothing but a comment"));
     }
 
@@ -372,6 +465,12 @@ public class RulesetTests
     {
         // Both folds start from a label naming the table and its layout, so two
         // tables cannot collide by holding coincidentally equal integers.
+        //
+        // OBSERVED: stop Hash64 distinguishing anything -- skip the label loop
+        // in Start and return `this` from Add(long). Both assertions go red,
+        // every table in the project coming back as the bare FNV offset basis
+        // CBF29CE484222325, which is what a fold that has stopped folding looks
+        // like from here.
         Assert.NotEqual(TheRuleset.Committed().ContentHash, TheMatch.Types().ContentHash);
         Assert.NotEqual(TheRuleset.Committed().ContentHash, TheMatch.Map().MapHash);
     }

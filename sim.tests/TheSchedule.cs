@@ -39,7 +39,7 @@ public static class TheSchedule
     /// </summary>
     public static AnchorSchedule Reshaped(UnitTypeTable? types = null) =>
         AnchorSchedule.Parse(
-            Replace(CommittedText(), "anchor        6     2", "anchor        5     2"),
+            PlantedText.Replace(CommittedText(), "anchor        6     2", "anchor        5     2"),
             types ?? TheMatch.Types());
 
     /// <summary><see cref="Minimal"/>, parsed against the committed unit table.</summary>
@@ -48,16 +48,8 @@ public static class TheSchedule
     /// <summary>Any schedule text, parsed against the committed unit table.</summary>
     public static AnchorSchedule Of(string text) => AnchorSchedule.Parse(text, TheMatch.Types());
 
-    /// <summary>One substring of a schedule swapped for another, exactly once.</summary>
-    public static string Replace(string text, string what, string with)
-    {
-        Assert.Contains(what, text, StringComparison.Ordinal);
-
-        return text.Replace(what, with, StringComparison.Ordinal);
-    }
-
     /// <summary><see cref="Minimal"/> with one substring swapped for another.</summary>
-    public static string Planted(string what, string with) => Replace(Minimal, what, with);
+    public static string Planted(string what, string with) => PlantedText.Replace(Minimal, what, with);
 
     /// <summary>
     /// The slot width of every wave of a run this long, derived from a shape and

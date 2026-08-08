@@ -87,7 +87,7 @@ public class CostTableTests
         Assert.Equal(77, dearer.PriceOf(Purchase.Unit(1)));
 
         CostTable retunedRules = CostTable.From(
-            Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "snapshot 10 25", "snapshot 10 26")),
+            Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "snapshot 10 25", "snapshot 10 26")),
             TheMatch.Types());
 
         Assert.Equal(26, retunedRules.PriceOf(Purchase.Snapshot));

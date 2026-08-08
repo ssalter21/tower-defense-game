@@ -116,7 +116,7 @@ public static class TheSweep
     /// rather than only across ten.
     /// </summary>
     public static Ruleset ThinHealth() =>
-        Ruleset.Parse(TheRuleset.Replace(TheRuleset.CommittedText(), "health       1500", "health        200"));
+        Ruleset.Parse(PlantedText.Replace(TheRuleset.CommittedText(), "health       1500", "health        200"));
 
     /// <summary>The wave the canned field sends.</summary>
     public static WaveScript Wave(UnitTypeTable types) =>

@@ -46,13 +46,14 @@ A run is authored as text. `content/commands.txt` is one `build` row per round â
 the wave, what was taken off that round's public offering, and how the wave's
 slots were filled â€” and `-Regenerate` compiles it into the record, having read
 the bytes back and played them to the end first. The menus a take names come
-from the run's seed, so the command line will print them:
+from the run's seed, so there is a tool that prints them:
 
 ```
-dotnet Sim.Cli.dll offerings --seed 20260807 --map content/map.txt --units content/units.txt \
-  --rules content/ruleset.txt --schedule content/schedule.txt --defense content/defense.txt \
-  --wave content/wave.txt
+./tools/show-offerings.ps1
 ```
+
+It prints every wave's menu for the seed the committed command stream carries;
+`-Seed` reads another run's, and every content file is an argument.
 
 The second thing is the balance harness:
 

@@ -543,7 +543,7 @@ public class BuildPhaseTests
         Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
         AnchorSchedule moved = AnchorSchedule.Parse(
-            TheSchedule.Replace(TheSchedule.CommittedText(), "anchor        6     2", "anchor        5     2"),
+            PlantedText.Replace(TheSchedule.CommittedText(), "anchor        6     2", "anchor        5     2"),
             types);
 
         var run = new Run(

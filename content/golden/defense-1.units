@@ -56,10 +56,16 @@
 # an armour type that changed the price would be charging twice for a bet.
 #
 # WHAT THAT LEAVES A ROW TO DIFFER IN IS SHAPE. Speed, granularity, and which
-# defense chews it. A wisp column is fifty-seven bodies at seven sauce and a
-# bulwark column is eight at forty-five, and against the committed defense they
-# return the same fraction of the sauce they cost -- so choosing between them is
-# a read of the board rather than a lookup of which row was mispriced.
+# defense chews it. Four hundred sauce buys fifty-seven wisps or eight
+# bulwarks, and against the committed defense both hand back about four fifths
+# of what they cost -- so choosing between them is a read of the board rather
+# than a lookup of which row was mispriced.
+#
+# THAT SAMENESS IS THE EXCHANGE RATE AND NOT A COINCIDENCE. A leak charging
+# what the creep cost means the health a sauce buys is the leak rate and
+# nothing else, so cost cancels out of it and a row is balanced by what it
+# survives. See docs/research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md,
+# which is also where the measurements above are written down.
 #
 # THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
 # the committed wave, thirteen of forty creeps get through -- a third, near

@@ -121,9 +121,13 @@ band           90       20
 #
 # The pool a run starts with, denominated in sauce. A leaked creep costs health
 # equal to its cost, one for one, so the exchange rate is legible without a
-# table. Three waves of average creep value, near enough: one deliberate
-# concession is affordable and a second is a real decision. Sauce cannot repair
-# it -- the pool is a clock.
+# table. Sauce cannot repair it -- the pool is a clock.
+#
+# WHAT 1500 BUYS, MEASURED. A wave is bought out of a purse the income row above
+# pays 100 a round into, so conceding one of them whole costs around a hundred
+# and the pool is some fifteen of those. The committed ten-round run in
+# content/run-outcome.txt concedes 1251 of it -- about 125 a round -- and
+# finishes on 249 with every wave survived.
 
 health       1500
 

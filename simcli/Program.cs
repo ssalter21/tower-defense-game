@@ -51,13 +51,6 @@ public static class Program
     private const int MaximumFieldSize = 65535;
 
     /// <summary>
-    /// How many seeds a sweep plays each creep on unless the caller says
-    /// otherwise. Small enough that the default invocation answers while
-    /// somebody is still looking at the shell.
-    /// </summary>
-    private const int DefaultRunsPerCreep = 16;
-
-    /// <summary>
     /// The most seeds one creep may be played on. There is no rule putting a
     /// ceiling here; a bound there is stops a mistyped argument asking for a
     /// billion runs and getting them.
@@ -367,7 +360,7 @@ public static class Program
         SweepPlan plan = ContentOf(arguments).Sweep(
             ShapeOf(arguments),
             arguments.RequiredUnsigned("seed"),
-            arguments.Optional("runs", DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
+            arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
             Dial(arguments, "ordinary-options"),
             Dial(arguments, "game-changers"),
             Dial(arguments, "free-snapshots"),

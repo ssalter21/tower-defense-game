@@ -638,7 +638,7 @@ public class RunTests
         // caught nothing, and what it built is a run whose Ending is Unfinished
         // after every round it will ever resolve.
         Ruleset capped = Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 500"));
+            PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 500"));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
             () => new Run(
@@ -759,6 +759,50 @@ public class RunTests
             Assert.Throws<SimulationException>(() => run.Advance(TheRun.Orders(types)));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_round_that_throws_after_its_matches_leaves_the_run_exactly_where_it_was()
+    {
+        // The other end of a round from the build phase's. Every match of the
+        // round resolves, and then the wave is paid -- the field is measured on
+        // first use and the purse is closed -- and both of those can refuse. A
+        // purse near the top of its range is the refusal a run can be built to
+        // reach: the interest alone carries the close past what a purse is kept
+        // in.
+        //
+        // OBSERVED: put the two Add calls and the purse assignment back above
+        // Purse.CloseWave in Run.Advance(RoundOrders). The round count goes red,
+        // 1 against 0, and the run carries a round on its vector and in what it
+        // sent for a wave that was never paid for -- with an outcome still
+        // folded from before it, which nothing downstream could tell from a run
+        // somebody played.
+        Ruleset rules = Ruleset.Parse(
+            PlantedText.Replace(TheRuleset.CommittedText(), "purse         100", "purse  2147483000"));
+
+        UnitTypeTable types = TheMatch.Types();
+
+        var run = new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheSchedule.Committed(types),
+            TheRun.Pool(types),
+            TheRun.Seed,
+            waves: 2,
+            fieldSize: 2);
+
+        SimulationException thrown =
+            Assert.Throws<SimulationException>(() => run.Advance(TheRun.Orders(types)));
+
+        Assert.Contains("does not fit in the 32-bit integer a purse is kept in", thrown.Message, StringComparison.Ordinal);
+
+        Assert.Equal(0, run.Round);
+        Assert.Empty(run.Sent);
+        Assert.Empty(run.Outcome.Rounds);
+        Assert.Equal(rules.HealthPoolSauce, run.Health);
+        Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
+        Assert.False(run.IsOver);
     }
 
     [Fact]

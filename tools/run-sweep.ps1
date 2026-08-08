@@ -77,10 +77,11 @@ param(
     # which is why the committed one is pinned here and printed into the file.
     [ulong]$Seed = 20260807,
 
-    # How many seeds each creep is played on. The committed report's number: a
-    # sample this size answers in a few seconds and separates the roster, and it
-    # is reported in the file as the sample it is.
-    [int]$Runs = 8,
+    # How many seeds each creep is played on, or zero for the library's own
+    # default -- SweepPlan.DefaultRunsPerCreep, which is the number the committed
+    # report was produced at. Whatever it comes to is reported in the file as the
+    # sample it is.
+    [int]$Runs = 0,
 
     # N and K. Ten and ten are this map's answers and both are expected to move.
     [int]$Waves = 10,
@@ -120,6 +121,8 @@ $committed = Join-Path $content 'sweep.csv'
 $build = Join-Path ([System.IO.Path]::GetTempPath()) 'simcli-build-sweep'
 $program = Join-Path $build 'Sim.Cli.dll'
 
+. (Join-Path $PSScriptRoot '_shared.ps1')
+
 & dotnet build (Join-Path $repoRoot 'simcli') --configuration Debug --nologo --output $build | Out-Host
 
 if ($LASTEXITCODE -ne 0) {
@@ -140,7 +143,6 @@ $sweepArguments = @(
     '--defense', $Defense,
     '--wave', $Field,
     '--seed', $Seed.ToString($number),
-    '--runs', $Runs.ToString($number),
     '--waves', $Waves.ToString($number),
     '--field-size', $FieldSize.ToString($number),
 
@@ -148,19 +150,10 @@ $sweepArguments = @(
     # wherever a build failed, which is the whole reason death is a flag.
     '--no-death')
 
-# The runner refuses by name and exits, rather than throwing: a sweep that
-# cannot be played has already said why in its own sentence, and a PowerShell
-# stack trace on top of it buries the one line anybody needs to read.
-function Invoke-SimCli {
-    param([string[]]$CliArgs)
-
-    & dotnet $program @CliArgs | Out-Host
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ""
-        Write-Host "simcli $($CliArgs[0]) refused (exit $LASTEXITCODE); its reason is above." -ForegroundColor Red
-        exit $LASTEXITCODE
-    }
+# --runs is left off entirely where nobody asked for one, so the number in force
+# is the library's and there is no second copy of it here to drift.
+if ($Runs -gt 0) {
+    $sweepArguments += @('--runs', $Runs.ToString($number))
 }
 
 if ($Regenerate) {
@@ -189,33 +182,12 @@ $fresh = Join-Path $scratch 'sweep.csv'
 
 Invoke-SimCli ($sweepArguments + @('--out', $fresh))
 
-$committedText = [System.IO.File]::ReadAllText($committed)
-$freshText = [System.IO.File]::ReadAllText($fresh)
+$same = Test-SameText "content/sweep.csv" `
+    ([System.IO.File]::ReadAllText($committed)) `
+    ([System.IO.File]::ReadAllText($fresh))
 
-if ($committedText -eq $freshText) {
-    Write-Host "content/sweep.csv is what the sweep produced." -ForegroundColor Green
+if ($same) {
     exit 0
-}
-
-# The first line the two disagree on, named. A whole-file "they differ" is a
-# message nobody can act on, and the first difference is nearly always the only
-# one that was not caused by the ones above it.
-$committedLines = $committedText -split "`n"
-$freshLines = $freshText -split "`n"
-$limit = [Math]::Max($committedLines.Count, $freshLines.Count)
-
-Write-Host "content/sweep.csv is NOT what the sweep produced." -ForegroundColor Red
-
-for ($index = 0; $index -lt $limit; $index++) {
-    $left = if ($index -lt $committedLines.Count) { $committedLines[$index] } else { '<end of file>' }
-    $right = if ($index -lt $freshLines.Count) { $freshLines[$index] } else { '<end of file>' }
-
-    if ($left -ne $right) {
-        Write-Host ("  line {0}" -f ($index + 1))
-        Write-Host ("    committed: {0}" -f $left)
-        Write-Host ("    this run : {0}" -f $right)
-        break
-    }
 }
 
 Write-Host ""
