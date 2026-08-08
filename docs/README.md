@@ -39,6 +39,7 @@ at its top rather than being rewritten.
 | [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? |
 | [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
 | [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
+| [Sixteen ways a tower can become something else](research/tower-upgrade-approaches.html) *(HTML)* | What shapes can the tower upgrade graph take, and which survive a ten-round run and the KayKit packs? **Synthesis, not new evidence** — it cites the notes above rather than primary sources, and it chooses nothing |
 
 **Build research**, on the tools rather than the game:
 

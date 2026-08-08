@@ -1,0 +1,1177 @@
+<title>Sixteen ways a tower can become something else</title>
+<style>
+  /* ---- tokens: light is the base, both dark states redefine only these ---- */
+  :root {
+    --ground:    #E8EAE3;
+    --surface:   #F5F6F1;
+    --surface-2: #DDE0D7;
+    --ink:       #191E1A;
+    --ink-2:     #46504A;
+    --muted:     #77817A;
+    --rule:      #C6CBBF;
+    --rule-hard: #A8AFA1;
+    --fir:       #2E6A4C;
+    --fir-wash:  #DDE8E0;
+    --ochre:     #9B6314;
+    --ochre-wash:#F0E5CF;
+    --rust:      #94382A;
+    --rust-wash: #F1DED9;
+    --shadow:    0 1px 0 rgba(25,30,26,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:    #131715;
+      --surface:   #1B201D;
+      --surface-2: #262C28;
+      --ink:       #E6EAE3;
+      --ink-2:     #B2BBB4;
+      --muted:     #879189;
+      --rule:      #333A35;
+      --rule-hard: #4A534C;
+      --fir:       #74C398;
+      --fir-wash:  #1D2E25;
+      --ochre:     #DFA75F;
+      --ochre-wash:#31281A;
+      --rust:      #E5806F;
+      --rust-wash: #33211D;
+      --shadow:    0 1px 0 rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:    #131715;
+    --surface:   #1B201D;
+    --surface-2: #262C28;
+    --ink:       #E6EAE3;
+    --ink-2:     #B2BBB4;
+    --muted:     #879189;
+    --rule:      #333A35;
+    --rule-hard: #4A534C;
+    --fir:       #74C398;
+    --fir-wash:  #1D2E25;
+    --ochre:     #DFA75F;
+    --ochre-wash:#31281A;
+    --rust:      #E5806F;
+    --rust-wash: #33211D;
+    --shadow:    0 1px 0 rgba(0,0,0,.3);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
+    font-size: 17px;
+    line-height: 1.62;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- shell ---- */
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+  @media (min-width: 1040px) {
+    .shell { grid-template-columns: 208px minmax(0, 1fr); gap: 56px; }
+  }
+
+  /* ---- index rail ---- */
+  .rail { display: none; }
+  @media (min-width: 1040px) {
+    .rail {
+      display: block;
+      position: sticky;
+      top: 0;
+      align-self: start;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding: 40px 0 40px;
+      font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+  }
+  .rail-group {
+    margin: 0 0 18px;
+  }
+  .rail-group > b {
+    display: block;
+    font-weight: 700;
+    font-size: 9.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rail a {
+    display: block;
+    padding: 2.5px 0;
+    color: var(--ink-2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    padding-left: 8px;
+    margin-left: -10px;
+  }
+  .rail a:hover, .rail a:focus-visible { color: var(--fir); border-left-color: var(--fir); }
+
+  main { padding-top: 40px; min-width: 0; }
+
+  /* ---- type scale ---- */
+  .eyebrow {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: clamp(28px, 4.4vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -.028em;
+    font-weight: 700;
+    margin: 0 0 20px;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  h2 {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 21px;
+    letter-spacing: -.018em;
+    font-weight: 700;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 15px;
+    letter-spacing: -.01em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+  p { margin: 0 0 15px; max-width: 72ch; }
+  .lede { font-size: 19.5px; line-height: 1.55; color: var(--ink-2); max-width: 62ch; }
+  a { color: var(--fir); text-underline-offset: 2px; }
+  strong { font-weight: 700; color: var(--ink); }
+  code, .m {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: .86em;
+  }
+
+  /* ---- section blocks ---- */
+  section { margin: 0 0 72px; scroll-margin-top: 24px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    border-top: 2px solid var(--ink);
+    padding-top: 10px;
+    margin-bottom: 22px;
+  }
+  .section-head h2 { flex: 1; }
+  .section-head .tag {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* ---- tables ---- */
+  .scroller { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td {
+    text-align: left;
+    padding: 9px 13px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  thead th {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.n { font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 13px; }
+  td.code { font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace; font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+  /* ---- approach card ---- */
+  .approach {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule-hard);
+    background: var(--surface);
+    padding: 20px 22px 6px;
+    margin: 0 0 20px;
+    box-shadow: var(--shadow);
+    scroll-margin-top: 24px;
+  }
+  .approach.pick { border-left-color: var(--fir); }
+  .approach-head {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .approach-head .txt { flex: 1 1 320px; min-width: 0; }
+  .approach .code-label {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .16em;
+    font-weight: 700;
+    color: var(--fir);
+    display: block;
+    margin-bottom: 3px;
+  }
+  .approach .sub { font-size: 14.5px; color: var(--muted); margin: 3px 0 0; }
+  .glyph { flex: 0 0 auto; color: var(--rule-hard); }
+  .glyph svg { display: block; }
+
+  /* ---- scorecard chips ---- */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 15px; }
+  .chip {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    padding: 3px 8px;
+    border: 1px solid var(--rule-hard);
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .chip b { font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 5px; }
+  .chip.good { border-color: var(--fir); background: var(--fir-wash); color: var(--fir); }
+  .chip.good b { color: var(--fir); opacity: .75; }
+  .chip.warn { border-color: var(--ochre); background: var(--ochre-wash); color: var(--ochre); }
+  .chip.warn b { color: var(--ochre); opacity: .8; }
+  .chip.bad  { border-color: var(--rust); background: var(--rust-wash); color: var(--rust); }
+  .chip.bad b { color: var(--rust); opacity: .8; }
+
+  .assets {
+    border-top: 1px solid var(--rule);
+    margin-top: 4px;
+    padding: 11px 0 14px;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+  .assets .k {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 3px;
+  }
+  .assets p { margin: 0 0 8px; max-width: none; }
+  .assets p:last-child { margin-bottom: 0; }
+
+  /* ---- callouts ---- */
+  .note {
+    border-left: 3px solid var(--ochre);
+    background: var(--ochre-wash);
+    padding: 14px 18px;
+    margin: 0 0 22px;
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note .k {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ochre); display: block; margin-bottom: 5px; font-weight: 700;
+  }
+  .note.fir { border-left-color: var(--fir); background: var(--fir-wash); }
+  .note.fir .k { color: var(--fir); }
+
+  ul.tight { margin: 0 0 16px; padding-left: 20px; max-width: 72ch; }
+  ul.tight li { margin-bottom: 7px; }
+
+  .family-intro { margin: 34px 0 16px; }
+  .family-intro:first-of-type { margin-top: 0; }
+  .family-intro .k {
+    font-family: 'Cascadia Mono', 'JetBrains Mono', 'IBM Plex Mono', Consolas, 'SF Mono', ui-monospace, monospace;
+    font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--ochre); font-weight: 700; display: block; margin-bottom: 5px;
+  }
+  .family-intro p { margin: 0; color: var(--ink-2); font-size: 15.5px; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  footer p { max-width: 72ch; }
+
+  :focus-visible { outline: 2px solid var(--fir); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="shell">
+<nav class="rail" aria-label="Approach index">
+  <div class="rail-group">
+    <b>Framing</b>
+    <a href="#decided">What is already decided</a>
+    <a href="#dials">The six dials</a>
+  </div>
+  <div class="rail-group">
+    <b>Vertical</b>
+    <a href="#ladder">LADDER</a>
+    <a href="#tech">TECH</a>
+    <a href="#rank">RANK</a>
+    <a href="#apex">APEX</a>
+  </div>
+  <div class="rail-group">
+    <b>Branching</b>
+    <a href="#fork">FORK</a>
+    <a href="#crosspath">CROSSPATH</a>
+    <a href="#mosaic">MOSAIC</a>
+  </div>
+  <div class="rail-group">
+    <b>Combinatorial</b>
+    <a href="#recipe">RECIPE</a>
+    <a href="#fusion">FUSION</a>
+    <a href="#kit">KIT</a>
+    <a href="#merge">MERGE</a>
+  </div>
+  <div class="rail-group">
+    <b>Positional</b>
+    <a href="#height">HEIGHT</a>
+    <a href="#stance">STANCE</a>
+    <a href="#aura">AURA</a>
+  </div>
+  <div class="rail-group">
+    <b>Economic</b>
+    <a href="#draft">DRAFT</a>
+    <a href="#feedback">FEEDBACK</a>
+  </div>
+  <div class="rail-group">
+    <b>Closing</b>
+    <a href="#ranger">The Ranger, six ways</a>
+    <a href="#assets">Asset reality check</a>
+    <a href="#stacks">Three stacks that work</a>
+    <a href="#open">What I need from you</a>
+  </div>
+</nav>
+
+<main>
+
+<p class="eyebrow">Design options &middot; 8 August 2026 &middot; input to seam 3, the roster</p>
+<h1>Sixteen ways a tower can become something else</h1>
+<p class="lede">A catalogue of upgrade topologies, each graded against the two things that actually constrain the answer: a run that is only ten rounds long, and a character pack of fifty-seven models that share one rig.</p>
+
+<div class="note fir">
+  <span class="k">What this is, and is not</span>
+  <p>This does not choose. It synthesises <a href="build-depth-in-tower-defense.md">the depth research</a>'s eleven-mechanism taxonomy and <a href="kaykit-character-roster.md">the KayKit roster inventory</a> into concrete upgrade schemes you can hold against the packs. Nothing here is an art decision — every model named is an option, not a pick.</p>
+  <p>Two provenance notes. The roster inventory is <strong>on an unmerged branch</strong> (<span class="m">worktree-kaykit-character-roster</span>) and its role readings are inferred from publisher renders, not from files on this machine — <span class="m">client/Assets/Art/Characters/</span> holds exactly two FBX today. And the bundle itself is <strong>not yet bought</strong>; <a href="https://github.com/ssalter21/tower-defense-game/issues/56">#56</a> is still open on the licence check.</p>
+</div>
+
+<!-- ============================================ -->
+<section id="decided">
+  <div class="section-head">
+    <h2>What is already decided</h2>
+    <span class="tag">The filter</span>
+  </div>
+
+  <p>Six settled decisions kill most of the design space before any of it gets interesting. Worth stating together, because they are scattered across the vision and they interact.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Decision</th><th>What it does to upgrades</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A run is ten waves</strong></td><td>Ten build phases, total. A five-tier ladder eats half the run on one tower. <strong>Two or three tiers is the honest ceiling</strong>, and every scheme below is costed against ten.</td></tr>
+      <tr><td><strong>Anchors open offense, never defense</strong></td><td>The pick menu at waves 3/6/9 belongs to the creeps. <strong>So the upgrade graph is the defense's entire tech axis</strong> — there is no second one. That raises the bar on it considerably.</td></tr>
+      <tr><td><strong>One purse, and interest is 10% a wave</strong></td><td>Every upgrade competes with compounding. An upgrade is not just "is this stronger" — it is "is this stronger than 10% and a wave slot". Timing is free depth here, and it comes attached to whatever you pick.</td></tr>
+      <tr><td><strong>Nothing persists</strong></td><td>The whole upgrade graph is available on run one. No unlock ramp, so the graph must be legible cold — which is the single strongest argument for a scheme whose leaves are <em>named archetypes a stranger recognises</em>.</td></tr>
+      <tr><td><strong>The board is a maze, at several elevations, and elevation grants range</strong></td><td>Restored 6 August. Placement is live again, which puts <span class="m">HEIGHT</span>, <span class="m">MOSAIC</span> and <span class="m">AURA</span> back on the table — all three were dead under the corridor.</td></tr>
+      <tr><td><strong>Three attack types, three armour types, a Latin square</strong></td><td>An upgrade that changes <em>attack type</em> is the sharpest lever available — it moves shots-to-kill by 2&times; against the right armour — and it costs no new numbers, only a column value.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    <span class="k">The one that surprised me</span>
+    <p>Because anchors were given to the offense, <strong>the defense has no pick axis at all</strong> — Element TD's eleven picks have no counterpart on your side of the board. Whatever you choose below is doing the job that, in the anchor game, two separate systems do. <span class="m">DRAFT</span> is the cheapest way to give the defense a pick axis back without touching the anchor rule.</p>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="dials">
+  <div class="section-head">
+    <h2>The six dials</h2>
+    <span class="tag">Orthogonal to the catalogue</span>
+  </div>
+
+  <p>Before the schemes: six choices that cut across all of them. Any approach below can be built at any setting of these, and the settings matter roughly as much as the scheme does.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Dial</th><th>One way</th><th>The other way</th><th>Why it matters here</th></tr></thead>
+    <tbody>
+      <tr><td class="code">OWNER</td><td>Per instance — this Ranger upgrades</td><td>Per type — every Ranger upgrades</td><td>Per-type collapses ten fiddly decisions into three big ones, which is a much better fit for a ten-round run. It is also far cheaper for the harness: the config is on the type, not the placement.</td></tr>
+      <tr><td class="code">TIMING</td><td>Declared at placement — you commit when you build</td><td>Deferred — the tower is generic until you spend</td><td>Declared makes placement the decision and reads off the board immediately. Deferred lets you react to the anchor you just saw at wave 9.</td></tr>
+      <tr><td class="code">REVERSIBLE</td><td>Irreversible, or an 80% sell refund</td><td>Free re-spec each build phase</td><td>Element TD 2 raises the refund from 80% to 100% in its random modes. If a scheme forces a commitment before information arrives, the refund rate is how you pay for it.</td></tr>
+      <tr><td class="code">VISIBLE</td><td>Reads off the silhouette</td><td>A stat you have to click</td><td>In the lobby your defense is scouted at the end of every round. A visible upgrade is a public commitment and feeds the counter-pick loop; an invisible one is a private optimisation.</td></tr>
+      <tr><td class="code">COST</td><td>Sauce only</td><td>Sauce plus a scarce non-money token</td><td>A second scarcity is free content — a predicate needs checking, not balancing. It is also the only way to stop a rich player simply owning everything by wave 8.</td></tr>
+      <tr><td class="code">BREADTH</td><td>Any tower can take any branch</td><td>Branches gated on what else you own</td><td>Gating is where interaction comes from — and where the harness's ability to price a tower in isolation goes. Spend it deliberately.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="catalogue">
+  <div class="section-head">
+    <h2>The catalogue</h2>
+    <span class="tag">16 schemes, 5 families</span>
+  </div>
+
+  <p>Each card carries four grades. <span class="m">ROUNDS</span> is how many of your ten build phases a full commitment eats. <span class="m">ART</span> is what it needs beyond what KayKit already ships. <span class="m">SURFACE</span> is the size of the thing the sweep harness has to price. <span class="m">READ</span> is whether an opponent scouting your board can see it.</p>
+
+  <!-- ---------- VERTICAL ---------- -->
+  <div class="family-intro">
+    <span class="k">Family 1 — Vertical</span>
+    <p>The same tower, more of it. No identity choice; the decision is only <em>when</em>, and <em>which</em> tower gets the money.</p>
+  </div>
+
+  <div class="approach" id="ladder">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">LADDER</span>
+        <h3>The tier ladder</h3>
+        <p class="sub">Ranger &rarr; Ranger II &rarr; Ranger III. One line, no branches.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="26" r="5"/><circle cx="44" cy="26" r="5"/><circle cx="76" cy="26" r="5"/>
+          <path d="M17 26h22M49 26h22"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>2–3</span>
+      <span class="chip good"><b>Art</b>Recolour only</span>
+      <span class="chip good"><b>Surface</b>types &times; tiers</span>
+      <span class="chip warn"><b>Read</b>Colour only</span>
+    </div>
+    <p>The floor. Every tower has two or three ranks bought with sauce; the whole build is a spending order. It works, it is unimpeachably legible, and the research names its exact failure: <em>"a roster where you can eventually have everything has no build in it, only an order."</em> With ten rounds and compounding interest that order is a real decision — but it is one decision repeated, not depth.</p>
+    <p>Worth keeping as the <strong>substrate</strong> underneath something else rather than as the answer. Element TD runs a ladder <em>and</em> a combination roster, and the interesting part is where they meet: tier-up is only available from a level-1 tower, so gold spent climbing is gold that cannot be converted into a higher tier.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The Adventurers Extra tier ships <strong>three alternate textures per character</strong>. That is four visual ranks per class, free, with no geometry and no animation work. Add a removable helmet (the Knight and Barbarian_Large both ship one) and you have a fifth read.</p>
+    </div>
+  </div>
+
+  <div class="approach pick" id="tech">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">TECH</span>
+        <h3>Upgrade the type, not the tower</h3>
+        <p class="sub">Buy "Ranger II" once; every Ranger on your board becomes one.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="14" cy="12" r="4"/><circle cx="14" cy="26" r="4"/><circle cx="14" cy="40" r="4"/>
+          <path d="M18 12h18M18 26h18M18 40h18"/>
+          <rect x="40" y="18" width="14" height="16" rx="2"/>
+          <path d="M54 26h12"/>
+          <circle cx="74" cy="26" r="6" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>3–4</span>
+      <span class="chip good"><b>Art</b>Recolour only</span>
+      <span class="chip good"><b>Surface</b>types &times; tiers</span>
+      <span class="chip good"><b>Read</b>Whole board</span>
+    </div>
+    <p>The same ladder with the <span class="m">OWNER</span> dial flipped, and it is much better than it sounds. Ten rounds cannot support per-instance upgrades on a board of a dozen towers — you would spend the run clicking. Per-type turns that into three or four large, legible commitments, each of which visibly changes <em>everything you own of that kind at once</em>.</p>
+    <p>Three things follow that no other vertical scheme gets. It is enormously juicy — the whole board reskins on a purchase, which is the cheapest big moment in the design. It makes going wide and going deep genuinely opposed, because a second class means a second ladder to fund. And it is the cheapest scheme in the catalogue for the harness, since a configuration lives on the unit type where the sweep already indexes.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Identical to <span class="m">LADDER</span> — the alt textures. But the payoff is bigger, because a palette swap that hits six towers simultaneously is a board-wide event rather than a detail.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="rank">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">RANK</span>
+        <h3>Veterancy — towers earn their own upgrades</h3>
+        <p class="sub">Kills feed experience; a tower ranks up during the run.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="20" cy="34" r="5"/>
+          <path d="M20 29V14M20 14l-4 4M20 14l4 4" stroke-linecap="round"/>
+          <path d="M34 40h40M34 40v-4M46 40v-9M58 40v-14M70 40v-20" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>0 — it is free</span>
+      <span class="chip good"><b>Art</b>Colourways</span>
+      <span class="chip bad"><b>Surface</b>A trajectory</span>
+      <span class="chip good"><b>Read</b>Rank pip</span>
+    </div>
+    <p>Bloons' heroes: level 1 every game, level 20 by the end of it, and run cash can buy a level early — money for tempo out of the one purse. It is simultaneously a depth mechanism and an accessibility mechanism, and it needs no persistence.</p>
+    <p><strong>The hazard is well documented and it is about scale.</strong> Per-instance experience on <em>every</em> tower makes a stored ghost "a layout plus a biography" and makes the build helper unable to answer what a tower does. One levelling unit whose trajectory is fully determined by recorded inputs is a different object entirely — it replays exactly. <strong>So: one, or at most two, and never the whole board.</strong></p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Two models ship as <strong>four colourways of one mesh</strong> — The Ninja (Series 4) and The Magical Girls (Series 6). A four-rank line where the colour <em>is</em> the rank, with zero authoring. That is as close to a purpose-built veterancy asset as the bundle contains.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="apex">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">APEX</span>
+        <h3>One capstone per run</h3>
+        <p class="sub">A single tower can be raised past the ceiling, and it consumes others to get there.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="14" cy="14" r="4"/><circle cx="14" cy="30" r="4"/><circle cx="14" cy="44" r="4" stroke-dasharray="2 2"/>
+          <path d="M18 14l26 10M18 30l26-4M18 44l26-14" stroke-dasharray="3 3"/>
+          <path d="M50 26l14-9v18z" fill="currentColor" stroke="none" opacity=".55"/>
+          <circle cx="76" cy="26" r="7"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip warn"><b>Rounds</b>4+ to reach</span>
+      <span class="chip good"><b>Art</b>Boss models exist</span>
+      <span class="chip good"><b>Surface</b>One per class</span>
+      <span class="chip good"><b>Read</b>Unmissable</span>
+    </div>
+    <p>Bloons' Paragons, bounded to one. It gives a run a shape — the first six rounds are setup for the thing you build at wave eight — and it makes wave 10 a payoff round, which the anchor schedule already wants it to be.</p>
+    <p>The consumption half fails the legibility veto on its own terms: <em>a tower that is gone cannot be read, and the resulting tower's power has no visible cause.</em> Fixable, and the fix is cheap — the apex stands on a plinth built from what it ate, so the cost stays on the board.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The boss-scale silhouettes are already there: <strong>Barbarian_Large</strong>, <strong>The Combat Mech</strong> (separate gatling and shield arms, so it upgrades visibly), <strong>The Skeleton Golem</strong>, <strong>The Monstrosity</strong>. And <strong>The Paladin ships a solid-gold statue of himself plus a plinth</strong> — a ready-made apex affordance nobody would think to commission.</p>
+    </div>
+  </div>
+
+  <!-- ---------- BRANCHING ---------- -->
+  <div class="family-intro">
+    <span class="k">Family 2 — Branching</span>
+    <p>The tower becomes a different thing, and you choose which. This is the family your question lives in.</p>
+  </div>
+
+  <div class="approach pick" id="fork">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">FORK</span>
+        <h3>The class fork</h3>
+        <p class="sub">A Ranger reaches tier 2 and becomes a Marksman, a Druid or an Avian — pick one, forever.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="26" r="5"/>
+          <path d="M17 26h14M31 26l14-12M31 26l14 12M31 26h14"/>
+          <circle cx="52" cy="12" r="5"/><circle cx="52" cy="26" r="5"/><circle cx="52" cy="40" r="5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>2</span>
+      <span class="chip warn"><b>Art</b>One model per leaf</span>
+      <span class="chip good"><b>Surface</b>bases &times; leaves</span>
+      <span class="chip good"><b>Read</b>Best in class</span>
+    </div>
+    <p>This is the literal answer to "how does a Ranger become a Rogue or a Druid", and it is the scheme the asset pack is <em>already shaped like</em>. KayKit's Adventurers is not a set of models, it is a set of <strong>archetypes a stranger recognises without a tooltip</strong> — which is exactly the property a game with no unlock ramp needs, because the whole graph has to be legible on run one.</p>
+    <p>Five bases with two or three leaves each gives twelve to fifteen terminal towers. Every leaf is a real model that exists today, and because all fifty-seven share one rig, a class change is a mesh swap with <strong>zero animation work</strong>. The commitment is irreversible and public, which makes it a genuine read in the lobby: what someone forked into at round four tells you what their round-nine wave is being built to survive.</p>
+
+    <div class="scroller">
+    <table>
+      <thead><tr><th>Base</th><th>Leaf</th><th>Pack</th><th>What the model already reads as</th><th>Natural role shift</th></tr></thead>
+      <tbody>
+        <tr><td class="code" rowspan="3">RANGER</td><td>The Marksman</td><td class="n">Series 6</td><td>Ghillie suit of hanging leaves, one green optic where a face would be</td><td>Longer range, slower cadence, single target</td></tr>
+        <tr><td>Druid</td><td class="n">Adventurers</td><td>Nature caster, visually distinct from the Mage</td><td>Slow / root / damage over time</td></tr>
+        <tr><td>The Avian Swordsman</td><td class="n">Series 6</td><td>Blue-feathered bird-person — the clearest air silhouette in the bundle</td><td>The answer to the wave-9 flying anchor</td></tr>
+        <tr><td class="code" rowspan="2">KNIGHT</td><td>The Paladin</td><td class="n">Series 4</td><td>Gilded winged helm, sunburst shield</td><td>Stops shooting, buffs neighbours</td></tr>
+        <tr><td>The Black Knight</td><td class="n">Series 5</td><td>Horned great helm, red plume, taller and heavier</td><td>Same job, more of it — the vertical leaf</td></tr>
+        <tr><td class="code" rowspan="3">MAGE</td><td>The Witch</td><td class="n">Series 5</td><td>Wide orange hat, riding a broom</td><td>Debuff, and airborne</td></tr>
+        <tr><td>The Frost Golem</td><td class="n">Series 5</td><td>White ice construct, pale blue crystal spikes</td><td>Slow / freeze</td></tr>
+        <tr><td>The Lorekeeper</td><td class="n">Series 6</td><td>Teal robe, crook staff, scrolls, a writing desk that matches him</td><td>Economy — pays sauce instead of damage</td></tr>
+        <tr><td class="code" rowspan="2">ROGUE</td><td>The Ninja</td><td class="n">Series 4</td><td>Masked, headbanded, four colourways in the box</td><td>Fast, low damage, high cadence</td></tr>
+        <tr><td>The Tiefling</td><td class="n">Series 5</td><td>Red skin, teal hair, long horns, twin curved blades</td><td>Dual-wield — the clips are already in the library</td></tr>
+        <tr><td class="code" rowspan="2">ENGINEER</td><td>The Combat Mech</td><td class="n">Series 5</td><td>Piloted mecha, separate gatling and shield arms</td><td>Heavy, slow, high single-target</td></tr>
+        <tr><td>The Clanker</td><td class="n">Series 5</td><td>Riveted brass automaton, glowing lamp eyes, crown plate</td><td>Mechanical support / lit from within</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><strong>The trade-off, named.</strong> Twelve leaves is twelve authored towers with twelve sets of numbers, and the combination rule saves you nothing on that bill — it saves the <em>player's memory</em>, which is the bigger prize when nothing persists. The other cost is that the depth is <em>between</em> towers rather than inside one, so a player's whole decision does not fit in a single panel the way a Bloons crosspath menu does.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Every leaf above is a shipped model. The bundle's real gift here is that <strong>Adventurers and Skeletons were built as mirrors</strong> — Knight/Warrior, Rogue/Rogue, Mage/Mage — so a tower line and its counterpart creep line already exist as matched silhouettes. If <span class="m">FEEDBACK</span> ever gets built, that pairing is the art already done.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="crosspath">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">CROSSPATH</span>
+        <h3>Three paths and a legality predicate</h3>
+        <p class="sub">Bloons' scheme: spend down two paths, and the second one is capped.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="26" r="4"/>
+          <path d="M16 26h10M26 26l10-14M26 26h10M26 26l10 14"/>
+          <circle cx="40" cy="12" r="3.5"/><circle cx="40" cy="26" r="3.5"/><circle cx="40" cy="40" r="3.5"/>
+          <path d="M44 12h10M44 26h10"/>
+          <circle cx="58" cy="12" r="3.5"/><circle cx="58" cy="26" r="3.5"/>
+          <path d="M62 12h10"/>
+          <circle cx="76" cy="12" r="3.5"/>
+          <path d="M44 40h8" stroke-dasharray="2 2" opacity=".5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip warn"><b>Rounds</b>4 on one tower</span>
+      <span class="chip good"><b>Art</b>Attachment points</span>
+      <span class="chip good"><b>Surface</b>25 / tower</span>
+      <span class="chip good"><b>Read</b>Silhouette</span>
+    </div>
+    <p>The best leverage in the genre: Bloons gets 64 configurations per tower out of 15 authored upgrades, and <strong>the leverage is in the predicate, not the upgrades</strong> — the rule that at most two paths may be touched and the second is capped discards 70% of the space, and the discarded 70% is the design.</p>
+    <p>Scaled to a ten-round run — three paths, three tiers, secondary capped at one — that is <strong>25 legal configurations per tower from 9 authored upgrades</strong>, and a full commitment costs four rounds. Six towers gives 150 configurations from 54 upgrades. Nothing else in the catalogue comes close per authored thing.</p>
+
+    <div class="note fir">
+      <span class="k">The art veto is lifted, and this is the finding worth having</span>
+      <p>The depth research rules crosspathing <strong>out on art cost</strong>: making 64 configurations visually distinct is what forces Bloons to ship 52 unique models for the Wizard Monkey alone, and this project's pipeline is stock models plus palette swaps.</p>
+      <p><strong>That arithmetic changes if the paths are attachment points rather than meshes.</strong> KayKit's Adventurers ships <strong>25+ swappable weapons and accessories</strong>, characters have removable helmets, and everything is UV'd onto one 1024&times;1024 gradient atlas. Bind path A to the weapon socket, path B to the head socket and path C to the palette, and five options each gives <strong>125 visually distinct configurations out of ten meshes and five PNGs</strong>, composed at runtime with no new geometry at all. The veto was on bespoke geometry per configuration; an attachment system never pays that bill.</p>
+    </div>
+
+    <p><strong>The structural mismatch is the real objection, and it survives.</strong> A crosspath is a private optimisation; this game's signature is reading an opponent's composition. Depth that lives inside one tower is more accessible — the whole decision fits in one panel — and less interesting in a format built on scouting. It is also the cheapest thing here to bolt onto <span class="m">FORK</span> later, since a legality predicate is free content and does not touch the roster.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The Adventurers accessory set, the Fantasy Weapon pack in the same bundle, and the shared atlas. Also worth knowing: <strong>The Action Figure ships four swappable face plates</strong> and <strong>muzzle-flash meshes that are already authored</strong> — a working demonstration that the socket approach is how the pack is built.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="mosaic">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">MOSAIC</span>
+        <h3>Neighbours decide what you can become</h3>
+        <p class="sub">A Ranger beside a Mage may become a Druid. Beside a Rogue, a Marksman.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M30 8l10 6v12l-10 6-10-6V14z"/>
+          <path d="M52 20l10 6v12l-10 6-10-6V26z"/>
+          <path d="M30 32l10 6v12l-10 6-10-6V38z" opacity=".45"/>
+          <circle cx="30" cy="20" r="2.5" fill="currentColor" stroke="none"/>
+          <circle cx="52" cy="32" r="2.5" fill="currentColor" stroke="none"/>
+          <path d="M32 21l18 10" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>2</span>
+      <span class="chip warn"><b>Art</b>Leaves + link VFX</span>
+      <span class="chip warn"><b>Surface</b>roster&sup2; per pair</span>
+      <span class="chip good"><b>Read</b>If linked visibly</span>
+    </div>
+    <p><span class="m">FORK</span> with the <span class="m">BREADTH</span> dial turned on: the leaf you may take is a function of what sits next to you. This makes <em>where</em> and <em>what</em> a single decision, which is precisely what the vision says elevation was restored to achieve — and it was dead under the corridor, so it is genuinely newly available.</p>
+    <p>The balance cost is bounded and small — a unit's value indexed by its neighbours is roster-squared per pair, low thousands, a rounding error against an overnight sweep. The presentation cost is real: an adjacency that is not drawn is an adjacency nobody can read, and it has to survive being scanned on two boards at once.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>No new models beyond <span class="m">FORK</span>'s leaves. The <strong>Medieval Hexagon</strong> pack — free, CC0, 200+ models on the same atlas — carries the tile vocabulary to mark a linked pair on the board itself rather than with a floating VFX, which is the cheaper and more readable answer.</p>
+    </div>
+  </div>
+
+  <!-- ---------- COMBINATORIAL ---------- -->
+  <div class="family-intro">
+    <span class="k">Family 3 — Combinatorial</span>
+    <p>The tower is assembled from parts, and the parts are the vocabulary a player learns instead of a catalogue.</p>
+  </div>
+
+  <div class="approach" id="recipe">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">RECIPE</span>
+        <h3>Ingredients — the Element TD scheme proper</h3>
+        <p class="sub">One tower per subset of a small vocabulary. Six names predict fifty-six towers.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="14" cy="14" r="4"/><circle cx="14" cy="38" r="4"/>
+          <path d="M18 14l16 8M18 38l16-8"/>
+          <circle cx="40" cy="26" r="5"/>
+          <path d="M45 26h12"/>
+          <circle cx="62" cy="26" r="4"/>
+          <path d="M66 26h8"/>
+          <circle cx="79" cy="26" r="4" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip bad"><b>Rounds</b>Needs a pick axis</span>
+      <span class="chip good"><b>Art</b>One PNG per element</span>
+      <span class="chip good"><b>Surface</b>41–56 units</span>
+      <span class="chip good"><b>Read</b>Best in class</span>
+    </div>
+    <p>The anchor game, taken whole. It is the only mechanism in the survey that is <em>simultaneously</em> a depth mechanism, an accessibility mechanism and a harness mechanism — a roster that compresses to six words is a tutorial and a content strategy in one lever. And its whole visual state is a material swap, which is the pipeline you have already bought.</p>
+    <p><strong>Two problems, and the first is structural.</strong> Element TD's depth is not the combinations, it is the <em>eleven metered picks</em> — and this vision has already spent its pick menu on the offense. Recipes without a metered ingredient budget is just a big flat roster. You would need to either give the defense a pick axis back (see <span class="m">DRAFT</span>) or accept that ingredients are bought with sauce, which removes the opportunity cost that makes the scheme work.</p>
+    <p><strong>The second is a known failure with two studios' worth of evidence.</strong> A combinatorial roster pays breadth a superlinear return — the sixth ingredient does not add one tower, it adds five duals and ten triples — so the widest build is the natural power peak. Element TD 2 has been nerfing six-element builds since version 0.51; GemCraft cut its palette from nine gem types to six. The counter-measure is cheap and this project can afford it overnight: <strong>a sweep report of win rate binned by number of ingredients taken</strong>, on the first sweep and every sweep after.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The gradient atlas is the entire pipeline: an element is one small PNG. Where it does <em>not</em> serve you is that a KayKit character reads as an <em>archetype</em>, not as an ingredient — a red Ranger reads as "a Ranger, in red", not as "Fire". Recipes want abstract or building towers, and the <strong>Medieval Hexagon</strong> kit's <span class="m">building_tower_A</span>, <span class="m">_B</span>, <span class="m">_catapult</span> and <span class="m">archeryrange</span> — each already shipping in four team colours — are a much better fit than the characters are.</p>
+    </div>
+  </div>
+
+  <div class="approach pick" id="fusion">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">FUSION</span>
+        <h3>Two classes make a third</h3>
+        <p class="sub">Ranger + Mage = Druid. Knight + Mage = Paladin. Rogue + Ranger = Marksman.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="14" cy="14" r="5"/><circle cx="14" cy="38" r="5"/>
+          <path d="M19 16l20 8M19 36l20-8"/>
+          <circle cx="48" cy="26" r="6"/>
+          <path d="M54 26h10"/>
+          <circle cx="72" cy="26" r="6"/>
+          <path d="M69 26h6M72 23v6" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>2–3</span>
+      <span class="chip good"><b>Art</b>Models exist</span>
+      <span class="chip good"><b>Surface</b>C(bases,2)</span>
+      <span class="chip good"><b>Read</b>Parents visible</span>
+    </div>
+    <p><span class="m">RECIPE</span>'s combinatorics without needing a pick axis, because <strong>the ingredients are towers you already built</strong>. Five bases gives ten dual classes; six gives fifteen. The scarcity is board space and sauce, both of which already exist, so it costs no new currency and no new predicate.</p>
+    <p>What makes this land here rather than being a generic merge mechanic is that <strong>the KayKit roster is already a fantasy class lattice</strong>, so most fusions have a shipped model that visibly carries both parents:</p>
+
+    <div class="scroller">
+    <table>
+      <thead><tr><th>Recipe</th><th>Result</th><th>Pack</th><th>Why the silhouette works</th></tr></thead>
+      <tbody>
+        <tr><td class="n">Ranger + Mage</td><td>Druid</td><td class="n">Adventurers</td><td>Nature caster — bow discipline in a robe</td></tr>
+        <tr><td class="n">Knight + Mage</td><td>The Paladin</td><td class="n">Series 4</td><td>Plate and a sunburst shield: armour plus faith, exactly</td></tr>
+        <tr><td class="n">Knight + Barbarian</td><td>The Black Knight</td><td class="n">Series 5</td><td>The Knight's shape, heavier and horned</td></tr>
+        <tr><td class="n">Rogue + Ranger</td><td>The Marksman</td><td class="n">Series 6</td><td>A hood and a scope — stealth plus reach</td></tr>
+        <tr><td class="n">Rogue + Mage</td><td>The Witch</td><td class="n">Series 5</td><td>Hooded caster, and airborne on the broom</td></tr>
+        <tr><td class="n">Rogue + Barbarian</td><td>The Tiefling</td><td class="n">Series 5</td><td>Twin curved blades — the dual-wield clips exist</td></tr>
+        <tr><td class="n">Engineer + Mage</td><td>The Clanker</td><td class="n">Series 5</td><td>A machine lit from within</td></tr>
+        <tr><td class="n">Engineer + Knight</td><td>The Combat Mech</td><td class="n">Series 5</td><td>Armour, built rather than worn</td></tr>
+        <tr><td class="n">Engineer + Barbarian</td><td>The Monstrosity</td><td class="n">Series 6</td><td>Stitched and bolt-necked — assembled brute</td></tr>
+        <tr><td class="n">Mage + Barbarian</td><td>The Frost Golem</td><td class="n">Series 5</td><td>Elemental mass</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p><strong>Ten fusions, ten shipped models, and the naming does itself.</strong> That is an unusually clean fit, and it is the strongest reason to look at this family rather than assume <span class="m">FORK</span> is the obvious answer.</p>
+    <p>Two costs. The consumption fails the legibility veto for the same reason <span class="m">APEX</span> does — the parents are gone and the result has no visible cause — though here the mitigation is built in, because the result's silhouette <em>is</em> the evidence. And it needs a fixed-point check before anything ships: <strong>if a fusion's output can equal or exceed its better input at the same cost, the mechanic is an unbounded loop</strong>, and that is visible in the coefficients rather than in playtesting. GemCraft's "supergemming" was exactly this and it took a sequel to remove.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Every result above ships today. The bundle also carries the <em>transformation</em> vocabulary for free — <strong>The Werewolf</strong> (lumberjack and wolf-headed), <strong>The Animatronic</strong> (intact and torn open) and <strong>The 4-GTN</strong> (clean and moss-overgrown) are each two models of one entity, which is the fusion moment authored as art rather than as a particle burst.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="kit">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">KIT</span>
+        <h3>Buy the tower, then buy its weapon</h3>
+        <p class="sub">The upgrade is a loadout slot, chosen at build time from a fixed catalogue.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="24" cy="26" r="8"/>
+          <rect x="46" y="8" width="14" height="10" rx="2"/>
+          <rect x="46" y="21" width="14" height="10" rx="2"/>
+          <rect x="46" y="34" width="14" height="10" rx="2"/>
+          <path d="M32 26h10l4-13" stroke-dasharray="2 2"/>
+          <path d="M68 13h10M68 26h10M68 39h10" opacity=".4"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>1 per slot</span>
+      <span class="chip good"><b>Art</b>Ships in the pack</span>
+      <span class="chip warn"><b>Surface</b>towers &times; items</span>
+      <span class="chip good"><b>Read</b>Weapons only</span>
+    </div>
+    <p>Item layering is rated the worst balance surface in the survey and it fails the legibility veto hardest — <em>an item equipped on a unit is invisible at this camera, and three items on thirty towers is thirty times invisible.</em></p>
+    <p><strong>Two restrictions rescue it, and both are forced by the assets anyway.</strong> First, <strong>one slot, and the slot holds a weapon</strong> — a weapon is a silhouette, so it passes the veto that a generic trinket fails. Second, <strong>bought at build time from a fixed catalogue, never dropped</strong>, which keeps a stored ghost a layout rather than a biography. With one slot the surface is towers &times; items, which is small enough to enumerate.</p>
+    <p>What it buys that <span class="m">FORK</span> does not: a <em>reversible, cheap</em> adjustment. If wave 9's anchor turns out to want pierce and you built impact, a weapon swap is the answer that does not cost you a tower.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>This is the scheme the pack is most literally built for. <strong>Adventurers ships 25+ swappable weapons and accessories; Skeletons ships 10+</strong>; the bundle includes a dedicated Fantasy Weapon pack. The Ranger's <strong>bow has an animated bowstring via blendshape</strong>. The Plant Warrior ships <em>both</em> a bud spear and a leaf bow — one model, two loadouts, already authored.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="merge">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">MERGE</span>
+        <h3>Two of a kind make one better</h3>
+        <p class="sub">Two Rangers on adjacent tiles combine into one Ranger II.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="16" cy="16" r="5"/><circle cx="16" cy="36" r="5"/>
+          <path d="M22 18l18 6M22 34l18-6"/>
+          <circle cx="52" cy="26" r="8"/>
+          <path d="M60 26h16" stroke-dasharray="2 2" opacity=".5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>0 extra</span>
+      <span class="chip good"><b>Art</b>Free</span>
+      <span class="chip warn"><b>Surface</b>Check the fixed point</span>
+      <span class="chip warn"><b>Read</b>Only the result</span>
+    </div>
+    <p>Super Auto Pets' shape. It costs no new upgrade currency at all — the upgrade path <em>is</em> buying two of something — and it gives a wide early board a reason to become a narrow late one, which is a decent arc for a ten-round run.</p>
+    <p>It carries the same unbounded-loop hazard as <span class="m">FUSION</span> and more sharply, because the inputs are identical: if merging two tier-1s produces something worth more than two tier-1s, merging is never wrong and the mechanic has no decision in it. The check is arithmetic, done once, before anything is built.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Nothing new required — the alt textures again. The merge <em>moment</em> is the only art cost, and Kenney's free Particle Pack is already the identified source for that.</p>
+    </div>
+  </div>
+
+  <!-- ---------- POSITIONAL ---------- -->
+  <div class="family-intro">
+    <span class="k">Family 4 — Positional and reversible</span>
+    <p>Upgrades that change where a tower is or what mode it is in, rather than what it is. All three were dead under the corridor and are alive again.</p>
+  </div>
+
+  <div class="approach pick" id="height">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">HEIGHT</span>
+        <h3>The upgrade is elevation</h3>
+        <p class="sub">Pay to raise a tower a level. Elevation grants range, so height is the stat.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 44h72" opacity=".5"/>
+          <path d="M22 44v-6h16v6z"/>
+          <path d="M50 44v-12h16v12z"/>
+          <path d="M50 32l8-5 8 5"/>
+          <circle cx="30" cy="32" r="4"/>
+          <circle cx="58" cy="20" r="4"/>
+          <path d="M34 30l20-9" stroke-dasharray="2 2" opacity=".6"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>1</span>
+      <span class="chip good"><b>Art</b>Free — tiles exist</span>
+      <span class="chip good"><b>Surface</b>levels</span>
+      <span class="chip good"><b>Read</b>Physically obvious</span>
+    </div>
+    <p>The maze reversal restored elevation and stated its purpose outright: height is <em>"the reason a range upgrade pays off in a later round instead of being a flat stat"</em>, and it makes <em>where</em> and <em>what</em> into one decision instead of two. Nothing in the vision yet says a player can <strong>buy</strong> height — but if they can, the cheapest upgrade in the catalogue is also one of the most interesting, because its value depends entirely on the map this rotation generated.</p>
+    <p>It composes with everything. It needs no new stats, no new predicate and no new art. And it is the only upgrade whose worth a player can evaluate by <em>looking at the board</em> rather than by reading a tooltip — which is exactly what the legibility pillar is asking for.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p><strong>Medieval Hexagon</strong>, free and CC0, 200+ models on the shared atlas — tiles, plinths and structures. The Paladin's gold statue plinth again, and <span class="m">building_tower_A/_B/_base</span> in four team colours the pack README describes as <em>"for versus gameplay"</em>, which is the faction-colour requirement met by the same asset.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="stance">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">STANCE</span>
+        <h3>A free toggle, not an upgrade</h3>
+        <p class="sub">Each build phase, a tower may switch between two modes at no cost.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="22" cy="26" r="7"/><circle cx="66" cy="26" r="7"/>
+          <path d="M31 21c8-6 18-6 26 0" stroke-linecap="round"/>
+          <path d="M57 21l1-5 5 2" stroke-linecap="round" fill="none"/>
+          <path d="M57 31c-8 6-18 6-26 0" stroke-linecap="round"/>
+          <path d="M31 31l-1 5-5-2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>0</span>
+      <span class="chip good"><b>Art</b>Pairs ship as pairs</span>
+      <span class="chip good"><b>Surface</b>&times;2 per tower</span>
+      <span class="chip good"><b>Read</b>Whole model changes</span>
+    </div>
+    <p>Not an upgrade at all, and included because it solves a problem the anchor schedule creates. Anchors at 3, 6 and 9 make preparation a skill — but under any irreversible scheme, a player who prepared for the wrong thing at wave 6 is simply behind with no recourse. A free stance toggle is the recourse, and it costs nothing to author.</p>
+    <p>It also puts a <em>decision</em> in every build phase even when the player has no sauce, which matters in a ten-round run where two or three rounds are spent banking for interest.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Three characters ship as <strong>two models of the same entity</strong> — The Werewolf, The Animatronic and The 4-GTN. That is a transformation mechanic authored as art, at no cost, and it is the sort of thing that is invisible until you go looking for it in an inventory.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="aura">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">AURA</span>
+        <h3>Upgrade out of combat entirely</h3>
+        <p class="sub">The tower stops shooting and starts making its neighbours better.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="44" cy="26" r="5"/>
+          <circle cx="44" cy="26" r="13" opacity=".55" stroke-dasharray="3 3"/>
+          <circle cx="44" cy="26" r="21" opacity=".28" stroke-dasharray="3 3"/>
+          <circle cx="22" cy="14" r="3.5"/><circle cx="66" cy="14" r="3.5"/>
+          <circle cx="22" cy="38" r="3.5"/><circle cx="66" cy="38" r="3.5"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>1–2</span>
+      <span class="chip warn"><b>Art</b>Needs a drawn link</span>
+      <span class="chip good"><b>Surface</b>Bounded by degree</span>
+      <span class="chip warn"><b>Read</b>Only if linked</span>
+    </div>
+    <p>The leaf that changes what a tower is <em>for</em> rather than how hard it hits. It is the sharpest possible expression of opportunity cost — you gave up a shooter — and it is the one leaf type that makes a <em>layout</em> matter as much as a roster.</p>
+    <p>It also opens the economy leaf, which is where the interest dial gets interesting: a Lorekeeper that pays sauce instead of damage is a bet on the back half of the run, priced against 10% compounding. That is Element TD's "Interest on the pick menu" move — the tech axis and the money axis meeting on one button — arriving through the upgrade graph instead.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The support archetypes are all shipped and all unmistakable: <strong>The Paladin</strong> (winged helm, sunburst shield, and the statue), <strong>The Lorekeeper</strong> (crook staff, scrolls, a writing desk that matches him exactly), <strong>The Engineer</strong> (toolbelt), <strong>The Farmers</strong> (wheelbarrows and produce that doubles as a resource prop).</p>
+    </div>
+  </div>
+
+  <!-- ---------- ECONOMIC ---------- -->
+  <div class="family-intro">
+    <span class="k">Family 5 — Economic</span>
+    <p>Schemes that change how the upgrade is <em>acquired</em> rather than what it is. Both compose with anything above.</p>
+  </div>
+
+  <div class="approach pick" id="draft">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">DRAFT</span>
+        <h3>Upgrades are offered, not bought</h3>
+        <p class="sub">The public offering carries two or three upgrade cards, the same ones for everybody.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="10" y="12" width="18" height="26" rx="2"/>
+          <rect x="35" y="12" width="18" height="26" rx="2"/>
+          <rect x="60" y="12" width="18" height="26" rx="2"/>
+          <path d="M35 12v26" opacity="0"/>
+          <path d="M39 44h10" stroke-linecap="round"/>
+          <path d="M44 40v6" stroke-linecap="round"/>
+          <path d="M15 20h8M15 25h8M40 20h8M65 20h8M65 25h8" opacity=".45"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>Shares the offering</span>
+      <span class="chip good"><b>Art</b>UI only</span>
+      <span class="chip good"><b>Surface</b>Unchanged</span>
+      <span class="chip good"><b>Read</b>Everyone saw the menu</span>
+    </div>
+    <p><strong>This is the cheapest way to give the defense back a pick axis.</strong> The anchor rule says anchors open offense — it does not say the <em>ordinary</em> offering may not carry a defensive option. Put upgrade cards in the same merged menu the creeps come from, and the tech choice and the offense choice become one decision over one list, which is the shape one purse was chosen for.</p>
+    <p>It also inherits the Mechabellum property the vision already banked: the opponent saw the same menu, so taking a thing <em>because they also need it</em> is a second-order decision that costs nothing to author. And a shared vocabulary is what makes a send a read rather than a guess.</p>
+    <p><strong>The cost is a genuine tension with the anchor rule's reasoning.</strong> Anchors open offense because <em>preparation has to have something to prepare against</em> — an anchor that handed you a better tower would be a gift rather than a threat. Ordinary rounds are not anchor rounds, so this does not break the rule, but it does mean the offering is now doing two jobs. Whether that dilutes it is a sweep question about the ratio, not an argument.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>Nothing — this is interface work, and the interface is already named as the hardest visual problem in the design.</p>
+    </div>
+  </div>
+
+  <div class="approach" id="feedback">
+    <div class="approach-head">
+      <div class="txt">
+        <span class="code-label">FEEDBACK</span>
+        <h3>The upgrade unlocks a creep</h3>
+        <p class="sub">Forking your Ranger into a Druid opens the nature creeps you may send.</p>
+      </div>
+      <div class="glyph" aria-hidden="true">
+        <svg width="88" height="52" viewBox="0 0 88 52" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="20" cy="18" r="6"/><circle cx="68" cy="34" r="6"/>
+          <path d="M26 18h30a6 6 0 016 6v4" stroke-linecap="round"/>
+          <path d="M62 24l-3 4 6 1" stroke-linecap="round" fill="none"/>
+          <path d="M62 34H32a6 6 0 01-6-6v-4" stroke-linecap="round" opacity=".45"/>
+        </svg>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip good"><b>Rounds</b>0 extra</span>
+      <span class="chip good"><b>Art</b>Mirrors already exist</span>
+      <span class="chip bad"><b>Surface</b>Both halves at once</span>
+      <span class="chip good"><b>Read</b>Very</span>
+    </div>
+    <p>The vision's own stated direction: <em>"a tower of a given type unlocks a skill tree for the creeps you can buy, so the pool you send from is a consequence of what you built"</em> — one coherent identity per run rather than two shopping trips. It is the only scheme here that makes the upgrade graph pay for itself twice.</p>
+    <p><strong>It is also the one piece of direction the research pushed back on.</strong> Exactly one shipped precedent was found — a Bloons TD Battles 1 upgrade that let you send a tier <em>earlier</em>, gating the schedule rather than the pool; it shipped with a carve-out and the sequel removed it. Every other game surveyed gates the opposite way: constrain the defense, keep the attacking vocabulary universal, <em>because a send is only a read if both players already know the whole menu</em>.</p>
+    <p>Two named failure modes bite hardest here. <strong>Double-dominance under one purse</strong> — one build wins both halves and there is no second wallet to separate them. And <strong>counter-picking collapsing to a lookup</strong>, since in the lobby you already see the opponent's defense at the end of each round. Unexplored rather than known-bad, and it is not a decision the upgrade scheme has to make on its own.</p>
+    <div class="assets">
+      <span class="k">What KayKit gives you</span>
+      <p>The best fit of anything here, and by accident. <strong>Adventurers and Skeletons were built as deliberate mirrors</strong> — Knight/Warrior, Rogue/Rogue, Mage/Mage — so a tower line and the creep line it would unlock already exist as matched silhouettes with a shared rig. The identity claim would be visible on the board without a single new model.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="ranger">
+  <div class="section-head">
+    <h2>The Ranger, six ways</h2>
+    <span class="tag">Same tower, six schemes</span>
+  </div>
+
+  <p>The question as you asked it, answered six times, so the schemes can be compared on one unit rather than in the abstract.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Scheme</th><th>What the player does</th><th>What they end up with</th><th>Cost in rounds</th><th>What it reads as on the board</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="code">LADDER</td>
+        <td>Spends sauce twice on this Ranger</td>
+        <td>Ranger III — same job, bigger numbers</td>
+        <td class="n">2</td>
+        <td>The same model, in the third palette</td>
+      </tr>
+      <tr>
+        <td class="code">TECH</td>
+        <td>Buys "Archery II" once</td>
+        <td>Every Ranger they own is a Ranger II</td>
+        <td class="n">1</td>
+        <td>Four towers change colour simultaneously</td>
+      </tr>
+      <tr>
+        <td class="code">FORK</td>
+        <td>Picks one of three leaves at tier 2</td>
+        <td>A Marksman, a Druid or an Avian Swordsman</td>
+        <td class="n">2</td>
+        <td>A different character, unmistakably</td>
+      </tr>
+      <tr>
+        <td class="code">FUSION</td>
+        <td>Builds a Mage next to the Ranger and pays to combine</td>
+        <td>A Druid, with both towers consumed</td>
+        <td class="n">2–3</td>
+        <td>Two towers become one, on a plinth of what they were</td>
+      </tr>
+      <tr>
+        <td class="code">CROSSPATH</td>
+        <td>Spends down the range path to 3 and dips the rate path to 1</td>
+        <td>A Ranger with a longbow, a hood and a cold palette</td>
+        <td class="n">4</td>
+        <td>Same character, visibly re-equipped</td>
+      </tr>
+      <tr>
+        <td class="code">KIT</td>
+        <td>Swaps the bow for a crossbow at the start of round 8</td>
+        <td>The same Ranger, now dealing pierce instead of impact</td>
+        <td class="n">1, reversible</td>
+        <td>One prop changes; the character does not</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note fir">
+    <span class="k">The reading that matters</span>
+    <p>Only <span class="m">FORK</span> and <span class="m">FUSION</span> produce a <strong>Druid</strong> — a thing with a name a stranger already knows. That is not a cosmetic difference. With no unlock ramp, the entire onboarding budget is spent on legibility, and <em>"the Ranger became a Druid"</em> is a sentence a new player understands before reading a single tooltip. <em>"The Ranger is at 3-1-0"</em> is not.</p>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="assets">
+  <div class="section-head">
+    <h2>Asset reality check</h2>
+    <span class="tag">What the packs can and cannot do</span>
+  </div>
+
+  <p>Five facts about the bundle do most of the work in the grading above, and one of them is a genuine gap.</p>
+
+  <ul class="tight">
+    <li><strong>One rig, 133 clips, all fifty-seven characters.</strong> A class change is a mesh swap with no animation cost. This is why <span class="m">FORK</span> and <span class="m">FUSION</span> are cheap and would be expensive in almost any other pack.</li>
+    <li><strong>One 1024&times;1024 gradient atlas.</strong> A recolour is one small PNG, so any scheme whose visual state is a palette is effectively free — which is every vertical scheme, and the element half of <span class="m">RECIPE</span>.</li>
+    <li><strong>Attachment points are how the pack is built.</strong> 25+ swappable weapons and accessories, removable helmets, four swappable face plates on the Action Figure, authored muzzle-flash meshes. This is what lifts the art veto on <span class="m">CROSSPATH</span> and makes <span class="m">KIT</span> nearly free.</li>
+    <li><strong>Three characters ship as transformation pairs</strong> — Werewolf, Animatronic, 4-GTN. <span class="m">STANCE</span> exists as art whether or not it exists as a rule.</li>
+    <li><strong>The tower-plausible half of the roster is about twenty-five models, not fifty-seven.</strong> Adventurers is all eight; the Mystery Monthly series contribute maybe seventeen more that read as defenders rather than as threats. That is comfortably enough for five bases and twelve leaves — and it is <em>not</em> enough for a fifty-six-tower combinatorial roster made of characters, which is the sharpest asset-side argument against <span class="m">RECIPE</span> in its full form.</li>
+  </ul>
+
+  <div class="note">
+    <span class="k">The gap, stated honestly</span>
+    <p><strong>Flying is thin.</strong> The Avian Swordsman and the Witch on her broom, and that is the list. The wave-9 anchor is currently written as the flying-units case, so if it stays that way, either the answer comes from <a href="https://quaternius.com/packs/ultimatemonsters.html">Quaternius Ultimate Monsters</a> (free, CC0, 50 animated) — already the named supplement — or the anchor's axis changes. There are also no true beasts and no insects in KayKit.</p>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="stacks">
+  <div class="section-head">
+    <h2>Three stacks that work</h2>
+    <span class="tag">The schemes compose</span>
+  </div>
+
+  <p>None of these are recommendations — they are three coherent points in the space, chosen to be as different from each other as possible so the trade-offs show.</p>
+
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Stack</th><th>Composition</th><th>What a run feels like</th><th>What it costs you</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="code">THE ARCHETYPE<br>STACK</td>
+        <td><span class="m">FORK</span> + <span class="m">TECH</span> + <span class="m">HEIGHT</span> + <span class="m">STANCE</span></td>
+        <td>Five recognisable classes, each forking once into one of two or three named leaves. Ranks are bought per type, so the board changes in visible steps. Height is the cheap filler decision, and a free stance toggle covers a mis-read anchor.</td>
+        <td>Twelve to fifteen authored towers with real numbers. Depth lives between towers, so no single panel shows a player their whole decision.</td>
+      </tr>
+      <tr>
+        <td class="code">THE LATTICE<br>STACK</td>
+        <td><span class="m">FUSION</span> + <span class="m">MOSAIC</span> + <span class="m">KIT</span> + <span class="m">HEIGHT</span></td>
+        <td>Five bases; what you can fuse into depends on what you placed beside what. Placement and identity are one decision, on a maze that changes every rotation. A weapon slot gives a late, reversible correction.</td>
+        <td>Ten dual classes plus five bases, and adjacency must be drawn or it cannot be read. The fixed-point check on fusion is mandatory before anything ships.</td>
+      </tr>
+      <tr>
+        <td class="code">THE DENSE<br>STACK</td>
+        <td><span class="m">CROSSPATH</span> + <span class="m">DRAFT</span> + <span class="m">APEX</span></td>
+        <td>Six towers, twenty-five configurations each. Upgrade cards arrive in the shared public offering, so what you can build is metered and everyone saw the menu. One apex per run gives the last three rounds a target.</td>
+        <td>The most authored upgrades of the three, and depth that is a private optimisation in a game whose signature is scouting a composition.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<section id="open">
+  <div class="section-head">
+    <h2>What I need from you</h2>
+    <span class="tag">Four decisions, in order</span>
+  </div>
+
+  <ul class="tight">
+    <li><strong>Does the defense get a pick axis, or is it gold only?</strong> Everything downstream turns on this. Gold-only makes the upgrade graph a spending order; <span class="m">DRAFT</span> makes it a metered commitment and costs only interface work. This is the biggest single decision on the page.</li>
+    <li><strong>Per instance or per type?</strong> A ten-round run and a board of a dozen towers argues hard for per type, and per type is also the cheapest thing for the sweep. It is a big change in feel and I would not assume it.</li>
+    <li><strong>Do you want named archetypes as leaves, or abstract configurations?</strong> This is really a question about what the game looks like — a board of recognisable classes, or a board of the same tower differently equipped. The assets serve both; the accessibility argument favours the first.</li>
+    <li><strong>Is wave 9's anchor still the flying case?</strong> If so, the air answer has to come from outside KayKit, and that is worth knowing before the bundle is bought.</li>
+  </ul>
+
+  <div class="note">
+    <span class="k">Before any of it</span>
+    <p><a href="https://github.com/ssalter21/tower-defense-game/issues/56">#56</a> is still open — the licence and price check in a real browser, five minutes, and the last thing between this plan and money moving. Everything above assumes the $150 Complete bundle and CC0.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Sources for every claim about shipped games — Element TD, Bloons TD 6, Legion TD 2, Mazebert, GemCraft, YouTD, Super Auto Pets — are in <a href="build-depth-in-tower-defense.md">docs/research/build-depth-in-tower-defense.md</a>. Model names, pack contents and the animation library are from <a href="kaykit-character-roster.md">docs/research/kaykit-character-roster.md</a>, currently on the unmerged branch <span class="m">worktree-kaykit-character-roster</span>. Settled decisions are quoted from <a href="../vision.md">docs/vision.md</a> as of 7 August 2026.</p>
+  <p>Roles read off publisher renders are inferred, not verified against files — the bundle is not on this machine. Confirm before authoring anything.</p>
+</footer>
+
+</main>
+</div>
