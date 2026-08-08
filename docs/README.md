@@ -39,6 +39,7 @@ at its top rather than being rewritten.
 | [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? |
 | [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
 | [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
+| [The KayKit character roster](research/kaykit-character-roster.md) | What 57 characters does the $150 bundle actually contain, and which ones read as towers and which as creeps? |
 
 **Build research**, on the tools rather than the game:
 
