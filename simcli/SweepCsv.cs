@@ -69,6 +69,8 @@ internal static class SweepCsv
         "taken_sauce",
         "spent_sauce",
         "cost_efficiency_dealt_per_100_sauce",
+        "income_base_sauce",
+        "bonus_sauce",
         "value",
         "of",
         "bounded",
@@ -129,7 +131,7 @@ internal static class SweepCsv
             text,
             new[]
             {
-                "note", column, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
+                "note", column, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
                 what, Blank, Blank,
             });
 
@@ -161,8 +163,8 @@ internal static class SweepCsv
             text,
             new[]
             {
-                "parameter", name, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
-                value, Blank, Blank,
+                "parameter", name, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
+                Blank, value, Blank, Blank,
             });
 
     private static void Coverage(StringBuilder text, CoverageBound bound) =>
@@ -172,7 +174,7 @@ internal static class SweepCsv
             {
                 "coverage",
                 bound.Axis,
-                Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
+                Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
                 Number(bound.Covered),
                 bound.Available == CoverageBound.Unbounded ? Blank : Number(bound.Available),
                 bound.IsBounded ? Yes : No,
@@ -194,6 +196,8 @@ internal static class SweepCsv
                 Number(row.LeakCostTaken),
                 Number(row.SauceSpent),
                 Number(row.DealtPerHundredSauce),
+                Number(row.IncomeBaseSauce),
+                Number(row.BonusSauce),
                 Blank, Blank, Blank,
             });
 

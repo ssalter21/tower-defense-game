@@ -33,10 +33,10 @@ namespace Sim
         public int IncomeBase { get; }
 
         /// <summary>
-        /// The performance bonus, as a share of the base. Zero against
-        /// <see cref="PerformanceField.Absent"/>, which is what every run
-        /// carries until a pool of other players' rounds exists -- a build-order
-        /// fact and not a fault. See <see cref="PerformanceField.Absent"/>.
+        /// The performance bonus: the share of the base the band this wave's
+        /// result reached in the field pays. Never negative, and zero only for a
+        /// wave in the bottom band or one measured against
+        /// <see cref="PerformanceField.Absent"/>.
         /// </summary>
         public int Bonus { get; }
 
@@ -218,9 +218,9 @@ namespace Sim
         /// </remarks>
         /// <param name="rules">The rate, the ceiling, the base and the bands.</param>
         /// <param name="field">
-        /// What everybody else's round was worth.
-        /// <see cref="PerformanceField.Absent"/> pays no bonus -- see the
-        /// remarks there, because that is the build order and not a fault.
+        /// What everybody else's round was worth. A population of nobody --
+        /// <see cref="PerformanceField.Absent"/> -- has no percentile to report
+        /// and so pays no bonus.
         /// </param>
         /// <param name="leakCostDealt">What this wave got past its opponents, priced in sauce.</param>
         public WavePayment CloseWave(Ruleset rules, PerformanceField field, int leakCostDealt)
@@ -235,8 +235,95 @@ namespace Sim
                 throw new ArgumentNullException(nameof(field));
             }
 
+            return Closed(rules, BonusOn(rules, field, leakCostDealt));
+        }
+
+        /// <summary>
+        /// The most a wave can pay this purse, for whoever cannot know what the
+        /// wave did.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The interest and the base, and then the top band rather than the band
+        /// a result reached -- so this is an upper bound on the payment and never
+        /// the payment. What a wave earns depends on what it got past the field,
+        /// which is a number only a resolved round has.
+        /// </para>
+        /// <para>
+        /// <b>The bound is above rather than below on purpose.</b> A walk over a
+        /// stored stream spends this purse checking whether each decision was
+        /// affordable; bounded above, everything it refuses was unaffordable
+        /// whatever the run performed, and a decision it lets through is checked
+        /// again against the purse the round really holds. Bounded below it would
+        /// refuse decisions the run affords perfectly well.
+        /// </para>
+        /// </remarks>
+        /// <param name="rules">The rate, the ceiling, the base and the bands.</param>
+        public WavePayment CloseWaveAtBest(Ruleset rules)
+        {
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
+            }
+
+            return Closed(rules, ShareOfTheBase(rules, rules.BestBand));
+        }
+
+        /// <summary>
+        /// What the bonus came to over a whole run: what each round dealt, placed
+        /// against the field, priced out of the bands and added up.
+        /// </summary>
+        /// <remarks>
+        /// <b>A fold over the outcome vector and nothing else.</b> The vector
+        /// carries what every round of the run got past the field it faced, so
+        /// what a run earned for its offense is arithmetic over a stored run --
+        /// no tick is replayed and no match is resolved to find out what a round
+        /// paid.
+        /// </remarks>
+        /// <param name="rules">Where the base and the bands are authored.</param>
+        /// <param name="field">The distribution every round of the run was paid against.</param>
+        /// <param name="outcome">The vector, played or rebuilt from a stored one.</param>
+        public static int BonusOver(Ruleset rules, PerformanceField field, RunOutcome outcome)
+        {
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
+            }
+
+            if (field is null)
+            {
+                throw new ArgumentNullException(nameof(field));
+            }
+
+            if (outcome is null)
+            {
+                throw new ArgumentNullException(nameof(outcome));
+            }
+
+            long earned = 0;
+
+            for (int round = 0; round < outcome.Rounds.Count; round++)
+            {
+                earned += BonusOn(rules, field, outcome.Rounds[round].LeakCostDealt);
+            }
+
+            if (earned > int.MaxValue)
+            {
+                throw new SimulationException(
+                    "A run's waves earned "
+                    + earned.ToString(CultureInfo.InvariantCulture)
+                    + " sauce in performance bonuses, which does not fit in the 32-bit integer sauce is "
+                    + "counted in. A bonus is a share of the flat base, so a total past that range is a "
+                    + "base or a band authored in the wrong units.");
+            }
+
+            return (int)earned;
+        }
+
+        /// <summary>The purse after the interest, the base and a bonus somebody worked out.</summary>
+        private WavePayment Closed(Ruleset rules, long bonus)
+        {
             long interest = InterestOn(rules, Sauce);
-            long bonus = BonusOn(rules, field, leakCostDealt);
             long closing = Sauce + interest + rules.IncomeBasePerWave + bonus;
 
             if (closing > int.MaxValue)
@@ -287,9 +374,11 @@ namespace Sim
                 return 0;
             }
 
-            PerformanceBand band = rules.BandFor(field.PercentileOf(leakCostDealt));
-
-            return (long)rules.IncomeBasePerWave * band.BonusPercentOfBase / Percent;
+            return ShareOfTheBase(rules, rules.BandFor(field.PercentileOf(leakCostDealt)));
         }
+
+        /// <summary>What one band pays, in sauce. Truncated, and never negative.</summary>
+        private static long ShareOfTheBase(Ruleset rules, PerformanceBand band) =>
+            (long)rules.IncomeBasePerWave * band.BonusPercentOfBase / Percent;
     }
 }

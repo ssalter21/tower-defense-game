@@ -60,7 +60,58 @@ public class SweepTests
             Assert.Equal(left.LeakCostTaken, right.LeakCostTaken);
             Assert.Equal(left.SauceSpent, right.SauceSpent);
             Assert.Equal(left.DealtPerHundredSauce, right.DealtPerHundredSauce);
+            Assert.Equal(left.IncomeBaseSauce, right.IncomeBaseSauce);
+            Assert.Equal(left.BonusSauce, right.BonusSauce);
         }
+    }
+
+    [Fact]
+    public void A_row_says_what_attacking_earned_its_sender_beside_what_turning_up_paid()
+    {
+        // The half of the economy the report would otherwise be silent about. A
+        // row carries what its runs were paid for happening and what they were
+        // paid for how they did, as two integers, so a reader can see the second
+        // is not zero and can divide one by the other without trusting a ratio
+        // this type computed.
+        //
+        // The base is arithmetic -- the flat income times the rounds the row's
+        // runs resolved between them -- which is what makes the bonus beside it
+        // readable as a share.
+        //
+        // OBSERVED: pass PerformanceField.Absent in place of run.Field to
+        // Purse.BonusOver in Sweep.Play. This goes red saying "Every creep in
+        // the report earned nothing at all for what it sent, over 4800 sauce of
+        // flat base", and every other number in the report stays exactly as it
+        // was -- which is what an economy paying the base alone looks like from
+        // every other column.
+        SweepReport report = Sweep.Of(TheSweep.Plan());
+        long bonus = 0;
+        long incomeBase = 0;
+
+        for (int index = 0; index < report.Rows.Count; index++)
+        {
+            SweepRow row = report.Rows[index];
+
+            Assert.True(
+                row.BonusSauce >= 0,
+                row.Label + " earned " + row.BonusSauce + " sauce in bonuses, which is a penalty.");
+
+            if (row.Ingredients != SweepRow.AllIngredients)
+            {
+                continue;
+            }
+
+            Assert.Equal(TheRuleset.Committed().IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseSauce);
+
+            bonus += row.BonusSauce;
+            incomeBase += row.IncomeBaseSauce;
+        }
+
+        Assert.True(
+            bonus > 0,
+            "Every creep in the report earned nothing at all for what it sent, over "
+            + incomeBase
+            + " sauce of flat base -- which is an economy paying the base alone.");
     }
 
     [Fact]

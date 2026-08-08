@@ -36,8 +36,8 @@ seed space is 2^64 wide and no run count enumerates it.
 
 **The canned field is part of the economy rather than a tool pointed at it.** The percentile bands are measured
 against a distribution of other players' rounds and no such pool exists until runs are stored, so the pool a
-sweep is handed is what the bands would be computed against — which is why every step before this one pays the
-income base alone. `content/field.txt` is that stand-in, and it is deliberately not `content/wave.txt`: the
+sweep is handed is what the bands are computed against — literally, since ADR-0042 measures it.
+`content/field.txt` is that stand-in, and it is deliberately not `content/wave.txt`: the
 authored match is forty creeps and three hundred and eighty sauce, and a run's purse is paid one wave's base a
 wave, so a field member composed of it outspends every opponent it faces three and a half times over. A sweep
 against one reports a total loss on every row and names nothing.

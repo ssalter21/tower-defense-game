@@ -61,8 +61,9 @@ The second thing is the balance harness:
 ```
 
 It plays every creep in the roster over a population of runs and writes what
-they came to as a comma-separated file — win rate, cost efficiency, and both of
-those binned by how many ingredients a run ended up holding. Ten thousand
+they came to as a comma-separated file — win rate, cost efficiency, what
+attacking earned its sender beside what turning up paid, and all of those binned
+by how many ingredients a run ended up holding. Ten thousand
 matchups is under ten seconds, which is the whole reason the tool is worth
 having before the roster is large. Every one of the six content files is an
 argument, so pointing it at another map to score it, or at another damage

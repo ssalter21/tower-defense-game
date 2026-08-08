@@ -175,14 +175,14 @@ public class PurseTests
     [Fact]
     public void A_wave_with_no_field_to_be_measured_against_is_paid_its_base_and_no_bonus()
     {
-        // THE ZERO BONUS, ASSERTED AS A FACT RATHER THAN LEFT SILENT. The bonus
-        // is a percentile band of a field, the field is a pool of other players'
-        // rounds, and no such pool exists in this build -- so every wave is paid
-        // the base alone. That is a build order and not a fault, and this test
-        // is where a reader who suspects a bug lands.
+        // A population of nobody, which no run carries: a run measures its own
+        // pool and is paid out of what it measured. This is the honest answer
+        // for whoever holds no population at all, and it is what the measurement
+        // itself is played against -- the pool's rounds are being priced there
+        // rather than paid.
         //
         // The base still arrives in full, which is the half that distinguishes
-        // "the bonus is zero" from "the payment is broken".
+        // "there was nobody to rank against" from "the payment is broken".
         //
         // OBSERVED: return the base as the bonus in Purse.BonusOn when the field
         // is absent. The bonus assertion goes red, 0 against 100 -- which is a
@@ -223,6 +223,93 @@ public class PurseTests
         Assert.Equal(25, field.PercentileOf(15));
         Assert.Equal(75, field.PercentileOf(35));
         Assert.Equal(100, field.PercentileOf(45));
+    }
+
+    [Fact]
+    public void The_top_band_is_a_ceiling_on_what_any_wave_can_be_paid()
+    {
+        // What a walk over a stored stream folds, because it has not played the
+        // rounds and cannot know what any of them dealt: the most the bands can
+        // pay. Bounded above, a walk refuses only decisions no run could have
+        // afforded however well it played; bounded below it would refuse waves a
+        // run's own bonus paid for. This is that bound, at every percentile a
+        // wave can reach.
+        //
+        // OBSERVED: return _bands[0] from Ruleset.BestBand. The ceiling
+        // assertion goes red at the 50th percentile, 155 against 150, and the
+        // ceiling becomes a floor.
+        Ruleset rules = TheRuleset.Committed();
+        var spread = new int[100];
+
+        for (int index = 0; index < spread.Length; index++)
+        {
+            spread[index] = index;
+        }
+
+        PerformanceField field = PerformanceField.Of(spread);
+        WavePayment best = Purse.Holding(500).CloseWaveAtBest(rules);
+
+        for (int dealt = 0; dealt <= spread.Length; dealt++)
+        {
+            WavePayment paid = Purse.Holding(500).CloseWave(rules, field, dealt);
+
+            Assert.True(
+                paid.Total <= best.Total,
+                "A wave at the "
+                + field.PercentileOf(dealt).ToString(CultureInfo.InvariantCulture)
+                + "th percentile was paid "
+                + paid.Total.ToString(CultureInfo.InvariantCulture)
+                + " against a ceiling of "
+                + best.Total.ToString(CultureInfo.InvariantCulture)
+                + ", so the ceiling is not one.");
+
+            Assert.Equal(best.Interest, paid.Interest);
+            Assert.Equal(best.IncomeBase, paid.IncomeBase);
+        }
+
+        // Reached rather than merely never exceeded: a wave nothing in the field
+        // matched is paid exactly the ceiling.
+        Assert.Equal(20, rules.BestBand.BonusPercentOfBase);
+        Assert.Equal(20, best.Bonus);
+        Assert.Equal(best.Total, Purse.Holding(500).CloseWave(rules, field, spread.Length).Total);
+    }
+
+    [Fact]
+    public void What_a_run_earned_for_its_offense_is_a_fold_over_its_outcome_vector()
+    {
+        // The whole reason the outcome is a vector: what every round of a run
+        // paid is arithmetic over what was stored, so a retrospective replays no
+        // tick and resolves no match. The vector here is written out rather than
+        // played, which is the point -- nothing below is simulated.
+        //
+        // OBSERVED: fold LeakCostTaken rather than LeakCostDealt in
+        // Purse.BonusOver. This goes red, 60 against 30: the bonus starts paying
+        // for what got past the run rather than for what the run got past the
+        // field.
+        Ruleset rules = TheRuleset.Committed();
+        PerformanceField field = PerformanceField.Of(new[] { 10, 20, 30, 40 });
+
+        // Beat all four, beat three of them, beat none: the top band, the one
+        // under it, and nothing.
+        var rounds = new[]
+        {
+            new RoundOutcome(45, 100),
+            new RoundOutcome(35, 100),
+            new RoundOutcome(5, 100),
+        };
+
+        RunOutcome outcome = RunOutcome.Of(1500, rounds, 3, deathEndsTheRun: true);
+
+        Assert.Equal(30, Purse.BonusOver(rules, field, outcome));
+
+        // The same answer off a vector rebuilt from stored rounds, which is what
+        // a stored population of runs is made of.
+        Assert.Equal(
+            30,
+            Purse.BonusOver(rules, field, RunOutcome.Of(1500, outcome.Rounds, 3, deathEndsTheRun: true)));
+
+        // And against a population of nobody there is no rank, so nothing to pay.
+        Assert.Equal(0, Purse.BonusOver(rules, PerformanceField.Absent, outcome));
     }
 
     [Fact]

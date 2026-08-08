@@ -36,22 +36,14 @@ namespace Sim
 
         /// <summary>
         /// No field at all: nobody to be measured against, so nothing to
-        /// measure.
+        /// measure. A wave paid against this earns its base and a bonus of zero.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// <b>A run measured against this is paid its base and a bonus of zero,
-        /// and that is a build order rather than a fault.</b> A band is a
-        /// percentile of a field and a field is a pool of other players' rounds,
-        /// so a run resolved before any such pool exists has nothing to be at a
-        /// percentile of and earns the base alone.
-        /// </para>
-        /// <para>
-        /// So: a zero bonus here is not a missing multiplication, an unread
-        /// ruleset row or a band that failed to match. It is this value, named.
-        /// The bands are authored, progressive and never negative already, and
-        /// a run handed a field is paid out of them.
-        /// </para>
+        /// <b>No run carries this.</b> A run measures its pool and is paid out
+        /// of what it measured, so the bonus a wave earns is a real number off
+        /// the bands. This is what the measurement itself is played against --
+        /// the pool's own rounds are being priced, not paid -- and it is the
+        /// honest answer for anybody holding a population of nobody.
         /// </remarks>
         public static PerformanceField Absent => NoField;
 
@@ -92,8 +84,8 @@ namespace Sim
             {
                 throw new SimulationException(
                     "A wave was ranked against a field of nobody. A percentile is a share of the field, "
-                    + "and there is no share of nothing -- see PerformanceField.Absent, which is what a "
-                    + "run with no field to measure against carries and why its bonus is zero.");
+                    + "and there is no share of nothing -- see PerformanceField.Absent, which is the field "
+                    + "a population of nobody makes and which pays no bonus rather than reporting a rank.");
             }
 
             int beaten = 0;

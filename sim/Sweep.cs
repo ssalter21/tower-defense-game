@@ -95,7 +95,9 @@ namespace Sim
             long leakCostDealt,
             long leakCostTaken,
             long sauceSpent,
-            int dealtPerHundredSauce)
+            int dealtPerHundredSauce,
+            long incomeBaseSauce,
+            long bonusSauce)
         {
             TypeId = typeId;
             Label = label;
@@ -108,6 +110,8 @@ namespace Sim
             LeakCostTaken = leakCostTaken;
             SauceSpent = sauceSpent;
             DealtPerHundredSauce = dealtPerHundredSauce;
+            IncomeBaseSauce = incomeBaseSauce;
+            BonusSauce = bonusSauce;
         }
 
         /// <summary>Which creep this row's runs favoured.</summary>
@@ -156,6 +160,21 @@ namespace Sim
         /// the remarks on <see cref="Sweep"/> before reading this as a price.
         /// </summary>
         public int DealtPerHundredSauce { get; }
+
+        /// <summary>What these runs' waves were paid for happening, in sauce, summed.</summary>
+        public long IncomeBaseSauce { get; }
+
+        /// <summary>
+        /// What these runs' waves were paid for how they did, in sauce, summed.
+        /// </summary>
+        /// <remarks>
+        /// The performance bonus, beside the base it is a share of, so the two
+        /// integers say what attacking earned its sender and what it would have
+        /// earned by turning up. A row where this is nothing is a creep whose
+        /// runs never cleared the bottom band; a row where it is missing across
+        /// the whole report is an economy paying the base alone.
+        /// </remarks>
+        public long BonusSauce { get; }
 
         public override string ToString() =>
             Label
@@ -503,8 +522,10 @@ namespace Sim
     /// <b>The canned field is the economy's stand-in and not a tool pointed at
     /// it.</b> The percentile bands are measured against a distribution of other
     /// players' rounds, and no such pool exists until runs are stored, so the
-    /// pool a sweep is handed is what the bands would be computed against. That
-    /// is why a run pays the income base alone until this exists.
+    /// pool a sweep is handed <i>is</i> what the bands are computed against --
+    /// what a run earns for its offense is decided by the harness's own canned
+    /// opponent. <see cref="SweepRow.BonusSauce"/> is that money, on the row,
+    /// beside the base it is a share of.
     /// </para>
     /// <para>
     /// <b>What <see cref="SweepRow.DealtPerHundredSauce"/> measures, and what it
@@ -656,7 +677,18 @@ namespace Sim
                 run.Advance(phase, plan.Defense);
             }
 
-            return new Played(run.Outcome, Ingredients(run.Unlocks), spent, plan.Waves, run.Round);
+            // The bonus is read off the finished vector rather than added up as
+            // the rounds went by: what each round dealt is on the vector, the
+            // field is fixed for the run, and the bands are a lookup -- so what
+            // a run earned for its offense is a fold and never a second play.
+            return new Played(
+                run.Outcome,
+                Ingredients(run.Unlocks),
+                spent,
+                plan.Waves,
+                run.Round,
+                (long)plan.Rules.IncomeBasePerWave * run.Round,
+                Purse.BonusOver(plan.Rules, run.Field, run.Outcome));
         }
 
         /// <summary>
@@ -830,11 +862,20 @@ namespace Sim
         /// <summary>One played run, as the numbers a row is folded out of.</summary>
         private readonly struct Played
         {
-            internal Played(RunOutcome outcome, int ingredients, long spent, int waves, int rounds)
+            internal Played(
+                RunOutcome outcome,
+                int ingredients,
+                long spent,
+                int waves,
+                int rounds,
+                long incomeBase,
+                long bonus)
             {
                 Ingredients = ingredients;
                 Spent = spent;
                 Rounds = rounds;
+                IncomeBase = incomeBase;
+                Bonus = bonus;
                 Dealt = outcome.LeakCostDealt;
                 Taken = outcome.LeakCostTaken;
 
@@ -849,6 +890,10 @@ namespace Sim
             internal long Spent { get; }
 
             internal int Rounds { get; }
+
+            internal long IncomeBase { get; }
+
+            internal long Bonus { get; }
 
             internal int Dealt { get; }
 
@@ -872,6 +917,10 @@ namespace Sim
 
             private long _spent;
 
+            private long _incomeBase;
+
+            private long _bonus;
+
             internal void Add(Played played)
             {
                 _runs++;
@@ -880,6 +929,8 @@ namespace Sim
                 _dealt += played.Dealt;
                 _taken += played.Taken;
                 _spent += played.Spent;
+                _incomeBase += played.IncomeBase;
+                _bonus += played.Bonus;
             }
 
             /// <summary>
@@ -910,7 +961,9 @@ namespace Sim
                     _dealt,
                     _taken,
                     _spent,
-                    _spent == 0 ? 0 : (int)(PerSauce * _dealt / _spent));
+                    _spent == 0 ? 0 : (int)(PerSauce * _dealt / _spent),
+                    _incomeBase,
+                    _bonus);
             }
         }
     }

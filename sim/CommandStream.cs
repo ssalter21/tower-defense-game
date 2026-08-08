@@ -424,18 +424,23 @@ namespace Sim
         /// <para>
         /// <b>Nothing is applied.</b> The unlocks and the purse are folded
         /// forward through local values exactly as a round moves them: a build
-        /// phase's take, then the wave's own purchases, then the payment a wave
-        /// closes on against <see cref="Run.Field"/>. The run is untouched, so a
-        /// stream can be checked and then refused without the run having moved,
-        /// and nothing here is handed a defense to play a round with even by
-        /// accident.
+        /// phase's take, then the wave's own purchases, then what the wave pays.
+        /// The run is untouched, so a stream can be checked and then refused
+        /// without the run having moved, and nothing here is handed a defense to
+        /// play a round with even by accident.
         /// </para>
         /// <para>
-        /// The wave a round dealt is passed to that payment as zero, because a
-        /// walk has not played the round and cannot know it. Against a field
-        /// nobody is at a percentile of, the bonus is nothing and the amount
-        /// does not enter the sum -- which is what makes the walk's purse the
-        /// run's own, asserted rather than assumed.
+        /// <b>The purse this walk carries is a ceiling and not the run's own.</b>
+        /// A wave's income includes the band its offense reached in the field,
+        /// and what a round got past the field is a number only a resolved round
+        /// has -- so the walk closes every wave at
+        /// <see cref="Purse.CloseWaveAtBest"/>, the most the bands can pay. Every
+        /// decision refused here is one no run could have afforded however well
+        /// it played; a decision the ceiling admits is checked again, against the
+        /// purse the round really holds, by the same
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>
+        /// when the round is played. Bounded the other way -- at no bonus -- this
+        /// would refuse waves the run affords perfectly well.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -474,7 +479,7 @@ namespace Sim
                 Build build = command.ToPhase().Resolve(run.OfferingAt(round), unlocks, purse, run.Costs);
 
                 unlocks = build.Unlocks;
-                purse = build.Purse.CloseWave(run.Rules, run.Field, 0).Purse;
+                purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
                 builds.Add(build);
             }
 
@@ -500,7 +505,11 @@ namespace Sim
         /// <para>
         /// <b>The whole stream is checked before the first round is played.</b>
         /// A run that partially validates would resolve three rounds, refuse the
-        /// fourth and leave an outcome somebody keeps.
+        /// fourth and leave an outcome somebody keeps. Everything a walk can
+        /// settle without playing the run is settled there; what it cannot is
+        /// how much a wave's own performance paid, so a decision affordable only
+        /// under the best band the run did not reach is the one refusal that
+        /// still lands mid-run.
         /// </para>
         /// </remarks>
         /// <param name="run">The run to play, on the seed and the tables this stream is stamped with.</param>

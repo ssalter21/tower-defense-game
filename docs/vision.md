@@ -280,8 +280,11 @@ bonus, never a penalty.
 
 Decided in [#72](https://github.com/ssalter21/tower-defense-game/issues/72), which holds the detail. The
 numbers — base, band thresholds, slot count and growth, creep costs — are step 4 sweeps rather than arguments.
-One consequence worth carrying: **the bonus is not computable until step 4**, because a distribution needs a
-field, so steps 1 to 3 pay the base alone and should not read a zero bonus as a fault.
+One consequence worth carrying: **the bonus needs a distribution to be measured against**, and step 1 supplies
+one by measuring the balance harness's canned field, so a run pays a real bonus from step 1 rather than the base
+alone. What that stand-in cannot do is tell the middle bands apart — a population of one has almost no spread,
+so the four authored bands behave as two until step 6 stores real ghosts. Measured in
+[`docs/research/a-canned-field-of-one-collapses-the-bands.md`](research/a-canned-field-of-one-collapses-the-bands.md).
 
 ### Depth is the point
 
@@ -1023,7 +1026,8 @@ at once, and how the harness's verdict gets back into `content/` without invalid
 **It also owes step 1 a debt it does not obviously owe.** The percentile bands in
 [§3](#one-purse--restored-6-august-2026) are measured against a field, and there is no field until step 6 — so
 **the sweep's canned set is what the economy measures against in the meantime.** That makes the harness part of
-the economy rather than a tool pointed at it, and it is why the bonus is uncomputable before step 4.
+the economy rather than a tool pointed at it: what a wave earns for how it did is decided by a file in the
+harness's own content, and pointing the pool somewhere else is what changes it.
 
 **It used to depend on seams 1 and 3 and now it does not wait for either.** The measurement in
 [§5](#5-how-it-is-balanced) is why: at 2.75 ms a match, a sweep is a minute of compute, so the harness is a

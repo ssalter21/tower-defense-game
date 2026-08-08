@@ -35,10 +35,26 @@
 #
 # WHICH IS ALSO WHY THIS ONE IS CALIBRATED AND NOT AVERAGED. It is the shape
 # that makes the report an instrument: over thirty-two runs a creep the
-# roster's six come in between sixteen and thirty-four percent of runs won,
+# roster's six come in between forty-one and sixty-six percent of runs won,
 # which is a column that separates them. Against the two-column wave every
 # creep wins every run, and against wave.txt none of them wins any -- and
 # neither of those reports says anything about a creep.
+#
+# IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
+# calibration argument carries. A round of this opponent is worth about
+# seventeen sauce, which sits under what a run's own wave gets past it, so
+# roughly half a run's rounds clear the top band and the bonus comes out near
+# nine percent of the flat base. Against wave.txt, whose rounds are worth about
+# a hundred and twenty-five, no run clears the bottom band and the bonus is
+# zero on every row -- a field that outspends every opponent it faces turns the
+# offense half of the economy off as well as the win-rate column.
+#
+# ONE MEMBER IS A DISTRIBUTION WITH ALMOST NO SPREAD, AND THAT IS THIS FILE'S
+# REAL LIMIT. Ten samples of one opponent land between fourteen and nineteen
+# sauce, so a round is above the field or below it and almost never inside it:
+# the 50th and 75th bands are unreachable in practice, and the four authored
+# bands behave as two. The measured evidence, and what a pool of four does
+# instead, is in docs/research/a-canned-field-of-one-collapses-the-bands.md.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 # Orders ascend by tick and then by type id, and that order is asserted rather
