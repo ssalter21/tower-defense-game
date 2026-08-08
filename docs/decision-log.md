@@ -79,3 +79,43 @@ Not a design reversal; a filing one, recorded here because it moved every docume
   measurement is not an instruction.
 - **`tools/hotreload-probe/` was deleted.** It called itself throwaway, and the question it existed to answer is
   answered.
+
+---
+
+## 8 August 2026 — the roster is signed, and the clock slows
+
+Decided in [#102](https://github.com/ssalter21/tower-defense-game/issues/102), which holds the reasoning for
+each. [`roster.md`](roster.md) is where the units themselves live; this records only what changed its mind.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **§3** — the currency | One currency, called **sauce** | **Renamed to gold.** Nothing else about the purse moved | No unit on the board could be named after sauce, and the roster is knights, archers, mages and skeletons. The word appears in no data file, so the rename retired nothing |
+| **the unit table** | Ten rows, of which six walk | **Eight rows — five creeps and three towers.** `wisp`, `bulwark`, `lancer`, `sniper` and `sieger` are retired | The roster is scoped to the five creeps that were actually designed. The swarm and the wall were the two ends of the granularity axis and their loss is recorded rather than absorbed |
+| **the attack types** | Assigned per tower — two impact, one pierce, one magic, for no recorded reason | **One attack type per tower line.** Soldier impact, Archer pierce, Mage magic | You can read what a tower does to a body by knowing which line it came from, and it fixes the lopsidedness by construction. It costs `sniper`, which was magic in a line that is now pierce |
+| **the tower cost column** | Four prices — 40, 90, 200, 300 — following no written rule | **A basis: one gold per five damage a second, times the bodies a shot hits** | Three of the four live prices already obeyed it and nobody had written it down. Creeps are priced on the health a defense must spend; towers are now priced on the health they remove, so one purse prices both sides against one number |
+| **the clock** | Creeps cross the 47-hex board in 18 seconds; the Archer fires five times a second | **Everything slows by three.** Durations ×3, creep speeds ÷3 | The pace was far faster than intended and nobody had looked at it in seconds. A uniform dilation changes the feel and nothing else — damage, health, range and every cost are untouched, and the wave resolves exactly as it did, over three minutes instead of one |
+
+### What a uniform dilation costs, and what it deliberately does not
+
+Worth stating separately because it is the one change here that touches every row and still changes no
+balance. Cooldown, windup, backswing, flight and dying are durations in ticks; speed is distance per tick.
+Multiplying the first group by three and dividing the second by three leaves **every ratio in the game where it
+was** — the same shots land on the same bodies in the same order, and the committed run leaks the same thirteen
+of forty.
+
+The alternative on the table was to slow only the firing and leave creeps walking at 2.55 hexes a second,
+compensating with much larger damage rolls. That was rejected: an Archer would need three shots to kill a
+Minion where it now needs nineteen, so overkill would rise from a few percent to roughly a third and the
+defense would get quietly weaker while the spreadsheet insisted nothing had changed.
+
+**One honest imprecision.** 85 ÷ 3 is not an integer, so the new speeds are rounded — the Minion walks at 28
+rather than 28.33. The leak may therefore land at twelve or fourteen rather than exactly thirteen. Exact
+division would have meant slowing by five, which puts a ten-round run near fifty minutes.
+
+### A correction to the roster document
+
+[`roster.md`](roster.md) said [#91](https://github.com/ssalter21/tower-defense-game/issues/91) "already had to
+cut `offering 3 3` to `offering 2 3` because the roster could not fill it". That is true of #91's own commit
+and stops the story one commit early: `85fed39` put the offering **back to three** when the roster grew to ten,
+and three is what `content/ruleset.txt` says today. Recorded here because the claim was load-bearing in the
+argument for a larger roster, and it was wrong.
