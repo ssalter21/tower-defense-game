@@ -483,17 +483,17 @@ public class CommandStreamTests
         // holding 52", refusing at load a wave the run affords perfectly well,
         // because the walk stopped paying the rounds it was walking.
         //
-        // The ceiling is observed by what it admits. This run holds 407 gold
-        // when its fourth build phase stands and the walk carries 474 -- three
+        // The ceiling is observed by what it admits. This run holds 357 gold
+        // when its fourth build phase stands and the walk carries 423 -- three
         // waves of the top band it did not reach, and the interest on them --
-        // so a fourth wave costing 450 is a decision the walk has to let past
+        // so a fourth wave costing 400 is a decision the walk has to let past
         // and the round itself has to refuse. That ordering is the whole design:
         // everything refused at load was unaffordable however the run played.
         //
         // OBSERVED, on the ceiling: close the walk's waves at
         // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The Check
-        // above goes red on an exception -- "A build phase at wave 4 buys 450
-        // gold of creeps out of a purse holding 407" -- refusing at load rather
+        // above goes red on an exception -- "A build phase at wave 4 buys 400
+        // gold of creeps out of a purse holding 357" -- refusing at load rather
         // than at the round, which is what a floor does to every decision a
         // run's own bonus paid for.
         Run run = TheCommands.Fresh();
@@ -513,10 +513,10 @@ public class CommandStreamTests
         {
             [TheCommands.Waves - 1] = RecordCommand.Of(
                 TheCommands.Waves,
-                BuildPhase.Of(fourth.Kind, fourth.Id, WaveSlot.Of(fourth.TypeId, 10))),
+                BuildPhase.Of(fourth.Kind, fourth.Id, WaveSlot.Of(fourth.TypeId, 40))),
         };
 
-        Assert.Equal(45, run.Costs.PriceOf(Purchase.Unit(fourth.TypeId)));
+        Assert.Equal(10, run.Costs.PriceOf(Purchase.Unit(fourth.TypeId)));
 
         CommandStream beyond = CommandStream.Of(run, overspent);
 
@@ -525,7 +525,7 @@ public class CommandStreamTests
         SimulationException refused = Assert.Throws<SimulationException>(
             () => beyond.Replay(TheCommands.Fresh(), TheCommands.Defense()));
 
-        Assert.Contains("450", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("400", refused.Message, StringComparison.Ordinal);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above

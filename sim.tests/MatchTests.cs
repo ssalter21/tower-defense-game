@@ -109,17 +109,25 @@ public class MatchTests
     }
 
     [Fact]
-    public void The_match_is_tuned_to_a_partial_break_over_a_minute_or_so()
+    public void The_match_is_tuned_to_a_partial_break_over_about_three_minutes()
     {
         // A defense that holds and a defense that collapses are both useless as
-        // signals. A third getting through means the leak count is a number a
-        // person can watch move.
+        // signals. A partial break means the leak count is a number a person
+        // can watch move.
+        //
+        // The band is a quarter to a half of the wave, which is the target the
+        // roster was signed against. Seventeen of forty is where it lands.
+        //
+        // OBSERVED: divide every order tick in content/wave.txt by three, which
+        // is what leaving that file alone through the clock dilation would have
+        // meant. The leak goes red at 25 of 40 -- the wave arriving three times
+        // faster than the towers now fire is most of what a leak rate is.
         MatchResult result = TheMatch.Fresh().Resolve();
         int seconds = result.FinalTick / Match.TicksPerSecond;
 
         Assert.Equal(40, result.Total);
-        Assert.InRange(result.Leaked, 12, 15);
-        Assert.InRange(seconds, 60, 90);
+        Assert.InRange(result.Leaked, 10, 20);
+        Assert.InRange(seconds, 150, 240);
     }
 
     [Fact]
@@ -136,11 +144,12 @@ public class MatchTests
         // dead and none is free money, not a pin on numbers a sweep is meant to
         // move.
         //
-        // OBSERVED: put the wisp at 500 health and 3 gold. It goes red --
-        // "wisp returned 0 percent of the gold a column of 133 cost" --
-        // because five hundred effective health is under what this defense
-        // deals a creep while it crosses, so every one of them dies and a whole
-        // row of the menu is a dead option that still reads like a choice.
+        // OBSERVED: put the Skeleton Scout at 500 health and 3 gold. It goes
+        // red -- "skeleton-scout returned 0 percent of the gold a column of 133
+        // cost" -- because five hundred effective health is under what this
+        // defense deals a creep while it crosses, so every one of them dies and
+        // a whole row of the menu is a dead option that still reads like a
+        // choice.
         UnitTypeTable types = TheMatch.Types();
         Ruleset rules = TheRuleset.Committed();
         TowerLayout defense = TheMatch.Layout(types);
@@ -369,16 +378,53 @@ public class MatchTests
         // rule is "furthest along the corridor, lowest id if level", so the
         // snapshot alone says who each tower should have picked.
         //
-        // The tie half is the point. Two of the wave's orders release on the
-        // same tick, so creeps regularly sit at exactly the same distance --
-        // and "closest to the exit" on its own is not a rule that can be
-        // replayed, because it leaves the answer to whichever of them happened
-        // to be looked at first.
+        // The tie half is the point, and it is fought on a wave built here
+        // rather than on the committed one. That is a correction. The committed
+        // wave does still put creeps at the same distance -- fifty-one times
+        // over the match -- but a tie only tests anything if it lands on the
+        // tick a tower acquires, and whether those two schedules coincide is
+        // luck. It held until the clock dilation of 8 August 2026 moved
+        // content/wave.txt and cut tower acquisitions to a third of what they
+        // were, at which point the coincidence stopped happening and this
+        // assertion went red having quietly tested nothing about ties for as
+        // long as the coincidence had lasted.
+        //
+        // The wave below cannot stop tying. The Minion and the Skeleton walk at
+        // exactly the same speed under the signed roster -- 28 each -- so two
+        // orders released on the same tick stay level for the whole crossing
+        // and every acquisition in range is a tie. "Closest to the exit" on its
+        // own is not a rule that can be replayed, because it leaves the answer
+        // to whichever of them happened to be looked at first.
+        //
+        // OBSERVED: drop the lower-id clause from target selection in
+        // Match, leaving "furthest along". The tie run goes red naming the
+        // creep it picked instead; the committed run below stays green, which
+        // is exactly why the tie half could not be left to it.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
         var coverage = TowerCoverage.For(TheMatch.Map(), layout);
 
-        Match match = TheMatch.Fresh();
+        Assert.Equal(types.ById(12).SpeedMilliHexPerTick, types.ById(1).SpeedMilliHexPerTick);
+
+        CheckTargeting(
+            new Match(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                layout,
+                WaveScript.Parse("order 0 1 12 0\norder 0 12 12 0", types),
+                TheMatch.Seed),
+            coverage,
+            requireTies: true);
+
+        CheckTargeting(TheMatch.Fresh(), coverage, requireTies: false);
+    }
+
+    /// <summary>
+    /// Walks a match and holds every target acquisition against the analytic
+    /// rule: furthest along the corridor, lowest id where two are level.
+    /// </summary>
+    private static void CheckTargeting(Match match, TowerCoverage coverage, bool requireTies)
+    {
         int acquisitions = 0;
         int ties = 0;
 
@@ -428,7 +474,11 @@ public class MatchTests
         }
 
         Assert.True(acquisitions > 100, $"Only {acquisitions} target acquisitions were checked.");
-        Assert.True(ties > 0, "No tower ever had to break a tie, so the tiebreak rule went untested.");
+
+        if (requireTies)
+        {
+            Assert.True(ties > 0, "No tower ever had to break a tie, so the tiebreak rule went untested.");
+        }
     }
 
     [Fact]

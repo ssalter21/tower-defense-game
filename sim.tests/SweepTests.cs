@@ -131,11 +131,11 @@ public class SweepTests
         //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
-        // grunt's whole-population row is identical across the two plans -- and
+        // minion's whole-population row is identical across the two plans -- and
         // the determinism test above stays green, which is exactly the hole it
         // cannot see.
-        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "grunt");
-        SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "grunt");
+        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
+        SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "minion");
 
         Assert.NotEqual(one.LeakCostDealt, other.LeakCostDealt);
     }
@@ -165,7 +165,7 @@ public class SweepTests
                 types: types,
                 rules: TheSweep.ThinHealth(),
                 field: TheSweep.LethalField(types))),
-            "grunt");
+            "minion");
 
         SweepRow dying = TheSweep.Whole(
             Sweep.Of(TheSweep.Plan(
@@ -173,7 +173,7 @@ public class SweepTests
                 rules: TheSweep.ThinHealth(),
                 field: TheSweep.LethalField(types),
                 deathEndsTheRun: true)),
-            "grunt");
+            "minion");
 
         Assert.Equal(TheSweep.Runs * TheSweep.Waves, living.Rounds);
         Assert.True(
@@ -228,7 +228,7 @@ public class SweepTests
         // is exactly one take a round: the bin-count assertion goes red having
         // found a single bin, and the whole column stops saying anything.
         SweepReport report = Sweep.Of(TheSweep.Plan());
-        SweepRow whole = TheSweep.Whole(report, "grunt");
+        SweepRow whole = TheSweep.Whole(report, "minion");
         int runs = 0;
         int wins = 0;
         int rounds = 0;
@@ -238,7 +238,7 @@ public class SweepTests
         {
             SweepRow row = report.Rows[index];
 
-            if (row.Label != "grunt" || row.Ingredients == SweepRow.AllIngredients)
+            if (row.Label != "minion" || row.Ingredients == SweepRow.AllIngredients)
             {
                 continue;
             }
@@ -254,7 +254,7 @@ public class SweepTests
         Assert.Equal(whole.Runs, runs);
         Assert.Equal(whole.Wins, wins);
         Assert.Equal(whole.Rounds, rounds);
-        Assert.True(bins > 1, "Every run of the grunt landed in one ingredient bin, so the column is flat.");
+        Assert.True(bins > 1, "Every run of the minion landed in one ingredient bin, so the column is flat.");
     }
 
     [Fact]
@@ -369,8 +369,8 @@ public class SweepTests
         Assert.NotEqual(authored.Rules.ContentHash, narrow.Rules.ContentHash);
 
         Assert.NotEqual(
-            TheSweep.Whole(Sweep.Of(authored), "grunt").LeakCostDealt,
-            TheSweep.Whole(Sweep.Of(narrow), "grunt").LeakCostDealt);
+            TheSweep.Whole(Sweep.Of(authored), "minion").LeakCostDealt,
+            TheSweep.Whole(Sweep.Of(narrow), "minion").LeakCostDealt);
     }
 
     [Fact]

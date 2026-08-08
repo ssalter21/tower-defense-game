@@ -154,8 +154,8 @@ public class RecordNegativeTests
     [Fact]
     public void A_duplicate_order_key_refuses()
     {
-        // Orders three and four are both at tick 700; making them the same type
-        // makes them one order written down twice, and two waves sending
+        // Orders three and four are both at tick 2100; making them the same
+        // type makes them one order written down twice, and two waves sending
         // identical units would have two different sets of bytes.
         UnitTypeTable types = TheMatch.Types();
         byte[] bytes = RecordBytes.WithU16(
@@ -165,7 +165,7 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => WaveRecord.FromBytes(bytes));
 
-        Assert.Contains("repeats the order key (tick 700, type 1)", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("repeats the order key (tick 2100, type 1)", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

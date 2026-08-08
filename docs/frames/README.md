@@ -35,13 +35,21 @@ agree on the overtake and disagreed by eleven ticks on the last creep to die.
 
 ## What is committed
 
-Two frames, kept as a record of what the match looked like when
-[#45](https://github.com/ssalter21/tower-defense-game/issues/45) landed:
+Two frames, kept as a record of what the match looks like:
 
-- `match-tick-0366.png` — the tick the committed landmark table names as the
+- `match-tick-0347.png` — the tick the committed landmark table names as the
   first overtake, with the wave bunched around the first corner.
-- `match-tick-0900.png` — the wave spread along the corridor, both kinds of
+- `match-tick-2700.png` — the wave spread along the corridor, both kinds of
   tower engaged.
+
+**Both ticks moved on 8 August 2026** and the pair was re-captured. They were
+0366 and 0900, chosen when
+[#45](https://github.com/ssalter21/tower-defense-game/issues/45) landed; the
+roster signature slowed the clock by three and moved the first overtake to 347,
+so a frame captioned 366 would have been a picture of a moment the match no
+longer has. **A tick number in a filename is a claim about the committed match**,
+which is the whole reason these two are named after ticks rather than after what
+is in them.
 
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture

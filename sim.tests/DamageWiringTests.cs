@@ -32,11 +32,11 @@ public class DamageWiringTests
     [Fact]
     public void A_shot_lands_the_roll_resolved_through_the_fused_expression()
     {
-        // One bolt against a column of bulwarks: one attack type, one armour
-        // type, and forty-five points of armour, so the divisor is 145 and the
-        // fused form is a different function from the two-step one on nearly
-        // half the rolls. Reconstructing the stream and resolving each roll
-        // here reproduces every amount the match reported.
+        // One Archer against a column of Skeleton Warriors: one attack type,
+        // one armour type, and forty-five points of armour, so the divisor is
+        // 145 and the fused form is a different function from the two-step one
+        // on nearly half the rolls. Reconstructing the stream and resolving
+        // each roll here reproduces every amount the match reported.
         //
         // OBSERVED: subtract the roll instead of the dealt amount -- assign
         // `roll` to `amount` in Match.Damage and report that to the events. The
@@ -51,7 +51,7 @@ public class DamageWiringTests
         UnitTypeTable types = TheMatch.Types();
         Ruleset rules = TheRuleset.Committed();
         UnitType bolt = types.ById(3);
-        UnitType bulwark = types.ById(6);
+        UnitType bulwark = types.ById(13);
 
         var events = new TheMatch.EventLog();
 
@@ -59,7 +59,7 @@ public class DamageWiringTests
             TheMatch.Map(),
             rules,
             TowerLayout.Parse(OneBolt, types),
-            WaveScript.Parse("order 0 6 10 0", types),
+            WaveScript.Parse("order 0 13 20 0", types),
             TheMatch.Seed)
             .Resolve(events);
 

@@ -366,7 +366,7 @@ public class AnchorScheduleTests
         // gift, and it would leave preparation with nothing to be about.
         //
         // OBSERVED: drop the role check in Draft.AddChanger. This goes red
-        // having caught nothing, and a shape whose wave-3 menu offers the bolt
+        // having caught nothing, and a shape whose wave-3 menu offers the Archer
         // tower loads -- at which point an anchor hands out defense and the
         // whole preparation axis has nothing on it.
         ContentException thrown = Assert.Throws<ContentException>(
@@ -384,7 +384,7 @@ public class AnchorScheduleTests
         //
         // OBSERVED: drop the counter's role check in Draft.AddAnchor. This goes
         // red having caught nothing, and a shape that answers wave 3 with a
-        // grunt loads -- an anchor whose preparation is another wave, which is
+        // Minion loads -- an anchor whose preparation is another wave, which is
         // the arms race the offense-only rule exists to keep off the board.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 3 1 plain 1 1")));
@@ -692,7 +692,12 @@ public class AnchorScheduleTests
         UnitType answer = types.ById(steep.CounterTypeId);
         UnitType body = types.ById(changer.TypeId);
 
-        // The mortar's mid roll against the grunt-bodied game changer.
+        // The Mage's mid roll against the Minion-bodied game changer. The Mage
+        // carries magic under the signed roster's one-type-per-line rule, and
+        // the Minion is Armoured, so the matrix cell is 140 rather than the 100
+        // an impact answer used to read -- every number below is 1.4x what it
+        // was and the four-to-one ratio the anchor is designed around survives
+        // that exactly, because a multiplier applies to both sides of it.
         int roll = (answer.DamageMin + answer.DamageMax) / 2;
 
         Assert.Equal(275, roll);
@@ -706,8 +711,8 @@ public class AnchorScheduleTests
         int unprepared = DamageModel.Dealt(
             rules, roll, schedule.BonusVsTag(3, changer), answer.AttackType, body.ArmourType, 0);
 
-        Assert.Equal(1100, prepared);
-        Assert.Equal(275, unprepared);
+        Assert.Equal(1540, prepared);
+        Assert.Equal(385, unprepared);
         Assert.Equal(4, prepared / unprepared);
 
         // Armour blunts the counter along with everything else, so the steep
@@ -715,7 +720,7 @@ public class AnchorScheduleTests
         int armoured = DamageModel.Dealt(
             rules, roll, schedule.BonusVsTag(answer.Id, changer), answer.AttackType, body.ArmourType, 60);
 
-        Assert.Equal(687, armoured);
+        Assert.Equal(962, armoured);
         Assert.True(armoured < prepared, "Armour did nothing at all against a hit carrying a counter.");
         Assert.InRange(armoured * 100 / DamageModel.Dealt(
             rules, roll, 0, answer.AttackType, body.ArmourType, 60), 390, 410);

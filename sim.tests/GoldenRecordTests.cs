@@ -231,13 +231,19 @@ public class GoldenRecordTests
         // "is a sensible value obvious", but "can a replay's result depend on
         // it". See RecordFormat.GhostVersion.
         //
-        // Both records are run against ONE table, and that makes it a restaging
-        // rather than a replay. Isolating one field means holding everything
-        // else still, and the two bundles carry two pinned tables that are free
-        // to differ; each run under its own would compare two rulesets as well,
-        // and would report a retune as a map handle that changed the match. The
-        // gate the restaging does keep is the map hash, which asks whether the
-        // bytes agree with themselves rather than which ruleset made them.
+        // The pair being compared is BUILT here rather than read from the two
+        // goldens, and that is a correction rather than a convenience. The
+        // goldens were used for this once, and it worked only for as long as
+        // content/wave.txt had not moved since the version-0 record was made:
+        // a bundle carries its own wave, so the moment that file is retuned the
+        // two goldens stop being the same match and this assertion starts
+        // reporting a wave change as a map handle that changed the match. The
+        // clock dilation of 8 August 2026 moved exactly that file. Two bundles
+        // recorded here from one live match, differing in the handle and in
+        // nothing else, isolate the field for good.
+        //
+        // The goldens still carry the format claim -- that a version-0 record
+        // has no handle and a current one does -- and that half stays below.
         UnitTypeTable types = PinnedTypes(RecordFormat.GhostVersion);
 
         ReplayBundle old = Golden(0);
@@ -247,8 +253,30 @@ public class GoldenRecordTests
         Assert.Equal(TheMatch.MapHandle, current.Ghost.MapHandle);
         Assert.NotEqual(old.GhostId, current.GhostId);
 
-        Match one = old.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
-        Match other = current.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
+        // OBSERVED: fold the map handle into Match's state hash -- add
+        // ghost.MapHandle to the opening fold. The tick-for-tick assertion goes
+        // red on tick zero, which is what a field the tick loop can see looks
+        // like and is exactly the thing that would make defaulting it a lie.
+        ReplayBundle handled = ReplayBundle.Of(
+            TheMatch.Map(),
+            TheMatch.Layout(types),
+            TheMatch.Wave(types),
+            types,
+            TheMatch.Seed,
+            TheMatch.MapHandle);
+
+        ReplayBundle unhandled = ReplayBundle.Of(
+            TheMatch.Map(),
+            TheMatch.Layout(types),
+            TheMatch.Wave(types),
+            types,
+            TheMatch.Seed,
+            GhostRecord.NoMapHandle);
+
+        Assert.NotEqual(handled.GhostId, unhandled.GhostId);
+
+        Match one = unhandled.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
+        Match other = handled.RestageUnderCurrentRules(types, TheRuleset.Committed()).Match;
 
         while (!one.IsFinished || !other.IsFinished)
         {

@@ -46,38 +46,52 @@ public class ContentTests
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(10, table.Count);
-        Assert.Equal("grunt", table.ById(1).Label);
+        Assert.Equal(8, table.Count);
+        Assert.Equal("minion", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
         Assert.Equal(Delivery.Projectile, table.ById(4).Delivery);
-        Assert.Equal(11, table.ById(4).ProjectileFlightTicks);
+        Assert.Equal(33, table.ById(4).ProjectileFlightTicks);
 
-        // Six of them walk, which is what an offering is drawn out of, and four
-        // stand. The ratio is what lets the ruleset ask for three ordinary
-        // options a round.
+        // Five of them walk, which is what an offering is drawn out of, and
+        // three stand. The ratio is what lets the ruleset ask for three
+        // ordinary options a round, and it is the tightest it has ever been:
+        // five walkers against three options puts most of the roster on every
+        // menu.
         //
-        // OBSERVED: change the bulwark's role from moving to placed in
-        // content/units.txt. The walker count goes red, 6 against 5, and the
+        // OBSERVED: change the skeleton's role from moving to placed in
+        // content/units.txt. The walker count goes red, 5 against 4, and the
         // offering's own refusal follows it in BuildPhaseTests.
-        Assert.Equal(6, table.Types.Count(row => row.Role == UnitRole.Moving));
-        Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
+        Assert.Equal(5, table.Types.Count(row => row.Role == UnitRole.Moving));
+        Assert.Equal(3, table.Types.Count(row => row.Role == UnitRole.Placed));
+
+        // The five retired ids are gone and stay gone. Ids are never reused, so
+        // these are not holes waiting to be filled -- a stored record pinning
+        // one still means what it meant, and there is simply no live row for it.
+        //
+        // OBSERVED: re-add the wisp as `unit 5 ...` in content/units.txt. This
+        // goes red on id 5, and the count assertion above goes red with it.
+        foreach (int retired in new[] { 5, 6, 8, 9, 10 })
+        {
+            Assert.DoesNotContain(table.Types, row => row.Id == retired);
+        }
     }
 
     [Fact]
     public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
     {
-        // Ten units and no eleventh column: a swarm, a wall, a sniper and a
-        // sieger are all authored out of the fields that were already here.
-        // Every attack type and every armour type is on the roster, so nothing
-        // in the matrix is a cell no committed unit can reach.
+        // Eight units and no nineteenth column. Every attack type and every
+        // armour type is on the roster, so nothing in the matrix is a cell no
+        // committed unit can reach -- and under the signed roster's one-type-
+        // per-tower-line rule the three attack types are covered exactly once
+        // each rather than lopsidedly, which is what makes a tower's line
+        // readable off the board.
         //
-        // OBSERVED: give the sieger `pierce` instead of `impact` -- one word in
-        // content/units.txt. The distinct-attack-types assertion still passes,
-        // because the sniper still carries magic; what goes red is the sieger's
-        // own row, Impact against Pierce. Both are here because the first says
-        // the matrix is covered and the second says which row covers what, and
-        // a roster that lost a whole attack type would go red on the first.
+        // OBSERVED: give the Mage `pierce` instead of `magic` -- one word in
+        // content/units.txt. The distinct-attack-types assertion goes red
+        // straight away, because with three towers and three types there is no
+        // second row carrying magic to hide behind. That is the whole gain of
+        // one type per line: the roster cannot lose a type quietly.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
         Assert.Equal(UnitTypeTable.CurrentLayout, table.Layout);
@@ -96,23 +110,42 @@ public class ContentTests
                 .Distinct()
                 .OrderBy(type => (int)type));
 
-        // The swarm is the cheapest body and the fastest; the wall is the
-        // dearest and the only one carrying armour points beside the drifter;
-        // the sniper outranges every other tower; the sieger's shell spends the
-        // longest in the air.
+        // The ends of each axis, named. The Skeleton Scout is the cheapest body
+        // and the fastest; the Skeleton Warrior is the dearest, the slowest and
+        // carries the most armour; the Mage outranges the other towers and is
+        // the only one that puts anything in the air; the Soldier is the
+        // shortest-ranged and the cheapest thing that stands.
         //
-        // OBSERVED: take the bulwark's forty-five points of armour down to
-        // zero. Its own row goes red, 45 against 0, and the cost band above
-        // goes red with it -- 7200 effective health bought against the 5000 it
-        // would then carry -- because armour points are half of what a wall is.
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(5).Cost);
-        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(5).SpeedMilliHexPerTick);
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(6).Cost);
-        Assert.Equal(45, table.ById(6).Armour);
-        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(9).RangeMilliHex);
-        Assert.Equal(AttackType.Magic, table.ById(9).AttackType);
-        Assert.Equal(AttackType.Impact, table.ById(10).AttackType);
-        Assert.Equal(table.Types.Max(row => row.ProjectileFlightTicks), table.ById(10).ProjectileFlightTicks);
+        // OBSERVED: take the Warrior's forty-five points of armour down to
+        // zero. Its own row goes red, 45 against 0, and the dearest-walker
+        // assertion goes red with it -- at zero armour the Warrior prices at 21
+        // and the Necromancer's 19 is no longer the row it beats by much --
+        // because armour points are half of what a heavy body is.
+        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(2).Cost);
+        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(2).SpeedMilliHexPerTick);
+        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(13).Cost);
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.SpeedMilliHexPerTick),
+            table.ById(13).SpeedMilliHexPerTick);
+        Assert.Equal(45, table.ById(13).Armour);
+        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(4).RangeMilliHex);
+        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
+        Assert.Equal(table.Types.Max(row => row.ProjectileFlightTicks), table.ById(4).ProjectileFlightTicks);
+        Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Placed).Min(row => row.RangeMilliHex),
+            table.ById(11).RangeMilliHex);
+
+        // One attack type per tower line, spelled out. This is the rule the
+        // roster was signed under and it is what lets a player read what a
+        // tower does to a body from which line it came from.
+        //
+        // OBSERVED: give the Soldier `pierce`. This goes red on its own row,
+        // Impact against Pierce, and the distinct-types assertion above goes
+        // red with it because impact then belongs to nothing.
+        Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
+        Assert.Equal(AttackType.Pierce, table.ById(3).AttackType);
+        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
     }
 
     [Fact]
@@ -126,11 +159,12 @@ public class ContentTests
         // exactly the same and an armour type that moved the price would be
         // charging twice for a bet.
         //
-        // OBSERVED: halve the bulwark's cost, 45 to 22, in content/units.txt.
-        // This goes red naming it -- "bulwark costs 22 gold, which buys 3520
-        // effective health at the roster's rate, against the 7250 it actually
-        // carries" -- which is what the wall being twice the deal of everything
-        // else on the menu looks like before anybody plays a round of it.
+        // OBSERVED: halve the Skeleton Warrior's cost, 31 to 15, in
+        // content/units.txt. This goes red naming it -- "skeleton-warrior costs
+        // 15 gold, which buys 2400 effective health at the roster's rate,
+        // against the 4930 it actually carries" -- which is what the heaviest
+        // body being twice the deal of everything else on the menu looks like
+        // before anybody plays a round of it.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
         foreach (UnitType creep in table.Types.Where(row => row.Role == UnitRole.Moving))
@@ -170,7 +204,53 @@ public class ContentTests
         Assert.Equal(40, table.ById(3).Cost);
         Assert.Equal(AttackType.Pierce, table.ById(3).AttackType);
         Assert.Equal(ArmourType.None, table.ById(3).ArmourType);
-        Assert.Equal(AttackType.Impact, table.ById(4).AttackType);
+        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
+    }
+
+    [Fact]
+    public void Every_placed_row_costs_its_damage_a_second_times_the_bodies_it_hits_over_five()
+    {
+        // The other half of the purse, and it is arithmetic for the same reason
+        // the creep rule is: one wallet buys both sides of the board, so both
+        // sides have to be priced in the same quantity. A tower is paid for by
+        // the health it removes, which is what a creep's price is measured in.
+        //
+        // The constant is five damage a second per gold, and "a second" is
+        // thirty ticks. That tie to the tick rate is the rule's one fragile
+        // edge and it is written into content/units.txt beside the rule: the
+        // clock has moved once already, and if it moves again every tower
+        // silently stops being based until the constant is re-derived.
+        //
+        // Splash is counted as three bodies, which is what makes the Mage dear
+        // rather than the Archer's equal. Nothing in the schema says how many
+        // bodies a shot hits -- that is a design fact about the row and it
+        // lives here and in docs/roster.md until a column can carry it.
+        //
+        // OBSERVED: halve the Mage's cost, 92 to 46, in content/units.txt. This
+        // goes red naming it -- "mage costs 46 gold, which is 5 damage a second
+        // per gold against the 9 it actually deals" -- which is what the splash
+        // tower being twice the deal of everything else looks like before
+        // anybody plays a round of it.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        foreach (UnitType tower in table.Types.Where(row => row.Role == UnitRole.Placed))
+        {
+            int bodies = tower.Delivery == Delivery.Projectile ? 3 : 1;
+            int average = (tower.DamageMin + tower.DamageMax) / 2;
+
+            // Damage a second, times bodies, at thirty ticks a second. Held as
+            // one integer expression so no division rounds before the compare.
+            int perSecondTimesBodies = average * bodies * Match.TicksPerSecond / tower.CooldownTicks;
+
+            Assert.True(
+                Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
+                tower.Label
+                + " costs "
+                + tower.Cost
+                + " gold, which is 5 damage a second per gold against the "
+                + (perSecondTimesBodies / 5)
+                + " it actually deals. Every placed row is within two percent of the rule.");
+        }
     }
 
     [Fact]
@@ -180,11 +260,11 @@ public class ContentTests
         // is unchanged because both sides moved together, which is what makes
         // this a resolution change rather than a balance change.
         //
-        // OBSERVED: put grunt max hp back to the pre-scale 155 without touching
-        // the bolt's damage. This goes red naming the row -- "grunt carries 155
-        // health and rolls 0 to 0" -- and so does every artefact downstream of
-        // it, which is the point: health and damage have to move together or
-        // shots-to-kill moves with them.
+        // OBSERVED: put the Minion's max hp back to the pre-scale 155 without
+        // touching the Archer's damage. This goes red naming the row -- "minion
+        // carries 155 health and rolls 0 to 0" -- and so does every artefact
+        // downstream of it, which is the point: health and damage have to move
+        // together or shots-to-kill moves with them.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
         foreach (UnitType row in table.Types)

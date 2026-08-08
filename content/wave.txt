@@ -21,14 +21,32 @@
 # them released together are one stack forever, and a stack is the single
 # arrangement in which unit ordering cannot be observed at all.
 #
-# THE TICKS ARE TUNED, and two things are being tuned for. A runner order is
-# placed while the grunt order before it is still walking, so the fast group
-# visibly catches the slow one -- the first overtake in the committed run is at
-# tick 366, which landmarks.txt beside this file carries because a real run
-# reported it, not because anybody worked it out. And the last order is grunts
-# rather than runners, so the tail of the match is the slowest thing on the map
-# and the match lasts sixty-two seconds rather than ending the moment the quick
-# ones are dealt with.
+# THE TICKS ARE TUNED, and two things are being tuned for. A Skeleton Scout
+# order is placed while the Minion order before it is still walking, so the
+# fast group visibly catches the slow one -- the first overtake in the
+# committed run is at tick 347, which landmarks.txt beside this file carries
+# because a real run reported it, not because anybody worked it out. And the
+# last order is Minions rather than Scouts, so the tail of the match is the
+# slowest thing on the map and the match lasts a hundred and eighty-nine
+# seconds rather than ending the moment the quick ones are dealt with.
+#
+# EVERY TICK BELOW WAS MULTIPLIED BY THREE ON 8 AUGUST 2026, when the roster
+# was signed and the clock slowed by the same factor. It had to be, and this is
+# the one file the roster ticket authorised to move: durations and speeds were
+# dilated in units.txt but a tick in this file is measured against the clock
+# those durations are counted in, so leaving them alone would have compressed
+# the whole wave threefold against a defense firing at a third of the rate.
+# Measured rather than reasoned -- left alone the leak went from thirteen of
+# forty to twenty-five, and dilated it lands at seventeen.
+#
+#   ONE PART OF THE DILATION COULD NOT REACH THIS FILE. The fifteen-tick
+#   release cadence above is a simulation constant and not a number here, so a
+#   column of ten still empties over a hundred and fifty ticks while its units
+#   walk a third as far in them -- which leaves columns three times denser in
+#   space than they were. That is a real change in wave shape, it is not a
+#   defect in these ticks, and it cannot be undone from content: the constant
+#   is covered by the simulation version and moving it would retire every
+#   stored replay.
 #
 #       tick  type  count  corridor
 #
@@ -36,8 +54,8 @@
 # corridor : which lane; the skeleton has one, and it is zero
 
 order   0     1     10     0
-order   250   2     8      0
-order   700   1     8      0
-order   700   2     6      0
-order   1250  2     3      0
-order   1400  1     5      0
+order   750   2     8      0
+order   2100  1     8      0
+order   2100  2     6      0
+order   3750  2     3      0
+order   4200  1     5      0

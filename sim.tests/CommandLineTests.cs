@@ -196,7 +196,7 @@ public class CommandLineTests
         Assert.Equal(
             "kind,subject,ingredients,runs,rounds,wins,win_rate_bp",
             string.Join(",", rows[0].Split(',').Take(7)));
-        Assert.Contains("coverage,creeps,,,,,,,,,,,,2,6,yes", rows, StringComparer.Ordinal);
+        Assert.Contains("coverage,creeps,,,,,,,,,,,,2,5,yes", rows, StringComparer.Ordinal);
         Assert.Contains("parameter,death_ends_the_run,,,,,,,,,,,,no,,", rows, StringComparer.Ordinal);
 
         // Two creeps scored, so two whole-population rows and at least one bin
@@ -236,7 +236,7 @@ public class CommandLineTests
             .Succeeded();
 
         Assert.StartsWith("kind,subject,", swept.Output, StringComparison.Ordinal);
-        Assert.Contains("\ncreep,grunt,0,2,", swept.Output, StringComparison.Ordinal);
+        Assert.Contains("\ncreep,minion,0,2,", swept.Output, StringComparison.Ordinal);
     }
 
     [Fact]

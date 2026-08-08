@@ -125,9 +125,27 @@ band           90       20
 #
 # WHAT 1500 BUYS, MEASURED. A wave is bought out of a purse the income row above
 # pays 100 a round into, so conceding one of them whole costs around a hundred
-# and the pool is some fifteen of those. The committed ten-round run in
-# content/run-outcome.txt concedes 1251 of it -- about 125 a round -- and
-# finishes on 249 with every wave survived.
+# and the pool is some fifteen of those.
+#
+# THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND THIS NUMBER DID NOT MOVE
+# WITH IT. The committed ten-round run in content/run-outcome.txt used to
+# concede 1251 and finish on 249 with every wave survived. It now concedes the
+# whole 1500 and dies on the tenth wave: the canned field takes about 153 a
+# round where it took about 125, because the clock dilation left its one column
+# three times denser in space and a denser column saturates the towers.
+#
+# THAT RUN IS COMMITTED AS IT PLAYED, AND DELIBERATELY. It is a real record of
+# a real run, it exercises the out-of-health ending that nothing else committed
+# does, and the alternative was retuning a number nobody had decided to retune
+# in order to make a demo end more comfortably. The roster signature authorised
+# content/wave.txt as its only lever and this is not that file.
+#
+# WHICH LEAVES 1500 AS AN OPEN DECISION RATHER THAN A SETTLED ONE. Story 20
+# wants the pool worth about three waves of average creep value, so that one
+# deliberate concession is affordable and a second is a real decision. Fifteen
+# concessions was already far off that, and it is now nine and a half. Something
+# nearer 400 to 500 would restore the reading the story asked for. Nobody has
+# decided it, so nothing here has been changed to suit it.
 
 health       1500
 

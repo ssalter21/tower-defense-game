@@ -69,13 +69,13 @@
 # EVERY ROW FILLS EXACTLY THE ROUND'S WIDTH, empties included, so the widening
 # at each anchor is legible down the file: 2 2 3 3 3 4 4 4 5 5.
 
-build    1  ordinary   5     0 0   0 0
+build    1  ordinary   1     0 0   0 0
 build    2  ordinary   2     0 0   0 0
 build    3  changer    4     0 0   0 0   0 0
-build    4  ordinary   7     0 0   0 0   2 10
-build    5  ordinary   8     0 0   0 0   2 20
+build    4  ordinary  12     0 0   0 0   2 10
+build    5  ordinary  13     0 0   0 0   2 20
 build    6  changer    7     1 10  2 20  0 0   0 0
-build    7  ordinary   5     1 2   2 8   5 2   0 0
-build    8  ordinary   6     1 2   2 8   5 2   7 1
-build    9  changer    9     1 5   2 15  5 2   0 0   0 0
-build   10  ordinary   1     1 5   2 10  5 2   6 1   7 1
+build    7  ordinary   7     1 2   2 8   12 2  0 0
+build    8  ordinary  13     1 2   2 8   7 1   12 2
+build    9  changer    9     1 5   2 15  12 2  0 0   0 0
+build   10  ordinary   1     1 5   2 9   7 1   12 1  13 1

@@ -514,12 +514,15 @@ public class BuildPhaseTests
                 1,
                 TheRun.Seed));
 
-        Assert.Contains("out of a roster of 6 creeps", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("out of a roster of 5 creeps", thrown.Message, StringComparison.Ordinal);
 
-        // Six options out of six walkers is exactly enough, and it is the whole
-        // roster on one menu -- which is the bound rather than the tuning. The
-        // committed ratio sits at half of it.
-        Assert.Equal(6, TheBuild.Fresh(waves: 1, ordinary: 6).Offering.Count);
+        // Five options out of five walkers is exactly enough, and it is the
+        // whole roster on one menu -- which is the bound rather than the
+        // tuning. The signed roster sits right up against it: the committed
+        // ratio of three options is three fifths of the roster, so a menu is
+        // most of what there is and the draw is a thin one. That is a known
+        // cost of five creeps and it is written down in docs/roster.md.
+        Assert.Equal(5, TheBuild.Fresh(waves: 1, ordinary: 5).Offering.Count);
         Assert.Equal(TheBuild.Ordinary, TheRuleset.Committed().OrdinaryOptionsPerRound);
     }
 

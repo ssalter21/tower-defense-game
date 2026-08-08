@@ -54,15 +54,17 @@ public class CostTableTests
         // creep rather than living in a budget of its own.
         //
         // OBSERVED: size CostTable's arrays at types.Count and write the
-        // snapshot over the last unit's row. This goes red on the mortar --
-        // "Nothing on the cost table prices one unit of type 4" -- which is what
-        // a line item that displaced a unit instead of joining it looks like.
+        // snapshot over the last unit's row. This goes red on the Warrior --
+        // "Nothing on the cost table prices one unit of type 13" -- which is
+        // what a line item that displaced a unit instead of joining it looks
+        // like.
         CostTable costs = TheRuleset.Costs();
 
         Assert.Equal(10, costs.PriceOf(Purchase.Unit(1)));
         Assert.Equal(9, costs.PriceOf(Purchase.Unit(2)));
         Assert.Equal(40, costs.PriceOf(Purchase.Unit(3)));
-        Assert.Equal(90, costs.PriceOf(Purchase.Unit(4)));
+        Assert.Equal(92, costs.PriceOf(Purchase.Unit(4)));
+        Assert.Equal(31, costs.PriceOf(Purchase.Unit(13)));
         Assert.Equal(25, costs.PriceOf(Purchase.Snapshot));
 
         // And the snapshot's price is the ruleset's, read back rather than

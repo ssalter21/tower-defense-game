@@ -8,10 +8,12 @@ This is a working document. It is meant to be opened, argued with and edited eve
 specified, so it is written line-by-line rather than as a wide table — a wide table is unreadable in a diff and
 miserable to edit by hand.
 
-> **Signed 8 August 2026 by [#102](https://github.com/ssalter21/tower-defense-game/issues/102).** Everything
-> below has numbers. **None of it is in `content/units.txt` yet** — that edit, the retirements, the currency
-> rename and the regenerated goldens are one commit on `effort/first-playable`, and until it lands this
-> document is ahead of the file. What changed its mind on the way here is in
+> **Signed 8 August 2026 by [#102](https://github.com/ssalter21/tower-defense-game/issues/102), and live in
+> `content/units.txt` since [#104](https://github.com/ssalter21/tower-defense-game/issues/104).** The eight
+> signed rows, the five retirements, the currency rename and the regenerated goldens all landed on
+> `effort/first-playable`. Every unit below marked `live` has a row you can read; everything still marked
+> `proposed` is waiting on a lever the schema does not have, and those are listed under
+> [what is deliberately absent](#what-is-deliberately-absent). What changed its mind on the way here is in
 > [the decision log](decision-log.md#8-august-2026--the-roster-is-signed-and-the-clock-slows).
 
 ## How to edit this
@@ -113,33 +115,38 @@ deletes one of those two cases.
 
 ## The index
 
-| id | unit | role | tier | status | row today |
-|---|---|---|---|---|---|
-| 1 | Minion | creep | — | signed | `grunt` |
-| 2 | Skeleton Scout | creep | — | signed | `runner` |
-| 3 | Archer | tower | 1 | signed | `bolt` |
-| 4 | Mage | tower | 1 | signed | `mortar` |
-| 7 | Necromancer | creep | — | signed | `drifter` |
-| 11 | Soldier | tower | 1 | signed | — new |
-| 12 | Skeleton | creep | — | signed | — new |
-| 13 | Skeleton Warrior | creep | — | signed | — new |
-| — | Captain | tower | 2 | proposed | |
-| — | Ranger | tower | 2 | proposed | |
-| — | Pyromancer | tower | 2a | proposed | |
-| — | Cryomancer | tower | 2b | proposed | |
-| — | Hero | tower | 3 | proposed | |
-| — | Marksman | tower | 3 | proposed | |
-| — | Frostfire Archmage | tower | 3 | proposed | |
-| 5 | ~~wisp~~ | creep | — | retired | see [below](#what-is-retired-and-why) |
-| 6 | ~~bulwark~~ | creep | — | retired | |
-| 8 | ~~lancer~~ | creep | — | retired | |
-| 9 | ~~sniper~~ | tower | — | retired | |
-| 10 | ~~sieger~~ | tower | — | retired | |
+| id | unit | role | tier | status | label in `units.txt` | was |
+|---|---|---|---|---|---|---|
+| 1 | Minion | creep | — | live | `minion` | `grunt` |
+| 2 | Skeleton Scout | creep | — | live | `skeleton-scout` | `runner` |
+| 3 | Archer | tower | 1 | live | `archer` | `bolt` |
+| 4 | Mage | tower | 1 | live | `mage` | `mortar` |
+| 7 | Necromancer | creep | — | live | `necromancer` | `drifter` |
+| 11 | Soldier | tower | 1 | live | `soldier` | — new |
+| 12 | Skeleton | creep | — | live | `skeleton` | — new |
+| 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` | — new |
+| — | Captain | tower | 2 | proposed | — | |
+| — | Ranger | tower | 2 | proposed | — | |
+| — | Pyromancer | tower | 2a | proposed | — | |
+| — | Cryomancer | tower | 2b | proposed | — | |
+| — | Hero | tower | 3 | proposed | — | |
+| — | Marksman | tower | 3 | proposed | — | |
+| — | Frostfire Archmage | tower | 3 | proposed | — | |
+| 5 | ~~wisp~~ | creep | — | retired | — | see [below](#what-is-retired-and-why) |
+| 6 | ~~bulwark~~ | creep | — | retired | — | |
+| 8 | ~~lancer~~ | creep | — | retired | — | |
+| 9 | ~~sniper~~ | tower | — | retired | — | |
+| 10 | ~~sieger~~ | tower | — | retired | — | |
 
-**The file will interleave towers and creeps, and it will have gaps.** Ids ascend strictly down the file and
-ascend past the roles, so two creeps sit below a tower and 5, 6, 8, 9 and 10 are permanently absent. Both are
-deliberate: the order records what was decided when, and the gaps make the retirements visible instead of
-papering over them. Grouping is what this document is for.
+**The file interleaves towers and creeps, and it has gaps.** Ids ascend strictly down the file and ascend past
+the roles, so two creeps sit below a tower and 5, 6, 8, 9 and 10 are permanently absent. Both are deliberate:
+the order records what was decided when, and the gaps make the retirements visible instead of papering over
+them. Grouping is what this document is for.
+
+**Labels in `units.txt` are lowercase single tokens, so the two-word names are hyphenated there.** The parser
+allows letters, digits, `-` and `_` and nothing else — a space would be two fields — so *Skeleton Warrior* is
+`skeleton-warrior` on its row. The label is for people reading the file and for error messages; nothing in the
+simulation branches on it, and renaming one moves no hash.
 
 ---
 
@@ -156,7 +163,7 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 
 ## The Soldier line — impact
 
-### 11 · Soldier · tier 1 · status signed
+### 11 · Soldier · tier 1 · status live
 
 - **Does** — one hex of range, single target, fast. Height does not change it.
 - **Looks** — knight, full helm down, short sword.
@@ -194,7 +201,7 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 
 ## The Archer line — pierce
 
-### 3 · Archer · tier 1 · status signed
+### 3 · Archer · tier 1 · status live
 
 - **Does** — three hexes of range, modest damage, fast.
 - **Looks** — the ranger model.
@@ -231,7 +238,7 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 
 ## The Mage line — magic
 
-### 4 · Mage · tier 1 · status signed
+### 4 · Mage · tier 1 · status live
 
 - **Does** — magic damage with splash of one additional hex.
 - **Looks** — the mage, book in hand.
@@ -307,7 +314,7 @@ not available: `armourValue 0` means the type still applies, at zero points.
 > five creeps and it resolves itself the moment the roster grows. It was not worth distorting the fiction to
 > fix now.
 
-### 1 · Minion · status signed
+### 1 · Minion · status live
 
 - **Does** — health and nothing else. The baseline body.
 - **Looks** — the minion skin, no tools.
@@ -318,7 +325,7 @@ not available: `armourValue 0` means the type still applies, at zero points.
 **This is the row every other row is read against**, which is why nothing about it moved except the clock.
 Re-baselining it would re-baseline every measurement in the sweep.
 
-### 12 · Skeleton · status signed
+### 12 · Skeleton · status live
 
 - **Does** — the Minion with a little armour. The low rung of the armoured ladder.
 - **Looks** — the minion skin with shield and sword.
@@ -331,7 +338,7 @@ Re-baselining it would re-baseline every measurement in the sweep.
 > relationship with the Scout that makes the target-selection tiebreak get consulted at all. A boring middle
 > rung was judged cheaper than deleting a test.
 
-### 13 · Skeleton Warrior · status signed
+### 13 · Skeleton Warrior · status live
 
 - **Does** — slow and genuinely armoured. The heavy.
 - **Looks** — the warrior skeleton, full kit.
@@ -343,7 +350,7 @@ Re-baselining it would re-baseline every measurement in the sweep.
 That was the open question the earlier draft left: "some armour" and "armour" differ by a word, and here they
 differ by a number and a cadence.
 
-### 2 · Skeleton Scout · status signed
+### 2 · Skeleton Scout · status live
 
 - **Does** — fast, no armour value.
 - **Looks** — the rogue skeleton.
@@ -353,7 +360,7 @@ differ by a number and a cadence.
 
 **Exactly twice the Minion's speed, and that is load-bearing rather than tidy.** See [the clock](#the-clock).
 
-### 7 · Necromancer · status signed
+### 7 · Necromancer · status live
 
 - **Does** — walks. **The aura is not signed** — see below.
 - **Looks** — the mage skeleton, staff, casting continuously. A large arcane bubble showing the radius.
@@ -411,17 +418,29 @@ sweep was proposed as the swarm's answer, so until a swarm exists it is answerin
 
 ## The tuning target
 
-**Against the committed defense and wave, thirteen of forty creeps leak.** That is deliberate: a defense that
-holds tells you nothing when it changes, and one that collapses tells you nothing either. A third leaking makes
-the leak count a number a person can watch.
+**Against the committed defense and wave, seventeen of forty creeps leak.** That is deliberate: a defense that
+holds tells you nothing when it changes, and one that collapses tells you nothing either. A partial break makes
+the leak count a number a person can watch. It was thirteen of forty before the signature.
 
-**Two changes in this signature push on it**, and in opposite directions from the same commit — the Mage moving
-to magic makes the defense stronger, and the rounding in the dilated speeds moves things by about a percent
-either way.
+**Measured, and the measurement moved something.** Three changes in this commit push on the leak, and the third
+was not on the list:
 
-**So the leak is measured before anything is retuned.** If it lands between roughly a quarter and a half of the
-wave, nothing moves. If it falls outside that, the lever is the wave counts in `content/wave.txt` rather than
-the creep rows above, which are signed.
+| | Direction | Size |
+|---|---|---|
+| The Mage moves impact → magic | Defense stronger — magic hits Armoured for 140 where impact hit 100 | Large |
+| Rounding in the dilated speeds | Either way | ~1% |
+| **The clock dilated and `wave.txt`'s ticks did not** | Defense far weaker — the wave arrives three times faster than the towers now fire | **13 → 25 of 40** |
+
+The third is what the "measure before you retune" rule was for. Left alone, `content/wave.txt` would have
+compressed the whole wave threefold against the new clock, and the leak landed at **25 of 40** — outside the
+quarter-to-half band. Multiplying every order tick in that file by three, which is the one lever the signature
+authorised, brought it to **17 of 40**. No creep row moved.
+
+> **One part of the dilation could not reach content at all.** The fifteen-tick release cadence inside a column
+> is a simulation constant, not a number in `wave.txt`, so a column of ten still empties over a hundred and
+> fifty ticks while its units walk a third as far in them — leaving columns three times denser in space than
+> they were. That is a real change in wave shape. It cannot be undone from content: the constant is covered by
+> the simulation version and moving it would retire every stored replay.
 
 ## What this roster needs that the schema does not have
 
@@ -481,3 +500,4 @@ reasoning. What is left:
 4. **The Mage's price rests on an unmeasured three.** Bodies-under-a-splash is the only number in the cost
    rule that was guessed, and it is a multiplier rather than a term.
 5. **The three absent shapes need models**, and art is not chosen unattended.
+

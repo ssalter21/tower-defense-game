@@ -7,6 +7,12 @@
 # file and for error messages; nothing in the simulation branches on it, and
 # renaming one does not move the content hash.
 #
+# THE GAPS AT 5, 6, 8, 9 AND 10 ARE PERMANENT. Five rows were retired when the
+# roster was signed on 8 August 2026 -- wisp, bulwark, lancer, sniper and
+# sieger -- and because ids are never reused, those five numbers stay empty
+# forever. A stored record that pins one of them still means what it meant;
+# there is simply nothing here to author against it. See docs/roster.md.
+#
 # INTEGERS ONLY, AND NO DECIMAL POINT. The parser refuses a '.' or a ',' on a
 # data line before it even tokenises, so a designer typing 1.5 gets a load
 # error rather than a float in the tick loop. Fractions are authored as the
@@ -26,16 +32,17 @@
 # match the layout it declared is refused rather than read against shifted
 # fields.
 #
-# A NEW UNIT IS A ROW AND NEVER A COLUMN. Every shape below -- a swarm, a wall
-# that walks, a sniper that outranges every other tower by half again, a sieger
-# whose shell is nearly a second in the air -- is authored out of the columns
-# that are already here. That is what the layout row costs: a column is a format
-# version, a hash label and every record made under the old one retired, and a
-# row is a line.
+# A NEW UNIT IS A ROW AND NEVER A COLUMN. That is what the layout row costs: a
+# column is a format version, a hash label and every record made under the old
+# one retired, and a row is a line. It is also the constraint the roster was
+# signed under, and it is what several units in docs/roster.md are waiting on
+# -- a target count, a radial shot, a timed slow, an aura, a second health pool
+# and an upgrade edge are all levers these columns do not have, so the units
+# that need them are written down there and are not authored here.
 #
 # Ids ascend strictly down the file, which is what makes a duplicate a
 # comparison against the row above rather than a lookup nobody performed. They
-# ascend past the roles, so a creep authored after a tower sits below it.
+# ascend past the roles, so the towers and the creeps below interleave.
 #
 # EVERY DAMAGE AND HEALTH NUMBER IS AT THE TENFOLD SCALE. Multiplying both
 # together leaves shots-to-kill where it was and buys resolution: armour and
@@ -45,63 +52,98 @@
 # per shot and the golden trace beside these files is a different trace than
 # the one the pre-scale numbers produced.
 #
-# EVERY WALKING ROW COSTS ITS EFFECTIVE HEALTH OVER A HUNDRED AND SIXTY, and
-# every one of them lands within a few percent of that. A leak charges health
-# equal to what the creep cost to send, one for one, so what gold buys is
-# health a defense has to spend to stop it -- and effective health is the pool
-# times the armour multiplier, which is the one thing a defense cannot argue
-# with. The type chart deliberately stays out of the price: every row and every
-# column of the matrix is a permutation of the same three cells, so averaged
-# over the three attack types every armour type is worth exactly the same, and
-# an armour type that changed the price would be charging twice for a bet.
+# NEITHER SIDE OF THE PURSE IS AUTHORED. BOTH ARE ARITHMETIC. There is one
+# wallet and it buys both halves of the board, so both halves are priced in the
+# same quantity by a rule rather than by judgement.
 #
-# WHAT THAT LEAVES A ROW TO DIFFER IN IS SHAPE. Speed, granularity, and which
-# defense chews it. Four hundred gold buys fifty-seven wisps or eight
-# bulwarks, and against the committed defense both hand back about four fifths
-# of what they cost -- so choosing between them is a read of the board rather
-# than a lookup of which row was mispriced.
+# EVERY WALKING ROW COSTS ITS EFFECTIVE HEALTH OVER A HUNDRED AND SIXTY. A leak
+# charges health equal to what the creep cost to send, one for one, so what
+# gold buys is health a defense has to spend to stop it -- and effective health
+# is the pool times the armour multiplier, which is the one thing a defense
+# cannot argue with. The type chart deliberately stays out of the price: every
+# row and every column of the matrix is a permutation of the same three cells,
+# so averaged over the three attack types every armour type is worth exactly
+# the same, and an armour type that changed the price would be charging twice
+# for a bet. Signing a creep is therefore signing health, speed and armour --
+# the price follows and is never authored.
+#
+# EVERY PLACED ROW COSTS ONE GOLD PER FIVE DAMAGE A SECOND, TIMES THE BODIES A
+# SHOT HITS. You pay for the health it removes, which is the same quantity the
+# creep rule charges for, which is what lets one purse buy both. Signing a
+# tower is therefore signing damage, cooldown and how many bodies it hits.
+#
+#   THE TOWER CONSTANT IS TIED TO THE TICK RATE. "Five damage a second" is a
+#   number about seconds, and cooldowns here are in ticks at thirty ticks a
+#   second. The clock has already moved once. If it moves again, re-derive the
+#   constant or every tower silently stops being based.
+#
+#   THE RULE DOES NOT PRICE RANGE. A one-hex tower and an eight-hex tower with
+#   the same damage cost the same. That is a known gap and not an oversight:
+#   the retired sniper is the row that missed the rule worst, and it missed
+#   precisely because it was the longest-ranged thing in the game.
 #
 # THAT SAMENESS IS THE EXCHANGE RATE AND NOT A COINCIDENCE. A leak charging
 # what the creep cost means the health gold buys is the leak rate and
 # nothing else, so cost cancels out of it and a row is balanced by what it
 # survives. See docs/research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md,
-# which is also where the measurements above are written down.
+# which is also where the measurements are written down.
 #
-# THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
-# the committed wave, thirteen of forty creeps get through -- a third, near
-# enough -- over sixty-one seconds. That is the point of the tuning and not a
-# coincidence: a defense that holds tells you nothing when it changes, and a
-# defense that collapses tells you nothing either. A third leaking means the
-# leak count is a number a person can watch, and the golden trace beside these
-# files is the run that produced it.
+# WHAT THAT LEAVES A ROW TO DIFFER IN IS SHAPE. Speed, granularity, and which
+# defense chews it. The five walking rows below span armour types and a factor
+# of three in speed, so choosing between them is a read of the board rather
+# than a lookup of which row was mispriced.
 #
-# THE COMMITTED DEFENSE IS FOUR BOLTS AND TWO MORTARS, so it is a pierce line
-# with an impact tail, and every health pool below is authored against what that
+# THIRTY TICKS A SECOND, AND THE CLOCK SLOWED BY THREE ON 8 AUGUST 2026. Every
+# duration here -- cooldown, windup, backswing, flight, dying -- was multiplied
+# by three and every walking speed divided by it. Damage, health, range and
+# every cost were left exactly where they were, so this changed how the game
+# feels and no balance at all: a Minion crosses the forty-seven hex corridor in
+# fifty-six seconds instead of eighteen, and a wave resolves in about three
+# minutes instead of one.
+#
+# THE COMMITTED DEFENSE IS FOUR ARCHERS AND TWO MAGES, so it is a pierce line
+# with a magic tail, and every health pool below is authored against what that
 # line actually deals rather than against a raw roll. Pierce takes 70 against
 # Armoured and 140 against Swift, so armour for armour an Armoured body stands
 # about a quarter longer in front of it than its number says and a Swift body
-# about a sixth less. Send the same two into a magic line and the two trade
+# about a sixth less. Send the same two into an impact line and the two trade
 # places, which is the whole of what the matrix is for.
 #
-# THE GRUNT AND THE RUNNER ARE THE PAIR THE COMMITTED WAVE SENDS, and they
-# differ in speed, maximum hp and armour type -- and in the cost that follows
-# from those -- and in nothing else, so that a later fast group catches an
-# earlier slow group and unit ordering stops being theoretical.
+# ONE ATTACK TYPE PER TOWER LINE. Soldier impact, Archer pierce, Mage magic --
+# so you can read what a tower does to a body from which line it came from,
+# rather than looking the row up. That is what moved the Mage off impact when
+# the roster was signed, and it is why the three types are covered exactly once
+# each rather than lopsidedly.
 #
-# THE RUNNER IS EXACTLY TWICE THE GRUNT'S SPEED, and that is load-bearing rather
-# than tidy. Two creeps are level for exactly one tick as one passes the other,
-# and being level is the case the target-selection tiebreak exists for -- pick
-# the creep furthest along, and the lower id if two are equal. With speeds that
-# were merely different, the two would step past each other without ever landing
-# on the same distance, the tiebreak would never once be consulted, and a rule
-# nothing exercises is a rule nobody has checked. Paired with the wave releasing
-# a grunt column and a runner column on the same tick, this makes the pass a
-# thing that happens repeatedly and visibly. The lancer walks at the grunt's
-# speed exactly and the wisp at three times it, so those three meet on whole
-# ticks too; the bulwark and the drifter deliberately do not, because a pass
-# that lands between ticks is the ordinary case and it needs to exist as well.
+# THE MINION AND THE SKELETON SCOUT ARE THE PAIR THE COMMITTED WAVE SENDS, and
+# they differ in speed, maximum hp and armour type -- and in the cost that
+# follows from those -- and in nothing else, so that a later fast group catches
+# an earlier slow group and unit ordering stops being theoretical.
 #
-#      id  label   role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue
+# THE SCOUT IS EXACTLY TWICE THE MINION'S SPEED, and that is load-bearing
+# rather than tidy. Two creeps are level for exactly one tick as one passes the
+# other, and being level is the case the target-selection tiebreak exists for
+# -- pick the creep furthest along, and the lower id if two are equal. With
+# speeds that were merely different, the two would step past each other without
+# ever landing on the same distance, the tiebreak would never once be
+# consulted, and a rule nothing exercises is a rule nobody has checked. Paired
+# with the wave releasing a Minion column and a Scout column on the same tick,
+# this makes the pass a thing that happens repeatedly and visibly. The Skeleton
+# walks at the Minion's speed exactly, so those three meet on whole ticks too;
+# the Necromancer at 33 and the Warrior at 18 deliberately do not, because a
+# pass that lands between ticks is the ordinary case and it needs to exist as
+# well.
+#
+# THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
+# the committed wave, seventeen of forty creeps get through -- a little over
+# two fifths -- across a hundred and eighty-nine seconds. That is the point of
+# the tuning and not a
+# coincidence: a defense that holds tells you nothing when it changes, and a
+# defense that collapses tells you nothing either. A partial break means the
+# leak count is a number a person can watch, and the golden trace beside these
+# files is the run that produced it.
+#
+#      id  label             role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue
 #
 # role     : moving (walks the corridor) | placed (stands where it was put)
 # maxHp    : zero means the unit has no health pool and cannot be damaged
@@ -116,13 +158,11 @@
 
 layout 2
 
-unit   1   grunt    moving  1550   85     0      0         0       0          0       0       none        0       12     10    none    armoured   0
-unit   2   runner   moving  1500   170    0      0         0       0          0       0       none        0       12      9    none    swift      0
-unit   3   bolt     placed  0      0      3200   6         3       2          90      150     hitscan     0       0      40    pierce  none       0
-unit   4   mortar   placed  0      0      4600   18        7       5          210     340     projectile  11      0      90    impact  none       0
-unit   5   wisp     moving  1100   255    0      0         0       0          0       0       none        0       8       7    none    arcane     0
-unit   6   bulwark  moving  5000   55     0      0         0       0          0       0       none        0       20     45    none    armoured  45
-unit   7   drifter  moving  2400   100    0      0         0       0          0       0       none        0       12     19    none    arcane    25
-unit   8   lancer   moving  3400   85     0      0         0       0          0       0       none        0       14     21    none    swift      0
-unit   9   sniper   placed  0      0      8000   45        20      10         1300    1700    hitscan     0       0      200   magic   none       0
-unit  10   sieger   placed  0      0      6500   60        25      12         2600    3400    projectile  25      0      300   impact  none       0
+unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0
+unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0
+unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0
+unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0
+unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25
+unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0
+unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20
+unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45
