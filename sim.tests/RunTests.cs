@@ -503,7 +503,7 @@ public class RunTests
         //
         // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
         // outcome.LeakCostDealt in Run.Advance. The purse assertion goes red,
-        // the run's 1860 against the fold's 2131: the run starts being paid for
+        // the run's 1860 against the fold's 2106: the run starts being paid for
         // what got past it rather than for what it got past the field, and the
         // fold and the payment stop being the same arithmetic.
         Ruleset rules = TheRuleset.Committed();
@@ -525,7 +525,7 @@ public class RunTests
 
         // And it is money rather than a column of zeroes: attacking pays its
         // sender, on top of what turning up pays.
-        Assert.Equal(170, bonus);
+        Assert.Equal(155, bonus);
         Assert.Equal(1000, rules.IncomeBasePerWave * run.Round);
     }
 

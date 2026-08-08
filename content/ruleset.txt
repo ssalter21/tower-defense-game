@@ -107,9 +107,10 @@ purse         100
 #
 # THESE BANDS PAY, AND WHAT THEY ARE MEASURED AGAINST IS THE POOL A RUN WAS
 # HANDED. A run prices ten of the pool's own rounds and reads its percentile off
-# that spread, so the canned pair in field.txt is the distribution today and a
-# stored population of real rounds is the same argument tomorrow. Retuning a
-# threshold or a percentage here is an edit to these four lines and no compile.
+# that spread, so the canned opponent field.txt describes is the distribution
+# today and a stored population of real rounds is the same argument tomorrow.
+# Retuning a threshold or a percentage here is an edit to these four lines and
+# no compile.
 
 band            0        0
 band           50        5

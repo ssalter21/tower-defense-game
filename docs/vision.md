@@ -867,8 +867,10 @@ which are worth nothing if the answer to the cheap ones was no.
   other", now this — and the churn is the point of settling it on paper before content exists.)* The economy is
   one purse, a flat base plus percentile-band bonuses on top of it, 10% interest on the bank, an unlock gate
   and scarce wave slots. **The trap is shipping the cost column and the base income and calling step 1 done**,
-  because the base is the only part computable without a field — and the parts that are not computable yet are
-  the parts that stop attacking being dominated. See [§3](#one-purse--restored-6-august-2026).
+  because the base is the part that needs nothing to be measured against, and the percentile bands — which do,
+  and which are what stops attacking being dominated — are the part that gets dropped. Step 1 pays both: the
+  balance harness's canned pool is the distribution the bands are read off until real ghosts are stored. See
+  [§3](#one-purse--restored-6-august-2026).
 - **Step 2 opens the input seam, and it is the one place in this sequence worth being slow.** There are ADRs
   *and tests* asserting that no input reaches the simulation, and that discipline is why determinism holds.
   The shape that preserves it: **the view emits a command, the command goes into the record, the record is

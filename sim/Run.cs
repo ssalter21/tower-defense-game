@@ -83,6 +83,14 @@ namespace Sim
         private const string MatchLabel = "run-match/1";
 
         /// <summary>
+        /// Names the derivation of which member of the pool one sample of the
+        /// field's own worth is taken from. Its own position rather than a walk
+        /// down the pool, so that a population wider than the sample count is
+        /// sampled rather than truncated at its first members.
+        /// </summary>
+        private const string MeasureLabel = "run-measure/1";
+
+        /// <summary>
         /// Names the derivation of this run's filling: which game changers sit
         /// on each anchor's menu. Drawn once, at run start.
         /// </summary>
@@ -442,17 +450,28 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Each sample is the average of its K resolutions, exactly as this
-        /// run's own rounds are.</b> A percentile compares one number against a
-        /// spread of numbers, so the two sides have to be the same measurement:
-        /// scoring an averaged round against single matches would widen the
-        /// field's tails and pin every honest run to the middle band.
+        /// <b>Each sample is the average of its K resolutions, as a round's own
+        /// score is.</b> A percentile compares one number against a spread of
+        /// numbers, so the two sides have to be the same measurement: scoring an
+        /// averaged round against single matches would widen the field's tails
+        /// and pin every honest run to the middle band.
         /// </para>
         /// <para>
         /// <b>Only the offense is resolved.</b> What the bands are measured
         /// against is leak cost dealt, so what the pool's rounds would have taken
         /// back is never played -- the measurement costs half of what a round
-        /// costs rather than all of it.
+        /// costs rather than all of it. What it sends carries no game changer,
+        /// for the reason the defending direction's does not: the pool is stored
+        /// orders rather than stored runs, and nothing in it says which of its
+        /// bodies was one.
+        /// </para>
+        /// <para>
+        /// <b>Both the member being measured and the field it meets are drawn.</b>
+        /// A walk down the pool would sample a population wider than
+        /// <see cref="FieldSamples"/> by truncating it at its first members. The
+        /// field a sample meets is the field the round of the same index meets,
+        /// which is what makes the spread this comes back with the spread of the
+        /// opponents this run will actually be scored against.
         /// </para>
         /// <para>
         /// A pool thinner than K is not a thin measurement. The draw is with
@@ -464,10 +483,11 @@ namespace Sim
         private PerformanceField MeasureField()
         {
             var worth = new int[FieldSamples];
+            var dice = new Pcg32(Derived(MeasureLabel, 0, 0, 0));
 
             for (int sample = 0; sample < worth.Length; sample++)
             {
-                RoundOrders member = _pool.At(sample % _pool.Size);
+                RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
                 int[] field = FieldFor(sample);
                 long dealt = 0;
 

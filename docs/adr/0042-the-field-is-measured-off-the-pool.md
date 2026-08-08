@@ -69,6 +69,12 @@ roster, and the extra income buys creeps, so the report moved: the win-rate colu
 a 41%–66% band and every creep's leak cost dealt rose by half again. The ordering between creeps carried over,
 which is the part that says the report is still an instrument.
 
+**It costs half a run per run.** A round is `FieldSize` opponents in both directions and the measurement is
+`FieldSamples` samples in one, so the committed sweep goes from 9,600 matches to 14,400 and from about eight
+seconds to about thirteen. Measuring once per sweep rather than once per run would have been cheaper and would
+have made the distribution a property of the harness rather than of the run's own seed; a run is the thing that
+is paid, so it is the thing that measures.
+
 **The four authored bands behave as two against a population of one.** Ten samples of the canned opponent land
 between 14 and 19 sauce, so a round is above the field or below it and almost never inside it; the 50th and
 75th thresholds are reachable only by a round dealing exactly 18 or 19. That is a property of the stand-in and

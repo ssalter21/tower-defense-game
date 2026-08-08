@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Sim.Tests;
 
 /// <summary>
@@ -27,8 +29,10 @@ public class SweepTests
         // or something in there is reading the machine.
         //
         // The rows are compared field by field rather than by their printed
-        // form, because ToString carries three of the ten numbers and a sweep
-        // that moved the other seven would compare equal.
+        // form, because ToString carries three of the twelve numbers and a sweep
+        // that moved the other nine would compare equal. The two payment columns
+        // are in that comparison for the same reason; what pins their values
+        // rather than their determinism is the row test below.
         //
         // OBSERVED: seed the runs from the run index alone -- drop the plan's
         // seed out of Hash64.Start(RunLabel) in SweepPlan.SeedOf. This stays
@@ -94,7 +98,10 @@ public class SweepTests
 
             Assert.True(
                 row.BonusSauce >= 0,
-                row.Label + " earned " + row.BonusSauce + " sauce in bonuses, which is a penalty.");
+                row.Label
+                + " earned "
+                + row.BonusSauce.ToString(CultureInfo.InvariantCulture)
+                + " sauce in bonuses, which is a penalty.");
 
             if (row.Ingredients != SweepRow.AllIngredients)
             {
@@ -110,7 +117,7 @@ public class SweepTests
         Assert.True(
             bonus > 0,
             "Every creep in the report earned nothing at all for what it sent, over "
-            + incomeBase
+            + incomeBase.ToString(CultureInfo.InvariantCulture)
             + " sauce of flat base -- which is an economy paying the base alone.");
     }
 
