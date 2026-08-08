@@ -40,6 +40,13 @@ at its top rather than being rewritten.
 | [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
 | [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
 
+**Asset research**, on the art that is actually on the machine:
+
+| Note | The question it answers |
+|---|---|
+| [What is actually inside The Complete KayKit Collection v6.1](research/kaykit-collection-inventory.md) | What does the downloaded bundle really contain — packs, rigs, clips, characters, triangle counts — read from the archive rather than from a listing? |
+| [The KayKit model index](research/kaykit-model-index.md) | Does KayKit have a *thing*, and what is the file called? All 2,252 distinct model names |
+
 **Build research**, on the tools rather than the game:
 
 | Note | The question it answers |
