@@ -15,6 +15,7 @@ is real — and every mode of it is the same machine at a different latency.*
 |---|---|
 | [The Vision](vision.md) | The destination, the pillars, the open questions, and [the build order](vision.md#8-the-build-order) |
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
+| [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
 | [`adr/`](adr/) | Why the code is shaped the way it is — 35 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
@@ -45,6 +46,16 @@ at its top rather than being rewritten.
 | Note | The question it answers |
 |---|---|
 | [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
+| [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
+| [Cost is not a balance lever under a one-for-one leak](research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md) | If a leak charges what the creep cost, what does the cost column actually control? |
+| [A canned field of one collapses the bands](research/a-canned-field-of-one-collapses-the-bands.md) | Four authored performance bands behave as two. Is the mechanism wrong, or the stand-in field? |
+
+**Asset research**, on the art that is actually on the machine:
+
+| Note | The question it answers |
+|---|---|
+| [What is actually inside The Complete KayKit Collection v6.1](research/kaykit-collection-inventory.md) | What does the downloaded bundle really contain — packs, rigs, clips, characters, triangle counts — read from the archive rather than from a listing? |
+| [The KayKit model index](research/kaykit-model-index.md) | Does KayKit have a *thing*, and what is the file called? All 2,252 distinct model names |
 
 **Build research**, on the tools rather than the game:
 

@@ -189,7 +189,7 @@ the purse below needs no interest cap.
 > ⚠️ **The cap may be lifted later, so run length is a parameter and not a constant** — and **removing it
 > forces an interest cap**, because uncapped 10% a wave is bounded today only by the run being ten waves long.
 
-**Health is a pool denominated in sauce. A leaked creep costs health equal to its cost, one for one.** A
+**Health is a pool denominated in gold. A leaked creep costs health equal to its cost, one for one.** A
 10-cost creep does 10 damage.
 
 That single sentence is doing most of the work in this section, because it makes health and money the same
@@ -204,7 +204,7 @@ unit:
 - **The pool is about three waves' worth of average creep value** — deep enough that one deliberate concession
   is affordable and a second is a real decision, shallow enough that a losing player is out around wave six or
   seven. A single number, and a step 4 sweep target rather than an argument.
-- **Sauce cannot repair health.** Permanent depletion is what makes the pool a clock, and the clock is the
+- **Gold cannot repair health.** Permanent depletion is what makes the pool a clock, and the clock is the
   thing that ejects a struggling player. A repair rate would sell them a way to stay in a run they are losing.
 
 **Death is in. Zero health ends the run there.** The wall sits at the bottom of a graded pool rather than in
@@ -214,7 +214,7 @@ place of one — Legion TD 2's *"King HP is a resource, to a certain extent."* F
 **Runs are ranked by waves survived first, then health remaining.** The graded pool therefore does double duty
 — the resource during the run and the placing at the end of it — so no third number has to be invented.
 
-**The offense never enters the placing. It pays in sauce and nothing else.**
+**The offense never enters the placing. It pays in gold and nothing else.**
 
 > ⚠️ **This is in tension with [*"the attacking half is as deep as the defending half"*](#depth-is-the-point)
 > below.** Secondary in *scoring* is not the same as shallow in *decision* — the wave slots, the unlock gate
@@ -234,8 +234,14 @@ Decided in [#74](https://github.com/ssalter21/tower-defense-game/issues/74), whi
 
 ### One purse — *restored 6 August 2026*
 
-**One currency, called sauce. Every coin of income lands as sauce, and sauce buys the defense and the offense
+**One currency, called gold. Every coin of income lands as gold, and gold buys the defense and the offense
 alike.**
+
+> **The currency was called *sauce* until 8 August 2026.** Nothing about the purse changed — only the word. The
+> roster settled on a register of knights, archers, mages and skeletons, and *sauce* was the one term in the
+> economy that no unit on the board could have been named after. Renaming it cost comments and identifiers and
+> moved no stored record, because the word never appears in a data file. See
+> [the decision log](decision-log.md#8-august-2026--the-roster-is-signed-and-the-clock-slows).
 
 This reverses the two purses adopted earlier the same day, and restores the single purse — but **not the
 argument the single purse used to rest on.** It stands now for a reason it did not have that morning, and the
@@ -264,7 +270,7 @@ cheapest:
   slot is one creep type plus a count, and slots may be left empty. **A slot spent on a cheap column is a slot
   not spent on a heavy unit** — which is precisely the opportunity cost the second wallet was there to
   manufacture.
-- **Timing comes from interest.** Unspent sauce banks and earns **10% a wave, rounded up**, uncapped for now.
+- **Timing comes from interest.** Unspent gold banks and earns **10% a wave, rounded up**, uncapped for now.
   Every purchase is therefore measured against compounding, and leaving a slot empty is not waste but
   investment. That is the dial the skill note said one purse had removed, and it is now attached to every
   purchase in the game rather than to one of two wallets.
@@ -495,7 +501,7 @@ run against the anchors' three. One of the two layers has to move, and it is thi
 
 **Anchors do not repeat, and they escalate.** A given game changer appears on exactly one anchor's menu — nine
 distinct creeps across a shape — so nobody doubles down on the same one twice, and wave 9's three are stronger
-than wave 3's, matching the wave widening and the sauce curve. A flat pool could hand someone a wave-9-grade
+than wave 3's, matching the wave widening and the gold curve. A flat pool could hand someone a wave-9-grade
 unit at wave 3, where nothing yet answers it.
 
 **Exactly one anchor per shape opens a hard counter, and it is wave 9.** The other two are extreme points on
@@ -641,7 +647,7 @@ genuinely different game from the lobby rather than a slower copy of it.
 > **What you *can* see in the round-robin is the incoming waves, and that is a different object** — *added
 > 7 August 2026*. A snapshot shows a **wave being sent at your stage**, never a defense, so the lookup defect
 > above does not apply: a wave is a composition you build against, not a board you solve. **Ten snapshots are
-> free per run and further ones are bought with sauce.** Scouting is therefore one mechanic across all three
+> free per run and further ones are bought with gold.** Scouting is therefore one mechanic across all three
 > latencies — *pay to reduce the blur on what you are facing* — and only the source of the blur differs by
 > mode. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026).
 
@@ -915,16 +921,16 @@ it already did, and the right-hand column links to it rather than restating it. 
 
 | # | Question | What is already known |
 |---|---|---|
-| 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called sauce. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
+| 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called gold. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
 | 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9 — *softened to a **steep** counter, 4.00×, by [#75](https://github.com/ssalter21/tower-defense-game/issues/75)*. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
-| 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in sauce and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
+| 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in gold and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
 | 4 | ~~How wide is the damage-type matrix, and what is the armour formula?~~ **✅ Decided** | **Resolved 7 August 2026 by [#75](https://github.com/ssalter21/tower-defense-game/issues/75).** A 3×3 Latin square with cells in {70, 100, 140} — a 2:1 spread — and `dealt = (base + bonus) × cell / (100 + armour)`, floor 1. `k` folds to 1, so one point of armour is one percent of base effective health. Hard counters live on a separate `bonusVsTag` layer, which is why the matrix could stay narrow. **Every damage and health number in the game is multiplied by ten**, because integer resolution is bought with the size of the numbers. Detail in [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) |
-| 5 | ~~What does the player get to compute before they commit, and what does it cost them?~~ **✅ Decided** | **Resolved 7 August 2026 by [#76](https://github.com/ssalter21/tower-defense-game/issues/76).** **Nothing is forecast.** Mechanism is free, total and always on; outcome is not computed at all, in any mode, free or paid — the offense least of all. The one pre-commit channel is **scouting incoming waves**: free in the lobby as of the previous round, ten free snapshots per run in the round-robin and sauce beyond. The simulator's home is the **retrospective**, which is free, unlimited and exact. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026) |
+| 5 | ~~What does the player get to compute before they commit, and what does it cost them?~~ **✅ Decided** | **Resolved 7 August 2026 by [#76](https://github.com/ssalter21/tower-defense-game/issues/76).** **Nothing is forecast.** Mechanism is free, total and always on; outcome is not computed at all, in any mode, free or paid — the offense least of all. The one pre-commit channel is **scouting incoming waves**: free in the lobby as of the previous round, ten free snapshots per run in the round-robin and gold beyond. The simulator's home is the **retrospective**, which is free, unlimited and exact. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026) |
 
 > **All five are now decided**, and the [map](https://github.com/ssalter21/tower-defense-game/issues/70) that
 > carried them has reached its destination. Step 1 is unblocked. **Two obligations fall out of question 5 and
 > belong to the execution effort:** the cost column needs a **non-unit line item**, because a scouting snapshot
-> beyond the free ten is bought with sauce out of the one purse; and the **free-snapshot count and the price
+> beyond the free ten is bought with gold out of the one purse; and the **free-snapshot count and the price
 > beyond it are step 4 sweep parameters**, not constants — ten is a starting point, not a decision.
 
 ### The eight seams, and where they land
@@ -1161,7 +1167,7 @@ choice or stated absolutely:
 | Where | What it said | What is true now |
 |---|---|---|
 | **§3** — the lobby's scouting | The opponent's defense is shown "**live, or** as of the previous round" | **As of the previous round only.** What they are building now is never shown, in any mode |
-| **§3** — the round-robin | "**In the round-robin you cannot** [scout]" | You cannot scout a **defense**. You can buy snapshots of the **waves** being sent at your stage — ten free per run, sauce beyond |
+| **§3** — the round-robin | "**In the round-robin you cannot** [scout]" | You cannot scout a **defense**. You can buy snapshots of the **waves** being sent at your stage — ten free per run, gold beyond |
 
 Neither disturbs [the skill note's](research/fun-and-skill-expression.html) finding, which is the reason that
 sentence was absolute in the first place: the defect it names is that a *frozen defense* is fully inspectable
@@ -1261,7 +1267,7 @@ unblocked.
     sweep target.
 - ~~**What a run is.**~~ **Closed 7 August 2026 by
   [#74](https://github.com/ssalter21/tower-defense-game/issues/74) — ten waves, a field of ten each round, a
-  sauce-denominated health pool, and death.** See
+  gold-denominated health pool, and death.** See
   [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026). What it left open, and deliberately:
   **the gamble** — opting out of the field average to face a single opponent drawn from the distribution,
   possibly choosing where in the distribution to draw from. It is the antidote to averaging making every round
@@ -1270,7 +1276,7 @@ unblocked.
 - ~~**What the player gets to compute before they commit, and what it costs them.**~~ **Closed 7 August 2026 by
   [#76](https://github.com/ssalter21/tower-defense-game/issues/76) — nothing is forecast.** Mechanism is free
   and total, outcome is not computed at all, and the only pre-commit channel is scouting **incoming waves**:
-  free in the lobby as of the previous round, ten free snapshots per run in the round-robin, sauce beyond. The
+  free in the lobby as of the previous round, ten free snapshots per run in the round-robin, gold beyond. The
   simulator's home is the retrospective. See
   [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026). Two things it left open, and
   deliberately:
@@ -1278,7 +1284,7 @@ unblocked.
     onto your own build**, aggregated over the simulated games. It needs per-cell kill attribution and a board
     to draw on, so it is [seam 7](#7--the-interface) and [seam 8](#8--the-presentation) rather than paperwork —
     and it is explicitly a thing to feel out in play rather than settle on paper. Until it exists, the
-    round-robin's sauce sink beyond ten snapshots is the only paid information in the game.
+    round-robin's gold sink beyond ten snapshots is the only paid information in the game.
   - **The free-snapshot count and the price beyond it.** Ten is a starting point. Both are step 4 sweep
     parameters, and the snapshot price is the first non-unit line in the cost column.
 
@@ -1475,7 +1481,7 @@ judgement.
 
 **The one pre-commit information channel is scouting, and it shows incoming waves.** Free in the lobby (the
 previous round's board, [never live](#what-you-see-of-your-opponent-depends-on-the-mode-and-that-is-deliberate));
-in the round-robin, **ten snapshots free per run and sauce for any beyond that**. It is one mechanic at three
+in the round-robin, **ten snapshots free per run and gold for any beyond that**. It is one mechanic at three
 latencies — pay to reduce the blur on what you are facing — and only the source of the blur changes.
 
 **The simulator's home is the retrospective.** After a round, analysis is free, unlimited and exact against the
