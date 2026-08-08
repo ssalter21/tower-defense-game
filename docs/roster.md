@@ -267,31 +267,41 @@ answer to [#98](https://github.com/ssalter21/tower-defense-game/pull/98)'s first
 there is only one thing to buy. **This roster gives the defensive side something to spend on**, which is what
 story 17 ("underbuilding my defense to fund my offense *is* spending health") has been missing.
 
+## Which pack is which side — *decided 8 August 2026*
+
+**KayKit's Skeletons are the creeps and the Adventurers are the towers.** This reverses the reading held
+earlier the same day, under which the evil-mirror units — the Skeletons plus the Black Knight from Mystery
+Monthly Series 5 — were going to be the defending side.
+
+It closes what had been the open question blocking the roster: the creep art source. And the pack's
+construction now works for the game rather than against it — each skeleton was built as a specific adventurer's
+deliberate twin, so **the two sides of the board are the two halves of one pack**, and a body reads against the
+tower it is the shadow of. Quaternius's Ultimate Monsters stay rejected.
+
+Anything the four skeleton models do not cover still needs a source in KayKit's register, and still needs
+choosing.
+
 ## Open questions
 
-1. **The skeletons are on the wrong side of the board, or the art decision moved.** It is recorded that
-   KayKit's evil-mirror pack — Skeletons plus the Black Knight — should be **towers**, and that the creep art
-   source is still unchosen. This roster uses skeletons as creeps and the Adventurers as towers, which is the
-   reverse. Both readings are coherent; only one is current.
-2. **Sauce.** The currency is sauce and nothing here is food. A knight-and-necromancer register makes that
+1. **Sauce.** The currency is sauce and nothing here is food. A knight-and-necromancer register makes that
    sharper, not softer. Either sauce is a joke the game is not in on, or it is the seed of a fiction nobody has
    authored yet.
-3. **Attack types are unassigned.** Soldier/Archer/Mage map onto impact/pierce/magic almost by construction and
+2. **Attack types are unassigned.** Soldier/Archer/Mage map onto impact/pierce/magic almost by construction and
    that fixes the live table's lopsidedness (two impact, one pierce, one magic), but the sheet does not say it.
    One line per type is a strong, legible rule — confirm or reject it.
-4. **Five creeps is fewer than six, and six was already tight.** The offering puts ordinary options on every
+3. **Five creeps is fewer than six, and six was already tight.** The offering puts ordinary options on every
    menu and [#91](https://github.com/ssalter21/tower-defense-game/issues/91) already had to cut `offering 3 3`
    to `offering 2 3` because the roster could not fill it. Five makes the draw more degenerate, not less. Nine
    is the number the anchor schedule's content bill implies.
-5. **No swarm and no wall.** [#94](https://github.com/ssalter21/tower-defense-game/issues/94) asked for a
+4. **No swarm and no wall.** [#94](https://github.com/ssalter21/tower-defense-game/issues/94) asked for a
    swarm, and the live `wisp` (57 bodies for 400 sauce) and `bulwark` (8 bodies for the same) are the two ends
    of the granularity axis that makes a purse a decision. Nothing here occupies either end.
-6. **Towers get nine states and creeps get five flat rows.** The attacking side is the player's half and the
+5. **Towers get nine states and creeps get five flat rows.** The attacking side is the player's half and the
    half the depth direction cares about. A roster that tiers the defense and not the offense is upside down
    relative to that. See [creep upgrade
    systems](research/creep-wave-variety-and-creep-upgrade-systems.md) — the question of whether creeps tier
    too was researched and never answered.
-7. **No numbers.** Nothing here can be signed into `units.txt` until health, speed and armour exist for every
+6. **No numbers.** Nothing here can be signed into `units.txt` until health, speed and armour exist for every
    creep and range, cooldown, damage and cost for every tower. That is what
    [#99](https://github.com/ssalter21/tower-defense-game/issues/99) is actually asking for, and it is what this
    document's blanks are.
