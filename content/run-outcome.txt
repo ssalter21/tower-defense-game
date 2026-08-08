@@ -15,22 +15,22 @@
 #
 # The run this came from:
 #
-#   command stream format 0, simulation version 1, content D2DCD5EB8C25FCB4, ruleset B8D395FFBCA5BCCC, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
+#   command stream format 0, simulation version 2, content D2DCD5EB8C25FCB4, ruleset B8D395FFBCA5BCCC, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
 #   shape      10 waves, a field of 10, death ends the run
-#   outcome    9 waves survived, 0 of 1500 health left, 813 dealt over 10 rounds, ended OutOfHealth
+#   outcome    10 waves survived, 478 of 1500 health left, 520 dealt over 10 rounds, ended OutOfWaves
 #
 # Any of those moving moves every line below it. That is the point: the outcome is retired
 # loudly rather than quietly comparing a run against a different one.
 #
 #   decision                                                    round
 
-wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 153
-wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 154
-wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 152
-wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 50, took 155
-wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 143, took 154
-wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 224, took 155
-wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 52, took 153
-wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 80, took 153
-wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 162, took 153
-wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 102, took 153
+wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 102
+wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 99
+wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 105
+wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 105
+wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 104
+wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 98
+wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 102
+wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 107
+wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 101
+wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 99

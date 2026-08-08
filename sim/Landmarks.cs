@@ -196,6 +196,47 @@ namespace Sim
             return text.ToString();
         }
 
+        /// <summary>
+        /// The table for a person to read: every row in the same layout, with
+        /// the ones that never happened named rather than dropped.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b><see cref="ToText"/> is what gets committed; this is what gets
+        /// printed.</b> The committed table refuses to render with a hole in it
+        /// because the sit-down checklist is written against it, and a row that
+        /// is simply absent sends somebody to look at a moment that never
+        /// happens. That reasoning is about the checklist and not about the
+        /// match: a report is nobody's checklist, and there the useful thing to
+        /// do with a moment that did not occur is to say so.
+        /// </para>
+        /// <para>
+        /// It matters for <c>content/golden/</c>, where a tiny historical bundle
+        /// restaged under today's rules can legitimately produce a match in
+        /// which nothing ever leaks. Refusing to print that would mean a rule
+        /// change could not be measured against the very records kept to measure
+        /// rule changes against.
+        /// </para>
+        /// </remarks>
+        public string ToReportText()
+        {
+            var text = new StringBuilder();
+
+            for (int index = 0; index < Order.Length; index++)
+            {
+                if (index > 0)
+                {
+                    text.Append('\n');
+                }
+
+                int found = IndexOf(Order[index]);
+
+                text.Append(found >= 0 ? Line(_found[found]) : Absent(Order[index]));
+            }
+
+            return text.ToString();
+        }
+
         /// <summary>One row, in the layout the committed table is written in.</summary>
         public static string Line(Landmark landmark) =>
             Keyword
@@ -227,6 +268,13 @@ namespace Sim
         /// <inheritdoc/>
         public void CreepOvertook(int creepId, int overtakenCreepId) =>
             Note(FirstOvertake, creepId, overtakenCreepId);
+
+        /// <summary>
+        /// The row for a moment that never happened. Words rather than a tick of
+        /// zero, because zero is a tick a real landmark could sit on.
+        /// </summary>
+        private static string Absent(string name) =>
+            Keyword + "  " + name.PadRight(NameWidth) + "never happened";
 
         private static string Number(int value) =>
             value.ToString(CultureInfo.InvariantCulture).PadLeft(NumberWidth);

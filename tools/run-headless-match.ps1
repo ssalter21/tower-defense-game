@@ -58,6 +58,21 @@
     could be made again. -Regenerate pins a fresh copy beside the bundle it
     re-records and leaves the older ones alone.
 
+    AND EACH IS RESTAGED RATHER THAN REPLAYED, which is the verb that survives a
+    simulation version bump. A bump retires every record made under the previous
+    value -- that is what it is for -- and these records cannot be made again, so
+    replaying them would mean each bump silently took a row out of the pool and
+    the reader branch it stood for went unproven from then on. Restaging sets the
+    version gate aside by name and labels every line it writes as a restaging, so
+    what is given up is written down rather than assumed. Nothing about a
+    golden's job is weakened: a golden is evidence about a READER -- that these
+    bytes still parse into that defense and that wave -- and restaging parses
+    them exactly as replaying does before running them to a pinned outcome. The
+    question a golden does not ask is "were these the same rules?", which is a
+    question about a competitive record. The live bundle's version gate is
+    checked in the verify above, on content/match.replay, which is the same bytes
+    as the current-version golden.
+
     THE RULESET IS THE LIVE ONE FOR EVERY RUN. It is not pinned beside a
     golden and it does not need to be: a table whose rows carry no attack or
     armour type never reaches the matrix, so the oldest goldens resolve their
@@ -352,7 +367,7 @@ if ($Regenerate) {
             throw "content/golden/$($goldenBundle.Name) has no pinned unit table beside it, so there is nothing to replay it against."
         }
 
-        $text = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
         Write-Host "wrote      $resultPath" -ForegroundColor Green
@@ -415,10 +430,15 @@ foreach ($name in @($traceName, $landmarkName)) {
     }
 }
 
-# Every historical format version, replayed. The writer emits one version and
+# Every historical format version, restaged. The writer emits one version and
 # only one, so these bundles can never be produced again -- they are the entire
 # evidence that the reader branch for each retired version still reads. A
 # deleted branch fails here, and the runner's refusal names the version.
+#
+# Restaged rather than replayed because a simulation version bump retires every
+# record made under the old value, and these are records nobody can remake: the
+# replay verb would take one row out of this pool on every bump, for good. See
+# the block on it in the description above.
 $goldens = Get-GoldenBundles
 
 if ($goldens.Count -eq 0) {
@@ -446,7 +466,7 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    $fresh = Get-SimCliOutput @('run', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
     $committed = [System.IO.File]::ReadAllText($resultPath)
 
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {

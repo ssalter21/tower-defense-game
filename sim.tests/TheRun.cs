@@ -61,20 +61,20 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(258, 128),
-        new RoundOutcome(269, 129),
-        new RoundOutcome(297, 118),
-        new RoundOutcome(241, 134),
-        new RoundOutcome(245, 140),
-        new RoundOutcome(255, 136),
-        new RoundOutcome(305, 113),
-        new RoundOutcome(295, 124),
-        new RoundOutcome(299, 118),
-        new RoundOutcome(317, 113),
+        new RoundOutcome(239, 91),
+        new RoundOutcome(245, 91),
+        new RoundOutcome(287, 92),
+        new RoundOutcome(213, 99),
+        new RoundOutcome(218, 99),
+        new RoundOutcome(230, 91),
+        new RoundOutcome(292, 86),
+        new RoundOutcome(281, 97),
+        new RoundOutcome(287, 87),
+        new RoundOutcome(308, 85),
     };
 
     /// <summary>What that run had left of the pool when its last wave resolved.</summary>
-    public const int HealthLeftInTheCommittedRun = 247;
+    public const int HealthLeftInTheCommittedRun = 582;
 
     /// <summary>The committed defense as one round's orders, sent at the committed wave.</summary>
     public static RoundOrders Orders(UnitTypeTable? types = null)

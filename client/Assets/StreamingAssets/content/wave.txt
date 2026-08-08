@@ -14,9 +14,10 @@
 # produce a confidently wrong result that still validates.
 #
 # A COUNT IS A COLUMN, NOT A PILE. The units of one order are released one
-# every fifteen ticks, which is a rule the simulation owns rather than a number
-# in this file -- so it is covered by the simulation version, and changing it
-# changes replays. Releasing a whole order on one tick was the obvious reading
+# every forty-five ticks, which is a rule the simulation owns rather than a
+# number in this file -- so it is covered by the simulation version, and
+# changing it changes replays. Releasing a whole order on one tick was the
+# obvious reading
 # and is the wrong one: units of one type share a speed and a route, so ten of
 # them released together are one stack forever, and a stack is the single
 # arrangement in which unit ordering cannot be observed at all.
@@ -24,7 +25,7 @@
 # THE TICKS ARE TUNED, and two things are being tuned for. A Skeleton Scout
 # order is placed while the Minion order before it is still walking, so the
 # fast group visibly catches the slow one -- the first overtake in the
-# committed run is at tick 347, which landmarks.txt beside this file carries
+# committed run is at tick 1096, which landmarks.txt beside this file carries
 # because a real run reported it, not because anybody worked it out. And the
 # last order is Minions rather than Scouts, so the tail of the match is the
 # slowest thing on the map and the match lasts a hundred and eighty-nine
@@ -37,16 +38,19 @@
 # those durations are counted in, so leaving them alone would have compressed
 # the whole wave threefold against a defense firing at a third of the rate.
 # Measured rather than reasoned -- left alone the leak went from thirteen of
-# forty to twenty-five, and dilated it lands at seventeen.
+# forty to twenty-five, and dilated it landed at seventeen.
 #
-#   ONE PART OF THE DILATION COULD NOT REACH THIS FILE. The fifteen-tick
-#   release cadence above is a simulation constant and not a number here, so a
-#   column of ten still empties over a hundred and fifty ticks while its units
-#   walk a third as far in them -- which leaves columns three times denser in
-#   space than they were. That is a real change in wave shape, it is not a
-#   defect in these ticks, and it cannot be undone from content: the constant
-#   is covered by the simulation version and moving it would retire every
-#   stored replay.
+#   THE PART OF THE DILATION THAT COULD NOT REACH THIS FILE WAS FINISHED IN
+#   CODE, LATER THE SAME DAY. The release cadence above is a simulation constant
+#   and not a number here, so while it stayed at fifteen a column of ten still
+#   emptied over a hundred and fifty ticks while its units walked a third as far
+#   in them -- which left columns three times denser in space than they were.
+#   That was a real change in wave shape rather than a defect in these ticks,
+#   and it could not be undone from content. It was undone where it lived:
+#   fifteen to forty-five in Match.SpawnIntervalTicks, at the cost of the
+#   simulation version bump to 2 that retiring every stored replay requires. The
+#   leak of the committed match then landed at twelve of forty, which is where a
+#   pure time change was always supposed to leave it.
 #
 #       tick  type  count  corridor
 #

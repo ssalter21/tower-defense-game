@@ -84,7 +84,19 @@ namespace Sim
         /// they share a speed and a route, and a stack is the one arrangement in
         /// which unit ordering cannot be observed.
         /// </summary>
-        public const int SpawnIntervalTicks = 15;
+        /// <remarks>
+        /// Fifteen until 8 August 2026, when the clock dilation that tripled
+        /// every duration in <c>units.txt</c>, divided every speed by three and
+        /// tripled every tick in <c>wave.txt</c> was completed here. This was the
+        /// one part of it that could not reach content: a cadence left at fifteen
+        /// emptied a column of ten over the same hundred and fifty ticks while
+        /// its units walked a third as far in them, which made columns three
+        /// times denser in space -- a balance change smuggled inside a change
+        /// that promised to be pure time. Forty-five restores the spacing, and
+        /// because the cadence is a rule rather than a number in a file, moving
+        /// it is a <see cref="SimulationVersion"/> bump.
+        /// </remarks>
+        public const int SpawnIntervalTicks = 45;
 
         /// <summary>
         /// Names the fold and its layout. The digit bumps when the set of fields
