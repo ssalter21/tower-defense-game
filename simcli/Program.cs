@@ -89,6 +89,14 @@ public static class Program
         "         Plays the bundle to the end and prints the result and the landmarks.",
         "         With --out, writes " + TraceFileName + " and " + LandmarkFileName + " there.",
         string.Empty,
+        "  restage --bundle <file> --units <file> --rules <file> [--out <directory>]",
+        string.Empty,
+        "         The same, with the simulation version and content hash gates set",
+        "         aside, and every line it writes labelled as a restaging. The",
+        "         outcome is what that defense and that wave do today; it is not",
+        "         that record's result, and this verb exists so that asking the",
+        "         question cannot be confused with replaying.",
+        string.Empty,
         "  record --map <file> --units <file> --rules <file> --defense <file>",
         "         --wave <file> --seed <number> --out <file> [--map-handle <number>]",
         string.Empty,
@@ -187,13 +195,16 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of six things.");
+            throw new UsageException("No verb. This program does one of seven things.");
         }
 
         switch (args[0])
         {
             case "run":
                 return Run(Arguments.Parse("run", args, 1, new[] { "bundle", "units", "rules", "out" }));
+
+            case "restage":
+                return Restage(Arguments.Parse("restage", args, 1, new[] { "bundle", "units", "rules", "out" }));
 
             case "record":
                 return Record(Arguments.Parse(
@@ -236,7 +247,27 @@ public static class Program
     /// <summary>
     /// Plays a committed bundle and writes down what happened.
     /// </summary>
-    private static int Run(Arguments arguments)
+    private static int Run(Arguments arguments) => Play(arguments, HeadlessRun.Of);
+
+    /// <summary>
+    /// Runs a committed bundle's defense and wave under today's rules, and says
+    /// in what it writes that this is not that record's result.
+    /// </summary>
+    /// <remarks>
+    /// The verb <c>content/golden/</c> is checked with. Those bundles are kept
+    /// forever and cannot be made again, so a simulation version bump would
+    /// otherwise retire the only evidence that each retired reader branch still
+    /// reads. See <see cref="HeadlessRun.Restaged"/>.
+    /// </remarks>
+    private static int Restage(Arguments arguments) => Play(arguments, HeadlessRun.Restaged);
+
+    /// <summary>
+    /// The two bundle verbs, which differ in one call and in nothing else. Both
+    /// read the same three files, print the same report and write the same two
+    /// generated files, so the difference between them stays visible as the one
+    /// thing it is.
+    /// </summary>
+    private static int Play(Arguments arguments, Func<byte[], string, string, HeadlessRun> play)
     {
         // The caller opens the file. The simulation receives bytes and text,
         // never a path -- it cannot open anything, and the build gate scans the
@@ -245,7 +276,7 @@ public static class Program
         string units = File.ReadAllText(arguments.Required("units"));
         string rules = File.ReadAllText(arguments.Required("rules"));
 
-        HeadlessRun run = HeadlessRun.Of(bundle, units, rules);
+        HeadlessRun run = play(bundle, units, rules);
 
         Report(run);
 
@@ -455,8 +486,19 @@ public static class Program
     }
 
     /// <summary>The result triple, the final hash, and the landmark table.</summary>
+    /// <remarks>
+    /// A restaging says so on its own line, above everything the run produced.
+    /// The label is emitted by <see cref="Sim.Restaging"/> itself rather than
+    /// composed here, so nothing that prints one of these can present the
+    /// outcome as the record's own by forgetting to.
+    /// </remarks>
     private static void Report(HeadlessRun run)
     {
+        if (run.Restaging is not null)
+        {
+            Console.Out.Write("restaged   " + run.Restaging.ToString() + "\n");
+        }
+
         Console.Out.Write(
             run.Bundle.Header.ToString()
             + "\nseed       "
@@ -468,7 +510,7 @@ public static class Program
             + "\n"
             + run.Summary()
             + "\n"
-            + run.Landmarks.ToText()
+            + run.Landmarks.ToReportText()
             + "\n");
     }
 

@@ -22,10 +22,10 @@ public static class TheMatch
     public const ulong Seed = 20260801UL;
 
     /// <summary>How many creeps get through, in the committed run.</summary>
-    public const int LeakedInTheCommittedRun = 17;
+    public const int LeakedInTheCommittedRun = 12;
 
     /// <summary>The tick the committed run ends on.</summary>
-    public const int FinalTickOfTheCommittedRun = 5692;
+    public const int FinalTickOfTheCommittedRun = 5283;
 
     /// <summary>
     /// The handle the committed map is filed under, and the one

@@ -525,7 +525,7 @@ public class RunTests
 
         // And it is money rather than a column of zeroes: attacking pays its
         // sender, on top of what turning up pays.
-        Assert.Equal(155, bonus);
+        Assert.Equal(130, bonus);
         Assert.Equal(1000, rules.IncomeBasePerWave * run.Round);
     }
 

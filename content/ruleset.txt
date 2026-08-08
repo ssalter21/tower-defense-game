@@ -127,25 +127,34 @@ band           90       20
 # pays 100 a round into, so conceding one of them whole costs around a hundred
 # and the pool is some fifteen of those.
 #
-# THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND THIS NUMBER DID NOT MOVE
-# WITH IT. The committed ten-round run in content/run-outcome.txt used to
-# concede 1251 and finish on 249 with every wave survived. It now concedes the
-# whole 1500 and dies on the tenth wave: the canned field takes about 153 a
-# round where it took about 125, because the clock dilation left its one column
-# three times denser in space and a denser column saturates the towers.
+# THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND IT REOPENED WHEN THE CLOCK
+# CHANGE WAS FINISHED. The committed ten-round run in content/run-outcome.txt
+# conceded 1251 and finished on 249 before the roster was signed; with the
+# roster signed and the release cadence still at fifteen ticks it conceded the
+# whole 1500 and died on the tenth wave, because a column three times denser in
+# space saturates the towers and the canned field took about 153 a round where
+# it had taken about 125. Dilating the cadence to forty-five undid that: the run
+# now takes about 99 a round, survives all ten waves and finishes on 478.
 #
-# THAT RUN IS COMMITTED AS IT PLAYED, AND DELIBERATELY. It is a real record of
-# a real run, it exercises the out-of-health ending that nothing else committed
-# does, and the alternative was retuning a number nobody had decided to retune
-# in order to make a demo end more comfortably. The roster signature authorised
-# content/wave.txt as its only lever and this is not that file.
+# NOTHING HERE WAS TOUCHED TO ACHIEVE ANY OF THAT. This number has been 1500
+# across all three measurements. Each time the run was committed as it played,
+# because the alternative was retuning a number nobody had decided to retune in
+# order to make a demo end more comfortably.
 #
 # WHICH LEAVES 1500 AS AN OPEN DECISION RATHER THAN A SETTLED ONE. Story 20
 # wants the pool worth about three waves of average creep value, so that one
-# deliberate concession is affordable and a second is a real decision. Fifteen
-# concessions was already far off that, and it is now nine and a half. Something
-# nearer 400 to 500 would restore the reading the story asked for. Nobody has
-# decided it, so nothing here has been changed to suit it.
+# deliberate concession is affordable and a second is a real decision. At about
+# 99 a round this is fifteen concessions, which is far off that; something
+# nearer 400 to 500 would restore the reading the story asked for.
+#
+# IT IS NOT BLOCKED ON SOMEBODY PICKING A VALUE. The taken column across the
+# committed run is 91 91 92 99 99 91 86 97 87 85 -- fourteen gold of spread over
+# ten rounds, while dealt swings from 0 to 224. The pool is not a resource the
+# player manages, it is a timer: nothing the player does moves it, because
+# Run.Advance takes the defense as a free argument and only creeps are charged.
+# Setting this to 450 today would not produce three meaningful concessions, it
+# would produce a run that ends on round five whatever anybody did. The number
+# is waiting on the purse being able to buy the defense, and not on a value.
 
 health       1500
 

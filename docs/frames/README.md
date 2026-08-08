@@ -37,19 +37,23 @@ agree on the overtake and disagreed by eleven ticks on the last creep to die.
 
 Two frames, kept as a record of what the match looks like:
 
-- `match-tick-0347.png` — the tick the committed landmark table names as the
-  first overtake, with the wave bunched around the first corner.
+- `match-tick-1096.png` — the tick the committed landmark table names as the
+  first overtake, with the wave strung out along the corridor and a shell in
+  flight.
 - `match-tick-2700.png` — the wave spread along the corridor, both kinds of
   tower engaged.
 
-**Both ticks moved on 8 August 2026** and the pair was re-captured. They were
-0366 and 0900, chosen when
+**The first tick has moved twice on 8 August 2026** and the pair was re-captured
+both times. It was 0366 when
 [#45](https://github.com/ssalter21/tower-defense-game/issues/45) landed; the
-roster signature slowed the clock by three and moved the first overtake to 347,
-so a frame captioned 366 would have been a picture of a moment the match no
-longer has. **A tick number in a filename is a claim about the committed match**,
-which is the whole reason these two are named after ticks rather than after what
-is in them.
+roster signature slowed the clock by three and moved the first overtake to 347;
+finishing that dilation in `Match.SpawnIntervalTicks` moved it again, to 1096.
+Each time a frame captioned with the old number would have been a picture of a
+moment the match no longer has. **A tick number in a filename is a claim about
+the committed match**, which is the whole reason these two are named after ticks
+rather than after what is in them — and it is why the caption is worth keeping
+attached to the landmark rather than to the number: 347 is still a tick of this
+match, so a stale frame would have gone on looking perfectly reasonable.
 
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture

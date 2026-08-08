@@ -67,6 +67,13 @@ public class DerivationTests
     private static readonly (uint Version, ulong Fingerprint)[] BehaviourByVersion =
     {
         (1u, 0xAB1569545287E5B0UL),
+
+        // Version 2 is version 1 with the within-column release cadence dilated
+        // from fifteen ticks to forty-five, finishing the 8 August 2026 clock
+        // change that content could not reach. Nothing in any content file moved
+        // to earn this row, which is the case this table exists to tell apart
+        // from a retune.
+        (2u, 0x42346EF613910009UL),
     };
 
     /// <summary>
@@ -446,13 +453,22 @@ public class DerivationTests
             }
         }
 
+        // The value is in the refusal because the sentence after it tells
+        // somebody to take it, and a refusal that throws before computing the
+        // thing it names sends them off to write a scratch test that computes it
+        // again. It is not a suggestion of what to write down: it is what this
+        // build's rules actually do, taken the only way the row may be taken.
         throw new Xunit.Sdk.XunitException(
             "Simulation version "
             + version.ToString(CultureInfo.InvariantCulture)
             + " has no behaviour fingerprint recorded for it. A bump is two edits: the constant, and a "
-            + "row here carrying what this build's rules actually do. Run this test, take the fingerprint "
-            + "it computed, and add the pair -- that is the moment every record made under the old rules "
-            + "is retired.");
+            + "row here carrying what this build's rules actually do. This build's is "
+            + RuleFingerprint().ToString()
+            + ", so the row is ("
+            + version.ToString(CultureInfo.InvariantCulture)
+            + "u, 0x"
+            + RuleFingerprint().ToString()
+            + "UL) -- and adding it is the moment every record made under the old rules is retired.");
     }
 
     /// <summary>

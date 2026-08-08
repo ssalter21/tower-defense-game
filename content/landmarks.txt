@@ -15,11 +15,11 @@
 #
 # The run this came from:
 #
-#   replay bundle format 0, simulation version 1, content D2DCD5EB8C25FCB4
+#   replay bundle format 0, simulation version 2, content D2DCD5EB8C25FCB4
 #   seed       20260801
-#   defense    D122DED01588DA02, read at defense record format 1
-#   wave       2B0DC95781AAC11E
-#   result     17 of 40 leaked, tick 5692 (189 seconds at 30 ticks a second), state 505D20CA34BC4E69
+#   defense    98B6695EA56684CD, read at defense record format 1
+#   wave       EB0707405EEE1D85
+#   result     12 of 40 leaked, tick 5283 (176 seconds at 30 ticks a second), state B58DBED2315303D2
 #
 #         landmark                 tick    who  other
 #
@@ -27,7 +27,7 @@
 # who   : the entity it happened to -- a creep, or a projectile
 # other : the other entity involved, or zero where there is only one
 
-landmark  first-overtake            347      8      7
-landmark  projectile-orphaned       347     19      0
-landmark  first-leak               1602     28      0
-landmark  last-creep-dies          5656     96      0
+landmark  first-overtake           1096     25     19
+landmark  projectile-orphaned       347     17      0
+landmark  first-leak               1662     29      0
+landmark  last-creep-dies          5247    107      0

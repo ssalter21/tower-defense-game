@@ -434,13 +434,19 @@ was not on the list:
 The third is what the "measure before you retune" rule was for. Left alone, `content/wave.txt` would have
 compressed the whole wave threefold against the new clock, and the leak landed at **25 of 40** — outside the
 quarter-to-half band. Multiplying every order tick in that file by three, which is the one lever the signature
-authorised, brought it to **17 of 40**. No creep row moved.
+authorised, brought it to **17 of 40**, and finishing the dilation in code brought it to **12 of 40**. No creep
+row moved for any of it.
 
-> **One part of the dilation could not reach content at all.** The fifteen-tick release cadence inside a column
-> is a simulation constant, not a number in `wave.txt`, so a column of ten still empties over a hundred and
-> fifty ticks while its units walk a third as far in them — leaving columns three times denser in space than
-> they were. That is a real change in wave shape. It cannot be undone from content: the constant is covered by
-> the simulation version and moving it would retire every stored replay.
+> **One part of the dilation could not reach content at all, and was finished in code later the same day.**
+> The fifteen-tick release cadence inside a column is a simulation constant, not a number in `wave.txt`, so a
+> column of ten still emptied over a hundred and fifty ticks while its units walked a third as far in them —
+> leaving columns three times denser in space than they were. That was a real change in wave shape, and it
+> could not be undone from content. It was undone in `Match.SpawnIntervalTicks`, fifteen to forty-five, at the
+> price the constant carries: a simulation version bump to 2, which retires every record made under version 1.
+> The bump was spent then rather than later because the only records that existed were this repository's own
+> and all but the historical goldens are regenerable by one command. **With the cadence dilated the leak lands
+> at 12 of 40**, back inside the quarter-to-half band and close to the 13 it sat at before the clock moved,
+> which is what a change that promised to be pure time was always supposed to do.
 
 ## What this roster needs that the schema does not have
 
