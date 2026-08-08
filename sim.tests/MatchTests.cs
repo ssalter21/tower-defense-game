@@ -123,7 +123,7 @@ public class MatchTests
     }
 
     [Fact]
-    public void Every_walking_row_returns_a_comparable_share_of_its_sauce_against_the_committed_defense()
+    public void Every_walking_row_returns_a_comparable_share_of_its_gold_against_the_committed_defense()
     {
         // The roster's own tuning claim, measured rather than asserted. A leak
         // charges health equal to what the creep cost to send, so what a column
@@ -131,13 +131,13 @@ public class MatchTests
         // makes survivability the only thing pricing can be wrong about, and
         // makes a row that never leaks a row nobody would ever take.
         //
-        // Four hundred sauce of one creep against the committed defense, per
+        // Four hundred gold of one creep against the committed defense, per
         // row. The band is deliberately wide: it is the claim that no row is
         // dead and none is free money, not a pin on numbers a sweep is meant to
         // move.
         //
-        // OBSERVED: put the wisp at 500 health and 3 sauce. It goes red --
-        // "wisp returned 0 percent of the sauce a column of 133 cost" --
+        // OBSERVED: put the wisp at 500 health and 3 gold. It goes red --
+        // "wisp returned 0 percent of the gold a column of 133 cost" --
         // because five hundred effective health is under what this defense
         // deals a creep while it crosses, so every one of them dies and a whole
         // row of the menu is a dead option that still reads like a choice.
@@ -163,7 +163,7 @@ public class MatchTests
                 creep.Label
                 + " returned "
                 + returned
-                + " percent of the sauce a column of "
+                + " percent of the gold a column of "
                 + count
                 + " cost, against a roster band of 60 to 95.");
         }

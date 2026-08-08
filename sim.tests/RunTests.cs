@@ -4,7 +4,7 @@ using System.Reflection;
 namespace Sim.Tests;
 
 /// <summary>
-/// The run: N waves, a field of K, a health pool denominated in sauce, and an
+/// The run: N waves, a field of K, a health pool denominated in gold, and an
 /// outcome that is a vector rather than a score.
 /// </summary>
 /// <remarks>
@@ -54,7 +54,7 @@ public class RunTests
         // against a run this test computed, so a lifecycle regression cannot
         // move both sides of the comparison at once.
         //
-        // The run survives its last wave by 382 sauce of health, which is what
+        // The run survives its last wave by 382 gold of health, which is what
         // makes the death flag inert here: the no-death row produces the same
         // vector as the rest rather than a longer one, so the flag is an
         // argument and not a different lifecycle.
@@ -168,7 +168,7 @@ public class RunTests
 
         // The pool is worth about three waves of average creep value: the third
         // concession is affordable and the fourth is the end of the run.
-        Assert.Equal(1500, TheRuleset.Committed().HealthPoolSauce);
+        Assert.Equal(1500, TheRuleset.Committed().HealthPoolGold);
 
         var health = new List<int>();
 
@@ -316,13 +316,13 @@ public class RunTests
     [Fact]
     public void Nothing_anywhere_in_a_run_can_put_health_back()
     {
-        // Sauce cannot repair health, so the pool is a clock and nobody is sold
+        // Gold cannot repair health, so the pool is a clock and nobody is sold
         // a way to stay in a run they are losing. The claim is structural: a
         // Repair(int) added later would look perfectly reasonable at the call
         // site that used it, so what is asserted is that Advance is the only
         // member that moves anything at all.
         //
-        // OBSERVED: add an empty `public void Repair(int sauce)` to Run. The
+        // OBSERVED: add an empty `public void Repair(int gold)` to Run. The
         // first assertion goes red, ["Advance", "OfferingAt"] against
         // ["Advance", "OfferingAt", "Repair"], which is the whole of what this
         // test is here to notice -- and it notices a member that does not even
@@ -349,13 +349,13 @@ public class RunTests
         // answers the same thing twice.
         //
         // OBSERVED: pay the run a coin for reading -- open Run.OfferingAt with
-        // Purse = Purse.Holding(Purse.Sauce + 1). The purse assertion goes red,
+        // Purse = Purse.Holding(Purse.Gold + 1). The purse assertion goes red,
         // 104 against 108, which is a member on the movers list moving
         // something while the list itself stays exactly as long.
         Run untouched = TheRun.Fresh(waves: 4, fieldSize: 3);
 
         Assert.Equal(untouched.Health, Drawn(untouched).Health);
-        Assert.Equal(untouched.Purse.Sauce, Drawn(untouched).Purse.Sauce);
+        Assert.Equal(untouched.Purse.Gold, Drawn(untouched).Purse.Gold);
         Assert.Equal(0, Drawn(untouched).Unlocks.Count);
 
         // And across a run it only ever goes one way, however much the purse
@@ -363,7 +363,7 @@ public class RunTests
         Run run = TheRun.Fresh(waves: 4, fieldSize: 3);
         RoundOrders orders = TheRun.Orders();
         int previous = run.Health;
-        int purse = run.Purse.Sauce;
+        int purse = run.Purse.Gold;
 
         while (!run.IsOver)
         {
@@ -377,10 +377,10 @@ public class RunTests
                 + run.Health.ToString(CultureInfo.InvariantCulture)
                 + ".");
 
-            Assert.True(run.Purse.Sauce > purse, "The wave paid the purse nothing at all.");
+            Assert.True(run.Purse.Gold > purse, "The wave paid the purse nothing at all.");
 
             previous = run.Health;
-            purse = run.Purse.Sauce;
+            purse = run.Purse.Gold;
         }
     }
 
@@ -388,14 +388,14 @@ public class RunTests
     public void Runs_rank_by_waves_survived_then_health_and_the_offense_never_enters_the_placing()
     {
         // The graded pool is both the resource during the run and the order at
-        // the end of it. What the offense earned is sauce, and it is on the
+        // the end of it. What the offense earned is gold, and it is on the
         // vector, and it is nowhere in the comparison.
         //
         // OBSERVED: compare LeakCostDealt between the waves and the health in
         // RunOutcome.CompareTo. The last pair of assertions goes red, 0 against
         // 1: two runs that survived the same waves on the same health are no
         // longer level, because one of them sent a better wave.
-        int pool = TheRuleset.Committed().HealthPoolSauce;
+        int pool = TheRuleset.Committed().HealthPoolGold;
 
         RunOutcome healthier = Outcome(pool, (0, 400), (0, 400), (0, 400));
         RunOutcome thinner = Outcome(pool, (0, 500), (0, 500), (0, 400));
@@ -417,7 +417,7 @@ public class RunTests
         Assert.True(healthier.CompareTo(thinner) < 0);
         Assert.True(thinner.CompareTo(healthier) > 0);
 
-        // Level on both, and one of them earned twenty-seven thousand sauce.
+        // Level on both, and one of them earned twenty-seven thousand gold.
         Assert.Equal(27000, loud.LeakCostDealt);
         Assert.Equal(0, healthier.LeakCostDealt);
         Assert.Equal(0, healthier.CompareTo(loud));
@@ -431,7 +431,7 @@ public class RunTests
         // placing or a retrospective computed later is arithmetic over what was
         // stored, and nothing has to be simulated twice to get it.
         //
-        // OBSERVED: fold the run against `_rules.HealthPoolSauce * 2` in
+        // OBSERVED: fold the run against `_rules.HealthPoolGold * 2` in
         // Run.Folded, so that the run's own health comes off a pool the vector
         // does not carry. The first assertion goes red, 2237 against 737 --
         // which is what one number kept in two places looks like the moment the
@@ -439,7 +439,7 @@ public class RunTests
         Run run = Played(TheRun.Fresh(waves: 5, fieldSize: 4), TheRun.Orders());
 
         RunOutcome rebuilt = RunOutcome.Of(
-            TheRuleset.Committed().HealthPoolSauce,
+            TheRuleset.Committed().HealthPoolGold,
             run.Outcome.Rounds,
             run.Waves,
             run.DeathEndsTheRun);
@@ -473,7 +473,7 @@ public class RunTests
 
         // The same seed, the same shape, and two populations: one whose rounds
         // are worth almost nothing and one whose rounds are worth three hundred
-        // sauce. Two hundred tops the first outright and beats none of the
+        // gold. Two hundred tops the first outright and beats none of the
         // second, which no distribution fixed in code could say.
         UnitTypeTable types = TheMatch.Types();
 
@@ -499,7 +499,7 @@ public class RunTests
         // the interest, the base and the band each round reached, folded
         // forward. Folded here out of the stored vector and the run's own field,
         // with no match resolved and no tick replayed -- and it has to come out
-        // at the sauce the run actually holds.
+        // at the gold the run actually holds.
         //
         // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
         // outcome.LeakCostDealt in Run.Advance. The purse assertion goes red,
@@ -508,7 +508,7 @@ public class RunTests
         // fold and the payment stop being the same arithmetic.
         Ruleset rules = TheRuleset.Committed();
         Run run = Played(TheRun.Fresh(), TheRun.Orders());
-        Purse folded = Purse.Holding(rules.StartingPurseSauce);
+        Purse folded = Purse.Holding(rules.StartingPurseGold);
         int bonus = 0;
 
         for (int round = 0; round < run.Outcome.Rounds.Count; round++)
@@ -520,7 +520,7 @@ public class RunTests
             folded = paid.Purse;
         }
 
-        Assert.Equal(run.Purse.Sauce, folded.Sauce);
+        Assert.Equal(run.Purse.Gold, folded.Gold);
         Assert.Equal(bonus, Purse.BonusOver(rules, run.Field, run.Outcome));
 
         // And it is money rather than a column of zeroes: attacking pays its
@@ -694,7 +694,7 @@ public class RunTests
         // having caught nothing, and a fourth round folds into a three-wave run
         // -- moving its health and its waves survived by an amount nobody
         // played for.
-        int pool = TheRuleset.Committed().HealthPoolSauce;
+        int pool = TheRuleset.Committed().HealthPoolGold;
 
         SimulationException thrown = Assert.Throws<SimulationException>(
             () => Outcome(pool, 3, (0, 1), (0, 1), (0, 1), (0, 1)));
@@ -800,8 +800,8 @@ public class RunTests
         Assert.Equal(0, run.Round);
         Assert.Empty(run.Sent);
         Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(rules.HealthPoolSauce, run.Health);
-        Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
+        Assert.Equal(rules.HealthPoolGold, run.Health);
+        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.False(run.IsOver);
     }
 
@@ -877,12 +877,12 @@ public class RunTests
     }
 
     /// <summary>An outcome built from pairs rather than from a simulation.</summary>
-    private static RunOutcome Outcome(int healthPoolSauce, params (int Dealt, int Taken)[] rounds) =>
-        Outcome(healthPoolSauce, 10, rounds);
+    private static RunOutcome Outcome(int healthPoolGold, params (int Dealt, int Taken)[] rounds) =>
+        Outcome(healthPoolGold, 10, rounds);
 
-    private static RunOutcome Outcome(int healthPoolSauce, int waves, params (int Dealt, int Taken)[] rounds) =>
+    private static RunOutcome Outcome(int healthPoolGold, int waves, params (int Dealt, int Taken)[] rounds) =>
         RunOutcome.Of(
-            healthPoolSauce,
+            healthPoolGold,
             rounds.Select(round => new RoundOutcome(round.Dealt, round.Taken)).ToArray(),
             waves,
             deathEndsTheRun: true);

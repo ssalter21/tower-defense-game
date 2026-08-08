@@ -35,15 +35,15 @@ public class RulesetTests
         Assert.Equal(100, rules.ArmourDenominator);
         Assert.Equal(1, rules.DamageFloor);
         Assert.Equal(10, rules.InterestPercentPerWave);
-        Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapSauce);
+        Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapGold);
         Assert.Equal(100, rules.IncomeBasePerWave);
 
         // What a run opens holding, which is one wave's base.
         // OBSERVED: change "purse         100" to "purse         150" in
         // content/ruleset.txt. This goes red, 100 against 150, which is what a
         // retuned opening balance nobody re-read here looks like.
-        Assert.Equal(100, rules.StartingPurseSauce);
-        Assert.Equal(1500, rules.HealthPoolSauce);
+        Assert.Equal(100, rules.StartingPurseGold);
+        Assert.Equal(1500, rules.HealthPoolGold);
         Assert.Equal(2, rules.StartingWaveSlots);
         Assert.Equal(1, rules.WaveSlotsPerAnchor);
 
@@ -53,7 +53,7 @@ public class RulesetTests
         Assert.Equal(3, rules.OrdinaryOptionsPerRound);
         Assert.Equal(3, rules.GameChangersPerAnchor);
         Assert.Equal(10, rules.FreeSnapshotsPerRun);
-        Assert.Equal(25, rules.SnapshotPriceSauce);
+        Assert.Equal(25, rules.SnapshotPriceGold);
 
         Assert.Equal(4, rules.Bands.Count);
         Assert.Equal(0, rules.Bands[0].PercentileThreshold);
@@ -220,7 +220,7 @@ public class RulesetTests
     [Fact]
     public void A_negative_interest_cap_refuses_to_load()
     {
-        // A ceiling below zero is interest that takes sauce out of the bank.
+        // A ceiling below zero is interest that takes gold out of the bank.
         //
         // OBSERVED: open the cap's range at int.MinValue. This goes red having
         // caught nothing, and a bank that earns -1 a wave is authored without
@@ -483,7 +483,7 @@ public class RulesetTests
         // asserted rather than assumed, because a copy constructor over sixteen
         // fields is exactly where a field goes missing quietly.
         //
-        // OBSERVED: carry StartingPurseSauce across as HealthPoolSauce in
+        // OBSERVED: carry StartingPurseGold across as HealthPoolGold in
         // Ruleset's retuning constructor. The purse assertion goes red, 1500
         // where 100 was expected, and nothing else in the suite notices -- which
         // is what a field crossed in a sixteen-line copy looks like.
@@ -493,7 +493,7 @@ public class RulesetTests
         Assert.Equal(2, retuned.OrdinaryOptionsPerRound);
         Assert.Equal(4, retuned.GameChangersPerAnchor);
         Assert.Equal(6, retuned.FreeSnapshotsPerRun);
-        Assert.Equal(8, retuned.SnapshotPriceSauce);
+        Assert.Equal(8, retuned.SnapshotPriceGold);
         Assert.NotEqual(authored.ContentHash, retuned.ContentHash);
 
         Assert.Equal(authored.Matrix.Cells, retuned.Matrix.Cells);
@@ -501,10 +501,10 @@ public class RulesetTests
         Assert.Equal(authored.ArmourDenominator, retuned.ArmourDenominator);
         Assert.Equal(authored.DamageFloor, retuned.DamageFloor);
         Assert.Equal(authored.InterestPercentPerWave, retuned.InterestPercentPerWave);
-        Assert.Equal(authored.InterestCapSauce, retuned.InterestCapSauce);
+        Assert.Equal(authored.InterestCapGold, retuned.InterestCapGold);
         Assert.Equal(authored.IncomeBasePerWave, retuned.IncomeBasePerWave);
-        Assert.Equal(authored.StartingPurseSauce, retuned.StartingPurseSauce);
-        Assert.Equal(authored.HealthPoolSauce, retuned.HealthPoolSauce);
+        Assert.Equal(authored.StartingPurseGold, retuned.StartingPurseGold);
+        Assert.Equal(authored.HealthPoolGold, retuned.HealthPoolGold);
         Assert.Equal(authored.StartingWaveSlots, retuned.StartingWaveSlots);
         Assert.Equal(authored.WaveSlotsPerAnchor, retuned.WaveSlotsPerAnchor);
         Assert.Equal(authored.Bands.Count, retuned.Bands.Count);
@@ -530,7 +530,7 @@ public class RulesetTests
                 authored.OrdinaryOptionsPerRound,
                 authored.GameChangersPerAnchor,
                 authored.FreeSnapshotsPerRun,
-                authored.SnapshotPriceSauce).ContentHash);
+                authored.SnapshotPriceGold).ContentHash);
     }
 
     [Theory]
@@ -555,7 +555,7 @@ public class RulesetTests
         //
         // OBSERVED: drop the RequireInRange calls from Ruleset.With. Every one
         // of the six rows goes red having thrown nothing at all -- an offering
-        // of zero options and a snapshot at minus one sauce both build a
+        // of zero options and a snapshot at minus one gold both build a
         // perfectly ordinary ruleset with a perfectly ordinary hash.
         SimulationException refused = Assert.Throws<SimulationException>(
             () => TheRuleset.Committed().With(ordinary, changers, free, price));

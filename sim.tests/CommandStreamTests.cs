@@ -143,7 +143,7 @@ public class CommandStreamTests
 
         Assert.Equal(live.Outcome.Rounds, outcome.Rounds);
         Assert.Equal(live.Health, fromRecord.Health);
-        Assert.Equal(live.Purse.Sauce, fromRecord.Purse.Sauce);
+        Assert.Equal(live.Purse.Gold, fromRecord.Purse.Gold);
         Assert.Equal(live.Unlocks.Count, fromRecord.Unlocks.Count);
         Assert.Equal(TheCommands.Waves, fromRecord.Round);
 
@@ -479,11 +479,11 @@ public class CommandStreamTests
         //
         // OBSERVED: fold the purse forward without the wave's payment -- assign
         // build.Purse straight to purse in Check. This goes red on an exception:
-        // "A build phase at wave 4 buys 90 sauce of creeps out of a purse
+        // "A build phase at wave 4 buys 90 gold of creeps out of a purse
         // holding 52", refusing at load a wave the run affords perfectly well,
         // because the walk stopped paying the rounds it was walking.
         //
-        // The ceiling is observed by what it admits. This run holds 407 sauce
+        // The ceiling is observed by what it admits. This run holds 407 gold
         // when its fourth build phase stands and the walk carries 474 -- three
         // waves of the top band it did not reach, and the interest on them --
         // so a fourth wave costing 450 is a decision the walk has to let past
@@ -493,7 +493,7 @@ public class CommandStreamTests
         // OBSERVED, on the ceiling: close the walk's waves at
         // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The Check
         // above goes red on an exception -- "A build phase at wave 4 buys 450
-        // sauce of creeps out of a purse holding 407" -- refusing at load rather
+        // gold of creeps out of a purse holding 407" -- refusing at load rather
         // than at the round, which is what a floor does to every decision a
         // run's own bonus paid for.
         Run run = TheCommands.Fresh();
@@ -538,7 +538,7 @@ public class CommandStreamTests
 
         Assert.Equal(0, untouched.Round);
         Assert.Equal(0, untouched.Unlocks.Count);
-        Assert.Equal(TheRuleset.Committed().StartingPurseSauce, untouched.Purse.Sauce);
+        Assert.Equal(TheRuleset.Committed().StartingPurseGold, untouched.Purse.Gold);
     }
 
     /// <summary>

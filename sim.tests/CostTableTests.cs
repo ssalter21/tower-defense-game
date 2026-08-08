@@ -50,7 +50,7 @@ public class CostTableTests
     {
         // Two units on opposite sides of the board and one thing that is not a
         // unit at all, priced by one call each. That the third is on this table
-        // is the whole design: a scouting snapshot competes for sauce with a
+        // is the whole design: a scouting snapshot competes for gold with a
         // creep rather than living in a budget of its own.
         //
         // OBSERVED: size CostTable's arrays at types.Count and write the
@@ -68,7 +68,7 @@ public class CostTableTests
         // And the snapshot's price is the ruleset's, read back rather than
         // repeated: a number typed twice is a number that can disagree with
         // itself.
-        Assert.Equal(TheRuleset.Committed().SnapshotPriceSauce, costs.PriceOf(Purchase.Snapshot));
+        Assert.Equal(TheRuleset.Committed().SnapshotPriceGold, costs.PriceOf(Purchase.Snapshot));
     }
 
     [Fact]

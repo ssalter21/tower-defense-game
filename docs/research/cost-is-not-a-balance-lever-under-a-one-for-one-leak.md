@@ -8,15 +8,15 @@ read in isolation. Against the committed corridor and the committed defense, wha
 actually change?
 
 **Inputs:** the committed map, defense and ruleset; `Match` over the committed simulation assembly; a column of
-one creep type at a fixed sauce budget, swept across health, speed and armour type.
+one creep type at a fixed gold budget, swept across health, speed and armour type.
 
 ---
 
 ## Bottom line
 
 **Under a one-for-one leak charge, the cost column cancels out of cost-efficiency entirely.** A wave order of
-`count` creeps at `cost` sauce each costs `count * cost` to send and deals `leaked * cost` health, so the health
-a sauce buys is `leaked / count` — the **leak rate**, and nothing else. Halving a creep's price doubles how many
+`count` creeps at `cost` gold each costs `count * cost` to send and deals `leaked * cost` health, so the health
+a gold buys is `leaked / count` — the **leak rate**, and nothing else. Halving a creep's price doubles how many
 of it a purse buys and halves what each leak charges, and the two cancel exactly.
 
 Two consequences, and both are load-bearing for the sweep:
@@ -29,15 +29,15 @@ Two consequences, and both are load-bearing for the sweep:
   the committed defense that budget is a little over a thousand: `SpawnIntervalTicks` is 15 and the six towers
   deal roughly 62 damage a tick before typing, so a creep released into a single-order column meets about 930
   raw damage while it crosses, and about 1100 once the pierce-heavy line's cells are applied. An earlier draft of
-  the roster carried a 500-health swarm creep at 3 sauce; it returned **zero** health per sauce at every budget
+  the roster carried a 500-health swarm creep at 3 gold; it returned **zero** health per gold at every budget
   from 150 to 600, and no price would have changed that.
 
 ## What was measured
 
-A column of one creep type, 400 sauce of it, released into the committed defense on the committed map. Health
-dealt is `leaked * cost`; the fraction below is that over the sauce spent.
+A column of one creep type, 400 gold of it, released into the committed defense on the committed map. Health
+dealt is `leaked * cost`; the fraction below is that over the gold spent.
 
-| creep | health | armour | speed | cost | leaked | health per sauce |
+| creep | health | armour | speed | cost | leaked | health per gold |
 |---|---|---|---|---|---|---|
 | grunt | 1550 | Armoured +0 | 85 | 10 | 32 of 40 | 0.80 |
 | runner | 1500 | Swift +0 | 170 | 9 | 32 of 44 | 0.73 |
@@ -51,7 +51,7 @@ constant and only survivability moves:
 
 - **Below about 900 effective health, nothing leaks at any speed.** 500 and 800 both return zero across every
   speed from 55 to 425 for Swift and Arcane bodies.
-- **Speed helps, and it helps most near the threshold.** A 1100-health Swift body returns 6% of its sauce at
+- **Speed helps, and it helps most near the threshold.** A 1100-health Swift body returns 6% of its gold at
   speed 55 and 73% at 425. Well above the threshold the curve flattens: a 9000-health body returns 86% to 100%
   across the same range.
 - **Armour type is worth about as much as a doubling of health against this defense.** Four pierce bolts and two
@@ -65,7 +65,7 @@ report leak rate under another name unless something changes the exchange. Three
 ticket's to decide:
 
 - Charge a leak something other than the creep's price — a flat amount, or a curve.
-- Let the same sauce buy something other than creeps, so the purse has an alternative use to be measured against.
+- Let the same gold buy something other than creeps, so the purse has an alternative use to be measured against.
   The snapshot line item is the only one today and it costs 25.
 - Leave it, and read the cost column as what it is: the knob that decides how many bodies a slot turns into.
 

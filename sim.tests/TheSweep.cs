@@ -70,7 +70,7 @@ public static class TheSweep
         int ordinaryOptionsPerRound = SweepPlan.AsAuthored,
         int gameChangersPerAnchor = SweepPlan.AsAuthored,
         int freeSnapshotsPerRun = SweepPlan.AsAuthored,
-        int snapshotPriceSauce = SweepPlan.AsAuthored,
+        int snapshotPriceGold = SweepPlan.AsAuthored,
         int mostCreeps = Creeps)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
@@ -91,7 +91,7 @@ public static class TheSweep
             ordinaryOptionsPerRound,
             gameChangersPerAnchor,
             freeSnapshotsPerRun,
-            snapshotPriceSauce,
+            snapshotPriceGold,
             mostCreeps);
     }
 
@@ -104,7 +104,7 @@ public static class TheSweep
 
     /// <summary>
     /// A field that sends the skeleton's authored match instead: three hundred
-    /// and eighty sauce a round, which is more than any run's purse can answer
+    /// and eighty gold a round, which is more than any run's purse can answer
     /// and is therefore what kills one.
     /// </summary>
     public static FieldPool LethalField(UnitTypeTable types) =>

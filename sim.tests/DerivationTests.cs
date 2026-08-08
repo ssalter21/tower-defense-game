@@ -162,7 +162,7 @@ public class DerivationTests
         Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       11         0"));
 
         // The interest cap, which is parsed and could be parsed and dropped.
-        // OBSERVED: delete .Add(draft.InterestCapSauce) from the fold. This line
+        // OBSERVED: delete .Add(draft.InterestCapGold) from the fold. This line
         // goes red with the capped and uncapped rulesets both hashing
         // 1E384929C5F43BFB, and every record pinned to one would replay happily
         // against the other.
@@ -171,8 +171,8 @@ public class DerivationTests
 
         // What a run opens holding, which decides whether the first build phase
         // can buy anything at all.
-        // OBSERVED: delete .Add(draft.StartingPurseSauce) from the fold. This
-        // line goes red with a run that opens on 100 sauce and one that opens
+        // OBSERVED: delete .Add(draft.StartingPurseGold) from the fold. This
+        // line goes red with a run that opens on 100 gold and one that opens
         // on 101 both hashing 6EBEF9AA88D5E2AA, so a stored run could be
         // replayed against an opening balance it never had.
         Assert.NotEqual(hash, Retuned(original, "purse         100", "purse         101"));

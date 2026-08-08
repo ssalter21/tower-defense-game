@@ -38,19 +38,19 @@ seed space is 2^64 wide and no run count enumerates it.
 against a distribution of other players' rounds and no such pool exists until runs are stored, so the pool a
 sweep is handed is what the bands are computed against — literally, since ADR-0042 measures it.
 `content/field.txt` is that stand-in, and it is deliberately not `content/wave.txt`: the
-authored match is forty creeps and three hundred and eighty sauce, and a run's purse is paid one wave's base a
+authored match is forty creeps and three hundred and eighty gold, and a run's purse is paid one wave's base a
 wave, so a field member composed of it outspends every opponent it faces three and a half times over. A sweep
 against one reports a total loss on every row and names nothing.
 
 **Cost efficiency is documented for what it measures and what it does not.** A leak charges health equal to what
-the creep cost to send, one for one, so leak cost dealt over sauce spent is the cost-weighted leak rate of what
+the creep cost to send, one for one, so leak cost dealt over gold spent is the cost-weighted leak rate of what
 was sent and the price level cancels out of it exactly — halving a creep's price doubles how many of it a purse
 buys and halves what each leak charges. The column therefore **cannot** say a creep is overpriced; the
 measurement behind that is in
 [`cost-is-not-a-balance-lever-under-a-one-for-one-leak.md`](../research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md).
 It is kept anyway, and it earns its place for a different reason: winning is one bit a run and it saturates
 against a canned field of one, while this column stays graded and goes on separating creeps after the win rate
-has flattened. It is named `cost_efficiency_dealt_per_100_sauce` so that the unit travels with it.
+has flattened. It is named `cost_efficiency_dealt_per_100_gold` so that the unit travels with it.
 
 ## Consequences
 

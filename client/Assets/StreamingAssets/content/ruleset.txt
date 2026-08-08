@@ -66,7 +66,7 @@ floor           1
 #
 #         interest  percent  cap
 #
-# What unspent sauce earns a wave, ROUNDED UP -- one sauce banked earns one and
+# What unspent gold earns a wave, ROUNDED UP -- one gold banked earns one and
 # never nothing. Leaving a wave slot empty is an investment rather than waste,
 # and every purchase is measured against it.
 #
@@ -77,14 +77,14 @@ floor           1
 
 interest       10         0
 
-#         income  sauce
+#         income  gold
 #
 # The flat base a wave pays. It is paid whether or not there is a field to be
 # measured against, which is why a run resolves before there are ghosts.
 
 income        100
 
-#         purse  sauce
+#         purse  gold
 #
 # What a run's purse opens holding. Nothing has been earned when the first build
 # phase stands, so a run that opened on nothing would have an opening round
@@ -101,7 +101,7 @@ purse         100
 # bands measured against the field. THE BANDS ARE NEVER NEGATIVE: performing
 # below average earns a smaller bonus and never a penalty. Thresholds ascend
 # strictly, the first is zero so every wave falls in a band, and no band pays
-# less than the one below it. Nothing here moves sauce between players: a wave
+# less than the one below it. Nothing here moves gold between players: a wave
 # is paid against the field's distribution and never against a named opponent,
 # so it reads the same whether the field is one lobby or a population.
 #
@@ -117,11 +117,11 @@ band           50        5
 band           75       10
 band           90       20
 
-#         health  sauce
+#         health  gold
 #
-# The pool a run starts with, denominated in sauce. A leaked creep costs health
+# The pool a run starts with, denominated in gold. A leaked creep costs health
 # equal to its cost, one for one, so the exchange rate is legible without a
-# table. Sauce cannot repair it -- the pool is a clock.
+# table. Gold cannot repair it -- the pool is a clock.
 #
 # WHAT 1500 BUYS, MEASURED. A wave is bought out of a purse the income row above
 # pays 100 a round into, so conceding one of them whole costs around a hundred
@@ -161,7 +161,7 @@ slots           2         1
 
 offering        3         3
 
-#         snapshot  free  sauce
+#         snapshot  free  gold
 #
 # Scouting. A run gets this many snapshots of an incoming wave for nothing and
 # pays this much for every one after. The price is charged on data and never on

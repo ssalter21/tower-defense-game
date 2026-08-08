@@ -79,7 +79,7 @@ public class GoldenSweepTests
         Assert.Equal(Number(rules.OrdinaryOptionsPerRound), Parameter("ordinary_options"));
         Assert.Equal(Number(rules.GameChangersPerAnchor), Parameter("game_changers"));
         Assert.Equal(Number(rules.FreeSnapshotsPerRun), Parameter("free_snapshots"));
-        Assert.Equal(Number(rules.SnapshotPriceSauce), Parameter("snapshot_price"));
+        Assert.Equal(Number(rules.SnapshotPriceGold), Parameter("snapshot_price"));
 
         // And that it was swept in no-death mode, which is what makes every row
         // of it N rounds of data rather than however far a run got.

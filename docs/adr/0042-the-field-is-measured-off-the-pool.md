@@ -76,13 +76,13 @@ have made the distribution a property of the harness rather than of the run's ow
 is paid, so it is the thing that measures.
 
 **The four authored bands behave as two against a population of one.** Ten samples of the canned opponent land
-between 14 and 19 sauce, so a round is above the field or below it and almost never inside it; the 50th and
+between 14 and 19 gold, so a round is above the field or below it and almost never inside it; the 50th and
 75th thresholds are reachable only by a round dealing exactly 18 or 19. That is a property of the stand-in and
 not of the thresholds — the same code against a pool of four members uses all four bands — so the numbers are
 deliberately **not** retuned here. The measurement is in
 [`a-canned-field-of-one-collapses-the-bands.md`](../research/a-canned-field-of-one-collapses-the-bands.md).
 
-`content/sweep.csv` gains two columns, `income_base_sauce` and `bonus_sauce`, as two integers rather than a
+`content/sweep.csv` gains two columns, `income_base_gold` and `bonus_gold`, as two integers rather than a
 ratio — the rule ADR-0041 set for every rate in that file. A reader can see the second is not zero and divide
 one by the other without trusting anything this code computed.
 

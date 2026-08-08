@@ -1,7 +1,7 @@
-# 0035 — A run's outcome is a vector, and health is a clock denominated in sauce
+# 0035 — A run's outcome is a vector, and health is a clock denominated in gold
 
 A run records one pair per round — what its wave got past the field, and what the field's waves got past its
-defense, both priced in sauce. Health, waves survived, how the run ended and every score are folds over that
+defense, both priced in gold. Health, waves survived, how the run ended and every score are folds over that
 vector, computed in `RunOutcome` and carried nowhere else.
 
 ## What was decided
@@ -12,7 +12,7 @@ is what lets the economy be priced against a distribution without re-simulating 
 is public for exactly that: a harness holding stored pairs rebuilds the outcome and reads health and waves
 survived off it.
 
-**Health is denominated in sauce, and a leaked creep costs its price one for one.** The exchange rate is
+**Health is denominated in gold, and a leaked creep costs its price one for one.** The exchange rate is
 legible without a table, and it makes underbuilding a defense to fund an offense literally spending health.
 Pricing a leak needs to know which creep leaked, which is why a match counts its leaks by the wave order that
 sent them rather than as a total: one wave sends two types at two prices.
@@ -23,12 +23,12 @@ would be a punishment. Taken at its best, a run's luckiest pairing would decide 
 the same rule pointed in two directions, which is what makes a field average a bad draw away rather than
 multiply it.
 
-**Sauce cannot repair health.** There is no member anywhere that adds to the pool; `Advance` is the only
+**Gold cannot repair health.** There is no member anywhere that adds to the pool; `Advance` is the only
 thing on `Run` that moves, and it only subtracts. The pool is a clock, and nobody is sold a way to stay in a
 run they are losing.
 
 **Runs place by waves survived, then health remaining.** The offense is on the vector, it is folded into
-`LeakCostDealt`, and it is absent from `CompareTo`. What a wave earns its sender is sauce; the ranking has
+`LeakCostDealt`, and it is absent from `CompareTo`. What a wave earns its sender is gold; the ranking has
 one meaning.
 
 **Death is an argument and not a rule.** A sweep runs with it off and gets N rounds of data out of every row
@@ -55,9 +55,9 @@ disagree, which is the whole reason both are reported.
 played, which is every distribution the bands are measured against.
 
 **Health as its own currency.** A second denomination needs an exchange rate, and an exchange rate is a table
-nobody can check by eye. Sauce is the only denomination in the game and health is spent in it.
+nobody can check by eye. Gold is the only denomination in the game and health is spent in it.
 
-**Repairing health with sauce.** It turns the wall at the bottom of the pool into a resource, and the pool
+**Repairing health with gold.** It turns the wall at the bottom of the pool into a resource, and the pool
 stops being a clock the moment it can be wound back.
 
 ## Where it lives

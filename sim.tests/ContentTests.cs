@@ -118,7 +118,7 @@ public class ContentTests
     [Fact]
     public void Every_walking_row_costs_its_effective_health_over_a_hundred_and_sixty()
     {
-        // What a sauce buys is health a defense has to spend, so the price of a
+        // What gold buys is health a defense has to spend, so the price of a
         // creep is the pool it carries times its armour multiplier, over one
         // constant. The type chart deliberately stays out of it: every row and
         // every column of the matrix is a permutation of the same three cells,
@@ -127,7 +127,7 @@ public class ContentTests
         // charging twice for a bet.
         //
         // OBSERVED: halve the bulwark's cost, 45 to 22, in content/units.txt.
-        // This goes red naming it -- "bulwark costs 22 sauce, which buys 3520
+        // This goes red naming it -- "bulwark costs 22 gold, which buys 3520
         // effective health at the roster's rate, against the 7250 it actually
         // carries" -- which is what the wall being twice the deal of everything
         // else on the menu looks like before anybody plays a round of it.
@@ -142,7 +142,7 @@ public class ContentTests
                 creep.Label
                 + " costs "
                 + creep.Cost
-                + " sauce, which buys "
+                + " gold, which buys "
                 + (creep.Cost * 160)
                 + " effective health at the roster's rate, against the "
                 + effective

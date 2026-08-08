@@ -36,7 +36,7 @@ public class BuildPhaseTests
         // handed the same menu.
         //
         // OBSERVED: mix the purse into the offering's position -- pass
-        // Purse.Sauce as the opponent coordinate in Run.OfferingAt. The wave-2
+        // Purse.Gold as the opponent coordinate in Run.OfferingAt. The wave-2
         // assertion goes red, [(Ordinary, 5), (Ordinary, 2), (Ordinary, 8)]
         // against [(Ordinary, 8), (Ordinary, 7), (Ordinary, 2)], which is what
         // a shop that reads what somebody can afford looks like from the other
@@ -66,7 +66,7 @@ public class BuildPhaseTests
             defense);
 
         Assert.NotEqual(mine.Unlocks.Taken[0].Id, theirs.Unlocks.Taken[0].Id);
-        Assert.NotEqual(mine.Purse.Sauce, theirs.Purse.Sauce);
+        Assert.NotEqual(mine.Purse.Gold, theirs.Purse.Gold);
 
         // And the round after it, and the one after that, are the same list.
         Assert.Equal(TheBuild.Named(mine.Offering), TheBuild.Named(theirs.Offering));
@@ -181,14 +181,14 @@ public class BuildPhaseTests
         TowerLayout defense = TheBuild.Defense();
         Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
-        Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
+        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.Equal(0, run.Unlocks.Count);
 
         Option first = run.Offering.Options[0];
         run.Advance(BuildPhase.Of(first.Kind, first.Id), defense);
 
         // Nothing was bought, so the purse is what it opened with plus the wave.
-        Assert.Equal(rules.StartingPurseSauce + 10 + rules.IncomeBasePerWave, run.Purse.Sauce);
+        Assert.Equal(rules.StartingPurseGold + 10 + rules.IncomeBasePerWave, run.Purse.Gold);
         Assert.Equal(1, run.Unlocks.Count);
         Assert.True(run.Unlocks.Has(first.TypeId));
 
@@ -244,7 +244,7 @@ public class BuildPhaseTests
     public void A_slot_may_be_left_empty_and_an_empty_slot_is_a_legal_wave_rather_than_an_error()
     {
         // Not sending is a position rather than an omission: an empty slot
-        // banks its sauce at the ruleset's interest, so leaving one empty is an
+        // banks its gold at the ruleset's interest, so leaving one empty is an
         // investment measured against the purchase that would have used it.
         //
         // OBSERVED: refuse an empty slot in BuildPhase.Resolve -- throw instead
@@ -394,7 +394,7 @@ public class BuildPhaseTests
         //
         // OBSERVED: drop the spent-against-purse check in BuildPhase.Resolve
         // and let Purse.Spend catch it. This goes red on the message rather
-        // than on the throw: what fires is "A purse holding 99 sauce was spent
+        // than on the throw: what fires is "A purse holding 99 gold was spent
         // 100", from a purse already part-spent on the earlier slots of a wave
         // that was never legal -- and its own text says that reaching there
         // means an unaffordable command was let through.
@@ -419,12 +419,12 @@ public class BuildPhaseTests
 
         Assert.Contains("There is no credit in this economy", thrown.Message, StringComparison.Ordinal);
 
-        // One sauce more and the same wave is fine, and the purse is what is
+        // One gold more and the same wave is fine, and the purse is what is
         // left rather than what was there.
         Build built = phase.Resolve(offering, everything, Purse.Holding(bill), costs);
 
         Assert.Equal(bill, built.Spent);
-        Assert.Equal(0, built.Purse.Sauce);
+        Assert.Equal(0, built.Purse.Gold);
     }
 
     [Fact]
@@ -574,8 +574,8 @@ public class BuildPhaseTests
         Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
         Run run = TheBuild.Fresh(waves: 2);
 
-        Assert.Equal(100, rules.StartingPurseSauce);
-        Assert.Equal(rules.StartingPurseSauce, run.Purse.Sauce);
+        Assert.Equal(100, rules.StartingPurseGold);
+        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
 
         Option first = run.Offering.Options[0];
         run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense: TheBuild.Defense());
@@ -646,7 +646,7 @@ public class BuildPhaseTests
         {
             Offering offering = run.Offering;
             Option cheapest = offering.Options.OrderBy(option => option.Type.Cost).First();
-            int affordable = run.Purse.Sauce / (cheapest.Type.Cost < 1 ? 1 : cheapest.Type.Cost);
+            int affordable = run.Purse.Gold / (cheapest.Type.Cost < 1 ? 1 : cheapest.Type.Cost);
 
             BuildPhase phase = BuildPhase.Of(
                 cheapest.Kind,
@@ -665,7 +665,7 @@ public class BuildPhaseTests
         Assert.Equal(10, run.Sent.Count);
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.True(spent.Sum() > 0, "Ten build phases bought nothing at all.");
-        Assert.All(spent, one => Assert.True(one >= 0, "A build phase gave sauce back."));
+        Assert.All(spent, one => Assert.True(one >= 0, "A build phase gave gold back."));
     }
 
     [Fact]
@@ -693,7 +693,7 @@ public class BuildPhaseTests
         over.Advance(TheBuild.TakeFirst(over.Offering), defense);
         Assert.True(over.IsOver);
 
-        int purse = over.Purse.Sauce;
+        int purse = over.Purse.Gold;
         int unlocks = over.Unlocks.Count;
 
         // A phase that would have been perfectly legal on a run with a round
@@ -705,7 +705,7 @@ public class BuildPhaseTests
 
         Assert.Throws<SimulationException>(() => over.Advance(past, defense));
 
-        Assert.Equal(purse, over.Purse.Sauce);
+        Assert.Equal(purse, over.Purse.Gold);
         Assert.Equal(unlocks, over.Unlocks.Count);
 
         // And a round with no defense standing is refused the same way.
@@ -718,7 +718,7 @@ public class BuildPhaseTests
                 defense: null!));
 
         Assert.Equal(0, alive.Unlocks.Count);
-        Assert.Equal(TheBuild.RulesOffering(TheBuild.Ordinary).StartingPurseSauce, alive.Purse.Sauce);
+        Assert.Equal(TheBuild.RulesOffering(TheBuild.Ordinary).StartingPurseGold, alive.Purse.Gold);
     }
 
     /// <summary>Every creep on a round's menu, unlocked, so a slot assertion is about the slot.</summary>

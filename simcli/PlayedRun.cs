@@ -159,7 +159,7 @@ internal sealed class PlayedRun
                 "EVERY ROUND IS A DECISION AND A PAIR. The decision came out of the command file and",
                 "nothing else: a run consumes build phases from a record, and there is no other route into",
                 "the tick loop. The pair is what that round's wave got past the field and what the field's",
-                "waves got past this run's defense, both priced in sauce and both the average over the",
+                "waves got past this run's defense, both priced in gold and both the average over the",
                 "field rather than the sum.",
                 string.Empty,
                 "The run this came from:",

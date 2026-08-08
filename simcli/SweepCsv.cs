@@ -65,12 +65,12 @@ internal static class SweepCsv
         "rounds",
         "wins",
         "win_rate_bp",
-        "dealt_sauce",
-        "taken_sauce",
-        "spent_sauce",
-        "cost_efficiency_dealt_per_100_sauce",
-        "income_base_sauce",
-        "bonus_sauce",
+        "dealt_gold",
+        "taken_gold",
+        "spent_gold",
+        "cost_efficiency_dealt_per_100_gold",
+        "income_base_gold",
+        "bonus_gold",
         "value",
         "of",
         "bounded",
@@ -104,7 +104,7 @@ internal static class SweepCsv
     /// <remarks>
     /// <para>
     /// There is exactly one, and it earns its row. Under a one-for-one leak
-    /// charge the price level cancels out of leak cost dealt over sauce spent
+    /// charge the price level cancels out of leak cost dealt over gold spent
     /// exactly -- halve a creep's price and a purse buys twice as many while
     /// each leak charges half -- so the cost-efficiency column is the
     /// cost-weighted leak rate of what was sent and it cannot say a creep is
@@ -122,7 +122,7 @@ internal static class SweepCsv
     private static void Notes(StringBuilder text) =>
         Note(
             text,
-            "cost_efficiency_dealt_per_100_sauce",
+            "cost_efficiency_dealt_per_100_gold",
             "a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one "
             + "so the price cancels out; see docs/adr/0041");
 
@@ -152,7 +152,7 @@ internal static class SweepCsv
         Parameter(text, "ordinary_options", Number(plan.Rules.OrdinaryOptionsPerRound));
         Parameter(text, "game_changers", Number(plan.Rules.GameChangersPerAnchor));
         Parameter(text, "free_snapshots", Number(plan.Rules.FreeSnapshotsPerRun));
-        Parameter(text, "snapshot_price", Number(plan.Rules.SnapshotPriceSauce));
+        Parameter(text, "snapshot_price", Number(plan.Rules.SnapshotPriceGold));
         Parameter(text, "first_seed", plan.FirstSeed.ToString(PlainText.Culture));
         Parameter(text, "runs_per_creep", Number(plan.RunsPerCreep));
         Parameter(text, "ruleset_hash", plan.Rules.ContentHash.ToString());
@@ -194,10 +194,10 @@ internal static class SweepCsv
                 Number(row.WinRateBasisPoints),
                 Number(row.LeakCostDealt),
                 Number(row.LeakCostTaken),
-                Number(row.SauceSpent),
-                Number(row.DealtPerHundredSauce),
-                Number(row.IncomeBaseSauce),
-                Number(row.BonusSauce),
+                Number(row.GoldSpent),
+                Number(row.DealtPerHundredGold),
+                Number(row.IncomeBaseGold),
+                Number(row.BonusGold),
                 Blank, Blank, Blank,
             });
 

@@ -62,10 +62,10 @@ public class SweepTests
             Assert.Equal(left.WinRateBasisPoints, right.WinRateBasisPoints);
             Assert.Equal(left.LeakCostDealt, right.LeakCostDealt);
             Assert.Equal(left.LeakCostTaken, right.LeakCostTaken);
-            Assert.Equal(left.SauceSpent, right.SauceSpent);
-            Assert.Equal(left.DealtPerHundredSauce, right.DealtPerHundredSauce);
-            Assert.Equal(left.IncomeBaseSauce, right.IncomeBaseSauce);
-            Assert.Equal(left.BonusSauce, right.BonusSauce);
+            Assert.Equal(left.GoldSpent, right.GoldSpent);
+            Assert.Equal(left.DealtPerHundredGold, right.DealtPerHundredGold);
+            Assert.Equal(left.IncomeBaseGold, right.IncomeBaseGold);
+            Assert.Equal(left.BonusGold, right.BonusGold);
         }
     }
 
@@ -84,7 +84,7 @@ public class SweepTests
         //
         // OBSERVED: pass PerformanceField.Absent in place of run.Field to
         // Purse.BonusOver in Sweep.Play. This goes red saying "Every creep in
-        // the report earned nothing at all for what it sent, over 4800 sauce of
+        // the report earned nothing at all for what it sent, over 4800 gold of
         // flat base", and every other number in the report stays exactly as it
         // was -- which is what an economy paying the base alone looks like from
         // every other column.
@@ -97,28 +97,28 @@ public class SweepTests
             SweepRow row = report.Rows[index];
 
             Assert.True(
-                row.BonusSauce >= 0,
+                row.BonusGold >= 0,
                 row.Label
                 + " earned "
-                + row.BonusSauce.ToString(CultureInfo.InvariantCulture)
-                + " sauce in bonuses, which is a penalty.");
+                + row.BonusGold.ToString(CultureInfo.InvariantCulture)
+                + " gold in bonuses, which is a penalty.");
 
             if (row.Ingredients != SweepRow.AllIngredients)
             {
                 continue;
             }
 
-            Assert.Equal(TheRuleset.Committed().IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseSauce);
+            Assert.Equal(TheRuleset.Committed().IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseGold);
 
-            bonus += row.BonusSauce;
-            incomeBase += row.IncomeBaseSauce;
+            bonus += row.BonusGold;
+            incomeBase += row.IncomeBaseGold;
         }
 
         Assert.True(
             bonus > 0,
             "Every creep in the report earned nothing at all for what it sent, over "
             + incomeBase.ToString(CultureInfo.InvariantCulture)
-            + " sauce of flat base -- which is an economy paying the base alone.");
+            + " gold of flat base -- which is an economy paying the base alone.");
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class SweepTests
         // every one of them.
         //
         // The lethal field is the skeleton's authored match -- three hundred and
-        // eighty sauce a round against a purse that holds a hundred -- and the
+        // eighty gold a round against a purse that holds a hundred -- and the
         // pool is thinned to what one of its rounds spends, so a run that could
         // die dies inside the four waves this suite plays.
         //
@@ -279,8 +279,8 @@ public class SweepTests
             Assert.InRange(row.Wins, 0, row.Runs);
             Assert.Equal((int)(10000L * row.Wins / row.Runs), row.WinRateBasisPoints);
             Assert.Equal(
-                row.SauceSpent == 0 ? 0 : (int)(100 * row.LeakCostDealt / row.SauceSpent),
-                row.DealtPerHundredSauce);
+                row.GoldSpent == 0 ? 0 : (int)(100 * row.LeakCostDealt / row.GoldSpent),
+                row.DealtPerHundredGold);
         }
     }
 
@@ -391,10 +391,10 @@ public class SweepTests
         // where 3 was expected -- which is exactly the failure an argument list
         // of four same-typed integers has, and the reason both are asserted
         // separately rather than through the hash they share.
-        SweepPlan retuned = TheSweep.Plan(freeSnapshotsPerRun: 3, snapshotPriceSauce: 40);
+        SweepPlan retuned = TheSweep.Plan(freeSnapshotsPerRun: 3, snapshotPriceGold: 40);
 
         Assert.Equal(3, retuned.Rules.FreeSnapshotsPerRun);
-        Assert.Equal(40, retuned.Rules.SnapshotPriceSauce);
+        Assert.Equal(40, retuned.Rules.SnapshotPriceGold);
         Assert.NotEqual(TheRuleset.Committed().ContentHash, retuned.Rules.ContentHash);
 
         // And a run priced against them prices a snapshot at the sweep's number,

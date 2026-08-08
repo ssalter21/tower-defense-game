@@ -139,15 +139,15 @@ public class HostileLocaleTests
         Assert.Equal(invariant.ArmourDenominator, hostile.ArmourDenominator);
         Assert.Equal(invariant.DamageFloor, hostile.DamageFloor);
         Assert.Equal(invariant.InterestPercentPerWave, hostile.InterestPercentPerWave);
-        Assert.Equal(invariant.InterestCapSauce, hostile.InterestCapSauce);
+        Assert.Equal(invariant.InterestCapGold, hostile.InterestCapGold);
         Assert.Equal(invariant.IncomeBasePerWave, hostile.IncomeBasePerWave);
-        Assert.Equal(invariant.HealthPoolSauce, hostile.HealthPoolSauce);
+        Assert.Equal(invariant.HealthPoolGold, hostile.HealthPoolGold);
         Assert.Equal(invariant.StartingWaveSlots, hostile.StartingWaveSlots);
         Assert.Equal(invariant.WaveSlotsPerAnchor, hostile.WaveSlotsPerAnchor);
         Assert.Equal(invariant.OrdinaryOptionsPerRound, hostile.OrdinaryOptionsPerRound);
         Assert.Equal(invariant.GameChangersPerAnchor, hostile.GameChangersPerAnchor);
         Assert.Equal(invariant.FreeSnapshotsPerRun, hostile.FreeSnapshotsPerRun);
-        Assert.Equal(invariant.SnapshotPriceSauce, hostile.SnapshotPriceSauce);
+        Assert.Equal(invariant.SnapshotPriceGold, hostile.SnapshotPriceGold);
 
         Assert.Equal(invariant.Bands.Count, hostile.Bands.Count);
 

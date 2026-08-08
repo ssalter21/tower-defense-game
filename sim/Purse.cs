@@ -55,18 +55,18 @@ namespace Sim
             + " base + "
             + Bonus.ToString(CultureInfo.InvariantCulture)
             + " bonus = "
-            + Purse.Sauce.ToString(CultureInfo.InvariantCulture)
-            + " sauce";
+            + Purse.Gold.ToString(CultureInfo.InvariantCulture)
+            + " gold";
     }
 
     /// <summary>
-    /// The purse: one currency called sauce, buying defense and offense alike.
+    /// The purse: one currency called gold, buying defense and offense alike.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>There is one wallet and this is it.</b> A tower and a creep and a
     /// scouting snapshot are all priced by the same <see cref="CostTable"/> and
-    /// all paid for out of the same sauce, so a build phase is one decision
+    /// all paid for out of the same gold, so a build phase is one decision
     /// rather than two small independent ones.
     /// </para>
     /// <para>
@@ -75,8 +75,8 @@ namespace Sim
     /// intermediate without replaying anything.
     /// </para>
     /// <para>
-    /// <b>Unspent sauce compounds.</b> What the purse carried through a wave
-    /// earns interest at the ruleset's rate, rounded up -- one sauce banked
+    /// <b>Unspent gold compounds.</b> What the purse carried through a wave
+    /// earns interest at the ruleset's rate, rounded up -- one gold banked
     /// earns one, never nothing -- so an empty wave slot is an investment and
     /// every purchase is measured against what not making it would have grown
     /// to. Compounding is bounded by the run's round cap and by nothing else,
@@ -97,31 +97,31 @@ namespace Sim
 
         private static readonly Purse Nothing = new Purse(0);
 
-        private Purse(int sauce)
+        private Purse(int gold)
         {
-            Sauce = sauce;
+            Gold = gold;
         }
 
         /// <summary>A purse holding nothing.</summary>
         public static Purse Empty => Nothing;
 
-        /// <summary>A purse holding this much sauce.</summary>
-        public static Purse Holding(int sauce)
+        /// <summary>A purse holding this much gold.</summary>
+        public static Purse Holding(int gold)
         {
-            if (sauce < 0)
+            if (gold < 0)
             {
                 throw new SimulationException(
                     "A purse was asked to hold "
-                    + sauce.ToString(CultureInfo.InvariantCulture)
-                    + " sauce. There is no credit in this economy: a purchase that cannot be afforded is "
+                    + gold.ToString(CultureInfo.InvariantCulture)
+                    + " gold. There is no credit in this economy: a purchase that cannot be afforded is "
                     + "refused rather than borrowed against.");
             }
 
-            return sauce == 0 ? Nothing : new Purse(sauce);
+            return gold == 0 ? Nothing : new Purse(gold);
         }
 
         /// <summary>What this purse holds.</summary>
-        public int Sauce { get; }
+        public int Gold { get; }
 
         /// <summary>
         /// Refuses a run whose bank would compound with nothing to stop it.
@@ -131,7 +131,7 @@ namespace Sim
         /// Interest is a share of the bank paid every wave, so the bank grows
         /// geometrically and the only thing bounding it is the number of waves.
         /// Lifting the round cap therefore forces a ceiling on the interest, and
-        /// a run configured with neither is a run whose sauce goes to infinity.
+        /// a run configured with neither is a run whose gold goes to infinity.
         /// This is where that announces itself, rather than turning up later as
         /// an exploding number in a sweep nobody was watching.
         /// </para>
@@ -164,7 +164,7 @@ namespace Sim
                     + " rather than as a negative length.");
             }
 
-            if (rounds != RoundCapLifted || rules.InterestCapSauce != Ruleset.NoInterestCeiling)
+            if (rounds != RoundCapLifted || rules.InterestCapGold != Ruleset.NoInterestCeiling)
             {
                 return;
             }
@@ -188,12 +188,12 @@ namespace Sim
 
             int price = costs.PriceOf(what, count);
 
-            if (price > Sauce)
+            if (price > Gold)
             {
                 throw new SimulationException(
                     "A purse holding "
-                    + Sauce.ToString(CultureInfo.InvariantCulture)
-                    + " sauce was spent "
+                    + Gold.ToString(CultureInfo.InvariantCulture)
+                    + " gold was spent "
                     + price.ToString(CultureInfo.InvariantCulture)
                     + " on "
                     + count.ToString(CultureInfo.InvariantCulture)
@@ -203,7 +203,7 @@ namespace Sim
                     + "here means an unaffordable command was let through.");
             }
 
-            return Holding(Sauce - price);
+            return Holding(Gold - price);
         }
 
         /// <summary>
@@ -222,7 +222,7 @@ namespace Sim
         /// <see cref="PerformanceField.Absent"/> -- has no percentile to report
         /// and so pays no bonus.
         /// </param>
-        /// <param name="leakCostDealt">What this wave got past its opponents, priced in sauce.</param>
+        /// <param name="leakCostDealt">What this wave got past its opponents, priced in gold.</param>
         public WavePayment CloseWave(Ruleset rules, PerformanceField field, int leakCostDealt)
         {
             if (rules is null)
@@ -312,7 +312,7 @@ namespace Sim
                 throw new SimulationException(
                     "A run's waves earned "
                     + earned.ToString(CultureInfo.InvariantCulture)
-                    + " sauce in performance bonuses, which does not fit in the 32-bit integer sauce is "
+                    + " gold in performance bonuses, which does not fit in the 32-bit integer gold is "
                     + "counted in. A bonus is a share of the flat base, so a total past that range is a "
                     + "base or a band authored in the wrong units.");
             }
@@ -323,21 +323,21 @@ namespace Sim
         /// <summary>The purse after the interest, the base and a bonus somebody worked out.</summary>
         private WavePayment Closed(Ruleset rules, long bonus)
         {
-            long interest = InterestOn(rules, Sauce);
-            long closing = Sauce + interest + rules.IncomeBasePerWave + bonus;
+            long interest = InterestOn(rules, Gold);
+            long closing = Gold + interest + rules.IncomeBasePerWave + bonus;
 
             if (closing > int.MaxValue)
             {
                 throw new SimulationException(
                     "A wave closed a purse at "
                     + closing.ToString(CultureInfo.InvariantCulture)
-                    + " sauce, which does not fit in the 32-bit integer a purse is kept in. Interest "
+                    + " gold, which does not fit in the 32-bit integer a purse is kept in. Interest "
                     + "compounds, so a bank left alone for long enough leaves that range on its own -- "
                     + "which is the consequence a lifted round cap forces an interest cap to answer.");
             }
 
             return new WavePayment(
-                Sauce,
+                Gold,
                 (int)interest,
                 rules.IncomeBasePerWave,
                 (int)bonus,
@@ -351,13 +351,13 @@ namespace Sim
         private static long InterestOn(Ruleset rules, int bank)
         {
             // Rounded up rather than truncated, so that a bank small enough for
-            // its share to be a fraction still earns a coin. One sauce at ten
+            // its share to be a fraction still earns a coin. One gold at ten
             // percent earns one.
             long earned = (((long)bank * rules.InterestPercentPerWave) + Percent - 1) / Percent;
 
-            if (rules.InterestCapSauce != Ruleset.NoInterestCeiling && earned > rules.InterestCapSauce)
+            if (rules.InterestCapGold != Ruleset.NoInterestCeiling && earned > rules.InterestCapGold)
             {
-                return rules.InterestCapSauce;
+                return rules.InterestCapGold;
             }
 
             return earned;
@@ -377,7 +377,7 @@ namespace Sim
             return ShareOfTheBase(rules, rules.BandFor(field.PercentileOf(leakCostDealt)));
         }
 
-        /// <summary>What one band pays, in sauce. Truncated, and never negative.</summary>
+        /// <summary>What one band pays, in gold. Truncated, and never negative.</summary>
         private static long ShareOfTheBase(Ruleset rules, PerformanceBand band) =>
             (long)rules.IncomeBasePerWave * band.BonusPercentOfBase / Percent;
     }

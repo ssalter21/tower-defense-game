@@ -21,10 +21,10 @@ Nothing about that is a rounding artefact: half a run's rounds clear the field o
 short.
 
 But the field the bonus is read off is a **near point mass**. Ten samples of the canned opponent, each averaged
-over K=10 opponents exactly as a run's own round is, land between **14 and 19 sauce**. A run's round is
+over K=10 opponents exactly as a run's own round is, land between **14 and 19 gold**. A run's round is
 therefore above the whole field or below the whole field, and almost never inside it: the percentile it comes
 back with is 0 or 100, and the 50th and 75th bands are reachable only by a round that dealt exactly 18 or
-exactly 19 sauce — a two-sauce window on a scale of hundreds.
+exactly 19 gold — a two-gold window on a scale of hundreds.
 
 **So the four authored bands behave as two.** That is a property of a population of one, not of the thresholds.
 The same code against a pool of four members produces percentiles of 80, 80, 80, 90, 90, 100, 100, 100, 100 and
@@ -42,7 +42,7 @@ discriminates at one threshold rather than three.
 Each field is ten samples, each the average of K resolutions, drawn from the run's own seed. The table is the
 range the ten samples span.
 
-| pool | members | sample range, sauce | spread as a share of the mean |
+| pool | members | sample range, gold | spread as a share of the mean |
 | --- | --- | --- | --- |
 | `content/field.txt` behind the committed defense | 1 | 14 – 19 | ~30% |
 | `content/wave.txt` behind the committed defense | 1 | 120 – 130 | ~8% |
@@ -54,8 +54,8 @@ magnitude larger and is the thing a percentile is supposed to be measuring.
 
 ### What the bonus came to
 
-The committed sweep: six creeps, eight seeds each, ten waves, K=10, no death. `income_base_sauce` and
-`bonus_sauce` are the two columns this ticket added to `content/sweep.csv`.
+The committed sweep: six creeps, eight seeds each, ten waves, K=10, no death. `income_base_gold` and
+`bonus_gold` are the two columns this ticket added to `content/sweep.csv`.
 
 | creep | leak cost dealt | base paid | bonus paid | bonus as a share of base |
 | --- | --- | --- | --- | --- |
@@ -71,8 +71,8 @@ is what the bonus is a function of, so the column separates the roster the same 
 
 ### What the field's calibration decides
 
-Pointing the same sweep at `content/wave.txt` — 380 sauce of creeps, which no build phase in this economy can
-compose — gives a field whose rounds are worth about 125 sauce. Every creep then deals about 15 sauce a round
+Pointing the same sweep at `content/wave.txt` — 380 gold of creeps, which no build phase in this economy can
+compose — gives a field whose rounds are worth about 125 gold. Every creep then deals about 15 gold a round
 and **the bonus is zero on every row**, alongside a win rate of zero on every row.
 
 A field that outspends every opponent it faces therefore turns the offense half of the economy off as well as

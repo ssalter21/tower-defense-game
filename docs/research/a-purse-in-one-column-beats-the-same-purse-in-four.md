@@ -17,9 +17,9 @@ round's public offering and dividing the purse evenly across the slots it fills.
 
 **How many columns a purse is spread across decides whether anything leaks, and it decides it by nearly three
 orders of magnitude.** The cleanest form of the measurement changes one thing only — the shape of the wave the
-canned field sends, holding its total sauce, the defense, the seeds and the run's own waves fixed:
+canned field sends, holding its total gold, the defense, the seeds and the run's own waves fixed:
 
-| what the field sends | sauce | columns | leak cost taken, 8 runs of 10 rounds |
+| what the field sends | gold | columns | leak cost taken, 8 runs of 10 rounds |
 |---|---|---|---|
 | 10 grunts | 100 | 1 | **1406** |
 | 5 grunts + 5 runners | 95 | 2 | **2** |
@@ -48,7 +48,7 @@ each of the roster's six creeps, against the one-column field:
 
 **The fall from three ingredients to five is the finding**; the tick up at six is seventeen runs and should not
 be read as a shape. The per-creep leak rate tells the same story less cleanly — the bulwark falls 36, 26, 16,
-15, 11 sauce dealt per hundred spent across bins two to six, and the drifter 20, 18, 15, 11, 8, but the grunt,
+15, 11 gold dealt per hundred spent across bins two to six, and the drifter 20, 18, 15, 11, 8, but the grunt,
 the runner and the lancer are flat or rise at the tail. Win rate is the column to read this on; cost efficiency
 is not, and under a one-for-one leak charge it never could be — see
 [the note on that](cost-is-not-a-balance-lever-under-a-one-for-one-leak.md).

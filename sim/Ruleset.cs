@@ -63,7 +63,7 @@ namespace Sim
         /// </summary>
         private const string HashLabel = "ruleset/3";
 
-        /// <summary>The <see cref="InterestCapSauce"/> that means no ceiling at all.</summary>
+        /// <summary>The <see cref="InterestCapGold"/> that means no ceiling at all.</summary>
         public const int NoInterestCeiling = 0;
 
         /// <summary>
@@ -92,17 +92,17 @@ namespace Sim
             ArmourDenominator = draft.ArmourDenominator;
             DamageFloor = draft.DamageFloor;
             InterestPercentPerWave = draft.InterestPercentPerWave;
-            InterestCapSauce = draft.InterestCapSauce;
+            InterestCapGold = draft.InterestCapGold;
             IncomeBasePerWave = draft.IncomeBasePerWave;
-            StartingPurseSauce = draft.StartingPurseSauce;
+            StartingPurseGold = draft.StartingPurseGold;
             _bands = draft.Bands.ToArray();
-            HealthPoolSauce = draft.HealthPoolSauce;
+            HealthPoolGold = draft.HealthPoolGold;
             StartingWaveSlots = draft.StartingWaveSlots;
             WaveSlotsPerAnchor = draft.WaveSlotsPerAnchor;
             OrdinaryOptionsPerRound = draft.OrdinaryOptionsPerRound;
             GameChangersPerAnchor = draft.GameChangersPerAnchor;
             FreeSnapshotsPerRun = draft.FreeSnapshotsPerRun;
-            SnapshotPriceSauce = draft.SnapshotPriceSauce;
+            SnapshotPriceGold = draft.SnapshotPriceGold;
             ContentHash = Fold();
         }
 
@@ -116,24 +116,24 @@ namespace Sim
             int ordinaryOptionsPerRound,
             int gameChangersPerAnchor,
             int freeSnapshotsPerRun,
-            int snapshotPriceSauce)
+            int snapshotPriceGold)
         {
             Matrix = original.Matrix;
             ArmourPercentPerPoint = original.ArmourPercentPerPoint;
             ArmourDenominator = original.ArmourDenominator;
             DamageFloor = original.DamageFloor;
             InterestPercentPerWave = original.InterestPercentPerWave;
-            InterestCapSauce = original.InterestCapSauce;
+            InterestCapGold = original.InterestCapGold;
             IncomeBasePerWave = original.IncomeBasePerWave;
-            StartingPurseSauce = original.StartingPurseSauce;
+            StartingPurseGold = original.StartingPurseGold;
             _bands = original._bands;
-            HealthPoolSauce = original.HealthPoolSauce;
+            HealthPoolGold = original.HealthPoolGold;
             StartingWaveSlots = original.StartingWaveSlots;
             WaveSlotsPerAnchor = original.WaveSlotsPerAnchor;
             OrdinaryOptionsPerRound = ordinaryOptionsPerRound;
             GameChangersPerAnchor = gameChangersPerAnchor;
             FreeSnapshotsPerRun = freeSnapshotsPerRun;
-            SnapshotPriceSauce = snapshotPriceSauce;
+            SnapshotPriceGold = snapshotPriceGold;
             ContentHash = Fold();
         }
 
@@ -160,23 +160,23 @@ namespace Sim
         public int InterestPercentPerWave { get; }
 
         /// <summary>
-        /// The most interest one wave may pay, in sauce.
+        /// The most interest one wave may pay, in gold.
         /// <see cref="NoInterestCeiling"/> means there is none, and compounding
         /// is then bounded by the run's round cap alone -- which is why a run
         /// with no round cap and no ceiling here is refused. See
         /// <see cref="Purse.RequireBoundedCompounding"/>.
         /// </summary>
-        public int InterestCapSauce { get; }
+        public int InterestCapGold { get; }
 
-        /// <summary>The flat income a wave pays, in sauce, before any bonus.</summary>
+        /// <summary>The flat income a wave pays, in gold, before any bonus.</summary>
         public int IncomeBasePerWave { get; }
 
         /// <summary>
-        /// What a run's purse opens holding, in sauce. Nothing has been earned
+        /// What a run's purse opens holding, in gold. Nothing has been earned
         /// yet when the first build phase stands, so without this the opening
         /// round's only affordable wave is the empty one.
         /// </summary>
-        public int StartingPurseSauce { get; }
+        public int StartingPurseGold { get; }
 
         /// <summary>
         /// The performance bonus, as bands against the field's distribution.
@@ -192,8 +192,8 @@ namespace Sim
         /// </summary>
         public PerformanceBand BestBand => _bands[_bands.Length - 1];
 
-        /// <summary>The health pool a run starts with, denominated in sauce.</summary>
-        public int HealthPoolSauce { get; }
+        /// <summary>The health pool a run starts with, denominated in gold.</summary>
+        public int HealthPoolGold { get; }
 
         /// <summary>How many wave slots the first round has.</summary>
         public int StartingWaveSlots { get; }
@@ -214,8 +214,8 @@ namespace Sim
         /// <summary>How many scouting snapshots a run gets before it starts paying.</summary>
         public int FreeSnapshotsPerRun { get; }
 
-        /// <summary>What a snapshot costs in sauce once the free ones are spent.</summary>
-        public int SnapshotPriceSauce { get; }
+        /// <summary>What a snapshot costs in gold once the free ones are spent.</summary>
+        public int SnapshotPriceGold { get; }
 
         /// <summary>
         /// The content hash: a fold over every parsed integer, in field order.
@@ -293,19 +293,19 @@ namespace Sim
             int ordinaryOptionsPerRound,
             int gameChangersPerAnchor,
             int freeSnapshotsPerRun,
-            int snapshotPriceSauce)
+            int snapshotPriceGold)
         {
             RequireInRange(ordinaryOptionsPerRound, "the ordinary options", 1, MostOptions);
             RequireInRange(gameChangersPerAnchor, "the game changers an anchor adds", 1, MostOptions);
             RequireInRange(freeSnapshotsPerRun, "the free snapshot count", 0, int.MaxValue);
-            RequireInRange(snapshotPriceSauce, "the snapshot price", 0, int.MaxValue);
+            RequireInRange(snapshotPriceGold, "the snapshot price", 0, int.MaxValue);
 
             return new Ruleset(
                 this,
                 ordinaryOptionsPerRound,
                 gameChangersPerAnchor,
                 freeSnapshotsPerRun,
-                snapshotPriceSauce);
+                snapshotPriceGold);
         }
 
         /// <summary>
@@ -380,9 +380,9 @@ namespace Sim
                 .Add(ArmourDenominator)
                 .Add(DamageFloor)
                 .Add(InterestPercentPerWave)
-                .Add(InterestCapSauce)
+                .Add(InterestCapGold)
                 .Add(IncomeBasePerWave)
-                .Add(StartingPurseSauce)
+                .Add(StartingPurseGold)
                 .Add(_bands.Length);
 
             for (int index = 0; index < _bands.Length; index++)
@@ -391,13 +391,13 @@ namespace Sim
             }
 
             return hash
-                .Add(HealthPoolSauce)
+                .Add(HealthPoolGold)
                 .Add(StartingWaveSlots)
                 .Add(WaveSlotsPerAnchor)
                 .Add(OrdinaryOptionsPerRound)
                 .Add(GameChangersPerAnchor)
                 .Add(FreeSnapshotsPerRun)
-                .Add(SnapshotPriceSauce);
+                .Add(SnapshotPriceGold);
         }
 
         /// <summary>A retuned number, refused where the authored column would have refused it.</summary>
@@ -458,7 +458,7 @@ namespace Sim
                     draft.Once(source, line, "interest");
                     draft.InterestPercentPerWave =
                         DataText.IntegerInRange(source, line, "the interest rate", fields[1], 0, 1000);
-                    draft.InterestCapSauce =
+                    draft.InterestCapGold =
                         DataText.IntegerInRange(source, line, "the interest cap", fields[2], 0, int.MaxValue);
                     return;
 
@@ -472,7 +472,7 @@ namespace Sim
                 case "purse":
                     Expect(source, line, fields, "purse", 2);
                     draft.Once(source, line, "purse");
-                    draft.StartingPurseSauce =
+                    draft.StartingPurseGold =
                         DataText.IntegerInRange(source, line, "the starting purse", fields[1], 0, int.MaxValue);
                     return;
 
@@ -488,7 +488,7 @@ namespace Sim
                 case "health":
                     Expect(source, line, fields, "health", 2);
                     draft.Once(source, line, "health");
-                    draft.HealthPoolSauce =
+                    draft.HealthPoolGold =
                         DataText.IntegerInRange(source, line, "the health pool", fields[1], 1, int.MaxValue);
                     return;
 
@@ -515,7 +515,7 @@ namespace Sim
                     draft.Once(source, line, "snapshot");
                     draft.FreeSnapshotsPerRun =
                         DataText.IntegerInRange(source, line, "the free snapshot count", fields[1], 0, int.MaxValue);
-                    draft.SnapshotPriceSauce =
+                    draft.SnapshotPriceGold =
                         DataText.IntegerInRange(source, line, "the snapshot price", fields[2], 0, int.MaxValue);
                     return;
 
@@ -569,13 +569,13 @@ namespace Sim
 
             internal int InterestPercentPerWave { get; set; }
 
-            internal int InterestCapSauce { get; set; }
+            internal int InterestCapGold { get; set; }
 
             internal int IncomeBasePerWave { get; set; }
 
-            internal int StartingPurseSauce { get; set; }
+            internal int StartingPurseGold { get; set; }
 
-            internal int HealthPoolSauce { get; set; }
+            internal int HealthPoolGold { get; set; }
 
             internal int StartingWaveSlots { get; set; }
 
@@ -587,7 +587,7 @@ namespace Sim
 
             internal int FreeSnapshotsPerRun { get; set; }
 
-            internal int SnapshotPriceSauce { get; set; }
+            internal int SnapshotPriceGold { get; set; }
 
             /// <summary>Records a row that may appear exactly once.</summary>
             internal void Once(string source, int line, string keyword)

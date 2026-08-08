@@ -47,7 +47,7 @@
 #
 # EVERY WALKING ROW COSTS ITS EFFECTIVE HEALTH OVER A HUNDRED AND SIXTY, and
 # every one of them lands within a few percent of that. A leak charges health
-# equal to what the creep cost to send, one for one, so what a sauce buys is
+# equal to what the creep cost to send, one for one, so what gold buys is
 # health a defense has to spend to stop it -- and effective health is the pool
 # times the armour multiplier, which is the one thing a defense cannot argue
 # with. The type chart deliberately stays out of the price: every row and every
@@ -56,13 +56,13 @@
 # an armour type that changed the price would be charging twice for a bet.
 #
 # WHAT THAT LEAVES A ROW TO DIFFER IN IS SHAPE. Speed, granularity, and which
-# defense chews it. Four hundred sauce buys fifty-seven wisps or eight
+# defense chews it. Four hundred gold buys fifty-seven wisps or eight
 # bulwarks, and against the committed defense both hand back about four fifths
 # of what they cost -- so choosing between them is a read of the board rather
 # than a lookup of which row was mispriced.
 #
 # THAT SAMENESS IS THE EXCHANGE RATE AND NOT A COINCIDENCE. A leak charging
-# what the creep cost means the health a sauce buys is the leak rate and
+# what the creep cost means the health gold buys is the leak rate and
 # nothing else, so cost cancels out of it and a row is balanced by what it
 # survives. See docs/research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md,
 # which is also where the measurements above are written down.
@@ -109,7 +109,7 @@
 # range    : thousandths of a hex
 # flight   : ticks a projectile spends travelling; zero unless delivery is projectile
 # dying    : ticks spent dying, so seeking into a death shows a death
-# cost     : sauce, and the health a leak of this creep costs one for one
+# cost     : gold, and the health a leak of this creep costs one for one
 # attack   : pierce | impact | magic, and none for a unit that never attacks
 # armour   : swift | armoured | arcane, and none for a unit with no health pool
 # armourValue : percent of base effective health added per point; none carries zero

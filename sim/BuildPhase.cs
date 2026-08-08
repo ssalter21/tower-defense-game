@@ -15,7 +15,7 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>An empty slot is a position rather than an omission.</b> Not sending
-    /// banks the sauce at the ruleset's interest, so leaving one empty is an
+    /// banks the gold at the ruleset's interest, so leaving one empty is an
     /// investment measured against every purchase that would have used it.
     /// <c>default</c> is <see cref="Empty"/>, so a slot nobody filled in is the
     /// empty one rather than one creep of a type that does not exist.
@@ -290,15 +290,15 @@ namespace Sim
                 orders.Add(new UnitOrder(ReleaseTick, after.TypeOf(slot.TypeId), slot.Count, Corridor));
             }
 
-            if (spent > purse.Sauce)
+            if (spent > purse.Gold)
             {
                 throw new SimulationException(
                     "A build phase at wave "
                     + offering.Wave.ToString(CultureInfo.InvariantCulture)
                     + " buys "
                     + spent.ToString(CultureInfo.InvariantCulture)
-                    + " sauce of creeps out of a purse holding "
-                    + purse.Sauce.ToString(CultureInfo.InvariantCulture)
+                    + " gold of creeps out of a purse holding "
+                    + purse.Gold.ToString(CultureInfo.InvariantCulture)
                     + ". There is no credit in this economy, so a wave nobody can afford is refused where "
                     + "the decision is read rather than borrowed against -- and the whole wave is priced "
                     + "before a coin moves, so a purse is never left part-spent on a wave that was never "
@@ -354,7 +354,7 @@ namespace Sim
         /// <summary>The purse after the wave was bought.</summary>
         public Purse Purse { get; }
 
-        /// <summary>What the wave cost, in sauce.</summary>
+        /// <summary>What the wave cost, in gold.</summary>
         public int Spent { get; }
 
         /// <summary>The wave the filled slots compose. Empty where every slot was left so.</summary>
@@ -366,8 +366,8 @@ namespace Sim
             + ", spent "
             + Spent.ToString(CultureInfo.InvariantCulture)
             + " of "
-            + (Purse.Sauce + Spent).ToString(CultureInfo.InvariantCulture)
-            + " sauce on "
+            + (Purse.Gold + Spent).ToString(CultureInfo.InvariantCulture)
+            + " gold on "
             + Wave.TotalUnits.ToString(CultureInfo.InvariantCulture)
             + " units";
     }

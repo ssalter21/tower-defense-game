@@ -10,14 +10,14 @@ namespace Sim
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>No sauce moves between players.</b> A wave is measured against the
+    /// <b>No gold moves between players.</b> A wave is measured against the
     /// spread of the field and never against a named opponent, so the payment
     /// reads the same whether the field is one lobby or a whole population, and
     /// beating somebody takes nothing off them.
     /// </para>
     /// <para>
     /// The measure is leak cost dealt -- what a wave got past its opponents,
-    /// priced in sauce -- which is one half of the pair a round already records.
+    /// priced in gold -- which is one half of the pair a round already records.
     /// </para>
     /// </remarks>
     public sealed class PerformanceField

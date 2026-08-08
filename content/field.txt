@@ -9,26 +9,26 @@
 # at it: the percentile bands are measured against whatever is in here.
 #
 # IT IS NOT wave.txt, AND THE DIFFERENCE IS THE WHOLE POINT. That file is the
-# skeleton's authored match -- forty creeps, three hundred and eighty sauce of
+# skeleton's authored match -- forty creeps, three hundred and eighty gold of
 # them, released over fourteen hundred ticks -- and no build phase in this
 # economy can compose it. A run's purse opens on one wave's base and is paid
-# one wave's base a wave, so what it sends is a little over a hundred sauce a
+# one wave's base a wave, so what it sends is a little over a hundred gold a
 # round. A field member that outspends every opponent it faces by three and a
 # half times is not a strong opponent, it is a different game, and a sweep
 # against one reports a total loss on every row and names nothing.
 #
 # SO THIS IS A BUILD PHASE'S OUTPUT: everything on tick zero, because a build
-# phase composes what is sent rather than when, and a hundred sauce of it,
+# phase composes what is sent rather than when, and a hundred gold of it,
 # because that is what a purse holds when a round comes round. It is the wave
 # an opening round composes -- one unlock, so one slot, so the whole purse in
 # one column.
 #
 # ONE COLUMN, AND THAT IS MEASURED RATHER THAN CHOSEN. A count is released one
-# unit every fifteen ticks, so the same hundred sauce spread across more
+# unit every fifteen ticks, so the same hundred gold spread across more
 # columns arrives as more bodies per tick over fewer ticks, and whether the
 # towers saturate is nearly the whole story of whether anything leaks. Over
 # eight ten-wave runs against the committed defense, holding everything else
-# byte-identical: ten grunts in one column got 1406 sauce past, five grunts
+# byte-identical: ten grunts in one column got 1406 gold past, five grunts
 # beside five runners got 2, and four columns totalling ten bodies got none at
 # all. A field member with the right total and the wrong number of columns is
 # not a slightly different opponent, it is a walkover.
@@ -42,7 +42,7 @@
 #
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
 # calibration argument carries. A round of this opponent is worth about
-# seventeen sauce, which sits under what a run's own wave gets past it, so
+# seventeen gold, which sits under what a run's own wave gets past it, so
 # roughly half a run's rounds clear the top band and the bonus comes out near
 # nine percent of the flat base. Against wave.txt, whose rounds are worth about
 # a hundred and twenty-five, no run clears the bottom band and the bonus is
@@ -51,7 +51,7 @@
 #
 # ONE MEMBER IS A DISTRIBUTION WITH ALMOST NO SPREAD, AND THAT IS THIS FILE'S
 # REAL LIMIT. Ten samples of one opponent land between fourteen and nineteen
-# sauce, so a round is above the field or below it and almost never inside it:
+# gold, so a round is above the field or below it and almost never inside it:
 # the 50th and 75th bands are unreachable in practice, and the four authored
 # bands behave as two. The measured evidence, and what a pool of four does
 # instead, is in docs/research/a-canned-field-of-one-collapses-the-bands.md.

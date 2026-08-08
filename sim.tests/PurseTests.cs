@@ -34,14 +34,14 @@ public class PurseTests
         Purse purse = Purse.Holding(100);
 
         Purse afterTower = purse.Spend(costs, Purchase.Unit(3), 1);
-        Assert.Equal(60, afterTower.Sauce);
+        Assert.Equal(60, afterTower.Gold);
 
         Purse afterCreeps = afterTower.Spend(costs, Purchase.Unit(1), 4);
-        Assert.Equal(20, afterCreeps.Sauce);
+        Assert.Equal(20, afterCreeps.Gold);
 
         // And the thing that is not a unit at all comes out of the same twenty,
         // which is not enough for it. Scouting competes with the board for
-        // sauce because there is nowhere else for it to be funded from.
+        // gold because there is nowhere else for it to be funded from.
         Assert.Equal(25, costs.PriceOf(Purchase.Snapshot));
         Assert.Throws<SimulationException>(() => afterCreeps.Spend(costs, Purchase.Snapshot, 1));
     }
@@ -49,7 +49,7 @@ public class PurseTests
     [Fact]
     public void Spending_more_than_the_purse_holds_is_refused_rather_than_borrowed()
     {
-        // OBSERVED: let Spend return Holding(Sauce - price) with no comparison.
+        // OBSERVED: let Spend return Holding(Gold - price) with no comparison.
         // This goes red having caught nothing, and the refusal that fires
         // instead is Holding's -- one layer late, naming a negative purse rather
         // than the purchase that emptied it.
@@ -63,17 +63,17 @@ public class PurseTests
     public void A_purse_cannot_hold_less_than_nothing()
     {
         // OBSERVED: drop the guard in Purse.Holding. This goes red having caught
-        // nothing, and a purse of -1 sauce is a debt in an economy that has no
+        // nothing, and a purse of -1 gold is a debt in an economy that has no
         // credit in it.
         Assert.Throws<SimulationException>(() => Purse.Holding(-1));
-        Assert.Equal(0, Purse.Empty.Sauce);
+        Assert.Equal(0, Purse.Empty.Gold);
     }
 
     [Fact]
-    public void One_sauce_banked_earns_one_and_not_none()
+    public void One_gold_banked_earns_one_and_not_none()
     {
         // The rounding direction, at the only boundary where the two directions
-        // differ by the whole of the effect. Ten percent of one sauce is a
+        // differ by the whole of the effect. Ten percent of one gold is a
         // tenth: rounded up it is a coin, truncated it is nothing at all and a
         // small bank never grows.
         //
@@ -92,9 +92,9 @@ public class PurseTests
     }
 
     [Fact]
-    public void Unspent_sauce_compounds_wave_after_wave()
+    public void Unspent_gold_compounds_wave_after_wave()
     {
-        // The fold. A hundred sauce left alone for ten waves at ten percent, and
+        // The fold. A hundred gold left alone for ten waves at ten percent, and
         // the sequence written out rather than recomputed by the same expression
         // the simulation uses -- an oracle that calls the thing under test is not
         // an oracle.
@@ -111,7 +111,7 @@ public class PurseTests
         for (int wave = 0; wave < 10; wave++)
         {
             purse = purse.CloseWave(rules, PerformanceField.Absent, 0).Purse;
-            banked.Add(purse.Sauce);
+            banked.Add(purse.Gold);
         }
 
         Assert.Equal(
@@ -122,7 +122,7 @@ public class PurseTests
         // of it is more than ten waves of simple interest on the opening bank.
         Assert.True(
             banked[9] > 100 + (10 * 10),
-            "A hundred sauce left alone for ten waves grew to "
+            "A hundred gold left alone for ten waves grew to "
             + banked[9].ToString(CultureInfo.InvariantCulture)
             + ", which is no more than simple interest, so nothing is compounding.");
     }
@@ -160,7 +160,7 @@ public class PurseTests
 
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
         Assert.Equal(100, paid.IncomeBase);
-        Assert.Equal(100, paid.Purse.Sauce);
+        Assert.Equal(100, paid.Purse.Gold);
 
         Assert.Equal(
             250,
@@ -196,7 +196,7 @@ public class PurseTests
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
         Assert.Equal(50, paid.Interest);
         Assert.Equal(150, paid.Total);
-        Assert.Equal(650, paid.Purse.Sauce);
+        Assert.Equal(650, paid.Purse.Gold);
     }
 
     [Fact]
@@ -369,7 +369,7 @@ public class PurseTests
     [Fact]
     public void Payment_is_against_the_field_as_a_distribution_and_never_against_an_opponent()
     {
-        // No sauce moves between players, so a field is a spread of amounts with
+        // No gold moves between players, so a field is a spread of amounts with
         // no identities in it. Two consequences, both asserted: the order the
         // rounds arrive in cannot change what a wave is paid, and being paid
         // takes nothing off anybody -- the same field answers the same question
@@ -434,7 +434,7 @@ public class PurseTests
         // anything rather than discovered later as an exploding number.
         //
         // OBSERVED: return early from Purse.RequireBoundedCompounding before the
-        // throw. This goes red having caught nothing -- and one single sauce,
+        // throw. This goes red having caught nothing -- and one single gold,
         // banked at ten percent and never spent, leaves the range of a 32-bit
         // purse in 207 waves. That is the failure this refusal exists instead
         // of.
@@ -462,8 +462,8 @@ public class PurseTests
         Purse.RequireBoundedCompounding(capped, Purse.RoundCapLifted);
         Purse.RequireBoundedCompounding(capped, 10);
 
-        Assert.Equal(Ruleset.NoInterestCeiling, uncapped.InterestCapSauce);
-        Assert.Equal(500, capped.InterestCapSauce);
+        Assert.Equal(Ruleset.NoInterestCeiling, uncapped.InterestCapGold);
+        Assert.Equal(500, capped.InterestCapGold);
     }
 
     [Fact]
@@ -487,7 +487,7 @@ public class PurseTests
         // What the cap buys: growth that is linear rather than geometric, which
         // is what makes an uncapped run's refusal answerable by authoring one.
         //
-        // OBSERVED: ignore rules.InterestCapSauce in Purse.InterestOn. The first
+        // OBSERVED: ignore rules.InterestCapGold in Purse.InterestOn. The first
         // assertion goes red, 5 against 100, and the ceiling a lifted round cap
         // forces somebody to author does nothing at all.
         Ruleset capped = Ruleset.Parse(PlantedText.Replace(
@@ -506,7 +506,7 @@ public class PurseTests
         for (int wave = 0; wave < 4; wave++)
         {
             purse = purse.CloseWave(capped, PerformanceField.Absent, 0).Purse;
-            banked.Add(purse.Sauce);
+            banked.Add(purse.Gold);
         }
 
         Assert.Equal(new[] { 1005, 1010, 1015, 1020 }, banked);
@@ -551,7 +551,7 @@ public class PurseTests
         Assert.Equal(100, paid.IncomeBase);
         Assert.Equal(20, paid.Bonus);
         Assert.Equal(154, paid.Total);
-        Assert.Equal(paid.Opening + paid.Total, paid.Purse.Sauce);
+        Assert.Equal(paid.Opening + paid.Total, paid.Purse.Gold);
     }
 
     /// <summary>What a wave that dealt this much is paid on top of the base.</summary>

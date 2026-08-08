@@ -145,7 +145,7 @@ internal sealed class RunContent
         int ordinaryOptionsPerRound,
         int gameChangersPerAnchor,
         int freeSnapshotsPerRun,
-        int snapshotPriceSauce,
+        int snapshotPriceGold,
         int mostCreeps) =>
         new SweepPlan(
             _map,
@@ -162,6 +162,6 @@ internal sealed class RunContent
             ordinaryOptionsPerRound,
             gameChangersPerAnchor,
             freeSnapshotsPerRun,
-            snapshotPriceSauce,
+            snapshotPriceGold,
             mostCreeps);
 }

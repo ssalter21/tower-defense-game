@@ -16,7 +16,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0025](0025-invariants-are-unconditional-throws.md) | Every invariant is an unconditional throw |
 | [0033](0033-one-fused-damage-expression-and-a-named-pipeline.md) | One fused damage expression, evaluated once, behind a named pipeline |
 | [0034](0034-run-level-draws-are-derived-positions.md) | Run-level draws come from derived positions; the match keeps its one stream |
-| [0035](0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | A run's outcome is a vector, and health is a clock denominated in sauce |
+| [0035](0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | A run's outcome is a vector, and health is a clock denominated in gold |
 | [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints |
 | [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once |
 | [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |

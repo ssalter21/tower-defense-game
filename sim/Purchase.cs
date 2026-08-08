@@ -6,7 +6,7 @@ namespace Sim
     /// <summary>
     /// What kind of thing a coin buys. One purse pays for every one of them, so
     /// this is what the cost table is keyed on -- a scouting snapshot is not a
-    /// unit and comes out of the same sauce.
+    /// unit and comes out of the same gold.
     /// </summary>
     /// <remarks>
     /// A kind is declared here, named in <see cref="Purchase.NameOf"/> and given

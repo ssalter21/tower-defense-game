@@ -19,7 +19,7 @@ namespace Sim
 
     /// <summary>
     /// One round, as the pair it is: what got past everybody else, and what got
-    /// past me. Both are leak costs -- sauce, priced one for one off whatever
+    /// past me. Both are leak costs -- gold, priced one for one off whatever
     /// walked to the exit.
     /// </summary>
     /// <remarks>
@@ -35,10 +35,10 @@ namespace Sim
             LeakCostTaken = Amount(leakCostTaken, "taken from");
         }
 
-        /// <summary>What this round's wave got past the field, priced in sauce.</summary>
+        /// <summary>What this round's wave got past the field, priced in gold.</summary>
         public int LeakCostDealt { get; }
 
-        /// <summary>What the field's waves got past this round's defense, priced in sauce.</summary>
+        /// <summary>What the field's waves got past this round's defense, priced in gold.</summary>
         public int LeakCostTaken { get; }
 
         public override string ToString() =>
@@ -80,7 +80,7 @@ namespace Sim
     /// <para>
     /// <b>The placing is waves survived, then health remaining.</b> The graded
     /// pool is both the resource during the run and the order at the end of it.
-    /// What the offense earned is sauce: it is on this vector, it is folded into
+    /// What the offense earned is gold: it is on this vector, it is folded into
     /// <see cref="LeakCostDealt"/>, and it appears nowhere in
     /// <see cref="CompareTo"/>.
     /// </para>
@@ -95,7 +95,7 @@ namespace Sim
         private readonly RoundOutcome[] _rounds;
 
         private RunOutcome(
-            int healthPoolSauce,
+            int healthPoolGold,
             RoundOutcome[] rounds,
             int waves,
             bool deathEndsTheRun,
@@ -104,7 +104,7 @@ namespace Sim
             int leakCostDealt,
             int leakCostTaken)
         {
-            HealthPoolSauce = healthPoolSauce;
+            HealthPoolGold = healthPoolGold;
             _rounds = rounds;
             Waves = waves;
             DeathEndsTheRun = deathEndsTheRun;
@@ -130,8 +130,8 @@ namespace Sim
             }
         }
 
-        /// <summary>The health the run started with, in sauce. What every fold below is measured off.</summary>
-        public int HealthPoolSauce { get; }
+        /// <summary>The health the run started with, in gold. What every fold below is measured off.</summary>
+        public int HealthPoolGold { get; }
 
         /// <summary>How many waves the run was set to last, or <see cref="Purse.RoundCapLifted"/>.</summary>
         public int Waves { get; }
@@ -145,7 +145,7 @@ namespace Sim
         /// <summary>How the run stopped, or that it has not.</summary>
         public RunEnding Ending { get; }
 
-        /// <summary>The pool less everything taken, floored at nothing. Sauce cannot put any of it back.</summary>
+        /// <summary>The pool less everything taken, floored at nothing. Gold cannot put any of it back.</summary>
         public int HealthRemaining { get; }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Sim
         /// vector rebuilds the outcome here and reads health, waves survived and
         /// the ending off it without simulating a tick.
         /// </remarks>
-        /// <param name="healthPoolSauce">What the run started with, from the ruleset.</param>
+        /// <param name="healthPoolGold">What the run started with, from the ruleset.</param>
         /// <param name="rounds">The pairs, in the order they happened.</param>
         /// <param name="waves">
         /// How many waves the run lasts, or <see cref="Purse.RoundCapLifted"/>
@@ -177,7 +177,7 @@ namespace Sim
         /// </param>
         /// <param name="deathEndsTheRun">Whether health reaching zero stops it.</param>
         public static RunOutcome Of(
-            int healthPoolSauce,
+            int healthPoolGold,
             IReadOnlyList<RoundOutcome> rounds,
             int waves,
             bool deathEndsTheRun)
@@ -187,11 +187,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rounds));
             }
 
-            if (healthPoolSauce < 1)
+            if (healthPoolGold < 1)
             {
                 throw new SimulationException(
                     "A run started on "
-                    + healthPoolSauce.ToString(CultureInfo.InvariantCulture)
+                    + healthPoolGold.ToString(CultureInfo.InvariantCulture)
                     + " health. The pool is a graded clock rather than a wall, so a run that begins at zero "
                     + "or below is over before its first wave and every fold over it reads as a death "
                     + "nothing caused.");
@@ -234,7 +234,7 @@ namespace Sim
                 // The pool runs down and never back up, so the rounds survived
                 // are a prefix: the first round the pool cannot pay for ends the
                 // count, and a no-death run keeps recording rounds past it.
-                if (alive && taken < healthPoolSauce)
+                if (alive && taken < healthPoolGold)
                 {
                     survived++;
                 }
@@ -245,11 +245,11 @@ namespace Sim
             }
 
             return new RunOutcome(
-                healthPoolSauce,
+                healthPoolGold,
                 copied,
                 waves,
                 deathEndsTheRun,
-                taken >= healthPoolSauce ? 0 : healthPoolSauce - (int)taken,
+                taken >= healthPoolGold ? 0 : healthPoolGold - (int)taken,
                 survived,
                 Sum(dealt, "dealt"),
                 Sum(taken, "taken"));
@@ -262,7 +262,7 @@ namespace Sim
         /// <remarks>
         /// Negative means this run places above the other, so a list sorted with
         /// this comparison reads best first. The offense is deliberately absent:
-        /// what a wave earns its sender is sauce, and the ranking has one
+        /// what a wave earns its sender is gold, and the ranking has one
         /// meaning.
         /// </remarks>
         public int CompareTo(RunOutcome? other)
@@ -290,7 +290,7 @@ namespace Sim
             + " waves survived, "
             + HealthRemaining.ToString(CultureInfo.InvariantCulture)
             + " of "
-            + HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
+            + HealthPoolGold.ToString(CultureInfo.InvariantCulture)
             + " health left, "
             + LeakCostDealt.ToString(CultureInfo.InvariantCulture)
             + " dealt over "
@@ -307,7 +307,7 @@ namespace Sim
                     + total.ToString(CultureInfo.InvariantCulture)
                     + " in leak cost "
                     + what
-                    + ", which does not fit in the 32-bit integer sauce is counted in.");
+                    + ", which does not fit in the 32-bit integer gold is counted in.");
             }
 
             return (int)total;

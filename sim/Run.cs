@@ -6,7 +6,7 @@ namespace Sim
 {
     /// <summary>
     /// One run: N waves, a build phase before each, every round resolved against
-    /// a field of K opponents, against a health pool denominated in sauce.
+    /// a field of K opponents, against a health pool denominated in gold.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -25,7 +25,7 @@ namespace Sim
     /// data out of every row rather than a short row wherever a build failed.
     /// </para>
     /// <para>
-    /// <b>Health is denominated in sauce and cannot be repaired.</b> A leaked
+    /// <b>Health is denominated in gold and cannot be repaired.</b> A leaked
     /// creep costs its price one for one, so underbuilding a defense to fund an
     /// offense <i>is</i> spending health, and the exchange rate is legible
     /// without a table. What a round costs is the field's <b>average</b> rather
@@ -184,7 +184,7 @@ namespace Sim
             FieldSize = fieldSize;
             DeathEndsTheRun = deathEndsTheRun;
             Costs = CostTable.From(rules, types);
-            Purse = Purse.Holding(rules.StartingPurseSauce);
+            Purse = Purse.Holding(rules.StartingPurseGold);
             Unlocks = Unlocks.None;
 
             // Revealed at run start: the shape was public all week and the
@@ -551,7 +551,7 @@ namespace Sim
                 throw new SimulationException(
                     "One match let "
                     + cost.ToString(CultureInfo.InvariantCulture)
-                    + " sauce past, which does not fit in the 32-bit integer health and sauce are both "
+                    + " gold past, which does not fit in the 32-bit integer health and gold are both "
                     + "counted in. A wave that costs more than a purse can hold is a cost column that was "
                     + "authored in the wrong units.");
             }
@@ -577,7 +577,7 @@ namespace Sim
                 + " rounds resolved and "
                 + Health.ToString(CultureInfo.InvariantCulture)
                 + " of "
-                + Rules.HealthPoolSauce.ToString(CultureInfo.InvariantCulture)
+                + Rules.HealthPoolGold.ToString(CultureInfo.InvariantCulture)
                 + " health left. A round resolved past the end of a run is a round nobody was still in the "
                 + "run to play, and folding it in moves an outcome that had already been settled.");
         }
@@ -609,7 +609,7 @@ namespace Sim
 
         /// <summary>The vector, folded. The only place health and the ending come from.</summary>
         private RunOutcome Folded() =>
-            RunOutcome.Of(Rules.HealthPoolSauce, _rounds, Waves, DeathEndsTheRun);
+            RunOutcome.Of(Rules.HealthPoolGold, _rounds, Waves, DeathEndsTheRun);
 
         /// <summary>
         /// Which pairing a match is: a round measures both directions against

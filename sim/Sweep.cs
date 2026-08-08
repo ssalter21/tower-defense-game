@@ -94,10 +94,10 @@ namespace Sim
             int winRateBasisPoints,
             long leakCostDealt,
             long leakCostTaken,
-            long sauceSpent,
-            int dealtPerHundredSauce,
-            long incomeBaseSauce,
-            long bonusSauce)
+            long goldSpent,
+            int dealtPerHundredGold,
+            long incomeBaseGold,
+            long bonusGold)
         {
             TypeId = typeId;
             Label = label;
@@ -108,10 +108,10 @@ namespace Sim
             WinRateBasisPoints = winRateBasisPoints;
             LeakCostDealt = leakCostDealt;
             LeakCostTaken = leakCostTaken;
-            SauceSpent = sauceSpent;
-            DealtPerHundredSauce = dealtPerHundredSauce;
-            IncomeBaseSauce = incomeBaseSauce;
-            BonusSauce = bonusSauce;
+            GoldSpent = goldSpent;
+            DealtPerHundredGold = dealtPerHundredGold;
+            IncomeBaseGold = incomeBaseGold;
+            BonusGold = bonusGold;
         }
 
         /// <summary>Which creep this row's runs favoured.</summary>
@@ -146,26 +146,26 @@ namespace Sim
         /// </summary>
         public int WinRateBasisPoints { get; }
 
-        /// <summary>What these runs' waves got past the field, in sauce, summed.</summary>
+        /// <summary>What these runs' waves got past the field, in gold, summed.</summary>
         public long LeakCostDealt { get; }
 
-        /// <summary>What the field's waves got past these runs, in sauce, summed.</summary>
+        /// <summary>What the field's waves got past these runs, in gold, summed.</summary>
         public long LeakCostTaken { get; }
 
-        /// <summary>What these runs bought creeps with, in sauce, summed.</summary>
-        public long SauceSpent { get; }
+        /// <summary>What these runs bought creeps with, in gold, summed.</summary>
+        public long GoldSpent { get; }
 
         /// <summary>
-        /// <see cref="LeakCostDealt"/> per hundred sauce spent, truncated. Read
+        /// <see cref="LeakCostDealt"/> per hundred gold spent, truncated. Read
         /// the remarks on <see cref="Sweep"/> before reading this as a price.
         /// </summary>
-        public int DealtPerHundredSauce { get; }
+        public int DealtPerHundredGold { get; }
 
-        /// <summary>What these runs' waves were paid for happening, in sauce, summed.</summary>
-        public long IncomeBaseSauce { get; }
+        /// <summary>What these runs' waves were paid for happening, in gold, summed.</summary>
+        public long IncomeBaseGold { get; }
 
         /// <summary>
-        /// What these runs' waves were paid for how they did, in sauce, summed.
+        /// What these runs' waves were paid for how they did, in gold, summed.
         /// </summary>
         /// <remarks>
         /// The performance bonus, beside the base it is a share of, so the two
@@ -174,7 +174,7 @@ namespace Sim
         /// runs never cleared the bottom band; a row where it is missing across
         /// the whole report is an economy paying the base alone.
         /// </remarks>
-        public long BonusSauce { get; }
+        public long BonusGold { get; }
 
         public override string ToString() =>
             Label
@@ -185,8 +185,8 @@ namespace Sim
             + " runs: "
             + WinRateBasisPoints.ToString(CultureInfo.InvariantCulture)
             + "bp won, "
-            + DealtPerHundredSauce.ToString(CultureInfo.InvariantCulture)
-            + " dealt per 100 sauce";
+            + DealtPerHundredGold.ToString(CultureInfo.InvariantCulture)
+            + " dealt per 100 gold";
     }
 
     /// <summary>
@@ -263,7 +263,7 @@ namespace Sim
         /// <param name="ordinaryOptionsPerRound">The offering ratio's first half, or <see cref="AsAuthored"/>.</param>
         /// <param name="gameChangersPerAnchor">The offering ratio's second half, or <see cref="AsAuthored"/>.</param>
         /// <param name="freeSnapshotsPerRun">How many snapshots a run gets free, or <see cref="AsAuthored"/>.</param>
-        /// <param name="snapshotPriceSauce">What one costs after that, or <see cref="AsAuthored"/>.</param>
+        /// <param name="snapshotPriceGold">What one costs after that, or <see cref="AsAuthored"/>.</param>
         /// <param name="mostCreeps">
         /// How many rows of the roster to score, or <see cref="WholeRoster"/>.
         /// Whatever it leaves out is reported rather than silently absent.
@@ -283,7 +283,7 @@ namespace Sim
             int ordinaryOptionsPerRound = AsAuthored,
             int gameChangersPerAnchor = AsAuthored,
             int freeSnapshotsPerRun = AsAuthored,
-            int snapshotPriceSauce = AsAuthored,
+            int snapshotPriceGold = AsAuthored,
             int mostCreeps = WholeRoster)
         {
             Map = map ?? throw new ArgumentNullException(nameof(map));
@@ -301,7 +301,7 @@ namespace Sim
                 Or(ordinaryOptionsPerRound, rules.OrdinaryOptionsPerRound),
                 Or(gameChangersPerAnchor, rules.GameChangersPerAnchor),
                 Or(freeSnapshotsPerRun, rules.FreeSnapshotsPerRun),
-                Or(snapshotPriceSauce, rules.SnapshotPriceSauce));
+                Or(snapshotPriceGold, rules.SnapshotPriceGold));
 
             RequireAtLeast(runsPerCreep, 1, "runs per creep", "A cell of no runs is a row about nothing.");
             RequireAtLeast(
@@ -532,13 +532,13 @@ namespace Sim
     /// players' rounds, and no such pool exists until runs are stored, so the
     /// pool a sweep is handed <i>is</i> what the bands are computed against --
     /// what a run earns for its offense is decided by the harness's own canned
-    /// opponent. <see cref="SweepRow.BonusSauce"/> is that money, on the row,
+    /// opponent. <see cref="SweepRow.BonusGold"/> is that money, on the row,
     /// beside the base it is a share of.
     /// </para>
     /// <para>
-    /// <b>What <see cref="SweepRow.DealtPerHundredSauce"/> measures, and what it
+    /// <b>What <see cref="SweepRow.DealtPerHundredGold"/> measures, and what it
     /// does not.</b> A leak charges health equal to what the creep cost to send,
-    /// one for one, so leak cost dealt over sauce spent is the <i>cost-weighted
+    /// one for one, so leak cost dealt over gold spent is the <i>cost-weighted
     /// leak rate of what was sent</i> and the price level cancels out of it
     /// exactly -- halving a creep's price doubles how many of it a purse buys
     /// and halves what each leak charges. <b>This column therefore cannot tell
@@ -569,8 +569,8 @@ namespace Sim
         /// <summary>What a basis point is out of. Not a lever: it is what the words mean.</summary>
         private const int BasisPoints = 10000;
 
-        /// <summary>What <see cref="SweepRow.DealtPerHundredSauce"/> is per.</summary>
-        private const int PerSauce = 100;
+        /// <summary>What <see cref="SweepRow.DealtPerHundredGold"/> is per.</summary>
+        private const int PerGold = 100;
 
         /// <summary>The axis of the report that is the roster.</summary>
         private const string CreepAxis = "creeps";
@@ -681,7 +681,7 @@ namespace Sim
             {
                 BuildPhase phase = Decide(run, creep.Id);
 
-                spent += SauceOf(run.Costs, phase);
+                spent += GoldOf(run.Costs, phase);
                 run.Advance(phase, plan.Defense);
             }
 
@@ -716,7 +716,7 @@ namespace Sim
             Option take = Preferred(offering, preferred);
             int[] chosen = Chosen(run.Unlocks.With(take), preferred, offering.WaveSlots);
             var slots = new WaveSlot[chosen.Length];
-            int share = chosen.Length == 0 ? 0 : run.Purse.Sauce / chosen.Length;
+            int share = chosen.Length == 0 ? 0 : run.Purse.Gold / chosen.Length;
 
             for (int index = 0; index < chosen.Length; index++)
             {
@@ -830,7 +830,7 @@ namespace Sim
         }
 
         /// <summary>What a build phase's slots cost, priced out of the run's own table.</summary>
-        private static long SauceOf(CostTable costs, BuildPhase phase)
+        private static long GoldOf(CostTable costs, BuildPhase phase)
         {
             long spent = 0;
 
@@ -969,7 +969,7 @@ namespace Sim
                     _dealt,
                     _taken,
                     _spent,
-                    _spent == 0 ? 0 : (int)(PerSauce * _dealt / _spent),
+                    _spent == 0 ? 0 : (int)(PerGold * _dealt / _spent),
                     _incomeBase,
                     _bonus);
             }

@@ -5,7 +5,7 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// What every purchasable thing costs, in sauce.
+    /// What every purchasable thing costs, in gold.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -71,7 +71,7 @@ namespace Sim
             // each, priced from the ruleset. Adding one does not disturb a
             // single row above it.
             items[types.Count] = Purchase.Snapshot;
-            prices[types.Count] = rules.SnapshotPriceSauce;
+            prices[types.Count] = rules.SnapshotPriceGold;
 
             return new CostTable(items, prices);
         }
@@ -79,7 +79,7 @@ namespace Sim
         /// <summary>Every purchasable thing this table prices, in the order it was built.</summary>
         public IReadOnlyList<Purchase> LineItems => _items;
 
-        /// <summary>What one of these costs, in sauce.</summary>
+        /// <summary>What one of these costs, in gold.</summary>
         public int PriceOf(Purchase what)
         {
             for (int index = 0; index < _items.Length; index++)
@@ -98,7 +98,7 @@ namespace Sim
                 + "wallet there is.");
         }
 
-        /// <summary>What this many of them cost, in sauce, all at once.</summary>
+        /// <summary>What this many of them cost, in gold, all at once.</summary>
         public int PriceOf(Purchase what, int count)
         {
             if (count < 0)
@@ -121,7 +121,7 @@ namespace Sim
                     + what.ToString()
                     + " costs "
                     + total.ToString(CultureInfo.InvariantCulture)
-                    + " sauce, which does not fit in the 32-bit integer a purse is kept in.");
+                    + " gold, which does not fit in the 32-bit integer a purse is kept in.");
             }
 
             return (int)total;

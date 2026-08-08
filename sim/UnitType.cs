@@ -115,7 +115,7 @@ namespace Sim
         /// <summary>Ticks spent in the dying state before the unit is cleared away.</summary>
         public int DyingTicks { get; }
 
-        /// <summary>What one of these costs, in sauce. Zero in column layout 1, which has no cost column.</summary>
+        /// <summary>What one of these costs, in gold. Zero in column layout 1, which has no cost column.</summary>
         public int Cost { get; }
 
         /// <summary>

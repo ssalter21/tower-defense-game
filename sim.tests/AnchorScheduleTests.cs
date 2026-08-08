@@ -325,7 +325,7 @@ public class AnchorScheduleTests
         // OBSERVED: delete the last-anchor check in
         // RequireOneSteepAnchorAtTheEnd. This goes red having caught nothing,
         // and a shape that demands its one specific answer at wave 3 -- before
-        // anybody has the sauce for it -- loads.
+        // anybody has the gold for it -- loads.
         ContentException thrown = Assert.Throws<ContentException>(() => TheSchedule.Of(
             PlantedText.Replace(
                 TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 3 1 steep 3 1"),

@@ -27,9 +27,9 @@
     resolved against a field of K opponents drawn from a population of other
     players' rounds; there is no such population until runs are stored, so the
     canned pair standing in for it is that wave behind the committed defense.
-    It is a build phase's output -- a hundred sauce, everything on tick zero --
+    It is a build phase's output -- a hundred gold, everything on tick zero --
     because the skeleton's authored match is forty creeps and three hundred and
-    eighty sauce, which no purse in this economy can compose. That file's own
+    eighty gold, which no purse in this economy can compose. That file's own
     header carries the measurements.
 
     ONE COMMITTED ARTEFACT FALLS OUT OF THIS: content/sweep.csv, the report a
