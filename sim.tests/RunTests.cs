@@ -453,6 +453,83 @@ public class RunTests
     }
 
     [Fact]
+    public void The_distribution_the_bands_are_measured_against_comes_out_of_the_pool()
+    {
+        // The canned field is a parameter and not a fixture: the pool a run is
+        // handed IS the population its percentile is a percentile of, so
+        // swapping the canned stand-in for a stored population of real rounds is
+        // that one argument and nothing else. A run cannot be given a pool and a
+        // distribution that disagree, because there is only the one of them.
+        //
+        // OBSERVED: measure nothing -- return PerformanceField.Of(new int[0])
+        // from Run.MeasureField, which is the Absent a run carried before there
+        // was a pool to measure. This goes red on the first assertion, IsPresent
+        // against a field of nobody, and the run goes back to paying the base
+        // alone.
+        Run run = TheRun.Fresh(waves: 4, fieldSize: 4);
+
+        Assert.True(run.Field.IsPresent);
+        Assert.Equal(Run.FieldSamples, run.Field.Size);
+
+        // The same seed, the same shape, and two populations: one whose rounds
+        // are worth almost nothing and one whose rounds are worth three hundred
+        // sauce. Two hundred tops the first outright and beats none of the
+        // second, which no distribution fixed in code could say.
+        UnitTypeTable types = TheMatch.Types();
+
+        Run againstThin = Against(types, FieldPool.Of(new[] { TheRun.Orders(types, 6, 1) }));
+        Run againstFat = Against(types, FieldPool.Of(new[] { TheRun.Orders(types, 1, 4) }));
+
+        Assert.Equal(100, againstThin.Field.PercentileOf(200));
+        Assert.Equal(0, againstFat.Field.PercentileOf(200));
+
+        // What the measurement says does not depend on when it is asked or on
+        // what the run has done: it is the seed, the pool and K, and nothing a
+        // round moves is in it.
+        againstThin.Advance(TheRun.Orders(types));
+
+        Assert.Equal(100, againstThin.Field.PercentileOf(200));
+        Assert.Equal(Run.FieldSamples, againstThin.Field.Size);
+    }
+
+    [Fact]
+    public void What_a_run_earned_for_its_waves_is_arithmetic_over_its_vector_and_never_a_second_play()
+    {
+        // A run that only stands and sends buys nothing, so its purse is exactly
+        // the interest, the base and the band each round reached, folded
+        // forward. Folded here out of the stored vector and the run's own field,
+        // with no match resolved and no tick replayed -- and it has to come out
+        // at the sauce the run actually holds.
+        //
+        // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
+        // outcome.LeakCostDealt in Run.Advance. The purse assertion goes red,
+        // the run's 1860 against the fold's 2106: the run starts being paid for
+        // what got past it rather than for what it got past the field, and the
+        // fold and the payment stop being the same arithmetic.
+        Ruleset rules = TheRuleset.Committed();
+        Run run = Played(TheRun.Fresh(), TheRun.Orders());
+        Purse folded = Purse.Holding(rules.StartingPurseSauce);
+        int bonus = 0;
+
+        for (int round = 0; round < run.Outcome.Rounds.Count; round++)
+        {
+            WavePayment paid = folded.CloseWave(
+                rules, run.Field, run.Outcome.Rounds[round].LeakCostDealt);
+
+            bonus += paid.Bonus;
+            folded = paid.Purse;
+        }
+
+        Assert.Equal(run.Purse.Sauce, folded.Sauce);
+        Assert.Equal(bonus, Purse.BonusOver(rules, run.Field, run.Outcome));
+
+        // And it is money rather than a column of zeroes: attacking pays its
+        // sender, on top of what turning up pays.
+        Assert.Equal(155, bonus);
+        Assert.Equal(1000, rules.IncomeBasePerWave * run.Round);
+    }
+
+    [Fact]
     public void A_rounds_field_is_drawn_from_the_seed_and_the_round_and_not_from_where_the_last_draw_left_off()
     {
         // The claim that makes a run reproducible from its record, and the one
@@ -720,6 +797,18 @@ public class RunTests
         Assert.True(priced > 0);
         Assert.NotEqual(result.Leaked * costs.PriceOf(Purchase.Unit(1)), priced);
     }
+
+    /// <summary>A one-round run on the committed content against a population written out here.</summary>
+    private static Run Against(UnitTypeTable types, FieldPool pool) =>
+        new Run(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheSchedule.Committed(types),
+            pool,
+            TheRun.Seed,
+            waves: 1,
+            fieldSize: 4);
 
     /// <summary>The same run, after every offering of it has been read.</summary>
     private static Run Drawn(Run run)

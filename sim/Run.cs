@@ -64,6 +64,15 @@ namespace Sim
         public const int DefaultFieldSize = 10;
 
         /// <summary>
+        /// How many of the pool's own rounds are played to measure what a round
+        /// of it is worth. Ten samples put the percentiles on the deciles, which
+        /// is the granularity four bands at 0, 50, 75 and 90 can use; it is a
+        /// number about the measurement and not about the run, so it moves with
+        /// the bands rather than with N.
+        /// </summary>
+        public const int FieldSamples = 10;
+
+        /// <summary>
         /// Names the derivation of a round's field draw. The digit bumps when
         /// what goes into it changes, which is what stops two schemes producing
         /// two different runs under one seed and one record.
@@ -72,6 +81,14 @@ namespace Sim
 
         /// <summary>Names the derivation of one pairing's match seed.</summary>
         private const string MatchLabel = "run-match/1";
+
+        /// <summary>
+        /// Names the derivation of which member of the pool one sample of the
+        /// field's own worth is taken from. Its own position rather than a walk
+        /// down the pool, so that a population wider than the sample count is
+        /// sampled rather than truncated at its first members.
+        /// </summary>
+        private const string MeasureLabel = "run-measure/1";
 
         /// <summary>
         /// Names the derivation of this run's filling: which game changers sit
@@ -97,6 +114,8 @@ namespace Sim
 
         private RunOutcome _outcome;
 
+        private PerformanceField? _field;
+
         /// <summary>
         /// Builds a run. Everything it will ever know arrives here: nothing in
         /// this assembly can open a file, read a clock or ask the machine
@@ -109,7 +128,10 @@ namespace Sim
         /// The shape: which waves are anchors, how wide each round's slots are,
         /// and which tier pool each anchor's menu is filled from.
         /// </param>
-        /// <param name="pool">The population a round's field of K is drawn from.</param>
+        /// <param name="pool">
+        /// The population a round's field of K is drawn from, and the one the
+        /// performance bonus is measured against. See <see cref="Field"/>.
+        /// </param>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
         /// <param name="waves">
         /// N. <see cref="Purse.RoundCapLifted"/> for a run with no last wave,
@@ -187,14 +209,31 @@ namespace Sim
         public UnitTypeTable Types { get; }
 
         /// <summary>
-        /// The distribution every wave of this run is paid against.
-        /// <see cref="PerformanceField.Absent"/> until a pool of other players'
-        /// rounds exists, which is a build order rather than a fault -- see the
-        /// remarks there. One property rather than a value read at each of the
-        /// places that needs it, so that what a wave is measured against and
-        /// what a walk over a stored stream predicts cannot be two answers.
+        /// The distribution every wave of this run is paid against: what a round
+        /// of the pool is worth, in leak cost dealt.
         /// </summary>
-        public PerformanceField Field => PerformanceField.Absent;
+        /// <remarks>
+        /// <para>
+        /// <b>It comes out of the pool, so swapping the canned stand-in for a
+        /// real ghost pool is the pool argument and nothing else.</b> The pool is
+        /// the population the bands are measured against, and measuring it is
+        /// <see cref="MeasureField"/> -- a run cannot be handed a pool and a
+        /// distribution that disagree, because there is only the one of them.
+        /// </para>
+        /// <para>
+        /// <b>Fixed for the whole run.</b> Every round of the run is placed
+        /// against the same spread, which is what makes what a round paid
+        /// arithmetic over the outcome vector -- see
+        /// <see cref="Purse.BonusOver"/>.
+        /// </para>
+        /// <para>
+        /// Measured on first use rather than in the constructor: measuring plays
+        /// matches, and a caller that only wants to read this run's offerings
+        /// should not pay for them. What it measures depends on the seed, the
+        /// pool and K alone, so when it happens cannot change what it says.
+        /// </para>
+        /// </remarks>
+        public PerformanceField Field => _field ??= MeasureField();
 
         /// <summary>N, or <see cref="Purse.RoundCapLifted"/> for a run with no last wave.</summary>
         public int Waves { get; }
@@ -221,9 +260,9 @@ namespace Sim
         public AnchorFilling Filling { get; }
 
         /// <summary>
-        /// The one wallet. Every wave pays it interest on what was banked plus
-        /// the flat base; the bonus waits on a field to be measured against, and
-        /// pays nothing until there is one.
+        /// The one wallet. Every wave pays it interest on what was banked, the
+        /// flat base, and the band its result reached in the <see cref="Field"/>
+        /// on top of that.
         /// </summary>
         public Purse Purse { get; private set; }
 
@@ -312,9 +351,10 @@ namespace Sim
             _rounds.Add(outcome);
             _sent.Add(orders);
 
-            // The bonus is a percentile of a field of other players' rounds, and
-            // no such pool exists yet, so every wave is paid the base alone. See
-            // PerformanceField.Absent, which is where that is written down.
+            // Interest, the flat base, and the band this round's offense reached
+            // in the field on top. Nothing is taken off anybody to pay it: the
+            // wave is placed against the spread of what a round of the pool is
+            // worth, not against whichever opponent it was drawn against.
             Purse = Purse.CloseWave(Rules, Field, outcome.LeakCostDealt).Purse;
 
             _outcome = Folded();
@@ -401,6 +441,70 @@ namespace Sim
             }
 
             return drawn;
+        }
+
+        /// <summary>
+        /// What a round of the pool is worth, measured by playing the pool's own
+        /// rounds: <see cref="FieldSamples"/> of them, each sent at the field
+        /// that sample's draw put in front of it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Each sample is the average of its K resolutions, as a round's own
+        /// score is.</b> A percentile compares one number against a spread of
+        /// numbers, so the two sides have to be the same measurement: scoring an
+        /// averaged round against single matches would widen the field's tails
+        /// and pin every honest run to the middle band.
+        /// </para>
+        /// <para>
+        /// <b>Only the offense is resolved.</b> What the bands are measured
+        /// against is leak cost dealt, so what the pool's rounds would have taken
+        /// back is never played -- the measurement costs half of what a round
+        /// costs rather than all of it. What it sends carries no game changer,
+        /// for the reason the defending direction's does not: the pool is stored
+        /// orders rather than stored runs, and nothing in it says which of its
+        /// bodies was one.
+        /// </para>
+        /// <para>
+        /// <b>Both the member being measured and the field it meets are drawn.</b>
+        /// A walk down the pool would sample a population wider than
+        /// <see cref="FieldSamples"/> by truncating it at its first members. The
+        /// field a sample meets is the field the round of the same index meets,
+        /// which is what makes the spread this comes back with the spread of the
+        /// opponents this run will actually be scored against.
+        /// </para>
+        /// <para>
+        /// A pool thinner than K is not a thin measurement. The draw is with
+        /// replacement, so one canned opponent sampled ten times is ten matches
+        /// on ten derived seeds, and the spread between them is the spread of
+        /// what that round is worth.
+        /// </para>
+        /// </remarks>
+        private PerformanceField MeasureField()
+        {
+            var worth = new int[FieldSamples];
+            var dice = new Pcg32(Derived(MeasureLabel, 0, 0, 0));
+
+            for (int sample = 0; sample < worth.Length; sample++)
+            {
+                RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
+                int[] field = FieldFor(sample);
+                long dealt = 0;
+
+                for (int index = 0; index < field.Length; index++)
+                {
+                    dealt += LeakCost(
+                        member.Wave,
+                        _pool.At(field[index]).Defense,
+                        sample,
+                        index,
+                        Side.Measured);
+                }
+
+                worth[sample] = (int)(dealt / field.Length);
+            }
+
+            return PerformanceField.Of(worth);
         }
 
         /// <summary>
@@ -495,8 +599,9 @@ namespace Sim
             RunOutcome.Of(Rules.HealthPoolSauce, _rounds, Waves, DeathEndsTheRun);
 
         /// <summary>
-        /// Which direction of a pairing a match is: a round measures both
-        /// against every opponent, and the two must not share a seed.
+        /// Which pairing a match is: a round measures both directions against
+        /// every opponent and the field is measured against itself, and no two of
+        /// the three may share a seed.
         /// </summary>
         private enum Side
         {
@@ -505,6 +610,13 @@ namespace Sim
 
             /// <summary>Their wave against this round's defense. The direction that costs health.</summary>
             Defending = 1,
+
+            /// <summary>
+            /// One of the pool's own waves against the pool. Neither direction of
+            /// this run's round: it is what a round of the field is worth, which
+            /// is the spread the bands are read off.
+            /// </summary>
+            Measured = 2,
         }
     }
 }

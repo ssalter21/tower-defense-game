@@ -105,11 +105,12 @@ purse         100
 # is paid against the field's distribution and never against a named opponent,
 # so it reads the same whether the field is one lobby or a population.
 #
-# THESE BANDS PAY NOTHING YET, AND THAT IS THE BUILD ORDER RATHER THAN A BUG.
-# A band is measured against a field, the field is a pool of other players'
-# rounds, and there is no such pool until the sweep's canned one arrives. Until
-# then every wave is paid the base alone. See PerformanceField.Absent, which is
-# the surface that says so in code.
+# THESE BANDS PAY, AND WHAT THEY ARE MEASURED AGAINST IS THE POOL A RUN WAS
+# HANDED. A run prices ten of the pool's own rounds and reads its percentile off
+# that spread, so the canned opponent field.txt describes is the distribution
+# today and a stored population of real rounds is the same argument tomorrow.
+# Retuning a threshold or a percentage here is an edit to these four lines and
+# no compile.
 
 band            0        0
 band           50        5

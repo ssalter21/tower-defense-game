@@ -31,7 +31,7 @@ namespace Sim.Tests;
 public class GoldenSweepTests
 {
     /// <summary>Where the coverage and parameter rows keep their one number.</summary>
-    private const int ValueColumn = 11;
+    private const int ValueColumn = 13;
 
     [Fact]
     public void Every_row_of_the_committed_report_has_the_columns_the_header_declares()

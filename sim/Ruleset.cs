@@ -185,6 +185,13 @@ namespace Sim
         /// </summary>
         public IReadOnlyList<PerformanceBand> Bands => _bands;
 
+        /// <summary>
+        /// The band that pays the most: the last one, because the bands ascend
+        /// by threshold and none of them pays less than the one below it. What
+        /// a wave earns is at most this, whatever it did.
+        /// </summary>
+        public PerformanceBand BestBand => _bands[_bands.Length - 1];
+
         /// <summary>The health pool a run starts with, denominated in sauce.</summary>
         public int HealthPoolSauce { get; }
 

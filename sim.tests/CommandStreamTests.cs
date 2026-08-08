@@ -466,19 +466,36 @@ public class CommandStreamTests
     }
 
     [Fact]
-    public void The_load_walk_folds_the_purse_and_the_unlocks_the_way_a_played_round_does()
+    public void The_load_walk_folds_the_unlocks_the_way_a_played_round_does_and_the_purse_at_its_ceiling()
     {
         // Check applies nothing, so it has to fold the two things a round moves
         // -- what has been taken and what is in the purse -- through values of
-        // its own. This is what pins that fold to the run's: the purse the walk
-        // predicts for the round after the last one is the purse the run
-        // actually holds when it gets there.
+        // its own. The unlocks it predicts are the run's exactly; the purse
+        // cannot be, because a wave's income now includes the band its offense
+        // reached and a walk has not played the round. So the walk closes every
+        // wave at the top band, and what it carries is a ceiling: strictly above
+        // the run's own purse for a run that did not top every band, which is
+        // this one.
         //
         // OBSERVED: fold the purse forward without the wave's payment -- assign
         // build.Purse straight to purse in Check. This goes red on an exception:
         // "A build phase at wave 4 buys 90 sauce of creeps out of a purse
         // holding 52", refusing at load a wave the run affords perfectly well,
         // because the walk stopped paying the rounds it was walking.
+        //
+        // The ceiling is observed by what it admits. This run holds 407 sauce
+        // when its fourth build phase stands and the walk carries 474 -- three
+        // waves of the top band it did not reach, and the interest on them --
+        // so a fourth wave costing 450 is a decision the walk has to let past
+        // and the round itself has to refuse. That ordering is the whole design:
+        // everything refused at load was unaffordable however the run played.
+        //
+        // OBSERVED, on the ceiling: close the walk's waves at
+        // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The Check
+        // above goes red on an exception -- "A build phase at wave 4 buys 450
+        // sauce of creeps out of a purse holding 407" -- refusing at load rather
+        // than at the round, which is what a floor does to every decision a
+        // run's own bonus paid for.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
         CommandStream stream = CommandStream.Of(run, decisions);
@@ -490,9 +507,25 @@ public class CommandStreamTests
 
         Assert.Equal(TheCommands.Waves, walked.Count);
         Assert.Equal(played.Unlocks.Count, walked[walked.Count - 1].Unlocks.Count);
-        Assert.Equal(
-            played.Purse.Sauce,
-            walked[walked.Count - 1].Purse.CloseWave(run.Rules, PerformanceField.Absent, 0).Purse.Sauce);
+
+        Option fourth = run.OfferingAt(TheCommands.Waves).Options[0];
+        var overspent = new List<RecordCommand>(decisions)
+        {
+            [TheCommands.Waves - 1] = RecordCommand.Of(
+                TheCommands.Waves,
+                BuildPhase.Of(fourth.Kind, fourth.Id, WaveSlot.Of(fourth.TypeId, 10))),
+        };
+
+        Assert.Equal(45, run.Costs.PriceOf(Purchase.Unit(fourth.TypeId)));
+
+        CommandStream beyond = CommandStream.Of(run, overspent);
+
+        beyond.Check(TheCommands.Fresh());
+
+        SimulationException refused = Assert.Throws<SimulationException>(
+            () => beyond.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+
+        Assert.Contains("450", refused.Message, StringComparison.Ordinal);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above
