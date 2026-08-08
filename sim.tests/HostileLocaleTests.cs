@@ -327,18 +327,18 @@ public class HostileLocaleTests
         using (Hostile(name))
         {
             Assert.Throws<ContentException>(
-                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10", "interest 10,5")));
+                () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10", "interest 10,5")));
 
             Assert.Throws<ContentException>(
-                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1.5 100")));
+                () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "armour 1 100", "armour 1.5 100")));
 
             // The interest cap is the column this layout added, and a ceiling
             // is exactly the shape a designer reaches for a fraction in.
             Assert.Throws<ContentException>(
-                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 0,5")));
+                () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 0,5")));
 
             Assert.Throws<ContentException>(
-                () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 1.5")));
+                () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 1.5")));
         }
     }
 
@@ -365,7 +365,7 @@ public class HostileLocaleTests
 
             Assert.Throws<ContentException>(
                 () => Ruleset.Parse(
-                    TheRuleset.Replace(TheRuleset.Minimal, "matrix magic", "matrix MAGIC")));
+                    PlantedText.Replace(TheRuleset.Minimal, "matrix magic", "matrix MAGIC")));
         }
     }
 

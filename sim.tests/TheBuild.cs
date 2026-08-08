@@ -25,7 +25,7 @@ public static class TheBuild
 
     /// <summary>The committed ruleset with the offering's ordinary count moved.</summary>
     public static Ruleset RulesOffering(int ordinary) =>
-        Ruleset.Parse(TheRuleset.Replace(
+        Ruleset.Parse(PlantedText.Replace(
             TheRuleset.CommittedText(),
             "offering        3         3",
             "offering        " + ordinary.ToString(System.Globalization.CultureInfo.InvariantCulture) + "         3"));

@@ -30,6 +30,11 @@ public class AnchorScheduleTests
     {
         // The shape, spelled out. Three-in-ten, in the interior, so that wave
         // ten is the payoff round where what was taken gets spent.
+        //
+        // OBSERVED: move the middle anchor from wave 6 to wave 5 in
+        // content/schedule.txt. The wave assertion goes red, [3, 5, 9] against
+        // [3, 6, 9], which is what a shape retuned without anybody re-reading
+        // the numbers written down here looks like.
         AnchorSchedule schedule = TheSchedule.Committed();
 
         Assert.Equal(3, schedule.Anchors.Count);
@@ -54,17 +59,18 @@ public class AnchorScheduleTests
         // folded into the content hash. That is only safe while both spellings
         // of a disagreement are unloadable, which is what these are.
         //
-        // OBSERVED: fold the flag in Anchor.Fold. Nothing goes red anywhere in
-        // the suite, in either direction, because no schedule that loads can
-        // carry it any other way -- which is the whole argument for leaving it
-        // out, stated as a run of the tests rather than as a sentence.
+        // OBSERVED: delete the count check in RequireOneSteepAnchorAtTheEnd.
+        // The second assertion goes red having caught nothing -- two anchors
+        // say steep, the last one is among them, and the shape loads. Delete
+        // the last-anchor check as well and the first goes red too, on a shape
+        // whose steep column names no anchor at all.
         string text = TheSchedule.CommittedText();
 
         Assert.Throws<ContentException>(
-            () => TheSchedule.Of(TheSchedule.Replace(text, "9     3  steep", "9     3  plain")));
+            () => TheSchedule.Of(PlantedText.Replace(text, "9     3  steep", "9     3  plain")));
 
         Assert.Throws<ContentException>(
-            () => TheSchedule.Of(TheSchedule.Replace(text, "3     1  plain", "3     1  steep")));
+            () => TheSchedule.Of(PlantedText.Replace(text, "3     1  plain", "3     1  steep")));
     }
 
     [Fact]
@@ -72,6 +78,12 @@ public class AnchorScheduleTests
     {
         // Four to a pool against a menu of three, so that drawing a menu is a
         // draw rather than a copy of the pool.
+        //
+        // OBSERVED: change "offering 3 3" to "offering 3 4" in
+        // content/ruleset.txt. The depth assertion goes red on its own message
+        // -- a pool no deeper than the menu makes the filling a copy -- which
+        // is the two files being multiplied together rather than one of them
+        // being retuned alone.
         AnchorSchedule schedule = TheSchedule.Committed();
         UnitTypeTable types = TheMatch.Types();
         int menu = TheRuleset.Committed().GameChangersPerAnchor;
@@ -115,7 +127,7 @@ public class AnchorScheduleTests
             TheSchedule.Widths(TheSchedule.Committed(), 10));
 
         AnchorSchedule moved = TheSchedule.Of(
-            TheSchedule.Replace(TheSchedule.CommittedText(), "anchor        6", "anchor        5"));
+            PlantedText.Replace(TheSchedule.CommittedText(), "anchor        6", "anchor        5"));
 
         Assert.Equal(new[] { 3, 5, 9 }, moved.Anchors.Select(anchor => anchor.Wave));
         Assert.Equal(new[] { 2, 2, 3, 3, 4, 4, 4, 4, 5, 5 }, TheSchedule.Widths(moved, 10));
@@ -147,6 +159,13 @@ public class AnchorScheduleTests
     [Fact]
     public void The_simulation_takes_the_schedule_as_bytes_as_well_as_text_and_agrees_with_itself()
     {
+        // OBSERVED: strip a byte-order mark unconditionally in the byte path --
+        // a .Substring(1) on what DataText.FromUtf8 decoded, as though every
+        // file handed to it carried one. This goes red on the throw: the first
+        // line loses its '#', " The anchor schedule." reaches the field
+        // splitter and the parse refuses on the '.' at column 21. The text path
+        // is untouched, which is what a second entry point drifting from the
+        // first looks like.
         UnitTypeTable types = TheMatch.Types();
 
         Assert.Equal(
@@ -157,6 +176,11 @@ public class AnchorScheduleTests
     [Fact]
     public void A_byte_order_mark_is_not_a_content_change_to_the_schedule()
     {
+        // OBSERVED: delete the byte-order-mark strip in DataText.SplitLines.
+        // This goes red on the throw -- "carries a character outside printable
+        // ASCII at column 1 (code point 65279)" -- so a schedule any Windows
+        // text writer produced refuses to load rather than parsing to what it
+        // says.
         UnitTypeTable types = TheMatch.Types();
         string text = File.ReadAllText(RepoLayout.ScheduleFile);
         byte[] withMark = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble()
@@ -173,6 +197,11 @@ public class AnchorScheduleTests
     {
         // Every fold starts from a label naming the table and its layout, so
         // two tables cannot collide by holding coincidentally equal integers.
+        //
+        // OBSERVED: stop Hash64 distinguishing anything -- skip the label loop
+        // in Start and return `this` from Add(long). All three assertions go
+        // red, every table in the project coming back as the bare FNV offset
+        // basis CBF29CE484222325.
         Hash64 hash = TheSchedule.Committed().ContentHash;
 
         Assert.NotEqual(hash, TheRuleset.Committed().ContentHash);
@@ -185,6 +214,10 @@ public class AnchorScheduleTests
     {
         // Without this, every refusal below could be firing on a fault the
         // fixture always had rather than on the one the test planted.
+        //
+        // OBSERVED: delete the "changer 4 late-b 2 2 400" row from
+        // TheSchedule.Minimal. The pool assertion goes red, 4 against 3 -- the
+        // fixture read back, rather than the fixture assumed.
         Assert.Equal(2, TheSchedule.Small().Anchors.Count);
         Assert.Equal(4, TheSchedule.Small().GameChangers.Count);
     }
@@ -294,7 +327,7 @@ public class AnchorScheduleTests
         // and a shape that demands its one specific answer at wave 3 -- before
         // anybody has the sauce for it -- loads.
         ContentException thrown = Assert.Throws<ContentException>(() => TheSchedule.Of(
-            TheSchedule.Replace(
+            PlantedText.Replace(
                 TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 3 1 steep 3 1"),
                 "anchor 6 2 steep 3 5",
                 "anchor 6 2 plain 3 5")));
@@ -424,9 +457,10 @@ public class AnchorScheduleTests
         // bound on the column -- one rule, and the range that would have
         // duplicated it would be a guard no planted text could ever reach.
         //
-        // OBSERVED: set the anchor wave's lower bound to 2 as well. Nothing
-        // anywhere goes red, in this test or the suite, because every shape the
-        // bound would refuse is a shape the counter rule refused first.
+        // OBSERVED: drop the counterFromWave comparison in Draft.AddAnchor.
+        // This goes red having caught nothing, and an anchor at wave one loads
+        // -- the wave a run starts on, standing in front of a build phase
+        // nobody has had a round of income for.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 1 1 plain 3 1")));
 
@@ -456,6 +490,10 @@ public class AnchorScheduleTests
     [Fact]
     public void A_row_the_schedule_does_not_have_refuses_to_load_rather_than_being_skipped()
     {
+        // OBSERVED: return from AnchorSchedule.ReadRow's default branch instead
+        // of throwing. This goes red having caught nothing, and a row somebody
+        // misspelled is dropped -- a shape that is missing whatever that row
+        // was going to say, loading as though it said nothing.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Minimal + "\nrotation 4"));
 
@@ -467,6 +505,11 @@ public class AnchorScheduleTests
     [InlineData("changer 1 early-a 1 1 0", "changer 1 early-a 1 1 0 0")]
     public void A_row_with_the_wrong_number_of_fields_refuses_to_load(string authored, string planted)
     {
+        // OBSERVED: make DataText.RequireFieldCount a no-op. The short anchor
+        // row goes red on the exception type -- an IndexOutOfRangeException,
+        // because ReadRow walks six fields off a row that has five -- and the
+        // long changer row goes red having caught nothing at all, its seventh
+        // field silently dropped.
         ContentException thrown =
             Assert.Throws<ContentException>(() => TheSchedule.Of(TheSchedule.Planted(authored, planted)));
 
@@ -480,6 +523,12 @@ public class AnchorScheduleTests
     {
         // The two characters a designer types when they want a fraction, and
         // the simulation has no representation for one that arrived as text.
+        //
+        // OBSERVED: drop the '.' and ',' refusal in DataText.Fields and have
+        // DataText.Integer stop at the first character that is not a digit
+        // rather than refuse it. Both rows go red having caught nothing: an
+        // anchor authored at wave 3.5 loads at wave 3, and a bonus of 4,00
+        // loads as 4.
         Assert.Throws<ContentException>(() => TheSchedule.Of(TheSchedule.Planted(authored, planted)));
     }
 
@@ -489,6 +538,15 @@ public class AnchorScheduleTests
     [InlineData("anchor 3 1 steep 3 1")]
     public void A_schedule_missing_a_whole_half_of_itself_refuses_to_load(string text)
     {
+        // OBSERVED: delete the RequireEverything call in AnchorSchedule.Parse.
+        // All three rows go red having caught nothing, and an empty file loads
+        // to a shape with no anchors and no pools -- a run against which is ten
+        // ordinary rounds on a slot width that never widens.
+        //
+        // The two count guards inside RequireEverything are not what to delete:
+        // with those gone the steep rule and the tier pairing refuse all three
+        // of these anyway, and this stays green on refusals that say nothing
+        // about the half that is missing.
         Assert.Throws<ContentException>(() => TheSchedule.Of(text));
     }
 
@@ -669,6 +727,11 @@ public class AnchorScheduleTests
         // Exactly one anchor per shape opens a steep counter, so preparing for
         // the other two is a matter of degree rather than of a number nobody
         // can see coming.
+        //
+        // OBSERVED: move skyborne's bonus from 825 to 826 in
+        // content/schedule.txt. This goes red, 826 against 825, which is what a
+        // counter retuned on one row of the steep pool and nowhere else looks
+        // like from here.
         AnchorSchedule schedule = TheSchedule.Committed();
 
         foreach (Anchor anchor in schedule.Anchors)

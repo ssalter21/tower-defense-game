@@ -49,7 +49,7 @@ public static class TheRuleset
     /// old ruleset is retired by it and nothing else about a run moves.
     /// </remarks>
     public static Ruleset Retuned() =>
-        Ruleset.Parse(Replace(CommittedText(), "income        100", "income        101"));
+        Ruleset.Parse(PlantedText.Replace(CommittedText(), "income        100", "income        101"));
 
     /// <summary>The committed ruleset as a different file and the same rules.</summary>
     public static string ReformattedText() => Reauthoring.Reauthored(CommittedText());
@@ -71,21 +71,16 @@ public static class TheRuleset
     /// sweep move one multiplier at a time.
     /// </summary>
     public static string WithCells(int first, int second, int third) =>
-        Replace(
-            Replace(
-                Replace(Minimal, "matrix pierce 140 70 100", Row("pierce", first, second, third)),
+        PlantedText.Replace(
+            PlantedText.Replace(
+                PlantedText.Replace(
+                    Minimal,
+                    "matrix pierce 140 70 100",
+                    Row("pierce", first, second, third)),
                 "matrix impact 70 100 140",
                 Row("impact", second, third, first)),
             "matrix magic 100 140 70",
             Row("magic", third, first, second));
-
-    /// <summary><see cref="Minimal"/> with one substring swapped for another, exactly once.</summary>
-    public static string Replace(string text, string what, string with)
-    {
-        Assert.Contains(what, text, StringComparison.Ordinal);
-
-        return text.Replace(what, with, StringComparison.Ordinal);
-    }
 
     /// <summary><see cref="Minimal"/> with every row starting with this keyword taken out.</summary>
     public static string Without(string keyword)

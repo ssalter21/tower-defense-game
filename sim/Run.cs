@@ -319,6 +319,12 @@ namespace Sim
         /// resolutions -- the average and not the best, symmetrically with the
         /// damage rule, so the ladder rewards robust play.
         /// </para>
+        /// <para>
+        /// <b>Nothing moves until everything that can refuse has refused.</b> The
+        /// round is composed, the field measured and the payment worked out
+        /// before the vector is appended to, so a throw anywhere in a round
+        /// leaves the run exactly where it was.
+        /// </para>
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         public RoundOutcome Advance(RoundOrders orders)
@@ -348,14 +354,21 @@ namespace Sim
             // a field would be a punishment for being in one.
             var outcome = new RoundOutcome((int)(dealt / field.Length), (int)(taken / field.Length));
 
-            _rounds.Add(outcome);
-            _sent.Add(orders);
-
             // Interest, the flat base, and the band this round's offense reached
             // in the field on top. Nothing is taken off anybody to pay it: the
             // wave is placed against the spread of what a round of the pool is
             // worth, not against whichever opponent it was drawn against.
-            Purse = Purse.CloseWave(Rules, Field, outcome.LeakCostDealt).Purse;
+            //
+            // Composed before anything moves, and that is the whole reason it is
+            // a local: reading Field measures the pool on first use, and both
+            // that and closing the purse can refuse. A round appended to the
+            // vector before them would leave a refused round on a run nobody
+            // could tell from one somebody played.
+            Purse closed = Purse.CloseWave(Rules, Field, outcome.LeakCostDealt).Purse;
+
+            _rounds.Add(outcome);
+            _sent.Add(orders);
+            Purse = closed;
 
             _outcome = Folded();
 

@@ -284,6 +284,27 @@ public class GoldenRecordTests
             File.ReadAllBytes(RepoLayout.GoldenBundleFile(RecordFormat.GhostVersion)));
     }
 
+    [Fact]
+    public void The_current_versions_pinned_table_is_content_units_txt_byte_for_byte()
+    {
+        // tools/run-headless-match.ps1 -Regenerate pins the current version's
+        // table by copying content/units.txt beside the bundle, so the two are
+        // the same bytes or the pin is a copy of some earlier table. The hash
+        // assertion above cannot see this: it folds the parsed integers, so
+        // comment text is free to drift between the two forever.
+        //
+        // OBSERVED: add a comment line to content/golden/defense-1.units. This
+        // goes red on the byte arrays while every other assertion in this class
+        // stays green -- which is exactly the state the pin was found in.
+        //
+        // Only the current version. The older ones are copies of tables this
+        // repository can no longer produce, and a retune is meant to leave them
+        // where they are.
+        Assert.Equal(
+            File.ReadAllBytes(RepoLayout.UnitsFile),
+            File.ReadAllBytes(RepoLayout.GoldenUnitsFile(RecordFormat.GhostVersion)));
+    }
+
     [Theory]
     [MemberData(nameof(EveryDefenseVersion))]
     public void The_committed_result_says_which_branch_read_it(int version)

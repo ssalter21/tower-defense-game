@@ -107,8 +107,8 @@ public class DamageTests
         // assertions at the committed matrix instead and the transposed index
         // is green, which is what this test looked like before the asymmetric
         // one was built.
-        Ruleset asymmetric = Ruleset.Parse(TheRuleset.Replace(
-            TheRuleset.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 100 140 70"),
+        Ruleset asymmetric = Ruleset.Parse(PlantedText.Replace(
+            PlantedText.Replace(TheRuleset.Minimal, "matrix impact 70 100 140", "matrix impact 100 140 70"),
             "matrix magic 100 140 70",
             "matrix magic 70 100 140"));
 
@@ -427,6 +427,10 @@ public class DamageTests
         // The default branch, reached the only way a test can reach it: with a
         // value that is not one of the declared stages. This is the shape of
         // what a listed-but-unimplemented stage would hit.
+        //
+        // OBSERVED: return string.Empty from DamageModel.NameOf's default
+        // branch. This goes red having caught nothing, and a stage nothing
+        // applies is named by the empty string wherever a message asks for it.
         SimulationException thrown =
             Assert.Throws<SimulationException>(() => DamageModel.NameOf((StatStage)7));
 

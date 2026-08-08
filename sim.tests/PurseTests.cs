@@ -143,7 +143,7 @@ public class PurseTests
             200,
             Purse.Holding(1000)
                 .CloseWave(
-                    Ruleset.Parse(TheRuleset.Replace(InterestOnlyText(), "interest 10 0", "interest 20 0")),
+                    Ruleset.Parse(PlantedText.Replace(InterestOnlyText(), "interest 10 0", "interest 20 0")),
                     PerformanceField.Absent,
                     0)
                 .Interest);
@@ -166,7 +166,7 @@ public class PurseTests
             250,
             Purse.Empty
                 .CloseWave(
-                    Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "income 100", "income 250")),
+                    Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "income 100", "income 250")),
                     PerformanceField.Absent,
                     0)
                 .IncomeBase);
@@ -353,7 +353,7 @@ public class PurseTests
         // And the content itself refuses the negative band outright, which is
         // why the sweep above can only ever see numbers somebody authored.
         Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Replace(TheRuleset.Minimal, "band 50 5", "band 50 -5")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 50 5", "band 50 -5")));
     }
 
     [Fact]
@@ -456,7 +456,7 @@ public class PurseTests
         // been widened into "no run may compound at all" looks like.
         Ruleset uncapped = TheRuleset.Committed();
         Ruleset capped = Ruleset.Parse(
-            TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 500"));
+            PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 500"));
 
         Purse.RequireBoundedCompounding(uncapped, 10);
         Purse.RequireBoundedCompounding(capped, Purse.RoundCapLifted);
@@ -490,8 +490,8 @@ public class PurseTests
         // OBSERVED: ignore rules.InterestCapSauce in Purse.InterestOn. The first
         // assertion goes red, 5 against 100, and the ceiling a lifted round cap
         // forces somebody to author does nothing at all.
-        Ruleset capped = Ruleset.Parse(TheRuleset.Replace(
-            TheRuleset.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 5"),
+        Ruleset capped = Ruleset.Parse(PlantedText.Replace(
+            PlantedText.Replace(TheRuleset.Minimal, "interest 10 0", "interest 10 5"),
             "income 100",
             "income 0"));
 
@@ -563,7 +563,7 @@ public class PurseTests
     /// over waves shows the bank compounding and nothing else.
     /// </summary>
     private static string InterestOnlyText() =>
-        TheRuleset.Replace(TheRuleset.Minimal, "income 100", "income 0");
+        PlantedText.Replace(TheRuleset.Minimal, "income 100", "income 0");
 
     private static Ruleset InterestOnly() => Ruleset.Parse(InterestOnlyText());
 }

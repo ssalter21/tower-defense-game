@@ -186,6 +186,8 @@ $golden = Join-Path $content 'golden'
 $build = Join-Path ([System.IO.Path]::GetTempPath()) ('simcli-build-' + $Simulation.ToLowerInvariant())
 $program = Join-Path $build 'Sim.Cli.dll'
 
+. (Join-Path $PSScriptRoot '_shared.ps1')
+
 $committedSim = Join-Path $repoRoot 'client/Packages/com.ssalter.sim/Runtime/Sim.dll'
 
 # The image this run is meant to play, and the one the assertion below holds
@@ -256,21 +258,6 @@ if ($Simulation -eq 'FreshRelease') {
 }
 
 Write-Host ("simulation $Simulation, SHA-256 " + $playedHash.Substring(0, 16)) -ForegroundColor Cyan
-
-# The runner refuses by name and exits, rather than throwing: a record that
-# will not replay has already said why in its own sentence, and a PowerShell
-# stack trace on top of it buries the one line anybody needs to read.
-function Invoke-SimCli {
-    param([string[]]$CliArgs)
-
-    & dotnet $program @CliArgs | Out-Host
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ""
-        Write-Host "simcli $($CliArgs[0]) refused (exit $LASTEXITCODE); its reason is above." -ForegroundColor Red
-        exit $LASTEXITCODE
-    }
-}
 
 # The same run, with what it printed handed back instead of shown. The golden
 # results are compared byte for byte, so they have to be the runner's own
@@ -418,38 +405,6 @@ if (Test-Path $scratch) {
 Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset, '--out', $scratch)
 
 $differences = 0
-
-# The first line the two disagree on, named. A whole-file "they differ" is a
-# message nobody can act on, and the first difference is nearly always the only
-# one that was not caused by the ones above it.
-function Test-SameText {
-    param([string]$What, [string]$Committed, [string]$Fresh)
-
-    if ($Committed -eq $Fresh) {
-        Write-Host "$What is what the run produced." -ForegroundColor Green
-        return $true
-    }
-
-    $committedLines = $Committed -split "`n"
-    $freshLines = $Fresh -split "`n"
-    $limit = [Math]::Max($committedLines.Count, $freshLines.Count)
-
-    Write-Host "$What is NOT what the run produced." -ForegroundColor Red
-
-    for ($index = 0; $index -lt $limit; $index++) {
-        $left = if ($index -lt $committedLines.Count) { $committedLines[$index] } else { '<end of file>' }
-        $right = if ($index -lt $freshLines.Count) { $freshLines[$index] } else { '<end of file>' }
-
-        if ($left -ne $right) {
-            Write-Host ("  line {0}" -f ($index + 1))
-            Write-Host ("    committed: {0}" -f $left)
-            Write-Host ("    this run : {0}" -f $right)
-            break
-        }
-    }
-
-    return $false
-}
 
 foreach ($name in @($traceName, $landmarkName)) {
     $committed = [System.IO.File]::ReadAllText((Join-Path $content $name))

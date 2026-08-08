@@ -225,6 +225,14 @@ namespace Sim
         /// <summary>The argument that says "whatever the ruleset already says" for a retunable number.</summary>
         public const int AsAuthored = -1;
 
+        /// <summary>
+        /// How many seeds each creep is played on unless the caller says
+        /// otherwise. A sample this size separates the roster and answers while
+        /// somebody is still looking at the shell; it is the number the committed
+        /// report was produced at.
+        /// </summary>
+        public const int DefaultRunsPerCreep = 8;
+
         /// <summary>The <see cref="MostCreeps"/> that scores the whole roster.</summary>
         public const int WholeRoster = 0;
 
@@ -268,7 +276,7 @@ namespace Sim
             TowerLayout defense,
             FieldPool field,
             ulong firstSeed,
-            int runsPerCreep,
+            int runsPerCreep = DefaultRunsPerCreep,
             int waves = Run.DefaultWaves,
             int fieldSize = Run.DefaultFieldSize,
             bool deathEndsTheRun = true,
