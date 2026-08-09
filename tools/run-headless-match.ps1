@@ -64,7 +64,14 @@
     older bundles were recorded before content/upgrades.txt existed, nothing
     folded into the hashes in their headers, and a ladder appearing beside one of
     them -- empty or not -- would fold something and retire the only record of
-    that format version there will ever be.
+    that format version there will ever be. Those are restaged against an empty
+    ladder written to scratch, which is what they were recorded against.
+
+    THE LIVE LADDER IS NEVER PASSED BESIDE A PINNED TABLE. A ladder is parsed
+    against a unit table and refuses an edge naming a row that table lacks, and
+    every pinned table is older and smaller than content/units.txt -- so the live
+    file refuses the moment it names a new id, for a reason that has nothing to do
+    with the branch being proved.
 
     AND EACH IS RESTAGED RATHER THAN REPLAYED, which is the verb that survives a
     simulation version bump. A bump retires every record made under the previous
@@ -342,6 +349,40 @@ function Get-GoldenUpgradesPath {
     return Join-Path $golden ($Bundle.BaseName + '.upgrades')
 }
 
+# The ladder a golden is RESTAGED against, which is the one belonging to the
+# table it is handed and never the live one.
+#
+# A ladder is parsed against a unit table and refuses an edge naming a row that
+# table does not define. The pinned tables are older and smaller than
+# content/units.txt, so the moment the live ladder names a new id, passing it
+# beside a pinned table refuses -- for a reason that has nothing to do with the
+# reader branch the golden exists to prove. Which ladder it is cannot change the
+# outcome either way, because RestageUnderCurrentRules skips the content-hash
+# gate; what it has to do is parse.
+#
+# Where there is no pinned ladder the answer is an EMPTY one, because that is
+# what the bundle was recorded against. It is written to scratch and never beside
+# the bundle: a ladder file appearing there would fold into the hash frozen in
+# that bundle's header and retire the only record of its format version.
+$emptyLadder = $null
+
+function Get-GoldenLadderPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    $pinned = Get-GoldenUpgradesPath $Bundle
+
+    if (Test-Path $pinned) {
+        return $pinned
+    }
+
+    if (-not $script:emptyLadder) {
+        $script:emptyLadder = Join-Path ([System.IO.Path]::GetTempPath()) 'simcli-no-ladder.txt'
+        [System.IO.File]::WriteAllText($script:emptyLadder, "layout 1`n")
+    }
+
+    return $script:emptyLadder
+}
+
 if ($Regenerate) {
     Invoke-SimCli @(
         'record',
@@ -402,11 +443,9 @@ if ($Regenerate) {
             throw "content/golden/$($goldenBundle.Name) has no pinned unit table beside it, so there is nothing to replay it against."
         }
 
-        # The PINNED table, and the LIVE ladder. That mixture is correct rather
-        # than an oversight: RestageUnderCurrentRules enforces the map hash alone
-        # and skips the content-hash gate by design, so a restaging never asks
-        # what roster -- or what ladder -- a golden was recorded with.
-        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', $upgrades, '--rules', $ruleset)
+        # The pinned table and the pinned ladder -- see Get-GoldenLadderPath for
+        # why the live ladder is exactly the wrong thing to pass here.
+        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', (Get-GoldenLadderPath $goldenBundle), '--rules', $ruleset)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
         Write-Host "wrote      $resultPath" -ForegroundColor Green
@@ -505,9 +544,9 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    # The pinned table and the live ladder, for the reason the regenerate branch
-    # above states: a restaging does not consult the content hash at all.
-    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', $upgrades, '--rules', $ruleset)
+    # The pinned table and the pinned ladder, for the reason
+    # Get-GoldenLadderPath states.
+    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', (Get-GoldenLadderPath $goldenBundle), '--rules', $ruleset)
     $committed = [System.IO.File]::ReadAllText($resultPath)
 
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {
