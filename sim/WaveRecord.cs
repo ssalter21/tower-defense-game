@@ -152,25 +152,8 @@ namespace Sim
             {
                 RecordOrder order = _orders[index];
 
-                if (!types.TryById(order.TypeId, out UnitType? type))
-                {
-                    throw new RecordException(
-                        "wave record",
-                        "sends type id "
-                        + order.TypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which this unit type table does not define. An unknown id refuses rather "
-                        + "than being skipped: a replay that quietly drops an order it cannot read "
-                        + "produces a confidently wrong result that still validates.");
-                }
-
-                if (type!.Role != UnitRole.Moving)
-                {
-                    throw new RecordException(
-                        "wave record",
-                        "sends "
-                        + type.ToString()
-                        + ", which is a placed unit. A wave is composed of units that walk.");
-                }
+                UnitType type = RecordFormat.RequireType(
+                    RecordKind.Wave, types, order.TypeId, UnitRole.Moving, "a wave order");
 
                 orders[index] = new UnitOrder(order.TickOffset, type, order.Count, order.Corridor);
             }

@@ -84,15 +84,18 @@
     bytes still parse into that defense and that wave -- and restaging parses
     them exactly as replaying does before running them to a pinned outcome. The
     question a golden does not ask is "were these the same rules?", which is a
-    question about a competitive record. The live bundle's version gate is
-    checked in the verify above, on content/match.replay, which is the same bytes
-    as the current-version golden.
+    question about a competitive record. The live bundle's version, content and
+    ruleset gates are all checked in the verify above, on content/match.replay,
+    which is the same bytes as the current-version golden.
 
-    THE RULESET IS THE LIVE ONE FOR EVERY RUN. It is not pinned beside a
-    golden and it does not need to be: a table whose rows carry no attack or
-    armour type never reaches the matrix, so the oldest goldens resolve their
-    shots to the roll whatever the ruleset says, and the current-version golden
-    is re-recorded by this switch anyway.
+    THE RULESET IS THE LIVE ONE FOR EVERY RUN. A bundle stamps the ruleset it
+    was recorded against and the replay gate compares the two, but restaging
+    skips that gate by name exactly as it skips the content-hash one -- so a
+    golden needs no ruleset pinned beside it, for the same reason the live
+    ladder is safe to pass. The oldest golden could not be replayed here in any
+    case: it is a version-0 bundle, it names no ruleset, and a record that does
+    not say which numbers its landings resolved through is retired at that gate.
+    See docs/adr/0047-a-bundle-stamps-its-ruleset.md.
 
 .EXAMPLE
     ./tools/run-headless-match.ps1
@@ -188,25 +191,12 @@ $ruleset = Join-Path $content 'ruleset.txt'
 $traceName = 'golden-trace.txt'
 $landmarkName = 'landmarks.txt'
 
-# The run: the shape it is played against, the decisions as authored, the
-# record they compile to, and the vector a real play of that record produced.
-$schedule = Join-Path $content 'schedule.txt'
+# The run: the decisions as authored, the record they compile to, and the
+# vector a real play of that record produced. The shape it is played against
+# comes off $runContent below.
 $commandScript = Join-Path $content 'commands.txt'
 $commands = Join-Path $content 'run.commands'
 $outcomeName = 'run-outcome.txt'
-
-# The seven files a run is built from. Every run verb takes all seven, so the
-# list is written once and splatted -- a verb reading a different defense than
-# the one the record was made against is a run that refuses for a reason that
-# has nothing to do with what was being checked.
-$runContent = @(
-    '--map', (Join-Path $content 'map.txt'),
-    '--units', $units,
-    '--upgrades', $upgrades,
-    '--rules', $ruleset,
-    '--schedule', $schedule,
-    '--defense', (Join-Path $content 'defense.txt'),
-    '--wave', (Join-Path $content 'wave.txt'))
 
 # One tiny bundle per defense record format version that has ever shipped, and
 # the result a real run of each produced. Committed forever: the writer emits
@@ -224,6 +214,21 @@ $build = Join-Path ([System.IO.Path]::GetTempPath()) ('simcli-build-' + $Simulat
 $program = Join-Path $build 'Sim.Cli.dll'
 
 . (Join-Path $PSScriptRoot '_shared.ps1')
+
+# The content every run verb is played on: the directory, out of which the
+# runner takes its seven files by the names it declares. See Get-ContentArguments
+# for why no file is named here.
+#
+# WHICH INCLUDES content/field.txt AND NOT content/wave.txt. A run's own waves
+# are composed by the build phases coming off the command stream and are read
+# from no file at all; the canned opponent each round is resolved against is a
+# build phase's output. content/wave.txt is a whole authored match -- three
+# hundred and eighty gold released over fourteen hundred ticks, which no purse
+# in this economy can compose -- so a run against one is measured against an
+# opponent no player could be. content/field.txt's own header carries the
+# measurements; see also docs/adr/0040. The run verbs refuse a wave released
+# over time by name.
+$runContent = Get-ContentArguments $content
 
 $committedSim = Join-Path $repoRoot 'client/Packages/com.ssalter.sim/Runtime/Sim.dll'
 
@@ -358,7 +363,7 @@ function Get-GoldenUpgradesPath {
 # beside a pinned table refuses -- for a reason that has nothing to do with the
 # reader branch the golden exists to prove. Which ladder it is cannot change the
 # outcome either way, because RestageUnderCurrentRules skips the content-hash
-# gate; what it has to do is parse.
+# and ruleset gates; what it has to do is parse.
 #
 # Where there is no pinned ladder the answer is an EMPTY one, because that is
 # what the bundle was recorded against. It is written to scratch and never beside

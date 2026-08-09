@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Sim.Tests;
 
 /// <summary>
@@ -6,14 +8,85 @@ namespace Sim.Tests;
 /// of it, and a record that fails the second gate is still perfectly readable.
 /// </summary>
 /// <remarks>
-/// How many things the second gate compares is the record kind's business: a
-/// bundle checks the simulation version, the unit table and the map it inlined;
-/// a command stream checks the simulation version, the unit table, the ruleset
-/// and the anchor schedule, because those are what a stored decision means
-/// anything against.
+/// Which things the second gate compares is the record kind's business, and each
+/// kind declares them to one walk: a bundle declares the simulation version, the
+/// unit table, the ruleset and the map it inlined; a command stream declares the
+/// simulation version, the unit table, the ruleset and the anchor schedule,
+/// because those are what a stored decision means anything against.
 /// </remarks>
 public class ReplayGateTests
 {
+    [Fact]
+    public void The_gate_walks_the_declared_stamps_in_order_and_names_the_first_that_disagrees()
+    {
+        // What a record kind hands the gate is a list, and the list's order is
+        // what a refusal reports. Two rows wrong at once names the one declared
+        // first, so a record whose whole world has moved is described by the
+        // coarsest thing that moved.
+        //
+        // OBSERVED: have ReplayGate.Require walk the whole list and throw on
+        // the last mismatch rather than the first. This goes red naming
+        // "ruleset hash" for a record the simulation version retires whatever
+        // any ruleset says.
+        Hash64 recorded = TheRuleset.Committed().ContentHash;
+        Hash64 live = TheRuleset.RetunedDamage().ContentHash;
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(() => ReplayGate.Require(
+            Stamp.Of("simulation version", SimulationVersion.Current + 1, SimulationVersion.Current),
+            Stamp.Of("content", recorded, live),
+            Stamp.Of("ruleset", recorded, live)));
+
+        Assert.Equal("simulation version", thrown.Gate);
+        Assert.Equal(
+            "simulation version " + (SimulationVersion.Current + 1).ToString(CultureInfo.InvariantCulture),
+            thrown.Recorded);
+        Assert.Equal(
+            "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture),
+            thrown.Live);
+    }
+
+    [Fact]
+    public void A_stamp_the_record_does_not_carry_agrees_with_no_live_value()
+    {
+        // The row a kind declares for a stamp its older records may not have.
+        // Absence is not a value that happens to differ, it is the record
+        // making no claim, so it refuses against the hash it was actually
+        // recorded under as firmly as against any other.
+        //
+        // OBSERVED: let a null recorded value pass. This goes red having caught
+        // nothing, and every bundle written before the ruleset field existed
+        // replays under whatever numbers happen to be loaded.
+        Hash64 live = TheRuleset.Committed().ContentHash;
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
+            () => ReplayGate.Require(Stamp.Of("ruleset", (Hash64?)null, live)));
+
+        Assert.Equal("ruleset hash", thrown.Gate);
+        Assert.Equal("no ruleset stamp", thrown.Recorded);
+        Assert.Equal("ruleset " + live, thrown.Live);
+    }
+
+    [Fact]
+    public void The_restagings_label_is_the_same_walk_as_the_refusal()
+    {
+        // A restaging asks the gate for a label rather than a refusal, over the
+        // three stamps it sets aside. One walk, so the label and the refusal
+        // cannot come to different answers about one pair -- which is what a
+        // second hand-written chain of comparisons was free to do.
+        //
+        // OBSERVED: drop the ruleset row from RulesetsCoincide. This goes red,
+        // and a restaging run under a retuned ruleset reports that today's
+        // rules are the record's own. The version-0 retirement assertion goes
+        // with it, which is what a second list of comparisons costs.
+        UnitTypeTable types = TheMatch.Types();
+        ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
+
+        Assert.True(bundle.RestageUnderCurrentRules(types, TheRuleset.Committed()).RulesetsCoincide);
+        Assert.False(bundle.RestageUnderCurrentRules(types, TheRuleset.RetunedDamage()).RulesetsCoincide);
+        Assert.False(
+            bundle.RestageUnderCurrentRules(TheMatch.RetunedTypes(), TheRuleset.Committed()).RulesetsCoincide);
+    }
+
     [Fact]
     public void A_bundle_that_passes_both_gates_replays_the_match_it_recorded()
     {
@@ -89,6 +162,117 @@ public class ReplayGateTests
     }
 
     [Fact]
+    public void The_bundles_ruleset_hash_gate_fails_on_its_own_and_names_both_hashes()
+    {
+        // Nothing is wrong with these bytes either. A number moved underneath
+        // them -- the armour denominator, which every landing divides by -- and
+        // the three gates a bundle used to have have nothing whatever to say
+        // about it.
+        //
+        // OBSERVED: drop the ruleset comparison from ReplayBundle.Replay. This
+        // goes red having caught nothing -- no exception was thrown -- and the
+        // committed bundle replays to 5A47152F5A40D790 where the record's own
+        // result is B58DBED2315303D2, with the simulation version, the content
+        // hash and the map hash all agreeing that it is the recorded match.
+        // The bundle on disk rather than one built here, because what the stamp
+        // has to protect is a record somebody stored months ago and a rule
+        // somebody retunes today.
+        UnitTypeTable types = TheMatch.Types();
+        ReplayBundle bundle = ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.BundleFile));
+        Ruleset retuned = TheRuleset.RetunedDamage();
+
+        RetiredRecordException thrown =
+            Assert.Throws<RetiredRecordException>(() => bundle.Replay(types, retuned));
+
+        Assert.Equal("ruleset hash", thrown.Gate);
+        Assert.Contains(TheRuleset.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
+        Assert.Contains(retuned.ContentHash.ToString(), thrown.Live, StringComparison.Ordinal);
+
+        // The other three gates are untouched, so this one is firing alone.
+        Assert.Equal(SimulationVersion.Current, bundle.Header.SimVersion);
+        Assert.Equal(types.ContentHash, bundle.Header.ContentHash);
+        Assert.Equal(bundle.Map.MapHash, bundle.Ghost.MapHash);
+
+        // Still readable, still a defense somebody could be shown.
+        Assert.Equal(6, bundle.Ghost.Count);
+        Assert.Equal(6, bundle.Wave.Count);
+
+        // And this is what the gate is refusing: the same bytes, the same
+        // defense and the same wave, coming to a different match. Restaging is
+        // the only operation that will run it, and it says so.
+        Assert.NotEqual(
+            TheMatch.Fresh().Resolve().RollingStateHash,
+            bundle.RestageUnderCurrentRules(types, retuned).Match.Resolve().RollingStateHash);
+    }
+
+    [Fact]
+    public void A_bundle_recorded_before_the_ruleset_stamp_is_retired_at_that_gate()
+    {
+        // The decision ADR 0047 records, as an assertion. A version-0 bundle
+        // names no ruleset, every number a landing resolves through lives in
+        // one, and there is no value this gate could accept on the record's
+        // behalf that would not be an input the recorded run never had. So it
+        // reads, and it does not replay.
+        //
+        // OBSERVED: let an unstamped record through the gate -- guard the
+        // comparison in ReplayBundle.Replay with `RulesetHash is not null`,
+        // which is the other half of the decision written out. This goes red
+        // having caught nothing, no exception was thrown, and the bundle
+        // replays under whatever numbers happen to be loaded and reports the
+        // result as the record's own. That is the failure the gate exists for,
+        // wearing the format bump as a disguise.
+        UnitTypeTable types = TheMatch.Types();
+        byte[] older = RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle().ToBytes());
+
+        ReplayBundle bundle = ReplayBundle.FromBytes(older);
+
+        // It read, through the branch that claims to know that version, and
+        // everything a version-0 bundle carries is there.
+        Assert.Equal(0, bundle.Header.FormatVersion);
+        Assert.Null(bundle.RulesetHash);
+        Assert.Equal(TheMatch.Seed, bundle.Seed);
+        Assert.Equal(6, bundle.Ghost.Count);
+        Assert.Equal(6, bundle.Wave.Count);
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
+            () => bundle.Replay(types, TheRuleset.Committed()));
+
+        Assert.Equal("ruleset hash", thrown.Gate);
+        Assert.Contains("no ruleset stamp", thrown.Recorded, StringComparison.Ordinal);
+        Assert.Contains(TheRuleset.Committed().ContentHash.ToString(), thrown.Live, StringComparison.Ordinal);
+
+        // It refuses against the ruleset it was actually recorded under as
+        // firmly as against any other, which is the whole of the decision: what
+        // is missing is the record's claim, not a match between two hashes.
+        Assert.Throws<RetiredRecordException>(() => bundle.Replay(types, TheRuleset.RetunedDamage()));
+
+        // And restaging still runs it, still labelled, which is what keeps the
+        // irreplaceable version-0 golden alive.
+        Restaging restaged = bundle.RestageUnderCurrentRules(types, TheRuleset.Committed());
+
+        Assert.Null(restaged.RecordedRulesetHash);
+        Assert.False(restaged.RulesetsCoincide);
+        Assert.Contains("no ruleset stamp", restaged.ToString(), StringComparison.Ordinal);
+        Assert.Equal(TheMatch.Fresh().Resolve().RollingStateHash, restaged.Match.Resolve().RollingStateHash);
+    }
+
+    [Fact]
+    public void A_bundle_that_names_no_ruleset_cannot_be_written_back_out()
+    {
+        // The writer emits the current format version and only that, and the
+        // current one stamps a ruleset. There is nothing honest to put in that
+        // field for a record that never named one, so asking is refused rather
+        // than answered with a zero -- which would be a bundle claiming numbers
+        // it could then pass a gate against.
+        ReplayBundle bundle = ReplayBundle.FromBytes(
+            RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle().ToBytes()));
+
+        SimulationException thrown = Assert.Throws<SimulationException>(() => bundle.ToBytes());
+
+        Assert.Contains("cannot be rewritten", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void The_map_hash_gate_fails_on_its_own_and_names_both_hashes()
     {
         // The defense says it was built on one grid and the grid inlined beside
@@ -136,16 +320,23 @@ public class ReplayGateTests
         // under the current numbers?" is a real question and it gets a real
         // answer -- just never from inside Replay, and never labelled as this
         // record's result.
+        //
+        // Both retuned together, the table and the ruleset, because the two are
+        // what "the current numbers" means and the operation has to set aside
+        // both or the distinction it draws is only half drawn.
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
         UnitTypeTable retuned = TheMatch.RetunedTypes();
+        Ruleset retunedRules = TheRuleset.RetunedDamage();
 
-        Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned, TheRuleset.Committed()));
+        Assert.Throws<RetiredRecordException>(() => bundle.Replay(retuned, retunedRules));
 
-        Restaging restaged = bundle.RestageUnderCurrentRules(retuned, TheRuleset.Committed());
+        Restaging restaged = bundle.RestageUnderCurrentRules(retuned, retunedRules);
 
         Assert.False(restaged.RulesetsCoincide);
         Assert.Equal(TheMatch.Types().ContentHash, restaged.RecordedContentHash);
         Assert.Equal(retuned.ContentHash, restaged.ContentHashUsed);
+        Assert.Equal(TheRuleset.Committed().ContentHash, restaged.RecordedRulesetHash);
+        Assert.Equal(retunedRules.ContentHash, restaged.RulesetHashUsed);
         Assert.Contains("not replayed", restaged.ToString(), StringComparison.Ordinal);
         Assert.Contains("not this record's result", restaged.ToString(), StringComparison.Ordinal);
 
@@ -174,22 +365,53 @@ public class ReplayGateTests
     }
 
     [Fact]
+    public void Restaging_sets_the_ruleset_aside_and_still_enforces_the_map_hash()
+    {
+        // The two halves of the operation, in one place. What it sets aside is
+        // "were these the same rules?" -- so a ruleset the bundle was never
+        // recorded against runs. What it does not set aside is "are these bytes
+        // internally consistent?" -- so a defense claiming one grid beside an
+        // inlined other refuses here exactly as it does at the replay gate.
+        //
+        // OBSERVED: drop the map hash comparison from
+        // RestageUnderCurrentRules. The second half goes red having caught
+        // nothing, and a bundle whose defense and whose grid are two different
+        // playfields runs to an outcome somebody keeps.
+        UnitTypeTable types = TheMatch.Types();
+        ReplayBundle good = TheMatch.Bundle();
+
+        Assert.NotNull(
+            ReplayBundle.FromBytes(good.ToBytes())
+                .RestageUnderCurrentRules(types, TheRuleset.RetunedDamage())
+                .Match);
+
+        ReplayBundle bent = ReplayBundle.FromBytes(RecordBytes.Flip(
+            good.ToBytes(),
+            RecordBytes.GhostIn(good) + RecordBytes.GhostMapHashOffset));
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
+            () => bent.RestageUnderCurrentRules(types, TheRuleset.Committed()));
+
+        Assert.Equal("map hash", thrown.Gate);
+    }
+
+    [Fact]
     public void A_command_stream_that_passes_both_gates_plays_the_run_it_recorded()
     {
         // The command stream's half of the first assertion in this file: the
         // bytes reproduce the run, round for round, through the same two gates
         // a bundle goes through.
         //
-        // OBSERVED: have CommandStream.Replay return run.Outcome without the
-        // loop that plays the commands. This goes red, 4 against 0 -- a gate
-        // that opened onto nothing, handing back the outcome of a run that never
+        // OBSERVED: have CommandStream.Replay hand back its empty list of rounds
+        // without the loop that plays the commands. This goes red, 4 against 0
+        // -- a gate that opened onto nothing, reporting a run that never
         // started.
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
         Run run = TheCommands.Fresh();
 
-        RunOutcome outcome = stream.Replay(run, TheCommands.Defense());
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheCommands.Defense());
 
-        Assert.Equal(TheCommands.Waves, outcome.Rounds.Count);
+        Assert.Equal(TheCommands.Waves, rounds.Count);
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(TheRun.Seed, stream.Seed);
     }
@@ -249,16 +471,14 @@ public class ReplayGateTests
         Assert.NotEqual(TheRuleset.CommittedText(), TheRuleset.ReformattedText());
         Assert.Equal(TheRuleset.Committed().ContentHash, reformatted.ContentHash);
 
-        RunOutcome committed = CommandStream
-            .FromBytes(TheCommands.Stream().ToBytes())
-            .Replay(TheCommands.Fresh(), TheCommands.Defense());
+        Run committed = TheCommands.Fresh();
+        Run against = TheCommands.Against(reformatted);
 
-        RunOutcome against = CommandStream
-            .FromBytes(TheCommands.Stream().ToBytes())
-            .Replay(TheCommands.Against(reformatted), TheCommands.Defense());
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(committed, TheCommands.Defense());
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(against, TheCommands.Defense());
 
-        Assert.Equal(committed.Rounds, against.Rounds);
-        Assert.Equal(committed.HealthRemaining, against.HealthRemaining);
+        Assert.Equal(committed.Outcome.Rounds, against.Outcome.Rounds);
+        Assert.Equal(committed.Outcome.HealthRemaining, against.Outcome.HealthRemaining);
     }
 
     [Fact]

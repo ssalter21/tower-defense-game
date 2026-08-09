@@ -70,8 +70,8 @@ public class CommandScriptTests
         // somebody cannot annotate is a file whose reasons live somewhere that
         // does not travel with it.
         //
-        // OBSERVED: have IsBlankOrComment's caller stop skipping -- take the
-        // continue out of the loop. The comment line is refused as a row
+        // OBSERVED: take the continue out of DataText.Rows, so a blank line and
+        // a comment are yielded as rows. The comment line is refused as a row
         // starting with '#', so this goes red on an exception rather than a
         // comparison, and content/commands.txt stops loading at all.
         IReadOnlyList<RecordCommand> annotated = CommandScript.Parse(
@@ -106,7 +106,8 @@ public class CommandScriptTests
             () => CommandScript.Parse("build 1 ordinary 5 5 2\norder 0 1 4 0\n"));
 
         Assert.Equal(2, thrown.Line);
-        Assert.Contains("the only row a command script has is 'build'", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("starts with 'order'", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("the rows this file has: build", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

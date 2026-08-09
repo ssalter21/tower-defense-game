@@ -153,8 +153,8 @@ public class BuildPhaseTests
         // whole of what "competes head to head" means.
         TowerLayout defense = TheBuild.Defense();
 
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
 
         Option changerOption = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
         run.Advance(BuildPhase.Of(OptionKind.GameChanger, changerOption.Id, WaveSlot.Empty), defense);
@@ -196,7 +196,7 @@ public class BuildPhaseTests
         // between, the first one is still fieldable.
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+            run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
         }
 
         Assert.Equal(4, run.Unlocks.Count);
@@ -382,6 +382,44 @@ public class BuildPhaseTests
                 WaveSlot.Of(creeps[1], 1))
                 .Resolve(offering, everything, Purse.Holding(1000), run.Costs)
                 .Wave.Count);
+    }
+
+    [Fact]
+    public void Every_slot_a_build_phase_fills_releases_on_tick_zero()
+    {
+        // A build phase composes what is sent rather than when, so the whole
+        // wave leaves at once and the ordering a wave record asserts falls to
+        // the type ids alone.
+        //
+        // This is pinned because something outside the simulation now depends on
+        // it: the command line refuses a --field file whose orders arrive over
+        // time, on the ground that a field member stands in for a stored round
+        // and a stored round is one of these. If the release tick ever moves,
+        // that refusal starts rejecting real rounds -- so the rule goes red here
+        // rather than out there.
+        //
+        // OBSERVED: move BuildPhase.ReleaseTick from 0 to 1. This goes red on
+        // the first order, and CommandLineTests's wrong-field refusal stays
+        // green, still refusing content/wave.txt for a reason that has stopped
+        // being true.
+        Run run = TheBuild.Fresh();
+        Offering offering = run.Offering;
+        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+
+        WaveScript wave = BuildPhase.Of(
+            offering.Options[0].Kind,
+            offering.Options[0].Id,
+            WaveSlot.Of(creeps[0], 1),
+            WaveSlot.Of(creeps[1], 1))
+            .Resolve(offering, Everything(offering), Purse.Holding(1000), run.Costs)
+            .Wave;
+
+        Assert.Equal(2, wave.Count);
+
+        for (int index = 0; index < wave.Count; index++)
+        {
+            Assert.Equal(0, wave.Orders[index].TickOffset);
+        }
     }
 
     [Fact]
@@ -604,8 +642,8 @@ public class BuildPhaseTests
         TowerLayout defense = TheBuild.Defense();
         AnchorSchedule schedule = TheSchedule.Committed();
 
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
 
         Option steepless = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
         run.Advance(BuildPhase.Of(OptionKind.GameChanger, steepless.Id, WaveSlot.Empty), defense);
@@ -637,10 +675,11 @@ public class BuildPhaseTests
         // same call rather than two lifecycles.
         //
         // OBSERVED: leave the purse and the unlocks on the build rather than
-        // taking them back -- drop the two assignments in
-        // Run.Advance(BuildPhase, TowerLayout). The unlock-count assertion goes
-        // red, 10 against 0, and every round of the run decides against a run
-        // that has never taken anything and never spent a coin.
+        // taking them back -- hand Run.Play the run's own Unlocks and Purse
+        // instead of the build's, in Run.Advance(BuildPhase, TowerLayout). The
+        // unlock-count assertion goes red, 10 against 0, and every round of the
+        // run decides against a run that has never taken anything and never
+        // spent a coin.
         Run run = TheBuild.Fresh();
         TowerLayout defense = TheBuild.Defense();
         var spent = new List<int>();
@@ -656,11 +695,10 @@ public class BuildPhaseTests
                 cheapest.Id,
                 affordable > 0 ? WaveSlot.Of(cheapest.TypeId, affordable) : WaveSlot.Empty);
 
-            // The same surface a stored command stream is checked against,
-            // called here for what the wave came to before the round pays out.
-            spent.Add(phase.Resolve(offering, run.Unlocks, run.Purse, run.Costs).Spent);
-
-            run.Advance(phase, defense);
+            // What the wave cost comes off the round the phase was played into.
+            // The build phase resolves once, where the round is played, and says
+            // what it came to.
+            spent.Add(run.Advance(phase, defense).Build.Spent);
         }
 
         Assert.Equal(10, run.Round);
@@ -679,21 +717,22 @@ public class BuildPhaseTests
         // paid for a wave nobody was in the run to send -- and nothing
         // downstream could tell that from a round somebody played.
         //
-        // OBSERVED: take the purse and the unlocks back before the round is
-        // checked rather than after -- move the two assignments in
-        // Run.Advance(BuildPhase, TowerLayout) above the RequireUnfinished
-        // call. The first half goes red, 210 against 190: a finished run pays
-        // for a wave it refused to send.
+        // OBSERVED: take the purse and the unlocks back where the decision is
+        // made rather than where the round is committed -- add
+        // `Unlocks = build.Unlocks; Purse = build.Purse;` above the
+        // RequireUnfinished call in Run.Advance(BuildPhase, TowerLayout). The
+        // first half goes red, 210 against 193: a finished run pays for a wave
+        // it refused to send.
         //
-        // OBSERVED: compose the orders after the two assignments instead of
-        // before them -- inline the RoundOrders.Of call into the Advance
-        // beneath it. The first half stays green and the second goes red, 0
-        // against 1, because the defense is the last thing that can refuse a
-        // round and it is the only one the earlier mutation leaves in place.
+        // OBSERVED: put those two assignments below RequireUnfinished instead,
+        // with the RoundOrders.Of call moved down past them. The first half
+        // stays green and the second goes red, 0 against 1, because the defense
+        // is the last thing that can refuse a round and it is the only refusal
+        // that mutation leaves standing.
         TowerLayout defense = TheBuild.Defense();
         Run over = TheBuild.Fresh(waves: 1);
 
-        over.Advance(TheBuild.TakeFirst(over.Offering), defense);
+        over.Advance(TheBuild.BuyingNothing(over.Offering), defense);
         Assert.True(over.IsOver);
 
         int purse = over.Purse.Gold;

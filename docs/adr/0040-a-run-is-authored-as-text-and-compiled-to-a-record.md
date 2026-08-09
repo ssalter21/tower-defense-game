@@ -37,9 +37,23 @@ skeleton's `record` verb already followed for a replay bundle.
 **The command line stays a thin shell.** Argument parsing, file reads, file writes. Every rule the three run
 verbs reach is behind `CommandStream`, `BuildPhase` and `Run`. The one composition decision made out here is
 the canned field: the population a round's opponents are drawn from is the single pair of orders
-`content/defense.txt` and `content/wave.txt` describe, standing in for a ghost pool that does not exist until
+`content/defense.txt` and `content/field.txt` describe, standing in for a ghost pool that does not exist until
 runs are stored. That is a thin pool rather than a missing one, and widening it is a longer list and no change
 anywhere else.
+
+**The canned field is `--field` and a match's wave is `--wave`, and no verb takes both.** A run's own waves are
+composed by the build phases coming off the command stream and are read from no file; the only file of orders a
+run verb wants is the opponent. One name for both was one file two callers could disagree about, and the
+disagreement is silent — an authored match parses as a field perfectly and outspends every opponent it faces
+several times over, so what comes back is a full report about nothing (ADR-0041 measures it). What tells the two
+apart is structural: a field member stands in for a stored round, a stored round is a build phase's output, and
+a build phase composes what is sent rather than when — so every order of one leaves on tick 0, and `RunContent`
+refuses a file whose orders arrive over time.
+
+**`--defense` is read twice, deliberately.** It is what stands while this run's waves are sent and it is the
+defense the canned opponent stands behind, so both directions of a round are measured through the same wall.
+That is what makes out-dealing the field a statement about the wave; a second defense file would be a second
+wall and the win condition would stop meaning anything.
 
 ## Consequences
 

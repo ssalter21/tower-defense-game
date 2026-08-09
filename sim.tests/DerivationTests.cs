@@ -155,8 +155,11 @@ public class DerivationTests
         string original = TheRuleset.CommittedText();
         Hash64 hash = Ruleset.Parse(original).ContentHash;
 
-        // A number moved, once per rule. Each of these retires every record
-        // pinned to the old ruleset, which is exactly what should happen.
+        // The two row-shaped rules moved. Every other number the file holds is
+        // covered one at a time by the theory below, which is derived off the
+        // file rather than listed; these two are here because neither of them
+        // is a column.
+        //
         // The matrix, twice: once widened and once permuted. A single cell
         // cannot move on its own without the square stopping being a Latin
         // square, so the retune that tests the fold is a whole value class
@@ -164,30 +167,13 @@ public class DerivationTests
         // folded rather than the multiset of nine numbers.
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, "150    70       100", "70   100       150", "100   150        70")).ContentHash);
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, " 70   100       140", "100   140        70", "140    70       100")).ContentHash);
-        Assert.NotEqual(hash, Retuned(original, "armour          1          100", "armour          2          100"));
-        Assert.NotEqual(hash, Retuned(original, "floor           1", "floor           2"));
-        Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       11         0"));
 
-        // The interest cap, which is parsed and could be parsed and dropped.
-        // OBSERVED: delete .Add(draft.InterestCapGold) from the fold. This line
-        // goes red with the capped and uncapped rulesets both hashing
-        // 1E384929C5F43BFB, and every record pinned to one would replay happily
-        // against the other.
-        Assert.NotEqual(hash, Retuned(original, "interest       10         0", "interest       10       500"));
-        Assert.NotEqual(hash, Retuned(original, "income        100", "income        101"));
-
-        // What a run opens holding, which decides whether the first build phase
-        // can buy anything at all.
-        // OBSERVED: delete .Add(draft.StartingPurseGold) from the fold. This
-        // line goes red with a run that opens on 100 gold and one that opens
-        // on 101 both hashing 6EBEF9AA88D5E2AA, so a stored run could be
-        // replayed against an opening balance it never had.
-        Assert.NotEqual(hash, Retuned(original, "purse         100", "purse         101"));
+        // A band's bonus, which the band folds rather than a column.
+        // OBSERVED: delete the band loop from Ruleset.FoldBands, leaving the
+        // count. This goes red with a top band paying 20 and one paying 21 both
+        // hashing 41DA8EEE80D8B334, and every record pinned to one performance
+        // curve would replay against another.
         Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
-        Assert.NotEqual(hash, Retuned(original, "health       1500", "health       1501"));
-        Assert.NotEqual(hash, Retuned(original, "slots           2         1", "slots           3         1"));
-        Assert.NotEqual(hash, Retuned(original, "offering        3         3", "offering        4         3"));
-        Assert.NotEqual(hash, Retuned(original, "snapshot       10        25", "snapshot       10        26"));
 
         // Nothing that is not a number moved. Each of these changes the file
         // and none of them changes a rule.
@@ -195,6 +181,33 @@ public class DerivationTests
         Assert.Equal(hash, Ruleset.Parse(WithColumnsRespaced(original)).ContentHash);
         Assert.Equal(hash, Ruleset.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal)).ContentHash);
         Assert.Equal(hash, Ruleset.Parse(original + "\n\n\n").ContentHash);
+    }
+
+    [Theory]
+    [MemberData(nameof(TheRuleset.EveryNumber), MemberType = typeof(TheRuleset))]
+    public void Moving_any_one_number_of_the_ruleset_moves_its_content_hash(string keyword, int column)
+    {
+        // One case per number the committed file holds outside the matrix and
+        // the bands, taken off the file rather than written down here. The
+        // simulation declares a ruleset field once, on the row that carries it,
+        // and refuses a file with a row missing or a row carrying the wrong
+        // number of columns -- so the columns of the committed file ARE the
+        // declared fields, and a field somebody adds arrives here without
+        // anybody adding a case for it.
+        //
+        // A field that is parsed and not folded is silent: retune it and the
+        // content hash does not move, so every stored command stream stamped
+        // against the old value passes the ruleset gate against the new one.
+        // That is what this theory covers, in one case per number, without
+        // depending on whoever added the number to have added an assertion.
+        //
+        // OBSERVED: stop Ruleset.Fold's walk one entry short of the end. The
+        // two snapshot rows go red, the free count and the price each coming
+        // out at DB21B47F2448B2BF whatever they are set to, and the other
+        // twelve stay green.
+        Assert.NotEqual(
+            TheRuleset.Committed().ContentHash,
+            Ruleset.Parse(TheRuleset.MovedNumber(keyword, column)).ContentHash);
     }
 
     [Fact]

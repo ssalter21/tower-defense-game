@@ -60,6 +60,9 @@ namespace Sim
         /// </summary>
         private static readonly string[] TakeKinds = { "ordinary", "changer" };
 
+        /// <summary>The words a row here may open with. There is one.</summary>
+        private static readonly string[] RowWords = { Keyword };
+
         /// <summary>
         /// The word a row spells this half of a round's menu with.
         /// </summary>
@@ -96,38 +99,19 @@ namespace Sim
                 throw new ArgumentNullException(nameof(source));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var commands = new List<RecordCommand>();
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the only row a command script has is '"
-                        + Keyword
-                        + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (fields.Length < FixedFields || (fields.Length - FixedFields) % FieldsPerSlot != 0)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "has "
                         + fields.Length.ToString(CultureInfo.InvariantCulture)
                         + " fields. A '"
@@ -139,20 +123,21 @@ namespace Sim
                         + "and guessing which half is how a wave nobody composed gets sent.");
                 }
 
-                int wave = DataText.IntegerInRange(source, number, "the wave", fields[1], 1, Largest);
-                int take = DataText.Keyword(source, number, "the take kind", fields[2], TakeKinds);
-                int takeId = DataText.IntegerInRange(source, number, "the take id", fields[3], 1, Largest);
+                int wave = DataText.IntegerInRange(source, row.Line, "the wave", fields[1], 1, Largest);
+                int take = DataText.Keyword(source, row.Line, "the take kind", fields[2], TakeKinds);
+                int takeId = DataText.IntegerInRange(source, row.Line, "the take id", fields[3], 1, Largest);
 
                 try
                 {
-                    commands.Add(RecordCommand.Of(wave, (OptionKind)take, takeId, Slots(source, number, fields)));
+                    commands.Add(
+                        RecordCommand.Of(wave, (OptionKind)take, takeId, Slots(source, row.Line, fields)));
                 }
                 catch (SimulationException refused)
                 {
                     // The rule is the record's and the line number is this
                     // file's. Rewrapped rather than reimplemented, so that
                     // moving the rule moves both the bytes and the text.
-                    throw new ContentException(source, number, refused.Message);
+                    throw new ContentException(source, row.Line, refused.Message);
                 }
             }
 

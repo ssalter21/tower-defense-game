@@ -38,10 +38,11 @@ namespace Sim
     /// <para>
     /// <b>Reading and replaying are different gates.</b> Reading needs a known
     /// format version and nothing else. Replaying needs, in addition, the
-    /// simulation version, the content hash and the map hash all to match what is
-    /// actually in front of it -- and when one does not, it refuses by name and
-    /// leaves the record perfectly readable, so a defense whose ruleset has moved
-    /// on can still be listed and drawn and shown as historical.
+    /// simulation version, the content hash, the ruleset hash and the map hash
+    /// all to match what is actually in front of it -- and when one does not, it
+    /// refuses by name and leaves the record perfectly readable, so a defense
+    /// whose ruleset has moved on can still be listed and drawn and shown as
+    /// historical.
     /// </para>
     /// </remarks>
     public sealed class ReplayBundle
@@ -52,6 +53,7 @@ namespace Sim
 
         private ReplayBundle(
             RecordHeader header,
+            Hash64? rulesetHash,
             ulong seed,
             HexMap map,
             GhostRecord ghost,
@@ -60,6 +62,7 @@ namespace Sim
             byte[] waveBytes)
         {
             Header = header;
+            RulesetHash = rulesetHash;
             Seed = seed;
             Map = map;
             Ghost = ghost;
@@ -70,6 +73,20 @@ namespace Sim
 
         /// <summary>Magic, format version, simulation version, content hash.</summary>
         public RecordHeader Header { get; }
+
+        /// <summary>
+        /// The hash of the parsed ruleset the match was played under, or null
+        /// where the record does not say -- which is every version-0 bundle,
+        /// all of them written before the field existed.
+        /// </summary>
+        /// <remarks>
+        /// Null is a fact about the record rather than a value standing in for
+        /// one. A sentinel digest would be a digest some ruleset legitimately
+        /// folds to, and any substituted hash would be a claim the record never
+        /// made about the numbers its landings resolved through.
+        /// <see cref="Replay"/> refuses on it.
+        /// </remarks>
+        public Hash64? RulesetHash { get; }
 
         /// <summary>The seed the dice are started from.</summary>
         public ulong Seed { get; }
@@ -113,6 +130,7 @@ namespace Sim
             TowerLayout layout,
             WaveScript wave,
             UnitTypeTable types,
+            Ruleset rules,
             ulong seed,
             int mapHandle)
         {
@@ -126,11 +144,17 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
+            }
+
             GhostRecord ghost = GhostRecord.Of(map, layout, types, mapHandle);
             WaveRecord waveRecord = WaveRecord.Of(wave, types);
 
             return new ReplayBundle(
                 RecordHeader.Current(RecordKind.Replay, types.ContentHash),
+                rules.ContentHash,
                 seed,
                 map,
                 ghost,
@@ -153,6 +177,9 @@ namespace Sim
                 case 0:
                     return ReadVersion0(cursor, header);
 
+                case 1:
+                    return ReadVersion1(cursor, header);
+
                 default:
                     throw cursor.Fault(
                         "is replay format version "
@@ -162,14 +189,34 @@ namespace Sim
         }
 
         /// <summary>The bytes. Always the current format version -- there is one writer.</summary>
+        /// <remarks>
+        /// A bundle read at version 0 cannot be written back out, and refuses
+        /// here rather than filling the ruleset field in with something. There
+        /// is one writer and it emits the current format, which carries a stamp
+        /// that record never made; a zero, or the ruleset that happens to be
+        /// loaded, would turn "this match was played under numbers nobody
+        /// wrote down" into a bundle claiming numbers it can pass a gate
+        /// against.
+        /// </remarks>
         public byte[] ToBytes()
         {
+            if (RulesetHash is null)
+            {
+                throw new SimulationException(
+                    "A replay bundle read at format version 0 was asked for its bytes. The writer emits "
+                    + "the current format version and only that, and the current one stamps the ruleset "
+                    + "the match was played under -- which a version-0 record does not carry and which "
+                    + "nothing may supply on its behalf. Such a bundle can be read, listed, drawn and "
+                    + "restaged; it cannot be rewritten.");
+            }
+
             byte[] cells = Map.ToCellBytes();
 
             var writer = new ByteWriter(
-                RecordFormat.HeaderBytes + 12 + cells.Length + _ghostBytes.Length + _waveBytes.Length);
+                RecordFormat.HeaderBytes + 20 + cells.Length + _ghostBytes.Length + _waveBytes.Length);
 
             Header.Write(writer);
+            writer.U64(RulesetHash.Value.Value);
             writer.U64(Seed);
             writer.U16("map width", Map.Width);
             writer.U16("map height", Map.Height);
@@ -185,11 +232,26 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Three checks, each refusing by name and with both values: the
-        /// simulation version against this build, the content hash against the
-        /// tables handed in, and the map hash the defense recorded against the
-        /// map actually inlined here. They are independent, so a record can fail
-        /// exactly one of them and the message says which.
+        /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
+        /// version against this build, the content hash against the tables
+        /// handed in, the ruleset hash against the rules handed in, and the map
+        /// hash the defense recorded against the map actually inlined here.
+        /// They are independent, so a record can fail exactly one of them; a
+        /// record that fails several is named by the first declared.
+        /// </para>
+        /// <para>
+        /// <b>The ruleset is compared because a landing resolves through it.</b>
+        /// The matrix cell, the armour denominator, the armour percentage and
+        /// the damage floor all reach the fused damage expression, so a bundle
+        /// run against a retuned ruleset comes to a different rolling state hash
+        /// while the other three gates have nothing at all to say about it.
+        /// </para>
+        /// <para>
+        /// <b>A bundle that carries no ruleset stamp is retired here.</b> Those
+        /// are the version-0 bundles, written before the field existed, and
+        /// there is no value this gate could accept on their behalf that would
+        /// not be an invented input -- see <see cref="RecordFormat.ReplayVersion"/>.
+        /// They read, they list and they restage; they do not replay.
         /// </para>
         /// <para>
         /// <b>Nothing here quietly substitutes anything.</b> There is no
@@ -213,29 +275,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            if (Header.SimVersion != SimulationVersion.Current)
-            {
-                throw new RetiredRecordException(
-                    "simulation version",
-                    "simulation version " + Header.SimVersion.ToString(CultureInfo.InvariantCulture),
-                    "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (Header.ContentHash != types.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "content hash",
-                    "content " + Header.ContentHash.ToString(),
-                    "content " + types.ContentHash.ToString());
-            }
-
-            if (Ghost.MapHash != Map.MapHash)
-            {
-                throw new RetiredRecordException(
-                    "map hash",
-                    "map " + Ghost.MapHash.ToString(),
-                    "map " + Map.MapHash.ToString());
-            }
+            ReplayGate.Require(
+                Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
+                Stamp.Of("content", Header.ContentHash, types.ContentHash),
+                Stamp.Of("ruleset", RulesetHash, rules.ContentHash),
+                Stamp.Of("map", Ghost.MapHash, Map.MapHash));
 
             return ToMatch(types, rules);
         }
@@ -255,11 +299,19 @@ namespace Sim
         /// <c>ToString</c> that it is not a replay.
         /// </para>
         /// <para>
-        /// The map hash is still enforced, and that is not an inconsistency. The
-        /// other two gates ask "were these the same rules?", which is the
-        /// question this operation is deliberately setting aside; the map hash
-        /// asks "are these bytes internally consistent?", which nothing sets
-        /// aside.
+        /// The map hash is the one stamp this still declares, and that is not an
+        /// inconsistency. The other three ask "were these the same rules?",
+        /// which is the question this operation is deliberately setting aside;
+        /// the map hash asks "are these bytes internally consistent?", which
+        /// nothing sets aside. The three it drops are three rows a reader can
+        /// see are not there.
+        /// </para>
+        /// <para>
+        /// <b>The <see cref="Restaging"/> carries out the ruleset it was
+        /// recorded under beside the one it was run under.</b> Setting a
+        /// question aside is only different from not asking it if the answer
+        /// travels with the result, and the ruleset is the stamp whose
+        /// substitution moves the numbers a landing resolves through.
         /// </para>
         /// </remarks>
         public Restaging RestageUnderCurrentRules(UnitTypeTable types, Ruleset rules)
@@ -274,19 +326,15 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            if (Ghost.MapHash != Map.MapHash)
-            {
-                throw new RetiredRecordException(
-                    "map hash",
-                    "map " + Ghost.MapHash.ToString(),
-                    "map " + Map.MapHash.ToString());
-            }
+            ReplayGate.Require(Stamp.Of("map", Ghost.MapHash, Map.MapHash));
 
             return new Restaging(
                 ToMatch(types, rules),
                 Header.SimVersion,
                 Header.ContentHash,
-                types.ContentHash);
+                types.ContentHash,
+                RulesetHash,
+                rules.ContentHash);
         }
 
         public override string ToString() =>
@@ -298,7 +346,49 @@ namespace Sim
             + " against wave "
             + WaveId.ToString();
 
-        private static ReplayBundle ReadVersion0(ByteCursor cursor, RecordHeader header)
+        /// <summary>
+        /// Version 0: <c>u64 seed + u16 width + u16 height + Cell[] + Ghost +
+        /// Wave</c>. No ruleset stamp, so none is read and none is supplied.
+        /// </summary>
+        /// <remarks>
+        /// <b>This branch never goes away, and what it produces never replays.</b>
+        /// <c>content/golden/defense-0.replay</c> is a real recorded bundle at
+        /// this version, kept so that deleting the branch is a red gate rather
+        /// than a quiet loss, and it is exercised by restaging. What it cannot
+        /// be given is a ruleset it never named: every number a landing resolves
+        /// through lives there, so a supplied value would be an input the
+        /// recorded run never had. <see cref="Replay"/> refuses it by name and
+        /// <see cref="RestageUnderCurrentRules"/> says out loud what it set
+        /// aside.
+        /// </remarks>
+        private static ReplayBundle ReadVersion0(ByteCursor cursor, RecordHeader header) =>
+            ReadBody(cursor, header, rulesetHash: null);
+
+        /// <summary>
+        /// Version 1: the version-0 fields with a <c>u64 ruleset_hash</c> in
+        /// front of them.
+        /// </summary>
+        /// <remarks>
+        /// The stamp goes first, ahead of the seed, so that it sits where a
+        /// command stream carries the same field -- immediately after the
+        /// header, where a hexdump of any record that pins a ruleset shows it in
+        /// the same place.
+        /// </remarks>
+        private static ReplayBundle ReadVersion1(ByteCursor cursor, RecordHeader header)
+        {
+            ulong rulesetHash = cursor.U64("the ruleset hash");
+
+            return ReadBody(cursor, header, Hash64.FromValue(rulesetHash));
+        }
+
+        /// <summary>
+        /// Everything after the ruleset stamp, which both versions share
+        /// unchanged. Shared because it is the same bytes: a copy per branch
+        /// would let the corridor assertion and the cross-check drift apart, and
+        /// the branch that lost one would go on reading bundles the other
+        /// refuses.
+        /// </summary>
+        private static ReplayBundle ReadBody(ByteCursor cursor, RecordHeader header, Hash64? rulesetHash)
         {
             ulong seed = cursor.U64("the seed");
             int width = cursor.U16("the map width");
@@ -340,6 +430,7 @@ namespace Sim
 
             return new ReplayBundle(
                 header,
+                rulesetHash,
                 seed,
                 map,
                 ghost,
@@ -403,12 +494,20 @@ namespace Sim
     /// </remarks>
     public sealed class Restaging
     {
-        internal Restaging(Match match, uint recordedSimVersion, Hash64 recordedContent, Hash64 contentUsed)
+        internal Restaging(
+            Match match,
+            uint recordedSimVersion,
+            Hash64 recordedContent,
+            Hash64 contentUsed,
+            Hash64? recordedRuleset,
+            Hash64 rulesetUsed)
         {
             Match = match;
             RecordedSimVersion = recordedSimVersion;
             RecordedContentHash = recordedContent;
             ContentHashUsed = contentUsed;
+            RecordedRulesetHash = recordedRuleset;
+            RulesetHashUsed = rulesetUsed;
         }
 
         /// <summary>The match, ready to be advanced. It is a new match, not a replay of one.</summary>
@@ -427,23 +526,53 @@ namespace Sim
         public Hash64 ContentHashUsed { get; }
 
         /// <summary>
+        /// The ruleset hash the record was made under, or null where the record
+        /// does not say. A version-0 bundle never named one, and this is the
+        /// only operation that will run one at all.
+        /// </summary>
+        public Hash64? RecordedRulesetHash { get; }
+
+        /// <summary>The hash of the ruleset it is actually being run against.</summary>
+        public Hash64 RulesetHashUsed { get; }
+
+        /// <summary>
         /// Whether today's rules and numbers happen to be the record's own. Even
         /// when they are, this is still not a replay -- it is a restaging that
         /// coincided with one, and calling it a replay would mean the label
         /// depended on the numbers rather than on what was asked for.
         /// </summary>
-        public bool RulesetsCoincide =>
-            RecordedSimVersion == SimVersionUsed && RecordedContentHash == ContentHashUsed;
+        /// <remarks>
+        /// <para>
+        /// The three stamps the replay gate would have compared, declared to
+        /// the same walk and asked for a label rather than a refusal. The map
+        /// hash is the visibly absent fourth: it was enforced before the
+        /// restaging ran, because it asks about the bytes rather than the
+        /// rules.
+        /// </para>
+        /// <para>
+        /// A record that names no ruleset never coincides, whatever ruleset is
+        /// in front of it. Nothing has been shown to agree with anything: the
+        /// record did not say, and "did not say" is not "said this".
+        /// </para>
+        /// </remarks>
+        public bool RulesetsCoincide => ReplayGate.Agree(
+            Stamp.Of("simulation version", RecordedSimVersion, SimVersionUsed),
+            Stamp.Of("content", RecordedContentHash, ContentHashUsed),
+            Stamp.Of("ruleset", RecordedRulesetHash, RulesetHashUsed));
 
         public override string ToString() =>
             "Restaged, not replayed: recorded under simulation version "
             + RecordedSimVersion.ToString(CultureInfo.InvariantCulture)
-            + " and content "
+            + ", content "
             + RecordedContentHash.ToString()
+            + " and "
+            + Stamp.Spell("ruleset", RecordedRulesetHash)
             + ", run under simulation version "
             + SimVersionUsed.ToString(CultureInfo.InvariantCulture)
-            + " and content "
+            + ", content "
             + ContentHashUsed.ToString()
+            + " and "
+            + Stamp.Spell("ruleset", RulesetHashUsed)
             + ". The outcome is what this defense and this wave do today, and it is not this record's "
             + "result.";
     }

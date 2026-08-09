@@ -187,10 +187,23 @@ namespace Sim
         /// <summary>Fields per row, keyword included: the keyword and two ids.</summary>
         private const int FieldCount = 3;
 
+        /// <summary>The words a row here may open with.</summary>
+        private static readonly string[] RowWords = { Keyword, LayoutKeyword };
+
         /// <summary>Ids are <c>u16</c> in the record format, and zero means "no unit".</summary>
         private const int MinimumId = 1;
 
         private const int MaximumId = 65535;
+
+        /// <summary>
+        /// What a completeness walk calls itself when it resolves an id. A walk
+        /// runs against the table the ladder was parsed against, where every id
+        /// in it resolved already, so a refusal naming this is a caller that
+        /// handed over two tables that were never checked together -- a fault in
+        /// the program rather than in anybody's authored content, which is why
+        /// nothing here rewraps it as a <see cref="ContentException"/>.
+        /// </summary>
+        private const string LadderWalk = "a ladder walked against a table it was not parsed against";
 
         private readonly UpgradeEdge[] _edges;
 
@@ -248,51 +261,30 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var edges = new List<UpgradeEdge>();
             int layout = 0;
             bool declared = false;
             int previousFrom = 0;
             int previousTo = 0;
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
+                if (string.Equals(row.Keyword, LayoutKeyword, StringComparison.Ordinal))
                 {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (string.Equals(fields[0], LayoutKeyword, StringComparison.Ordinal))
-                {
-                    layout = ReadLayout(source, number, fields, declared);
+                    layout = ReadLayout(source, row.Line, fields, declared);
                     declared = true;
                     continue;
                 }
 
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the rows this file has are '"
-                        + Keyword
-                        + "' and '"
-                        + LayoutKeyword
-                        + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (!declared)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is an edge above any '"
                         + LayoutKeyword
                         + "' row. The layout says how to read a row, so it is stated before the first of "
@@ -302,20 +294,22 @@ namespace Sim
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, row.Line, Keyword, FieldCount, fields.Length);
                 }
 
-                int from = DataText.IntegerInRange(source, number, "the source id", fields[1], MinimumId, MaximumId);
-                int to = DataText.IntegerInRange(source, number, "the target id", fields[2], MinimumId, MaximumId);
+                int from = DataText.IntegerInRange(
+                    source, row.Line, "the source id", fields[1], MinimumId, MaximumId);
+                int to = DataText.IntegerInRange(
+                    source, row.Line, "the target id", fields[2], MinimumId, MaximumId);
 
-                RequireKnown(source, number, types, "upgrades", from);
-                RequireKnown(source, number, types, "upgrades into", to);
+                DataText.RequireType(source, row.Line, types, from, null, "an upgrade's source");
+                DataText.RequireType(source, row.Line, types, to, null, "an upgrade's target");
 
                 if (to <= from)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "upgrades id "
                         + from.ToString(CultureInfo.InvariantCulture)
                         + " into id "
@@ -330,7 +324,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "states the edge "
                         + from.ToString(CultureInfo.InvariantCulture)
                         + " -> "
@@ -343,7 +337,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is out of canonical order: rows ascend strictly by source id and then by target "
                         + "id. The order is asserted rather than sorted on load, because it is what makes a "
                         + "duplicate a comparison against the row above -- and because these edges fold "
@@ -443,8 +437,8 @@ namespace Sim
             for (int index = 0; index < _edges.Length; index++)
             {
                 UpgradeEdge edge = _edges[index];
-                UnitType from = types.ById(edge.From);
-                UnitType to = types.ById(edge.To);
+                UnitType from = types.Require(edge.From, null, LadderWalk);
+                UnitType to = types.Require(edge.To, null, LadderWalk);
 
                 if (from.Role != to.Role)
                 {
@@ -467,8 +461,8 @@ namespace Sim
                         + Gold(to.Cost) + ", so the upgrade is not dearer than what it replaces."));
                 }
 
-                int source = IndexOf(types, edge.From);
-                int target = IndexOf(types, edge.To);
+                int source = IndexOf(types, from);
+                int target = IndexOf(types, to);
 
                 named[source] = true;
                 named[target] = true;
@@ -625,30 +619,33 @@ namespace Sim
         }
 
         /// <summary>
-        /// Where in the table a unit id sits. A linear scan for the reason
+        /// Where in the table a row sits, which is what the walk's grids are
+        /// indexed by. A linear scan for the reason
         /// <see cref="UnitTypeTable.TryById"/> is one: the table has a handful of
         /// rows and the obvious dictionary is a banned type.
         /// </summary>
-        private static int IndexOf(UnitTypeTable types, int id)
+        /// <remarks>
+        /// An id the table does not define is refused where it is resolved,
+        /// above, so what arrives here is a row this table handed out and the
+        /// scan finds it. Falling off the end is the two halves of the table
+        /// disagreeing with each other rather than anything an author wrote,
+        /// and it says so instead of returning a -1 that would index a grid.
+        /// </remarks>
+        private static int IndexOf(UnitTypeTable types, UnitType type)
         {
             for (int index = 0; index < types.Count; index++)
             {
-                if (types.Types[index].Id == id)
+                if (types.Types[index].Id == type.Id)
                 {
                     return index;
                 }
             }
 
-            // Reachable only by handing this ladder a different table than the
-            // one it was parsed against, which is a fault in the calling program
-            // rather than in anybody's authored content -- so it is a
-            // SimulationException and not a ContentException. A silent -1 would
-            // index the grid below it.
             throw new SimulationException(
-                "This ladder names type id "
-                + id.ToString(CultureInfo.InvariantCulture)
-                + ", which the table handed to it does not define. A ladder is walked against the table it "
-                + "was parsed against; every id in it was resolved there already.");
+                "This unit type table resolved "
+                + type.ToString()
+                + " and does not list it, so the rows it hands out and the rows it exposes are not the "
+                + "same rows.");
         }
 
         /// <summary>A unit and what its role does, for a sentence naming both ends of an edge.</summary>
@@ -660,31 +657,5 @@ namespace Sim
         private static string Upgrades(int length) =>
             length.ToString(CultureInfo.InvariantCulture) + (length == 1 ? " upgrade" : " upgrades");
 
-        /// <summary>
-        /// An id required to name a row of the table. An unknown id refuses to
-        /// load rather than being skipped, exactly as it does everywhere else a
-        /// content file names one.
-        /// </summary>
-        private static void RequireKnown(
-            string source,
-            int line,
-            UnitTypeTable types,
-            string verb,
-            int id)
-        {
-            if (types.TryById(id, out UnitType? _))
-            {
-                return;
-            }
-
-            throw new ContentException(
-                source,
-                line,
-                verb
-                + " type id "
-                + id.ToString(CultureInfo.InvariantCulture)
-                + ", which the unit type table does not define. An edge naming a row nobody authored is "
-                + "an edge nothing can price or draw.");
-        }
     }
 }

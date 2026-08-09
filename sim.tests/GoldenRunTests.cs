@@ -101,9 +101,15 @@ public class GoldenRunTests
         // difference to compound.
         //
         // Every comparison is anchored on both sides -- the decision on the
-        // left, the pair on the right -- because "dealt 0, took 12" sits inside
+        // left, the round on the right -- because "dealt 0, took 12" sits inside
         // "dealt 0, took 128", so a number that lost a digit would be found in
         // the committed line and pass.
+        //
+        // The round is the whole of what a round reported: the pair, what the
+        // wave cost and what it paid the purse. The economy is pinned round by
+        // round for the reason the pair is -- an interest rate that compounded
+        // differently or a band that paid the wrong share moves a number here
+        // long before it moves health.
         //
         // OBSERVED: doctor content/run-outcome.txt. Wave six's "dealt 206" to
         // "dealt 260" reddens the round-six assertion and nothing else; the
@@ -111,22 +117,28 @@ public class GoldenRunTests
         // summary assertion alone. Without watching those, a Contains against a
         // file nobody regenerates is a test that passes because the substring is
         // short.
+        //
+        // OBSERVED, on the economy half: wave four's "spent 90" to "spent 91"
+        // reddens the round-four assertion and nothing else -- so what a round
+        // cost is pinned to the same standard as what it dealt rather than
+        // riding along on a line checked for its other half.
+        Run run = Fresh();
         CommandStream stream = Committed();
-        RunOutcome outcome = stream.Replay(Fresh(), TheMatch.Layout(TheMatch.Types()));
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheMatch.Layout(TheMatch.Types()));
         string committed = File.ReadAllText(RepoLayout.RunOutcomeFile);
 
-        Assert.Equal(stream.Count, outcome.Rounds.Count);
+        Assert.Equal(stream.Count, rounds.Count);
 
         for (int index = 0; index < stream.Count; index++)
         {
             Assert.Contains(
-                stream.Commands[index].ToString() + "   ->   " + outcome.Rounds[index].ToString() + "\n",
+                stream.Commands[index].ToString() + "   ->   " + rounds[index].ToString() + "\n",
                 committed,
                 StringComparison.Ordinal);
         }
 
         Assert.Contains(
-            "outcome    " + outcome.ToString() + ", ended " + outcome.Ending.ToString() + "\n",
+            "outcome    " + run.Outcome.ToString() + ", ended " + run.Outcome.Ending.ToString() + "\n",
             committed,
             StringComparison.Ordinal);
     }
@@ -156,13 +168,24 @@ public class GoldenRunTests
     /// <summary>
     /// The run the command line builds for that record: the committed board,
     /// tables and shape, and the canned field of one the committed defense and
-    /// wave make.
+    /// the committed field file make.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Composed here rather than shared with the command line, which is a
     /// second arrangement of the same content and is meant to be: if the two
     /// ever describe different runs, the vector this replays to stops matching
     /// the committed one and the run above goes red naming the round.
+    /// </para>
+    /// <para>
+    /// <b>The pool is <c>content/field.txt</c> and never <c>content/wave.txt</c></b>,
+    /// which is the same distinction the command line's <c>--field</c> draws.
+    /// The wave file is a whole authored match and a round of it costs several
+    /// times what any purse composes, so a run against one takes about a hundred
+    /// gold a round from an opponent no player could be -- and every number it
+    /// produces is self-consistent, which is why the committed outcome is what
+    /// says which of the two this was.
+    /// </para>
     /// </remarks>
     private static Run Fresh()
     {
@@ -174,7 +197,7 @@ public class GoldenRunTests
             TheRuleset.Committed(),
             types,
             TheSchedule.Committed(types),
-            FieldPool.Of(new[] { RoundOrders.Of(defense, TheMatch.Wave(types)) }),
+            FieldPool.Canned(defense, TheRun.FieldWave(types)),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

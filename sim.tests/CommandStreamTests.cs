@@ -137,11 +137,12 @@ public class CommandStreamTests
         }
 
         Run fromRecord = TheCommands.Fresh();
-        RunOutcome outcome = CommandStream
+        IReadOnlyList<RoundReport> rounds = CommandStream
             .FromBytes(CommandStream.Of(recorded, decisions).ToBytes())
             .Replay(fromRecord, defense);
 
-        Assert.Equal(live.Outcome.Rounds, outcome.Rounds);
+        Assert.Equal(live.Outcome.Rounds, fromRecord.Outcome.Rounds);
+        Assert.Equal(live.Outcome.Rounds, rounds.Select(round => round.Outcome));
         Assert.Equal(live.Health, fromRecord.Health);
         Assert.Equal(live.Purse.Gold, fromRecord.Purse.Gold);
         Assert.Equal(live.Unlocks.Count, fromRecord.Unlocks.Count);
@@ -158,12 +159,17 @@ public class CommandStreamTests
     public void Nothing_reaches_a_run_or_a_match_except_as_a_value_a_record_can_carry()
     {
         // The structural half of "no input reaches the simulation". A run moves
-        // forward through two overloads of one name and nothing else, and every
-        // parameter of every public member of both surfaces is a defense, a
-        // wave, a decision or a number. There is no delegate to call back into,
-        // no reader, no path, and the one interface either of them accepts is
-        // the decorative event listener, whose every method returns void -- so
-        // it can be told things and can answer nothing.
+        // forward through one method and nothing else, and every parameter of
+        // every public member of both surfaces is a defense, a decision or a
+        // number. There is no delegate to call back into, no reader, no path,
+        // and the one interface either of them accepts is the decorative event
+        // listener, whose every method returns void -- so it can be told things
+        // and can answer nothing.
+        //
+        // The one route in is a fact about the type rather than about this
+        // list: a wave a view composed cannot be handed to a run at all, because
+        // the only thing Advance takes is the decision a command carries. What
+        // the list still catches is a second route being added beside it.
         //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
         // choose, TowerLayout defense)` to Run, which is exactly the shape a
@@ -171,6 +177,10 @@ public class CommandStreamTests
         // "Advance(Func`2, TowerLayout)" at position 1 -- and a run that asks a
         // caller what to do mid-round is a run whose input never went through a
         // record and never could.
+        //
+        // OBSERVED: put `public RoundOutcome Advance(RoundOrders orders)` back
+        // on Run -- the route this suite was written around, which took a wave
+        // nobody was charged for. The list goes red naming it at position 1.
         //
         // OBSERVED, on the decision surface below: add a fourth public property
         // to BuildPhase. It goes red naming the new member, which is the case
@@ -198,7 +208,7 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase, TowerLayout)", "Advance(RoundOrders)", "OfferingAt(Int32)" },
+            new[] { "Advance(BuildPhase, TowerLayout)", "OfferingAt(Int32)" },
             moves);
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
@@ -443,14 +453,26 @@ public class CommandStreamTests
         // first three assertions stay green; Assert.Throws goes red having
         // caught nothing, and a stream that refuses to play is written out
         // anyway -- which is the whole failure this surface exists to prevent.
+        //
+        // OBSERVED, on the rounds: hand back a fresh empty list of them beside
+        // the bytes while still replaying. Everything about the bytes stays
+        // green and the round count goes red, 4 against 0 -- proving the stream
+        // by playing it and then throwing away what the playing worked out is
+        // exactly how a caller ends up playing it a second time.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
 
-        byte[] bytes = CommandStream.Recorded(run, TheCommands.Defense(), decisions);
+        (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
+            CommandStream.Recorded(run, TheCommands.Defense(), decisions);
 
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(CommandStream.Of(TheCommands.Fresh(), decisions).ToBytes(), bytes);
         Assert.Equal(CommandStream.FromBytes(bytes).Commands, decisions);
+
+        // The rounds the proving played come back with the bytes, so nothing
+        // that wants what the stored run cost has to play it a second time.
+        Assert.Equal(TheCommands.Waves, rounds.Count);
+        Assert.Equal(run.Purse.Gold, rounds[rounds.Count - 1].Payment.Purse.Gold);
 
         // And a stream that will not replay yields no bytes at all.
         Run doomed = TheCommands.Fresh();

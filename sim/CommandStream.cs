@@ -303,14 +303,18 @@ namespace Sim
         /// </para>
         /// <para>
         /// The run handed in is the one the stream is played into, so it has to
-        /// be a run that has not started; it comes back played, and whatever
-        /// asked for the recording reads the outcome off it.
+        /// be a run that has not started; it comes back played, and the rounds
+        /// that proving the bytes produced come back beside them rather than
+        /// being thrown away for whoever wants them to play the stream again.
         /// </para>
         /// </remarks>
         /// <param name="run">A fresh run, on the seed and the tables the stream is stamped with.</param>
         /// <param name="defense">What stands while each of the run's waves is sent.</param>
         /// <param name="commands">The build phases to record.</param>
-        public static byte[] Recorded(Run run, TowerLayout defense, IReadOnlyList<RecordCommand> commands)
+        public static (byte[] Bytes, IReadOnlyList<RoundReport> Rounds) Recorded(
+            Run run,
+            TowerLayout defense,
+            IReadOnlyList<RecordCommand> commands)
         {
             if (run is null)
             {
@@ -328,9 +332,7 @@ namespace Sim
 
             byte[] bytes = Of(run, commands).ToBytes();
 
-            FromBytes(bytes).Replay(run, defense);
-
-            return bytes;
+            return (bytes, FromBytes(bytes).Replay(run, defense));
         }
 
         /// <summary>Reads a command stream from bytes. The read gate, and nothing else.</summary>
@@ -491,11 +493,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Four checks, each refusing by name and with both values: the
-        /// simulation version against this build, and the unit table, the
-        /// ruleset and the anchor schedule against the ones the run is playing.
-        /// They are independent, so a stream can fail exactly one of them and
-        /// the message says which.
+        /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
+        /// version against this build, and the unit table, the ruleset and the
+        /// anchor schedule against the ones the run is playing. They are
+        /// independent, so a stream can fail exactly one of them; a stream that
+        /// fails several is named by the first declared.
         /// </para>
         /// <para>
         /// The seed is checked before any of them and refuses differently,
@@ -511,10 +513,16 @@ namespace Sim
         /// under the best band the run did not reach is the one refusal that
         /// still lands mid-run.
         /// </para>
+        /// <para>
+        /// <b>Every round comes back.</b> What each one took, what its wave cost
+        /// and what the wave paid are settled while it is played, so they are
+        /// handed over rather than dropped -- a report of a stored run's
+        /// economics is then a walk over these, and never a second play.
+        /// </para>
         /// </remarks>
         /// <param name="run">The run to play, on the seed and the tables this stream is stamped with.</param>
         /// <param name="defense">What stands while each of the run's waves is sent.</param>
-        public RunOutcome Replay(Run run, TowerLayout defense)
+        public IReadOnlyList<RoundReport> Replay(Run run, TowerLayout defense)
         {
             if (run is null)
             {
@@ -537,46 +545,22 @@ namespace Sim
                     + "two different runs and the decisions of one were read off the other's menus.");
             }
 
-            if (Header.SimVersion != SimulationVersion.Current)
-            {
-                throw new RetiredRecordException(
-                    "simulation version",
-                    "simulation version " + Header.SimVersion.ToString(CultureInfo.InvariantCulture),
-                    "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (Header.ContentHash != run.Types.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "content hash",
-                    "content " + Header.ContentHash.ToString(),
-                    "content " + run.Types.ContentHash.ToString());
-            }
-
-            if (RulesetHash != run.Rules.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "ruleset hash",
-                    "ruleset " + RulesetHash.ToString(),
-                    "ruleset " + run.Rules.ContentHash.ToString());
-            }
-
-            if (ScheduleHash != run.Schedule.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "schedule hash",
-                    "schedule " + ScheduleHash.ToString(),
-                    "schedule " + run.Schedule.ContentHash.ToString());
-            }
+            ReplayGate.Require(
+                Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
+                Stamp.Of("content", Header.ContentHash, run.Types.ContentHash),
+                Stamp.Of("ruleset", RulesetHash, run.Rules.ContentHash),
+                Stamp.Of("schedule", ScheduleHash, run.Schedule.ContentHash));
 
             Check(run);
 
+            var rounds = new List<RoundReport>();
+
             for (int index = 0; index < _commands.Length; index++)
             {
-                run.Advance(_commands[index].ToPhase(), defense);
+                rounds.Add(run.Advance(_commands[index].ToPhase(), defense));
             }
 
-            return run.Outcome;
+            return rounds;
         }
 
         public bool Equals(CommandStream? other)

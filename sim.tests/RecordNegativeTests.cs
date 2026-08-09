@@ -282,7 +282,10 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => ghost.ToLayout(types));
 
-        Assert.Contains("places type id 999", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "a defense requiring a placed unit names type id 999",
+            thrown.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -646,7 +649,7 @@ public class RecordNegativeTests
         ReplayBundle good = TheMatch.Bundle();
         byte[] bytes = RecordBytes.WithU16(
             good.ToBytes(),
-            RecordFormat.HeaderBytes + 8,
+            RecordBytes.BundleMapWidthOffset,
             4000);
 
         RecordException thrown = Assert.Throws<RecordException>(() => ReplayBundle.FromBytes(bytes));

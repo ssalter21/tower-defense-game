@@ -18,6 +18,9 @@ namespace Sim
         /// <summary>Fields per row, keyword included.</summary>
         private const int FieldCount = 3;
 
+        /// <summary>The words a row here may open with. There is one.</summary>
+        private static readonly string[] RowWords = { Keyword };
+
         private readonly ulong[] _hashes;
 
         private GoldenTrace(ulong[] hashes)
@@ -49,41 +52,26 @@ namespace Sim
                 throw new ArgumentNullException(nameof(source));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var hashes = new List<ulong>();
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '" + fields[0] + "', but the only row a trace has is '" + Keyword + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, row.Line, Keyword, FieldCount, fields.Length);
                 }
 
-                int tick = DataText.IntegerInRange(source, number, "the tick", fields[1], 0, int.MaxValue);
+                int tick = DataText.IntegerInRange(source, row.Line, "the tick", fields[1], 0, int.MaxValue);
 
                 if (tick != hashes.Count)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is tick "
                         + tick.ToString(CultureInfo.InvariantCulture)
                         + " where the trace is up to tick "
@@ -93,7 +81,7 @@ namespace Sim
                         + "start at.");
                 }
 
-                hashes.Add(DataText.Hex64(source, number, "the state hash", fields[2]));
+                hashes.Add(DataText.Hex64(source, row.Line, "the state hash", fields[2]));
             }
 
             if (hashes.Count == 0)

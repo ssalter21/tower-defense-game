@@ -33,17 +33,21 @@ public static class TheCommandLine
     /// <summary>The built runner, as a path <c>dotnet</c> will run.</summary>
     public static string Program => LazyProgram.Value;
 
-    /// <summary>The seven content arguments every run verb takes.</summary>
-    public static string[] RunContent => new[]
-    {
-        "--map", RepoLayout.MapFile,
-        "--units", RepoLayout.UnitsFile,
-        "--upgrades", RepoLayout.UpgradesFile,
-        "--rules", RepoLayout.RulesetFile,
-        "--schedule", RepoLayout.ScheduleFile,
-        "--defense", RepoLayout.DefenseFile,
-        "--wave", RepoLayout.WaveFile,
-    };
+    /// <summary>
+    /// The content every run verb takes: the committed directory, out of which
+    /// the runner takes all seven files by the names it declares.
+    /// </summary>
+    /// <remarks>
+    /// <b>Which means the field file and never the wave file.</b> A run's own
+    /// waves come off the command stream's build phases; the canned opponent
+    /// each round is resolved against is <c>content/field.txt</c>, and
+    /// <c>content/wave.txt</c> is a whole authored match that outspends anything
+    /// a purse composes. A suite pointed at that one measures every verb here
+    /// against an opponent no player could be -- and nothing about the numbers it
+    /// produces looks wrong. Naming the seven here is what let that happen; the
+    /// declaration is now the only place the pairing is written down.
+    /// </remarks>
+    public static string[] RunContent => new[] { "--content", RepoLayout.ContentDirectory };
 
     /// <summary>
     /// A directory of this test run's own, emptied first. Nothing here writes

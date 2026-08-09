@@ -45,6 +45,15 @@ namespace Sim.Tests;
 /// always answer it.
 /// </para>
 /// <para>
+/// <b>The bundle at replay format version 0 could not be replayed even at this
+/// build's simulation version, and restaging is what keeps it running.</b> It
+/// names no ruleset, and a replay refuses a record that does not say which
+/// numbers its landings resolved through. That is the decision in
+/// <c>docs/adr/0047-a-bundle-stamps-its-ruleset.md</c>, and this pool is where
+/// it was already paid for: these files have been restaged since the day they
+/// were kept, for the same reason.
+/// </para>
+/// <para>
 /// The end-to-end half of this lives in <c>tools/run-headless-match.ps1
 /// -Verify</c>, which restages every golden through the actual command line
 /// against that golden's pinned table and compares what it printed against the
@@ -236,7 +245,7 @@ public class GoldenRecordTests
             Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered, TheRuleset.Committed()));
 
         // WHICH gate depends on the version, and naming it rather than accepting
-        // any refusal is the point. The three gates are ordered, so a record
+        // any refusal is the point. The four gates are ordered, so a record
         // made under retired rules is refused before its table is looked at all
         // -- a stronger refusal than the content hash, not a weaker one, and one
         // that would be indistinguishable from it if this only asserted that
@@ -294,6 +303,7 @@ public class GoldenRecordTests
             TheMatch.Layout(types),
             TheMatch.Wave(types),
             types,
+            TheRuleset.Committed(),
             TheMatch.Seed,
             TheMatch.MapHandle);
 
@@ -302,6 +312,7 @@ public class GoldenRecordTests
             TheMatch.Layout(types),
             TheMatch.Wave(types),
             types,
+            TheRuleset.Committed(),
             TheMatch.Seed,
             GhostRecord.NoMapHandle);
 
@@ -379,6 +390,29 @@ public class GoldenRecordTests
         Assert.Equal(
             File.ReadAllBytes(RepoLayout.UpgradesFile),
             File.ReadAllBytes(RepoLayout.GoldenUpgradesFile(RecordFormat.GhostVersion)));
+    }
+
+    [Fact]
+    public void The_oldest_golden_names_no_ruleset_and_the_current_one_names_the_committed_one()
+    {
+        // The two sides of the format bump, as bytes on disk rather than as a
+        // paragraph. The version-0 file is the only evidence that branch will
+        // ever have, and what it is evidence of is now two things: that the
+        // bytes still parse, and that a record which named no ruleset still
+        // reads back as one that names none.
+        //
+        // The current version's stamp is content/ruleset.txt's own hash, on the
+        // same terms as its pinned unit table: -Regenerate re-records this
+        // bundle against the live ruleset, so a retune that forgot to run it
+        // goes red here rather than being found by a gate refusing the shipped
+        // record months later.
+        Assert.Equal(0, Golden(0).Header.FormatVersion);
+        Assert.Null(Golden(0).RulesetHash);
+
+        Assert.Equal(RecordFormat.ReplayVersion, Golden(RecordFormat.GhostVersion).Header.FormatVersion);
+        Assert.Equal(
+            TheRuleset.Committed().ContentHash,
+            Golden(RecordFormat.GhostVersion).RulesetHash);
     }
 
     [Fact]

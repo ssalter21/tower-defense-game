@@ -72,10 +72,10 @@ internal sealed class HeadlessRun
         ReplayBundle bundle = ReplayBundle.FromBytes(bundleBytes);
 
         // The replay gate, not the read gate: the simulation version, the
-        // content hash and the map hash all have to be this build's, or the
-        // record is refused by name. A trace produced under a ruleset the
-        // record was not made against would be a confidently wrong answer that
-        // still validates.
+        // content hash, the ruleset hash and the map hash all have to be this
+        // run's, or the record is refused by name. A trace produced under a
+        // ruleset the record was not made against would be a confidently wrong
+        // answer that still validates.
         Match match = bundle.Replay(types, rules);
 
         return Play(bundle, restaging: null, match);

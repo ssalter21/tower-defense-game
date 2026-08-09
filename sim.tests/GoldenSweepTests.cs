@@ -1,4 +1,5 @@
 using System.Globalization;
+using Sim.Cli;
 
 namespace Sim.Tests;
 
@@ -30,8 +31,11 @@ namespace Sim.Tests;
 /// </remarks>
 public class GoldenSweepTests
 {
-    /// <summary>Where the coverage and parameter rows keep their one number.</summary>
-    private const int ValueColumn = 13;
+    /// <summary>
+    /// Where the coverage and parameter rows keep their one number, read off the
+    /// writer's own column order rather than counted out here.
+    /// </summary>
+    private static readonly int ValueColumn = SweepColumns.IndexOf("value");
 
     [Fact]
     public void Every_row_of_the_committed_report_has_the_columns_the_header_declares()

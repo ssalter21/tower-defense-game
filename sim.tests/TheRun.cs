@@ -53,6 +53,13 @@ public static class TheRun
     /// regenerates them.
     /// </para>
     /// <para>
+    /// <b>This is a run that shopped.</b> Every round of it took the first thing
+    /// on its menu and spent the purse on the creep that unlocked, so what it
+    /// dealt is bounded by what a hundred gold and a wave's income could buy.
+    /// What it took back is the field's business and not the purse's, which is
+    /// why the second column of every pair is what it always was.
+    /// </para>
+    /// <para>
     /// The run finishes its last wave on <see cref="HealthLeftInTheCommittedRun"/>
     /// of the ruleset's 1500, which is what makes the death flag inert across
     /// the scenario theory. If a content change ever takes that below zero, the
@@ -61,20 +68,36 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(239, 91),
-        new RoundOutcome(245, 91),
-        new RoundOutcome(287, 92),
-        new RoundOutcome(213, 99),
-        new RoundOutcome(218, 99),
-        new RoundOutcome(230, 91),
-        new RoundOutcome(292, 86),
-        new RoundOutcome(281, 97),
-        new RoundOutcome(287, 87),
-        new RoundOutcome(308, 85),
+        new RoundOutcome(51, 91),
+        new RoundOutcome(71, 91),
+        new RoundOutcome(74, 92),
+        new RoundOutcome(40, 99),
+        new RoundOutcome(66, 99),
+        new RoundOutcome(57, 91),
+        new RoundOutcome(83, 86),
+        new RoundOutcome(72, 97),
+        new RoundOutcome(70, 87),
+        new RoundOutcome(80, 85),
     };
 
     /// <summary>What that run had left of the pool when its last wave resolved.</summary>
     public const int HealthLeftInTheCommittedRun = 582;
+
+    /// <summary>
+    /// The wave the committed canned field sends: <c>content/field.txt</c>,
+    /// which is what every run verb of the command line reads for
+    /// <c>--field</c>.
+    /// </summary>
+    /// <remarks>
+    /// <b>Not <c>content/wave.txt</c>, and the difference is a whole different
+    /// game.</b> The wave file is one authored match released over fourteen
+    /// hundred ticks and costing several times what any round's purse composes;
+    /// this one is a build phase's output, everything on tick zero and a
+    /// round's worth of gold. <c>content/field.txt</c>'s own header carries the
+    /// measurements, and <c>docs/adr/0040</c> carries the decision.
+    /// </remarks>
+    public static WaveScript FieldWave(UnitTypeTable types) =>
+        WaveScript.Parse("field", File.ReadAllText(RepoLayout.FieldFile), types);
 
     /// <summary>The committed defense as one round's orders, sent at the committed wave.</summary>
     public static RoundOrders Orders(UnitTypeTable? types = null)
@@ -92,22 +115,30 @@ public static class TheRun
     /// One round at a field of ten, against a population written out here.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// The round is the run's first, shopped for out of the opening purse, and
+    /// what comes back is the whole of it -- so an assertion about what the
+    /// round dealt can be held against the wave the round actually bought.
+    /// </para>
+    /// <para>
     /// The seed of every pairing's match is derived from the round and the
     /// pairing rather than from who was drawn, so two calls to this that differ
     /// only in the population fight the same twenty seeds. That is what makes
     /// the difference between their answers a statement about the fold rather
     /// than about the dice.
+    /// </para>
     /// </remarks>
-    public static RoundOutcome Against(UnitTypeTable types, RoundOrders orders, params RoundOrders[] pool) =>
-        Against(types, orders, 10, pool);
+    public static RoundReport Against(UnitTypeTable types, TowerLayout defense, params RoundOrders[] pool) =>
+        Against(types, defense, 10, pool);
 
     /// <summary>One round at a field of this many, against a population written out here.</summary>
-    public static RoundOutcome Against(
+    public static RoundReport Against(
         UnitTypeTable types,
-        RoundOrders orders,
+        TowerLayout defense,
         int fieldSize,
-        params RoundOrders[] pool) =>
-        new Run(
+        params RoundOrders[] pool)
+    {
+        var run = new Run(
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
@@ -115,8 +146,10 @@ public static class TheRun
             FieldPool.Of(pool),
             Seed,
             waves: 1,
-            fieldSize: fieldSize)
-            .Advance(orders);
+            fieldSize: fieldSize);
+
+        return run.Advance(TheBuild.Shopping(run), defense);
+    }
 
     /// <summary>
     /// A population of four, spread wide enough that averaging over it is not
@@ -155,6 +188,40 @@ public static class TheRun
             waves,
             fieldSize,
             deathEndsTheRun);
+    }
+
+    /// <summary>
+    /// <see cref="Fresh"/> with an opening purse deep enough to buy waves the
+    /// field can be scored against.
+    /// </summary>
+    /// <remarks>
+    /// The committed hundred buys five bodies, and five bodies get past nobody
+    /// in a field drawn from <see cref="Pool"/>: every round of such a run is
+    /// placed in the bottom band, so what it earned for its offense is a column
+    /// of zeroes and an assertion over that column is an assertion about
+    /// nothing. Opening on more than a wave's income is what puts a bought wave
+    /// in front of the bands the pool is measured into, so that the three lines
+    /// a purse moves on are three real numbers and a fold over them has
+    /// something to be wrong about.
+    /// </remarks>
+    public static Run Wealthy(int purse)
+    {
+        UnitTypeTable types = TheMatch.Types();
+
+        Ruleset rules = Ruleset.Parse(PlantedText.Replace(
+            TheRuleset.CommittedText(),
+            "purse         100",
+            "purse       " + purse.ToString(CultureInfo.InvariantCulture)));
+
+        return new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheSchedule.Committed(types),
+            Pool(types),
+            Seed,
+            Run.DefaultWaves,
+            Run.DefaultFieldSize);
     }
 
     /// <summary>

@@ -71,7 +71,8 @@ public static class TheSweep
         int gameChangersPerAnchor = SweepPlan.AsAuthored,
         int freeSnapshotsPerRun = SweepPlan.AsAuthored,
         int snapshotPriceGold = SweepPlan.AsAuthored,
-        int mostCreeps = Creeps)
+        int mostCreeps = Creeps,
+        BuildPolicy? policy = null)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
         TowerLayout defense = TheMatch.Layout(table);
@@ -92,7 +93,28 @@ public static class TheSweep
             gameChangersPerAnchor,
             freeSnapshotsPerRun,
             snapshotPriceGold,
-            mostCreeps);
+            mostCreeps,
+            policy);
+    }
+
+    /// <summary>
+    /// A second scripted player: it takes its option and fills no slot at all,
+    /// so every purse it is handed is banked.
+    /// </summary>
+    /// <remarks>
+    /// It is the whole of what a policy decides said as briefly as it can be
+    /// said -- one take and a wave of nothing -- which is what makes a report
+    /// played under it unmistakable from a column away. It takes the first thing
+    /// on the menu and ignores <paramref name="preferred"/> entirely: what the
+    /// row is about is a preference the policy is free to have, and having none
+    /// is part of what makes this a second player rather than a tuning of the
+    /// first.
+    /// </remarks>
+    public static BuildPhase Banks(Run run, int preferred)
+    {
+        Option first = run.Offering.Options[0];
+
+        return BuildPhase.Of(first.Kind, first.Id);
     }
 
     /// <summary>
@@ -100,7 +122,7 @@ public static class TheSweep
     /// behind <c>content/field.txt</c>, drawn with replacement.
     /// </summary>
     public static FieldPool Field(UnitTypeTable types) =>
-        FieldPool.Of(new[] { RoundOrders.Of(TheMatch.Layout(types), Wave(types)) });
+        FieldPool.Canned(TheMatch.Layout(types), TheRun.FieldWave(types));
 
     /// <summary>
     /// A field that sends the skeleton's authored match instead: three hundred
@@ -108,7 +130,7 @@ public static class TheSweep
     /// and is therefore what kills one.
     /// </summary>
     public static FieldPool LethalField(UnitTypeTable types) =>
-        FieldPool.Of(new[] { RoundOrders.Of(TheMatch.Layout(types), TheMatch.Wave(types)) });
+        FieldPool.Canned(TheMatch.Layout(types), TheMatch.Wave(types));
 
     /// <summary>
     /// The committed rules on a pool one round of that field spends. What death
@@ -117,10 +139,6 @@ public static class TheSweep
     /// </summary>
     public static Ruleset ThinHealth() =>
         Ruleset.Parse(PlantedText.Replace(TheRuleset.CommittedText(), "health       1500", "health        200"));
-
-    /// <summary>The wave the canned field sends.</summary>
-    public static WaveScript Wave(UnitTypeTable types) =>
-        WaveScript.Parse("field", File.ReadAllText(RepoLayout.FieldFile), types);
 
     /// <summary>
     /// A plan whose roster is towers alone: a schedule loaded against the
@@ -144,7 +162,7 @@ public static class TheSweep
             towers,
             TheSchedule.Committed(),
             defense,
-            FieldPool.Of(new[] { RoundOrders.Of(defense, Wave(TheMatch.Types())) }),
+            FieldPool.Canned(defense, TheRun.FieldWave(TheMatch.Types())),
             Seed,
             Runs,
             Waves,

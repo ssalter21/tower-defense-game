@@ -28,6 +28,17 @@ namespace Sim.Tests;
 /// what happens when globalization is switched off at build time -- would pass
 /// while proving nothing.
 /// </para>
+/// <para>
+/// <b>"The whole parse" is meant literally, and is derived rather than typed.</b>
+/// The sweep walks <see cref="ContentParsers.All"/>, which is the same
+/// declaration <see cref="RepoLayout.NumericContentFiles"/> is taken from, and
+/// a separate test reflects over the assembly to prove that list names every
+/// parser there is. The suite used to enumerate its parsers by hand and quietly
+/// omitted three of them -- the tower layout, the golden trace and the upgrade
+/// ladder, the last of which folds into the roster's content hash and so gates
+/// every stored record. Derivation is what stops that from being possible
+/// again: a parser can be in both gates or in neither, and never in one.
+/// </para>
 /// </remarks>
 public class HostileLocaleTests
 {
@@ -44,43 +55,77 @@ public class HostileLocaleTests
     [Theory]
     [InlineData(Turkish)]
     [InlineData(CommaDecimal)]
-    public void The_full_parse_and_hash_is_identical_under_a_hostile_culture(string name)
+    public void Every_content_parser_hashes_identically_under_a_hostile_culture(string name)
     {
-        string units = File.ReadAllText(RepoLayout.UnitsFile);
-        string wave = File.ReadAllText(RepoLayout.WaveFile);
-        string map = File.ReadAllText(RepoLayout.MapFile);
-
-        UnitTypeTable invariantTypes = UnitTypeTable.Parse(units);
-        WaveScript invariantWave = WaveScript.Parse(wave, invariantTypes);
-        HexMap invariantMap = HexMap.Parse(map);
-
-        UnitTypeTable hostileTypes;
-        WaveScript hostileWave;
-        HexMap hostileMap;
-
-        using (Hostile(name))
+        // The whole sweep, and the only test here that grows on its own when a
+        // parser is added. Each parser's committed file is parsed twice and
+        // folded twice -- into its own content hash where it has one, and into a
+        // fold over every field it produced where it has not -- and the two
+        // numbers have to be the same number.
+        //
+        // The fold is compared rather than a field at a time on purpose: a
+        // per-field assertion list is the thing that goes stale when a column is
+        // added, and a stale list is how a parser ends up half-covered without
+        // anything going red.
+        foreach (ContentParser parser in ContentParsers.All)
         {
-            hostileTypes = UnitTypeTable.Parse(units);
-            hostileWave = WaveScript.Parse(wave, hostileTypes);
-            hostileMap = HexMap.Parse(map);
-        }
+            string text = File.ReadAllText(parser.File);
+            Hash64 invariant = parser.Digest(text);
+            Hash64 hostile;
 
-        Assert.Equal(invariantTypes.ContentHash, hostileTypes.ContentHash);
-        Assert.Equal(invariantMap.MapHash, hostileMap.MapHash);
-        Assert.Equal(invariantWave.TotalUnits, hostileWave.TotalUnits);
+            using (Hostile(name))
+            {
+                hostile = parser.Digest(text);
+            }
 
-        for (int index = 0; index < invariantTypes.Count; index++)
-        {
-            Assert.Equal(invariantTypes.Types[index].Id, hostileTypes.Types[index].Id);
-            Assert.Equal(invariantTypes.Types[index].MaxHp, hostileTypes.Types[index].MaxHp);
-            Assert.Equal(invariantTypes.Types[index].Delivery, hostileTypes.Types[index].Delivery);
-            Assert.Equal(invariantTypes.Types[index].Role, hostileTypes.Types[index].Role);
+            Assert.True(
+                invariant == hostile,
+                $"{parser} folded to {invariant} under the invariant culture and {hostile} under {name}.");
         }
+    }
 
-        for (int index = 0; index < invariantMap.Route.Count; index++)
-        {
-            Assert.Equal(invariantMap.Route[index], hostileMap.Route[index]);
-        }
+    [Fact]
+    public void Every_parser_in_the_simulation_is_declared_in_the_sweep()
+    {
+        // What makes the sweep above a claim about the simulation rather than a
+        // claim about a list somebody maintained. Every exported type with a
+        // public static Parse is found by reflection and has to appear in the
+        // declaration, so a parser added without a content file and a fold
+        // reddens here instead of being quietly absent from two gates.
+        //
+        // OBSERVED: delete the upgrade ladder's row from ContentParsers.Declare.
+        // This is the only test that reddens, and it names UpgradeLadder. The
+        // sweep above and the committed-file decimal-point check both go green
+        // having quietly stopped covering the one parser whose hash gates stored
+        // records -- which is the whole failure mode, reproduced.
+        IReadOnlyList<Type> discovered = ContentParsers.DiscoveredInTheAssembly();
+        var declared = new HashSet<Type>(ContentParsers.All.Select(parser => parser.ParsedBy));
+
+        Assert.NotEmpty(discovered);
+
+        string[] undeclared = discovered
+            .Where(type => !declared.Contains(type))
+            .Select(type => type.Name)
+            .ToArray();
+
+        Assert.True(
+            undeclared.Length == 0,
+            "These parsers are in the simulation and not in ContentParsers.All, so nothing runs them "
+            + "under a hostile culture: "
+            + string.Join(", ", undeclared)
+            + ". Declare each one with the committed file it reads and a fold over what it parses.");
+
+        // And the other way, so a declaration cannot outlive the parser it names.
+        string[] stale = declared
+            .Where(type => !discovered.Contains(type))
+            .Select(type => type.Name)
+            .ToArray();
+
+        Assert.True(
+            stale.Length == 0,
+            "These types are declared in ContentParsers.All but no longer expose a public static Parse: "
+            + string.Join(", ", stale)
+            + ".");
     }
 
     [Theory]

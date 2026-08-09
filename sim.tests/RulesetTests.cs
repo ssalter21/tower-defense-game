@@ -128,18 +128,13 @@ public class RulesetTests
     }
 
     [Theory]
-    [InlineData("matrix")]
-    [InlineData("armour")]
-    [InlineData("floor")]
-    [InlineData("interest")]
-    [InlineData("income")]
-    [InlineData("band")]
-    [InlineData("health")]
-    [InlineData("slots")]
-    [InlineData("offering")]
-    [InlineData("snapshot")]
+    [MemberData(nameof(TheRuleset.EveryRule), MemberType = typeof(TheRuleset))]
     public void A_ruleset_missing_any_row_refuses_to_load_naming_the_row(string keyword)
     {
+        // One case per rule the committed file states, taken off the file rather
+        // than listed here, so a rule added to the ruleset is covered without
+        // anybody adding a case for it.
+        //
         // OBSERVED: delete the call to RequireEverything in Ruleset.Parse. Rows
         // of this theory go red having caught nothing at all, and a ruleset
         // with no interest rate, no income base and no health pool in it loads
@@ -152,24 +147,20 @@ public class RulesetTests
     }
 
     [Theory]
-    [InlineData("armour 1 100")]
-    [InlineData("floor 1")]
-    [InlineData("interest 10 0")]
-    [InlineData("income 100")]
-    [InlineData("health 1500")]
-    [InlineData("slots 2 1")]
-    [InlineData("offering 3 3")]
-    [InlineData("snapshot 10 25")]
-    public void A_rule_stated_twice_refuses_to_load(string row)
+    [MemberData(nameof(TheRuleset.EveryRuleStatedOnce), MemberType = typeof(TheRuleset))]
+    public void A_rule_stated_twice_refuses_to_load(string keyword)
     {
         // Two rows claiming one rule means the ruleset in force is whichever of
         // them was read last, which is a coin flip nobody can see in a diff.
+        // The matrix and the bands are not here because both are authored as
+        // several rows on purpose, and both have their own refusals for a row
+        // too many.
         //
         // OBSERVED: delete the duplicate loop in Draft.Once, leaving the Add.
-        // All eight rows go red having caught nothing, and a file stating the
+        // All nine rows go red having caught nothing, and a file stating the
         // health pool twice loads on the second one.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(TheRuleset.Minimal + "\n" + row));
+            () => Ruleset.Parse(TheRuleset.Minimal + "\n" + TheRuleset.MinimalRow(keyword)));
 
         Assert.Contains("second '", thrown.Message, StringComparison.Ordinal);
     }

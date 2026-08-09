@@ -12,6 +12,30 @@
     runs on its own -- no module to install, no editor, no session.
 #>
 
+# THE CONTENT A RUN VERB IS PLAYED ON, AND NOT ONE FILE NAME IN SIGHT. Every
+# verb that plays a run takes seven content files, and simcli declares all seven
+# once -- the option, the file name and the parser together, in
+# simcli/ContentFiles.cs. --content hands it the directory and it takes them out
+# by those names.
+#
+# So a content file added to the runner needs no edit in any script here.
+#
+# -Elsewhere points single files somewhere else: @{ map = 'maps/second.txt' }
+# scores another board and leaves the other six where they were. The key is the
+# option's name, so the runner refuses an unknown one by name rather than this
+# guessing.
+function Get-ContentArguments {
+    param([string]$Directory, [hashtable]$Elsewhere = @{})
+
+    $arguments = @('--content', $Directory)
+
+    foreach ($option in ($Elsewhere.Keys | Sort-Object)) {
+        $arguments += @('--' + $option, [string]$Elsewhere[$option])
+    }
+
+    return , $arguments
+}
+
 # The runner refuses by name and exits, rather than throwing: a record that
 # will not replay has already said why in its own sentence, and a PowerShell
 # stack trace on top of it buries the one line anybody needs to read.

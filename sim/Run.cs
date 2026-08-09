@@ -5,6 +5,51 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
+    /// What one round came to: the pair it resolved to, the decision it was
+    /// played from, and what its wave paid the purse.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Three answers, handed back together, because a round settles all
+    /// three at once.</b> The pair is what got past whom. The build is what was
+    /// taken off the offering and what the wave cost to buy. The payment is what
+    /// the wave earned, itemised into the interest, the base and the band. Each
+    /// is worked out once, while the round is being played, so nothing holding
+    /// this has to resolve a decision a second time or price a wave again to
+    /// find out what a round did.
+    /// </para>
+    /// <para>
+    /// <b>What a run's economics are is a walk over these.</b> Round by round:
+    /// what was spent, what came back and which line it came back on.
+    /// </para>
+    /// </remarks>
+    public sealed class RoundReport
+    {
+        internal RoundReport(RoundOutcome outcome, Build build, WavePayment payment)
+        {
+            Outcome = outcome;
+            Build = build;
+            Payment = payment;
+        }
+
+        /// <summary>What this round's wave got past the field, and what the field got past it.</summary>
+        public RoundOutcome Outcome { get; }
+
+        /// <summary>What the build phase took, what its wave cost, and what it left in the purse.</summary>
+        public Build Build { get; }
+
+        /// <summary>What the wave paid the purse, line by line, and the purse afterwards.</summary>
+        public WavePayment Payment { get; }
+
+        public override string ToString() =>
+            Outcome.ToString()
+            + ", spent "
+            + Build.Spent.ToString(CultureInfo.InvariantCulture)
+            + ", paid "
+            + Payment.ToString();
+    }
+
+    /// <summary>
     /// One run: N waves, a build phase before each, every round resolved against
     /// a field of K opponents, against a health pool denominated in gold.
     /// </summary>
@@ -191,7 +236,7 @@ namespace Sim
             // filling is what this run drew onto it.
             Filling = schedule.Fill(rules.GameChangersPerAnchor, Derived(FillingLabel, 0, 0, 0));
 
-            _outcome = Folded();
+            _outcome = Folded(_rounds);
         }
 
         /// <summary>The seed every draw in this run is derived from.</summary>
@@ -308,9 +353,21 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The argument is the build phase slot.</b> A round is one decision
+        /// <b>This is the only way into a round.</b> A round is one decision
         /// plus the wave that resolves it, and the decision reaches the
-        /// simulation as a value handed in here and by no other route.
+        /// simulation as a <see cref="BuildPhase"/> handed in here and by no
+        /// other route -- a value a stored command carries every field of, so
+        /// nothing can be played into a run that could not have been written
+        /// down.
+        /// </para>
+        /// <para>
+        /// The decision is checked against this round's offering, this run's
+        /// unlocks, this round's slot width and this run's purse -- by
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
+        /// which is the surface a stored command stream is validated against
+        /// too, so there is one implementation of the rules and not two. The
+        /// defense arrives beside it because a build phase composes what is
+        /// sent; what stands is the other half of a round's orders.
         /// </para>
         /// <para>
         /// K opponents are drawn, and each is fought in both directions: this
@@ -320,89 +377,30 @@ namespace Sim
         /// damage rule, so the ladder rewards robust play.
         /// </para>
         /// <para>
-        /// <b>Nothing moves until everything that can refuse has refused.</b> The
-        /// round is composed, the field measured and the payment worked out
-        /// before the vector is appended to, so a throw anywhere in a round
-        /// leaves the run exactly where it was.
-        /// </para>
-        /// </remarks>
-        /// <param name="orders">The defense that stands and the wave that is sent.</param>
-        public RoundOutcome Advance(RoundOrders orders)
-        {
-            if (orders is null)
-            {
-                throw new ArgumentNullException(nameof(orders));
-            }
-
-            RequireUnfinished();
-
-            int round = _rounds.Count;
-            int[] field = FieldFor(round);
-            long dealt = 0;
-            long taken = 0;
-
-            for (int index = 0; index < field.Length; index++)
-            {
-                RoundOrders against = _pool.At(field[index]);
-
-                dealt += LeakCost(orders.Wave, against.Defense, round, index, Side.Attacking);
-                taken += LeakCost(against.Wave, orders.Defense, round, index, Side.Defending);
-            }
-
-            // The average rather than the sum, on both sides. Summed, one round
-            // against ten opponents would cost ten rounds' worth of health, and
-            // a field would be a punishment for being in one.
-            var outcome = new RoundOutcome((int)(dealt / field.Length), (int)(taken / field.Length));
-
-            // Interest, the flat base, and the band this round's offense reached
-            // in the field on top. Nothing is taken off anybody to pay it: the
-            // wave is placed against the spread of what a round of the pool is
-            // worth, not against whichever opponent it was drawn against.
-            //
-            // Composed before anything moves, and that is the whole reason it is
-            // a local: reading Field measures the pool on first use, and both
-            // that and closing the purse can refuse. A round appended to the
-            // vector before them would leave a refused round on a run nobody
-            // could tell from one somebody played.
-            Purse closed = Purse.CloseWave(Rules, Field, outcome.LeakCostDealt).Purse;
-
-            _rounds.Add(outcome);
-            _sent.Add(orders);
-            Purse = closed;
-
-            _outcome = Folded();
-
-            return outcome;
-        }
-
-        /// <summary>
-        /// Resolves one round from the decision a build phase made rather than
-        /// from orders somebody composed by hand.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The same round, entered a step earlier. The decision is checked
-        /// against this round's offering, this run's unlocks, this round's slot
-        /// width and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
-        /// which is the surface a stored command stream is validated against
-        /// too, so there is one implementation of the rules and not two.
-        /// </para>
-        /// <para>
-        /// The defense arrives beside it because a build phase composes what is
-        /// sent; what stands is the other half of a round's orders.
-        /// </para>
-        /// <para>
         /// <b>Everything that can refuse this round refuses before a coin
         /// moves</b> -- the decision against the offering, the orders against
-        /// the defense, and the run against being over. A purse spent and an
-        /// unlock taken on a round that then threw would be paid for a wave
-        /// nobody was in the run to send.
+        /// the defense, the run against being over, and then everything the
+        /// round itself can refuse at. The whole round is worked out into
+        /// locals -- see <see cref="Play"/> -- and reaches the run through
+        /// <see cref="Commit"/>, which writes everything a round moves,
+        /// together, and is the only place any of it is written. What the
+        /// decision unlocked and what it left in the purse travel into
+        /// <see cref="Play"/> as arguments rather than being written first, so
+        /// a purse spent and an unlock taken for a wave nobody was in the run
+        /// to send is a state that cannot be reached rather than an ordering to
+        /// get right.
+        /// </para>
+        /// <para>
+        /// <b>What comes back is the whole round</b> -- see
+        /// <see cref="RoundReport"/>. The pair, the decision as it resolved and
+        /// what the wave paid are all settled here, so a caller that wants what
+        /// a round cost reads it rather than resolving the decision again
+        /// against a run the round has already moved.
         /// </para>
         /// </remarks>
         /// <param name="phase">What this round took, and how it filled its slots.</param>
         /// <param name="defense">What stands against every wave the field sends this round.</param>
-        public RoundOutcome Advance(BuildPhase phase, TowerLayout defense)
+        public RoundReport Advance(BuildPhase phase, TowerLayout defense)
         {
             if (phase is null)
             {
@@ -414,10 +412,9 @@ namespace Sim
 
             RequireUnfinished();
 
-            Unlocks = build.Unlocks;
-            Purse = build.Purse;
+            (RoundOutcome outcome, WavePayment payment) = Play(orders, build.Unlocks, build.Purse);
 
-            return Advance(orders);
+            return new RoundReport(outcome, build, payment);
         }
 
         /// <summary>
@@ -430,6 +427,95 @@ namespace Sim
         /// </remarks>
         public Offering OfferingAt(int wave) =>
             Sim.Offering.Draw(Rules, Types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
+
+        /// <summary>
+        /// Works one round out in full, commits it, and hands back the pair it
+        /// resolved to beside what its wave paid.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The unlocks and the purse arrive as arguments.</b> A build phase's
+        /// decision governs the round it was made in -- the creep it just
+        /// unlocked is fielded in this round's wave, and the wave is bought out
+        /// of this round's purse -- and passing them is what lets that happen
+        /// without either having been written to the run first.
+        /// </para>
+        /// <para>
+        /// <b>Nothing above the commit moves the run.</b> Measuring the field,
+        /// playing the matches, composing the round's pair, closing the purse
+        /// and folding the outcome can each refuse, and a run left holding any
+        /// part of a round that refused is a run nobody could tell from one
+        /// somebody played. The measured field is the one thing written above
+        /// the commit, and it is a memo of a number no round can move -- see
+        /// <see cref="Field"/>.
+        /// </para>
+        /// </remarks>
+        /// <param name="orders">The defense that stands and the wave that is sent.</param>
+        /// <param name="unlocks">What the run may field this round, this round's take included.</param>
+        /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
+        private (RoundOutcome Outcome, WavePayment Payment) Play(
+            RoundOrders orders,
+            Unlocks unlocks,
+            Purse purse)
+        {
+            // Measured ahead of the round's own matches: what a round of the
+            // pool is worth depends on the seed, the pool and K, so the round
+            // being played cannot move it, and a measurement that refuses
+            // refuses before a single match of this round is resolved.
+            PerformanceField field = Field;
+
+            int round = _rounds.Count;
+            int[] drawn = FieldFor(round);
+            long dealt = 0;
+            long taken = 0;
+
+            for (int index = 0; index < drawn.Length; index++)
+            {
+                RoundOrders against = _pool.At(drawn[index]);
+
+                dealt += LeakCost(orders.Wave, against.Defense, unlocks, round, index, Side.Attacking);
+                taken += LeakCost(against.Wave, orders.Defense, unlocks, round, index, Side.Defending);
+            }
+
+            // The average rather than the sum, on both sides. Summed, one round
+            // against ten opponents would cost ten rounds' worth of health, and
+            // a field would be a punishment for being in one.
+            var outcome = new RoundOutcome((int)(dealt / drawn.Length), (int)(taken / drawn.Length));
+
+            // Interest, the flat base, and the band this round's offense reached
+            // in the field on top. Nothing is taken off anybody to pay it: the
+            // wave is placed against the spread of what a round of the pool is
+            // worth, not against whichever opponent it was drawn against.
+            WavePayment payment = purse.CloseWave(Rules, field, outcome.LeakCostDealt);
+
+            Commit(orders, outcome, unlocks, payment.Purse, FoldedWith(outcome));
+
+            return (outcome, payment);
+        }
+
+        /// <summary>
+        /// The one place a round is written to the run.
+        /// </summary>
+        /// <remarks>
+        /// Every field a round moves moves here, from arguments that are already
+        /// settled, and nothing between the first write and the last can refuse.
+        /// That is the whole of the guarantee <see cref="Advance"/> makes: it is
+        /// a property of where the writes are rather than of what order the work
+        /// above them happens in.
+        /// </remarks>
+        private void Commit(
+            RoundOrders orders,
+            RoundOutcome outcome,
+            Unlocks unlocks,
+            Purse purse,
+            RunOutcome folded)
+        {
+            _rounds.Add(outcome);
+            _sent.Add(orders);
+            Unlocks = unlocks;
+            Purse = purse;
+            _outcome = folded;
+        }
 
         /// <summary>
         /// Which K of the pool this round is fought against.
@@ -509,6 +595,7 @@ namespace Sim
                     dealt += LeakCost(
                         member.Wave,
                         _pool.At(field[index]).Defense,
+                        Unlocks.None,
                         sample,
                         index,
                         Side.Measured);
@@ -525,14 +612,20 @@ namespace Sim
         /// to send, one for one, so what got past is the wave's own orders read
         /// off the cost table.
         /// </summary>
-        private int LeakCost(WaveScript wave, TowerLayout defense, int round, int opponent, Side side)
+        private int LeakCost(
+            WaveScript wave,
+            TowerLayout defense,
+            Unlocks unlocks,
+            int round,
+            int opponent,
+            Side side)
         {
             // Only this run's own wave can carry a game changer anybody here
             // knows about: what is fielded is a fact about the sender's
             // unlocks, and the pool is stored orders rather than stored runs,
             // so nothing coming the other way says which of its bodies was one.
             ShotBonus bonuses = side == Side.Attacking
-                ? ShotBonus.Fielded(wave, defense, Unlocks, Schedule)
+                ? ShotBonus.Fielded(wave, defense, unlocks, Schedule)
                 : ShotBonus.None;
 
             var match = new Match(_map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
@@ -559,11 +652,7 @@ namespace Sim
             return (int)cost;
         }
 
-        /// <summary>
-        /// Refuses a round past the end of a run. One implementation, called
-        /// from both ways in, so that entering a round from a build phase
-        /// cannot reach a run the other way in would have turned away.
-        /// </summary>
+        /// <summary>Refuses a round past the end of a run.</summary>
         private void RequireUnfinished()
         {
             if (!IsOver)
@@ -607,9 +696,20 @@ namespace Sim
                 .Add(side)
                 .Value;
 
-        /// <summary>The vector, folded. The only place health and the ending come from.</summary>
-        private RunOutcome Folded() =>
-            RunOutcome.Of(Rules.HealthPoolGold, _rounds, Waves, DeathEndsTheRun);
+        /// <summary>A vector, folded. The only place health and the ending come from.</summary>
+        private RunOutcome Folded(IReadOnlyList<RoundOutcome> rounds) =>
+            RunOutcome.Of(Rules.HealthPoolGold, rounds, Waves, DeathEndsTheRun);
+
+        /// <summary>
+        /// The fold a round would leave behind, taken over a vector of its own.
+        /// </summary>
+        /// <remarks>
+        /// The run's vector is not appended to, because the fold refuses a total
+        /// that has left the range gold is counted in -- so a round that cannot
+        /// be folded has to be a round that was never added.
+        /// </remarks>
+        private RunOutcome FoldedWith(RoundOutcome round) =>
+            Folded(new List<RoundOutcome>(_rounds) { round });
 
         /// <summary>
         /// Which pairing a match is: a round measures both directions against

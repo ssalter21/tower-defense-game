@@ -258,6 +258,65 @@ public class SweepTests
     }
 
     [Fact]
+    public void A_sweep_that_names_no_policy_is_played_by_the_even_share_bot()
+    {
+        // The scripted player is a value on the plan and its default is
+        // declared there rather than reached for inside the fold, which is what
+        // makes the committed report the even-share bot's report rather than
+        // the harness's only possible one.
+        //
+        // OBSERVED: copy the banking policy below into SweepPlan and default to
+        // it. This goes red naming both methods -- "Method = Banks" against the
+        // "Method = Decide" expected -- and five more rows of this class go red
+        // behind it, because a sweep that buys nothing has no seed to separate
+        // and no offering ratio to be sensitive to.
+        Assert.Equal(new BuildPolicy(EvenShareBot.Decide), TheSweep.Plan().Policy);
+    }
+
+    [Fact]
+    public void Another_build_policy_is_an_argument_rather_than_an_edit()
+    {
+        // The property the whole seam exists for: scoring a roster under a
+        // different scripted player costs one argument to the plan and nothing
+        // at all in the fold that scores it. The second policy takes its option
+        // and fills no slot, so every run of it banks -- and the bins it
+        // produces are still a partition of the population above them, which is
+        // the fold doing its job without knowing what decided the waves.
+        //
+        // OBSERVED: call EvenShareBot.Decide in Sweep.Play in place of the
+        // plan's policy. This goes red on the first spend assertion, 2502 gold
+        // where nothing was expected, and the plan's parameter goes back to
+        // being a field nothing reads.
+        SweepReport banked = Sweep.Of(TheSweep.Plan(policy: TheSweep.Banks));
+        SweepRow whole = TheSweep.Whole(banked, "minion");
+        int binnedRuns = 0;
+
+        for (int index = 0; index < banked.Rows.Count; index++)
+        {
+            SweepRow row = banked.Rows[index];
+
+            Assert.Equal(0, row.GoldSpent);
+            Assert.Equal(0, row.LeakCostDealt);
+
+            if (row.Label == "minion" && row.Ingredients != SweepRow.AllIngredients)
+            {
+                Assert.True(row.Ingredients >= 1, row.ToString());
+                binnedRuns += row.Runs;
+            }
+        }
+
+        Assert.Equal(whole.Runs, binnedRuns);
+
+        // And the default player does spend, so the assertions above are about
+        // the policy that was supplied rather than about a sweep that never
+        // buys anything.
+        Assert.True(
+            TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion").GoldSpent > 0,
+            "The even-share bot bought nothing either, so a report of no spending says nothing about "
+            + "which player produced it.");
+    }
+
+    [Fact]
     public void A_win_rate_is_the_wins_over_the_runs_in_basis_points()
     {
         // There is no floating point in the simulation and the build gate scans

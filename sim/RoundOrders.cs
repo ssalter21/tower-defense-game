@@ -123,6 +123,31 @@ namespace Sim
             return new FieldPool(copied);
         }
 
+        /// <summary>
+        /// The canned pool: one player's round, standing in for a population of
+        /// stored ones.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A round is resolved against K opponents drawn from a population of
+        /// other players' rounds, and there is no such population until runs are
+        /// stored. Until then the population is the one pair of orders named
+        /// here, drawn with replacement, so a field of ten is that opponent ten
+        /// times. That is a thin pool rather than a missing one, and widening it
+        /// is a longer list at <see cref="Of"/> and no change anywhere else.
+        /// </para>
+        /// <para>
+        /// <b>What a field of one collapses is the bands and not the
+        /// arithmetic.</b> The percentile a round is paid on is read off the
+        /// pool itself (ADR-0042), so a population of one puts nearly every
+        /// round above the field or below it. That is a property of the
+        /// stand-in, measured in
+        /// <c>docs/research/a-canned-field-of-one-collapses-the-bands.md</c>.
+        /// </para>
+        /// </remarks>
+        public static FieldPool Canned(TowerLayout defense, WaveScript wave) =>
+            Of(new[] { RoundOrders.Of(defense, wave) });
+
         /// <summary>The member at this index.</summary>
         public RoundOrders At(int index)
         {

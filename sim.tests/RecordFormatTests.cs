@@ -46,11 +46,11 @@ public class RecordFormatTests
         // is asked per kind: when one of them gains a version 1 the others will
         // still refuse it.
         //
-        // OBSERVED: move the wave, the bundle and the command stream to version
-        // 1 together and widen all three branches of IsKnown, which is what a
-        // single global counter does the moment a fourth kind arrives. The
+        // OBSERVED: move the wave and the command stream to version 1 alongside
+        // the defense and the bundle, and widen both branches of IsKnown, which
+        // is what a single global counter does the moment a kind moves. The
         // version assertions below go red, 0 against 1, and every stored wave
-        // and bundle starts claiming a version it was never written at.
+        // and command stream starts claiming a version it was never written at.
         Assert.True(RecordFormat.IsKnown(RecordKind.Ghost, RecordFormat.GhostVersion));
         Assert.True(RecordFormat.IsKnown(RecordKind.Wave, RecordFormat.WaveVersion));
         Assert.True(RecordFormat.IsKnown(RecordKind.Replay, RecordFormat.ReplayVersion));
@@ -62,18 +62,22 @@ public class RecordFormatTests
         Assert.False(RecordFormat.IsKnown(RecordKind.Command, RecordFormat.CommandVersion + 1));
 
         // And now they are not constants that happen to be equal. The defense
-        // gained the map handle and moved to version 1; the other three did not
-        // move, and a version 1 of any of them is a version that has never
-        // existed. The command stream is the fourth kind and it arrived at
-        // version 0 of its own counter, which is the whole of why the three
-        // that came before it are still where they were.
+        // carries the map handle and the bundle carries the ruleset stamp, and
+        // each of those is a version 1; the wave's bytes and the command
+        // stream's have never moved, so a version 1 of either is a version that
+        // has never existed. Two kinds at 1 and two at 0 is what per-kind
+        // counting looks like once the counters have diverged.
         Assert.Equal(1, RecordFormat.GhostVersion);
         Assert.Equal(0, RecordFormat.WaveVersion);
-        Assert.Equal(0, RecordFormat.ReplayVersion);
+        Assert.Equal(1, RecordFormat.ReplayVersion);
         Assert.Equal(0, RecordFormat.CommandVersion);
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, 1));
-        Assert.False(RecordFormat.IsKnown(RecordKind.Replay, 1));
         Assert.False(RecordFormat.IsKnown(RecordKind.Command, 1));
+
+        // The two that did move keep every version they have ever had. A branch
+        // deleted here is stored bytes this build can no longer open.
+        Assert.True(RecordFormat.IsKnown(RecordKind.Ghost, 0));
+        Assert.True(RecordFormat.IsKnown(RecordKind.Replay, 0));
     }
 
     [Fact]

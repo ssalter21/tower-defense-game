@@ -42,8 +42,17 @@ public static class RecordBytes
     /// <summary>Where a wave's order array starts, relative to the start of that record.</summary>
     public const int WaveOrdersOffset = RecordFormat.HeaderBytes + 2;
 
+    /// <summary>Where a bundle's ruleset hash sits. A version-0 bundle has nothing here.</summary>
+    public const int BundleRulesetHashOffset = RecordFormat.HeaderBytes;
+
+    /// <summary>Where a bundle's seed sits.</summary>
+    public const int BundleSeedOffset = BundleRulesetHashOffset + 8;
+
+    /// <summary>Where a bundle's map width sits, with the height two bytes after it.</summary>
+    public const int BundleMapWidthOffset = BundleSeedOffset + 8;
+
     /// <summary>Where a bundle's inlined map cells start.</summary>
-    public const int BundleCellsOffset = RecordFormat.HeaderBytes + 8 + 2 + 2;
+    public const int BundleCellsOffset = BundleMapWidthOffset + 2 + 2;
 
     /// <summary>Where a command stream's ruleset hash sits.</summary>
     public const int CommandRulesetHashOffset = RecordFormat.HeaderBytes;
@@ -90,6 +99,25 @@ public static class RecordBytes
 
     /// <summary>Where the wave inside a bundle starts.</summary>
     public static int WaveIn(ReplayBundle bundle) => GhostIn(bundle) + bundle.Ghost.ToBytes().Length;
+
+    /// <summary>
+    /// A bundle as the version-0 bytes it would have been: the format version
+    /// turned back to zero and the ruleset stamp cut out.
+    /// </summary>
+    /// <remarks>
+    /// The writer emits the current version and only that, so a fresh version-0
+    /// bundle is not something this repository can make. The one that exists,
+    /// <c>content/golden/defense-0.replay</c>, is stamped at a retired
+    /// simulation version and is refused at that gate long before the ruleset
+    /// one is reached -- so manufacturing the bytes here is what lets a test
+    /// watch a missing stamp refuse on its own.
+    /// </remarks>
+    public static byte[] WithoutTheRulesetStamp(byte[] bundle)
+    {
+        byte[] older = WithU16(bundle, FormatVersionOffset, 0);
+
+        return older[..BundleRulesetHashOffset].Concat(older[BundleSeedOffset..]).ToArray();
+    }
 
     /// <summary>The same bytes with one of them replaced.</summary>
     public static byte[] With(byte[] bytes, int offset, byte value)

@@ -149,7 +149,7 @@ public class UpgradeLadderTests
         ContentException thrown = Assert.Throws<ContentException>(
             () => Parse(PlantedText.Replace(OneRung, "upgrade 2 3", "upgrade 99 3")));
 
-        Assert.Contains("upgrades type id 99", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("an upgrade's source names type id 99", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("does not define", thrown.Message, StringComparison.Ordinal);
     }
 
@@ -159,7 +159,7 @@ public class UpgradeLadderTests
         ContentException thrown = Assert.Throws<ContentException>(
             () => Parse(PlantedText.Replace(OneRung, "upgrade 2 3", "upgrade 2 99")));
 
-        Assert.Contains("upgrades into type id 99", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("an upgrade's target names type id 99", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

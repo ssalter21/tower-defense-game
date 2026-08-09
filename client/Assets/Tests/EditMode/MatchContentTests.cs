@@ -103,7 +103,7 @@ namespace Tests.EditMode
         {
             Sim.ReplayBundle record = StreamingContent.ReadRecordedMatch();
 
-            // Getting through the call is the assertion: the gate is three
+            // Getting through the call is the assertion: the gate is four
             // unconditional throws and what is wanted is that none of them
             // fires. Asserting the returned match is on tick zero would be
             // asserting about a freshly constructed object, which is true

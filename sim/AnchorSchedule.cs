@@ -156,6 +156,12 @@ namespace Sim
         /// <summary>The row this file refuses on sight. See the remarks on the type.</summary>
         private const string SlotsKeyword = "slots";
 
+        /// <summary>
+        /// The words a row here may open with. <see cref="SlotsKeyword"/> is not
+        /// among them and has a refusal of its own.
+        /// </summary>
+        private static readonly string[] RowWords = { AnchorKeyword, ChangerKeyword };
+
         /// <summary>Both rows carry the same number of columns, keyword included.</summary>
         private const int FieldsPerRow = 6;
 
@@ -250,20 +256,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var draft = new Draft();
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
-
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                ReadRow(source, number, DataText.Fields(source, number, line), draft, types);
+                ReadRow(source, row.Line, row.Fields, draft, types);
             }
 
             draft.RequireEverything(source);
@@ -493,17 +490,7 @@ namespace Sim
                         + "copy the two would disagree with nothing to say so.");
 
                 default:
-                    throw new ContentException(
-                        source,
-                        line,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the rows this schedule has are '"
-                        + AnchorKeyword
-                        + "' and '"
-                        + ChangerKeyword
-                        + "'. An unrecognised row is refused rather than skipped, because a shape nobody "
-                        + "read is a shape the defaults quietly supplied.");
+                    throw DataText.NoSuchRow(source, line, fields[0], RowWords);
             }
         }
 
@@ -578,31 +565,11 @@ namespace Sim
                         + "deletes the preparation the schedule exists to restore.");
                 }
 
-                if (!types.TryById(counterTypeId, out UnitType? counter))
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "answers the anchor at wave "
-                        + wave.ToString(CultureInfo.InvariantCulture)
-                        + " with type id "
-                        + counterTypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which is in no unit table this schedule was read against.");
-                }
-
-                if (counter!.Role != UnitRole.Placed)
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "answers the anchor at wave "
-                        + wave.ToString(CultureInfo.InvariantCulture)
-                        + " with "
-                        + counter.ToString()
-                        + ", which walks the corridor. An anchor is a threat that can be seen coming and "
-                        + "the preparation happens on the other side of the board, so what answers one "
-                        + "stands where it was put.");
-                }
+                // An anchor is a threat that can be seen coming and the
+                // preparation happens on the other side of the board, so what
+                // answers one stands where it was put.
+                DataText.RequireType(
+                    source, line, types, counterTypeId, UnitRole.Placed, "an anchor's counter");
 
                 Anchors.Add(new Anchor(wave, tier, steep, counterTypeId, counterFromWave));
             }
@@ -646,27 +613,11 @@ namespace Sim
                         + "duplicate is impossible to miss.");
                 }
 
-                if (!types.TryById(typeId, out UnitType? body))
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "fields type id "
-                        + typeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which is in no unit table this schedule was read against.");
-                }
-
-                if (body!.Role != UnitRole.Moving)
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "opens "
-                        + body.ToString()
-                        + ", which stands where it is put. AN ANCHOR OPENS OFFENSE AND NEVER DEFENSE: a "
-                        + "better tower would be a gift rather than a threat, and it would leave "
-                        + "preparation with nothing to be about.");
-                }
+                // AN ANCHOR OPENS OFFENSE AND NEVER DEFENSE: a better tower
+                // would be a gift rather than a threat, and it would leave
+                // preparation with nothing to be about.
+                DataText.RequireType(
+                    source, line, types, typeId, UnitRole.Moving, "a game changer's body");
 
                 Changers.Add(new GameChanger(id, label, tier, typeId, bonusVsTag));
             }

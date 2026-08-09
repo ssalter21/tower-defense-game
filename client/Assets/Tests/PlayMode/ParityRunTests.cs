@@ -95,8 +95,11 @@ namespace Tests.PlayMode
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
             // The replay gate, run here rather than assumed: the simulation
-            // version, the content hash and the map hash all have to be this
-            // build's or the record is refused by name. The match it returns is
+            // version, the content hash, the ruleset hash and the map hash all
+            // have to be this run's or the record is refused by name. The
+            // shipped ruleset is what the gate compares the record's stamp
+            // against, so a player carrying a retuned copy is refused here
+            // rather than drawing a match nobody recorded. The match it returns is
             // dropped -- the view builds its own, because a view that cannot
             // build a match cannot seek -- so what this line buys is the
             // refusal, and the refusal is the point.
