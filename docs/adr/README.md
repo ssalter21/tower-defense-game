@@ -48,6 +48,10 @@ These were extracted from the source comments when the project moved to a commen
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
 | [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against |
 | [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
+| [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
+| [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
+| [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
+| [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing, and the content hash covers content the simulation never reads |
 
 ## Drawing the match
 
