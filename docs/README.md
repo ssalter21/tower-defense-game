@@ -13,7 +13,7 @@ is real — and every mode of it is the same machine at a different latency.*
 
 | | |
 |---|---|
-| [The Vision](vision.md) | The destination, the pillars, the open questions, and [the build order](vision.md#8-the-build-order) |
+| [The Vision](vision.md) | The destination, the pillars, the open questions, and [the build order](vision.md#8-the-build-order) — a seven-step sequence with the nine seams it serves mapped onto it |
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
