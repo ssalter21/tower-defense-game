@@ -78,6 +78,34 @@ public class ContentTests
     }
 
     [Fact]
+    public void The_committed_roster_and_the_committed_ladder_have_no_faults()
+    {
+        // The enforcer. Its precedent is
+        // No_committed_numeric_data_file_contains_a_decimal_point below, and that
+        // test's own comment is the argument: the pass is the mechanism, and this
+        // is the second half -- the committed files are checked directly, so a
+        // fault cannot sit in a pair that nothing happens to walk today and
+        // become somebody's problem the first time something does.
+        //
+        // DELIBERATELY NOT A CENSUS. No row count and no pinned edge list: the
+        // ladder is expected to grow one row at a time, and a census would go red
+        // on every legitimate authoring. The notes are not asserted on at all --
+        // a note is a design statement and asserting one would make it a rule.
+        //
+        // On the day this lands the assertion is vacuous, because the committed
+        // ladder has no edges. Its first real subject is the Archer's rung.
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UpgradeLadder ladder = UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
+
+        LadderReport report = ladder.Completeness(types);
+
+        Assert.True(
+            report.HasNoFaults,
+            "content/upgrades.txt and content/units.txt disagree:\n  "
+            + string.Join("\n  ", report.Faults.Select(fault => fault.Sentence)));
+    }
+
+    [Fact]
     public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
     {
         // Eight units and no nineteenth column. Every attack type and every
