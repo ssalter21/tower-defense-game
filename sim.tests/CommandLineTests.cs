@@ -246,11 +246,31 @@ public class CommandLineTests
 
         string[] rows = File.ReadAllText(report).Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        Assert.Equal(
-            "kind,subject,ingredients,runs,rounds,wins,win_rate_bp",
-            string.Join(",", rows[0].Split(',').Take(7)));
-        Assert.Contains("coverage,creeps,,,,,,,,,,,,2,5,yes", rows, StringComparer.Ordinal);
-        Assert.Contains("parameter,death_ends_the_run,,,,,,,,,,,,no,,", rows, StringComparer.Ordinal);
+        // The two rows are spelled by naming their columns, off the writer's own
+        // declaration, rather than as a literal with its blank cells counted out
+        // here -- so a column added to the report is an edit to that list and
+        // not to this.
+        Assert.Equal(SweepColumns.Header().Line, rows[0]);
+
+        Assert.Contains(
+            new CsvRow()
+                .With("kind", "coverage")
+                .With("subject", "creeps")
+                .With("value", "2")
+                .With("of", "5")
+                .With("bounded", "yes")
+                .Line,
+            rows,
+            StringComparer.Ordinal);
+
+        Assert.Contains(
+            new CsvRow()
+                .With("kind", "parameter")
+                .With("subject", "death_ends_the_run")
+                .With("value", "no")
+                .Line,
+            rows,
+            StringComparer.Ordinal);
 
         // Two creeps scored, so two whole-population rows and at least one bin
         // under each of them.

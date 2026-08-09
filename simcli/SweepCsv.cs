@@ -33,12 +33,18 @@ namespace Sim.Cli;
 /// one a creep per ingredient count that occurred.</item>
 /// </list>
 /// <para>
+/// <b>Rows are assembled by naming their columns.</b> The order lives in
+/// <see cref="SweepColumns"/>, a row fills in the columns it has something for,
+/// and every column it does not name comes out blank -- so no writer below
+/// counts cells to reach a heading.
+/// </para>
+/// <para>
 /// <b>No cell is ever quoted, and that is enforced rather than assumed.</b>
 /// Every value written here is an integer formatted under the invariant culture
 /// or a label off a content file, and a content file's parser refuses a comma on
 /// a data line before it tokenises -- so a comma cannot reach a cell. If one
-/// ever does, this refuses rather than writing a file whose columns have
-/// silently shifted by one from some row downwards.
+/// ever does, <see cref="CsvRow"/> refuses rather than writing a file whose
+/// columns have silently shifted by one from some row downwards.
 /// </para>
 /// </remarks>
 internal static class SweepCsv
@@ -48,40 +54,12 @@ internal static class SweepCsv
 
     private const string No = "no";
 
-    /// <summary>The empty cell: a column this kind of row has no number for.</summary>
-    private static readonly string Blank = string.Empty;
-
-    /// <summary>
-    /// The columns, in order. <c>value</c>, <c>of</c> and <c>bounded</c> are the
-    /// three the parameter and coverage rows use; every other column belongs to
-    /// a creep row.
-    /// </summary>
-    private static readonly string[] Columns =
-    {
-        "kind",
-        "subject",
-        "ingredients",
-        "runs",
-        "rounds",
-        "wins",
-        "win_rate_bp",
-        "dealt_gold",
-        "taken_gold",
-        "spent_gold",
-        "cost_efficiency_dealt_per_100_gold",
-        "income_base_gold",
-        "bonus_gold",
-        "value",
-        "of",
-        "bounded",
-    };
-
     /// <summary>The whole file, header row first, ending in a newline.</summary>
     public static string Of(SweepReport report)
     {
         var text = new StringBuilder();
 
-        Row(text, Columns);
+        Row(text, SweepColumns.Header());
         Notes(text);
         Parameters(text, report.Plan);
 
@@ -129,11 +107,10 @@ internal static class SweepCsv
     private static void Note(StringBuilder text, string column, string what) =>
         Row(
             text,
-            new[]
-            {
-                "note", column, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
-                what, Blank, Blank,
-            });
+            new CsvRow()
+                .With("kind", "note")
+                .With("subject", column)
+                .With("value", what));
 
     /// <summary>
     /// What the sweep was played under, one row a number.
@@ -161,91 +138,52 @@ internal static class SweepCsv
     private static void Parameter(StringBuilder text, string name, string value) =>
         Row(
             text,
-            new[]
-            {
-                "parameter", name, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
-                Blank, value, Blank, Blank,
-            });
+            new CsvRow()
+                .With("kind", "parameter")
+                .With("subject", name)
+                .With("value", value));
 
-    private static void Coverage(StringBuilder text, CoverageBound bound) =>
-        Row(
-            text,
-            new[]
-            {
-                "coverage",
-                bound.Axis,
-                Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank, Blank,
-                Number(bound.Covered),
-                bound.Available == CoverageBound.Unbounded ? Blank : Number(bound.Available),
-                bound.IsBounded ? Yes : No,
-            });
+    /// <summary>
+    /// One axis and what the sweep covered of it. The population is named only
+    /// where it is a number: an axis nothing enumerates leaves that column
+    /// blank by not filling it in.
+    /// </summary>
+    private static void Coverage(StringBuilder text, CoverageBound bound)
+    {
+        CsvRow row = new CsvRow()
+            .With("kind", "coverage")
+            .With("subject", bound.Axis)
+            .With("value", Number(bound.Covered))
+            .With("bounded", bound.IsBounded ? Yes : No);
+
+        if (bound.Available != CoverageBound.Unbounded)
+        {
+            row.With("of", Number(bound.Available));
+        }
+
+        Row(text, row);
+    }
 
     private static void Creep(StringBuilder text, SweepRow row) =>
         Row(
             text,
-            new[]
-            {
-                "creep",
-                row.Label,
-                Number(row.Ingredients),
-                Number(row.Runs),
-                Number(row.Rounds),
-                Number(row.Wins),
-                Number(row.WinRateBasisPoints),
-                Number(row.LeakCostDealt),
-                Number(row.LeakCostTaken),
-                Number(row.GoldSpent),
-                Number(row.DealtPerHundredGold),
-                Number(row.IncomeBaseGold),
-                Number(row.BonusGold),
-                Blank, Blank, Blank,
-            });
+            new CsvRow()
+                .With("kind", "creep")
+                .With("subject", row.Label)
+                .With("ingredients", Number(row.Ingredients))
+                .With("runs", Number(row.Runs))
+                .With("rounds", Number(row.Rounds))
+                .With("wins", Number(row.Wins))
+                .With("win_rate_bp", Number(row.WinRateBasisPoints))
+                .With("dealt_gold", Number(row.LeakCostDealt))
+                .With("taken_gold", Number(row.LeakCostTaken))
+                .With("spent_gold", Number(row.GoldSpent))
+                .With("cost_efficiency_dealt_per_100_gold", Number(row.DealtPerHundredGold))
+                .With("income_base_gold", Number(row.IncomeBaseGold))
+                .With("bonus_gold", Number(row.BonusGold)));
 
     private static string Number(long value) => value.ToString(PlainText.Culture);
 
-    /// <summary>One row, its cells checked and its newline appended.</summary>
-    private static void Row(StringBuilder text, string[] cells)
-    {
-        for (int index = 0; index < cells.Length; index++)
-        {
-            if (index > 0)
-            {
-                text.Append(',');
-            }
-
-            text.Append(Cell(cells[index]));
-        }
-
-        text.Append('\n');
-    }
-
-    /// <summary>
-    /// A cell, refused if it carries anything a reader would have to be told
-    /// about.
-    /// </summary>
-    /// <remarks>
-    /// A quoting rule is the alternative and it is the wrong one here: this file
-    /// is read by a spreadsheet, by a diff and by whatever scores maps next, and
-    /// the failure it is worth spending code on is the quiet one -- a stray
-    /// separator shifting every column from one row downwards, which reads as a
-    /// balance finding rather than as a broken file.
-    /// </remarks>
-    private static string Cell(string value)
-    {
-        if (value.IndexOf(',') < 0
-            && value.IndexOf('"') < 0
-            && value.IndexOf('\n') < 0
-            && value.IndexOf('\r') < 0)
-        {
-            return value;
-        }
-
-        throw new IOException(
-            "A sweep cell reads '"
-            + value
-            + "', which carries a separator, a quote or a line break. Every cell of this report is an "
-            + "integer or a label off a content file, and a content file refuses both of those characters "
-            + "on a data line -- so this is a cell that was assembled here rather than read, and writing "
-            + "it would shift every column of every row below it by one.");
-    }
+    /// <summary>One row, and the newline that ends it.</summary>
+    private static void Row(StringBuilder text, CsvRow row) => text.Append(row.Line).Append('\n');
 }

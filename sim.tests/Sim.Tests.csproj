@@ -43,7 +43,7 @@
   </ItemGroup>
 
   <!--
-    THE RUNNER'S DECLARATION OF THE CONTENT FILES, COMPILED HERE AS A SOURCE.
+    THE RUNNER'S OWN DECLARATIONS, COMPILED HERE AS SOURCES.
 
     simcli/ContentFiles.cs names the seven files a run is built from: the option
     each is given on a command line, what each is called on disk, and the type
@@ -52,14 +52,22 @@
     that has to agree with the runner's. A list that has to agree is the thing
     the declaration exists to remove.
 
+    simcli/SweepColumns.cs names the columns of the balance report in the order
+    they are written, and carries the row that is filled in by naming them.
+    GoldenSweepTests and CommandLineTests read reports by column, and a test that
+    counted its way to one would be another copy of that order. The separator
+    refusal lives in the same file, and calling it is the only way to watch it
+    work, for the reason SweepColumnsTests gives.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
     Program.Main is called from inside a test host. See TheCommandLine. Linking
-    one declaration shares the data without making the program a dependency.
+    a declaration shares the data without making the program a dependency.
   -->
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
   </ItemGroup>
 
   <ItemGroup>
