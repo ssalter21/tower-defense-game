@@ -46,6 +46,25 @@ namespace View
         /// <summary>The unit type table — both creep types and both tower types.</summary>
         public const string UnitsFileName = "units.txt";
 
+        /// <summary>Which unit follows which: the upgrade ladder.</summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Nothing on the view side reads an edge, and this still has to
+        /// ship.</b> The ladder is folded into the unit table's content hash, and
+        /// that hash is what <see cref="Sim.ReplayBundle.Replay"/> compares the
+        /// record's stamped one against. A player without this file rebuilds the
+        /// wrong hash and the shipped record is refused at the gate — which
+        /// presents as a floor that draws and a match that never starts.
+        /// </para>
+        /// <para>
+        /// So it is neither of the two failures the sync list is usually about.
+        /// It is not content that ships and is never read, and it is not content
+        /// that is read and does not ship. It is an honest third case: content
+        /// that ships because a hash covers it.
+        /// </para>
+        /// </remarks>
+        public const string UpgradesFileName = "upgrades.txt";
+
         /// <summary>The six towers the match is fought by.</summary>
         public const string DefenseFileName = "defense.txt";
 
@@ -102,21 +121,22 @@ namespace View
         /// playfield in a build that worked perfectly in the editor.
         /// </para>
         /// <para>
-        /// The five text files ship alongside the record even though the record
-        /// inlines three of them. <see cref="UnitsFileName"/> and
-        /// <see cref="RulesetFileName"/> have to: the type table is what the
-        /// replay gate checks the record's content hash against and the ruleset
-        /// is what every landing is resolved through, and neither is in the
-        /// bundle. The other three are the authored originals the bundle was
-        /// recorded from, and they are what the fixtures read; the record's own
-        /// gate is what stops the match on screen being drawn from anything
-        /// else.
+        /// The six text files ship alongside the record even though the record
+        /// inlines three of them. <see cref="UnitsFileName"/>,
+        /// <see cref="UpgradesFileName"/> and <see cref="RulesetFileName"/> have
+        /// to: the type table and the ladder folded into it are what the replay
+        /// gate checks the record's content hash against, and the ruleset is what
+        /// every landing is resolved through. None of the three is in the bundle.
+        /// The other three are the authored originals the bundle was recorded
+        /// from, and they are what the fixtures read; the record's own gate is
+        /// what stops the match on screen being drawn from anything else.
         /// </para>
         /// </remarks>
         public static readonly string[] MatchFileNames =
         {
             MapFileName,
             UnitsFileName,
+            UpgradesFileName,
             RulesetFileName,
             DefenseFileName,
             WaveFileName,
@@ -155,9 +175,23 @@ namespace View
         /// </summary>
         public static HexMap ReadMap() => HexMap.ParseUtf8(MapFileName, Read(MapFileName));
 
-        /// <summary>The unit type table, parsed by the simulation.</summary>
-        public static UnitTypeTable ReadUnitTypes() =>
-            UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
+        /// <summary>
+        /// The unit type table, parsed by the simulation, with the upgrade ladder
+        /// folded into its content hash.
+        /// </summary>
+        /// <remarks>
+        /// The view reads no edge here — it reconstructs a hash. That hash is
+        /// what the replay gate compares the shipped record's stamped one
+        /// against, and the ladder is part of what it is made of, so a table
+        /// returned without it is a table the record will be refused against.
+        /// </remarks>
+        public static UnitTypeTable ReadUnitTypes()
+        {
+            UnitTypeTable types = UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
+
+            return types.WithLadder(
+                UpgradeLadder.ParseUtf8(UpgradesFileName, Read(UpgradesFileName), types));
+        }
 
         /// <summary>The rules every shot in a match is resolved through.</summary>
         public static Ruleset ReadRuleset() =>

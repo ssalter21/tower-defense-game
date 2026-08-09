@@ -37,7 +37,27 @@ public static class TheMatch
 
     public static HexMap Map() => HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
-    public static UnitTypeTable Types() => UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+    /// <summary>
+    /// The committed roster: the table, with the committed upgrade ladder folded
+    /// into its content hash.
+    /// </summary>
+    /// <remarks>
+    /// The ladder is folded because this is what "the committed roster" means to
+    /// every writer -- the bundle and the command stream both stamp this hash, and
+    /// the replay gate compares it. A fixture that parsed the table alone would
+    /// build records the committed ones do not match, and would report that as a
+    /// record that had gone stale.
+    /// </remarks>
+    public static UnitTypeTable Types()
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        return types.WithLadder(Ladder(types));
+    }
+
+    /// <summary>The committed upgrade ladder, read against a roster.</summary>
+    public static UpgradeLadder Ladder(UnitTypeTable types) =>
+        UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
 
     public static WaveScript Wave(UnitTypeTable types) =>
         WaveScript.Parse(File.ReadAllText(RepoLayout.WaveFile), types);

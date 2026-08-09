@@ -15,10 +15,10 @@
 #
 # The run this came from:
 #
-#   replay bundle format 0, simulation version 2, content D2DCD5EB8C25FCB4
+#   replay bundle format 0, simulation version 2, content 51BC7297223A70E8
 #   seed       20260801
-#   defense    98B6695EA56684CD, read at defense record format 1
-#   wave       EB0707405EEE1D85
+#   defense    7A696149E8C67620, read at defense record format 1
+#   wave       B9C1B643DC253568
 #   result     12 of 40 leaked, tick 5283 (176 seconds at 30 ticks a second), state B58DBED2315303D2
 #
 #         landmark                 tick    who  other

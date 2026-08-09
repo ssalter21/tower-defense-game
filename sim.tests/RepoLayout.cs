@@ -42,6 +42,13 @@ public static class RepoLayout
 
     public static string WaveFile => Path.Combine(ContentDirectory, "wave.txt");
 
+    /// <summary>
+    /// Which unit follows which: one row per upgrade edge, both ends naming a
+    /// row of <see cref="UnitsFile"/>. Read and handed over as text, exactly
+    /// like the unit table, and legal with no edges in it at all.
+    /// </summary>
+    public static string UpgradesFile => Path.Combine(ContentDirectory, "upgrades.txt");
+
     public static string MapFile => Path.Combine(ContentDirectory, "map.txt");
 
     public static string DefenseFile => Path.Combine(ContentDirectory, "defense.txt");
@@ -176,6 +183,21 @@ public static class RepoLayout
     public static string GoldenUnitsFile(int defenseFormatVersion) =>
         Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".units");
 
+    /// <summary>
+    /// The upgrade ladder that bundle was recorded against, copied beside it and
+    /// never rewritten afterwards.
+    /// </summary>
+    /// <remarks>
+    /// <b>This file does not exist for every version, and its absence is
+    /// meaningful rather than missing.</b> A bundle recorded before
+    /// <c>content/upgrades.txt</c> existed was recorded against no ladder at all,
+    /// so nothing folds into the hash in its header -- which is exactly what
+    /// keeps that frozen hash standing forever. Whatever reads this asks whether
+    /// the file is there and folds nothing when it is not.
+    /// </remarks>
+    public static string GoldenUpgradesFile(int defenseFormatVersion) =>
+        Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".upgrades");
+
     /// <summary>The headless runner's project.</summary>
     public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
 
@@ -185,6 +207,7 @@ public static class RepoLayout
         get
         {
             yield return UnitsFile;
+            yield return UpgradesFile;
             yield return WaveFile;
             yield return FieldFile;
             yield return DefenseFile;
@@ -252,16 +275,20 @@ public static class RepoLayout
         using Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Could not start dotnet build.");
 
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        string standardError = process.StandardError.ReadToEnd();
+        // Drained at once rather than one after the other, for the reason
+        // TheCommandLine.Invoke spells out: a pipe holds a few kilobytes, and a
+        // build whose diagnostics outgrow one would hang here instead of failing.
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+
         process.WaitForExit();
 
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException(
                 $"dotnet build failed for {projectPath} (exit {process.ExitCode}).{Environment.NewLine}"
-                + standardOutput
-                + standardError);
+                + standardOutput.Result
+                + standardError.Result);
         }
 
         return output;

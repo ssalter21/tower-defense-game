@@ -64,7 +64,7 @@
 
 .EXAMPLE
     ./tools/run-sweep.ps1 -Map maps/second.txt -Runs 64 -Out artefacts/second.csv
-    Score another board. Every one of the six content files is a parameter, so
+    Score another board. Every one of the seven content files is a parameter, so
     pointing the harness somewhere else is an argument rather than an edit.
 #>
 param(
@@ -87,11 +87,12 @@ param(
     [int]$Waves = 10,
     [int]$FieldSize = 10,
 
-    # The six content files. All six are parameters so that pointing the sweep
-    # at another map to score it, or at another matrix, costs an argument here
-    # rather than a retrofit across every call site.
+    # The seven content files. All seven are parameters so that pointing the
+    # sweep at another map to score it, or at another matrix, costs an argument
+    # here rather than a retrofit across every call site.
     [string]$Map,
     [string]$Units,
+    [string]$Upgrades,
     [string]$Rules,
     [string]$Schedule,
     [string]$Defense,
@@ -109,6 +110,7 @@ $content = Join-Path $repoRoot 'content'
 
 if (-not $Map)      { $Map = Join-Path $content 'map.txt' }
 if (-not $Units)    { $Units = Join-Path $content 'units.txt' }
+if (-not $Upgrades) { $Upgrades = Join-Path $content 'upgrades.txt' }
 if (-not $Rules)    { $Rules = Join-Path $content 'ruleset.txt' }
 if (-not $Schedule) { $Schedule = Join-Path $content 'schedule.txt' }
 if (-not $Defense)  { $Defense = Join-Path $content 'defense.txt' }
@@ -138,6 +140,7 @@ $sweepArguments = @(
     'sweep',
     '--map', $Map,
     '--units', $Units,
+    '--upgrades', $Upgrades,
     '--rules', $Rules,
     '--schedule', $Schedule,
     '--defense', $Defense,

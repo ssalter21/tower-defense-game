@@ -65,9 +65,9 @@ internal sealed class HeadlessRun
     /// Reads the bundle, checks it through the replay gate, and runs it to the
     /// end.
     /// </summary>
-    public static HeadlessRun Of(byte[] bundleBytes, string unitsText, string rulesText)
+    public static HeadlessRun Of(byte[] bundleBytes, string unitsText, string upgradesText, string rulesText)
     {
-        UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+        UnitTypeTable types = Roster(unitsText, upgradesText);
         Ruleset rules = Ruleset.Parse(rulesText);
         ReplayBundle bundle = ReplayBundle.FromBytes(bundleBytes);
 
@@ -106,14 +106,39 @@ internal sealed class HeadlessRun
     /// than by a gate quietly not running.
     /// </para>
     /// </remarks>
-    public static HeadlessRun Restaged(byte[] bundleBytes, string unitsText, string rulesText)
+    public static HeadlessRun Restaged(
+        byte[] bundleBytes,
+        string unitsText,
+        string upgradesText,
+        string rulesText)
     {
-        UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+        UnitTypeTable types = Roster(unitsText, upgradesText);
         Ruleset rules = Ruleset.Parse(rulesText);
         ReplayBundle bundle = ReplayBundle.FromBytes(bundleBytes);
         Restaging restaging = bundle.RestageUnderCurrentRules(types, rules);
 
         return Play(bundle, restaging, restaging.Match);
+    }
+
+    /// <summary>
+    /// The roster a bundle is run against: the table, with the ladder folded into
+    /// its content hash.
+    /// </summary>
+    /// <remarks>
+    /// <b>Which ladder a golden is restaged against does not matter, and that is
+    /// by design rather than by luck.</b>
+    /// <see cref="ReplayBundle.RestageUnderCurrentRules"/> enforces the map hash
+    /// alone and skips the content-hash gate on purpose, so a restaging never
+    /// asks what roster -- or what ladder -- a record was made with.
+    /// <see cref="Of"/> is the other case: there the folded hash is exactly what
+    /// the gate compares, so the ladder handed in has to be the one the record
+    /// was recorded against.
+    /// </remarks>
+    private static UnitTypeTable Roster(string unitsText, string upgradesText)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+
+        return types.WithLadder(UpgradeLadder.Parse(upgradesText, types));
     }
 
     /// <summary>The tick loop, which is the same one either side of the gate.</summary>

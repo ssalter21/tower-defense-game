@@ -209,6 +209,50 @@ namespace Sim
         }
 
         /// <summary>
+        /// The same rows, with an upgrade ladder folded into the content hash --
+        /// and <b>the receiver itself when the ladder has no edges in it</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>That identity is the load-bearing part of this method.</b>
+        /// <c>content/golden/defense-0.replay</c> is a bundle this repository can
+        /// never produce again, and its header carries the hash of the table
+        /// pinned beside it. No ladder is pinned there, so nothing folds, so its
+        /// frozen hash stands forever. Every record made before this file existed
+        /// stays replayable for the same reason.
+        /// </para>
+        /// <para>
+        /// <b>The ladder joins this hash rather than being carried separately.</b>
+        /// <see cref="ContentHash"/> is the one value the ghost, the wave, the
+        /// bundle and the command stream all already stamp and all already gate
+        /// on, so an edge set that changes what a roster means is covered by four
+        /// writers without one of them gaining a field. What the edges fold under
+        /// is the ladder's own label, so a ladder cannot hash equal to a row.
+        /// </para>
+        /// <para>
+        /// The rows come back untouched either way: an edge is an annotation, and
+        /// no <see cref="UnitType"/> gains or loses anything by being on one.
+        /// </para>
+        /// </remarks>
+        public UnitTypeTable WithLadder(UpgradeLadder ladder)
+        {
+            if (ladder is null)
+            {
+                throw new ArgumentNullException(nameof(ladder));
+            }
+
+            if (ladder.Count == 0)
+            {
+                return this;
+            }
+
+            return new UnitTypeTable(
+                _types,
+                Layout,
+                ContentHash.Add(unchecked((long)ladder.ContentHash.Value)));
+        }
+
+        /// <summary>
         /// Whether this reader has a branch for that column layout.
         /// </summary>
         /// <remarks>

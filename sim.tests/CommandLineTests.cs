@@ -158,6 +158,57 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void The_ladder_verb_reads_the_committed_pair_and_exits_zero()
+    {
+        // Two files and not seven, which is the shape of the verb: a ladder is
+        // read against the roster and against nothing else.
+        //
+        // The edge count is read off the same parser the verb uses rather than
+        // pinned, because the ladder is expected to grow one row at a time and a
+        // pinned count would go red on every legitimate authoring. What this
+        // holds the verb to is printing one line per committed edge and exiting
+        // zero -- which over a ladder with no edges is no output and still a zero,
+        // and is still the statement that the file was opened and accepted rather
+        // than skipped.
+        CommandLineResult listed = TheCommandLine.Invoke(
+            "ladder",
+            "--units", RepoLayout.UnitsFile,
+            "--upgrades", RepoLayout.UpgradesFile)
+            .Succeeded();
+
+        Assert.Equal(EdgeCount(), listed.Output.Split("edge   ").Length - 1);
+    }
+
+    [Fact]
+    public void The_ladder_verb_refuses_a_ladder_it_cannot_read()
+    {
+        // The verb enforces nothing about a ladder's DESIGN and everything about
+        // its structure: it exits zero over a fault, and non-zero over a file it
+        // could not parse. Those are two different questions and this is the one
+        // a wrong exit code would hide.
+        string scratch = TheCommandLine.Scratch("ladder");
+        string broken = Path.Combine(scratch, "upgrades.txt");
+
+        File.WriteAllText(broken, "layout 1\nupgrade 4 3\n");
+
+        CommandLineResult refused = TheCommandLine.Invoke(
+            "ladder",
+            "--units", RepoLayout.UnitsFile,
+            "--upgrades", broken);
+
+        Assert.NotEqual(0, refused.ExitCode);
+        Assert.Contains("has to exceed its source", refused.Error, StringComparison.Ordinal);
+    }
+
+    /// <summary>How many edges the committed ladder has, read the same way the verb reads it.</summary>
+    private static int EdgeCount()
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        return UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types).Count;
+    }
+
+    [Fact]
     public void The_sweep_verb_writes_the_report_the_harness_computed()
     {
         // The wiring, end to end: six content files and a shape in, a

@@ -58,6 +58,21 @@
     could be made again. -Regenerate pins a fresh copy beside the bundle it
     re-records and leaves the older ones alone.
 
+    AND AGAINST THE LADDER PINNED BESIDE IT, WHERE THERE IS ONE. The upgrade
+    ladder is folded into the unit table's content hash, so defense-N.upgrades is
+    pinned exactly as defense-N.units is. Only the current version has one: the
+    older bundles were recorded before content/upgrades.txt existed, nothing
+    folded into the hashes in their headers, and a ladder appearing beside one of
+    them -- empty or not -- would fold something and retire the only record of
+    that format version there will ever be. Those are restaged against an empty
+    ladder written to scratch, which is what they were recorded against.
+
+    THE LIVE LADDER IS NEVER PASSED BESIDE A PINNED TABLE. A ladder is parsed
+    against a unit table and refuses an edge naming a row that table lacks, and
+    every pinned table is older and smaller than content/units.txt -- so the live
+    file refuses the moment it names a new id, for a reason that has nothing to do
+    with the branch being proved.
+
     AND EACH IS RESTAGED RATHER THAN REPLAYED, which is the verb that survives a
     simulation version bump. A bump retires every record made under the previous
     value -- that is what it is for -- and these records cannot be made again, so
@@ -160,6 +175,12 @@ $content = Join-Path $repoRoot 'content'
 $bundle = Join-Path $content 'match.replay'
 $units = Join-Path $content 'units.txt'
 
+# Which unit follows which. No run reads an edge -- the ladder is folded into
+# the roster's content hash and handed to nothing that ticks -- but every verb
+# that takes --units takes this too, so that an unreadable ladder is a refusal
+# rather than a file nobody opened.
+$upgrades = Join-Path $content 'upgrades.txt'
+
 # Every number a shot resolves through: the matrix, the armour expression and
 # the floor. A match cannot be played without it, and a table whose rows carry
 # no types simply never consults it.
@@ -174,13 +195,14 @@ $commandScript = Join-Path $content 'commands.txt'
 $commands = Join-Path $content 'run.commands'
 $outcomeName = 'run-outcome.txt'
 
-# The six files a run is built from. Every run verb takes all six, so the list
-# is written once and splatted -- a verb reading a different defense than the
-# one the record was made against is a run that refuses for a reason that has
-# nothing to do with what was being checked.
+# The seven files a run is built from. Every run verb takes all seven, so the
+# list is written once and splatted -- a verb reading a different defense than
+# the one the record was made against is a run that refuses for a reason that
+# has nothing to do with what was being checked.
 $runContent = @(
     '--map', (Join-Path $content 'map.txt'),
     '--units', $units,
+    '--upgrades', $upgrades,
     '--rules', $ruleset,
     '--schedule', $schedule,
     '--defense', (Join-Path $content 'defense.txt'),
@@ -316,11 +338,57 @@ function Get-GoldenUnitsPath {
     return Join-Path $golden ($Bundle.BaseName + '.units')
 }
 
+# The upgrade ladder that bundle was recorded against. Only the current version
+# has one: the older bundles were recorded before content/upgrades.txt existed,
+# so no ladder folded into the hashes in their headers, and a ladder appearing
+# beside one of them -- empty or not -- would fold something and retire the only
+# record of that format version there will ever be.
+function Get-GoldenUpgradesPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    return Join-Path $golden ($Bundle.BaseName + '.upgrades')
+}
+
+# The ladder a golden is RESTAGED against, which is the one belonging to the
+# table it is handed and never the live one.
+#
+# A ladder is parsed against a unit table and refuses an edge naming a row that
+# table does not define. The pinned tables are older and smaller than
+# content/units.txt, so the moment the live ladder names a new id, passing it
+# beside a pinned table refuses -- for a reason that has nothing to do with the
+# reader branch the golden exists to prove. Which ladder it is cannot change the
+# outcome either way, because RestageUnderCurrentRules skips the content-hash
+# gate; what it has to do is parse.
+#
+# Where there is no pinned ladder the answer is an EMPTY one, because that is
+# what the bundle was recorded against. It is written to scratch and never beside
+# the bundle: a ladder file appearing there would fold into the hash frozen in
+# that bundle's header and retire the only record of its format version.
+$emptyLadder = $null
+
+function Get-GoldenLadderPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    $pinned = Get-GoldenUpgradesPath $Bundle
+
+    if (Test-Path $pinned) {
+        return $pinned
+    }
+
+    if (-not $script:emptyLadder) {
+        $script:emptyLadder = Join-Path ([System.IO.Path]::GetTempPath()) 'simcli-no-ladder.txt'
+        [System.IO.File]::WriteAllText($script:emptyLadder, "layout 1`n")
+    }
+
+    return $script:emptyLadder
+}
+
 if ($Regenerate) {
     Invoke-SimCli @(
         'record',
         '--map', (Join-Path $content 'map.txt'),
         '--units', $units,
+        '--upgrades', $upgrades,
         '--rules', $ruleset,
         '--defense', (Join-Path $content 'defense.txt'),
         '--wave', (Join-Path $content 'wave.txt'),
@@ -328,7 +396,7 @@ if ($Regenerate) {
         '--map-handle', $MapHandle.ToString([System.Globalization.CultureInfo]::InvariantCulture),
         '--out', $bundle)
 
-    Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset, '--out', $content)
+    Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset, '--out', $content)
 
     # The freshly recorded bundle becomes the golden for whatever version the
     # writer emits, and the version is read off the run rather than written in
@@ -336,7 +404,7 @@ if ($Regenerate) {
     # after the writer moved to 2, and would overwrite the wrong file.
     New-Item -ItemType Directory -Force -Path $golden | Out-Null
 
-    $fresh = Get-SimCliOutput @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset)
+    $fresh = Get-SimCliOutput @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset)
     $match = [regex]::Match($fresh, 'read at defense record format (\d+)')
 
     if (-not $match.Success) {
@@ -355,6 +423,14 @@ if ($Regenerate) {
     Copy-Item -Path $units -Destination $currentGoldenUnits -Force
     Write-Host "wrote      $currentGoldenUnits" -ForegroundColor Green
 
+    # And the ladder, for the same reason and with the same consequence: it is
+    # folded into that table's content hash, so a re-recorded bundle whose pinned
+    # ladder stayed behind is a bundle nothing can replay. The older versions get
+    # no ladder pinned beside them, ever -- see Get-GoldenUpgradesPath.
+    $currentGoldenUpgrades = Get-GoldenUpgradesPath (Get-Item $currentGolden)
+    Copy-Item -Path $upgrades -Destination $currentGoldenUpgrades -Force
+    Write-Host "wrote      $currentGoldenUpgrades" -ForegroundColor Green
+
     # Every golden's result is rewritten, the old versions included: a rule
     # change moves what all of them do, and a stale result beside a live one is
     # the failure this whole arrangement exists to make loud. Each is played
@@ -367,7 +443,9 @@ if ($Regenerate) {
             throw "content/golden/$($goldenBundle.Name) has no pinned unit table beside it, so there is nothing to replay it against."
         }
 
-        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+        # The pinned table and the pinned ladder -- see Get-GoldenLadderPath for
+        # why the live ladder is exactly the wrong thing to pass here.
+        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', (Get-GoldenLadderPath $goldenBundle), '--rules', $ruleset)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
         Write-Host "wrote      $resultPath" -ForegroundColor Green
@@ -394,7 +472,7 @@ if ($Regenerate) {
 }
 
 if (-not $Verify) {
-    $arguments = @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset)
+    $arguments = @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset)
     $runArguments = @('play-run', '--commands', $commands) + $runContent
 
     if ($Out) {
@@ -417,7 +495,7 @@ if (Test-Path $scratch) {
     Remove-Item $scratch -Recurse -Force
 }
 
-Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset, '--out', $scratch)
+Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset, '--out', $scratch)
 
 $differences = 0
 
@@ -466,7 +544,9 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+    # The pinned table and the pinned ladder, for the reason
+    # Get-GoldenLadderPath states.
+    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', (Get-GoldenLadderPath $goldenBundle), '--rules', $ruleset)
     $committed = [System.IO.File]::ReadAllText($resultPath)
 
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {

@@ -1,0 +1,68 @@
+# The upgrade ladder.
+#
+# ONE ROW SAYS THAT ONE UNIT FOLLOWS ANOTHER. A row names a source id and a
+# target id, both of them ids in content/units.txt, and it means that a built
+# source may be swapped for a target by paying the target's full price. That is
+# the whole content of an edge: no tier number, no direction marker, no cost.
+# Reasoning in docs/adr/0045-the-ladder-is-a-graph-not-a-list.md.
+#
+# INTEGERS ONLY, AND NO DECIMAL POINT. Same rule as content/units.txt and
+# content/ruleset.txt, same reason, and the same parser enforces it: a '.' or a
+# ',' anywhere on a data line is refused before the line is even tokenised.
+#
+# ONE EDGE PER ROW AND THE ARITY IS FIXED AT TWO IDS. A row whose field count
+# is not two is refused rather than read against shifted fields. Two rows naming
+# the same target are how a diamond is stated -- two lines, not a wider one.
+#
+# THE TARGET ID MUST EXCEED THE SOURCE ID. Ids in units.txt ascend strictly down
+# the file and are never reused, so a target above its source makes a cycle
+# unstateable rather than something a walk has to detect. What it costs is real
+# and worth stating: a rung can never be inserted BELOW an existing unit. A tier
+# that ought to sit under a row already authored is a new row at a new id and the
+# old one retired, exactly as a column change is a new layout.
+#
+# ROWS ASCEND STRICTLY BY (FROM, TO). Asserted and never sorted, which is what
+# makes a duplicate edge a comparison against the row above rather than a lookup
+# nobody performed. It is also what makes this file canonical, so that a ladder
+# folds into the unit table's content hash the same way whoever typed it ordered
+# the lines.
+#
+# A FILE WITH NO EDGES IN IT IS LEGAL -- a layout row and nothing else. A ladder
+# with no edges folds nothing into the content hash, so a roster half-way through
+# being authored still loads and every record made before this file existed stays
+# replayable forever. Reasoning in
+# docs/adr/0046-an-absent-ladder-folds-nothing.md.
+#
+# THE SIMULATION NEVER READS THIS FILE. An edge is an annotation on the roster;
+# nothing in a tick loop can observe one. The parsed ladder is held by the
+# command line and is never handed to a run, which turns that sentence from a
+# promise into a property.
+#
+# WHICH CHECKS ARE FAULTS AND WHICH ARE NOTES. A whole-file pass walks the
+# ladder against the roster and returns both. Neither refuses to load -- a
+# half-authored roster has to stay runnable -- so the faults are what the build
+# gate goes red on and the notes are printed for a person.
+#
+#   Faults, and there are two.
+#
+#     MIXED ROLES -- the two ends of an edge have different roles. A placed unit
+#     that upgrades into a walking one is not a tier, it is a typo.
+#
+#     UNEQUAL ROADS -- two ids joined by more than one path where the paths are
+#     not all the same length. A diamond whose sides differ is a ladder where
+#     one route to the same tower costs fewer upgrades than another.
+#
+#   Notes, and there are three. Each is a design statement rather than a defect,
+#   and none of them is ever judged.
+#
+#     ROOT -- a unit with no incoming edge. LEAF -- a unit with no outgoing edge.
+#     FLAT OR FALLING PRICE -- the target costs no more than the source.
+#
+# ./tools/show-ladder.ps1 prints the edges, then the notes, then the faults, and
+# always exits zero.
+#
+#      from  to
+
+layout 1
+
+upgrade    3  14
