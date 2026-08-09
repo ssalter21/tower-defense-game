@@ -1,15 +1,17 @@
 # The Vision
 
-**The standing document** · 3 August 2026
+**The standing document** · 3 August 2026, last revised 7 August 2026
 
 > **What this game is, what it is not, and the order it gets built in.**
 >
 > Parts I to V were written to answer whether this game was worth making and what to make it with. They were
 > right about the machinery and wrong about the audience. This document fixes the destination, and where it
-> disagrees with any of the five, this document is current.
+> disagrees with any of the five — now archived in [`archive/`](archive/) — this document is current.
 >
 > It is deliberately larger than one effort. [§8](#8-the-build-order) sequences it, and each seam named there
 > is the subject of its own wayfinder map.
+>
+> **Every time it has changed its own mind is in [the decision log](decision-log.md)**, not edited away.
 
 ---
 
@@ -97,7 +99,7 @@ The unifying claim, stated precisely so the rest of the document can lean on it.
 
 | Mode | Who fills the other seats | Barrier clears when | Latency |
 |---|---|---|---|
-| **Round-robin** | The shared pool — a different stored defense every wave, drawn at your stage | Immediately; the pool is already there | Days, or none |
+| **Round-robin** | The shared pool — a **field of ten** stored defenses every wave, drawn at your stage | Immediately; the pool is already there | Days, or none |
 | **Lobby** | The friends in the lobby | Everyone present has submitted | Minutes |
 | **Co-op** | *Not yet specified* — see [§10](#10-not-yet-specified) | — | — |
 
@@ -113,11 +115,24 @@ submissions and broadcast the result.
 > *turn*. The deterministic sim that already exists resolves it, and the record format that already exists
 > transmits it. Live head-to-head costs a barrier and a lobby, not a netcode layer.
 
-**Round-robin draws a fresh opponent every wave, matched at the same stage.** Wave four meets somebody's
-wave-four defense. This dissolves the hardest problem in the async model: a stored defense never has to evolve
-mid-match, because you only ever meet it at one moment of its life. It is the Super Auto Pets structure, and it
-is also the variance control Part II §3 argued round-robin exists for — ten opponents per run means one bad
-draw is a dent, not a defeat.
+**Every round draws a fresh field of ten, matched at the same stage** — *changed 7 August 2026, see
+[§9](#and-what-was-reversed-on-7-august-2026).* Round four meets ten people's round-four defenses, and ten
+people's round-four waves. This dissolves the hardest problem in the async model: a stored defense never has to
+evolve mid-match, because you only ever meet it at one moment of its life. It is the Super Auto Pets structure.
+
+**The field is also the variance control** Part II §3 argued round-robin exists for, and it does that job far
+harder than the earlier one-opponent-per-wave draw did: a round's result is the *average* across ten, so a
+single bad matchup is a rounding error rather than a dent. The number is **K = 10, fixed, in every mode** — a
+lobby smaller than ten is topped up from the pool at that `(map, stage)`. Decided in
+[#74](https://github.com/ssalter21/tower-defense-game/issues/74).
+
+The cost of averaging is that a round tends toward the field mean, which risks rounds feeling alike. The
+antidote on file — deliberately undecided — is a **gamble**: opt out of the average and face a single opponent
+drawn from the distribution, with best-of-ten as its natural payoff. It cannot be tuned before a real field
+exists at step 6.
+
+Compute is not a constraint here. At the 2.75 ms a match `BudgetTests` measures, ten rounds against ten
+opponents on two sides is about half a second for an entire run.
 
 The cost is that **the pool needs depth at every stage, not just at the end**, which sharpens Part II's
 cold-start problem rather than removing it. Hand-authored defenses at each stage are the answer, and they cost
@@ -147,6 +162,11 @@ needed, and is explicitly not adopted.**
 The cost is real and lands on [the interface seam](#8-the-build-order): the player is reading two boards at once, and
 that is the hardest unsolved presentation problem in this design.
 
+> ⚠️ **And it got harder on 7 August 2026.** A round now resolves against
+> [a field of ten](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026), so the problem is no longer
+> reading two boards at once — it is reading *twenty*. **What the player actually watches is now the biggest
+> open thing in [seam 7](#7--the-interface)**, and nothing in this document answers it.
+
 ### Build phases between waves, and nothing during one
 
 The classic tower defense rhythm. A wave resolves with no input; then a build phase opens; then the next wave.
@@ -156,34 +176,121 @@ ghosts only because of the per-wave draw above. A defense in the pool is a snaps
 to play itself, never has to replay a build order chosen against a different wave, and never has to follow a
 policy you authored. **It is finished, at that stage, forever.**
 
-### Two purses — *reversed 6 August 2026*
+### A run is ten waves, and health is money — *decided 7 August 2026*
 
-**Two currencies, one for the defense and one for the offense.** Both halves are a build you develop across a
-run, and neither is funded by starving the other.
+**Ten waves. A round is one build phase plus the wave that follows it, so ten waves is ten rounds.** The
+length is fixed and public, and it is the number this document was already leaning on without deciding it.
 
-This reverses the single purse, which stood until now as "the sharp decision this game is built around". The
-reasons it fell are on file and they converged:
+The reason for short over Element TD's fifty is not pacing but mercy: **a player who has fallen behind the
+curve should not be stuck in a long game.** Get them out and into the next run, where the thing they just
+learned is worth something. Ten also keeps 10% interest compounding to about 2.6x across a run, which is why
+the purse below needs no interest cap.
 
-- **The research said the genre is two-currency for a reason.**
-  [The sending research](research/attack-composition-and-sending.md) found Legion TD 2's send loop is
-  *two-currency* — gold buys workers, workers make mythium, mythium buys mercenaries, and spending mythium
-  **permanently raises your income** — so every send is an investment that pays you back. Under one purse a
-  coin spent attacking is simply gone, which makes attacking a pure tempo loss and, at equilibrium,
-  **dominated**.
-- **Restated as skill expression, it was worse than a balance problem.**
-  [The skill note](research/fun-and-skill-expression.html) found that economy is the axis competitive tower
-  defense is actually built on, and that **a purchase which only ever subtracts has no timing question
-  attached to it — and timing is what players practise.** One purse did not make the economy hard to balance;
-  it removed the dial players get good at.
-- **It contradicted the ambition of an offense as deep as the defense.** §3 asks for the attacking half to be
-  a build. A build needs its own budget, or it is a tax on the other build.
+> ⚠️ **The cap may be lifted later, so run length is a parameter and not a constant** — and **removing it
+> forces an interest cap**, because uncapped 10% a wave is bounded today only by the run being ten waves long.
 
-What is *lost* is real and should be named: one purse made each build phase one sharp decision rather than two
-small independent ones, and it made *what an opponent spent on* legible at a glance. Two purses buy that back
-only if the two economies interact — so **the cross-feed is now the design question**, and it replaces the
-payback question that used to block step 1. The known-good shapes are Legion TD 2's (one currency buys the
-generator for the other) and Bloons TD Battles 2's (the send is the income). A pair of fully independent
-wallets is the failure mode to avoid: that really is two unrelated shopping trips.
+**Health is a pool denominated in gold. A leaked creep costs health equal to its cost, one for one.** A
+10-cost creep does 10 damage.
+
+That single sentence is doing most of the work in this section, because it makes health and money the same
+unit:
+
+- **It gives conceding a wave a literal exchange rate.** Under one purse, underbuilding your defense to fund
+  your offense already *is* spending health. There is no sell-health button and none is needed — the shared
+  wallet is the dial, which is the same argument [#72](https://github.com/ssalter21/tower-defense-game/issues/72)
+  landed on for timing.
+- **Damage taken in a round is the field average, not the sum.** Summing ten opponents' leaks would kill
+  everybody immediately; averaging is the entire point of a field of ten.
+- **The pool is about three waves' worth of average creep value** — deep enough that one deliberate concession
+  is affordable and a second is a real decision, shallow enough that a losing player is out around wave six or
+  seven. A single number, and a step 4 sweep target rather than an argument.
+- **Gold cannot repair health.** Permanent depletion is what makes the pool a clock, and the clock is the
+  thing that ejects a struggling player. A repair rate would sell them a way to stay in a run they are losing.
+
+**Death is in. Zero health ends the run there.** The wall sits at the bottom of a graded pool rather than in
+place of one — Legion TD 2's *"King HP is a resource, to a certain extent."* For the step 4 harness, death is a
+**flag** rather than a rule, so a sweep can run in no-death mode and always yield ten rounds of data.
+
+**Runs are ranked by waves survived first, then health remaining.** The graded pool therefore does double duty
+— the resource during the run and the placing at the end of it — so no third number has to be invented.
+
+**The offense never enters the placing. It pays in gold and nothing else.**
+
+> ⚠️ **This is in tension with [*"the attacking half is as deep as the defending half"*](#depth-is-the-point)
+> below.** Secondary in *scoring* is not the same as shallow in *decision* — the wave slots, the unlock gate
+> and the percentile bands all still make composing a wave a real choice — but an attacking half that can never
+> win you a placing is a weaker claim than that section makes. **Seam 1 owns the reconciliation.**
+
+**A run's outcome is a vector, not a score:** per round, the pair `(leak cost dealt, leak cost taken)`, plus how
+the run terminated. Health remaining, waves survived and any score are folds over it. Recording a scalar
+instead would mean re-simulating to recover the two distributions the percentile bands are computed from. A
+round's **offense** score is the average of the ten rather than the best of them — the same rule as the damage,
+taken symmetrically.
+
+The simulation already produces the raw material. `sim/MatchResult.cs` returns `Leaked / Total / FinalTick` and
+says so in its own summary: *"Carries no win or loss verdict."* Health is a layer over a number that exists.
+
+Decided in [#74](https://github.com/ssalter21/tower-defense-game/issues/74), which holds the detail.
+
+### One purse — *restored 6 August 2026*
+
+**One currency, called gold. Every coin of income lands as gold, and gold buys the defense and the offense
+alike.**
+
+> **The currency was called *sauce* until 8 August 2026.** Nothing about the purse changed — only the word. The
+> roster settled on a register of knights, archers, mages and skeletons, and *sauce* was the one term in the
+> economy that no unit on the board could have been named after. Renaming it cost comments and identifiers and
+> moved no stored record, because the word never appears in a data file. See
+> [the decision log](decision-log.md#8-august-2026--the-roster-is-signed-and-the-clock-slows).
+
+This reverses the two purses adopted earlier the same day, and restores the single purse — but **not the
+argument the single purse used to rest on.** It stands now for a reason it did not have that morning, and the
+distinction is the whole of this section.
+
+**Why two purses were adopted.** [The sending research](research/attack-composition-and-sending.md) found the
+genre's deep send systems are two-currency, and that under one purse a coin spent attacking is simply gone —
+which makes attacking a pure tempo loss and, at equilibrium, **dominated**.
+[The skill note](research/fun-and-skill-expression.html) restated it as something worse than a balance problem:
+**a purchase which only ever subtracts has no timing question attached to it, and timing is what players
+practise.**
+
+**Why one purse survives anyway.** Read closely, neither objection is to the single wallet. Both are to a
+*missing payback*. A second currency was one way to supply it. It is not the only way, and it is not the
+cheapest:
+
+- **Attacking pays back through performance, not through a second wallet.** Income is a flat base per wave,
+  **plus a bonus on top of that base** paid in non-linear percentile bands, measured over two distributions:
+  how your creep wave performed, and how your defense performed, each against the field. A wave that does well
+  pays you for having sent it. The payback the research demanded is present; the currency it was going to
+  arrive in is not.
+- **The offense is separated by a gate, not by a budget.** Each round offers a selection of choices, and taking
+  one **unlocks a creep permanently for the run** — free to unlock, paid to buy. What you may field is bounded
+  by what you have unlocked, not by which wallet you remembered to save into.
+- **Scarcity comes from wave slots.** A wave has a limited number of slots, and that number grows each round. A
+  slot is one creep type plus a count, and slots may be left empty. **A slot spent on a cheap column is a slot
+  not spent on a heavy unit** — which is precisely the opportunity cost the second wallet was there to
+  manufacture.
+- **Timing comes from interest.** Unspent gold banks and earns **10% a wave, rounded up**, uncapped for now.
+  Every purchase is therefore measured against compounding, and leaving a slot empty is not waste but
+  investment. That is the dial the skill note said one purse had removed, and it is now attached to every
+  purchase in the game rather than to one of two wallets.
+
+**And it buys back what two purses cost.** Each build phase is one decision over one wallet again, rather than
+two small independent ones — the loss named on the morning the two purses were adopted.
+
+**No money moves between players.** Denial — Legion TD 2's rule that leaking pays the attacker — is
+deliberately rejected. The coupling between players is **statistical**: you are paid against the field's
+distribution, never against a named opponent, and that reads the same whether the field is one lobby or a
+global population. The bands are **progressive and never negative**: performing below average earns a smaller
+bonus, never a penalty.
+
+Decided in [#72](https://github.com/ssalter21/tower-defense-game/issues/72), which holds the detail. The
+numbers — base, band thresholds, slot count and growth, creep costs — are step 4 sweeps rather than arguments.
+One consequence worth carrying: **the bonus needs a distribution to be measured against**, and step 1 supplies
+one by measuring the balance harness's canned field, so a run pays a real bonus from step 1 rather than the base
+alone. What that stand-in cannot do is tell the middle bands apart — a population of one has almost no spread,
+so the four authored bands behave as two until step 6 stores real ghosts. Measured in
+[`docs/research/a-canned-field-of-one-collapses-the-bands.md`](research/a-canned-field-of-one-collapses-the-bands.md).
 
 ### Depth is the point
 
@@ -351,10 +458,155 @@ It also does the pacing job [§6](#6-what-it-looks-like) needs. Element TD meter
 fifty waves and gates each behind a boss; Super Auto Pets unlocks shop tier *X* on turn 2*X*−1. Both are
 progressive disclosure that resets every run, which is the only shape [§4](#4-what-persists) permits.
 
+### Three anchors, a shape and a filling — *decided 7 August 2026*
+
+**Anchors sit at waves 3, 6 and 9. At each one, three *game changer* creeps join that round's public offering,
+and the player takes one thing from the combined list.**
+
+Three-in-ten sits between the precedents — Element TD meters eleven picks across fifty waves, Super Auto Pets
+unlocks a tier every other turn. Wave 1 is the starting state and an anchor at wave 10 would have nothing after
+it, so the anchors live in the interior and **wave 10 is the payoff round**: the one where what you took gets
+spent.
+
+**Anchors open offense, never defense.** An anchor is a threat you can see coming, and the preparation happens
+on the other side of the board — you know what lands at wave 9, so you buy the answer by wave 8. An anchor that
+handed you a better *tower* would give preparation nothing to be about; it would just be a gift. This puts one
+hard constraint on [seam 3](#3--the-roster), which inherits it rather than choosing it: **for every anchor, its
+counter must already be purchasable strictly before it.** Otherwise the anchor is not preparation, it is a
+forced simultaneous buy.
+
+**The menu is merged, not additional.** The three game changers are added to the ordinary offering and the
+player takes *one thing* from the whole list, so a game changer competes head-to-head with an ordinary unlock.
+The alternative — a free extra pick at each anchor — was rejected because it ends every run with every player
+holding all three, which leaves only *when they field it* to be unknown. Merged, **who has what is unknown
+too**, which is the property the schedule exists to buy. What makes that trade real is the ratio of ordinary
+options to game changers, and that is a step 4 sweep parameter rather than an argument here.
+
+**The schedule has a shape and a filling, and they turn over at different rates.** This is the load-bearing
+distinction:
+
+| | What it is | How long it holds |
+|---|---|---|
+| **Shape** | Anchors at 3, 6, 9; which tier each is; which one is the hard-counter anchor | **Per [rotation](#the-map-rotates-and-it-is-generated)** — public, stable, learnable |
+| **Filling** | *Which* three creeps sit on each anchor's menu | **Per run** — drawn from that anchor's tier pool, revealed at run start |
+
+Preparation is a skill about the **shape**, which is why it survives being drawn at all: every run this week you
+know wave 9 will demand a specific answer. Replay value comes from the **filling**, which is why a fixed map
+does not go stale in a week. A single-layer schedule cannot have both — fixed everywhere is solved by Tuesday,
+drawn everywhere has nothing to prepare against.
+
+**The anchors are the constant; the ordinary offering is the churn.** The per-round offering is itself drawn
+per round and identical for everyone, which is where most of a week's variety actually comes from — ten draws a
+run against the anchors' three. One of the two layers has to move, and it is this one.
+
+**Anchors do not repeat, and they escalate.** A given game changer appears on exactly one anchor's menu — nine
+distinct creeps across a shape — so nobody doubles down on the same one twice, and wave 9's three are stronger
+than wave 3's, matching the wave widening and the gold curve. A flat pool could hand someone a wave-9-grade
+unit at wave 3, where nothing yet answers it.
+
+**Exactly one anchor per shape opens a hard counter, and it is wave 9.** The other two are extreme points on
+axes that already exist — a very fast unit, a very tough one — answered by generally competent defense. One is
+enough to make preparation sharp; three would make a run turn on a single missed buy. *How* a counter works —
+armour formula, matrix width — is [question 4's](#the-five-decisions-that-block-step-1), not this section's;
+all that is settled here is that the schedule may **require** one.
+
+> ⚠️ **Amended 7 August 2026: "hard" now reads "steep".** This section wrote wave 9's anchor as the
+> flying-units case — *without the specific answer, existing towers do nothing at all*.
+> [Question 4](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) then declined the
+> binary gate that would have made that literally true, and put counters on a `bonusVsTag` layer instead, so
+> the anchor is a **steep gradient rather than a wall**: on the decided ruleset a prepared tower kills it in
+> nine shots and an unprepared one in thirty-six. **4.00×.**
+>
+> The schedule is unchanged in every other respect. What moved is only that a player who mis-prepares for
+> wave 9 is *punished* rather than *eliminated* — which is the same argument the round-robin makes about a bad
+> draw, and consistent with a ruleset in which **nothing is binary**.
+
+**Wave slots grow on the same cadence, and only there.** [§3](#one-purse--restored-6-august-2026) makes wave
+slots the scarcity that replaces a second wallet. They start at 2 and gain one at each anchor — **2, 2, 3, 3,
+3, 4, 4, 4, 5, 5** — rather than one per round, which would reach ten slots by wave 10 and dissolve the
+scarcity entirely. One cadence governs the run instead of two, and an anchor becomes a single legible landmark:
+*the wave got wider, and something new arrived.*
+
+**The ghost pool does not shard.** Ghosts are drawn on `(map, stage)` alone, as before. A ghost from another
+run in this rotation was played under the same shape, so anything it fields is from the same tier on the same
+axis — unfamiliar, never unanticipatable. That is what makes a per-run filling safe, and it avoids paying for
+variance with a thinner pool, which [rotation already taxes](#the-map-rotates-and-it-is-generated) quite enough.
+
+Decided in [#73](https://github.com/ssalter21/tower-defense-game/issues/73), which holds the detail. Every
+number here — three anchors, three options, slot widths, the 3/6/9 placement — is priced against the one-hex
+corridor that [seam 9's board](#the-board-is-a-maze-again--reversed-6-august-2026) is removing, and is a step 4
+sweep target rather than an argument.
+
+### How a shot resolves — a cycle and one expression — *decided 7 August 2026*
+
+**Three attack types, three armour types, and one line of arithmetic.**
+
+| Attack ↓ / Armour → | Swift | Armoured | Arcane |
+|---|---|---|---|
+| **Pierce** | 140% | 70% | 100% |
+| **Impact** | 70% | 100% | 140% |
+| **Magic** | 100% | 140% | 70% |
+
+```
+dealt = (base + bonus) * cell / (100 + armour)      // one multiply, one divide
+if (dealt < 1) dealt = 1;                            // the floor
+```
+
+Every **row** and every **column** is a permutation of (70, 100, 140). That is what makes it a Latin square
+rather than merely a table: **no attack type is globally better and no armour type globally tougher**, every
+cell is reachable, and the whole thing fits in a player's head. A 2:1 spread means type moves shots-to-kill by
+exactly double — a real read, and never an unwinnable draw.
+
+**`k` is folded to 1, which is the part worth keeping.** The reduction shape is the one Warcraft 3 and League
+of Legends independently arrived at, whose property is that *effective health is linear in armour* so armour
+stacks without a cap. Setting its coefficient to 1 makes the authored number read as its own meaning: **one
+point of armour is one percent of base effective health.** Every bit of strength a larger coefficient would buy
+is bought instead by authoring a larger armour number, and the ruleset header loses a constant nobody can check
+by eye.
+
+**Hard counters do not come from this table.** They come from `bonusVsTag` — a per-anchor integer added to the
+base before typing and mitigation. That separation is why the matrix could stay narrow: *lean narrow* and *must
+express a counter* were never actually opposed, they were two constraints on two different layers that only
+looked opposed while both were pointed at the matrix. Because the bonus joins the hit rather than bypassing it,
+**a high-armour anchor blunts its own counter** — armour keeps meaning something against the thing built to
+kill it.
+
+> **The arithmetic eliminated more candidates than the argument did**, which is worth recording because it is
+> not how this document usually gets its answers.
+>
+> - **Warcraft 3's 40:1 is impossible here, not merely violent.** A 15-damage hit through a 5% cell is
+>   `15 × 5 / 100` = **zero** — the type chart deletes the hit before armour is consulted. A damage floor
+>   "rescues" that only by making every cell beneath it identical, at which point the table has stopped
+>   existing for small hits.
+> - **Flat subtraction is out with the number attached.** At armour 5 a five-archer volley of 5 damage each
+>   delivers **5** of its nominal 25; a single 25-damage cannon delivers **20**. Under the decided formula the
+>   volley and the cannon fall off *together* across the whole armour range. That is
+>   [the squad research's](research/towers-versus-placed-squads.md) quadratic, gone.
+> - **The two-step and fused forms of the same algebra are different functions.** `d × cell / 100` then
+>   `× 100 / (100 + armour)` composes to `d × cell / (100 + armour)` — but across 411,600 swept triples they
+>   disagree on **42.7%**, and the fused form is never lower because it truncates once instead of twice. This
+>   is [ADR-0001's](adr/0001-fixed-point-arithmetic.md) warning arriving in practice, and it is why the
+>   expression is written down here rather than left to whoever implements it.
+>
+> ⚠️ **And the finding nobody went looking for: resolution is bought with the size of the numbers.** At the
+> scale `content/units.txt` ships today, a 9-damage bolt deals **8 damage for eleven consecutive points of
+> armour** — armour a player cannot feel and a sweep cannot tune. That is the integer grid being coarser than
+> the design, not a flaw in any formula. **So every damage and health number in the game is multiplied by
+> ten**, which restores it without touching the arithmetic. It costs one commit and a regenerated golden trace
+> at step 1; after step 6 it would cost a content migration and a retired ghost pool.
+
+Decided in [#75](https://github.com/ssalter21/tower-defense-game/issues/75), which holds the detail and the
+[arithmetic that produced it](prototypes/damage-matrix-arithmetic.py). The **shape** here survives the maze;
+the **constants** do not. The Latin square, the fused expression, the ×10 scale and the floor are all
+independent of geometry, but the cell values and armour numbers are priced against the one-hex corridor that
+[seam 9's board](#the-board-is-a-maze-again--reversed-6-august-2026) is removing, and are step 4 sweep targets
+rather than arguments.
+
 ### The options are the same for everyone — *the Mechabellum move*
 
 **Each build phase offers the same small set of choices to every player in the match.** Not a private random
-draw; one public offering that everybody sees.
+draw; one public offering that everybody sees. The offering is **drawn fresh each round** — identical across the
+match, different between runs — and on an anchor round the three game changers are drawn into it.
 
 This is Mechabellum's reinforcement system, and its own players describe the consequence exactly right: the
 opponent sees the same choices, *so it becomes a mind game*. It buys three things at once, which is why it
@@ -374,22 +626,30 @@ of implementation.
 
 | | **Round-robin (async)** | **Lobby (live)** |
 |---|---|---|
-| Opponent's defense | Not shown as a board to compose against | **Shown** — live, or as of the previous round |
+| Opponent's defense | Not shown as a board to compose against | **Shown as of the end of the previous round** — never live *(decided 7 August 2026)* |
 | What you are optimising for | Performance across *many* defenses | Performance against *one known* defense |
 | The skill | Robustness, and reading the shared offering | Hedging and counter-picking, TFT-style |
 | Feedback | Mean and spread over the field (see [§12](#12-the-planning-phase-is-the-game)) | The board in front of you |
 
-**In the lobby you can scout.** Seeing the opponent's towers — live or one round stale — makes composing a
-wave a counter-pick, and the stale variant is the more interesting one because it prices *change*: what they
-had is evidence, not truth. This is Teamfight Tactics' loop, where scouting between rounds decides
-itemisation, positioning and whether to commit to a composition at all.
+**In the lobby you can scout, and only backwards** — *decided 7 August 2026 by
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76)*. Seeing the opponent's towers makes composing
+a wave a counter-pick, and the **stale** variant is the one taken, because it prices *change*: what they had is
+evidence, not truth. **What they are building right now is never shown.** This is Teamfight Tactics' loop,
+where scouting between rounds decides itemisation, positioning and whether to commit to a composition at all.
 
-**In the round-robin you cannot**, and this fixes a real defect rather than merely accepting a limitation.
-[The skill note](research/fun-and-skill-expression.html) found that a stored ghost inverts *reading the
-opponent* into a lookup: a frozen defense is fully inspectable and cannot react or lie, so perfect information
-about it produces optimisation, not inference, and degrades to a table. Withholding the board and paying the
-player in **statistics over the field instead** is the fix, and it also turns the async mode into a genuinely
-different game from the lobby rather than a slower copy of it.
+**In the round-robin you cannot scout a defense**, and this fixes a real defect rather than merely accepting a
+limitation. [The skill note](research/fun-and-skill-expression.html) found that a stored ghost inverts *reading
+the opponent* into a lookup: a frozen defense is fully inspectable and cannot react or lie, so perfect
+information about it produces optimisation, not inference, and degrades to a table. Withholding the board and
+paying the player in **statistics over the field instead** is the fix, and it also turns the async mode into a
+genuinely different game from the lobby rather than a slower copy of it.
+
+> **What you *can* see in the round-robin is the incoming waves, and that is a different object** — *added
+> 7 August 2026*. A snapshot shows a **wave being sent at your stage**, never a defense, so the lookup defect
+> above does not apply: a wave is a composition you build against, not a board you solve. **Ten snapshots are
+> free per run and further ones are bought with gold.** Scouting is therefore one mechanic across all three
+> latencies — *pay to reduce the blur on what you are facing* — and only the source of the blur differs by
+> mode. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026).
 
 > **You do not know exactly what your wave will do — and the reason matters.** Not because the simulation is
 > hidden or random; it is neither. Because in the round-robin your wave is measured against *many* defenses,
@@ -591,7 +851,7 @@ Steps 1 to 4 need no engine, no licence and no editor. They run from a shell.
 
 | # | Step | What it delivers | Size |
 |---|---|---|---|
-| 1 | **Cost column, ~~one purse~~ two purses and their cross-feed, income between waves** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file | Small |
+| 1 | **Cost column, one purse, wave slots, income between waves — and the damage model** | Every integer already in `content/units.txt` becomes a design lever, because cost-per-effect is what makes a unit good or bad. Today there is no decision anywhere in a match: the defense is a file and the wave is a file. **The ×10 rescale and the attack/armour columns land here too** — one commit and a regenerated golden trace now, a content migration and a retired ghost pool after step 6. See [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) | Small |
 | 2 | **A run is N waves, with a build phase between, recorded as a command stream** | `Match` gains a lifecycle; the record gains `(wave index, decision)` pairs, which is what a build phase *is* from the record's point of view; `simcli` gains a mode that plays a command file | Medium — the real structural work |
 | 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small — see [§5](#5-how-it-is-balanced) |
@@ -607,18 +867,28 @@ which are worth nothing if the answer to the cheap ones was no.
 
 ### Three obligations the sequence carries
 
-- **Step 1 must decide how the two purses feed each other**, on the day they are added rather than after.
-  *(Superseded 6 August 2026: this obligation used to read "how an attack purchase pays back", which was the
-  one-purse form of the same problem.)* Two wallets that never touch is two unrelated shopping trips; the
-  known-good shapes are Legion TD 2's — one currency buys the *generator* for the other — and Bloons TD
-  Battles 2's, where the send and the income are the same purchase on one dial.
-  [The sending research](research/attack-composition-and-sending.md) still holds the survey.
+- **Step 1 inherits a decided economy, and must build the whole of it rather than the easy half.**
+  *(Discharged 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72). This
+  obligation has now read three ways — "how an attack purchase pays back", then "how the two purses feed each
+  other", now this — and the churn is the point of settling it on paper before content exists.)* The economy is
+  one purse, a flat base plus percentile-band bonuses on top of it, 10% interest on the bank, an unlock gate
+  and scarce wave slots. **The trap is shipping the cost column and the base income and calling step 1 done**,
+  because the base is the part that needs nothing to be measured against, and the percentile bands — which do,
+  and which are what stops attacking being dominated — are the part that gets dropped. Step 1 pays both: the
+  balance harness's canned pool is the distribution the bands are read off until real ghosts are stored. See
+  [§3](#one-purse--restored-6-august-2026).
 - **Step 2 opens the input seam, and it is the one place in this sequence worth being slow.** There are ADRs
   *and tests* asserting that no input reaches the simulation, and that discipline is why determinism holds.
   The shape that preserves it: **the view emits a command, the command goes into the record, the record is
   what the match consumes.** Done that way every playtest is also a determinism test — exactly as scrubbing is
   today — and [seam 2](#2--the-submission-barrier) comes nearly free later, because a submitted turn *is* a
   command batch. Done the other way it contaminates the one guarantee everything here rests on.
+
+  *Added 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74):* **run length N and
+  field size K are parameters of the lifecycle, not constants.** Ten and ten are the answers, and both are
+  expected to move — the round cap may be lifted entirely. Two signatures, cheap now and tedious across every
+  call site later, which is the same argument [seam 4](#4--the-balance-harness--pulled-forward-to-step-4) makes
+  for the sweep taking its map as a parameter.
 - **Step 3 exhausts rows before it touches the schema.** `UnitType` already carries eleven integer levers —
   HP, speed, range, cooldown, windup, backswing, damage min, damage max, delivery, projectile flight, dying
   ticks — and the four committed unit types use about half of that space. A slow sieger is a cooldown and a
@@ -642,19 +912,26 @@ which are worth nothing if the answer to the cheap ones was no.
   accounts, matchmaking, rating, anti-cheat re-simulation and the two-board interface from the critical path
   to *is this fun*. **It defers them; it does not repeal them.**
 
-### The four decisions that block step 1
+### The five decisions that block step 1
 
-Small, on paper, blocking, and all four get more expensive the more content exists when they are answered.
+Small, on paper, blocking, and all of them get more expensive the more content exists when they are answered.
 None needs an engine, a server or an asset. This is a **checklist**; the full description of each lives where
-it already did, and the right-hand column links to it rather than restating it.
+it already did, and the right-hand column links to it rather than restating it. They are charted as
+[map #70](https://github.com/ssalter21/tower-defense-game/issues/70), one ticket each.
 
 | # | Question | What is already known |
 |---|---|---|
-| 1 | ~~How does an attack purchase pay back under one purse?~~ **How do the two purses feed each other?** | **Superseded 6 August 2026 by the two-purse reversal.** The question is no longer payback but cross-feed: two fully independent wallets is the failure mode. Known-good shapes are Legion TD 2's (one currency buys the other's generator) and Bloons TD Battles 2's (the send *is* the income). Detail in [§3](#two-purses--reversed-6-august-2026) |
-| 2 | ~~Is there a shared, public baseline wave?~~ **What is on the variance anchor schedule?** | **Answered in principle 6 August 2026.** There is a public constant, and it is an anchor schedule rather than a baseline wave — fixed waves at which a major variance event unlocks for everyone. What remains is which waves and which events. Detail in [§3](#wave-variance-is-anchored-not-emergent) |
-| 3 | **What is a run?** | How many waves, and whether it ends in a loss condition or simply ends. Step 2 needs at least a provisional answer. The skill note adds a preference: **a graded loss condition deep enough that conceding a wave on purpose can be correct**, because that is what makes health a resource rather than a wall. Detail in [§10](#the-open-questions) |
-| 4 | **How wide is the damage-type matrix, and what is the armour formula?** | Flat-subtraction armour punishes many-small-hits quadratically, so rule it out, and lean narrow. Detail in [§10](#the-open-questions) |
-| 5 | **What does the player get to compute before they commit, and what does it cost them?** | **New, 6 August 2026, and it blocks step 1 for the same reason the others do.** A deterministic sim can answer any question the player asks, and a game that answers all of them has been solved rather than played. Detail in [§12](#12-the-planning-phase-is-the-game) |
+| 1 | ~~How does an attack purchase pay back under one purse?~~ ~~How do the two purses feed each other?~~ **✅ Decided** | **Resolved 6 August 2026 by [#72](https://github.com/ssalter21/tower-defense-game/issues/72).** One purse, called gold. The payback is a flat base plus percentile-band bonuses on top; separation comes from an unlock gate and scarce wave slots; timing comes from 10% interest. No money moves between players. Detail in [§3](#one-purse--restored-6-august-2026) |
+| 2 | ~~Is there a shared, public baseline wave?~~ ~~What is on the variance anchor schedule?~~ **✅ Decided** | **Resolved 7 August 2026 by [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** Anchors at waves 3, 6 and 9; at each, three game changer creeps join that round's public offering and the player takes one thing from the merged list. Offense only, no repeats, escalating, with exactly one hard-counter anchor at wave 9 — *softened to a **steep** counter, 4.00×, by [#75](https://github.com/ssalter21/tower-defense-game/issues/75)*. The schedule's **shape** is fixed per rotation and its **filling** is drawn per run. Wave slots widen on the same cadence: 2,2,3,3,3,4,4,4,5,5. Detail in [§3](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) |
+| 3 | ~~What is a run?~~ **✅ Decided** | **Resolved 7 August 2026 by [#74](https://github.com/ssalter21/tower-defense-game/issues/74).** Ten waves, each resolved against a field of ten, ending at zero health or the tenth wave. Health is denominated in gold and cannot be repaired; damage is the field average; ranking is waves survived then health remaining; the outcome is a vector of per-round `(dealt, taken)` pairs. Detail in [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) |
+| 4 | ~~How wide is the damage-type matrix, and what is the armour formula?~~ **✅ Decided** | **Resolved 7 August 2026 by [#75](https://github.com/ssalter21/tower-defense-game/issues/75).** A 3×3 Latin square with cells in {70, 100, 140} — a 2:1 spread — and `dealt = (base + bonus) × cell / (100 + armour)`, floor 1. `k` folds to 1, so one point of armour is one percent of base effective health. Hard counters live on a separate `bonusVsTag` layer, which is why the matrix could stay narrow. **Every damage and health number in the game is multiplied by ten**, because integer resolution is bought with the size of the numbers. Detail in [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) |
+| 5 | ~~What does the player get to compute before they commit, and what does it cost them?~~ **✅ Decided** | **Resolved 7 August 2026 by [#76](https://github.com/ssalter21/tower-defense-game/issues/76).** **Nothing is forecast.** Mechanism is free, total and always on; outcome is not computed at all, in any mode, free or paid — the offense least of all. The one pre-commit channel is **scouting incoming waves**: free in the lobby as of the previous round, ten free snapshots per run in the round-robin and gold beyond. The simulator's home is the **retrospective**, which is free, unlimited and exact. Detail in [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026) |
+
+> **All five are now decided**, and the [map](https://github.com/ssalter21/tower-defense-game/issues/70) that
+> carried them has reached its destination. Step 1 is unblocked. **Two obligations fall out of question 5 and
+> belong to the execution effort:** the cost column needs a **non-unit line item**, because a scouting snapshot
+> beyond the free ten is bought with gold out of the one purse; and the **free-snapshot count and the price
+> beyond it are step 4 sweep parameters**, not constants — ten is a starting point, not a decision.
 
 ### The nine seams, and where they land
 
@@ -679,8 +956,9 @@ was not there before — which is exactly the thing a seam map is supposed to no
 
 ### 1 · The match format — *its first half is steps 1 to 3*
 
-What one wave actually is. Two boards resolving at once, two purses and their cross-feed, the build-phase rhythm, what a build phase
-offers, how a wave is composed, what a wave is worth and what winning one means.
+What one wave actually is. Two boards resolving at once, the build-phase rhythm, what a build phase
+offers, how a wave is composed, what a wave is worth and what winning one means. *(The economy is no longer
+part of this list — [§3](#one-purse--restored-6-august-2026) settled it.)*
 
 It also owns the **shape of the depth** from [§3](#3-what-a-match-is), and that is the larger half of it: what
 the combination system actually is, whether the creep pool is gated on your towers and how, whether send order
@@ -695,11 +973,14 @@ build the smallest ruleset that can be played, at a standard where being wrong c
 It remains the cheapest seam to be wrong about now and the most expensive later, and it needs no server, no art
 and no friends to answer.
 
-**All research notes have landed**, so it is ready to chart. Each ends with ranked candidate directions and
-none of them decides anything — that is deliberate, and it is seam 1's to do. It inherits four obligations
-they surfaced: cross-feed the two purses, spend the computed-balance budget knowingly, decide the variance
-anchor schedule, and **decide what the player may compute before committing and what it costs them**. The
-first, third and fourth are now [step 1's blocking decisions](#the-four-decisions-that-block-step-1).
+**All three research notes have landed**, so it is ready to chart. Each note ends with two or three ranked
+candidate directions and none of them decides anything — that is deliberate, and it is seam 1's to do. It
+inherits three obligations they surfaced: make attacking pay for itself, spend the
+computed-balance budget knowingly, and decide whether there is a baseline wave at all. The first and third were
+[step 1's blocking decisions](#the-five-decisions-that-block-step-1) — **and both are now discharged**, the
+first by [§3's one purse](#one-purse--restored-6-august-2026) and the third by
+[§3's anchor schedule](#three-anchors-a-shape-and-a-filling--decided-7-august-2026). Only the
+computed-balance budget is still seam 1's to spend.
 
 > **One reconciliation is new and belongs to nobody else.** [§3](#3-what-a-match-is) now holds two ideas that
 > pull against each other: *your defense decides your offense* — a private, tower-gated creep pool — and
@@ -751,11 +1032,32 @@ Constrained hard by [§4](#4-what-persists): nothing is unlocked, so **every uni
 first run** — and by [§6](#6-what-it-looks-like), because a unit whose role cannot be read off its silhouette
 fails the accessibility pillar however well it plays.
 
+**And now by [the anchor schedule](#three-anchors-a-shape-and-a-filling--decided-7-august-2026), in two ways it
+does not get to argue with.** *Added 7 August 2026.* First, a **counter must exist and be purchasable strictly
+before the anchor that needs it** — a roster where the answer to wave 9 first appears at wave 9 turns
+preparation into a forced buy and deletes the axis the schedule was built to restore. Second, the schedule
+signs a content bill: **nine game changer creeps per shape**, tiered across the three anchors, of which one per
+shape must open a genuine counter rather than an extreme stat. That is on top of the flat roster step 3
+builds, and it is the first place the roster's size is set by something other than taste.
+
+**And a third, from [question 4](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026).**
+*Added 7 August 2026.* Every unit the roster authors now carries an **attack type or an armour type** from a
+fixed three-way cycle, and a counter is a **`bonusVsTag` integer** rather than an immunity. Two consequences
+the roster does not get to argue with: the wave-9 anchor's counter is **steep, not absolute** — four times
+faster to kill, never impossible — and **every damage and health number is authored at ten times the scale the
+skeleton shipped**, because integer resolution is bought with the size of the numbers.
+
 ### 4 · The balance harness — *pulled forward to step 4*
 
 The tool, and the definitions underneath it. What a sweep is, what it measures, what a red cell means, what
-"cost-efficient" is in a two-purse economy, and how the harness's verdict gets back into `content/` without
-invalidating a pool of stored ghosts.
+"cost-efficient" is in a one-purse economy where a unit competes with a tower, a wave slot and 10% interest all
+at once, and how the harness's verdict gets back into `content/` without invalidating a pool of stored ghosts.
+
+**It also owes step 1 a debt it does not obviously owe.** The percentile bands in
+[§3](#one-purse--restored-6-august-2026) are measured against a field, and there is no field until step 6 — so
+**the sweep's canned set is what the economy measures against in the meantime.** That makes the harness part of
+the economy rather than a tool pointed at it: what a wave earns for how it did is decided by a file in the
+harness's own content, and pointing the pool somewhere else is what changes it.
 
 **It used to depend on seams 1 and 3 and now it does not wait for either.** The measurement in
 [§5](#5-how-it-is-balanced) is why: at 2.75 ms a match, a sweep is a minute of compute, so the harness is a
@@ -809,7 +1111,11 @@ conversation.
 ### 7 · The interface
 
 The hardest unsolved problem in the design, and [§6's](#6-what-it-looks-like) accessibility pillar makes it
-harder still. Two live battles, one economy, a build menu, and a readable account of what the opponent just did
+harder still. **Harder again since 7 August 2026**, because a round now resolves against
+[a field of ten](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026) rather than one opponent —
+so *what the player watches at all* is the seam's largest open question, and this document does not answer it.
+Twenty resolutions cannot each be watched, and a round that is only ever summarised is a round nobody sees.
+Two live battles, one economy, a build menu, and a readable account of what the opponent just did
 — on one screen, legible at a glance, to somebody who has never played it, with **no unlock ramp available to
 stagger the options**. Includes the faction-colour scheme, which is as much an information-design decision as
 an art one, and the presentation of whatever combination system seam 1 chooses — a combinatorial build space
@@ -818,11 +1124,20 @@ that cannot be read is a menu with extra steps.
 > **This seam grew more than any other on 6 August 2026, and it should probably be split.**
 > [§12](#12-the-planning-phase-is-the-game) makes the build phase the main event, which puts the entire
 > planning surface here: range and elevation overlays, damage previews, the purchase shown against what it
-> replaces, the forecast and whatever it costs, the scouting view in the lobby, the post-run dashboard and the
+> replaces, the scouting view in the lobby, the post-run dashboard and the
 > retrospective review. That is not the same problem as *reading two boards at once*. One is information
 > design for a decision; the other is legibility under simultaneity. **They share a screen and nothing else**,
 > and a map that tries to hold both will do neither well. The natural cut is *the planning surface* and *the
 > watching surface*, and it is worth taking before either is charted.
+
+**And it inherits the whole of the post-round surface** — *added 7 August 2026 by
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76).* With no forecast anywhere in the planning
+phase, the retrospective is where the simulation's value is actually delivered to a player, and three things
+now land here rather than in §12's direction: the **computed highlight reel** that makes a field of 100+
+watchable at all, the **stats and histogram** that turn a result into a comparison, and the deferred **kill
+heatmap** that is the leading candidate for the game's paid predictor. That is a promotion, not a footnote:
+the seam that was hardest because of what happens *during* a round is now also carrying most of what happens
+*after* one.
 
 ### 8 · The presentation
 
@@ -882,7 +1197,7 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 | **I** — whole document | Commercial viability is the question | **Superseded.** Not a commercial product. The market analysis is background, not a constraint. |
 | **II** — the async argument | Async is justified by the 830-player synchronous ceiling | **Reason replaced, conclusion kept.** Async is justified by schedule mismatch. True at three players. |
 | **II §3** — defense feels meaningless | Fix it with cross-fed currencies, per Supercell | **Not adopted.** Both boards are live every round, so nothing needs cross-feeding. One purse. |
-| **II §3** — matching axis | Match on progression state first, rating second | **Sharpened.** The draw is per *wave*, at the matching stage — so it is the only matching axis that exists. |
+| **II §3** — matching axis | Match on progression state first, rating second | **Sharpened twice.** The draw is per *round*, at the matching stage — so it is the only matching axis that exists — and since 7 Aug 2026 it draws a **field of ten** rather than one. |
 | **II §5** — UGC discovery | Curation is a feature, not a backlog item | **Does not apply.** Opponents are drawn, never browsed. No discovery surface exists to get wrong. |
 | **II §6** — build order | Private friend lobbies are step 7, the one synchronous mode | **Promoted and reclassified.** The lobby is not synchronous and is not last; it is the same loop at low latency. |
 | **III** — networking | No realtime networking | **Stands, for a new reason.** Live PvP is in scope and still needs none — a build phase with a barrier is a turn. |
@@ -891,34 +1206,74 @@ Read against Parts I to V, so nothing below is left standing where it has been r
 | **IV** — can the dev rig and animate? | The KayKit-versus-Synty recommendation turns on this | **Closed by irrelevance.** KayKit ships animations; the question only mattered for Synty. |
 | **V** — the unit schema | One unit, two roles; levers as components; versioned vocabulary | **Stands, and is now load-bearing.** Seam 3 fills it in. |
 
-### And what this document overturns in itself
+The five live in [`archive/`](archive/) and each carries a banner saying what survived it.
 
-Three claims made above were written before the walking skeleton existed, and reading the finished skeleton
-changed them. Recorded here rather than quietly edited, because a standing document that revises itself
-silently is one nobody can trust the age of.
+### And where this document has changed its own mind
 
-| Where | What it said | What is true now |
-|---|---|---|
-| **§5** — the harness | Sweep thousands of matches **overnight** | **Off by orders of magnitude.** `BudgetTests` measures the committed match at 2.75 ms — ~360 matches a second on one core. A sweep is a minute, so the harness is a `simcli` mode and a CSV, and it moves *before* the roster instead of after it. |
-| **§8** — the seams | Eight seams ordered by what depends on what; the match format decided in full first | **Reordered, not repealed.** A dependency order does not say what is cheapest to *learn*, and the one untested claim in the whole design is that this is fun. The seams stand as destinations; the sequence in §8 is how they are approached. |
-| **§8 seam 4** — the harness again | Depends on seams 1 and 3 | **Independent of both.** It needs a purse and a roster of any size, not a finished ruleset. |
+**In [the decision log](decision-log.md)**, which is where every reversal is recorded rather than quietly
+edited away — including the six of 6 August 2026 that brought back the maze, made the map generated and
+rotating, anchored wave variance, made the offering public, stopped the round-robin showing you a board, and
+took the purse to two and back again inside a day.
 
-### And what was reversed on 6 August 2026
+It is a separate file for one reason: it grows every time a decision moves, and this document should not.
 
-Six changes, made after [the skill note](research/fun-and-skill-expression.html) audited which of the genre's
-skill axes this design could still charge the player for. Four of the six exist to buy back an axis the design
-had deleted or inverted.
+### And what was reversed on 7 August 2026
+
+One change, and it is a structural one. It came out of
+[#74](https://github.com/ssalter21/tower-defense-game/issues/74) — a ticket asking only *what is a run* — which
+is worth noting, because the reversal was not the question being asked.
 
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
-| **§3** — one purse | A single currency; the sharp decision the game is built around | **Reversed. Two purses**, and the cross-feed between them is the new open question | A purchase that only subtracts has no timing question attached, and timing is what players practise |
-| **§3 / §11** — the corridor | One hex wide, never branches; mazing and pathfinding permanently out of scope | **Reversed. A maze, deliberately hard to solve, at several elevation levels**, with elevation granting range | Geometry is the axis the genre was popularised on, and it was the largest deletion in the design |
-| **§3** — send ordering | Rescued by the corridor, which *is* a single-file column | **Weakened, not repealed.** A branching map dilutes order; the map must now be designed to preserve it | Consequence of the reversal above, recorded rather than discovered later |
-| **§3** — wave composition | The player composes the whole wave; a baseline wave was an open question | **Anchored.** A public schedule injects major variance at fixed, known waves | Without a public constant, preparation had nothing to be a skill about |
-| **§3** — the offering | Not specified; the depth research ranked a private random offering third | **Public. Everyone sees the same options**, Mechabellum-style | A send is only a read if both players know the menu — and it makes the shop a second-order decision |
-| **§2 / §3** — the async ghost | Opponents are drawn and their stored defense is what you compose against | **The round-robin no longer shows you a board.** It pays you in statistics over the field instead | A frozen defense cannot react or lie, so inspecting it produces a lookup rather than a read |
-| **§2 / §3** — the map | One authored corridor, implicitly permanent | **Generated, and rotating daily or weekly**, selected by sweeping candidates for outcome spread | A hard map buys time; an unseen one buys it permanently — and the harness can already measure which is which |
-| **Bottom line** | "the creeps you can send determined by the towers you chose" | **Dropped from the bottom line, still live in §3 as a direction.** A public shared offering is in tension with a private tower-gated pool, and seam 1 now owns the reconciliation | Recorded rather than silently cut |
+| **§2** — the round-robin draw | A different stored defense **every wave**; ten opponents per run | **A field of ten every round.** Ten rounds against ten opponents each, with the round's result taken as the **average** across the field | The one-draw-per-wave rule was carrying the whole variance-control argument on ten samples across an entire run. Averaging ten *per round* does that job far harder — a bad matchup becomes a rounding error rather than a dent |
+
+**Two things this nearly broke, and how each was closed:**
+
+- **Mode symmetry.** In a lobby your wave is one of the ten in everybody else's field, so it takes real health
+  off real players; in round-robin the ten are stored ghosts, and a ghost has no run to lose. Same machine,
+  different consequence — precisely what [§2's](#2-the-loop--one-machine-at-three-latencies) *one machine at
+  three latencies* exists to preclude. **Closed by storing your wave and letting it enter other players' fields
+  later**, identically in all three modes: in a lobby that lands within the round, in round-robin whenever you
+  are drawn. Symmetry is restored across *time* instead of within a round, and it costs nothing, because a
+  stored wave and a stored defense are the same kind of object the pool already holds.
+- **The interface.** [Seam 7](#7--the-interface) was already the hardest unsolved problem in the design at two
+  boards. It is now twenty. **Not closed** — recorded, and handed to the seam.
+
+**And one thing that got quietly better.** [§12's](#12-the-planning-phase-is-the-game) argument that the honest
+answer to *"will this wave work"* is a **distribution rather than a result** stops being an aspiration and
+becomes the literal shape of the data: the field of ten *is* the distribution, and it exists every round rather
+than being assembled out of a pool.
+
+**One amendment the same day, and it is not a reversal.**
+[#75](https://github.com/ssalter21/tower-defense-game/issues/75) softened
+[#73's](https://github.com/ssalter21/tower-defense-game/issues/73) *hard* counter at wave 9 to a **steep** one —
+4.00×, not infinite — by declining a binary damage gate and putting counters on a `bonusVsTag` layer instead.
+Recorded here rather than in the table above because nothing was overturned: the anchor schedule stands exactly
+as decided, and what changed is the strength of one thing it requires. It is listed because it makes a claim
+about the whole ruleset that is easier to see across three decisions than inside any one of them — **nothing
+here is binary.** Not the type chart, not the counter, not the damage floor. A player who reads the round wrong
+is punished at a steep rate and keeps playing, which is the same bargain the round-robin strikes over a bad
+draw.
+
+**A second amendment the same day, and it narrows rather than overturns.**
+[#76](https://github.com/ssalter21/tower-defense-game/issues/76) settled two things
+[§3's mode table](#what-you-see-of-your-opponent-depends-on-the-mode-and-that-is-deliberate) had left as a
+choice or stated absolutely:
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§3** — the lobby's scouting | The opponent's defense is shown "**live, or** as of the previous round" | **As of the previous round only.** What they are building now is never shown, in any mode |
+| **§3** — the round-robin | "**In the round-robin you cannot** [scout]" | You cannot scout a **defense**. You can buy snapshots of the **waves** being sent at your stage — ten free per run, gold beyond |
+
+Neither disturbs [the skill note's](research/fun-and-skill-expression.html) finding, which is the reason that
+sentence was absolute in the first place: the defect it names is that a *frozen defense* is fully inspectable
+and therefore degrades reading an opponent into a lookup. A wave is a composition rather than a board, so it
+does not have that property, and the stale board prices *change* rather than revealing truth.
+
+**And what the same ticket declined is the larger statement.** §12 was written as an argument that a
+2.75 ms simulation should be spent making the plan phase answer questions. It is now spent on **rules and
+retrospect instead of prediction** — no forecast exists at all — which is a smaller planning surface and a much
+larger post-round one than this document originally imagined.
 
 ---
 
@@ -926,9 +1281,9 @@ had deleted or inverted.
 
 In scope, headed toward the destination, not yet sharp enough to seam.
 
-### Research in flight
-
 ### Research landed
+
+**Nothing is in flight.** Every note commissioned against this section has come back.
 
 Three notes were commissioned against [§3's](#3-what-a-match-is) depth direction and the open question below.
 **All three are in.** They are decision inputs for seams 1, 3 and 7, and the match-format session is now
@@ -938,17 +1293,19 @@ unblocked.
 |---|---|
 | ✅ **[Build depth](research/build-depth-in-tower-defense.md)** — *landed* | How TD games produce combinatorial depth. Verdict: two structurally different routes, and **only the generative one is simultaneously a depth mechanism, an accessibility mechanism, and enumerable by the harness**. The corridor kills **one of eleven** mechanisms, far less than feared; what "nothing persists" removes is the onboarding ramp, and the fix is to move it *inside the run* |
 | ✅ **[The attacking half](research/attack-composition-and-sending.md)** — *landed* | How sending is made deep. Verdict: seven mechanisms, five survive, **ordering is *strengthened* by the hex corridor**, and the income loop the genre is built on is the one the single purse takes away. The gating idea has **one thin precedent, since removed** |
-| ✅ **[Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html)** — *landed 6 Aug 2026* | Why the genre is fun, and where its skill expression lives. Verdict: six fun mechanisms, each of which **inverts into a known failure mode**; skill comes from **eight axes**, of which this design was deleting two, inverting one and leaving a fourth unanchored. **Four of the six reversals recorded in [§9](#and-what-was-reversed-on-6-august-2026) are answers to this note** |
+| ✅ **[Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html)** — *landed 6 Aug 2026* | Why the genre is fun, and where its skill expression lives. Verdict: six fun mechanisms, each of which **inverts into a known failure mode**; skill comes from **eight axes**, of which this design was deleting two, inverting one and leaving a fourth unanchored. **Four of the six reversals recorded in [the decision log](decision-log.md#6-august-2026--six-reversals) are answers to this note** |
 | ✅ **[Making the plan the game](research/planning-phase-and-simulated-stats.html)** — *landed 6 Aug 2026* | How to elevate the build phase, and what a fast deterministic sim can be spent on as design material rather than as tooling. The direction it feeds is [§12](#12-the-planning-phase-is-the-game) |
 | ✅ **[Towers, or placed squads?](research/towers-versus-placed-squads.md)** — *landed* | The open question below. Verdict: the aesthetic half is free and mostly already decided by Part IV §5; the mechanical half is one number, projectile volume, and it lands on `FlyProjectiles` rather than on target acquisition |
 
 ### The open questions
 
-> **Three of these are no longer unscheduled — they block step 1.** *How wide the damage-type matrix is*,
-> *what a run is*, and *whether there is a baseline wave* are marked **→ blocks step 1** below, and appear as a
-> checklist alongside the cross-feed question from [§3](#two-purses--reversed-6-august-2026) in
-> [§8's four decisions](#the-four-decisions-that-block-step-1). **The detail stays here** and the checklist
+> **Three of these were no longer unscheduled — they blocked step 1, and all three are now closed.** *How wide
+> the damage-type matrix is*, *what a run is*, and *whether there is a baseline wave* appeared as a checklist
+> alongside the settled economy question from [§3](#one-purse--restored-6-august-2026) in
+> [§8's five decisions](#the-five-decisions-that-block-step-1). **The detail stays here** and the checklist
 > there points back to it, so there is one description of each question and not two that can drift apart.
+> **All five closed on 7 August 2026**, the last of them being what the player gets to compute before they
+> commit.
 
 - **Does the defending side have to be towers?** The alternative floated: **walls flanking the path as a
   placement surface** — archers on a rampart running alongside the corridor — with squads that shoot, upgrade
@@ -991,24 +1348,51 @@ unblocked.
 - **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
   loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
   is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
-- **How wide the damage-type matrix should be, and what the armour formula is.** **→ blocks step 1.** Carried forward from Part V
-  §4.1, still open, still cheap to set on paper. Legion TD 2 runs 1.67:1, Element TD 2 runs 4:1, Warcraft 3
-  runs 40:1. Belongs to seam 3 or 4 when one of them reaches it — but the squad research has already
-  constrained it from an unexpected direction: **many-small-hits is punished quadratically by flat-subtraction
-  armour**, so that formula should be ruled out if squads exist at all, and the same finding argues for the
-  narrow end of the matrix. A presentation choice reaching back into the damage model is exactly the kind of
-  coupling seam 1 exists to catch early.
-- **What a run is.** **→ blocks step 1.** How many waves, how long a session lasts, and whether a run ends in a
-  loss condition or simply ends. Touched by seam 1 but may outgrow it. Step 2 cannot be built without at least
-  a provisional answer, since "N waves" is the thing it makes real.
+- ~~**How wide the damage-type matrix should be, and what the armour formula is.**~~ **Closed 7 August 2026 by
+  [#75](https://github.com/ssalter21/tower-defense-game/issues/75) — a 3×3 Latin square at 2:1, and
+  `dealt = (base + bonus) × cell / (100 + armour)` with every number ×10.** See
+  [§3](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026). Carried since Part V §4.1, and
+  it turned out to be the one question on the list that **arithmetic answered rather than argument**: Warcraft
+  3's 40:1 is impossible in an integer sim rather than merely violent, and flat subtraction is out with a
+  number attached. The squad research's steer — *lean narrow* — was followed, and the constraint that seemed to
+  oppose it (the anchor schedule needing a hard counter) turned out to be aimed at the wrong layer. What it
+  left open, and deliberately:
+  - **Which towers carry which attack type, and which creeps which armour type.** Content, and seam 3's. With
+    four unit types today the assignment is trivial and provisional.
+  - **The `bonusVsTag` magnitude per anchor.** 4.00× is a measured example, not a tuned value; it is a step 4
+    sweep target.
+- ~~**What a run is.**~~ **Closed 7 August 2026 by
+  [#74](https://github.com/ssalter21/tower-defense-game/issues/74) — ten waves, a field of ten each round, a
+  gold-denominated health pool, and death.** See
+  [§3](#a-run-is-ten-waves-and-health-is-money--decided-7-august-2026). What it left open, and deliberately:
+  **the gamble** — opting out of the field average to face a single opponent drawn from the distribution,
+  possibly choosing where in the distribution to draw from. It is the antidote to averaging making every round
+  tend toward the mean, and best-of-ten is its natural payoff. Not decidable before a real field exists at
+  step 6.
+- ~~**What the player gets to compute before they commit, and what it costs them.**~~ **Closed 7 August 2026 by
+  [#76](https://github.com/ssalter21/tower-defense-game/issues/76) — nothing is forecast.** Mechanism is free
+  and total, outcome is not computed at all, and the only pre-commit channel is scouting **incoming waves**:
+  free in the lobby as of the previous round, ten free snapshots per run in the round-robin, gold beyond. The
+  simulator's home is the retrospective. See
+  [§12](#what-the-player-may-compute-before-committing--decided-7-august-2026). Two things it left open, and
+  deliberately:
+  - **The paid predictor.** Named so it is not reinvented: an **average heatmap of where creeps died, layered
+    onto your own build**, aggregated over the simulated games. It needs per-cell kill attribution and a board
+    to draw on, so it is [seam 7](#7--the-interface) and [seam 8](#8--the-presentation) rather than paperwork —
+    and it is explicitly a thing to feel out in play rather than settle on paper. Until it exists, the
+    round-robin's gold sink beyond ten snapshots is the only paid information in the game.
+  - **The free-snapshot count and the price beyond it.** Ten is a starting point. Both are step 4 sweep
+    parameters, and the snapshot price is the first non-unit line in the cost column.
 
 - ~~**Whether there is a baseline wave at all — a risk no surveyed game carries.**~~ **Closed 6 August 2026 —
   there is a public constant, and it is [the variance anchor schedule](#wave-variance-is-anchored-not-emergent)
   rather than a baseline wave.** An anchor supplies what a baseline was wanted for — something for a send, and
   a newcomer, to be read against — without also supplying the content of the wave, which is the part the
-  player is meant to author. What remains open is *which* waves and *which* events, which is now question 2 on
-  [the step 1 checklist](#the-four-decisions-that-block-step-1). The original statement of the problem is kept
-  below because the reasoning is what justifies the anchor.
+  player is meant to author. **Fully closed 7 August 2026 by
+  [#73](https://github.com/ssalter21/tower-defense-game/issues/73)** — the waves are 3, 6 and 9 and the events
+  are game changer creeps entering that round's merged offering, in
+  [a shape that holds per rotation and a filling drawn per run](#three-anchors-a-shape-and-a-filling--decided-7-august-2026).
+  The original statement of the problem is kept below because the reasoning is what justifies the anchor.
 
   In Legion TD 2 the wave is a
   memorised public constant, which is exactly what makes a sent mercenary legible: it is *the part that is not
@@ -1025,13 +1409,32 @@ unblocked.
   being solved before it turns over. **The three candidate answers are in
   [§3](#the-map-rotates-and-it-is-generated)**; the note that surveys them is
   [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking
-  until step 6, since nothing before that reads a pool at all.
+  until step 6, since nothing before that reads a pool at all. ⚠️ **Raised 7 August 2026: the rotation now
+  carries more than the map.** [#73](https://github.com/ssalter21/tower-defense-game/issues/73) put the
+  [anchor schedule's *shape*](#three-anchors-a-shape-and-a-filling--decided-7-august-2026) on the same clock,
+  so a cadence choice now sets how long a *preparation* problem stays learnable as well as how long a map does.
+  The two want the same answer — long enough to learn — which is a mild argument for slow, and one more thing
+  the cadence decision has to be right about.
+
+- **Whether a run carries a modifier, and what one would be.** **Added 7 August 2026 by
+  [#73](https://github.com/ssalter21/tower-defense-game/issues/73).** A per-run mutator drawn at run start,
+  changing one rule for the whole run — the standard roguelike lever, and the obvious next source of variety
+  once the map, the shape and the filling have each been placed on their own clock. Deliberately not opened:
+  the field of ten is already the primary replay engine, since your ten opponents differ every run and what
+  works therefore differs every run. A modifier pool is a whole system — balance interactions with everything
+  else, and a step 4 sweep that gains a dimension per modifier — and none of it is needed to say what the
+  anchor schedule is.
 - **How big the map archive has to be, and whether a map may ever repeat.** A generator plus a sweep produces
   an archive; a scheduler draws from it. Whether the archive is large enough that no player sees a map twice,
   or small enough that maps become known quantities with a metagame, is a design choice and not a capacity
   one — and it is the same lever as the cadence, viewed from the other end.
 - **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those
   are one ladder or two is unresolved.
+- **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** Raised in
+  [Part III](archive/tech-stack-assessment.md) and never closed. **Current assumption: no — C# throughout.**
+  It bears on [seam 6](#6--the-social-layer), since a replay you can send someone who does not have the game is
+  a different artefact from one you watch in the client. Recorded here because it was the last open question
+  living outside this section.
 
 ## 11. Out of scope
 
@@ -1086,6 +1489,13 @@ community plans in an offline calculator because it is better than the game's ow
 histograms, which turn a finished solution into a comparison; Football Manager, whose match is watched rather
 than played; and Into the Breach, which gives away the enemy's next move on purpose.
 
+> ⚠️ **The order of that list was wrong, and [#76](https://github.com/ssalter21/tower-defense-game/issues/76)
+> reordered it on 7 August 2026.** Path of Building was named first and it is the model this section
+> *declines*: the planning phase is not a calculator, and it forecasts nothing by default. **Football Manager
+> and the Zachtronics histogram are the model** — the match is watched, and the analysis lands *after* it. The
+> budget below is still spent on the plan phase; it is spent on making the **rules** legible and the
+> **retrospective** rich, not on predicting the result.
+
 ### Two things this buys, stated as direction
 
 **The plan phase should sing.** Perfect information about *mechanism* is a feature, not a leak — Into the
@@ -1093,6 +1503,12 @@ Breach telegraphs every enemy attack precisely so that failure belongs to the pl
 Range overlays, damage previews, the arithmetic done for you, the thing you are about to buy shown against the
 thing it replaces: none of that reduces the decision, and all of it moves the difficulty from *arithmetic* to
 *judgement*, which is where it should be.
+
+> **"Damage previews" means one shot, not one round** — *clarified 7 August 2026 by
+> [#76](https://github.com/ssalter21/tower-defense-game/issues/76).* Showing what
+> [the fused expression](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) does to a
+> given target is mechanism and it is free. Showing what your *wave* will do to a *field* is a forecast, and
+> there is no such thing in this game.
 
 **The stats the sim can compute are game design material, not a debug menu.** A run against a hundred stored
 defenses is under a second of compute. That is a mechanic, a reward structure and a presentation layer that no
@@ -1139,8 +1555,56 @@ tower defense has because no tower defense could afford it:
 > the field, not from hidden state or dice** — which is the only form of it compatible with a deterministic,
 > re-simulable, cheat-proof game.
 >
-> Whatever else seam 1 grants the player, the forecast must stay *partial, sampled, or paid for*. That is
-> [question 5 on the step 1 checklist](#the-four-decisions-that-block-step-1).
+> Whatever else seam 1 grants the player, the forecast must stay *partial, sampled, or paid for*. That was
+> [question 5 on the step 1 checklist](#the-five-decisions-that-block-step-1), and it is **answered below**
+> — considerably more starkly than this paragraph anticipated. There is no forecast at all.
+
+### What the player may compute before committing — *decided 7 August 2026*
+
+**Nothing is forecast.** The planning surface exposes the rules completely and predicts nothing, in any mode,
+free or paid. Decided by [#76](https://github.com/ssalter21/tower-defense-game/issues/76), the last of
+[the five decisions that block step 1](#the-five-decisions-that-block-step-1).
+
+**Mechanism is free, total and always on.** Range overlays, costs, interest, the offering, and the
+[fused expression](#how-a-shot-resolves--a-cycle-and-one-expression--decided-7-august-2026) evaluated live for
+any attacker against any target. This is Into the Breach's calibration — perfect information about *rules*,
+none about *outcome* — and hiding any of it would only tax the players who do not keep a spreadsheet.
+
+**Outcome is not computed at all.** No preview, no dummy defense, no distribution, no band, no number that
+predicts a result. **The offense in particular gets nothing**: a wave is composed from the rules and from
+memory, which gives the two halves genuinely different textures — the defense is engineering, the offense is
+judgement.
+
+**The one pre-commit information channel is scouting, and it shows incoming waves.** Free in the lobby (the
+previous round's board, [never live](#what-you-see-of-your-opponent-depends-on-the-mode-and-that-is-deliberate));
+in the round-robin, **ten snapshots free per run and gold for any beyond that**. It is one mechanic at three
+latencies — pay to reduce the blur on what you are facing — and only the source of the blur changes.
+
+**The simulator's home is the retrospective.** After a round, analysis is free, unlimited and exact against the
+real field: the waves that hit you are viewable in full, and re-running the match with one purchase changed is
+2.75 ms. **The direction is a field of 100+ with a computed highlight reel and stats in place of manual
+review** — nobody watches a hundred matches, they watch the three that came down to one unit. That raises `K`,
+which [#74](https://github.com/ssalter21/tower-defense-game/issues/74) already made a parameter rather than a
+constant, so nothing needs reopening.
+
+**Two findings this rests on, both of which constrain anything built later:**
+
+- **The price can only be charged on data, never on compute.** The simulation is deterministic, records store
+  inputs, and a match is 2.75 ms — so anything the client holds the *data* for, a third-party calculator
+  computes for free regardless of what the game charges. Query caps and per-simulation fees are unenforceable
+  by construction. What the server can withhold is the **pool**, and that is where every real lever in this
+  question turned out to be.
+- **Roughness has to come from unknown inputs, never from fuzzed arithmetic.** Your own towers are client-side,
+  so an external tool resolves them exactly against any *specified* wave. A prediction is only honestly rough
+  when the player does not know which waves are coming — which is the same structural trick as drawing the
+  field after the commit, and the reason a paid predictor must sell **information** rather than precision.
+
+> **Deferred, and named so it is not reinvented: the paid predictor.** The candidate is an **average heatmap of
+> where creeps died, layered onto your own build** — aggregated over the simulated games, showing which parts
+> of a defense are doing work and which are dead weight. It is not specced here. It needs per-cell kill
+> attribution aggregated across a field and rendered onto a board, which is [seam 7](#7--the-interface) and
+> [seam 8](#8--the-presentation) work, and steps 1 to 4 have no interface at all. **It is also the kind of
+> thing to be felt out in play rather than argued about on paper.**
 
 ---
 
@@ -1148,8 +1612,8 @@ tower defense has because no tower defense could afford it:
 
 Everything factual here is either established in Parts I to V, verifiable in this repository, or listed below.
 
-1. **Parts I–V** — [`docs/`](README.md). Their claims are inherited except where [§9](#9-what-this-overturns)
-   replaces them.
+1. **Parts I–V** — [`docs/archive/`](archive/). Their claims are inherited except where
+   [§9](#9-what-this-overturns) replaces them.
 2. **This repository** — `sim/` (deterministic Fix64 simulation, hex map, ghost record), `simcli/`,
    `client/Assets/` (Unity 6 URP view, KayKit imports), `tools/` (headless entry points),
    [`docs/sit-down.md`](sit-down.md). The walking skeleton is landed on `main`.
@@ -1158,30 +1622,31 @@ Everything factual here is either established in Parts I to V, verifiable in thi
    [#56](https://github.com/ssalter21/tower-defense-game/issues/56).
 4. **CC0 1.0** — [Creative Commons deed](https://creativecommons.org/publicdomain/zero/1.0/): copy, modify,
    distribute and perform, including commercially, without permission.
-5. **Legion TD 2** — the both-boards-at-once match structure, and the two-currency cross-feed that
-   [§3](#two-purses--reversed-6-august-2026) now takes as its model.
+5. **Legion TD 2** — the both-boards-at-once match structure, and the two-currency loop whose *problem
+   statement* [§3](#one-purse--restored-6-august-2026) adopts even though it declines the solution: attacking
+   must pay you back.
 6. **Element TD** (Warcraft 3 mod) — the named reference for §3's combinatorial build depth. Its element
    combination system is the target class of depth, not a specification. Under research.
 7. **Bloons TD 6** — the standing proof that legible-to-a-child and competitively deep are compatible, which
    §6's accessibility pillar depends on being true. Under research.
-6. **Super Auto Pets / Backpack Battles** — the per-round draw against a snapshot at the same stage, and the
+8. **Super Auto Pets / Backpack Battles** — the per-round draw against a snapshot at the same stage, and the
    AI-fill answer to an empty pool.
-7. **Supercell** — "Builder Base 2: Balancing Attacking, Defending and Builders", the source of the
+9. **Supercell** — "Builder Base 2: Balancing Attacking, Defending and Builders", the source of the
    defense-feels-meaningless finding this document answers differently.
-8. **Slay the Spire daily** — the nothing-persists-but-rating model.
+10. **Slay the Spire daily** — the nothing-persists-but-rating model.
 
 Added 6 August 2026, for the reversals in [§3](#3-what-a-match-is) and the direction in
 [§12](#12-the-planning-phase-is-the-game). Each is surveyed properly in
 [Making the plan the game](research/planning-phase-and-simulated-stats.html) and
 [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html).
 
-9. **Mechabellum** — the public shared offering. Its reinforcements are the same on both sides, which is what
-   makes the shop a mind game rather than a private draw.
-10. **Teamfight Tactics** — between-round scouting as the loop the live lobby is modelled on.
-11. **Zachtronics** (SpaceChem, Opus Magnum) — histograms instead of leaderboards, and competing optimisation
+11. **Mechabellum** — the public shared offering. Its reinforcements are the same on both sides, which is what
+    makes the shop a mind game rather than a private draw.
+12. **Teamfight Tactics** — between-round scouting as the loop the live lobby is modelled on.
+13. **Zachtronics** (SpaceChem, Opus Magnum) — histograms instead of leaderboards, and competing optimisation
     metrics as a deliberate tension. The source of the best-and-average reward shape.
-12. **Into the Breach** — perfect information about mechanism, never about outcome. The safety rail on §12.
-13. **Path of Building** — the community's offline planner for Path of Exile, and the standing evidence that a
+14. **Into the Breach** — perfect information about mechanism, never about outcome. The safety rail on §12.
+15. **Path of Building** — the community's offline planner for Path of Exile, and the standing evidence that a
     planning tool can be the part of a game people love most.
-14. **Football Manager** — a match you watch rather than play, and the highlights-and-dashboard apparatus that
+16. **Football Manager** — a match you watch rather than play, and the highlights-and-dashboard apparatus that
     makes that work.

@@ -1,38 +1,94 @@
-# Design documents
+# Documents
+
+An index. **Every verdict lives in the document that holds it** — this file says only what each one is for, so
+there is nowhere for a claim to sit and go quietly out of date.
 
 ## Start here
 
 **[The Vision](vision.md)** is the standing document — what this game is, what it is not, and the order it gets
-built in. It fixes the destination the five deep dives below were written to find, and **where it disagrees
-with any of them, it is current**; its [§9](vision.md#9-what-this-overturns) lists every place it replaces one.
+built in. Where anything else in this directory disagrees with it, it is current.
 
 In one line: *a technically excellent tower defense, built for the pleasure of building it, whose multiplayer
 is real — and every mode of it is the same machine at a different latency.*
 
-[§8](vision.md#8-the-build-order) is the build order: a seven-step sequence ordered by what is cheapest to
-learn rather than by what depends on what, with the nine seams it serves mapped onto it. Each seam is still
-the subject of its own wayfinder map, planned and worked separately.
+| | |
+|---|---|
+| [The Vision](vision.md) | The destination, the pillars, the open questions, and [the build order](vision.md#8-the-build-order) — a seven-step sequence with the nine seams it serves mapped onto it |
+| [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
+| [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
+| [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 35 records. Source comments say *what*; these say *why* |
+| [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
+| [`archive/`](archive/) | The five deep dives the vision was built on. Superseded; kept as the reading |
+| [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
 
-## The five deep dives
+## Research notes
 
-Written before the vision, in the order they were written. Each one answers a question raised by the one before
-it, so they read best in sequence.
+In [`research/`](research/). They are **evidence, not design documents**: each resolves one question, cites
+primary sources, and decides nothing. Where the vision has since moved past one, the note says so in a banner
+at its top rather than being rewritten.
 
-> **These five documents are an input to the vision, not the current state of anything.** Several of their
-> claims have been overturned — by [The Vision](vision.md), and before it by the walking-skeleton map,
-> [Walking skeleton: scope a small vertical that teaches Unity and proves the architecture](https://github.com/ssalter21/tower-defense-game/issues/2)
-> (see [What has been settled since](#what-has-been-settled-since)). Where any of them disagrees with the
-> vision, the vision is current.
+**Design research**, commissioned against the vision's depth direction and open questions:
 
-| # | Document | Question it answers | Verdict |
-|---|---|---|---|
-| I | [Market Report & Viability Read](market-report.md) | Is a multiplayer tower defense worth building in 2026? | Viable, but **not multiplayer-first**. Synchronous PvP TD tops out around 830 concurrent players. |
-| II | [Async Ghost Round-Robin](async-ghost-round-robin.md) | Does asynchronous ghost PvP fix that, and what does it cost? | The model is proven and fits TD unusually well. **Determinism is the whole build risk.** |
-| III | [Technology Stack Assessment](tech-stack-assessment.md) | What do we build it with? | Unity 6 client, plain C# integer sim library, no realtime networking. |
-| IV | [Art Direction & Asset Pack Strategy](art-direction-and-assets.md) | What does it look like, and what do we buy to get there fast? | Stylized 3D, not pixel art. Synty ships no animations — that inverts the obvious pick. Its **"KayKit Complete, $150" verdict is reactivated** by [The Vision §6](vision.md#6-what-it-looks-like); it had only been *paused* while the walking-skeleton effort ran free-tier only at $0 under [#17](https://github.com/ssalter21/tower-defense-game/issues/17), never overturned. The hex-kit mispricing was in **§5**, not §13, and is **now corrected in the document** by [#27](https://github.com/ssalter21/tower-defense-game/issues/27), along with §5's recommendation of a static-mesh pack for towers it requires to be animated. |
-| V | [Tower & Creep Variance Levers](variance-levers-and-unit-schema.md) | What can a tower or a creep actually differ by, and what data structure holds all of it? | **One unit schema, two roles**, levers as components. Version the numbers apart from the vocabulary — and never silently skip an unknown lever. ⚠️ **§3.11's Element TD 2 claims are wrong** — it ships **59** towers, not 57, and is **not** combinatorially complete (there is no five-element tower). §6 already quotes the correct figure, so the document disagrees with itself. Found by [Build depth in tower defense](research/build-depth-in-tower-defense.md); correction drafted in [#60](https://github.com/ssalter21/tower-defense-game/issues/60) and **not yet applied**. |
+| Note | The question it answers |
+|---|---|
+| [Build depth in tower defense](research/build-depth-in-tower-defense.md) | How do TD games produce extreme, combinatorial build depth, and which mechanisms survive this project's constraints? |
+| [The attacking half](research/attack-composition-and-sending.md) | How is sending made deep — and has anyone gated the attacking options on the player's defensive build? |
+| [Creep wave variety and creep upgrade systems](research/creep-wave-variety-and-creep-upgrade-systems.md) | Which games went deep on creep variety, and does anything let you upgrade creeps the way you upgrade towers? |
+| [Element TD's ancestry](research/element-td-ancestry-and-wc3-tower-mechanics.md) | Which WC3 map inspired Element TD, and what were the original's tower mechanics? |
+| [Towers, or placed squads?](research/towers-versus-placed-squads.md) | Does the defending side have to be towers, or could placements be flanking walls with archer squads? |
+| [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? |
+| [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
+| [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
 
-## The thread running through all five
+**Simulation research**, measured in this repository rather than commissioned:
+
+| Note | The question it answers |
+|---|---|
+| [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
+| [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
+| [Cost is not a balance lever under a one-for-one leak](research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md) | If a leak charges what the creep cost, what does the cost column actually control? |
+| [A canned field of one collapses the bands](research/a-canned-field-of-one-collapses-the-bands.md) | Four authored performance bands behave as two. Is the mechanism wrong, or the stand-in field? |
+
+**Asset research**, on the art that is actually on the machine:
+
+| Note | The question it answers |
+|---|---|
+| [What is actually inside The Complete KayKit Collection v6.1](research/kaykit-collection-inventory.md) | What does the downloaded bundle really contain — packs, rigs, clips, characters, triangle counts — read from the archive rather than from a listing? |
+| [The KayKit model index](research/kaykit-model-index.md) | Does KayKit have a *thing*, and what is the file called? All 2,252 distinct model names |
+
+**Build research**, on the tools rather than the game:
+
+| Note | The question it answers |
+|---|---|
+| [Claude Code inside a Unity 6 project](research/unity-agent-workflow.md) | What can a terminal-only agent do inside Unity, and what must be done by hand? |
+| [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? |
+| [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL, or sources inside Unity? Carries [amendments](research/unity-sim-library-integration.md#amendments) |
+| [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
+
+> **One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence
+> and pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those
+> in a real browser before relying on them commercially.
+
+## The archive
+
+The five deep dives that were written before the vision, in [`archive/`](archive/). They read best in sequence —
+each answers a question raised by the one before it — and each carries a banner saying what survived it.
+
+| # | Document | Question it answered |
+|---|---|---|
+| I | [Market Report & Viability Read](archive/market-report.md) | Is a multiplayer tower defense worth building in 2026? |
+| II | [Async Ghost Round-Robin](archive/async-ghost-round-robin.md) | Does asynchronous ghost PvP fix the population ceiling, and what does it cost? |
+| III | [Technology Stack Assessment](archive/tech-stack-assessment.md) | What do we build it with? |
+| IV | [Art Direction & Asset Pack Strategy](archive/art-direction-and-assets.md) | What does it look like, and what do we buy to get there fast? |
+| V | [Tower & Creep Variance Levers](archive/variance-levers-and-unit-schema.md) | What can a tower or a creep differ by, and what data structure holds all of it? |
+
+**They are an input to the vision, not the current state of anything.** Part I's question is no longer being
+asked; Part II's conclusion survived with a different reason; Parts III, IV and V are still being built
+against. [The Vision §9](vision.md#9-what-this-overturns) is the row-by-row account, and it is the only place
+that account exists.
+
+## The thread running through the five
 
 Part I found that every competitive tower defense is population-gated, and that a tower layout is the most
 snapshot-friendly artefact in strategy gaming — so the competition can be made asynchronous and the ceiling
@@ -49,105 +105,16 @@ turns balance into a computation.
 
 Part IV tests the one assumption Part III made without examining it — that the art is stylized 3D — and closes
 it. The art direction holds, but the reason changes: 2D loses on **unit-count × facings arithmetic**, not on
-taste. Part III's stack verdict survives, though its Unity justification does not: asset packs are portable
-between engines now, so what still holds Unity in place is Mecanim humanoid retargeting and UI, not lock-in.
-Part IV also extends Part III's rendering rule into art: **the sim owns attack timing in integer ticks and the
-view scales animation playback to fit** — which is what makes swapping asset packs, or the whole art direction,
-a reversible decision rather than a rewrite.
+taste. Part IV also extends Part III's rendering rule into art: **the sim owns attack timing in integer ticks
+and the view scales animation playback to fit** — which is what makes swapping asset packs, or the whole art
+direction, a reversible decision rather than a rewrite.
 
 Part V takes Part III's closing claim — that balance becomes a computation — and points out it is only true if
 the things being balanced are *described* rather than *coded*. So it catalogues every axis a tower or a creep
-can vary along, checked against what a dozen shipped games actually do, and derives the schema that has to hold
-them. Two findings change the shape of the sim: the tower-versus-creep split is an artefact of single-player
-games and should not survive into a format where players author both halves, so there is **one unit with two
-roles**; and the vocabulary of levers must be versioned separately from the numbers, because a stored ghost has
-to mean the same thing in two years. Part V also sharpens Part III's no-floats rule with a reason Part III did
-not have: ECMA-334 §8.3.7 permits any C# implementation to compute floating point at higher precision than the
-declared type, so a float sim is not replay-stable even on one machine with one binary.
-
-## Research notes
-
-Narrower investigations in [`research/`](research/). Each resolves one ticket on the map and cites primary sources;
-they are evidence, not design documents, and where the map has since moved past one the note says so in place.
-
-| Note | Question it answers | Finding |
-|---|---|---|
-| [Claude Code inside a Unity 6 project](research/unity-agent-workflow.md) | What can a terminal-only agent do inside Unity, and what must be done by hand? | Unity is agent-hostile but **bounded and front-loaded** — roughly two hours of unavoidable mouse time, almost all of it installation. The working model is *agent writes editor C#, then triggers it*, never *agent edits scene files*. The first-party MCP bridge is **paywalled at $10/mo**; the free paths are `-batchmode -executeMethod` and the MIT community bridge. Resolves [#4](https://github.com/ssalter21/tower-defense-game/issues/4). |
-| [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? | **Unity 6.3 LTS · Universal 3D (URP) · Linear · Input System · .NET Standard/Mono.** Only two dialog fields are expensive to get wrong — Editor version and template. URP stopped being a judgement call: Built-In is deprecated from 6.5 and HDRP is in maintenance. Resolves [#6](https://github.com/ssalter21/tower-defense-game/issues/6). |
-| [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL or sources inside Unity? | **Build outside Unity with `dotnet build`; consume the compiled `netstandard2.1` DLL as a managed plug-in.** Decisive reason: Unity compiles with its own bundled Roslyn, so any source-in-Unity layout ships a *different IL image* than the determinism run hashed. Also found **two bugs in Part III's banned-API enforcement**. ⚠️ Carries [amendments](research/unity-sim-library-integration.md#amendments) — four supporting arguments were superseded by [#15](https://github.com/ssalter21/tower-defense-game/issues/15); the headline recommendation stands. Resolves [#5](https://github.com/ssalter21/tower-defense-game/issues/5). |
-
-**One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence and
-pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those in a real
-browser before relying on them commercially.
-
-### Design research
-
-Commissioned against [The Vision](vision.md) §3's depth direction and §10's open questions. These are decision
-inputs for the match-format seam, which waits on them.
-
-| Note | Question it answers | Finding |
-|---|---|---|
-| [Build depth in tower defense](research/build-depth-in-tower-defense.md) | How do TD games produce extreme, combinatorial build depth — and which mechanisms survive a one-hex corridor and no meta-progression? | Depth is manufactured **two structurally different ways**: a *generative rule* that mints a large roster from a small vocabulary (Element TD's six elements → 56 towers), or a *large authored pool* metered by a random offering (YouTD, Mazebert, Legion TD 2). **Only the generative route is simultaneously a depth mechanism, an accessibility mechanism, and enumerable by a sweep harness.** ⚠️ **Computed balance is a budget, not a licence** — every depth mechanism works by making one unit's value depend on your other units, which is exactly what stops a harness pricing units in isolation. **The corridor kills one of eleven mechanisms**, not most: Mazebert runs on a fixed path, and Legion TD 2's own docs say it has "generally no walls that block a unit from where it wants to go". What "nothing persists" removes is the *onboarding ramp* — and the fix is shipped in three games: **move the disclosure ramp inside the run**. Also: **Element TD's depth is the metered picks, not the combination table**, and every pick after the first is gated behind a boss you must kill. ⚠️ **Corrects Part V** — Element TD 2 ships **59** towers, not 57, and is *not* combinatorially complete (there is no five-element tower). |
-| [The attacking half](research/attack-composition-and-sending.md) | How is sending made deep — and has anyone gated the attacking options on the player's defensive build? | Seven distinct depth mechanisms; five survive this project's constraints. **Ordering is the one the hex corridor *strengthens*** — a one-hex corridor is already a single-file column — and `content/wave.txt` has already built it. ⚠️ **The single purse deletes the income loop every deep send system in the genre rests on**: under one purse a coin spent attacking is simply gone, so attacking is dominated unless the purchase pays back some other way. The one-purse precedent is Bloons TD Battles 2, not Legion TD 2. The **gating idea has one thin precedent** — a Bloons TD Battles 1 tower upgrade that moved the *schedule*, not the pool, and the sequel removed it; every other game gates the opposite way, because a send is only a *read* if both players know the whole menu. |
-| [Element TD's ancestry, and the WC3 original's tower mechanics](research/element-td-ancestry-and-wc3-tower-mechanics.md) | Which Warcraft 3 map inspired Element TD, what were its tower mechanics, and how does it compare to Element TD 2 and Legion TD? | ⚠️ **The premise does not survive: no earlier map is on record as Element TD's inspiration.** Every candidate either post-dates it (Gem TD, Feb 2007; Flash Element TD, Jan 2007 — which is *derived from* Element TD by its own account; Legion TD, late 2000s) or is a different subgenre (Wintermaul Wars: mazing + sending). Element TD released **23 Oct 2006** and its combination system appears original. The WC3 original ran **four mechanics Element TD 2 dropped**, one of which matters here: **Interest was itself a pick**, competing with elements in the same random offering, capped at two per game at 1/7 odds — a shipped answer to the one-purse problem. Also: the counter system is a **ring of six, not a 6×6 matrix** (six numbers, not thirty-six), and its **4:1 spread has survived unchanged since 2006 across four engines**. Element TD and Legion TD are opposite answers to *where the decision lives* — a metered tech tree against a fixed public wave, versus an economy against a live opponent. |
-| [Creep wave variety and creep upgrade systems](research/creep-wave-variety-and-creep-upgrade-systems.md) | Which TD games went deep on creep/wave variety — and does anything let you upgrade creeps the way you upgrade towers? | Variety is manufactured four ways and **only orthogonal composable properties scale**: BTD6's depth is *camo × regrow × fortified* multiplying against a fixed type list, not its 22 types. **Types should be few and properties many, because properties compose** — a schema shape decision for [Part V §3.6](variance-levers-and-unit-schema.md#36-wave-and-spawn--the-composition-half), cheap now and expensive later. Creep-upgrade systems split into three families, and **the literal ask — an upgrade tree that buffs the creep's statline — has one clean shipped example: _Tower Wars_ (2012)**, whose "Battle Point accrual" row is an income upgrade sitting on the *attacking* line. Everywhere else you upgrade the **purchase**, not the unit (Legion TD 2 has **no** mercenary levelling at all). The PvE version of the idea is nearly empty for a real reason: **the payout curve is the design, not the tree** — GemCraft and Sanctum 2 both had to bolt on an explicit reward multiplier. Also: **Infinitode 2 gets a whole game out of 11 enemies** because its abilities attack the *tower model*, not the damage numbers. |
-| [Towers, or placed squads?](research/towers-versus-placed-squads.md) | Does the defending side have to be towers, or could placements be flanking walls with archer squads on them? | **The aesthetic half is free and mostly already decided** — Part IV §5 already ruled towers are rooted animated characters, so a rampart is a picture drawn over placements that exist. The mechanical half is one number, **projectile volume**, and it lands on `FlyProjectiles` — **O(projectiles × creeps)** — not on target acquisition. Costs the ghost record **nothing**, since a record stores inputs and projectiles are output. The sharp finding: **N independent shooters is behaviourally identical to one shooter firing N arrows**, because identical archers on one cell never desynchronise — so attrition is the only thing that justifies the expensive model. Recommends squads as an *archetype*, not the model for the whole defense. |
-| [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? | Fun comes from six mechanisms, each of which **inverts into a known failure mode** — deferred agency into passivity, legible causality into an obvious answer, a curriculum into a memorised script. Skill comes from **eight structurally distinct axes**, and this design **deletes two, inverts one, and leaves a fourth with nothing to attach to**: geometry and in-wave execution are gone by settled decision, ⚠️ **the async ghost inverts *reading the opponent* into a lookup** — caused by the ghost itself, not by the gating idea — and ⚠️ **without a baseline wave, preparation has no object**, which upgrades that open question from cheap insurance to load-bearing. The four survivors — composition, sequencing, economy, risk budgeting — **all land in the build phase**, where every comparison game spreads skill across two. Restates the one-purse warning as a skill problem: **a purchase that only subtracts has no timing question, and timing is what players practise.** |
-| [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game — and what can a 2.75 ms deterministic sim be spent on as design material rather than tooling? | The games that make planning carry everything **give away the mechanism completely and withhold the outcome** — Into the Breach telegraphs every number and no result, which is why *"the only cause of failure becomes the players themselves"*. The nearest neighbours are not TD games: **Path of Building, Zachtronics, Football Manager, Into the Breach.** Catalogues eight plan-phase mechanisms and fourteen sim-derived ones, of which **six have no equivalent in the genre** — retrospective review (a chess engine for TD, one match per counterfactual), the **computed highlight reel** (the whole field resolves before anything is drawn, so salience is calculated and *the director knows the ending*), the field distribution, **simulation sold to the player as a resource**, measured solvability, and computed par. Reward **best and average separately** — SpaceChem shipped three competing metrics precisely because optimising one costs you the others. ⚠️ **The one real hazard: a sim that answers everything deletes the game.** The rule that survives it is a table of what to give away freely, sample, or sell. |
-| [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? | The established method is **search-based PCG** — generate many, score each by simulation, let the score steer the next batch — and **the literature's standing objection to it is the one problem this project does not have**: simulation-based fitness is rejected everywhere else as too slow, and at 2.75 ms a match it is affordable here. The fitness function needs no proxy: **outcome spread across good plans** is what "solvable" means written down, and it wants a band rather than a maximum. Generate an **archive** (MAP-Elites) rather than a map, because that is what keeps rotation from becoming a live-service cadence — the rule the vision holds hardest. Seeding is mostly already built: `HexMap.FromCells`, `Match(…, ulong seed)`, `HexMap.MapHash` and `GhostRecord`'s `MapHash`/`MapHandle` compose into a generated-map pipeline with **no format change and anti-cheat still free** — but the generator version becomes content and must be hashed like content. ⚠️ **The cadence question is not freshness vs staleness; it is the map against the ghost pool**, which is indexed by `(map, stage)` and empties at every stage on every rotation. Recommends **weekly for the round-robin, daily as a separate pool-free mode**. |
-
-## Status
-
-**The walking skeleton is built and landed on `main`.** A deterministic integer simulation (`sim/`), the ghost
-record format, a headless CLI (`simcli/`), and a Unity 6 URP view that scrubs a recorded match from snapshots
-— with a passed twelve-row [sit-down](sit-down.md). Its map,
-[#2](https://github.com/ssalter21/tower-defense-game/issues/2), is closed at 19 of 19.
-
-Part II §6's build order is no longer the plan. It sequenced a *commercial* game, and steps 4 through 7 —
-ship it, turn on submission, add rating, then friend lobbies last — do not survive
-[the destination the vision fixes](vision.md#1-the-destination). What replaces it is
-[the vision's build order](vision.md#8-the-build-order).
-
-**What is next is an economy.** The skeleton's machinery is excellent and it takes no input from a player:
-four unit types, one fixed defense, one fixed wave, no currency, no build phase, one wave per run. So the
-build order is sequenced by what is cheapest to *learn* rather than by what depends on what, and the first
-four steps — a purse, a run of N waves recorded as a command stream, a ten-unit roster, and a sweep harness —
-run from a shell with no engine in them. The match format seam is still where the game is going; what changed
-is that its first half is now played rather than finished on paper.
-
-## What has been settled since
-
-Questions these documents raise that the map has since closed. Listed so nothing here is read as still open; the
-detail lives in the linked ticket, not here.
-
-- **Mazing or preset path? — settled: no mazing, ever.** The playfield is a **hex grid** with a corridor exactly one
-  hex wide that never branches, so route derivation is a trace rather than a search and *no unit ever chooses its
-  path* — which keeps pathfinding out of the sim library permanently. Part V's six mazing-dependent levers
-  (`Path policy`, `Repath trigger`, `blocksPath`, the maze/gun resource split, geometry-driven stats, route choice)
-  are dead weight under this answer. Closed by
-  [Top-down grid or side-on lane?](https://github.com/ssalter21/tower-defense-game/issues/3).
-- **Top-down grid or side-on lane? — settled: neither as posed.** The question welded a sticky decision (playfield
-  shape) to a cheap one (camera), and they were answered separately. Playfield is the hex corridor above; camera is a
-  **fixed isometric orthographic orbit with 60° yaw snapping**, view-only and never sim input. This **overturns Part
-  III's "fixed camera, no free rotation"** and makes *no billboards, no flat cards, no painted-on shadows* a mandatory
-  art rule. Track A (stylized low-poly 3D) stands. Closed by
-  [the same ticket](https://github.com/ssalter21/tower-defense-game/issues/3).
-
-And two more the vision has since closed:
-
-- **Can the developer rig and animate in Blender? — closed by irrelevance.** Part IV's recommendation flipped
-  from KayKit to Synty on this single fact, and the vision buys KayKit, which ships its own animations. The
-  question only ever mattered for Synty. [The Vision §6](vision.md#6-what-it-looks-like).
-- **Is this a commercial product? — settled: no.** Part I's viability analysis becomes background reading
-  rather than a constraint, and Part II §6's build order goes with it.
-  [The Vision §1](vision.md#1-the-destination).
-
-Still open, and unchanged:
-
-- **How wide should the damage-type matrix be?** Flagged in [Part V, §4.1](variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one).
-  Legion TD 2 runs a 1.67:1 spread, Element TD 2 runs 4:1, Warcraft 3's shipped constants run 40:1. It sets how
-  much a matchup is decided before the wave starts, it is another free decision made on paper, and it is
-  cheaper to set now than to retune later. Carried into
-  [the vision's fog](vision.md#10-not-yet-specified) — it belongs to the roster or balance seam.
-- **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** Flagged in Part III.
-  Current assumption: no — C# throughout.
+can vary along and derives the schema that has to hold them. Two findings change the shape of the sim: the
+tower-versus-creep split is an artefact of single-player games and should not survive into a format where
+players author both halves, so there is **one unit with two roles**; and the vocabulary of levers must be
+versioned separately from the numbers, because a stored ghost has to mean the same thing in two years. Part V
+also sharpens Part III's no-floats rule with a reason Part III did not have: ECMA-334 §8.3.7 permits any C#
+implementation to compute floating point at higher precision than the declared type, so a float sim is not
+replay-stable even on one machine with one binary.

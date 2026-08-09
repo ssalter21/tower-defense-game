@@ -4,7 +4,7 @@
 
 **Question:** which Unity 6 project-creation settings are expensive to change later, and what should this
 project pick?
-**Inputs:** [Part III §4](../tech-stack-assessment.md#4-client-engine) (Unity 6 client, the rendering rule),
+**Inputs:** [Part III §4](../archive/tech-stack-assessment.md#4-client-engine) (Unity 6 client, the rendering rule),
 Part IV §5 and §8 (stylized low-poly 3D, CC0 packs, fixed three-quarter camera, Shuriken particles).
 
 ---

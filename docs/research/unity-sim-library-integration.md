@@ -4,7 +4,7 @@
 
 **Question:** how should a Unity 6 project consume a separately compiled .NET simulation library, and what does each
 mechanism cost?
-**Input:** [Part III — Technology Stack Assessment](../tech-stack-assessment.md) §2, §3, §6.
+**Input:** [Part III — Technology Stack Assessment](../archive/tech-stack-assessment.md) §2, §3, §6.
 
 > **This note has been amended since it was written. Read [Amendments](#amendments) before acting on §2, §4, §8 or §9.**
 > Its headline recommendation — build outside Unity, consume a precompiled `netstandard2.1` DLL — **stands and was

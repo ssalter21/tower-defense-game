@@ -120,7 +120,7 @@ public class BudgetTests
         // budget is about the twentieth scrub of the slider rather than the
         // first.
         Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, TheMatch.Fresh().Resolve().FinalTick);
-        Assert.Equal(ReferenceWorkload.Checksum, ReferenceWorkload.Run(ReferenceWorkload.Iterations));
+        Assert.Equal(ReferenceWorkload.Checksum, ReferenceWorkload.Churn(ReferenceWorkload.Iterations));
 
         double[] matchMilliseconds = new double[Runs];
         double[] referenceMilliseconds = new double[Runs];
@@ -133,7 +133,7 @@ public class BudgetTests
             matchWatch.Stop();
 
             var referenceWatch = Stopwatch.StartNew();
-            long checksum = ReferenceWorkload.Run(ReferenceWorkload.Iterations);
+            long checksum = ReferenceWorkload.Churn(ReferenceWorkload.Iterations);
             referenceWatch.Stop();
 
             Assert.Equal(TheMatch.FinalTickOfTheCommittedRun, result.FinalTick);
@@ -180,7 +180,7 @@ public class BudgetTests
         // a red test with a reason rather than a threshold that quietly means
         // something else. It also catches the optimiser deleting the loop,
         // which would otherwise calibrate the budget against zero.
-        Assert.Equal(ReferenceWorkload.Checksum, ReferenceWorkload.Run(ReferenceWorkload.Iterations));
+        Assert.Equal(ReferenceWorkload.Checksum, ReferenceWorkload.Churn(ReferenceWorkload.Iterations));
     }
 
     [Fact]

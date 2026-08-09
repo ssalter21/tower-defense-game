@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 namespace Sim
@@ -50,8 +51,16 @@ namespace Sim
             int damageMax,
             Delivery delivery,
             int projectileFlightTicks,
-            int dyingTicks)
+            int dyingTicks,
+            int cost,
+            AttackType attackType,
+            ArmourType armourType,
+            int armour)
         {
+            Cost = cost;
+            AttackType = attackType;
+            ArmourType = armourType;
+            Armour = armour;
             Id = id;
             Label = label;
             Role = role;
@@ -106,16 +115,40 @@ namespace Sim
         /// <summary>Ticks spent in the dying state before the unit is cleared away.</summary>
         public int DyingTicks { get; }
 
+        /// <summary>What one of these costs, in gold. Zero in column layout 1, which has no cost column.</summary>
+        public int Cost { get; }
+
+        /// <summary>
+        /// Which row of the damage matrix this unit's shots are resolved
+        /// through. <see cref="Sim.AttackType.None"/> for a unit that never
+        /// attacks, and for every row of column layout 1.
+        /// </summary>
+        public AttackType AttackType { get; }
+
+        /// <summary>
+        /// Which column of the damage matrix shots at this unit are resolved
+        /// through. <see cref="Sim.ArmourType.None"/> for a unit with no health
+        /// pool, and for every row of column layout 1.
+        /// </summary>
+        public ArmourType ArmourType { get; }
+
+        /// <summary>
+        /// Armour, in percent of base effective health added per point. Zero
+        /// where there is no armour type to apply it through.
+        /// </summary>
+        public int Armour { get; }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
         /// <summary>
-        /// Folds this row into a hash in field order. The order of these calls is
-        /// the layout the content hash pins, so moving a line bumps the label's
-        /// version digit.
+        /// Folds this row into a hash in the field order of that column layout.
+        /// The order of these calls is the layout the content hash pins, so
+        /// moving a line is a new layout with a label of its own.
         /// </summary>
-        internal Hash64 Fold(Hash64 hash) =>
-            hash
+        internal Hash64 Fold(Hash64 hash, int layout)
+        {
+            hash = hash
                 .Add(Id)
                 .Add((int)Role)
                 .Add(MaxHp)
@@ -129,5 +162,26 @@ namespace Sim
                 .Add((int)Delivery)
                 .Add(ProjectileFlightTicks)
                 .Add(DyingTicks);
+
+            switch (layout)
+            {
+                case 1:
+                    return hash;
+
+                case 2:
+                    return hash
+                        .Add(Cost)
+                        .Add((int)AttackType)
+                        .Add((int)ArmourType)
+                        .Add(Armour);
+
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(layout),
+                        "Column layout "
+                        + layout.ToString(CultureInfo.InvariantCulture)
+                        + " has no fold in this row.");
+            }
+        }
     }
 }

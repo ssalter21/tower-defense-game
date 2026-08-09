@@ -37,7 +37,15 @@ namespace Tests.PlayMode
         /// shells in the air. Well short of the end, so a seek here is a seek
         /// into the middle of something rather than onto an empty playfield.
         /// </summary>
-        private const int BusyTick = 600;
+        /// <remarks>
+        /// Multiplied by three when the clock slowed by three on 8 August 2026.
+        /// This is a window measured in ticks and what it is really asking for
+        /// is a stretch of match, so a dilation that left it alone would have
+        /// shrunk it to a third of the match it was written to sample -- and it
+        /// said so: at six hundred ticks the busy-enough assertion below went
+        /// red at 68 events against the hundred it wants.
+        /// </remarks>
+        private const int BusyTick = 1800;
 
         private PlaybackController Playback() => new PlaybackController(Begin());
 
@@ -53,7 +61,7 @@ namespace Tests.PlayMode
         /// Asserted on the count of events the decorations were ever
         /// <i>told</i> about rather than on the effects left standing
         /// afterwards, and the difference is the whole test. An implementation
-        /// that ran the six hundred ticks with the event sink attached and then
+        /// that ran the eighteen hundred ticks with the event sink attached and then
         /// tidied up would leave nothing on screen either — and would still
         /// have built and thrown away every tracer, flash and spark of the
         /// match, which on a seek to the end is the frame-long detonation this
@@ -74,7 +82,7 @@ namespace Tests.PlayMode
             Assert.That(played.View.Current.Tick, Is.EqualTo(BusyTick),
                 "the match ended before it got busy enough to say anything");
             Assert.That(played.View.Decorations.EventsHeard, Is.GreaterThan(100),
-                "the match said almost nothing in six hundred ticks, so this proves nothing");
+                "the match said almost nothing in eighteen hundred ticks, so this proves nothing");
 
             // Sought, they say nothing at all.
             PlaybackController sought = Playback();
@@ -130,7 +138,7 @@ namespace Tests.PlayMode
             int drawnBefore = view.Decorations.TracersDrawn;
 
             Assert.That(drawnBefore, Is.GreaterThan(10),
-                "hardly any tracer was drawn in six hundred ticks, so a count that did not drop proves "
+                "hardly any tracer was drawn in eighteen hundred ticks, so a count that did not drop proves "
                 + "nothing about whether something cleared");
 
             // A fast-forward crosses far more than one tick in a frame and is
@@ -310,3 +318,4 @@ namespace Tests.PlayMode
         }
     }
 }
+

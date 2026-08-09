@@ -39,6 +39,12 @@ client/Assets/StreamingAssets/**  text eol=lf
 # checkout. A record whose bytes a checkout may rewrite is not a record.
 *.replay  binary
 
+# And the command streams, for exactly the same reason: a run's build phases are
+# a record, its bytes are what the read gate hashes and checks, and a checkout
+# that rewrote a 0x0D inside them would hand the reader a record that is no
+# longer the one it says it is.
+*.commands  binary
+
 # Binaries -- never diff, never merge
 *.dll binary
 *.pdb binary

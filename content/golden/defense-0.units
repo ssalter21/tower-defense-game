@@ -1,0 +1,58 @@
+# The unit type table.
+#
+# ONE GLOBAL ID SPACE. Towers and creeps are the same kind of thing here, so
+# an id is unique across every unit that has ever existed, is never reused,
+# and is never an index into anything. A record that pins type 2 today still
+# means this row in five years. The label beside it is for people reading this
+# file and for error messages; nothing in the simulation branches on it, and
+# renaming one does not move the content hash.
+#
+# INTEGERS ONLY, AND NO DECIMAL POINT. The parser refuses a '.' or a ',' on a
+# data line before it even tokenises, so a designer typing 1.5 gets a load
+# error rather than a float in the tick loop. Fractions are authored as the
+# two integers they are made of, in units named by the column: thousandths of
+# a hex, or ticks.
+#
+# FIELD ORDER IS WHAT THE CONTENT HASH FOLDS. Reindent a column, rewrap this
+# comment or convert the line endings and the hash does not move, so no stored
+# record is falsely retired. Change one number and it does. Moving a column is
+# a layout change and bumps the version digit in the hash label inside
+# UnitTypeTable, which retires every record pinned to the old layout loudly.
+#
+# Ids ascend strictly down the file, which is what makes a duplicate a
+# comparison against the row above rather than a lookup nobody performed.
+#
+# THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
+# the committed wave, twelve of forty creeps get through -- a third, near
+# enough -- over sixty-two seconds. That is the point of the tuning and not a
+# coincidence: a defense that holds tells you nothing when it changes, and a
+# defense that collapses tells you nothing either. A third leaking means the
+# leak count is a number a person can watch, and the golden trace beside these
+# files is the run that produced it.
+#
+# The two creep types differ in SPEED AND MAXIMUM HP ONLY, so that a later fast
+# group catches an earlier slow group and unit ordering stops being theoretical.
+#
+# THE RUNNER IS EXACTLY TWICE THE GRUNT'S SPEED, and that is load-bearing rather
+# than tidy. Two creeps are level for exactly one tick as one passes the other,
+# and being level is the case the target-selection tiebreak exists for -- pick
+# the creep furthest along, and the lower id if two are equal. With speeds that
+# were merely different, the two would step past each other without ever landing
+# on the same distance, the tiebreak would never once be consulted, and a rule
+# nothing exercises is a rule nobody has checked. Paired with the wave releasing
+# a grunt column and a runner column on the same tick, this makes the pass a
+# thing that happens repeatedly and visibly.
+#
+#      id  label   role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying
+#
+# role     : moving (walks the corridor) | placed (stands where it was put)
+# maxHp    : zero means the unit has no health pool and cannot be damaged
+# speed    : thousandths of a hex per tick
+# range    : thousandths of a hex
+# flight   : ticks a projectile spends travelling; zero unless delivery is projectile
+# dying    : ticks spent dying, so seeking into a death shows a death
+
+unit   1   grunt   moving  200    85     0      0         0       0          0       0       none        0       12
+unit   2   runner  moving  110    170    0      0         0       0          0       0       none        0       12
+unit   3   bolt    placed  0      0      3200   6         3       2          9       15      hitscan     0       0
+unit   4   mortar  placed  0      0      4600   18        7       5          21      34      projectile  11      0
