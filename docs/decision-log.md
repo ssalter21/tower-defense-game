@@ -119,3 +119,74 @@ cut `offering 3 3` to `offering 2 3` because the roster could not fill it". That
 and stops the story one commit early: `85fed39` put the offering **back to three** when the roster grew to ten,
 and three is what `content/ruleset.txt` says today. Recorded here because the claim was load-bearing in the
 argument for a larger roster, and it was wrong.
+
+---
+
+## 9 August 2026 — the upgrade edge is decided, and most of it was decided twice
+
+Charted and worked as [#107](https://github.com/ssalter21/tower-defense-game/issues/107), which holds the nine
+decisions taken before any ticket was written and the six that were taken in them. The vocabulary the map
+turned out to need is in [ADR-0043](adr/0043-a-tier-is-its-own-id-and-its-own-row.md) through
+[ADR-0046](adr/0046-an-absent-ladder-folds-nothing.md); this records only what changed its mind on the way.
+
+**Five of the six resolved tickets reversed something, and three of the five reversed themselves rather than
+each other.** That is worth saying plainly, because the map's whole premise was that a decision made on paper
+before any content exists can be unmade for the price of editing a paragraph — and it was unmade five times
+for exactly that price.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`roster.md`** — where the edge lives | Beside the cost table in **`ruleset.txt`**, and not a column in `units.txt` | **Its own file, `content/upgrades.txt`.** The instinct to keep it out of `units.txt` was right and the destination was wrong | `ruleset.txt`'s header states that *every row is required and none may appear twice*. It is a file of required, fixed-arity rules; an edge set is optional and variable-length — zero edges today, eight when the three lines are authored. Repetition was never the obstacle; `matrix` and `band` already repeat |
+| **[#108](https://github.com/ssalter21/tower-defense-game/issues/108)** — what survives a swap | **Nothing but the cell.** A new row in the same place, no memory of what it was — the recommendation on the record | **Reversed by the human. The placement's identity survives**, as identity and not as a pointer: stats key on `(placement id, unit type id)`, so a Soldier-turned-Captain has two stat rows and one id | The game is data-driven and a Captain that was a Soldier for four waves has a career. Losing it on upgrade loses real data, and a `was` pointer would have bought the same answer with a reference that can go stale |
+| **[#109](https://github.com/ssalter21/tower-defense-game/issues/109)** — precedent for that | *"Not one of the fourteen games stores a link back to what a tower used to be"*, so #108's answer *"has no direct precedent"* | **Both false.** A second research pass surveyed **Bloons TD 6**, which does exactly what #108 decided — mutates the existing tower, keeps its `ObjectId`, never resets `damageDealt` or `cashEarned`, accumulates `Tower.worth` | The first pass had not read BTD6. The correction strengthens #108 rather than changing it: the reversal was right and it now has the genre's deepest tower defense standing behind it instead of standing alone |
+| **[#110](https://github.com/ssalter21/tower-defense-game/issues/110)** — which way a row reads | **Target first** — `follows <unit> <predecessor>`, sorted by target, and therefore append-only forever | **Overridden by the human. Source first**, `upgrade <from> <to>`, so a row reads as the act: *the soldier becomes the captain* | The cost charged against source-first during grilling was overstated — sorted by (`from`, `to`) the diamond's two rows come out **adjacent**, because a split's branches are authored at the same time and take consecutive ids. What remains is a real cost and it is recorded: a new tier is keyed on its parent's id, so it edits the middle of the file |
+| **[#112](https://github.com/ssalter21/tower-defense-game/issues/112)** — how often the hash moves | **Twice** — once when the empty file lands, once when the first edge is authored — and goldens regenerate at each | **Once**, reversed by [#111](https://github.com/ssalter21/tower-defense-game/issues/111). An absent ladder folds nothing, so landing the empty file retires nothing at all | The first of the two moves was not merely wasteful, it was **illegal**, for a reason #112 could not see from where it stood. See below |
+| **[#117](https://github.com/ssalter21/tower-defense-game/issues/117)** — fatal or advisory | A policy call, because *"a roster mid-edit may legitimately be in that state"* | **Not a policy call.** A fault is a red build gate, a note is a printed line, there is no third posture and no suppression mechanism | Every check a mid-edit roster could legitimately trip turned out to be **unstateable**. Three of the four candidate faults need a tier number, and no content file holds one — so the question dissolved rather than being answered |
+
+### The collision that reversed #112, and why it was invisible from there
+
+#110 folded `upgrades.txt` into the bundle that retires records, and #112 read that literally: an empty file
+still hashes, so the hash moves the day the file lands. Read against the code, that move breaks something that
+cannot be repaired.
+
+`GoldenRecordTests.The_table_a_golden_was_recorded_against_is_committed_beside_it` **recomputes** a pinned
+table's content hash and compares it against bytes frozen in the golden's header. The moment the *formula*
+gains a ladder term, `content/golden/defense-0.replay`'s recomputes to a value that can never equal the one
+frozen in it — and a version-0 bundle cannot be re-recorded, because the writer emits the current version and
+only the current version. That is ADR-0009's rule broken by name: *a bump may retire a record, but it may never
+retire the only evidence for a branch.*
+
+Three ways out were weighed and two of them paid a price this repository has already refused. The third —
+**an absent ladder folds nothing** — survives both, and is
+[ADR-0046](adr/0046-an-absent-ladder-folds-nothing.md).
+
+**Worth keeping for its own sake:** #112's reading was the conservative one, and conservative was wrong. "Move
+the hash more often than strictly needed" looks like the safe direction right up until the thing it retires is
+a file nothing can produce again.
+
+### Three of four faults turned out to be sentences about a fact no file holds
+
+#117 was written to decide whether a ladder checker should refuse an unreachable tier-2 tower, a skipped rung
+or an orphan target, and whether refusing should be fatal. It could not, and the reason is upstream of it:
+**`units.txt` layout 2 has eighteen columns and none of them is a tier**, and #110 kept a tier off the edge row
+for its own reasons. So *"a tower above tier 1 with no incoming edge"* is not a check that was hard to write —
+it is a check that cannot be spelled, because a live tier-1 tower and an unreachable tier-2 tower are the same
+row with the same absence beside it.
+
+What survives is two faults — **mixed roles** and **unequal roads** — and three notes, and the fatal-versus-
+advisory question goes with the checks that could not be written. The honest cost is recorded rather than
+glossed: a roster whose Marksman was never given an incoming edge passes everything, and that gap closes when a
+tier number exists rather than when somebody writes a cleverer checker.
+
+### A correction to #111's accounting
+
+#111 concluded that on the day the first edge is authored, five files regenerate and *"nothing else moves"*.
+That is right about generated content and it stops one reader short. The **view** parses `content/units.txt`
+with the simulation's own parser and takes `content/match.replay` through `ReplayBundle.Replay`, which compares
+the record's stamped hash against the parsed table's — so the player either ships `upgrades.txt` beside the
+other five content files or its shipped record stops passing the gate, even though nothing on the view side
+reads an edge. #112 ruled the file out of the streaming whitelist on the grounds that nothing on the view side
+reads a ladder, which stays true and turns out not to be the question. Recorded here because it is the one
+thing the map settled and did not notice, and because the test that presents the bill —
+`MatchContentTests.TheShippedRecordPassesTheReplayGate` — is an engine-side test that only goes red in an
+editor.
