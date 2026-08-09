@@ -402,7 +402,6 @@ public class MatchTests
         // is exactly why the tie half could not be left to it.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout layout = TheMatch.Layout(types);
-        var coverage = TowerCoverage.For(TheMatch.Map(), layout);
 
         Assert.Equal(types.ById(12).SpeedMilliHexPerTick, types.ById(1).SpeedMilliHexPerTick);
 
@@ -413,17 +412,65 @@ public class MatchTests
                 layout,
                 WaveScript.Parse("order 0 1 12 0\norder 0 12 12 0", types),
                 TheMatch.Seed),
-            coverage,
             requireTies: true);
 
-        CheckTargeting(TheMatch.Fresh(), coverage, requireTies: false);
+        CheckTargeting(TheMatch.Fresh(), requireTies: false);
+    }
+
+    [Fact]
+    public void A_creep_first_appears_at_the_entrance_having_walked_nowhere()
+    {
+        // The wave releases at the end of a tick, after everything that moves
+        // has moved and after the towers have chosen -- the phase order in
+        // Match.Step. This is the half of that a picture can see, and it is
+        // why targeting on a spawn tick is asked of the rule directly in
+        // TargetingTests rather than of a snapshot here: the creep standing at
+        // the entrance in this tick's picture is one the towers did not see.
+        // Every one of the forty is caught on the tick it was released.
+        //
+        // OBSERVED: move the Release call in Match.Step above MoveCreeps. It
+        // goes red at 1 of 40 -- everything released inside a tick now walks a
+        // step in that same tick, so only the one the constructor released is
+        // ever seen standing at the entrance.
+        Match match = TheMatch.Fresh();
+        Snapshot snapshot = match.PullSnapshot();
+        int released = 0;
+
+        while (true)
+        {
+            foreach (CreepSnapshot creep in snapshot.Creeps)
+            {
+                if (creep.State != CreepState.Walking || creep.TicksInState != 0)
+                {
+                    continue;
+                }
+
+                Assert.Equal(Fix64.Zero, creep.DistanceAlongPath);
+                released++;
+            }
+
+            if (match.IsFinished)
+            {
+                break;
+            }
+
+            match.Advance(1);
+            snapshot = match.PullSnapshot();
+        }
+
+        Assert.Equal(40, released);
     }
 
     /// <summary>
     /// Walks a match and holds every target acquisition against the analytic
     /// rule: furthest along the corridor, lowest id where two are level.
     /// </summary>
-    private static void CheckTargeting(Match match, TowerCoverage coverage, bool requireTies)
+    /// <remarks>
+    /// The intervals come off the match rather than from a second table built
+    /// beside it, so what the acquisition is held against is the table the
+    /// acquisition went through.
+    /// </remarks>
+    private static void CheckTargeting(Match match, bool requireTies)
     {
         int acquisitions = 0;
         int ties = 0;
@@ -435,7 +482,12 @@ public class MatchTests
 
             // A creep that spawned or died this tick was a different creep
             // when the towers looked, so those ticks are not ones the
-            // snapshot can be an oracle for.
+            // snapshot can be an oracle for. TargetingTests asks the rule
+            // about both of them directly, which is the only way they get
+            // covered at all: measured over both waves below, not one of the
+            // 622 acquisitions this walk checks lands on a spawn tick, so a
+            // refinement here that recovered those ticks would be an
+            // assertion about nothing.
             bool settled = snapshot.Creeps.All(creep => creep.TicksInState > 0);
 
             if (!settled)
@@ -452,7 +504,7 @@ public class MatchTests
 
                 CreepSnapshot[] reachable = snapshot.Creeps
                     .Where(creep => creep.State == CreepState.Walking)
-                    .Where(creep => coverage.Covers(tower.Id - 1, creep.DistanceAlongPath))
+                    .Where(creep => match.Coverage.Covers(tower.Id - 1, creep.DistanceAlongPath))
                     .ToArray();
 
                 Assert.NotEmpty(reachable);

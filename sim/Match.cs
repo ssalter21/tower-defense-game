@@ -165,6 +165,19 @@ namespace Sim
 
         private Creep[] _creeps;
 
+        /// <summary>
+        /// Scratch space for one acquisition: the walking creeps a tower can
+        /// reach, refilled from <see cref="_creeps"/> every time a tower looks.
+        /// </summary>
+        /// <remarks>
+        /// A field rather than a local, and sized once at the whole wave rather
+        /// than grown, because seeking re-simulates: anything the tick path
+        /// allocates is a cost every scrub of the slider pays. Nothing can be
+        /// walking that has not been released, so a wave's total is the most
+        /// candidates one acquisition can ever have.
+        /// </remarks>
+        private readonly WalkingTarget[] _reachable;
+
         private Projectile[] _projectiles;
 
         private int _creepCount;
@@ -284,6 +297,7 @@ namespace Sim
 
             _nextEntityId = layout.Count + 1;
             _creeps = new Creep[8];
+            _reachable = new WalkingTarget[wave.TotalUnits];
             _projectiles = new Projectile[8];
 
             _spawnFold = Hash64.Start("match-spawns/1");
@@ -338,7 +352,13 @@ namespace Sim
         /// <summary>How many creeps have been killed so far.</summary>
         public int Killed => _killed;
 
-        /// <summary>Where each tower can reach, so a caller can check the defense makes sense.</summary>
+        /// <summary>
+        /// Where each tower can reach: the intervals this match acquires
+        /// through, rather than a second table built to agree with them. A
+        /// caller checking whether the defense makes sense, or whether a tower
+        /// shot the creep the rule says it should have, is then holding the
+        /// answer against the table that produced it.
+        /// </summary>
         public TowerCoverage Coverage => _coverage;
 
         /// <summary>
@@ -706,14 +726,14 @@ namespace Sim
                             break;
                         }
 
-                        int target = Acquire(index, type);
+                        int target = Acquire(index);
 
-                        if (target < 0)
+                        if (target == 0)
                         {
                             break;
                         }
 
-                        tower.TargetId = _creeps[target].Id;
+                        tower.TargetId = target;
                         tower.State = TowerState.Windup;
                         tower.TicksInState = 0;
 
@@ -748,28 +768,19 @@ namespace Sim
         }
 
         /// <summary>
-        /// Picks what a tower shoots at: whichever creep it can reach is
-        /// furthest along the corridor, and the lowest id of those if two are
-        /// level.
+        /// What a tower shoots at, as the id of a creep, or zero when nothing
+        /// it can reach is walking.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// The rule is a total order, which is the only kind of rule that can be
-        /// replayed: "the closest to the exit" alone is not one, because two
-        /// creeps at the same distance would leave the answer to whichever
-        /// happened to be looked at first, and that is exactly the sort of thing
-        /// that differs between runs for reasons nobody can see.
-        /// </para>
-        /// <para>
-        /// Ties are counted rather than merely broken. The count is in the state
-        /// hash and in nothing else, which makes it a detector: two runs that
-        /// disagree about unit ordering will usually agree on everything visible
-        /// for a while and disagree here immediately.
-        /// </para>
+        /// The rule is <see cref="Targeting.Chosen"/> and none of it is spelled
+        /// here. This is the projection onto it: walk the creeps once, keep the
+        /// walking ones this tower's coverage reaches, hand them over in the
+        /// order the array is kept in -- which is ascending id -- and add the
+        /// ties it broke to the running count the state hash folds.
         /// </remarks>
-        private int Acquire(int tower, UnitType type)
+        private int Acquire(int tower)
         {
-            int best = -1;
+            int reachable = 0;
 
             for (int index = 0; index < _creepCount; index++)
             {
@@ -780,28 +791,17 @@ namespace Sim
                     continue;
                 }
 
-                if (best < 0)
-                {
-                    best = index;
-                    continue;
-                }
-
-                if (creep.Distance > _creeps[best].Distance)
-                {
-                    best = index;
-                }
-                else if (creep.Distance == _creeps[best].Distance)
-                {
-                    _tiebreaksBroken++;
-
-                    if (creep.Id < _creeps[best].Id)
-                    {
-                        best = index;
-                    }
-                }
+                _reachable[reachable] = new WalkingTarget(creep.Id, creep.Distance);
+                reachable++;
             }
 
-            return best;
+            int chosen = Targeting.Chosen(
+                new ReadOnlySpan<WalkingTarget>(_reachable, 0, reachable),
+                out int tiebreaks);
+
+            _tiebreaksBroken += tiebreaks;
+
+            return chosen < 0 ? 0 : _reachable[chosen].Id;
         }
 
         /// <summary>
