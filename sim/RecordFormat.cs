@@ -182,6 +182,34 @@ namespace Sim
         }
 
         /// <summary>
+        /// The row a stored type id names, required to play that half of the
+        /// loop.
+        /// </summary>
+        /// <remarks>
+        /// The rule is <see cref="UnitTypeTable.Require"/>'s and the record's
+        /// name is this side's, so the refusal is rewrapped rather than
+        /// reimplemented. Reading bytes stays an all-or-nothing gate: a record
+        /// naming a type this table has never heard of is refused whole, never
+        /// read with the row dropped.
+        /// </remarks>
+        internal static UnitType RequireType(
+            RecordKind kind,
+            UnitTypeTable types,
+            int id,
+            UnitRole role,
+            string what)
+        {
+            try
+            {
+                return types.Require(id, role, what);
+            }
+            catch (SimulationException refused)
+            {
+                throw new RecordException(NameOf(kind), refused.Message);
+            }
+        }
+
+        /// <summary>
         /// The only version the writer emits for this kind. See the remarks on
         /// <see cref="RecordFormat"/> for why there is only one.
         /// </summary>

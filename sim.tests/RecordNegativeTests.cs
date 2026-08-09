@@ -282,7 +282,10 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => ghost.ToLayout(types));
 
-        Assert.Contains("places type id 999", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "a defense requiring a placed unit names type id 999",
+            thrown.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]

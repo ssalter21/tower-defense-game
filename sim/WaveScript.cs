@@ -158,26 +158,8 @@ namespace Sim
                 int count = DataText.IntegerInRange(source, number, "the count", fields[3], 1, 65535);
                 int corridor = DataText.IntegerInRange(source, number, "the corridor", fields[4], 0, 255);
 
-                if (!types.TryById(typeId, out UnitType? type))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "sends type id "
-                        + typeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which the unit type table does not define. An unknown id refuses to load "
-                        + "rather than being skipped.");
-                }
-
-                if (type!.Role != UnitRole.Moving)
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "sends "
-                        + type.ToString()
-                        + ", which is a placed unit. A wave is composed of units that walk.");
-                }
+                UnitType type = DataText.RequireType(
+                    source, number, types, typeId, UnitRole.Moving, "a wave order");
 
                 if (tick == previousTick && typeId == previousType)
                 {

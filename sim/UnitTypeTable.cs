@@ -323,6 +323,64 @@ namespace Sim
         }
 
         /// <summary>
+        /// The row an id names, required to be one this table has and -- where
+        /// <paramref name="role"/> says so -- to play that half of the loop.
+        /// <paramref name="what"/> names whatever asked for it, and the refusal
+        /// quotes it back.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the whole of the rule, and every id that arrives from
+        /// authored text or from stored bytes is resolved here.</b> The wave,
+        /// the defense, the anchor schedule and the upgrade ladder each wrote it
+        /// out for themselves once, and the copies drifted into three different
+        /// sentences with nothing to make them agree. What does not come through
+        /// here is a lookup of an id that was already resolved at load --
+        /// <see cref="ById"/>, which names no context and requires no role.
+        /// </para>
+        /// <para>
+        /// <b>It refuses with a <see cref="SimulationException"/> because it
+        /// belongs to neither side of the load seam.</b> A caller reading text
+        /// rewraps it as a <see cref="ContentException"/> carrying its line
+        /// number, a caller reading bytes rewraps it as a
+        /// <see cref="RecordException"/> carrying the record's name, and a
+        /// caller that owes neither -- a ladder walked against a table it was
+        /// not parsed against -- lets it through as the program fault it is.
+        /// </para>
+        /// <para>
+        /// A null <paramref name="role"/> is "either half of the loop will do",
+        /// which is what an upgrade edge wants: an edge joins two ids, and a
+        /// ladder of creeps stays structurally possible.
+        /// </para>
+        /// </remarks>
+        public UnitType Require(int id, UnitRole? role, string what)
+        {
+            if (!TryById(id, out UnitType? type))
+            {
+                throw new SimulationException(
+                    Asking(what, role)
+                    + " names type id "
+                    + id.ToString(CultureInfo.InvariantCulture)
+                    + ", which this unit type table does not define. An unknown id refuses rather than "
+                    + "being skipped: an order, a tower or an edge that resolves to nothing produces a "
+                    + "confidently wrong result that still validates.");
+            }
+
+            if (role.HasValue && type!.Role != role.Value)
+            {
+                throw new SimulationException(
+                    Asking(what, role)
+                    + " names "
+                    + type.ToString()
+                    + ", which is a "
+                    + RoleWords[(int)type.Role]
+                    + " unit.");
+            }
+
+            return type!;
+        }
+
+        /// <summary>
         /// The type with this id, if there is one. A linear scan on purpose:
         /// the table has a handful of rows, and the obvious dictionary is a
         /// banned type whose enumeration order is an implementation detail.
@@ -425,6 +483,16 @@ namespace Sim
 
             return all;
         }
+
+        /// <summary>
+        /// What asked for a row, with the half of the loop it asked for appended
+        /// where it named one. It is the subject of both sentences
+        /// <see cref="Require"/> refuses with.
+        /// </summary>
+        private static string Asking(string what, UnitRole? role) =>
+            role.HasValue
+                ? what + " requiring a " + RoleWords[(int)role.Value] + " unit"
+                : what;
 
         private static ArgumentOutOfRangeException NoSuchLayout(int layout) =>
             new ArgumentOutOfRangeException(

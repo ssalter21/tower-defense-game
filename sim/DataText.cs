@@ -395,6 +395,34 @@ namespace Sim
             return field;
         }
 
+        /// <summary>
+        /// The row a type id on this line names, required to play that half of
+        /// the loop where <paramref name="role"/> says one.
+        /// </summary>
+        /// <remarks>
+        /// The rule is <see cref="UnitTypeTable.Require"/>'s and the line number
+        /// is this file's, so the refusal is rewrapped rather than
+        /// reimplemented: moving the rule moves every content file that names a
+        /// type id, and the bytes beside them.
+        /// </remarks>
+        internal static UnitType RequireType(
+            string source,
+            int line,
+            UnitTypeTable types,
+            int id,
+            UnitRole? role,
+            string what)
+        {
+            try
+            {
+                return types.Require(id, role, what);
+            }
+            catch (SimulationException refused)
+            {
+                throw new ContentException(source, line, refused.Message);
+            }
+        }
+
         /// <summary>A row required to carry exactly the fields its keyword has.</summary>
         internal static void RequireFieldCount(
             string source,

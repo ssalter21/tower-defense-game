@@ -365,14 +365,23 @@ public class AnchorScheduleTests
         // happens on the other side of the board. A better tower would be a
         // gift, and it would leave preparation with nothing to be about.
         //
-        // OBSERVED: drop the role check in Draft.AddChanger. This goes red
-        // having caught nothing, and a shape whose wave-3 menu offers the Archer
-        // tower loads -- at which point an anchor hands out defense and the
-        // whole preparation axis has nothing on it.
+        // OBSERVED: pass a null role to the RequireType call in
+        // Draft.AddChanger. This goes red having caught nothing, and a shape
+        // whose wave-3 menu offers the Archer tower loads -- at which point an
+        // anchor hands out defense and the whole preparation axis has nothing
+        // on it.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("changer 1 early-a 1 1 0", "changer 1 early-a 1 3 0")));
 
-        Assert.Contains("OPENS OFFENSE AND NEVER DEFENSE", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "a game changer's body requiring a moving unit",
+            thrown.Message,
+            StringComparison.Ordinal);
+
+        // The tail as well as the head: the head is what an unknown id would
+        // say too, so pinning it alone would leave this green if the role check
+        // went and the id lookup broke instead.
+        Assert.Contains("which is a placed unit", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -382,14 +391,19 @@ public class AnchorScheduleTests
         // it was put, because that is the side of the board preparation happens
         // on.
         //
-        // OBSERVED: drop the counter's role check in Draft.AddAnchor. This goes
-        // red having caught nothing, and a shape that answers wave 3 with a
-        // Minion loads -- an anchor whose preparation is another wave, which is
-        // the arms race the offense-only rule exists to keep off the board.
+        // OBSERVED: pass a null role to the RequireType call in
+        // Draft.AddAnchor. This goes red having caught nothing, and a shape that
+        // answers wave 3 with a Minion loads -- an anchor whose preparation is
+        // another wave, which is the arms race the offense-only rule exists to
+        // keep off the board.
         ContentException thrown = Assert.Throws<ContentException>(
             () => TheSchedule.Of(TheSchedule.Planted("anchor 3 1 plain 3 1", "anchor 3 1 plain 1 1")));
 
-        Assert.Contains("which walks the corridor", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "an anchor's counter requiring a placed unit",
+            thrown.Message,
+            StringComparison.Ordinal);
+        Assert.Contains("which is a moving unit", thrown.Message, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -476,7 +490,7 @@ public class AnchorScheduleTests
         // read against the wrong table is refused rather than carrying an id
         // that resolves to nothing at the wave it matters.
         //
-        // OBSERVED: replace the TryById checks in Draft.AddAnchor and
+        // OBSERVED: replace the RequireType calls in Draft.AddAnchor and
         // Draft.AddChanger with ById, which throws its own ContentException.
         // Both rows go red on the message -- "unit types: has no type with id
         // 99" -- so the refusal names the roster and the line it came from is
@@ -484,7 +498,10 @@ public class AnchorScheduleTests
         ContentException thrown =
             Assert.Throws<ContentException>(() => TheSchedule.Of(TheSchedule.Planted(authored, planted)));
 
-        Assert.Contains("no unit table this schedule was read against", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "names type id 99, which this unit type table does not define",
+            thrown.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]

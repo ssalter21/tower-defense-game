@@ -219,25 +219,8 @@ namespace Sim
             {
                 RecordTower tower = _towers[index];
 
-                if (!types.TryById(tower.TypeId, out UnitType? type))
-                {
-                    throw new RecordException(
-                        "defense record",
-                        "places type id "
-                        + tower.TypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which this unit type table does not define. An unknown id refuses rather "
-                        + "than being skipped.");
-                }
-
-                if (type!.Role != UnitRole.Placed)
-                {
-                    throw new RecordException(
-                        "defense record",
-                        "places "
-                        + type.ToString()
-                        + ", which is a moving unit. A defense is composed of units that stand where "
-                        + "they were put.");
-                }
+                UnitType type = RecordFormat.RequireType(
+                    RecordKind.Ghost, types, tower.TypeId, UnitRole.Placed, "a defense");
 
                 Hex.ToOddRowOffset(tower.Cell, out int column, out int row);
                 placed[index] = new PlacedTower(type, column, row, index + 1);

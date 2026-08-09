@@ -163,27 +163,8 @@ namespace Sim
                 int column = DataText.IntegerInRange(source, number, "the column", fields[2], 0, short.MaxValue);
                 int row = DataText.IntegerInRange(source, number, "the row", fields[3], 0, short.MaxValue);
 
-                if (!types.TryById(typeId, out UnitType? type))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "places type id "
-                        + typeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which the unit type table does not define. An unknown id refuses to load "
-                        + "rather than being skipped.");
-                }
-
-                if (type!.Role != UnitRole.Placed)
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "places "
-                        + type.ToString()
-                        + ", which is a moving unit. A defense is composed of units that stand where they "
-                        + "were put.");
-                }
+                UnitType type = DataText.RequireType(
+                    source, number, types, typeId, UnitRole.Placed, "a defense");
 
                 if (row == previousRow && column == previousColumn)
                 {
