@@ -158,6 +158,55 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void The_ladder_verb_reads_the_committed_pair_and_exits_zero()
+    {
+        // Two files and not seven, which is the shape of the verb: a ladder is
+        // read against the roster and against nothing else.
+        //
+        // ON THE DAY THIS LANDS IT PRINTS NOTHING, AND THAT IS THE CHECK.
+        // content/upgrades.txt holds a layout row and no edges, so there is no
+        // line to print and no note to make -- and the exit code says the file
+        // was opened, parsed and accepted rather than skipped. What it prints
+        // once an edge exists is asserted where that edge is authored.
+        CommandLineResult listed = TheCommandLine.Invoke(
+            "ladder",
+            "--units", RepoLayout.UnitsFile,
+            "--upgrades", RepoLayout.UpgradesFile)
+            .Succeeded();
+
+        Assert.Equal(EdgeCount(), listed.Output.Split("edge   ").Length - 1);
+    }
+
+    [Fact]
+    public void The_ladder_verb_refuses_a_ladder_it_cannot_read()
+    {
+        // The verb enforces nothing about a ladder's DESIGN and everything about
+        // its structure: it exits zero over a fault, and non-zero over a file it
+        // could not parse. Those are two different questions and this is the one
+        // a wrong exit code would hide.
+        string scratch = TheCommandLine.Scratch("ladder");
+        string broken = Path.Combine(scratch, "upgrades.txt");
+
+        File.WriteAllText(broken, "layout 1\nupgrade 4 3\n");
+
+        CommandLineResult refused = TheCommandLine.Invoke(
+            "ladder",
+            "--units", RepoLayout.UnitsFile,
+            "--upgrades", broken);
+
+        Assert.NotEqual(0, refused.ExitCode);
+        Assert.Contains("has to exceed its source", refused.Error, StringComparison.Ordinal);
+    }
+
+    /// <summary>How many edges the committed ladder has, read the same way the verb reads it.</summary>
+    private static int EdgeCount()
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        return UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types).Count;
+    }
+
+    [Fact]
     public void The_sweep_verb_writes_the_report_the_harness_computed()
     {
         // The wiring, end to end: six content files and a shape in, a

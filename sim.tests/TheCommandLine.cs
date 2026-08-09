@@ -85,17 +85,27 @@ public static class TheCommandLine
             startInfo.ArgumentList.Add(argument);
         }
 
-        // Both streams are read to the end before the wait, because a process
-        // that fills a pipe nobody is draining blocks forever and a test that
-        // hangs is worse than one that fails.
+        // BOTH STREAMS ARE DRAINED AT ONCE, not one and then the other. A pipe
+        // holds a few kilobytes; past that a write blocks until somebody reads.
+        // Reading stdout to the end first therefore deadlocks against any verb
+        // whose stderr is bigger than one pipeful -- the child waits for its
+        // stderr to be read, the test waits for a stdout that will never close,
+        // and neither ever moves.
+        //
+        // OBSERVED: read the two sequentially again and run this class. The
+        // misspelled-option case below hangs indefinitely, because a usage
+        // refusal prints the whole usage block to stderr and that block is now
+        // over a pipeful long. It hangs rather than failing, which is the worst
+        // shape a gate can take.
         using Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Could not start the command line.");
 
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
+        Task<string> output = process.StandardOutput.ReadToEndAsync();
+        Task<string> error = process.StandardError.ReadToEndAsync();
+
         process.WaitForExit();
 
-        return new CommandLineResult(process.ExitCode, output, error);
+        return new CommandLineResult(process.ExitCode, output.Result, error.Result);
     }
 }
 

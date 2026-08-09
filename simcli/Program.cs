@@ -146,6 +146,16 @@ public static class Program
         "         kind and an id off one of these, so this is what a command",
         "         script is written from.",
         string.Empty,
+        "  ladder     --units <file> --upgrades <file>",
+        string.Empty,
+        "         Prints which unit follows which, with the price of each tier,",
+        "         then what a walk over the whole ladder had to say about it --",
+        "         its roots, its leaves and any upgrade that is not dearer than",
+        "         what it replaces, then any fault.",
+        string.Empty,
+        "         It always exits zero, faults included. What fails a build on a",
+        "         fault is a test; this reads a roster and enforces nothing.",
+        string.Empty,
         "  sweep      --seed <number> [--runs <number>] [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
@@ -209,7 +219,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of seven things.");
+            throw new UsageException("No verb. This program does one of eight things.");
         }
 
         switch (args[0])
@@ -243,6 +253,13 @@ public static class Program
 
             case "offerings":
                 return ShowOfferings(RunVerb("offerings", args, "seed"));
+
+            // Two files and not a RunVerb: a ladder is read against the roster
+            // and against nothing else, so asking for a map, a schedule, a
+            // defense and a wave to print one would be six arguments nobody's
+            // answer depends on.
+            case "ladder":
+                return ShowLadder(Arguments.Parse("ladder", args, 1, new[] { "units", "upgrades" }));
 
             case "sweep":
                 return RunSweep(RunVerb(
@@ -397,6 +414,26 @@ public static class Program
         Sim.Run run = ContentOf(arguments).Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
 
         Console.Out.Write(Offerings.ToText(run));
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Prints the upgrade ladder, and exits zero whatever it found.
+    /// </summary>
+    /// <remarks>
+    /// Faults included. What fails a build on one is a test in <c>sim.tests</c>;
+    /// this verb is for reading a roster, and a second enforcer here would be one
+    /// rule with two homes.
+    /// </remarks>
+    private static int ShowLadder(Arguments arguments)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(arguments.Required("units")));
+        UpgradeLadder ladder = UpgradeLadder.Parse(
+            File.ReadAllText(arguments.Required("upgrades")),
+            types);
+
+        Console.Out.Write(Ladder.ToText(types, ladder));
 
         return 0;
     }

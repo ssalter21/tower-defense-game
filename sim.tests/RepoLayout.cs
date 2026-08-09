@@ -260,16 +260,20 @@ public static class RepoLayout
         using Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException("Could not start dotnet build.");
 
-        string standardOutput = process.StandardOutput.ReadToEnd();
-        string standardError = process.StandardError.ReadToEnd();
+        // Drained at once rather than one after the other, for the reason
+        // TheCommandLine.Invoke spells out: a pipe holds a few kilobytes, and a
+        // build whose diagnostics outgrow one would hang here instead of failing.
+        Task<string> standardOutput = process.StandardOutput.ReadToEndAsync();
+        Task<string> standardError = process.StandardError.ReadToEndAsync();
+
         process.WaitForExit();
 
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException(
                 $"dotnet build failed for {projectPath} (exit {process.ExitCode}).{Environment.NewLine}"
-                + standardOutput
-                + standardError);
+                + standardOutput.Result
+                + standardError.Result);
         }
 
         return output;
