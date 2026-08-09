@@ -97,11 +97,91 @@ namespace Sim
         }
 
         /// <summary>
-        /// True for a line the parsers skip entirely: blank, or a comment. A
+        /// The data rows of a file: every line that is neither blank nor a
+        /// comment, split into fields, each carrying the one-based line number
+        /// it came from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The blank-and-comment test happens before the split, and holding
+        /// that order is what this method is for.</b> <see cref="Fields"/>
+        /// refuses a full stop and a comma anywhere on the line, and a comment
+        /// is prose -- every committed content file has one that ends in a full
+        /// stop. A walk that split first would refuse the file on its own
+        /// documentation.
+        /// </para>
+        /// <para>
+        /// The number is the line in the file rather than the row's position
+        /// among the rows, because it is what a person reads in an editor and
+        /// what <see cref="ContentException"/> prints.
+        /// </para>
+        /// </remarks>
+        internal static IEnumerable<Row> Rows(string source, string text)
+        {
+            string[] lines = SplitLines(text);
+
+            for (int index = 0; index < lines.Length; index++)
+            {
+                string line = lines[index];
+
+                if (IsBlankOrComment(line))
+                {
+                    continue;
+                }
+
+                int number = index + 1;
+
+                yield return new Row(number, Fields(source, number, line));
+            }
+        }
+
+        /// <summary>
+        /// A row required to open with one of the words this file has a reader
+        /// branch for.
+        /// </summary>
+        /// <remarks>
+        /// A file whose rows are read through a <c>switch</c> refuses from its
+        /// default arm with <see cref="NoSuchRow"/> instead, which is the same
+        /// sentence thrown from where the branching already is. That is the
+        /// pairing <see cref="RequireFieldCount"/> and
+        /// <see cref="WrongFieldCount"/> are.
+        /// </remarks>
+        internal static void RequireRow(string source, Row row, string[] words)
+        {
+            for (int index = 0; index < words.Length; index++)
+            {
+                if (string.Equals(row.Keyword, words[index], StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+
+            throw NoSuchRow(source, row.Line, row.Keyword, words);
+        }
+
+        /// <summary>
+        /// A row that opens with a word the file has no reader branch for. The
+        /// words it does have are the parameter.
+        /// </summary>
+        internal static ContentException NoSuchRow(string source, int line, string keyword, string[] words)
+        {
+            return new ContentException(
+                source,
+                line,
+                "starts with '"
+                + keyword
+                + "', which is not one of the rows this file has: "
+                + string.Join(", ", words)
+                + ". An unrecognised row is refused rather than skipped, because a row nobody read is "
+                + "content the reader's defaults quietly supplied.");
+        }
+
+        /// <summary>
+        /// True for a line the row walk skips entirely: blank, or a comment. A
         /// comment is not scanned for anything, which is exactly why editing
         /// one must not move a content hash.
         /// </summary>
-        internal static bool IsBlankOrComment(string line)
+        private static bool IsBlankOrComment(string line)
         {
             for (int index = 0; index < line.Length; index++)
             {
@@ -124,7 +204,7 @@ namespace Sim
         /// on <see cref="DataText"/> for why the refusal happens here rather
         /// than inside the number parser.
         /// </summary>
-        internal static string[] Fields(string source, int line, string text)
+        private static string[] Fields(string source, int line, string text)
         {
             for (int index = 0; index < text.Length; index++)
             {
@@ -462,5 +542,32 @@ namespace Sim
                 source,
                 line,
                 name + " is '" + field + "', which is not an integer written in ASCII digits.");
+
+        /// <summary>
+        /// One data row: the fields it was split into, and the line of the file
+        /// they were written on.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Fields"/> is never empty -- a line with no fields on it is
+        /// blank, and the walk skipped it -- so a reader may take the keyword
+        /// off the front without checking.
+        /// </remarks>
+        internal readonly struct Row
+        {
+            internal Row(int line, string[] fields)
+            {
+                Line = line;
+                Fields = fields;
+            }
+
+            /// <summary>The one-based line of the file this row was written on.</summary>
+            internal int Line { get; }
+
+            /// <summary>The whitespace-separated fields, keyword included.</summary>
+            internal string[] Fields { get; }
+
+            /// <summary>The first field, which is the word the row says it is.</summary>
+            internal string Keyword => Fields[0];
+        }
     }
 }

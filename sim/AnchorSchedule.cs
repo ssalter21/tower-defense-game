@@ -156,6 +156,12 @@ namespace Sim
         /// <summary>The row this file refuses on sight. See the remarks on the type.</summary>
         private const string SlotsKeyword = "slots";
 
+        /// <summary>
+        /// The words a row here may open with. <see cref="SlotsKeyword"/> is not
+        /// among them and has a refusal of its own.
+        /// </summary>
+        private static readonly string[] RowWords = { AnchorKeyword, ChangerKeyword };
+
         /// <summary>Both rows carry the same number of columns, keyword included.</summary>
         private const int FieldsPerRow = 6;
 
@@ -250,20 +256,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var draft = new Draft();
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
-
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                ReadRow(source, number, DataText.Fields(source, number, line), draft, types);
+                ReadRow(source, row.Line, row.Fields, draft, types);
             }
 
             draft.RequireEverything(source);
@@ -493,17 +490,7 @@ namespace Sim
                         + "copy the two would disagree with nothing to say so.");
 
                 default:
-                    throw new ContentException(
-                        source,
-                        line,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the rows this schedule has are '"
-                        + AnchorKeyword
-                        + "' and '"
-                        + ChangerKeyword
-                        + "'. An unrecognised row is refused rather than skipped, because a shape nobody "
-                        + "read is a shape the defaults quietly supplied.");
+                    throw DataText.NoSuchRow(source, line, fields[0], RowWords);
             }
         }
 

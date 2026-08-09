@@ -187,6 +187,9 @@ namespace Sim
         /// <summary>Fields per row, keyword included: the keyword and two ids.</summary>
         private const int FieldCount = 3;
 
+        /// <summary>The words a row here may open with.</summary>
+        private static readonly string[] RowWords = { Keyword, LayoutKeyword };
+
         /// <summary>Ids are <c>u16</c> in the record format, and zero means "no unit".</summary>
         private const int MinimumId = 1;
 
@@ -258,51 +261,30 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var edges = new List<UpgradeEdge>();
             int layout = 0;
             bool declared = false;
             int previousFrom = 0;
             int previousTo = 0;
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
+                if (string.Equals(row.Keyword, LayoutKeyword, StringComparison.Ordinal))
                 {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (string.Equals(fields[0], LayoutKeyword, StringComparison.Ordinal))
-                {
-                    layout = ReadLayout(source, number, fields, declared);
+                    layout = ReadLayout(source, row.Line, fields, declared);
                     declared = true;
                     continue;
                 }
 
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the rows this file has are '"
-                        + Keyword
-                        + "' and '"
-                        + LayoutKeyword
-                        + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (!declared)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is an edge above any '"
                         + LayoutKeyword
                         + "' row. The layout says how to read a row, so it is stated before the first of "
@@ -312,20 +294,22 @@ namespace Sim
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, row.Line, Keyword, FieldCount, fields.Length);
                 }
 
-                int from = DataText.IntegerInRange(source, number, "the source id", fields[1], MinimumId, MaximumId);
-                int to = DataText.IntegerInRange(source, number, "the target id", fields[2], MinimumId, MaximumId);
+                int from = DataText.IntegerInRange(
+                    source, row.Line, "the source id", fields[1], MinimumId, MaximumId);
+                int to = DataText.IntegerInRange(
+                    source, row.Line, "the target id", fields[2], MinimumId, MaximumId);
 
-                DataText.RequireType(source, number, types, from, null, "an upgrade's source");
-                DataText.RequireType(source, number, types, to, null, "an upgrade's target");
+                DataText.RequireType(source, row.Line, types, from, null, "an upgrade's source");
+                DataText.RequireType(source, row.Line, types, to, null, "an upgrade's target");
 
                 if (to <= from)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "upgrades id "
                         + from.ToString(CultureInfo.InvariantCulture)
                         + " into id "
@@ -340,7 +324,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "states the edge "
                         + from.ToString(CultureInfo.InvariantCulture)
                         + " -> "
@@ -353,7 +337,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is out of canonical order: rows ascend strictly by source id and then by target "
                         + "id. The order is asserted rather than sorted on load, because it is what makes a "
                         + "duplicate a comparison against the row above -- and because these edges fold "

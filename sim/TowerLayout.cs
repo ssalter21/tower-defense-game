@@ -93,6 +93,9 @@ namespace Sim
         /// <summary>Fields per row, keyword included.</summary>
         private const int FieldCount = 4;
 
+        /// <summary>The words a row here may open with. There is one.</summary>
+        private static readonly string[] RowWords = { Keyword };
+
         private readonly PlacedTower[] _towers;
 
         private TowerLayout(PlacedTower[] towers)
@@ -129,48 +132,35 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var towers = new List<PlacedTower>();
             int previousColumn = -1;
             int previousRow = -1;
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row placement in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = placement.Fields;
 
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '" + fields[0] + "', but the only row a defense has is '" + Keyword + "'.");
-                }
+                DataText.RequireRow(source, placement, RowWords);
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, placement.Line, Keyword, FieldCount, fields.Length);
                 }
 
-                int typeId = DataText.IntegerInRange(source, number, "the type id", fields[1], 1, 65535);
-                int column = DataText.IntegerInRange(source, number, "the column", fields[2], 0, short.MaxValue);
-                int row = DataText.IntegerInRange(source, number, "the row", fields[3], 0, short.MaxValue);
+                int typeId = DataText.IntegerInRange(source, placement.Line, "the type id", fields[1], 1, 65535);
+                int column = DataText.IntegerInRange(
+                    source, placement.Line, "the column", fields[2], 0, short.MaxValue);
+                int row = DataText.IntegerInRange(
+                    source, placement.Line, "the row", fields[3], 0, short.MaxValue);
 
                 UnitType type = DataText.RequireType(
-                    source, number, types, typeId, UnitRole.Placed, "a defense");
+                    source, placement.Line, types, typeId, UnitRole.Placed, "a defense");
 
                 if (row == previousRow && column == previousColumn)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        placement.Line,
                         "puts a second tower on column "
                         + column.ToString(CultureInfo.InvariantCulture)
                         + ", row "
@@ -183,7 +173,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        placement.Line,
                         "is out of canonical order: towers ascend by row and then by column. The order is "
                         + "asserted rather than sorted on load, because sorting would leave identical "
                         + "defenses with different bytes -- and because this order is the order the match "
@@ -193,7 +183,7 @@ namespace Sim
 
                 previousRow = row;
                 previousColumn = column;
-                towers.Add(new PlacedTower(type, column, row, number));
+                towers.Add(new PlacedTower(type, column, row, placement.Line));
             }
 
             if (towers.Count == 0)

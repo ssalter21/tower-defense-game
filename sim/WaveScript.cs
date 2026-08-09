@@ -82,6 +82,9 @@ namespace Sim
         /// <summary>Fields per row, keyword included.</summary>
         private const int FieldCount = 5;
 
+        /// <summary>The words a row here may open with. There is one.</summary>
+        private static readonly string[] RowWords = { Keyword };
+
         private readonly UnitOrder[] _orders;
 
         private WaveScript(UnitOrder[] orders, int totalUnits)
@@ -122,50 +125,35 @@ namespace Sim
                 throw new ArgumentNullException(nameof(types));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var orders = new List<UnitOrder>();
             int previousTick = -1;
             int previousType = -1;
             long total = 0;
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '" + fields[0] + "', but the only row a wave has is '" + Keyword + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, number, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, row.Line, Keyword, FieldCount, fields.Length);
                 }
 
-                int tick = DataText.IntegerInRange(source, number, "the tick offset", fields[1], 0, int.MaxValue);
-                int typeId = DataText.IntegerInRange(source, number, "the type id", fields[2], 1, 65535);
-                int count = DataText.IntegerInRange(source, number, "the count", fields[3], 1, 65535);
-                int corridor = DataText.IntegerInRange(source, number, "the corridor", fields[4], 0, 255);
+                int tick = DataText.IntegerInRange(source, row.Line, "the tick offset", fields[1], 0, int.MaxValue);
+                int typeId = DataText.IntegerInRange(source, row.Line, "the type id", fields[2], 1, 65535);
+                int count = DataText.IntegerInRange(source, row.Line, "the count", fields[3], 1, 65535);
+                int corridor = DataText.IntegerInRange(source, row.Line, "the corridor", fields[4], 0, 255);
 
                 UnitType type = DataText.RequireType(
-                    source, number, types, typeId, UnitRole.Moving, "a wave order");
+                    source, row.Line, types, typeId, UnitRole.Moving, "a wave order");
 
                 if (tick == previousTick && typeId == previousType)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "repeats the order key (tick "
                         + tick.ToString(CultureInfo.InvariantCulture)
                         + ", type "
@@ -178,7 +166,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "is out of canonical order: orders ascend by tick and then by type id. The order "
                         + "is asserted rather than sorted on load, because sorting would leave identical "
                         + "waves with different bytes.");

@@ -241,20 +241,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(source));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var draft = new Draft();
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
-
-                if (DataText.IsBlankOrComment(line))
-                {
-                    continue;
-                }
-
-                ReadRow(source, number, DataText.Fields(source, number, line), draft);
+                ReadRow(source, row.Line, row.Fields, draft);
             }
 
             draft.RequireEverything(source);
@@ -520,15 +511,7 @@ namespace Sim
                     return;
 
                 default:
-                    throw new ContentException(
-                        source,
-                        line,
-                        "starts with '"
-                        + fields[0]
-                        + "', which is not one of the rows this ruleset has: "
-                        + string.Join(", ", Draft.EveryKeyword)
-                        + ". An unrecognised row is refused rather than skipped, because a rule nobody "
-                        + "read is a rule the defaults quietly supplied.");
+                    throw DataText.NoSuchRow(source, line, fields[0], Draft.RowWords);
             }
         }
 
@@ -545,7 +528,7 @@ namespace Sim
         /// </summary>
         private sealed class Draft
         {
-            internal static readonly string[] EveryKeyword =
+            internal static readonly string[] RowWords =
             {
                 "matrix", "armour", "floor", "interest", "income", "purse", "band", "health", "slots",
                 "offering", "snapshot",
@@ -722,7 +705,7 @@ namespace Sim
                         + "against and every wave would be paid an amount nobody authored.");
                 }
 
-                foreach (string keyword in EveryKeyword)
+                foreach (string keyword in RowWords)
                 {
                     if (string.Equals(keyword, "matrix", StringComparison.Ordinal)
                         || string.Equals(keyword, "band", StringComparison.Ordinal))

@@ -52,6 +52,9 @@ namespace Sim
 
         private const string LayoutKeyword = "layout";
 
+        /// <summary>The words a row here may open with.</summary>
+        private static readonly string[] RowWords = { Keyword, LayoutKeyword };
+
         /// <summary>Ids are <c>u16</c> in the record format, and zero means "no unit".</summary>
         private const int MinimumId = 1;
 
@@ -118,57 +121,36 @@ namespace Sim
                 throw new ArgumentNullException(nameof(source));
             }
 
-            string[] lines = DataText.SplitLines(text);
             var types = new List<UnitType>();
             int previousId = 0;
             int layout = DefaultLayout;
             bool declared = false;
 
-            for (int index = 0; index < lines.Length; index++)
+            foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                string line = lines[index];
-                int number = index + 1;
+                string[] fields = row.Fields;
 
-                if (DataText.IsBlankOrComment(line))
+                if (string.Equals(row.Keyword, LayoutKeyword, StringComparison.Ordinal))
                 {
-                    continue;
-                }
-
-                string[] fields = DataText.Fields(source, number, line);
-
-                if (string.Equals(fields[0], LayoutKeyword, StringComparison.Ordinal))
-                {
-                    layout = ReadLayout(source, number, fields, declared, types.Count);
+                    layout = ReadLayout(source, row.Line, fields, declared, types.Count);
                     declared = true;
                     continue;
                 }
 
-                if (!string.Equals(fields[0], Keyword, StringComparison.Ordinal))
-                {
-                    throw new ContentException(
-                        source,
-                        number,
-                        "starts with '"
-                        + fields[0]
-                        + "', but the rows this table has are '"
-                        + Keyword
-                        + "' and '"
-                        + LayoutKeyword
-                        + "'.");
-                }
+                DataText.RequireRow(source, row, RowWords);
 
                 if (fields.Length != FieldCountOf(layout))
                 {
-                    throw WrongColumnCount(source, number, layout, fields.Length);
+                    throw WrongColumnCount(source, row.Line, layout, fields.Length);
                 }
 
-                UnitType type = ReadRow(source, number, fields, layout);
+                UnitType type = ReadRow(source, row.Line, fields, layout);
 
                 if (type.Id == previousId)
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "reuses type id "
                         + type.Id.ToString(CultureInfo.InvariantCulture)
                         + ". Ids are the one global identity in this file and a record pins them for years; "
@@ -180,7 +162,7 @@ namespace Sim
                 {
                     throw new ContentException(
                         source,
-                        number,
+                        row.Line,
                         "has type id "
                         + type.Id.ToString(CultureInfo.InvariantCulture)
                         + " after id "
