@@ -14,12 +14,24 @@ it is the reason the whole harness needs one behavioural seam instead of a secon
 appeared in the writer and nowhere in the library would be a rule living in the shell.
 
 **Every one of its inputs is a parameter of one plan.** The map, the ruleset, the roster, the anchor schedule,
-the defense, the canned field, N, K, the death flag, the offering ratio, the free-snapshot count and the
-snapshot price. Pointing the sweep at another board to score it, or at another damage matrix, is then an
-argument rather than a retrofit across every call site — which is the one thing that is cheap now and expensive
-in a year. The last four reach the rules through `Ruleset.With`, which recomputes the content hash over the
-parsed integers exactly as a parse does (ADR-0011), so a retuned sweep plays a real ruleset that a stored record
-is loudly refused against, rather than a set of overrides carried alongside one.
+the defense, the canned field, N, K, the death flag, the offering ratio, the free-snapshot count, the snapshot
+price and the build policy. Pointing the sweep at another board to score it, or at another damage matrix, is
+then an argument rather than a retrofit across every call site — which is the one thing that is cheap now and
+expensive in a year. The offering ratio's two halves, the free-snapshot count and the snapshot price reach the
+rules through `Ruleset.With`, which recomputes the content hash over the parsed integers exactly as a parse
+does (ADR-0011), so a retuned sweep plays a real ruleset that a stored record is loudly refused against, rather
+than a set of overrides carried alongside one.
+
+**Who plays the runs is one of those parameters.** A row's runs favour the creep the row is about, and *how*
+they favour it is a strategy: take that creep off the offering where the menu carries it, fill every slot the
+round has with an equal share of the purse, bank what is left. That is a scripted player, it is the only
+producer of build phases that is not a command stream, and until it had a name every committed number in
+`content/sweep.csv` depended on it and on the fold together with nothing separating the two. It is now
+`BuildPolicy` — one operation from a run and a preferred type id to a build phase — carried on the plan and
+defaulting to `EvenShareBot`, so "score this roster under a greedier build instead" is an argument like every
+other input rather than an edit inside the harness. The fold underneath it knows nothing about any of it: its
+ingredient bins are sized from what the runs it just played came back holding, not from the wave count, because
+a bin width derived from N is a claim about the player that a policy-blind fold cannot check.
 
 **A rate is basis points, beside the two integers it came from.** There is no floating point in the simulation
 and the gate scans for it, so a ratio has to be an integer. Basis points rather than per-mille because a sweep

@@ -71,7 +71,8 @@ public static class TheSweep
         int gameChangersPerAnchor = SweepPlan.AsAuthored,
         int freeSnapshotsPerRun = SweepPlan.AsAuthored,
         int snapshotPriceGold = SweepPlan.AsAuthored,
-        int mostCreeps = Creeps)
+        int mostCreeps = Creeps,
+        BuildPolicy? policy = null)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
         TowerLayout defense = TheMatch.Layout(table);
@@ -92,7 +93,28 @@ public static class TheSweep
             gameChangersPerAnchor,
             freeSnapshotsPerRun,
             snapshotPriceGold,
-            mostCreeps);
+            mostCreeps,
+            policy);
+    }
+
+    /// <summary>
+    /// A second scripted player: it takes its option and fills no slot at all,
+    /// so every purse it is handed is banked.
+    /// </summary>
+    /// <remarks>
+    /// It is the whole of what a policy decides said as briefly as it can be
+    /// said -- one take and a wave of nothing -- which is what makes a report
+    /// played under it unmistakable from a column away. It takes the first thing
+    /// on the menu and ignores <paramref name="preferred"/> entirely: what the
+    /// row is about is a preference the policy is free to have, and having none
+    /// is part of what makes this a second player rather than a tuning of the
+    /// first.
+    /// </remarks>
+    public static BuildPhase Banks(Run run, int preferred)
+    {
+        Option first = run.Offering.Options[0];
+
+        return BuildPhase.Of(first.Kind, first.Id);
     }
 
     /// <summary>
