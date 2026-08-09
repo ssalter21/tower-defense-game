@@ -687,6 +687,29 @@ public class RunTests
     }
 
     [Fact]
+    public void The_canned_pool_is_one_pair_of_orders_and_a_field_is_that_pair_over_and_over()
+    {
+        // The population every run in this repository is played against, and it
+        // is composed here rather than by whoever happened to read the two
+        // files: a defense and a wave are one member, and a field of any width
+        // is that member drawn as many times.
+        //
+        // OBSERVED: hand Canned the pool's own wave twice -- Of(new[] { orders,
+        // orders }) -- and the size assertion goes red at 2 against 1. A pool
+        // whose members are all the same opponent is a field that reads exactly
+        // like a wide one and is not one.
+        UnitTypeTable types = TheMatch.Types();
+        TowerLayout defense = TheMatch.Layout(types);
+        WaveScript wave = TheRun.FieldWave(types);
+
+        FieldPool canned = FieldPool.Canned(defense, wave);
+
+        Assert.Equal(1, canned.Size);
+        Assert.Same(defense, canned.At(0).Defense);
+        Assert.Same(wave, canned.At(0).Wave);
+    }
+
+    [Fact]
     public void A_run_with_no_last_wave_and_no_death_in_it_is_refused()
     {
         // A run is bounded by its wave count or by its health pool. Lifting

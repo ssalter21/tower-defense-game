@@ -61,33 +61,40 @@ public static class Program
     private const int MaximumCreeps = 65535;
 
     /// <summary>
-    /// The seven content files a run is built from, and the three arguments that
-    /// say how long it lasts, how wide its field is and whether death ends it.
-    /// Every run verb takes all ten, so the list is written once.
+    /// The directory a run's content is taken out of where a file is not named
+    /// outright. Every file of <see cref="RunContentFiles"/> is looked for in it
+    /// under the name that declaration gives.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <b><c>--upgrades</c> is required and never optional</b>, which is why it
-    /// is in this list rather than read with a default behind it. An optional
-    /// content file is a default, and a default is a number nobody authored
-    /// folded into a content hash as though somebody had. The cost is that every
-    /// invocation in the repository names one file more; it is paid once.
-    /// </para>
-    /// <para>
-    /// <b><c>--field</c> is the canned opponent and it is not a wave the run
-    /// sends.</b> A run's own waves are composed by the build phases coming off
-    /// the command stream and are read from no file at all; this one file is the
-    /// population a round's field of K is drawn from. <c>record</c> is the only
-    /// verb that takes <c>--wave</c>, and what it means there is a whole
-    /// authored match. See
-    /// <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
-    /// </para>
+    /// A directory somebody named is not a default: nothing is assumed about
+    /// where content lives, and a file missing from the directory refuses by the
+    /// path it looked at. What it buys is that the seven names are written in one
+    /// declaration rather than in every invocation and every shell script that
+    /// makes one.
     /// </remarks>
-    private static readonly string[] RunOptions =
-    {
-        "map", "units", "upgrades", "rules", "schedule", "defense", "field",
-        "waves", "field-size", "no-death",
-    };
+    private const string ContentDirectoryOption = "content";
+
+    /// <summary>The left margin a verb's continuation lines sit on.</summary>
+    private const string UsageIndent = "             ";
+
+    /// <summary>The left margin the usage block's prose sits on.</summary>
+    private const string ProseIndent = "         ";
+
+    /// <summary>
+    /// Every option a run verb takes: the content files, the directory they can
+    /// be found in, and the three arguments that say how long the run lasts, how
+    /// wide its field is and whether death ends it.
+    /// </summary>
+    /// <remarks>
+    /// <b>The content half is read off <see cref="RunContentFiles"/></b> rather
+    /// than typed out, so an option offered here is an option something opens.
+    /// A list written by hand can carry a file no verb reads and omit one every
+    /// verb needs, and both of those compile.
+    /// </remarks>
+    private static readonly string[] RunOptions = RunContentFiles.All
+        .Select(file => file.Option)
+        .Concat(new[] { ContentDirectoryOption, "waves", "field-size", "no-death" })
+        .ToArray();
 
     /// <summary>
     /// The options across every verb that are switches rather than pairs. Named
@@ -96,9 +103,14 @@ public static class Program
     /// </summary>
     private static readonly string[] Switches = { "no-death" };
 
-    private const string RunContentUsage =
-        "--map <file> --units <file> --upgrades <file> --rules <file> --schedule <file>\n"
-        + "             --defense <file> --field <file>";
+    /// <summary>
+    /// The content every run verb takes, as an invocation writes it: a directory
+    /// holding the seven, or each of them named outright.
+    /// </summary>
+    private static readonly string RunContentUsage =
+        "--" + ContentDirectoryOption + " <directory>, or each file named outright:\n"
+        + UsageIndent
+        + Wrapped(RunContentFiles.All.Select(file => "--" + file.Option + " <file>"));
 
     private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
 
@@ -187,6 +199,18 @@ public static class Program
         "         lasts and how many opponents each round is resolved against.",
         "         --no-death keeps a run going after its health reaches zero, so",
         "         that a sweep gets N rounds of data out of every row.",
+        string.Empty,
+        "  Where a run's content comes from",
+        string.Empty,
+        ProseIndent + "--content names a directory and takes the files above out of",
+        ProseIndent + "it by name:",
+        ProseIndent + Wrapped(RunContentFiles.All.Select(file => file.FileName), ProseIndent),
+        string.Empty,
+        ProseIndent + "Naming a file outright overrides the directory for that one",
+        ProseIndent + "file, so scoring another board is one argument rather than a",
+        ProseIndent + "whole set. Every file is required either way: an optional",
+        ProseIndent + "content file is a default, and a default is a number nobody",
+        ProseIndent + "authored folded into a content hash as though somebody had.",
         string.Empty,
         "  The two files that hold orders, and why they are two",
         string.Empty,
@@ -531,16 +555,80 @@ public static class Program
             arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize),
             !arguments.Given("no-death"));
 
-    /// <summary>The seven files every run verb is handed, read here and parsed there.</summary>
+    /// <summary>
+    /// The seven files every run verb is handed, opened here and parsed there.
+    /// </summary>
+    /// <remarks>
+    /// The order is the one <see cref="RunContent.Of"/> layers the content in,
+    /// and each file is named by its row of <see cref="RunContentFiles"/> rather
+    /// than by a string spelled here -- so an option this reads is an option the
+    /// verb takes and a file the layout tests look for.
+    /// </remarks>
     private static RunContent ContentOf(Arguments arguments) =>
         RunContent.Of(
-            File.ReadAllText(arguments.Required("map")),
-            File.ReadAllText(arguments.Required("units")),
-            File.ReadAllText(arguments.Required("upgrades")),
-            File.ReadAllText(arguments.Required("rules")),
-            File.ReadAllText(arguments.Required("schedule")),
-            File.ReadAllText(arguments.Required("defense")),
-            File.ReadAllText(arguments.Required("field")));
+            TextOf(arguments, RunContentFiles.Map),
+            TextOf(arguments, RunContentFiles.Units),
+            TextOf(arguments, RunContentFiles.Upgrades),
+            TextOf(arguments, RunContentFiles.Rules),
+            TextOf(arguments, RunContentFiles.Schedule),
+            TextOf(arguments, RunContentFiles.Defense),
+            TextOf(arguments, RunContentFiles.Field));
+
+    /// <summary>
+    /// One content file's text: out of the path its own option named, or out of
+    /// the directory <c>--content</c> named, under the name it is declared with.
+    /// </summary>
+    /// <remarks>
+    /// The option wins where both are given, so pointing a run at another board
+    /// is one argument beside the directory rather than seven instead of it. The
+    /// simulation is handed what comes back and never the path it came from,
+    /// which is the seam ADR-0018 draws and the build gate scans for.
+    /// </remarks>
+    private static string TextOf(Arguments arguments, ContentFile file)
+    {
+        string? named = arguments.Optional(file.Option);
+
+        if (named is not null)
+        {
+            return File.ReadAllText(named);
+        }
+
+        string? directory = arguments.Optional(ContentDirectoryOption);
+
+        if (directory is not null)
+        {
+            return File.ReadAllText(Path.Combine(directory, file.FileName));
+        }
+
+        throw new UsageException(
+            $"'{arguments.Verb}' needs --{file.Option}, and it was not given. Name the file, or name a "
+            + $"directory holding {file.FileName} with --{ContentDirectoryOption}.");
+    }
+
+    /// <summary>
+    /// Words laid out one line under another, so that a list the usage block
+    /// prints grows a line rather than running off the terminal.
+    /// </summary>
+    private static string Wrapped(IEnumerable<string> words, string indent = UsageIndent, int width = 64)
+    {
+        var lines = new List<string>();
+        string line = string.Empty;
+
+        foreach (string word in words)
+        {
+            if (line.Length > 0 && line.Length + 1 + word.Length > width)
+            {
+                lines.Add(line);
+                line = string.Empty;
+            }
+
+            line = line.Length == 0 ? word : line + " " + word;
+        }
+
+        lines.Add(line);
+
+        return string.Join("\n" + indent, lines);
+    }
 
     /// <summary>The stream's stamps, the shape it was played at, and the vector.</summary>
     private static void Report(PlayedRun run)

@@ -191,36 +191,12 @@ $ruleset = Join-Path $content 'ruleset.txt'
 $traceName = 'golden-trace.txt'
 $landmarkName = 'landmarks.txt'
 
-# The run: the shape it is played against, the decisions as authored, the
-# record they compile to, and the vector a real play of that record produced.
-$schedule = Join-Path $content 'schedule.txt'
+# The run: the decisions as authored, the record they compile to, and the
+# vector a real play of that record produced. The shape it is played against
+# comes off $runContent below.
 $commandScript = Join-Path $content 'commands.txt'
 $commands = Join-Path $content 'run.commands'
 $outcomeName = 'run-outcome.txt'
-
-# The seven files a run is built from. Every run verb takes all seven, so the
-# list is written once and splatted -- a verb reading a different defense than
-# the one the record was made against is a run that refuses for a reason that
-# has nothing to do with what was being checked.
-#
-# THE LAST OF THEM IS content/field.txt AND NOT content/wave.txt. A run's own
-# waves are composed by the build phases coming off the command stream and are
-# read from no file at all; --field is the canned opponent each round is
-# resolved against, and it is a build phase's output. content/wave.txt is a
-# whole authored match -- three hundred and eighty gold released over fourteen
-# hundred ticks, which no purse in this economy can compose -- so a run against
-# one is measured against an opponent no player could be. content/field.txt's
-# own header carries the measurements; see also docs/adr/0040. The run verbs
-# refuse a wave released over time by name, so this cannot go quietly wrong
-# again.
-$runContent = @(
-    '--map', (Join-Path $content 'map.txt'),
-    '--units', $units,
-    '--upgrades', $upgrades,
-    '--rules', $ruleset,
-    '--schedule', $schedule,
-    '--defense', (Join-Path $content 'defense.txt'),
-    '--field', (Join-Path $content 'field.txt'))
 
 # One tiny bundle per defense record format version that has ever shipped, and
 # the result a real run of each produced. Committed forever: the writer emits
@@ -238,6 +214,21 @@ $build = Join-Path ([System.IO.Path]::GetTempPath()) ('simcli-build-' + $Simulat
 $program = Join-Path $build 'Sim.Cli.dll'
 
 . (Join-Path $PSScriptRoot '_shared.ps1')
+
+# The content every run verb is played on: the directory, out of which the
+# runner takes its seven files by the names it declares. See Get-ContentArguments
+# for why no file is named here.
+#
+# WHICH INCLUDES content/field.txt AND NOT content/wave.txt. A run's own waves
+# are composed by the build phases coming off the command stream and are read
+# from no file at all; the canned opponent each round is resolved against is a
+# build phase's output. content/wave.txt is a whole authored match -- three
+# hundred and eighty gold released over fourteen hundred ticks, which no purse
+# in this economy can compose -- so a run against one is measured against an
+# opponent no player could be. content/field.txt's own header carries the
+# measurements; see also docs/adr/0040. The run verbs refuse a wave released
+# over time by name, so this cannot go quietly wrong again.
+$runContent = Get-ContentArguments $content
 
 $committedSim = Join-Path $repoRoot 'client/Packages/com.ssalter.sim/Runtime/Sim.dll'
 

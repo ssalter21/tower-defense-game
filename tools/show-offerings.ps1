@@ -32,9 +32,10 @@
     Another run, twenty waves long.
 
 .EXAMPLE
-    ./tools/show-offerings.ps1 -Schedule maps/second-schedule.txt
-    Another shape. Every one of the seven content files is a parameter, so
-    pointing this somewhere else is an argument rather than an edit.
+    ./tools/show-offerings.ps1 -ContentFile @{ schedule = 'maps/second-schedule.txt' }
+    Another shape. Any of the seven content files can be pointed somewhere else
+    by the option the runner declares for it, so this is an argument rather than
+    an edit.
 #>
 param(
     # The seed every offering, filling and field in the run is derived from.
@@ -46,30 +47,20 @@ param(
     [int]$Waves = 10,
     [int]$FieldSize = 10,
 
-    # The seven content files. All seven are parameters so that pointing this at
-    # another roster or another shape costs an argument here rather than a
-    # retrofit across every call site.
-    [string]$Map,
-    [string]$Units,
-    [string]$Upgrades,
-    [string]$Rules,
-    [string]$Schedule,
-    [string]$Defense,
-    [string]$Field
+    # Where the seven content files live. The runner takes them out of it by the
+    # names it declares, so this script names no file of its own.
+    [string]$Content,
+
+    # One or more of the seven somewhere else, keyed by the runner's own option
+    # names: @{ schedule = 'maps/second-schedule.txt' }.
+    [hashtable]$ContentFile = @{}
 )
 
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$content = Join-Path $repoRoot 'content'
 
-if (-not $Map)      { $Map = Join-Path $content 'map.txt' }
-if (-not $Units)    { $Units = Join-Path $content 'units.txt' }
-if (-not $Upgrades) { $Upgrades = Join-Path $content 'upgrades.txt' }
-if (-not $Rules)    { $Rules = Join-Path $content 'ruleset.txt' }
-if (-not $Schedule) { $Schedule = Join-Path $content 'schedule.txt' }
-if (-not $Defense)  { $Defense = Join-Path $content 'defense.txt' }
-if (-not $Field)    { $Field = Join-Path $content 'field.txt' }
+if (-not $Content) { $Content = Join-Path $repoRoot 'content' }
 
 # Built into scratch space rather than into the project's own bin/, so that a
 # run of this script cannot leave the working tree dirtier than it found it.
@@ -86,17 +77,9 @@ if ($LASTEXITCODE -ne 0) {
 
 $number = [System.Globalization.CultureInfo]::InvariantCulture
 
-Invoke-SimCli @(
-    'offerings',
-    '--map', $Map,
-    '--units', $Units,
-    '--upgrades', $Upgrades,
-    '--rules', $Rules,
-    '--schedule', $Schedule,
-    '--defense', $Defense,
-    '--field', $Field,
+Invoke-SimCli (@('offerings') + (Get-ContentArguments $Content $ContentFile) + @(
     '--seed', $Seed.ToString($number),
     '--waves', $Waves.ToString($number),
-    '--field-size', $FieldSize.ToString($number))
+    '--field-size', $FieldSize.ToString($number)))
 
 exit 0

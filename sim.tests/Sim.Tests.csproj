@@ -42,6 +42,26 @@
     </Reference>
   </ItemGroup>
 
+  <!--
+    THE RUNNER'S DECLARATION OF THE CONTENT FILES, COMPILED HERE AS A SOURCE.
+
+    simcli/ContentFiles.cs names the seven files a run is built from: the option
+    each is given on a command line, what each is called on disk, and the type
+    that parses it. RepoLayout finds the committed content by those names and
+    ContentParsers checks each of them, so both would otherwise restate a list
+    that has to agree with the runner's. A list that has to agree is the thing
+    the declaration exists to remove.
+
+    A source link rather than a project reference, because the runner is
+    exercised here as a PROCESS and not as a library: what its verbs are made of
+    is argument parsing, file IO and an exit code, none of which exist when
+    Program.Main is called from inside a test host. See TheCommandLine. Linking
+    one declaration shares the data without making the program a dependency.
+  -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>

@@ -89,6 +89,9 @@ internal sealed class Arguments
         return arguments;
     }
 
+    /// <summary>The verb these arguments were read for, which is what a refusal names.</summary>
+    public string Verb => _verb;
+
     /// <summary>Whether a switch was written on the command line.</summary>
     public bool Given(string name) => _names.Contains(name);
 

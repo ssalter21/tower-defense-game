@@ -1,4 +1,5 @@
 using System.Reflection;
+using Sim.Cli;
 
 namespace Sim.Tests;
 
@@ -30,6 +31,21 @@ public sealed class ContentParser
         File = file;
         IntegersOnly = integersOnly;
         Digest = digest;
+    }
+
+    /// <summary>
+    /// A row for one of the files a run is built from, taking the parser and the
+    /// committed file off the runner's own declaration.
+    /// </summary>
+    /// <remarks>
+    /// What is left to say here is the fold and whether the file is authored in
+    /// the integers-only dialect, which are this gate's business and no part of
+    /// reading a run. Everything else -- which type parses it, what it is called
+    /// -- is <see cref="RunContentFiles"/>'s, so the two cannot disagree.
+    /// </remarks>
+    internal ContentParser(ContentFile file, bool integersOnly, Func<string, Hash64> digest)
+        : this(file.ParsedBy, RepoLayout.InContent(file), integersOnly, digest)
+    {
     }
 
     /// <summary>The type whose <c>Parse</c> reads this file.</summary>
@@ -70,6 +86,14 @@ public sealed class ContentParser
 /// the files below, and <c>HostileLocaleTests</c> runs the whole list under a
 /// culture chosen to break it. Neither restates the parsers, so a parser can
 /// only be covered by both or by neither.
+/// </para>
+/// <para>
+/// <b>The seven a run is built from are not named here either.</b> Those rows
+/// take their file and their parser from <see cref="RunContentFiles"/>, which is
+/// the runner's own declaration and the same one its option list, its usage
+/// block and its reader are built from. What this file adds to them is the fold
+/// and the dialect, which are a gate's business. The three remaining rows are
+/// files no run verb takes.
 /// </para>
 /// <para>
 /// A parser added to the simulation and not added here reddens
@@ -124,23 +148,20 @@ public static class ContentParsers
 
     private static IReadOnlyList<ContentParser> Declare() =>
     [
-        new(typeof(UnitTypeTable), RepoLayout.UnitsFile, true, text => UnitTypeTable.Parse(text).ContentHash),
-        new(
-            typeof(UpgradeLadder),
-            RepoLayout.UpgradesFile,
-            true,
-            text => UpgradeLadder.Parse(text, Types()).ContentHash),
+        // The seven a run is built from, each row naming its file by the
+        // runner's declaration of it.
+        new(RunContentFiles.Units, true, text => UnitTypeTable.Parse(text).ContentHash),
+        new(RunContentFiles.Upgrades, true, text => UpgradeLadder.Parse(text, Types()).ContentHash),
+        new(RunContentFiles.Field, true, text => Fold(WaveScript.Parse(text, Types()))),
+        new(RunContentFiles.Defense, true, text => Fold(TowerLayout.Parse(text, Types()))),
+        new(RunContentFiles.Rules, true, text => Ruleset.Parse(text).ContentHash),
+        new(RunContentFiles.Schedule, true, text => AnchorSchedule.Parse(text, Types()).ContentHash),
+        new(RunContentFiles.Map, false, text => HexMap.Parse(text).MapHash),
+
+        // And the three no run verb takes: the authored match 'record' is given,
+        // the script a run is compiled from, and the trace a match writes.
         new(typeof(WaveScript), RepoLayout.WaveFile, true, text => Fold(WaveScript.Parse(text, Types()))),
-        new(typeof(WaveScript), RepoLayout.FieldFile, true, text => Fold(WaveScript.Parse(text, Types()))),
-        new(typeof(TowerLayout), RepoLayout.DefenseFile, true, text => Fold(TowerLayout.Parse(text, Types()))),
-        new(typeof(Ruleset), RepoLayout.RulesetFile, true, text => Ruleset.Parse(text).ContentHash),
-        new(
-            typeof(AnchorSchedule),
-            RepoLayout.ScheduleFile,
-            true,
-            text => AnchorSchedule.Parse(text, Types()).ContentHash),
         new(typeof(CommandScript), RepoLayout.CommandScriptFile, true, text => Fold(CommandScript.Parse(text))),
-        new(typeof(HexMap), RepoLayout.MapFile, false, text => HexMap.Parse(text).MapHash),
         new(typeof(GoldenTrace), RepoLayout.GoldenTraceFile, false, text => Fold(GoldenTrace.Parse(text))),
     ];
 

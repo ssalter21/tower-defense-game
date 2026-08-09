@@ -68,19 +68,15 @@ internal readonly struct RunShape
 /// </para>
 /// <para>
 /// <b>The field is canned and it stands in for a ghost pool that does not
-/// exist.</b> A round is resolved against K opponents drawn from a population
-/// of other players' rounds, and there is no such population until runs are
-/// stored; until then the population is the one pair of orders this content
-/// describes, drawn with replacement, so a field of ten is that opponent ten
-/// times. That is a thin pool rather than a missing one, and widening it is a
-/// bigger list here and no change anywhere else.
+/// exist.</b> What that means -- one pair of orders, drawn with replacement, so
+/// a field of ten is that opponent ten times -- is composed by
+/// <see cref="FieldPool.Canned"/> and described there. It is the simulation's
+/// answer to how thin a pool may be rather than this reader's, which is why the
+/// two files meeting here does not make it this file's decision.
 /// </para>
 /// </remarks>
 internal sealed class RunContent
 {
-    /// <summary>What the field file is called in anything its parser complains about.</summary>
-    private const string FieldSource = "field";
-
     /// <summary>
     /// The tick every order of a build phase's wave releases on. A field member
     /// stands in for a stored round, a stored round is a build phase's output,
@@ -108,7 +104,7 @@ internal sealed class RunContent
         _map = map;
         _rules = rules;
         _schedule = schedule;
-        _pool = FieldPool.Of(new[] { RoundOrders.Of(defense, field) });
+        _pool = FieldPool.Canned(defense, field);
         Types = types;
         Ladder = ladder;
         Defense = defense;
@@ -171,7 +167,7 @@ internal sealed class RunContent
     /// </remarks>
     private static WaveScript Field(string fieldText, UnitTypeTable types)
     {
-        WaveScript field = WaveScript.Parse(FieldSource, fieldText, types);
+        WaveScript field = WaveScript.Parse(RunContentFiles.Field.Option, fieldText, types);
 
         for (int index = 0; index < field.Count; index++)
         {
@@ -183,7 +179,9 @@ internal sealed class RunContent
             }
 
             throw new UsageException(
-                "--field names a wave whose order "
+                "--"
+                + RunContentFiles.Field.Option
+                + " names a wave whose order "
                 + (index + 1).ToString(PlainText.Culture)
                 + " releases on tick "
                 + tick.ToString(PlainText.Culture)

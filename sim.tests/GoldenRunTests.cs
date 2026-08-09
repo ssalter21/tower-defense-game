@@ -197,7 +197,7 @@ public class GoldenRunTests
             TheRuleset.Committed(),
             types,
             TheSchedule.Committed(types),
-            FieldPool.Of(new[] { RoundOrders.Of(defense, TheRun.FieldWave(types)) }),
+            FieldPool.Canned(defense, TheRun.FieldWave(types)),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

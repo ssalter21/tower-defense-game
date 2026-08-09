@@ -23,10 +23,12 @@
     change committed without its rebuild goes red here rather than being
     papered over by MSBuild rebuilding sim/ on the way past.
 
-    THE FIELD IS content/field.txt AND NOT content/wave.txt. A round is
-    resolved against a field of K opponents drawn from a population of other
+    THE FIELD IS content/field.txt AND NOT content/wave.txt, and this script no
+    longer has an opinion about that: it hands over the content DIRECTORY and
+    the runner takes the seven files out of it by the names it declares. A round
+    is resolved against a field of K opponents drawn from a population of other
     players' rounds; there is no such population until runs are stored, so the
-    canned pair standing in for it is that wave behind the committed defense.
+    canned pair standing in for it is field.txt behind the committed defense.
     It is a build phase's output -- a hundred gold, everything on tick zero --
     because the skeleton's authored match is forty creeps and three hundred and
     eighty gold, which no purse in this economy can compose. That file's own
@@ -63,9 +65,10 @@
     deliberate content or rules change.
 
 .EXAMPLE
-    ./tools/run-sweep.ps1 -Map maps/second.txt -Runs 64 -Out artefacts/second.csv
-    Score another board. Every one of the seven content files is a parameter, so
-    pointing the harness somewhere else is an argument rather than an edit.
+    ./tools/run-sweep.ps1 -ContentFile @{ map = 'maps/second.txt' } -Runs 64 -Out artefacts/second.csv
+    Score another board. Any of the seven content files can be pointed somewhere
+    else by the option the runner declares for it, so this is an argument rather
+    than an edit -- and the other six stay where they were.
 #>
 param(
     [string]$Out,
@@ -87,16 +90,15 @@ param(
     [int]$Waves = 10,
     [int]$FieldSize = 10,
 
-    # The seven content files. All seven are parameters so that pointing the
-    # sweep at another map to score it, or at another matrix, costs an argument
-    # here rather than a retrofit across every call site.
-    [string]$Map,
-    [string]$Units,
-    [string]$Upgrades,
-    [string]$Rules,
-    [string]$Schedule,
-    [string]$Defense,
-    [string]$Field
+    # Where the seven content files live. The runner takes them out of it by the
+    # names it declares, so pointing the sweep at a whole other set of content
+    # is one argument and this script names no file.
+    [string]$Content,
+
+    # One or more of the seven somewhere else: @{ map = 'maps/second.txt' }.
+    # Keyed by the runner's own option names, so scoring another board costs an
+    # argument here rather than a retrofit across every call site.
+    [hashtable]$ContentFile = @{}
 )
 
 $ErrorActionPreference = 'Stop'
@@ -106,17 +108,12 @@ if ($Verify -and $Regenerate) {
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$content = Join-Path $repoRoot 'content'
 
-if (-not $Map)      { $Map = Join-Path $content 'map.txt' }
-if (-not $Units)    { $Units = Join-Path $content 'units.txt' }
-if (-not $Upgrades) { $Upgrades = Join-Path $content 'upgrades.txt' }
-if (-not $Rules)    { $Rules = Join-Path $content 'ruleset.txt' }
-if (-not $Schedule) { $Schedule = Join-Path $content 'schedule.txt' }
-if (-not $Defense)  { $Defense = Join-Path $content 'defense.txt' }
-if (-not $Field)    { $Field = Join-Path $content 'field.txt' }
+if (-not $Content) { $Content = Join-Path $repoRoot 'content' }
 
-$committed = Join-Path $content 'sweep.csv'
+# The report this repository commits, which is the authored content's own and
+# does not move when somebody sweeps another set of it.
+$committed = Join-Path $repoRoot 'content/sweep.csv'
 
 # Built into scratch space rather than into the project's own bin/, so that a
 # run of this script cannot leave the working tree dirtier than it found it.
@@ -136,15 +133,7 @@ $number = [System.Globalization.CultureInfo]::InvariantCulture
 # The whole invocation, written once. A verb reading a different roster than
 # the one the report names is a sweep that refuses for a reason that has
 # nothing to do with what was being checked.
-$sweepArguments = @(
-    'sweep',
-    '--map', $Map,
-    '--units', $Units,
-    '--upgrades', $Upgrades,
-    '--rules', $Rules,
-    '--schedule', $Schedule,
-    '--defense', $Defense,
-    '--field', $Field,
+$sweepArguments = @('sweep') + (Get-ContentArguments $Content $ContentFile) + @(
     '--seed', $Seed.ToString($number),
     '--waves', $Waves.ToString($number),
     '--field-size', $FieldSize.ToString($number),

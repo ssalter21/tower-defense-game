@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Sim.Cli;
 
 namespace Sim.Tests;
 
@@ -38,8 +39,26 @@ public static class RepoLayout
     /// </summary>
     public static string ContentDirectory => Path.Combine(Root, "content");
 
-    public static string UnitsFile => Path.Combine(ContentDirectory, "units.txt");
+    /// <summary>
+    /// One of the seven files a run is built from, where this repository keeps
+    /// it.
+    /// </summary>
+    /// <remarks>
+    /// The name comes off <see cref="RunContentFiles"/> -- the runner's own
+    /// declaration, compiled into this project as a source -- rather than being
+    /// spelled again here. A gate checking one file while the command line reads
+    /// another is green about content nobody plays.
+    /// </remarks>
+    internal static string InContent(ContentFile file) => Path.Combine(ContentDirectory, file.FileName);
 
+    public static string UnitsFile => InContent(RunContentFiles.Units);
+
+    /// <summary>
+    /// The skeleton's authored match: a whole wave released over time, which is
+    /// what <c>record</c> takes as <c>--wave</c>. No run verb reads it -- see
+    /// <see cref="FieldFile"/> for the one that stands in for a stored round --
+    /// so it is named here rather than declared with the seven.
+    /// </summary>
     public static string WaveFile => Path.Combine(ContentDirectory, "wave.txt");
 
     /// <summary>
@@ -47,32 +66,32 @@ public static class RepoLayout
     /// row of <see cref="UnitsFile"/>. Read and handed over as text, exactly
     /// like the unit table, and legal with no edges in it at all.
     /// </summary>
-    public static string UpgradesFile => Path.Combine(ContentDirectory, "upgrades.txt");
+    public static string UpgradesFile => InContent(RunContentFiles.Upgrades);
 
-    public static string MapFile => Path.Combine(ContentDirectory, "map.txt");
+    public static string MapFile => InContent(RunContentFiles.Map);
 
-    public static string DefenseFile => Path.Combine(ContentDirectory, "defense.txt");
+    public static string DefenseFile => InContent(RunContentFiles.Defense);
 
     /// <summary>
     /// The wave the sweep's canned field sends: a build phase's output rather
     /// than the skeleton's authored match, which is a distinction that file's
     /// own header explains at length.
     /// </summary>
-    public static string FieldFile => Path.Combine(ContentDirectory, "field.txt");
+    public static string FieldFile => InContent(RunContentFiles.Field);
 
     /// <summary>
     /// Every number the rules are made of: the damage matrix, the armour
     /// expression, the floor, the purse, the offering and the scouting price.
     /// Read and handed over as text, exactly like the unit table.
     /// </summary>
-    public static string RulesetFile => Path.Combine(ContentDirectory, "ruleset.txt");
+    public static string RulesetFile => InContent(RunContentFiles.Rules);
 
     /// <summary>
     /// The shape: which waves are anchors, which tier each draws from, which one
     /// opens the steep counter, and the tier pools a run's filling is drawn
     /// from. Read and handed over as text, exactly like the unit table.
     /// </summary>
-    public static string ScheduleFile => Path.Combine(ContentDirectory, "schedule.txt");
+    public static string ScheduleFile => InContent(RunContentFiles.Schedule);
 
     /// <summary>
     /// The rolling state hash of the committed match, one line per tick, as a

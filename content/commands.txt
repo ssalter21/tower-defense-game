@@ -42,10 +42,11 @@
 # drawn from the run's seed and the wave -- so the menus have to be read before
 # a script can be written. That is what the offerings verb is for:
 #
-#   dotnet Sim.Cli.dll offerings --seed 20260807 --map content/map.txt \
-#     --units content/units.txt --upgrades content/upgrades.txt \
-#     --rules content/ruleset.txt --schedule content/schedule.txt \
-#     --defense content/defense.txt --field content/field.txt
+#   dotnet Sim.Cli.dll offerings --seed 20260807 --content content
+#
+# --content is the directory the content files live in; the runner takes each
+# of them out of it under the name it declares, and naming one outright --
+# --map elsewhere/map.txt -- points that one file somewhere else.
 #
 # --field IS THE CANNED OPPONENT AND NOT A WAVE THIS RUN SENDS. The waves in
 # this file are composed by its own build rows out of a purse; --field is the

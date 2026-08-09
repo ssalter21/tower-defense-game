@@ -1,3 +1,5 @@
+using Sim.Cli;
+
 namespace Sim.Tests;
 
 /// <summary>
@@ -340,6 +342,95 @@ public class CommandLineTests
         Assert.False(
             File.Exists(Path.Combine(scratch, "sweep.csv")),
             "A report was written for a sweep against an opponent no player could be.");
+    }
+
+    [Fact]
+    public void A_file_named_outright_stands_in_for_the_one_the_content_directory_holds()
+    {
+        // --content is a directory and the seven files inside it are found by
+        // the names the runner declares; naming one outright replaces that file
+        // and leaves the other six where they were.
+        //
+        // What proves the override reached the reader rather than being ignored
+        // is the refusal: the file named here is the authored match, whose
+        // second order releases on tick 750, and no stored round does that.
+        //
+        // OBSERVED: look in the directory before the option in Program.TextOf.
+        // The verb exits 0 and prints a run's menus against content/field.txt --
+        // an argument that named a file nobody opened, which is the failure the
+        // whole of Arguments exists to prevent.
+        CommandLineResult refused = TheCommandLine.Invoke(
+            "offerings",
+            "--seed", "20260807",
+            "--waves", "2",
+            "--content", RepoLayout.ContentDirectory,
+            "--field", RepoLayout.WaveFile);
+
+        Assert.Equal(1, refused.ExitCode);
+        Assert.Contains("releases on tick 750", refused.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Every_content_file_the_runner_declares_is_one_a_run_verb_opens()
+    {
+        // The declaration drives the option list and the usage block by being
+        // read, and it drives the reader by somebody having written the line.
+        // This is what holds the third to the first two: a run verb is played
+        // against a directory with one declared file missing from it, once per
+        // file, and it has to refuse naming the file that is not there.
+        //
+        // A row added to RunContentFiles and not opened by Program.ContentOf is
+        // an option that parses, appears in the usage block and reaches nothing
+        // -- so this walks the declaration rather than a list of its own.
+        //
+        // OBSERVED: drop the --schedule line from Program.ContentOf. The verb
+        // runs to completion against a directory with no schedule.txt in it and
+        // this goes red naming that file, while every other test in this class
+        // stays green -- content nobody reads, offered by name.
+        string scratch = TheCommandLine.Scratch("content-directory");
+
+        foreach (ContentFile file in RunContentFiles.All)
+        {
+            File.Copy(RepoLayout.InContent(file), Path.Combine(scratch, file.FileName));
+        }
+
+        foreach (ContentFile withheld in RunContentFiles.All)
+        {
+            string path = Path.Combine(scratch, withheld.FileName);
+            string held = File.ReadAllText(path);
+
+            File.Delete(path);
+
+            CommandLineResult refused = TheCommandLine.Invoke(
+                "offerings", "--seed", "20260807", "--waves", "1", "--content", scratch);
+
+            File.WriteAllText(path, held);
+
+            Assert.True(
+                refused.ExitCode != 0,
+                "The offerings verb played a run with no " + withheld.FileName + " in front of it.");
+
+            Assert.Contains(withheld.FileName, refused.Error, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
+    public void A_run_verb_given_neither_the_file_nor_a_directory_names_both_ways_to_give_it()
+    {
+        // Nothing is assumed about where content lives: a verb with no --map and
+        // no --content refuses, and says which file it wanted and both ways of
+        // handing it over. A default path here would play a run against content
+        // nobody named and print a confident answer about a different game.
+        //
+        // OBSERVED: fall back to Path.Combine("content", file.FileName) instead
+        // of throwing. The exit code goes to 0 wherever the program happens to
+        // have been started from, and to 1 with a file-not-found somewhere else
+        // -- a verb whose behaviour is the shell's working directory.
+        CommandLineResult refused = TheCommandLine.Invoke("offerings", "--seed", "20260807");
+
+        Assert.Equal(1, refused.ExitCode);
+        Assert.Contains("'offerings' needs --map", refused.Error, StringComparison.Ordinal);
+        Assert.Contains("holding map.txt with --content", refused.Error, StringComparison.Ordinal);
     }
 
     [Fact]
