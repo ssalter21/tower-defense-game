@@ -40,6 +40,7 @@ at its top rather than being rewritten.
 | [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
 | [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
 | [The character roster: KayKit and Quaternius](research/kaykit-character-roster.md) | What 102 character models do the two packs actually contain, and which read as towers and which as creeps? |
+| [Sixteen ways a tower can become something else](research/tower-upgrade-approaches.html) *(HTML)* | What shapes can the tower upgrade graph take, and which survive a ten-round run and the KayKit packs? **Synthesis, not new evidence** — it cites the notes above rather than primary sources, and it chooses nothing |
 
 **Build research**, on the tools rather than the game:
 
