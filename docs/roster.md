@@ -126,7 +126,7 @@ deletes one of those two cases.
 | 12 | Skeleton | creep | — | live | `skeleton` | — new |
 | 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` | — new |
 | — | Captain | tower | 2 | proposed | — | |
-| — | Ranger | tower | 2 | proposed | — | |
+| — | Ranger | tower | 2 | signed | — | |
 | — | Pyromancer | tower | 2a | proposed | — | |
 | — | Cryomancer | tower | 2b | proposed | — | |
 | — | Hero | tower | 3 | proposed | — | |
@@ -216,14 +216,27 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 > reading would have retuned the tower the committed defense is mostly made of, to buy early what tier 3 gives
 > anyway.
 
-### Ranger · tier 2 · status proposed
+### Ranger · tier 2 · status signed
 
 - **Does** — +1 hex of range.
-- **Looks** — stands a block higher.
-- **Numbers** — range 4200.
+- **Looks** —
+- **Numbers** — range 4200, and every other number the Archer's: cooldown 18, damage 90–150, windup 9,
+  backswing 6, hitscan, pierce, **cost 40**.
 - **Needs** — nothing. Authorable today, and it is the only tier on this page that is purely a number.
-- **Open** — a tier that is one stat is cheap to build and thin to play. Is that acceptable as the middle rung,
-  or does it want a second clause?
+- **Open** — none. A tier that is one stat was the question, and the answer is yes, for now: it is the middle
+  rung, it is what the upgrade edge was built to be able to state, and a second clause can be added to it
+  later without moving its id.
+
+> **It costs the same as the Archer, and that is the rule rather than a mistake.** A tower is priced at one gold
+> per five damage a second times the bodies a shot hits, and **the rule does not price range** — so a tower that
+> differs from the Archer in range alone prices identically to it. `./tools/show-ladder.ps1` prints a *flat or
+> falling price* note against the `archer → ranger` edge for exactly this reason. It is a note and not a fault,
+> nothing goes red, and there is nothing here for anybody to go and fix.
+>
+> The gap is [already written down beside the rule](#what-things-cost) and this leans on it rather than
+> tripping over it. Two futures were named and neither gates this row: range may become an input to the cost
+> algorithm, or the algorithm may be replaced by something derived from **many simulations rather than from a
+> row's stats**. Both sit with the capstone exemption, and neither is this effort's.
 
 ### Marksman · tier 3 · status proposed
 
