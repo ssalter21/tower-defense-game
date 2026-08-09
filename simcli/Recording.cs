@@ -50,7 +50,14 @@ internal static class Recording
         TowerLayout layout = TowerLayout.Parse(defenseText, types);
         WaveScript wave = WaveScript.Parse(waveText, types);
 
-        byte[] bytes = ReplayBundle.Of(map, layout, wave, types, seed, mapHandle).ToBytes();
+        // The bundle stamps the ruleset's content hash and the replay gate
+        // compares the two, so the numbers a landing resolves through are pinned
+        // the way the roster already is. It comes off the same text the proof
+        // below is handed, which is what makes the stamp the rules that were
+        // played.
+        Ruleset rules = Ruleset.Parse(rulesText);
+
+        byte[] bytes = ReplayBundle.Of(map, layout, wave, types, rules, seed, mapHandle).ToBytes();
 
         return (bytes, HeadlessRun.Of(bytes, unitsText, upgradesText, rulesText));
     }

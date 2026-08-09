@@ -15,7 +15,7 @@
 #
 # The run this came from:
 #
-#   replay bundle format 0, simulation version 2, content 51BC7297223A70E8
+#   replay bundle format 1, simulation version 2, content 51BC7297223A70E8
 #   seed       20260801
 #   defense    7A696149E8C67620, read at defense record format 1
 #   wave       B9C1B643DC253568

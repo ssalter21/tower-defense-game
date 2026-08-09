@@ -84,15 +84,18 @@
     bytes still parse into that defense and that wave -- and restaging parses
     them exactly as replaying does before running them to a pinned outcome. The
     question a golden does not ask is "were these the same rules?", which is a
-    question about a competitive record. The live bundle's version gate is
-    checked in the verify above, on content/match.replay, which is the same bytes
-    as the current-version golden.
+    question about a competitive record. The live bundle's version, content and
+    ruleset gates are all checked in the verify above, on content/match.replay,
+    which is the same bytes as the current-version golden.
 
-    THE RULESET IS THE LIVE ONE FOR EVERY RUN. It is not pinned beside a
-    golden and it does not need to be: a table whose rows carry no attack or
-    armour type never reaches the matrix, so the oldest goldens resolve their
-    shots to the roll whatever the ruleset says, and the current-version golden
-    is re-recorded by this switch anyway.
+    THE RULESET IS THE LIVE ONE FOR EVERY RUN. A bundle stamps the ruleset it
+    was recorded against and the replay gate compares the two, but restaging
+    skips that gate by name exactly as it skips the content-hash one -- so a
+    golden needs no ruleset pinned beside it, for the same reason the live
+    ladder is safe to pass. The oldest golden could not be replayed here in any
+    case: it is a version-0 bundle, it names no ruleset, and a record that does
+    not say which numbers its landings resolved through is retired at that gate.
+    See docs/adr/0047-a-bundle-stamps-its-ruleset.md.
 
 .EXAMPLE
     ./tools/run-headless-match.ps1
@@ -358,7 +361,7 @@ function Get-GoldenUpgradesPath {
 # beside a pinned table refuses -- for a reason that has nothing to do with the
 # reader branch the golden exists to prove. Which ladder it is cannot change the
 # outcome either way, because RestageUnderCurrentRules skips the content-hash
-# gate; what it has to do is parse.
+# and ruleset gates; what it has to do is parse.
 #
 # Where there is no pinned ladder the answer is an EMPTY one, because that is
 # what the bundle was recorded against. It is written to scratch and never beside

@@ -649,7 +649,7 @@ public class RecordNegativeTests
         ReplayBundle good = TheMatch.Bundle();
         byte[] bytes = RecordBytes.WithU16(
             good.ToBytes(),
-            RecordFormat.HeaderBytes + 8,
+            RecordBytes.BundleMapWidthOffset,
             4000);
 
         RecordException thrown = Assert.Throws<RecordException>(() => ReplayBundle.FromBytes(bytes));

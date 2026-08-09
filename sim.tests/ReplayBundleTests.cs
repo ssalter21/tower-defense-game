@@ -7,8 +7,12 @@ namespace Sim.Tests;
 public class ReplayBundleTests
 {
     [Fact]
-    public void A_bundle_is_the_header_the_seed_the_map_the_defense_and_the_wave_and_nothing_else()
+    public void A_bundle_is_the_header_the_ruleset_the_seed_the_map_the_defense_and_the_wave_and_nothing_else()
     {
+        // Header, ruleset hash, seed, width, height, the grid, the defense and
+        // the wave -- nothing else fits. The eight bytes of ruleset hash are the
+        // whole of format version 1; if this number grows again without the
+        // format version moving, that is the mistake this assertion catches.
         UnitTypeTable types = TheMatch.Types();
         ReplayBundle bundle = TheMatch.Bundle();
 
@@ -17,7 +21,7 @@ public class ReplayBundleTests
         int wave = TheMatch.WaveOf(types).ToBytes().Length;
 
         Assert.Equal(135, cells);
-        Assert.Equal(18 + 8 + 2 + 2 + cells + ghost + wave, bundle.ToBytes().Length);
+        Assert.Equal(18 + 8 + 8 + 2 + 2 + cells + ghost + wave, bundle.ToBytes().Length);
     }
 
     [Fact]
@@ -35,6 +39,7 @@ public class ReplayBundleTests
         ReplayBundle read = ReplayBundle.FromBytes(bundle.ToBytes());
 
         Assert.Equal(bundle.Header, read.Header);
+        Assert.Equal(bundle.RulesetHash, read.RulesetHash);
         Assert.Equal(bundle.Seed, read.Seed);
         Assert.Equal(bundle.Map.MapHash, read.Map.MapHash);
         Assert.Equal(bundle.Ghost, read.Ghost);
@@ -45,10 +50,12 @@ public class ReplayBundleTests
     public void The_bundle_carries_everything_a_match_needs_and_consults_no_registry()
     {
         // Self-contained: the seed, the map inlined as the parsed grid, the
-        // defense and the wave. The only thing that has to be handed in is the
-        // ruleset, which the content hash pins.
+        // defense and the wave. The two things that have to be handed in are the
+        // unit table and the ruleset, and the bundle carries the hash of each,
+        // so neither can be substituted without the gate saying so.
         ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
 
+        Assert.Equal(TheRuleset.Committed().ContentHash, bundle.RulesetHash);
         Assert.Equal(TheMatch.Seed, bundle.Seed);
         Assert.Equal(TheMatch.Map().MapHash, bundle.Map.MapHash);
         Assert.Equal(TheMatch.Map().Route.Count, bundle.Map.Route.Count);
@@ -132,9 +139,10 @@ public class ReplayBundleTests
         ReplayBundle read = ReplayBundle.FromBytes(onDisk);
 
         Assert.Equal(TheMatch.Seed, read.Seed);
-        Assert.Equal(0, read.Header.FormatVersion);
+        Assert.Equal(RecordFormat.ReplayVersion, read.Header.FormatVersion);
         Assert.Equal(SimulationVersion.Current, read.Header.SimVersion);
         Assert.Equal(TheMatch.Types().ContentHash, read.Header.ContentHash);
+        Assert.Equal(TheRuleset.Committed().ContentHash, read.RulesetHash);
     }
 
     [Fact]

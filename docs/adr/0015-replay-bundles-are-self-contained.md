@@ -1,6 +1,6 @@
 # A replay bundle is self-contained, and the seed lives in it
 
-A replay bundle carries the seed, the map inlined, the defense and the wave — everything needed to re-run the match, with no registry and no assumption about where anything lives.
+A replay bundle carries the seed, the map inlined, the defense and the wave — everything needed to re-run the match, with no registry and no assumption about where anything lives. The two tables it does not inline, the unit types and the ruleset, it pins by content hash ([0047](0047-a-bundle-stamps-its-ruleset.md)), so neither can be substituted without the replay gate saying so.
 
 ## Considered options
 

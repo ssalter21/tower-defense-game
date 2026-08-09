@@ -52,6 +52,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
 | [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
 | [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing, and the content hash covers content the simulation never reads |
+| [0047](0047-a-bundle-stamps-its-ruleset.md) | A replay bundle stamps its ruleset, and a bundle that names none is retired |
 
 ## Drawing the match
 

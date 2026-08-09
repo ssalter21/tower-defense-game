@@ -1,5 +1,5 @@
-restaged   Restaged, not replayed: recorded under simulation version 2 and content 51BC7297223A70E8, run under simulation version 2 and content 51BC7297223A70E8. The outcome is what this defense and this wave do today, and it is not this record's result.
-replay bundle format 0, simulation version 2, content 51BC7297223A70E8
+restaged   Restaged, not replayed: recorded under simulation version 2, content 51BC7297223A70E8 and ruleset B8D395FFBCA5BCCC, run under simulation version 2, content 51BC7297223A70E8 and ruleset B8D395FFBCA5BCCC. The outcome is what this defense and this wave do today, and it is not this record's result.
+replay bundle format 1, simulation version 2, content 51BC7297223A70E8
 seed       20260801
 defense    7A696149E8C67620, read at defense record format 1
 wave       B9C1B643DC253568

@@ -82,10 +82,17 @@ public static class TheMatch
     public static WaveRecord WaveOf(UnitTypeTable types) => WaveRecord.Of(Wave(types), types);
 
     /// <summary>The committed match as one self-contained replay bundle.</summary>
-    public static ReplayBundle Bundle(ulong seed = Seed)
+    /// <remarks>
+    /// Stamped with the committed ruleset, because that is what the committed
+    /// bundle on disk is stamped with and every gate test compares against it.
+    /// </remarks>
+    public static ReplayBundle Bundle(ulong seed = Seed) => Bundle(TheRuleset.Committed(), seed);
+
+    /// <summary>The same match, stamped with a ruleset the caller names.</summary>
+    public static ReplayBundle Bundle(Ruleset rules, ulong seed = Seed)
     {
         UnitTypeTable types = Types();
-        return ReplayBundle.Of(Map(), Layout(types), Wave(types), types, seed, MapHandle);
+        return ReplayBundle.Of(Map(), Layout(types), Wave(types), types, rules, seed, MapHandle);
     }
 
     /// <summary>

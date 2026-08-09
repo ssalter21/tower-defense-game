@@ -51,6 +51,25 @@ public static class TheRuleset
     public static Ruleset Retuned() =>
         Ruleset.Parse(PlantedText.Replace(CommittedText(), "income        100", "income        101"));
 
+    /// <summary>
+    /// The committed ruleset with the armour denominator moved by one and
+    /// nothing else touched.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Retuned"/> moves the income base, which no match can see: it
+    /// pays a purse, and a purse belongs to a run. This one moves a number the
+    /// fused damage expression divides by on every landing, whatever the
+    /// creep's armour, so a match run against it comes to a different rolling
+    /// state hash. That difference is the reason a bundle stamps its ruleset,
+    /// and a gate test that used a number no match reads would be proving the
+    /// stamp against a change that could not have hurt anybody.
+    /// </remarks>
+    public static Ruleset RetunedDamage() =>
+        Ruleset.Parse(PlantedText.Replace(
+            CommittedText(),
+            "armour          1          100",
+            "armour          1          101"));
+
     /// <summary>The committed ruleset as a different file and the same rules.</summary>
     public static string ReformattedText() => Reauthoring.Reauthored(CommittedText());
 

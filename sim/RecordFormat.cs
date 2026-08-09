@@ -128,8 +128,32 @@ namespace Sim
         /// <summary>The wave layout, version 0.</summary>
         public const int WaveVersion = 0;
 
-        /// <summary>The replay bundle layout, version 0.</summary>
-        public const int ReplayVersion = 0;
+        /// <summary>
+        /// The replay bundle layout, version 1: the version-0 fields with a
+        /// <c>u64 ruleset_hash</c> in front of the seed.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Version 0 carries no ruleset stamp, and version 1 is the bump
+        /// that adds one.</b> Every landing reads the matrix cell, the armour
+        /// denominator, the armour percentage and the damage floor off the
+        /// ruleset a bundle is replayed against, so the stamp is what stops one
+        /// retuned number producing a different match under a record's name
+        /// while the simulation version, the content hash and the map hash all
+        /// agree.
+        /// </para>
+        /// <para>
+        /// <b>The version-0 branch supplies nothing, and a version-0 bundle is
+        /// retired at the ruleset gate.</b> This is the case
+        /// <see cref="GhostVersion"/> names as the one a reader may not default:
+        /// a replay's result depends on every number in the ruleset, so any
+        /// value the branch invented would be an input the recorded run never
+        /// had. Those bundles stay readable, listable and restageable forever
+        /// and they no longer replay. See
+        /// <c>docs/adr/0047-a-bundle-stamps-its-ruleset.md</c>.
+        /// </para>
+        /// </remarks>
+        public const int ReplayVersion = 1;
 
         /// <summary>
         /// The command stream layout, version 0. Counted on its own, so a
@@ -260,7 +284,12 @@ namespace Sim
                     return formatVersion == 0;
 
                 case RecordKind.Replay:
-                    return formatVersion == 0;
+                    // Version 0 is here on the same terms the defense's is: a
+                    // golden bundle is committed against it forever, and the
+                    // branch stays for as long as any version-0 bytes exist.
+                    // That it can no longer pass the replay gate is a decision
+                    // about the ruleset field and not about reading the bytes.
+                    return formatVersion == 0 || formatVersion == 1;
 
                 case RecordKind.Command:
                     return formatVersion == 0;
