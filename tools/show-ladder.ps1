@@ -29,8 +29,8 @@
 
 .EXAMPLE
     ./tools/show-ladder.ps1
-    The committed ladder. While content/upgrades.txt holds no edges this prints
-    nothing at all and exits zero, which is what an empty ladder is.
+    The committed ladder: its edges, then its notes, then its faults. A ladder
+    with no edges in it prints nothing at all and still exits zero.
 
 .EXAMPLE
     ./tools/show-ladder.ps1 -Upgrades drafts/second-ladder.txt

@@ -163,11 +163,13 @@ public class CommandLineTests
         // Two files and not seven, which is the shape of the verb: a ladder is
         // read against the roster and against nothing else.
         //
-        // ON THE DAY THIS LANDS IT PRINTS NOTHING, AND THAT IS THE CHECK.
-        // content/upgrades.txt holds a layout row and no edges, so there is no
-        // line to print and no note to make -- and the exit code says the file
-        // was opened, parsed and accepted rather than skipped. What it prints
-        // once an edge exists is asserted where that edge is authored.
+        // The edge count is read off the same parser the verb uses rather than
+        // pinned, because the ladder is expected to grow one row at a time and a
+        // pinned count would go red on every legitimate authoring. What this
+        // holds the verb to is printing one line per committed edge and exiting
+        // zero -- which over a ladder with no edges is no output and still a zero,
+        // and is still the statement that the file was opened and accepted rather
+        // than skipped.
         CommandLineResult listed = TheCommandLine.Invoke(
             "ladder",
             "--units", RepoLayout.UnitsFile,

@@ -95,10 +95,9 @@ public class ContentTests
         // DELIBERATELY NOT A CENSUS. No row count and no pinned edge list: the
         // ladder is expected to grow one row at a time, and a census would go red
         // on every legitimate authoring. The notes are not asserted on at all --
-        // a note is a design statement and asserting one would make it a rule.
-        //
-        // On the day this lands the assertion is vacuous, because the committed
-        // ladder has no edges. Its first real subject is the Archer's rung.
+        // a note is a design statement and asserting one would make it a rule,
+        // and the committed pair has three of them, including the flat price the
+        // Ranger carries by way of the cost rule not pricing range.
         UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
         UpgradeLadder ladder = UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
 

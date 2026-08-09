@@ -27,10 +27,11 @@
 # folds into the unit table's content hash the same way whoever typed it ordered
 # the lines.
 #
-# AN EMPTY FILE IS LEGAL, and it is the state this file lands in: a layout row
-# and no edges. An absent ladder folds nothing into the content hash, which is
-# what keeps every record made before this file existed replayable forever.
-# Reasoning in docs/adr/0046-an-absent-ladder-folds-nothing.md.
+# A FILE WITH NO EDGES IN IT IS LEGAL -- a layout row and nothing else. A ladder
+# with no edges folds nothing into the content hash, so a roster half-way through
+# being authored still loads and every record made before this file existed stays
+# replayable forever. Reasoning in
+# docs/adr/0046-an-absent-ladder-folds-nothing.md.
 #
 # THE SIMULATION NEVER READS THIS FILE. An edge is an annotation on the roster;
 # nothing in a tick loop can observe one. The parsed ladder is held by the

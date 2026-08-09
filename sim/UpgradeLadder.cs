@@ -15,11 +15,10 @@ namespace Sim
     /// </remarks>
     public readonly struct UpgradeEdge
     {
-        internal UpgradeEdge(int from, int to, int line)
+        internal UpgradeEdge(int from, int to)
         {
             From = from;
             To = to;
-            Line = line;
         }
 
         /// <summary>The unit a swap consumes.</summary>
@@ -27,9 +26,6 @@ namespace Sim
 
         /// <summary>The unit it becomes. Always the larger of the two ids.</summary>
         public int To { get; }
-
-        /// <summary>The line of the authored file this edge came from, for messages.</summary>
-        internal int Line { get; }
 
         public override string ToString() =>
             From.ToString(CultureInfo.InvariantCulture)
@@ -174,9 +170,9 @@ namespace Sim
     /// edges into a unit table's content hash walks them in file order.
     /// </para>
     /// <para>
-    /// <b>A ladder with no edges at all is legal</b>, and it is what
-    /// <c>content/upgrades.txt</c> was born as. A roster mid-edit has to stay
-    /// loadable, and an empty ladder folds nothing.
+    /// <b>A ladder with no edges at all is legal.</b> A roster half-way through
+    /// being authored has to stay loadable, and a ladder with no edges folds
+    /// nothing into a content hash.
     /// </para>
     /// </remarks>
     public sealed class UpgradeLadder
@@ -357,7 +353,7 @@ namespace Sim
 
                 previousFrom = from;
                 previousTo = to;
-                edges.Add(new UpgradeEdge(from, to, number));
+                edges.Add(new UpgradeEdge(from, to));
             }
 
             if (!declared)
@@ -643,15 +639,16 @@ namespace Sim
                 }
             }
 
-            // Unreachable: every id in an edge was resolved against this table at
-            // parse. Stated as a throw rather than a comment, because a silent -1
-            // would index a grid.
-            throw new ContentException(
-                "upgrade ladder",
-                0,
-                "names type id "
+            // Reachable only by handing this ladder a different table than the
+            // one it was parsed against, which is a fault in the calling program
+            // rather than in anybody's authored content -- so it is a
+            // SimulationException and not a ContentException. A silent -1 would
+            // index the grid below it.
+            throw new SimulationException(
+                "This ladder names type id "
                 + id.ToString(CultureInfo.InvariantCulture)
-                + ", which is not in the table this ladder was parsed against.");
+                + ", which the table handed to it does not define. A ladder is walked against the table it "
+                + "was parsed against; every id in it was resolved there already.");
         }
 
         /// <summary>A unit and what its role does, for a sentence naming both ends of an edge.</summary>
