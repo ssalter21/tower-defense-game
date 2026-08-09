@@ -637,10 +637,11 @@ public class BuildPhaseTests
         // same call rather than two lifecycles.
         //
         // OBSERVED: leave the purse and the unlocks on the build rather than
-        // taking them back -- drop the two assignments in
-        // Run.Advance(BuildPhase, TowerLayout). The unlock-count assertion goes
-        // red, 10 against 0, and every round of the run decides against a run
-        // that has never taken anything and never spent a coin.
+        // taking them back -- hand Run.Play the run's own Unlocks and Purse
+        // instead of the build's, in Run.Advance(BuildPhase, TowerLayout). The
+        // unlock-count assertion goes red, 10 against 0, and every round of the
+        // run decides against a run that has never taken anything and never
+        // spent a coin.
         Run run = TheBuild.Fresh();
         TowerLayout defense = TheBuild.Defense();
         var spent = new List<int>();
@@ -679,17 +680,18 @@ public class BuildPhaseTests
         // paid for a wave nobody was in the run to send -- and nothing
         // downstream could tell that from a round somebody played.
         //
-        // OBSERVED: take the purse and the unlocks back before the round is
-        // checked rather than after -- move the two assignments in
-        // Run.Advance(BuildPhase, TowerLayout) above the RequireUnfinished
-        // call. The first half goes red, 210 against 190: a finished run pays
-        // for a wave it refused to send.
+        // OBSERVED: take the purse and the unlocks back where the decision is
+        // made rather than where the round is committed -- add
+        // `Unlocks = build.Unlocks; Purse = build.Purse;` above the
+        // RequireUnfinished call in Run.Advance(BuildPhase, TowerLayout). The
+        // first half goes red, 210 against 193: a finished run pays for a wave
+        // it refused to send.
         //
-        // OBSERVED: compose the orders after the two assignments instead of
-        // before them -- inline the RoundOrders.Of call into the Advance
-        // beneath it. The first half stays green and the second goes red, 0
-        // against 1, because the defense is the last thing that can refuse a
-        // round and it is the only one the earlier mutation leaves in place.
+        // OBSERVED: put those two assignments below RequireUnfinished instead,
+        // with the RoundOrders.Of call moved down past them. The first half
+        // stays green and the second goes red, 0 against 1, because the defense
+        // is the last thing that can refuse a round and it is the only refusal
+        // that mutation leaves standing.
         TowerLayout defense = TheBuild.Defense();
         Run over = TheBuild.Fresh(waves: 1);
 

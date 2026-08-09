@@ -738,11 +738,11 @@ public class RunTests
         // guard is per line item and never sees the wave.
         //
         // OBSERVED: sum the leak cost into an int in Run.LeakCost and drop the
-        // range check. The refusal fires one layer later, from RoundOutcome,
-        // naming a round that took -294967296 in leak cost -- so this goes red
+        // range check. The refusal fires one layer later, from PerformanceField,
+        // naming a field that dealt -294967296 in leak cost -- so this goes red
         // on the message rather than on the throw. That is why the refusal is
         // asserted by name: a wrapped total should say which arithmetic wrapped
-        // rather than surface as a round that gave health back.
+        // rather than surface as a field that gave gold back.
         UnitTypeTable types = TheRun.RuinouslyPricedTypes();
 
         var run = new Run(
@@ -765,18 +765,17 @@ public class RunTests
     public void A_round_that_throws_after_its_matches_leaves_the_run_exactly_where_it_was()
     {
         // The other end of a round from the build phase's. Every match of the
-        // round resolves, and then the wave is paid -- the field is measured on
-        // first use and the purse is closed -- and both of those can refuse. A
-        // purse near the top of its range is the refusal a run can be built to
-        // reach: the interest alone carries the close past what a purse is kept
-        // in.
+        // round resolves, and then the wave is paid, which can refuse: a purse
+        // near the top of its range is the refusal a run can be built to reach,
+        // because the interest alone carries the close past what a purse is
+        // kept in.
         //
         // OBSERVED: put the two Add calls and the purse assignment back above
-        // Purse.CloseWave in Run.Advance(RoundOrders). The round count goes red,
-        // 1 against 0, and the run carries a round on its vector and in what it
-        // sent for a wave that was never paid for -- with an outcome still
-        // folded from before it, which nothing downstream could tell from a run
-        // somebody played.
+        // Purse.CloseWave in Run.Play. The round count goes red, 1 against 0,
+        // and the run carries a round on its vector and in what it sent for a
+        // wave that was never paid for -- with an outcome still folded from
+        // before it, which nothing downstream could tell from a run somebody
+        // played.
         Ruleset rules = Ruleset.Parse(
             PlantedText.Replace(TheRuleset.CommittedText(), "purse         100", "purse  2147483000"));
 
@@ -803,6 +802,159 @@ public class RunTests
         Assert.Equal(rules.HealthPoolGold, run.Health);
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.False(run.IsOver);
+    }
+
+    [Fact]
+    public void A_run_advanced_through_a_build_phase_into_a_purse_overflow_is_left_exactly_where_it_was()
+    {
+        // The fixture above, entered a step earlier. The round is the same round
+        // and it refuses in the same place; what is different is that a build
+        // phase has resolved a take and a purchase in front of it, and both have
+        // to survive the refusal as nothing at all.
+        //
+        // OBSERVED: assign build.Unlocks and build.Purse to the run in
+        // Run.Advance(BuildPhase, TowerLayout) before the round is played. The
+        // unlock count goes red, 1 against 0, and the run carries a take and a
+        // spent purse for a wave nobody was in the run to send.
+        Ruleset rules = Ruleset.Parse(
+            PlantedText.Replace(TheRuleset.CommittedText(), "purse         100", "purse  2147483000"));
+
+        UnitTypeTable types = TheMatch.Types();
+
+        var run = new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheSchedule.Committed(types),
+            TheRun.Pool(types),
+            TheRun.Seed,
+            waves: 2,
+            fieldSize: 2);
+
+        // A take and a slot of the creep it unlocks, so the round has both a
+        // purse to leave alone and an unlock to leave untaken.
+        BuildPhase phase = TheBuild.TakeFirst(
+            run.Offering, WaveSlot.Of(run.Offering.Options[0].TypeId, 1));
+
+        SimulationException thrown = Assert.Throws<SimulationException>(
+            () => run.Advance(phase, TheBuild.Defense(types)));
+
+        Assert.Contains(
+            "does not fit in the 32-bit integer a purse is kept in",
+            thrown.Message,
+            StringComparison.Ordinal);
+
+        Assert.Equal(0, run.Round);
+        Assert.Empty(run.Sent);
+        Assert.Empty(run.Outcome.Rounds);
+        Assert.Equal(0, run.Unlocks.Count);
+        Assert.Equal(rules.HealthPoolGold, run.Health);
+        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
+        Assert.False(run.IsOver);
+    }
+
+    [Fact]
+    public void A_round_whose_field_measurement_refuses_leaves_the_run_exactly_where_it_was()
+    {
+        // The second of the three things a round can refuse at. What a round of
+        // the pool is worth is measured on first use, which is inside the first
+        // round of the run, and measuring plays matches of its own -- so it can
+        // refuse for the reason a round's own matches can.
+        //
+        // The measurement is the only thing here that reaches for that refusal,
+        // and the pool is two members so that it is. Ruinously priced, the long
+        // wave costs more than a purse can hold once it leaks and the short one
+        // does not; the round is fought against the short member and the
+        // measurement draws the long one. Measured: with the Field read in
+        // Run.Play moved back down to the CloseWave call, so that the round's
+        // own matches all resolve first, this still throws -- none of them was
+        // ever over the limit.
+        //
+        // OBSERVED: give the pool's second member the short wave too --
+        // TheRun.Orders(types, 6, 1) for both. The test goes red having caught
+        // nothing, because the round plays out: no match in it, measured or
+        // fought, leaks more gold than a purse can hold.
+        UnitTypeTable types = TheRun.RuinouslyPricedTypes();
+        Ruleset rules = TheRuleset.Committed();
+
+        var run = new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheSchedule.Committed(types),
+            FieldPool.Of(new[] { TheRun.Orders(types, 6, 1), TheRun.Orders(types, 6, 6) }),
+            TheRun.Seed,
+            waves: 1,
+            fieldSize: 1);
+
+        SimulationException thrown = Assert.Throws<SimulationException>(
+            () => run.Advance(TheBuild.TakeFirst(run.Offering), TheBuild.Defense(types)));
+
+        Assert.Contains(
+            "does not fit in the 32-bit integer health and gold",
+            thrown.Message,
+            StringComparison.Ordinal);
+
+        Assert.Equal(0, run.Round);
+        Assert.Empty(run.Sent);
+        Assert.Empty(run.Outcome.Rounds);
+        Assert.Equal(0, run.Unlocks.Count);
+        Assert.Equal(rules.HealthPoolGold, run.Health);
+        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
+    }
+
+    [Fact]
+    public void A_round_whose_outcome_will_not_fold_leaves_the_run_exactly_where_it_was()
+    {
+        // The third. What a run has dealt and taken are totals over the whole
+        // vector, so the round that carries one of them out of the range gold is
+        // counted in is refused by the fold rather than by anything inside the
+        // round -- and the fold is the last thing a round does.
+        //
+        // A pool sending ten ruinously priced leakers costs a round a thousand
+        // million in health, which two rounds fit and three do not. Death does
+        // not end this run, so the rounds past the first are rounds it is still
+        // in to play.
+        //
+        // OBSERVED: fold after the appends rather than before them -- hand
+        // Run.Commit the run's current _outcome in place of
+        // FoldedWith(outcome), and end Commit with
+        // `_outcome = Folded(_rounds);`. The round count goes red, 3 against 2,
+        // and the run carries a round its own outcome was never folded over.
+        UnitTypeTable types = TheRun.RuinouslyPricedTypes();
+
+        var run = new Run(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheSchedule.Committed(types),
+            FieldPool.Of(new[] { TheRun.Orders(types, 6, 1) }),
+            TheRun.Seed,
+            waves: 3,
+            fieldSize: 1,
+            deathEndsTheRun: false);
+
+        TowerLayout defense = TheBuild.Defense(types);
+
+        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+
+        int purse = run.Purse.Gold;
+        RunOutcome outcome = run.Outcome;
+
+        SimulationException thrown = Assert.Throws<SimulationException>(
+            () => run.Advance(TheBuild.TakeFirst(run.Offering), defense));
+
+        Assert.Contains(
+            "in leak cost taken, which does not fit in the 32-bit integer gold is counted in",
+            thrown.Message,
+            StringComparison.Ordinal);
+
+        Assert.Equal(2, run.Round);
+        Assert.Equal(2, run.Sent.Count);
+        Assert.Equal(2, run.Unlocks.Count);
+        Assert.Equal(purse, run.Purse.Gold);
+        Assert.Same(outcome, run.Outcome);
     }
 
     [Fact]
