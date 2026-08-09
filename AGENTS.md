@@ -69,3 +69,5 @@ Three facts, measured. The evidence is in
 - [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. Source comments say *what* the code does; the
   reasoning lives here.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
+- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the effort review
+  boundary, and how blocking, claiming and closing a ticket are done here.
