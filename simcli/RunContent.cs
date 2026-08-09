@@ -54,6 +54,12 @@ internal readonly struct RunShape
 /// and the engine call.
 /// </para>
 /// <para>
+/// <b>The defense is read twice on purpose.</b> It is what stands while this
+/// run's waves are sent, and it is also the defense the canned opponent stands
+/// behind, so both directions of a round are measured through the same wall.
+/// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
+/// </para>
+/// <para>
 /// <b>The upgrade ladder is parsed, folded into the roster's content hash, held
 /// -- and never handed to <see cref="Run"/>.</b> That absence is what makes
 /// "the simulation does not enforce the ladder" a property of the code rather
@@ -72,6 +78,16 @@ internal readonly struct RunShape
 /// </remarks>
 internal sealed class RunContent
 {
+    /// <summary>What the field file is called in anything its parser complains about.</summary>
+    private const string FieldSource = "field";
+
+    /// <summary>
+    /// The tick every order of a build phase's wave releases on. A field member
+    /// stands in for a stored round, a stored round is a build phase's output,
+    /// and a build phase composes what is sent rather than when.
+    /// </summary>
+    private const int ReleaseTick = 0;
+
     private readonly HexMap _map;
 
     private readonly Ruleset _rules;
@@ -87,12 +103,12 @@ internal sealed class RunContent
         Ruleset rules,
         AnchorSchedule schedule,
         TowerLayout defense,
-        WaveScript wave)
+        WaveScript field)
     {
         _map = map;
         _rules = rules;
         _schedule = schedule;
-        _pool = FieldPool.Of(new[] { RoundOrders.Of(defense, wave) });
+        _pool = FieldPool.Of(new[] { RoundOrders.Of(defense, field) });
         Types = types;
         Ladder = ladder;
         Defense = defense;
@@ -125,7 +141,7 @@ internal sealed class RunContent
         string rulesText,
         string scheduleText,
         string defenseText,
-        string waveText)
+        string fieldText)
     {
         UnitTypeTable roster = UnitTypeTable.Parse(unitsText);
         UpgradeLadder ladder = UpgradeLadder.Parse(upgradesText, roster);
@@ -138,7 +154,47 @@ internal sealed class RunContent
             Ruleset.Parse(rulesText),
             AnchorSchedule.Parse(scheduleText, types),
             TowerLayout.Parse(defenseText, types),
-            WaveScript.Parse(waveText, types));
+            Field(fieldText, types));
+    }
+
+    /// <summary>
+    /// The canned opponent's wave, refused unless it is a round's worth of
+    /// orders rather than a match's.
+    /// </summary>
+    /// <remarks>
+    /// An authored match wave parses here perfectly -- same keyword, same
+    /// fields, same table -- and a report swept against one reads exactly like a
+    /// real one while separating no creep from any other. What tells the two
+    /// apart is the release tick: <see cref="BuildPhase"/> composes what is sent
+    /// rather than when, so every order of a stored round leaves on tick zero.
+    /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
+    /// </remarks>
+    private static WaveScript Field(string fieldText, UnitTypeTable types)
+    {
+        WaveScript field = WaveScript.Parse(FieldSource, fieldText, types);
+
+        for (int index = 0; index < field.Count; index++)
+        {
+            int tick = field.Orders[index].TickOffset;
+
+            if (tick == ReleaseTick)
+            {
+                continue;
+            }
+
+            throw new UsageException(
+                "--field names a wave whose order "
+                + (index + 1).ToString(PlainText.Culture)
+                + " releases on tick "
+                + tick.ToString(PlainText.Culture)
+                + ". The canned field stands in for a population of stored rounds, and a stored round "
+                + "is a build phase's output: it composes what is sent rather than when, so every order "
+                + "of one leaves on tick 0. A wave released over time is a whole authored match, which "
+                + "is what --wave means on the 'record' verb -- and swept against, it outspends every "
+                + "opponent it faces and reports a total loss on every row.");
+        }
+
+        return field;
     }
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>

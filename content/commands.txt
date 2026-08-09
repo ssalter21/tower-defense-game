@@ -43,9 +43,14 @@
 # a script can be written. That is what the offerings verb is for:
 #
 #   dotnet Sim.Cli.dll offerings --seed 20260807 --map content/map.txt \
-#     --units content/units.txt --rules content/ruleset.txt \
-#     --schedule content/schedule.txt --defense content/defense.txt \
-#     --wave content/wave.txt
+#     --units content/units.txt --upgrades content/upgrades.txt \
+#     --rules content/ruleset.txt --schedule content/schedule.txt \
+#     --defense content/defense.txt --field content/field.txt
+#
+# --field IS THE CANNED OPPONENT AND NOT A WAVE THIS RUN SENDS. The waves in
+# this file are composed by its own build rows out of a purse; --field is the
+# round the field of K is drawn from, and content/wave.txt -- a whole authored
+# match, released over fourteen hundred ticks -- is refused there by name.
 #
 # Every row it prints is a take-kind, a take-id and the type id that take
 # unlocks, spelled with the words a build row uses. THE SEED IS PART OF THE

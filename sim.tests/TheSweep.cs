@@ -100,7 +100,7 @@ public static class TheSweep
     /// behind <c>content/field.txt</c>, drawn with replacement.
     /// </summary>
     public static FieldPool Field(UnitTypeTable types) =>
-        FieldPool.Of(new[] { RoundOrders.Of(TheMatch.Layout(types), Wave(types)) });
+        FieldPool.Of(new[] { RoundOrders.Of(TheMatch.Layout(types), TheRun.FieldWave(types)) });
 
     /// <summary>
     /// A field that sends the skeleton's authored match instead: three hundred
@@ -117,10 +117,6 @@ public static class TheSweep
     /// </summary>
     public static Ruleset ThinHealth() =>
         Ruleset.Parse(PlantedText.Replace(TheRuleset.CommittedText(), "health       1500", "health        200"));
-
-    /// <summary>The wave the canned field sends.</summary>
-    public static WaveScript Wave(UnitTypeTable types) =>
-        WaveScript.Parse("field", File.ReadAllText(RepoLayout.FieldFile), types);
 
     /// <summary>
     /// A plan whose roster is towers alone: a schedule loaded against the
@@ -144,7 +140,7 @@ public static class TheSweep
             towers,
             TheSchedule.Committed(),
             defense,
-            FieldPool.Of(new[] { RoundOrders.Of(defense, Wave(TheMatch.Types())) }),
+            FieldPool.Of(new[] { RoundOrders.Of(defense, TheRun.FieldWave(TheMatch.Types())) }),
             Seed,
             Runs,
             Waves,

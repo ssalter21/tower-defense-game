@@ -291,6 +291,58 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void A_sweep_handed_the_match_wave_as_its_field_is_refused_by_name()
+    {
+        // The mistake this closes is the silent one, and it is the mistake three
+        // shells and this suite were all making: content/wave.txt parses as a
+        // field perfectly, and a sweep against it loses every row and separates
+        // no creep from any other. The report that falls out reads exactly like
+        // a real one -- same columns, same coverage rows, every number
+        // self-consistent -- so nothing about it says which file it was about.
+        //
+        // What makes the two tellable apart is structural rather than a budget:
+        // a field member stands in for a stored round, a stored round is a build
+        // phase's output, and a build phase composes what is sent rather than
+        // when. The wave file's second order releases on tick 750, which is the
+        // one thing a stored round can never do.
+        //
+        // OBSERVED: take the tick loop out of RunContent.Field. The exit code
+        // goes to 0 and this goes red on it, the sweep having run to completion
+        // and written its report -- the minion row reading 0 dealt against 219
+        // taken and no win. At the committed shape the same build writes a whole
+        // report in which not one of the five creeps wins a single run: 824 gold
+        // dealt against 8211 taken, and a zero in the win rate and the bonus of
+        // all twenty-two rows, with every other column perfectly self-consistent.
+        string scratch = TheCommandLine.Scratch("sweep-wrong-field");
+
+        CommandLineResult refused = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "1",
+                "--waves", "2",
+                "--field-size", "1",
+                "--most-creeps", "1",
+                "--no-death",
+                "--out", Path.Combine(scratch, "sweep.csv"),
+                "--map", RepoLayout.MapFile,
+                "--units", RepoLayout.UnitsFile,
+                "--upgrades", RepoLayout.UpgradesFile,
+                "--rules", RepoLayout.RulesetFile,
+                "--schedule", RepoLayout.ScheduleFile,
+                "--defense", RepoLayout.DefenseFile,
+                "--field", RepoLayout.WaveFile,
+            });
+
+        Assert.Equal(1, refused.ExitCode);
+        Assert.Contains("releases on tick 750", refused.Error, StringComparison.Ordinal);
+        Assert.False(
+            File.Exists(Path.Combine(scratch, "sweep.csv")),
+            "A report was written for a sweep against an opponent no player could be.");
+    }
+
+    [Fact]
     public void The_death_flag_is_a_switch_and_it_reaches_the_run()
     {
         // Death is a flag rather than a rule so that a harness can ask for a

@@ -83,6 +83,22 @@ public static class TheRun
     /// <summary>What that run had left of the pool when its last wave resolved.</summary>
     public const int HealthLeftInTheCommittedRun = 582;
 
+    /// <summary>
+    /// The wave the committed canned field sends: <c>content/field.txt</c>,
+    /// which is what every run verb of the command line reads for
+    /// <c>--field</c>.
+    /// </summary>
+    /// <remarks>
+    /// <b>Not <c>content/wave.txt</c>, and the difference is a whole different
+    /// game.</b> The wave file is one authored match released over fourteen
+    /// hundred ticks and costing several times what any round's purse composes;
+    /// this one is a build phase's output, everything on tick zero and a
+    /// round's worth of gold. <c>content/field.txt</c>'s own header carries the
+    /// measurements, and <c>docs/adr/0040</c> carries the decision.
+    /// </remarks>
+    public static WaveScript FieldWave(UnitTypeTable types) =>
+        WaveScript.Parse("field", File.ReadAllText(RepoLayout.FieldFile), types);
+
     /// <summary>The committed defense as one round's orders, sent at the committed wave.</summary>
     public static RoundOrders Orders(UnitTypeTable? types = null)
     {

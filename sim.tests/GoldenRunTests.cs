@@ -168,13 +168,24 @@ public class GoldenRunTests
     /// <summary>
     /// The run the command line builds for that record: the committed board,
     /// tables and shape, and the canned field of one the committed defense and
-    /// wave make.
+    /// the committed field file make.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Composed here rather than shared with the command line, which is a
     /// second arrangement of the same content and is meant to be: if the two
     /// ever describe different runs, the vector this replays to stops matching
     /// the committed one and the run above goes red naming the round.
+    /// </para>
+    /// <para>
+    /// <b>The pool is <c>content/field.txt</c> and never <c>content/wave.txt</c></b>,
+    /// which is the same distinction the command line's <c>--field</c> draws.
+    /// The wave file is a whole authored match and a round of it costs several
+    /// times what any purse composes, so a run against one takes about a hundred
+    /// gold a round from an opponent no player could be -- and every number it
+    /// produces is self-consistent, which is why the committed outcome is what
+    /// says which of the two this was.
+    /// </para>
     /// </remarks>
     private static Run Fresh()
     {
@@ -186,7 +197,7 @@ public class GoldenRunTests
             TheRuleset.Committed(),
             types,
             TheSchedule.Committed(types),
-            FieldPool.Of(new[] { RoundOrders.Of(defense, TheMatch.Wave(types)) }),
+            FieldPool.Of(new[] { RoundOrders.Of(defense, TheRun.FieldWave(types)) }),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

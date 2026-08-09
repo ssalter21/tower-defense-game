@@ -66,15 +66,26 @@ public static class Program
     /// Every run verb takes all ten, so the list is written once.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// <b><c>--upgrades</c> is required and never optional</b>, which is why it
     /// is in this list rather than read with a default behind it. An optional
     /// content file is a default, and a default is a number nobody authored
     /// folded into a content hash as though somebody had. The cost is that every
     /// invocation in the repository names one file more; it is paid once.
+    /// </para>
+    /// <para>
+    /// <b><c>--field</c> is the canned opponent and it is not a wave the run
+    /// sends.</b> A run's own waves are composed by the build phases coming off
+    /// the command stream and are read from no file at all; this one file is the
+    /// population a round's field of K is drawn from. <c>record</c> is the only
+    /// verb that takes <c>--wave</c>, and what it means there is a whole
+    /// authored match. See
+    /// <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
+    /// </para>
     /// </remarks>
     private static readonly string[] RunOptions =
     {
-        "map", "units", "upgrades", "rules", "schedule", "defense", "wave",
+        "map", "units", "upgrades", "rules", "schedule", "defense", "field",
         "waves", "field-size", "no-death",
     };
 
@@ -87,7 +98,7 @@ public static class Program
 
     private const string RunContentUsage =
         "--map <file> --units <file> --upgrades <file> --rules <file> --schedule <file>\n"
-        + "             --defense <file> --wave <file>";
+        + "             --defense <file> --field <file>";
 
     private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
 
@@ -176,6 +187,27 @@ public static class Program
         "         lasts and how many opponents each round is resolved against.",
         "         --no-death keeps a run going after its health reaches zero, so",
         "         that a sweep gets N rounds of data out of every row.",
+        string.Empty,
+        "  The two files that hold orders, and why they are two",
+        string.Empty,
+        "         --field is the canned opponent, and every verb that plays a run",
+        "         takes it: play-run, record-run, offerings and sweep. It is one",
+        "         round's worth of orders standing behind --defense, drawn with",
+        "         replacement to make the field of K a round is resolved against.",
+        "         A build phase composes what is sent rather than when, so every",
+        "         order of one releases on tick 0 and a file whose orders arrive",
+        "         over time is refused here rather than swept against.",
+        string.Empty,
+        "         --wave is a whole authored match, released over time, and",
+        "         'record' is the only verb that takes it. A run's own waves come",
+        "         from the build phases on the command stream and are read from no",
+        "         file at all.",
+        string.Empty,
+        "         --defense is read twice by a run verb, deliberately: it is what",
+        "         stands while this run's waves are sent AND the defense the canned",
+        "         opponent stands behind. Both directions of a round are then",
+        "         measured through the same wall, which is what makes out-dealing",
+        "         the field a fair comparison rather than a flattering one.",
     };
 
     /// <summary>The entry point. Zero if the run happened, non-zero if it did not.</summary>
@@ -508,7 +540,7 @@ public static class Program
             File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("schedule")),
             File.ReadAllText(arguments.Required("defense")),
-            File.ReadAllText(arguments.Required("wave")));
+            File.ReadAllText(arguments.Required("field")));
 
     /// <summary>The stream's stamps, the shape it was played at, and the vector.</summary>
     private static void Report(PlayedRun run)

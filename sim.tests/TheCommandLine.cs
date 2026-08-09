@@ -33,7 +33,18 @@ public static class TheCommandLine
     /// <summary>The built runner, as a path <c>dotnet</c> will run.</summary>
     public static string Program => LazyProgram.Value;
 
-    /// <summary>The seven content arguments every run verb takes.</summary>
+    /// <summary>
+    /// The seven content arguments every run verb takes.
+    /// </summary>
+    /// <remarks>
+    /// <b>The last of them is the field file and not the wave file.</b> A run's
+    /// own waves come off the command stream's build phases; <c>--field</c> is
+    /// the canned opponent each round is resolved against, and
+    /// <c>content/wave.txt</c> is a whole authored match that outspends anything
+    /// a purse composes. A suite pointed at that one measures every verb here
+    /// against an opponent no player could be -- and nothing about the numbers
+    /// it produces looks wrong.
+    /// </remarks>
     public static string[] RunContent => new[]
     {
         "--map", RepoLayout.MapFile,
@@ -42,7 +53,7 @@ public static class TheCommandLine
         "--rules", RepoLayout.RulesetFile,
         "--schedule", RepoLayout.ScheduleFile,
         "--defense", RepoLayout.DefenseFile,
-        "--wave", RepoLayout.WaveFile,
+        "--field", RepoLayout.FieldFile,
     };
 
     /// <summary>

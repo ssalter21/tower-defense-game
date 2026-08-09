@@ -202,6 +202,17 @@ $outcomeName = 'run-outcome.txt'
 # list is written once and splatted -- a verb reading a different defense than
 # the one the record was made against is a run that refuses for a reason that
 # has nothing to do with what was being checked.
+#
+# THE LAST OF THEM IS content/field.txt AND NOT content/wave.txt. A run's own
+# waves are composed by the build phases coming off the command stream and are
+# read from no file at all; --field is the canned opponent each round is
+# resolved against, and it is a build phase's output. content/wave.txt is a
+# whole authored match -- three hundred and eighty gold released over fourteen
+# hundred ticks, which no purse in this economy can compose -- so a run against
+# one is measured against an opponent no player could be. content/field.txt's
+# own header carries the measurements; see also docs/adr/0040. The run verbs
+# refuse a wave released over time by name, so this cannot go quietly wrong
+# again.
 $runContent = @(
     '--map', (Join-Path $content 'map.txt'),
     '--units', $units,
@@ -209,7 +220,7 @@ $runContent = @(
     '--rules', $ruleset,
     '--schedule', $schedule,
     '--defense', (Join-Path $content 'defense.txt'),
-    '--wave', (Join-Path $content 'wave.txt'))
+    '--field', (Join-Path $content 'field.txt'))
 
 # One tiny bundle per defense record format version that has ever shipped, and
 # the result a real run of each produced. Committed forever: the writer emits

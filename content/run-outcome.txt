@@ -19,20 +19,20 @@
 #
 #   command stream format 0, simulation version 2, content 51BC7297223A70E8, ruleset B8D395FFBCA5BCCC, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
 #   shape      10 waves, a field of 10, death ends the run
-#   outcome    10 waves survived, 478 of 1500 health left, 520 dealt over 10 rounds, ended OutOfWaves
+#   outcome    10 waves survived, 1500 of 1500 health left, 520 dealt over 10 rounds, ended OutOfWaves
 #
 # Any of those moving moves every line below it. That is the point: the outcome is retired
 # loudly rather than quietly comparing a run against a different one.
 #
 #   decision                                                    round, cost and payment
 
-wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 102, spent 0, paid 100 + 10 interest + 100 base + 0 bonus = 210 gold
-wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 99, spent 0, paid 210 + 21 interest + 100 base + 0 bonus = 331 gold
-wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 105, spent 0, paid 331 + 34 interest + 100 base + 0 bonus = 465 gold
-wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 105, spent 90, paid 375 + 38 interest + 100 base + 0 bonus = 513 gold
-wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 104, spent 180, paid 333 + 34 interest + 100 base + 0 bonus = 467 gold
-wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 98, spent 280, paid 187 + 19 interest + 100 base + 20 bonus = 326 gold
-wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 102, spent 126, paid 200 + 20 interest + 100 base + 0 bonus = 320 gold
-wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 107, spent 145, paid 175 + 18 interest + 100 base + 0 bonus = 293 gold
-wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 101, spent 219, paid 74 + 8 interest + 100 base + 20 bonus = 202 gold
-wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 99, spent 198, paid 4 + 1 interest + 100 base + 0 bonus = 105 gold
+wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 0, spent 0, paid 100 + 10 interest + 100 base + 0 bonus = 210 gold
+wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 0, spent 0, paid 210 + 21 interest + 100 base + 0 bonus = 331 gold
+wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 0, spent 0, paid 331 + 34 interest + 100 base + 0 bonus = 465 gold
+wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 0, spent 90, paid 375 + 38 interest + 100 base + 0 bonus = 513 gold
+wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 0, spent 180, paid 333 + 34 interest + 100 base + 20 bonus = 487 gold
+wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 0, spent 280, paid 207 + 21 interest + 100 base + 20 bonus = 348 gold
+wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 0, spent 126, paid 222 + 23 interest + 100 base + 20 bonus = 365 gold
+wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 0, spent 145, paid 220 + 22 interest + 100 base + 20 bonus = 362 gold
+wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 0, spent 219, paid 143 + 15 interest + 100 base + 20 bonus = 278 gold
+wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 0, spent 198, paid 80 + 8 interest + 100 base + 20 bonus = 208 gold

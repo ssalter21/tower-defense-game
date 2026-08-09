@@ -385,6 +385,44 @@ public class BuildPhaseTests
     }
 
     [Fact]
+    public void Every_slot_a_build_phase_fills_releases_on_tick_zero()
+    {
+        // A build phase composes what is sent rather than when, so the whole
+        // wave leaves at once and the ordering a wave record asserts falls to
+        // the type ids alone.
+        //
+        // This is pinned because something outside the simulation now depends on
+        // it: the command line refuses a --field file whose orders arrive over
+        // time, on the ground that a field member stands in for a stored round
+        // and a stored round is one of these. If the release tick ever moves,
+        // that refusal starts rejecting real rounds -- so the rule goes red here
+        // rather than out there.
+        //
+        // OBSERVED: move BuildPhase.ReleaseTick from 0 to 1. This goes red on
+        // the first order, and CommandLineTests's wrong-field refusal stays
+        // green, still refusing content/wave.txt for a reason that has stopped
+        // being true.
+        Run run = TheBuild.Fresh();
+        Offering offering = run.Offering;
+        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+
+        WaveScript wave = BuildPhase.Of(
+            offering.Options[0].Kind,
+            offering.Options[0].Id,
+            WaveSlot.Of(creeps[0], 1),
+            WaveSlot.Of(creeps[1], 1))
+            .Resolve(offering, Everything(offering), Purse.Holding(1000), run.Costs)
+            .Wave;
+
+        Assert.Equal(2, wave.Count);
+
+        for (int index = 0; index < wave.Count; index++)
+        {
+            Assert.Equal(0, wave.Orders[index].TickOffset);
+        }
+    }
+
+    [Fact]
     public void A_wave_nobody_can_afford_is_refused_where_the_decision_is_read()
     {
         // There is no credit in this economy. The whole wave is priced before a

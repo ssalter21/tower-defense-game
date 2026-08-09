@@ -94,7 +94,7 @@ Invoke-SimCli @(
     '--rules', $Rules,
     '--schedule', $Schedule,
     '--defense', $Defense,
-    '--wave', $Field,
+    '--field', $Field,
     '--seed', $Seed.ToString($number),
     '--waves', $Waves.ToString($number),
     '--field-size', $FieldSize.ToString($number))
