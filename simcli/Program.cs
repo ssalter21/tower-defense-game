@@ -95,12 +95,14 @@ public static class Program
     {
         "Sim.Cli -- one match or one run, played headless.",
         string.Empty,
-        "  run    --bundle <file> --units <file> --rules <file> [--out <directory>]",
+        "  run    --bundle <file> --units <file> --upgrades <file> --rules <file>",
+        "         [--out <directory>]",
         string.Empty,
         "         Plays the bundle to the end and prints the result and the landmarks.",
         "         With --out, writes " + TraceFileName + " and " + LandmarkFileName + " there.",
         string.Empty,
-        "  restage --bundle <file> --units <file> --rules <file> [--out <directory>]",
+        "  restage --bundle <file> --units <file> --upgrades <file> --rules <file>",
+        "          [--out <directory>]",
         string.Empty,
         "         The same, with the simulation version and content hash gates set",
         "         aside, and every line it writes labelled as a restaging. The",
@@ -108,8 +110,9 @@ public static class Program
         "         that record's result, and this verb exists so that asking the",
         "         question cannot be confused with replaying.",
         string.Empty,
-        "  record --map <file> --units <file> --rules <file> --defense <file>",
-        "         --wave <file> --seed <number> --out <file> [--map-handle <number>]",
+        "  record --map <file> --units <file> --upgrades <file> --rules <file>",
+        "         --defense <file> --wave <file> --seed <number> --out <file>",
+        "         [--map-handle <number>]",
         string.Empty,
         "         Records the content as one self-contained replay bundle, having",
         "         first read it back and played it. Nothing is written if it will",
@@ -212,17 +215,25 @@ public static class Program
         switch (args[0])
         {
             case "run":
-                return Run(Arguments.Parse("run", args, 1, new[] { "bundle", "units", "rules", "out" }));
+                return Run(Arguments.Parse(
+                    "run",
+                    args,
+                    1,
+                    new[] { "bundle", "units", "upgrades", "rules", "out" }));
 
             case "restage":
-                return Restage(Arguments.Parse("restage", args, 1, new[] { "bundle", "units", "rules", "out" }));
+                return Restage(Arguments.Parse(
+                    "restage",
+                    args,
+                    1,
+                    new[] { "bundle", "units", "upgrades", "rules", "out" }));
 
             case "record":
                 return Record(Arguments.Parse(
                     "record",
                     args,
                     1,
-                    new[] { "map", "units", "rules", "defense", "wave", "seed", "out", "map-handle" }));
+                    new[] { "map", "units", "upgrades", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
             case "play-run":
                 return PlayRun(RunVerb("play-run", args, "commands", "out"));
@@ -278,16 +289,17 @@ public static class Program
     /// generated files, so the difference between them stays visible as the one
     /// thing it is.
     /// </summary>
-    private static int Play(Arguments arguments, Func<byte[], string, string, HeadlessRun> play)
+    private static int Play(Arguments arguments, Func<byte[], string, string, string, HeadlessRun> play)
     {
         // The caller opens the file. The simulation receives bytes and text,
         // never a path -- it cannot open anything, and the build gate scans the
         // compiled image to keep it that way.
         byte[] bundle = File.ReadAllBytes(arguments.Required("bundle"));
         string units = File.ReadAllText(arguments.Required("units"));
+        string upgrades = File.ReadAllText(arguments.Required("upgrades"));
         string rules = File.ReadAllText(arguments.Required("rules"));
 
-        HeadlessRun run = play(bundle, units, rules);
+        HeadlessRun run = play(bundle, units, upgrades, rules);
 
         Report(run);
 
@@ -312,6 +324,7 @@ public static class Program
         (byte[] bytes, HeadlessRun proof) = Recording.Of(
             File.ReadAllText(arguments.Required("map")),
             File.ReadAllText(arguments.Required("units")),
+            File.ReadAllText(arguments.Required("upgrades")),
             File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("defense")),
             File.ReadAllText(arguments.Required("wave")),

@@ -32,19 +32,26 @@ internal static class Recording
     public static (byte[] Bytes, HeadlessRun Proof) Of(
         string mapText,
         string unitsText,
+        string upgradesText,
         string rulesText,
         string defenseText,
         string waveText,
         ulong seed,
         int mapHandle)
     {
-        UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+        UnitTypeTable roster = UnitTypeTable.Parse(unitsText);
+
+        // The ladder joins the roster's content hash, which is the value the
+        // bundle stamps and the replay gate compares -- so a record made under
+        // one ladder is retired by another, exactly as it is by a retuned row.
+        UnitTypeTable types = roster.WithLadder(UpgradeLadder.Parse(upgradesText, roster));
+
         HexMap map = HexMap.Parse(mapText);
         TowerLayout layout = TowerLayout.Parse(defenseText, types);
         WaveScript wave = WaveScript.Parse(waveText, types);
 
         byte[] bytes = ReplayBundle.Of(map, layout, wave, types, seed, mapHandle).ToBytes();
 
-        return (bytes, HeadlessRun.Of(bytes, unitsText, rulesText));
+        return (bytes, HeadlessRun.Of(bytes, unitsText, upgradesText, rulesText));
     }
 }

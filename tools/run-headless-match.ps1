@@ -328,6 +328,7 @@ if ($Regenerate) {
         'record',
         '--map', (Join-Path $content 'map.txt'),
         '--units', $units,
+        '--upgrades', $upgrades,
         '--rules', $ruleset,
         '--defense', (Join-Path $content 'defense.txt'),
         '--wave', (Join-Path $content 'wave.txt'),
@@ -335,7 +336,7 @@ if ($Regenerate) {
         '--map-handle', $MapHandle.ToString([System.Globalization.CultureInfo]::InvariantCulture),
         '--out', $bundle)
 
-    Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset, '--out', $content)
+    Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset, '--out', $content)
 
     # The freshly recorded bundle becomes the golden for whatever version the
     # writer emits, and the version is read off the run rather than written in
@@ -343,7 +344,7 @@ if ($Regenerate) {
     # after the writer moved to 2, and would overwrite the wrong file.
     New-Item -ItemType Directory -Force -Path $golden | Out-Null
 
-    $fresh = Get-SimCliOutput @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset)
+    $fresh = Get-SimCliOutput @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset)
     $match = [regex]::Match($fresh, 'read at defense record format (\d+)')
 
     if (-not $match.Success) {
@@ -374,7 +375,11 @@ if ($Regenerate) {
             throw "content/golden/$($goldenBundle.Name) has no pinned unit table beside it, so there is nothing to replay it against."
         }
 
-        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+        # The PINNED table, and the LIVE ladder. That mixture is correct rather
+        # than an oversight: RestageUnderCurrentRules enforces the map hash alone
+        # and skips the content-hash gate by design, so a restaging never asks
+        # what roster -- or what ladder -- a golden was recorded with.
+        $text = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', $upgrades, '--rules', $ruleset)
         $resultPath = Get-GoldenResultPath $goldenBundle
         [System.IO.File]::WriteAllText($resultPath, $text)
         Write-Host "wrote      $resultPath" -ForegroundColor Green
@@ -401,7 +406,7 @@ if ($Regenerate) {
 }
 
 if (-not $Verify) {
-    $arguments = @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset)
+    $arguments = @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset)
     $runArguments = @('play-run', '--commands', $commands) + $runContent
 
     if ($Out) {
@@ -424,7 +429,7 @@ if (Test-Path $scratch) {
     Remove-Item $scratch -Recurse -Force
 }
 
-Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--rules', $ruleset, '--out', $scratch)
+Invoke-SimCli @('run', '--bundle', $bundle, '--units', $units, '--upgrades', $upgrades, '--rules', $ruleset, '--out', $scratch)
 
 $differences = 0
 
@@ -473,7 +478,9 @@ foreach ($goldenBundle in $goldens) {
         continue
     }
 
-    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--rules', $ruleset)
+    # The pinned table and the live ladder, for the reason the regenerate branch
+    # above states: a restaging does not consult the content hash at all.
+    $fresh = Get-SimCliOutput @('restage', '--bundle', $goldenBundle.FullName, '--units', $goldenUnits, '--upgrades', $upgrades, '--rules', $ruleset)
     $committed = [System.IO.File]::ReadAllText($resultPath)
 
     if (-not (Test-SameText "content/golden/$($goldenBundle.BaseName).result" $committed $fresh)) {
