@@ -54,6 +54,10 @@ namespace Sim
     /// is a rule the file does not state and the reader invented, and it would
     /// be folded into the hash as though somebody had authored it.
     /// </para>
+    /// <para>
+    /// <b>A field is spelled once, in <see cref="Rules"/>.</b> Everything that
+    /// reads or writes one goes through that declaration.
+    /// </para>
     /// </remarks>
     public sealed class Ruleset
     {
@@ -83,58 +87,120 @@ namespace Sim
         /// </summary>
         private const int MaximumFactor = 1000000;
 
+        /// <summary>
+        /// Every rule the file states, in the order the content hash folds them.
+        /// One entry per row keyword, carrying the columns that follow it: the
+        /// field each fills, what a refusal calls it, and the range it is held
+        /// to.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the only place a ruleset number is spelled.</b>
+        /// <see cref="RuleFor"/> looks a row's opening word up here,
+        /// <see cref="RowWords"/> is the words it may be,
+        /// <see cref="Rule.Read"/> writes what it parsed into
+        /// <see cref="_values"/> at the column's field, <see cref="Fold"/> walks
+        /// this array in order, and <see cref="With"/> takes a retuned number's
+        /// range off the same column the file is held to. A number that can be
+        /// parsed is therefore a number that is folded, and the fold has no
+        /// order of its own to disagree with the file's.
+        /// </para>
+        /// <para>
+        /// The damage matrix and the performance bands are row-shaped rather
+        /// than column-shaped -- three rows of a square read in attack-type
+        /// order, and however many ascending bands the file states -- so they
+        /// carry no columns and bring their own reader and their own fold. Where
+        /// they sit in this array is where they sit in the hash.
+        /// </para>
+        /// </remarks>
+        private static readonly Rule[] Rules =
+        {
+            Rule.RowShaped("matrix", 5, ReadMatrixRow, FoldMatrix),
+            Rule.Numbers(
+                "armour",
+                new Column(Field.ArmourPercentPerPoint, "the armour coefficient", 0, 1000),
+                new Column(Field.ArmourDenominator, "the armour denominator", 1, MaximumFactor)),
+            Rule.Numbers("floor", new Column(Field.DamageFloor, "the damage floor", 1, MaximumFactor)),
+            Rule.Numbers(
+                "interest",
+                new Column(Field.InterestPercentPerWave, "the interest rate", 0, 1000),
+                new Column(Field.InterestCapGold, "the interest cap", 0, int.MaxValue)),
+            Rule.Numbers("income", new Column(Field.IncomeBasePerWave, "the income base", 0, int.MaxValue)),
+            Rule.Numbers("purse", new Column(Field.StartingPurseGold, "the starting purse", 0, int.MaxValue)),
+            Rule.RowShaped("band", 3, ReadBandRow, FoldBands),
+            Rule.Numbers("health", new Column(Field.HealthPoolGold, "the health pool", 1, int.MaxValue)),
+            Rule.Numbers(
+                "slots",
+                new Column(Field.StartingWaveSlots, "the starting slot width", 1, 64),
+                new Column(Field.WaveSlotsPerAnchor, "the slots an anchor adds", 0, 64)),
+            Rule.Numbers(
+                "offering",
+                new Column(Field.OrdinaryOptionsPerRound, "the ordinary options", 1, MostOptions),
+                new Column(Field.GameChangersPerAnchor, "the game changers an anchor adds", 1, MostOptions)),
+            Rule.Numbers(
+                "snapshot",
+                new Column(Field.FreeSnapshotsPerRun, "the free snapshot count", 0, int.MaxValue),
+                new Column(Field.SnapshotPriceGold, "the snapshot price", 0, int.MaxValue)),
+        };
+
+        /// <summary>
+        /// The column that fills each <see cref="Field"/>, indexed by it. Built
+        /// from <see cref="Rules"/> and refusing a field that no column fills or
+        /// that two do, so the enum cannot carry a member the declaration does
+        /// not -- which would be a number nothing parses, nothing folds and
+        /// every reader sees as zero.
+        /// </summary>
+        private static readonly Column[] ColumnByField = IndexColumns();
+
         private readonly PerformanceBand[] _bands;
+
+        private readonly int[] _values;
 
         private Ruleset(Draft draft)
         {
             Matrix = draft.Matrix!;
-            ArmourPercentPerPoint = draft.ArmourPercentPerPoint;
-            ArmourDenominator = draft.ArmourDenominator;
-            DamageFloor = draft.DamageFloor;
-            InterestPercentPerWave = draft.InterestPercentPerWave;
-            InterestCapGold = draft.InterestCapGold;
-            IncomeBasePerWave = draft.IncomeBasePerWave;
-            StartingPurseGold = draft.StartingPurseGold;
             _bands = draft.Bands.ToArray();
-            HealthPoolGold = draft.HealthPoolGold;
-            StartingWaveSlots = draft.StartingWaveSlots;
-            WaveSlotsPerAnchor = draft.WaveSlotsPerAnchor;
-            OrdinaryOptionsPerRound = draft.OrdinaryOptionsPerRound;
-            GameChangersPerAnchor = draft.GameChangersPerAnchor;
-            FreeSnapshotsPerRun = draft.FreeSnapshotsPerRun;
-            SnapshotPriceGold = draft.SnapshotPriceGold;
+            _values = draft.Values;
             ContentHash = Fold();
         }
 
         /// <summary>
-        /// The same rules with four of their numbers replaced. Every other
-        /// field is carried across by reference to the same values, so the two
-        /// rulesets differ in exactly what was asked for.
+        /// The same rules with some of their numbers replaced. The matrix and
+        /// the bands are carried across by reference to the same values, so the
+        /// two rulesets differ in exactly what was asked for.
         /// </summary>
-        private Ruleset(
-            Ruleset original,
-            int ordinaryOptionsPerRound,
-            int gameChangersPerAnchor,
-            int freeSnapshotsPerRun,
-            int snapshotPriceGold)
+        private Ruleset(Ruleset original, int[] values)
         {
             Matrix = original.Matrix;
-            ArmourPercentPerPoint = original.ArmourPercentPerPoint;
-            ArmourDenominator = original.ArmourDenominator;
-            DamageFloor = original.DamageFloor;
-            InterestPercentPerWave = original.InterestPercentPerWave;
-            InterestCapGold = original.InterestCapGold;
-            IncomeBasePerWave = original.IncomeBasePerWave;
-            StartingPurseGold = original.StartingPurseGold;
             _bands = original._bands;
-            HealthPoolGold = original.HealthPoolGold;
-            StartingWaveSlots = original.StartingWaveSlots;
-            WaveSlotsPerAnchor = original.WaveSlotsPerAnchor;
-            OrdinaryOptionsPerRound = ordinaryOptionsPerRound;
-            GameChangersPerAnchor = gameChangersPerAnchor;
-            FreeSnapshotsPerRun = freeSnapshotsPerRun;
-            SnapshotPriceGold = snapshotPriceGold;
+            _values = values;
             ContentHash = Fold();
+        }
+
+        /// <summary>
+        /// One number the ruleset holds. Every member is filled by exactly one
+        /// column of <see cref="Rules"/>, which is what indexes
+        /// <see cref="_values"/>.
+        /// </summary>
+        private enum Field
+        {
+            ArmourPercentPerPoint,
+            ArmourDenominator,
+            DamageFloor,
+            InterestPercentPerWave,
+            InterestCapGold,
+            IncomeBasePerWave,
+            StartingPurseGold,
+            HealthPoolGold,
+            StartingWaveSlots,
+            WaveSlotsPerAnchor,
+            OrdinaryOptionsPerRound,
+            GameChangersPerAnchor,
+            FreeSnapshotsPerRun,
+            SnapshotPriceGold,
+
+            /// <summary>How many of them there are. Not one of them.</summary>
+            Count,
         }
 
         /// <summary>Three attack types against three armour types, as nine percentages.</summary>
@@ -144,20 +210,20 @@ namespace Sim
         /// How much of a target's base effective health one point of armour
         /// adds, in percent. The coefficient in the armour expression.
         /// </summary>
-        public int ArmourPercentPerPoint { get; }
+        public int ArmourPercentPerPoint => _values[(int)Field.ArmourPercentPerPoint];
 
         /// <summary>
         /// What the armour expression divides by at zero armour. A cell is a
         /// percentage of this, so a hundred here makes a cell of 100 the
         /// identity.
         /// </summary>
-        public int ArmourDenominator { get; }
+        public int ArmourDenominator => _values[(int)Field.ArmourDenominator];
 
         /// <summary>The least a hit may deal. No combination of type and armour deletes one.</summary>
-        public int DamageFloor { get; }
+        public int DamageFloor => _values[(int)Field.DamageFloor];
 
         /// <summary>What the bank pays a wave, in percent, rounded up.</summary>
-        public int InterestPercentPerWave { get; }
+        public int InterestPercentPerWave => _values[(int)Field.InterestPercentPerWave];
 
         /// <summary>
         /// The most interest one wave may pay, in gold.
@@ -166,17 +232,17 @@ namespace Sim
         /// with no round cap and no ceiling here is refused. See
         /// <see cref="Purse.RequireBoundedCompounding"/>.
         /// </summary>
-        public int InterestCapGold { get; }
+        public int InterestCapGold => _values[(int)Field.InterestCapGold];
 
         /// <summary>The flat income a wave pays, in gold, before any bonus.</summary>
-        public int IncomeBasePerWave { get; }
+        public int IncomeBasePerWave => _values[(int)Field.IncomeBasePerWave];
 
         /// <summary>
         /// What a run's purse opens holding, in gold. Nothing has been earned
         /// yet when the first build phase stands, so without this the opening
         /// round's only affordable wave is the empty one.
         /// </summary>
-        public int StartingPurseGold { get; }
+        public int StartingPurseGold => _values[(int)Field.StartingPurseGold];
 
         /// <summary>
         /// The performance bonus, as bands against the field's distribution.
@@ -193,29 +259,29 @@ namespace Sim
         public PerformanceBand BestBand => _bands[_bands.Length - 1];
 
         /// <summary>The health pool a run starts with, denominated in gold.</summary>
-        public int HealthPoolGold { get; }
+        public int HealthPoolGold => _values[(int)Field.HealthPoolGold];
 
         /// <summary>How many wave slots the first round has.</summary>
-        public int StartingWaveSlots { get; }
+        public int StartingWaveSlots => _values[(int)Field.StartingWaveSlots];
 
         /// <summary>
         /// How many slots an anchor adds. Slot width is derived rather than
         /// authored: a round's width is this many per anchor at or before it,
         /// on top of <see cref="StartingWaveSlots"/>.
         /// </summary>
-        public int WaveSlotsPerAnchor { get; }
+        public int WaveSlotsPerAnchor => _values[(int)Field.WaveSlotsPerAnchor];
 
         /// <summary>How many ordinary options the offering carries each round.</summary>
-        public int OrdinaryOptionsPerRound { get; }
+        public int OrdinaryOptionsPerRound => _values[(int)Field.OrdinaryOptionsPerRound];
 
         /// <summary>How many game changers join the offering on an anchor round.</summary>
-        public int GameChangersPerAnchor { get; }
+        public int GameChangersPerAnchor => _values[(int)Field.GameChangersPerAnchor];
 
         /// <summary>How many scouting snapshots a run gets before it starts paying.</summary>
-        public int FreeSnapshotsPerRun { get; }
+        public int FreeSnapshotsPerRun => _values[(int)Field.FreeSnapshotsPerRun];
 
         /// <summary>What a snapshot costs in gold once the free ones are spent.</summary>
-        public int SnapshotPriceGold { get; }
+        public int SnapshotPriceGold => _values[(int)Field.SnapshotPriceGold];
 
         /// <summary>
         /// The content hash: a fold over every parsed integer, in field order.
@@ -245,7 +311,7 @@ namespace Sim
 
             foreach (DataText.Row row in DataText.Rows(source, text))
             {
-                ReadRow(source, row.Line, row.Fields, draft);
+                RuleFor(source, row).Read(source, row, draft);
             }
 
             draft.RequireEverything(source);
@@ -277,7 +343,8 @@ namespace Sim
         /// <para>
         /// Every bound here is the one the parser applies to the same column,
         /// because a number that reaches the rules through this door has had no
-        /// file to be refused at.
+        /// file to be refused at -- and it is the same bound rather than a
+        /// matching one, read off the column in <see cref="Rules"/>.
         /// </para>
         /// </remarks>
         public Ruleset With(
@@ -286,17 +353,14 @@ namespace Sim
             int freeSnapshotsPerRun,
             int snapshotPriceGold)
         {
-            RequireInRange(ordinaryOptionsPerRound, "the ordinary options", 1, MostOptions);
-            RequireInRange(gameChangersPerAnchor, "the game changers an anchor adds", 1, MostOptions);
-            RequireInRange(freeSnapshotsPerRun, "the free snapshot count", 0, int.MaxValue);
-            RequireInRange(snapshotPriceGold, "the snapshot price", 0, int.MaxValue);
+            var values = (int[])_values.Clone();
 
-            return new Ruleset(
-                this,
-                ordinaryOptionsPerRound,
-                gameChangersPerAnchor,
-                freeSnapshotsPerRun,
-                snapshotPriceGold);
+            Retune(values, Field.OrdinaryOptionsPerRound, ordinaryOptionsPerRound);
+            Retune(values, Field.GameChangersPerAnchor, gameChangersPerAnchor);
+            Retune(values, Field.FreeSnapshotsPerRun, freeSnapshotsPerRun);
+            Retune(values, Field.SnapshotPriceGold, snapshotPriceGold);
+
+            return new Ruleset(this, values);
         }
 
         /// <summary>
@@ -359,167 +423,290 @@ namespace Sim
         }
 
         /// <summary>
-        /// The content hash: every parsed integer, in field order, under the
-        /// layout label. Computed from the fields rather than from whatever
-        /// built them, so a parsed ruleset and a retuned one are hashed by one
-        /// walk and cannot drift apart.
+        /// The content hash: every parsed integer under the layout label, in the
+        /// order <see cref="Rules"/> declares the rules that hold them. Computed
+        /// from the fields rather than from whatever built them, so a parsed
+        /// ruleset and a retuned one are hashed by one walk and cannot drift
+        /// apart.
         /// </summary>
         private Hash64 Fold()
         {
-            Hash64 hash = Matrix.Fold(Hash64.Start(HashLabel))
-                .Add(ArmourPercentPerPoint)
-                .Add(ArmourDenominator)
-                .Add(DamageFloor)
-                .Add(InterestPercentPerWave)
-                .Add(InterestCapGold)
-                .Add(IncomeBasePerWave)
-                .Add(StartingPurseGold)
-                .Add(_bands.Length);
+            Hash64 hash = Hash64.Start(HashLabel);
 
-            for (int index = 0; index < _bands.Length; index++)
+            for (int index = 0; index < Rules.Length; index++)
             {
-                hash = _bands[index].Fold(hash);
+                hash = Rules[index].Fold(this, hash);
             }
 
-            return hash
-                .Add(HealthPoolGold)
-                .Add(StartingWaveSlots)
-                .Add(WaveSlotsPerAnchor)
-                .Add(OrdinaryOptionsPerRound)
-                .Add(GameChangersPerAnchor)
-                .Add(FreeSnapshotsPerRun)
-                .Add(SnapshotPriceGold);
+            return hash;
         }
 
-        /// <summary>A retuned number, refused where the authored column would have refused it.</summary>
-        private static void RequireInRange(int value, string what, int minimum, int maximum)
+        /// <summary>The matrix, at the position in the hash its row is declared at.</summary>
+        private static Hash64 FoldMatrix(Ruleset rules, Hash64 hash) => rules.Matrix.Fold(hash);
+
+        /// <summary>
+        /// The bands, counted and then folded in order. The count goes in
+        /// because a ruleset with a band removed must not hash as the prefix of
+        /// one that still has it.
+        /// </summary>
+        private static Hash64 FoldBands(Ruleset rules, Hash64 hash)
         {
-            if (value >= minimum && value <= maximum)
+            hash = hash.Add(rules._bands.Length);
+
+            for (int index = 0; index < rules._bands.Length; index++)
             {
-                return;
+                hash = rules._bands[index].Fold(hash);
             }
 
-            throw new SimulationException(
-                "A ruleset was retuned with "
-                + value.ToString(CultureInfo.InvariantCulture)
-                + " for "
-                + what
-                + ", which runs from "
-                + minimum.ToString(CultureInfo.InvariantCulture)
-                + " to "
-                + maximum.ToString(CultureInfo.InvariantCulture)
-                + ". A number handed in here has had no file to be refused at, so it is held to the range "
-                + "the authored column is held to -- otherwise a sweep is the one caller that can build a "
-                + "ruleset no text file could express.");
+            return hash;
         }
 
-        private static void ReadRow(string source, int line, string[] fields, Draft draft)
+        /// <summary>
+        /// A retuned number written into a copy of the values, refused where the
+        /// authored column would have refused it.
+        /// </summary>
+        private static void Retune(int[] values, Field field, int value)
         {
-            switch (fields[0])
+            Column column = ColumnByField[(int)field];
+
+            if (value < column.Minimum || value > column.Maximum)
             {
-                case "matrix":
-                    Expect(source, line, fields, "matrix", 5);
-                    draft.AddMatrixRow(
-                        source,
-                        line,
-                        DataText.Keyword(source, line, "the attack type", fields[1], DamageMatrix.AttackWords),
-                        Cell(source, line, "the swift cell", fields[2]),
-                        Cell(source, line, "the armoured cell", fields[3]),
-                        Cell(source, line, "the arcane cell", fields[4]));
-                    return;
-
-                case "armour":
-                    Expect(source, line, fields, "armour", 3);
-                    draft.Once(source, line, "armour");
-                    draft.ArmourPercentPerPoint =
-                        DataText.IntegerInRange(source, line, "the armour coefficient", fields[1], 0, 1000);
-                    draft.ArmourDenominator =
-                        DataText.IntegerInRange(source, line, "the armour denominator", fields[2], 1, MaximumFactor);
-                    return;
-
-                case "floor":
-                    Expect(source, line, fields, "floor", 2);
-                    draft.Once(source, line, "floor");
-                    draft.DamageFloor =
-                        DataText.IntegerInRange(source, line, "the damage floor", fields[1], 1, MaximumFactor);
-                    return;
-
-                case "interest":
-                    Expect(source, line, fields, "interest", 3);
-                    draft.Once(source, line, "interest");
-                    draft.InterestPercentPerWave =
-                        DataText.IntegerInRange(source, line, "the interest rate", fields[1], 0, 1000);
-                    draft.InterestCapGold =
-                        DataText.IntegerInRange(source, line, "the interest cap", fields[2], 0, int.MaxValue);
-                    return;
-
-                case "income":
-                    Expect(source, line, fields, "income", 2);
-                    draft.Once(source, line, "income");
-                    draft.IncomeBasePerWave =
-                        DataText.IntegerInRange(source, line, "the income base", fields[1], 0, int.MaxValue);
-                    return;
-
-                case "purse":
-                    Expect(source, line, fields, "purse", 2);
-                    draft.Once(source, line, "purse");
-                    draft.StartingPurseGold =
-                        DataText.IntegerInRange(source, line, "the starting purse", fields[1], 0, int.MaxValue);
-                    return;
-
-                case "band":
-                    Expect(source, line, fields, "band", 3);
-                    draft.AddBand(
-                        source,
-                        line,
-                        DataText.IntegerInRange(source, line, "the band's percentile", fields[1], 0, 99),
-                        DataText.IntegerInRange(source, line, "the band's bonus", fields[2], 0, int.MaxValue));
-                    return;
-
-                case "health":
-                    Expect(source, line, fields, "health", 2);
-                    draft.Once(source, line, "health");
-                    draft.HealthPoolGold =
-                        DataText.IntegerInRange(source, line, "the health pool", fields[1], 1, int.MaxValue);
-                    return;
-
-                case "slots":
-                    Expect(source, line, fields, "slots", 3);
-                    draft.Once(source, line, "slots");
-                    draft.StartingWaveSlots =
-                        DataText.IntegerInRange(source, line, "the starting slot width", fields[1], 1, 64);
-                    draft.WaveSlotsPerAnchor =
-                        DataText.IntegerInRange(source, line, "the slots an anchor adds", fields[2], 0, 64);
-                    return;
-
-                case "offering":
-                    Expect(source, line, fields, "offering", 3);
-                    draft.Once(source, line, "offering");
-                    draft.OrdinaryOptionsPerRound = DataText.IntegerInRange(
-                        source, line, "the ordinary options", fields[1], 1, MostOptions);
-                    draft.GameChangersPerAnchor = DataText.IntegerInRange(
-                        source, line, "the game changers an anchor adds", fields[2], 1, MostOptions);
-                    return;
-
-                case "snapshot":
-                    Expect(source, line, fields, "snapshot", 3);
-                    draft.Once(source, line, "snapshot");
-                    draft.FreeSnapshotsPerRun =
-                        DataText.IntegerInRange(source, line, "the free snapshot count", fields[1], 0, int.MaxValue);
-                    draft.SnapshotPriceGold =
-                        DataText.IntegerInRange(source, line, "the snapshot price", fields[2], 0, int.MaxValue);
-                    return;
-
-                default:
-                    throw DataText.NoSuchRow(source, line, fields[0], Draft.RowWords);
+                throw new SimulationException(
+                    "A ruleset was retuned with "
+                    + value.ToString(CultureInfo.InvariantCulture)
+                    + " for "
+                    + column.Name
+                    + ", which runs from "
+                    + column.Minimum.ToString(CultureInfo.InvariantCulture)
+                    + " to "
+                    + column.Maximum.ToString(CultureInfo.InvariantCulture)
+                    + ". A number handed in here has had no file to be refused at, so it is held to the "
+                    + "range the authored column is held to -- otherwise a sweep is the one caller that "
+                    + "can build a ruleset no text file could express.");
             }
+
+            values[(int)field] = value;
         }
+
+        /// <summary>
+        /// The column that fills each field, indexed by it, gathered off
+        /// <see cref="Rules"/> the first time a ruleset is built.
+        /// </summary>
+        private static Column[] IndexColumns()
+        {
+            var byField = new Column[(int)Field.Count];
+            var filled = new bool[(int)Field.Count];
+
+            for (int index = 0; index < Rules.Length; index++)
+            {
+                Column[] columns = Rules[index].Columns;
+
+                for (int column = 0; column < columns.Length; column++)
+                {
+                    int field = (int)columns[column].Field;
+
+                    if (filled[field])
+                    {
+                        throw new SimulationException(
+                            Name(columns[column].Field)
+                            + " is filled by two columns of the ruleset. One would overwrite the other and "
+                            + "the fold would take it twice, leaving whichever field lost its column read "
+                            + "as a zero nobody authored.");
+                    }
+
+                    byField[field] = columns[column];
+                    filled[field] = true;
+                }
+            }
+
+            for (int field = 0; field < filled.Length; field++)
+            {
+                if (!filled[field])
+                {
+                    throw new SimulationException(
+                        Name((Field)field)
+                        + " is filled by no column of any ruleset rule. Nothing would parse it, nothing "
+                        + "would fold it into the content hash, and its accessor would answer zero -- so "
+                        + "a field exists on the row that carries it or it does not exist.");
+                }
+            }
+
+            return byField;
+        }
+
+        private static string Name(Field field) => "The ruleset field " + field.ToString();
+
+        /// <summary>The rule a row's opening word names, or a refusal listing the words this file has.</summary>
+        private static Rule RuleFor(string source, DataText.Row row)
+        {
+            for (int index = 0; index < Rules.Length; index++)
+            {
+                if (string.Equals(row.Keyword, Rules[index].Keyword, StringComparison.Ordinal))
+                {
+                    return Rules[index];
+                }
+            }
+
+            throw DataText.NoSuchRow(source, row.Line, row.Keyword, RowWords());
+        }
+
+        /// <summary>The words a ruleset row may open with: the keywords of <see cref="Rules"/>.</summary>
+        private static string[] RowWords()
+        {
+            var words = new string[Rules.Length];
+
+            for (int index = 0; index < Rules.Length; index++)
+            {
+                words[index] = Rules[index].Keyword;
+            }
+
+            return words;
+        }
+
+        private static void ReadMatrixRow(string source, DataText.Row row, Draft draft) =>
+            draft.AddMatrixRow(
+                source,
+                row.Line,
+                DataText.Keyword(source, row.Line, "the attack type", row.Fields[1], DamageMatrix.AttackWords),
+                Cell(source, row.Line, "the swift cell", row.Fields[2]),
+                Cell(source, row.Line, "the armoured cell", row.Fields[3]),
+                Cell(source, row.Line, "the arcane cell", row.Fields[4]));
+
+        private static void ReadBandRow(string source, DataText.Row row, Draft draft) =>
+            draft.AddBand(
+                source,
+                row.Line,
+                DataText.IntegerInRange(source, row.Line, "the band's percentile", row.Fields[1], 0, 99),
+                DataText.IntegerInRange(source, row.Line, "the band's bonus", row.Fields[2], 0, int.MaxValue));
 
         private static int Cell(string source, int line, string name, string field) =>
             DataText.IntegerInRange(source, line, name, field, 1, MaximumFactor);
 
-        private static void Expect(string source, int line, string[] fields, string keyword, int count) =>
-            DataText.RequireFieldCount(source, line, keyword, count, fields);
+        /// <summary>
+        /// One number on a row: the field it fills, what a refusal calls it, and
+        /// the range the authored column is held to.
+        /// </summary>
+        private readonly struct Column
+        {
+            internal Column(Field field, string name, int minimum, int maximum)
+            {
+                Field = field;
+                Name = name;
+                Minimum = minimum;
+                Maximum = maximum;
+            }
+
+            internal Field Field { get; }
+
+            /// <summary>What a refusal calls this number, as a noun phrase.</summary>
+            internal string Name { get; }
+
+            internal int Minimum { get; }
+
+            internal int Maximum { get; }
+        }
+
+        /// <summary>
+        /// One kind of row the ruleset file has: the word it opens with, how
+        /// many fields it carries, and what reading one leaves behind.
+        /// </summary>
+        /// <remarks>
+        /// A rule is either a run of numbered columns -- read into the draft and
+        /// folded straight off the values, stated exactly once -- or row-shaped,
+        /// carrying its own reader and its own fold and appearing as many times
+        /// as the shape it describes has rows.
+        /// </remarks>
+        private sealed class Rule
+        {
+            private readonly Action<string, DataText.Row, Draft>? _read;
+
+            private readonly Func<Ruleset, Hash64, Hash64>? _fold;
+
+            private Rule(
+                string keyword,
+                int fields,
+                Column[] columns,
+                Action<string, DataText.Row, Draft>? read,
+                Func<Ruleset, Hash64, Hash64>? fold)
+            {
+                Keyword = keyword;
+                FieldsPerRow = fields;
+                Columns = columns;
+                _read = read;
+                _fold = fold;
+            }
+
+            /// <summary>The word a row of this rule opens with.</summary>
+            internal string Keyword { get; }
+
+            /// <summary>How many whitespace-separated fields a row of it carries, keyword included.</summary>
+            internal int FieldsPerRow { get; }
+
+            /// <summary>The numbers that follow the keyword, in the order they are written.</summary>
+            internal Column[] Columns { get; }
+
+            /// <summary>
+            /// True for the matrix and the bands: rules whose rows describe a
+            /// shape rather than filling a column, so that a completeness check
+            /// over them is about how many rows arrived.
+            /// </summary>
+            internal bool IsRowShaped => _read is not null;
+
+            /// <summary>A rule whose row is a keyword followed by one number per column.</summary>
+            internal static Rule Numbers(string keyword, params Column[] columns) =>
+                new Rule(keyword, columns.Length + 1, columns, null, null);
+
+            /// <summary>A rule whose rows describe a shape, read and folded by name.</summary>
+            internal static Rule RowShaped(
+                string keyword,
+                int fields,
+                Action<string, DataText.Row, Draft> read,
+                Func<Ruleset, Hash64, Hash64> fold) =>
+                new Rule(keyword, fields, Array.Empty<Column>(), read, fold);
+
+            /// <summary>Reads one row of this rule into the draft.</summary>
+            internal void Read(string source, DataText.Row row, Draft draft)
+            {
+                DataText.RequireFieldCount(source, row.Line, Keyword, FieldsPerRow, row.Fields);
+
+                if (_read is not null)
+                {
+                    _read(source, row, draft);
+                    return;
+                }
+
+                draft.Once(source, row.Line, Keyword);
+
+                for (int index = 0; index < Columns.Length; index++)
+                {
+                    Column column = Columns[index];
+
+                    draft.Values[(int)column.Field] = DataText.IntegerInRange(
+                        source,
+                        row.Line,
+                        column.Name,
+                        row.Fields[index + 1],
+                        column.Minimum,
+                        column.Maximum);
+                }
+            }
+
+            /// <summary>Folds what this rule holds into the content hash.</summary>
+            internal Hash64 Fold(Ruleset rules, Hash64 hash)
+            {
+                if (_fold is not null)
+                {
+                    return _fold(rules, hash);
+                }
+
+                for (int index = 0; index < Columns.Length; index++)
+                {
+                    hash = hash.Add(rules._values[(int)Columns[index].Field]);
+                }
+
+                return hash;
+            }
+        }
 
         /// <summary>
         /// The ruleset part-read: every field, plus which rows have been seen.
@@ -528,12 +715,6 @@ namespace Sim
         /// </summary>
         private sealed class Draft
         {
-            internal static readonly string[] RowWords =
-            {
-                "matrix", "armour", "floor", "interest", "income", "purse", "band", "health", "slots",
-                "offering", "snapshot",
-            };
-
             private readonly List<string> _seen = new List<string>();
 
             private readonly int[] _cells = new int[DamageMatrix.CellCount];
@@ -544,33 +725,8 @@ namespace Sim
 
             internal List<PerformanceBand> Bands { get; } = new List<PerformanceBand>();
 
-            internal int ArmourPercentPerPoint { get; set; }
-
-            internal int ArmourDenominator { get; set; }
-
-            internal int DamageFloor { get; set; }
-
-            internal int InterestPercentPerWave { get; set; }
-
-            internal int InterestCapGold { get; set; }
-
-            internal int IncomeBasePerWave { get; set; }
-
-            internal int StartingPurseGold { get; set; }
-
-            internal int HealthPoolGold { get; set; }
-
-            internal int StartingWaveSlots { get; set; }
-
-            internal int WaveSlotsPerAnchor { get; set; }
-
-            internal int OrdinaryOptionsPerRound { get; set; }
-
-            internal int GameChangersPerAnchor { get; set; }
-
-            internal int FreeSnapshotsPerRun { get; set; }
-
-            internal int SnapshotPriceGold { get; set; }
+            /// <summary>Every number a column filled, indexed by its field.</summary>
+            internal int[] Values { get; } = new int[(int)Field.Count];
 
             /// <summary>Records a row that may appear exactly once.</summary>
             internal void Once(string source, int line, string keyword)
@@ -705,24 +861,22 @@ namespace Sim
                         + "against and every wave would be paid an amount nobody authored.");
                 }
 
-                foreach (string keyword in RowWords)
+                for (int index = 0; index < Rules.Length; index++)
                 {
-                    if (string.Equals(keyword, "matrix", StringComparison.Ordinal)
-                        || string.Equals(keyword, "band", StringComparison.Ordinal))
+                    Rule rule = Rules[index];
+
+                    if (rule.IsRowShaped || Was(rule.Keyword))
                     {
                         continue;
                     }
 
-                    if (!Was(keyword))
-                    {
-                        throw new ContentException(
-                            source,
-                            0,
-                            "has no '"
-                            + keyword
-                            + "' row. Every rule is authored here: a missing one would be supplied by this "
-                            + "reader and folded into the content hash as though somebody had chosen it.");
-                    }
+                    throw new ContentException(
+                        source,
+                        0,
+                        "has no '"
+                        + rule.Keyword
+                        + "' row. Every rule is authored here: a missing one would be supplied by this "
+                        + "reader and folded into the content hash as though somebody had chosen it.");
                 }
             }
 
