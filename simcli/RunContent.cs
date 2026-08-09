@@ -46,12 +46,19 @@ internal readonly struct RunShape
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>The caller opened six files; the simulation was handed six strings.</b>
-/// Nothing in the simulation assembly can open anything -- <c>System.IO</c> is
-/// a banned namespace there and the build gate scans the compiled image for it
-/// -- so reading the content is this program's job and parsing it is the
-/// simulation's. Every parser here is the same one the tests and the engine
-/// call.
+/// <b>The caller opened seven files; the simulation was handed seven
+/// strings.</b> Nothing in the simulation assembly can open anything --
+/// <c>System.IO</c> is a banned namespace there and the build gate scans the
+/// compiled image for it -- so reading the content is this program's job and
+/// parsing it is the simulation's. Every parser here is the same one the tests
+/// and the engine call.
+/// </para>
+/// <para>
+/// <b>The upgrade ladder is parsed, folded into the roster's content hash, held
+/// -- and never handed to <see cref="Run"/>.</b> That absence is what makes
+/// "the simulation does not enforce the ladder" a property of the code rather
+/// than a promise about it, the same move as banning <c>System.IO</c> from the
+/// simulation assembly and then scanning the compiled image for it.
 /// </para>
 /// <para>
 /// <b>The field is canned and it stands in for a ghost pool that does not
@@ -76,6 +83,7 @@ internal sealed class RunContent
     private RunContent(
         HexMap map,
         UnitTypeTable types,
+        UpgradeLadder ladder,
         Ruleset rules,
         AnchorSchedule schedule,
         TowerLayout defense,
@@ -86,29 +94,47 @@ internal sealed class RunContent
         _schedule = schedule;
         _pool = FieldPool.Of(new[] { RoundOrders.Of(defense, wave) });
         Types = types;
+        Ladder = ladder;
         Defense = defense;
     }
 
-    /// <summary>The roster every creep, cost and offering in the run is read out of.</summary>
+    /// <summary>
+    /// The roster every creep, cost and offering in the run is read out of, with
+    /// the ladder folded into its content hash.
+    /// </summary>
     public UnitTypeTable Types { get; }
+
+    /// <summary>
+    /// Which unit follows which. Held here and handed to nothing that ticks --
+    /// see the remarks on <see cref="RunContent"/>.
+    /// </summary>
+    public UpgradeLadder Ladder { get; }
 
     /// <summary>What stands while each of the run's waves is sent.</summary>
     public TowerLayout Defense { get; }
 
-    /// <summary>Parses the six files a run needs. Order matters: the tables check against the roster.</summary>
+    /// <summary>
+    /// Parses the seven files a run needs. Order matters: the ladder and the
+    /// three tables all check against the roster, and the roster the rest are
+    /// read against is the one the ladder has been folded into.
+    /// </summary>
     public static RunContent Of(
         string mapText,
         string unitsText,
+        string upgradesText,
         string rulesText,
         string scheduleText,
         string defenseText,
         string waveText)
     {
-        UnitTypeTable types = UnitTypeTable.Parse(unitsText);
+        UnitTypeTable roster = UnitTypeTable.Parse(unitsText);
+        UpgradeLadder ladder = UpgradeLadder.Parse(upgradesText, roster);
+        UnitTypeTable types = roster.WithLadder(ladder);
 
         return new RunContent(
             HexMap.Parse(mapText),
             types,
+            ladder,
             Ruleset.Parse(rulesText),
             AnchorSchedule.Parse(scheduleText, types),
             TowerLayout.Parse(defenseText, types),

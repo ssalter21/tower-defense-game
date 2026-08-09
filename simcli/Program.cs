@@ -61,12 +61,22 @@ public static class Program
     private const int MaximumCreeps = 65535;
 
     /// <summary>
-    /// The six content files a run is built from, and the three arguments that
+    /// The seven content files a run is built from, and the three arguments that
     /// say how long it lasts, how wide its field is and whether death ends it.
-    /// Every run verb takes all nine, so the list is written once.
+    /// Every run verb takes all ten, so the list is written once.
     /// </summary>
+    /// <remarks>
+    /// <b><c>--upgrades</c> is required and never optional</b>, which is why it
+    /// is in this list rather than read with a default behind it. An optional
+    /// content file is a default, and a default is a number nobody authored
+    /// folded into a content hash as though somebody had. The cost is that every
+    /// invocation in the repository names one file more; it is paid once.
+    /// </remarks>
     private static readonly string[] RunOptions =
-        { "map", "units", "rules", "schedule", "defense", "wave", "waves", "field-size", "no-death" };
+    {
+        "map", "units", "upgrades", "rules", "schedule", "defense", "wave",
+        "waves", "field-size", "no-death",
+    };
 
     /// <summary>
     /// The options across every verb that are switches rather than pairs. Named
@@ -76,7 +86,8 @@ public static class Program
     private static readonly string[] Switches = { "no-death" };
 
     private const string RunContentUsage =
-        "--map <file> --units <file> --rules <file> --schedule <file> --defense <file> --wave <file>";
+        "--map <file> --units <file> --upgrades <file> --rules <file> --schedule <file>\n"
+        + "             --defense <file> --wave <file>";
 
     private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
 
@@ -438,11 +449,12 @@ public static class Program
             arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize),
             !arguments.Given("no-death"));
 
-    /// <summary>The six files every run verb is handed, read here and parsed there.</summary>
+    /// <summary>The seven files every run verb is handed, read here and parsed there.</summary>
     private static RunContent ContentOf(Arguments arguments) =>
         RunContent.Of(
             File.ReadAllText(arguments.Required("map")),
             File.ReadAllText(arguments.Required("units")),
+            File.ReadAllText(arguments.Required("upgrades")),
             File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("schedule")),
             File.ReadAllText(arguments.Required("defense")),

@@ -160,6 +160,12 @@ $content = Join-Path $repoRoot 'content'
 $bundle = Join-Path $content 'match.replay'
 $units = Join-Path $content 'units.txt'
 
+# Which unit follows which. No run reads an edge -- the ladder is folded into
+# the roster's content hash and handed to nothing that ticks -- but every verb
+# that takes --units takes this too, so that an unreadable ladder is a refusal
+# rather than a file nobody opened.
+$upgrades = Join-Path $content 'upgrades.txt'
+
 # Every number a shot resolves through: the matrix, the armour expression and
 # the floor. A match cannot be played without it, and a table whose rows carry
 # no types simply never consults it.
@@ -174,13 +180,14 @@ $commandScript = Join-Path $content 'commands.txt'
 $commands = Join-Path $content 'run.commands'
 $outcomeName = 'run-outcome.txt'
 
-# The six files a run is built from. Every run verb takes all six, so the list
-# is written once and splatted -- a verb reading a different defense than the
-# one the record was made against is a run that refuses for a reason that has
-# nothing to do with what was being checked.
+# The seven files a run is built from. Every run verb takes all seven, so the
+# list is written once and splatted -- a verb reading a different defense than
+# the one the record was made against is a run that refuses for a reason that
+# has nothing to do with what was being checked.
 $runContent = @(
     '--map', (Join-Path $content 'map.txt'),
     '--units', $units,
+    '--upgrades', $upgrades,
     '--rules', $ruleset,
     '--schedule', $schedule,
     '--defense', (Join-Path $content 'defense.txt'),

@@ -33,11 +33,12 @@ public static class TheCommandLine
     /// <summary>The built runner, as a path <c>dotnet</c> will run.</summary>
     public static string Program => LazyProgram.Value;
 
-    /// <summary>The six content arguments every run verb takes.</summary>
+    /// <summary>The seven content arguments every run verb takes.</summary>
     public static string[] RunContent => new[]
     {
         "--map", RepoLayout.MapFile,
         "--units", RepoLayout.UnitsFile,
+        "--upgrades", RepoLayout.UpgradesFile,
         "--rules", RepoLayout.RulesetFile,
         "--schedule", RepoLayout.ScheduleFile,
         "--defense", RepoLayout.DefenseFile,
