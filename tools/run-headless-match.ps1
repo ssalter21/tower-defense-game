@@ -58,6 +58,14 @@
     could be made again. -Regenerate pins a fresh copy beside the bundle it
     re-records and leaves the older ones alone.
 
+    AND AGAINST THE LADDER PINNED BESIDE IT, WHERE THERE IS ONE. The upgrade
+    ladder is folded into the unit table's content hash, so defense-N.upgrades is
+    pinned exactly as defense-N.units is. Only the current version has one: the
+    older bundles were recorded before content/upgrades.txt existed, nothing
+    folded into the hashes in their headers, and a ladder appearing beside one of
+    them -- empty or not -- would fold something and retire the only record of
+    that format version there will ever be.
+
     AND EACH IS RESTAGED RATHER THAN REPLAYED, which is the verb that survives a
     simulation version bump. A bump retires every record made under the previous
     value -- that is what it is for -- and these records cannot be made again, so
@@ -323,6 +331,17 @@ function Get-GoldenUnitsPath {
     return Join-Path $golden ($Bundle.BaseName + '.units')
 }
 
+# The upgrade ladder that bundle was recorded against. Only the current version
+# has one: the older bundles were recorded before content/upgrades.txt existed,
+# so no ladder folded into the hashes in their headers, and a ladder appearing
+# beside one of them -- empty or not -- would fold something and retire the only
+# record of that format version there will ever be.
+function Get-GoldenUpgradesPath {
+    param([System.IO.FileInfo]$Bundle)
+
+    return Join-Path $golden ($Bundle.BaseName + '.upgrades')
+}
+
 if ($Regenerate) {
     Invoke-SimCli @(
         'record',
@@ -362,6 +381,14 @@ if ($Regenerate) {
     $currentGoldenUnits = Get-GoldenUnitsPath (Get-Item $currentGolden)
     Copy-Item -Path $units -Destination $currentGoldenUnits -Force
     Write-Host "wrote      $currentGoldenUnits" -ForegroundColor Green
+
+    # And the ladder, for the same reason and with the same consequence: it is
+    # folded into that table's content hash, so a re-recorded bundle whose pinned
+    # ladder stayed behind is a bundle nothing can replay. The older versions get
+    # no ladder pinned beside them, ever -- see Get-GoldenUpgradesPath.
+    $currentGoldenUpgrades = Get-GoldenUpgradesPath (Get-Item $currentGolden)
+    Copy-Item -Path $upgrades -Destination $currentGoldenUpgrades -Force
+    Write-Host "wrote      $currentGoldenUpgrades" -ForegroundColor Green
 
     # Every golden's result is rewritten, the old versions included: a rule
     # change moves what all of them do, and a stale result beside a live one is

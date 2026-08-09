@@ -183,6 +183,21 @@ public static class RepoLayout
     public static string GoldenUnitsFile(int defenseFormatVersion) =>
         Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".units");
 
+    /// <summary>
+    /// The upgrade ladder that bundle was recorded against, copied beside it and
+    /// never rewritten afterwards.
+    /// </summary>
+    /// <remarks>
+    /// <b>This file does not exist for every version, and its absence is
+    /// meaningful rather than missing.</b> A bundle recorded before
+    /// <c>content/upgrades.txt</c> existed was recorded against no ladder at all,
+    /// so nothing folds into the hash in its header -- which is exactly what
+    /// keeps that frozen hash standing forever. Whatever reads this asks whether
+    /// the file is there and folds nothing when it is not.
+    /// </remarks>
+    public static string GoldenUpgradesFile(int defenseFormatVersion) =>
+        Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".upgrades");
+
     /// <summary>The headless runner's project.</summary>
     public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
 
