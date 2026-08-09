@@ -36,9 +36,16 @@
 # column is a format version, a hash label and every record made under the old
 # one retired, and a row is a line. It is also the constraint the roster was
 # signed under, and it is what several units in docs/roster.md are waiting on
-# -- a target count, a radial shot, a timed slow, an aura, a second health pool
-# and an upgrade edge are all levers these columns do not have, so the units
-# that need them are written down there and are not authored here.
+# -- a target count, a radial shot, a timed slow, an aura and a second health
+# pool are all levers these columns do not have, so the units that need them
+# are written down there and are not authored here.
+#
+# WHICH UNIT FOLLOWS WHICH IS NOT IN THIS FILE. An upgrade edge is a row in
+# content/upgrades.txt, which names two ids out of this table, and it is an
+# annotation rather than a column for the reason above: a tier is its own id and
+# its own row here, and the edge that joins two of them lives beside them. That
+# file's edges fold into this table's content hash, so authoring one retires the
+# records pinned to the roster before it exactly as retuning a number does.
 #
 # Ids ascend strictly down the file, which is what makes a duplicate a
 # comparison against the row above rather than a lookup nobody performed. They
@@ -166,3 +173,4 @@ unit   7   necromancer       moving  2400   33     0      0         0       0   
 unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0
 unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20
 unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45
+unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0

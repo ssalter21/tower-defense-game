@@ -46,7 +46,7 @@ public class ContentTests
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(8, table.Count);
+        Assert.Equal(9, table.Count);
         Assert.Equal("minion", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
@@ -54,16 +54,21 @@ public class ContentTests
         Assert.Equal(33, table.ById(4).ProjectileFlightTicks);
 
         // Five of them walk, which is what an offering is drawn out of, and
-        // three stand. The ratio is what lets the ruleset ask for three
+        // four stand. The walker count is what lets the ruleset ask for three
         // ordinary options a round, and it is the tightest it has ever been:
         // five walkers against three options puts most of the roster on every
         // menu.
+        //
+        // The Ranger is the fourth thing that stands and it changed neither of
+        // those, which is the point of a tier being a row: an offering is drawn
+        // from the walkers alone, so a new tower does not enter a menu and
+        // cannot move a draw.
         //
         // OBSERVED: change the skeleton's role from moving to placed in
         // content/units.txt. The walker count goes red, 5 against 4, and the
         // offering's own refusal follows it in BuildPhaseTests.
         Assert.Equal(5, table.Types.Count(row => row.Role == UnitRole.Moving));
-        Assert.Equal(3, table.Types.Count(row => row.Role == UnitRole.Placed));
+        Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
 
         // The five retired ids are gone and stay gone. Ids are never reused, so
         // these are not holes waiting to be filled -- a stored record pinning

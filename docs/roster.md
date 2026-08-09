@@ -38,7 +38,7 @@ its own id and its own row** — the Captain is not the Soldier with a flag set.
 **Ids are taken when a unit is built, never reserved.** An earlier draft of this document held 11–20 for the
 tower tiers and 21–25 for the creeps. That reservation is abandoned: nine of those ids were being held for
 units that may never exist, and a file whose gaps only make sense if you have read a document is exactly the
-drift this roster exists to close. The next unit built takes id 14, whatever it is.
+drift this roster exists to close. The next unit built takes id 15, whatever it is.
 
 ## What things cost
 
@@ -125,8 +125,8 @@ deletes one of those two cases.
 | 11 | Soldier | tower | 1 | live | `soldier` | — new |
 | 12 | Skeleton | creep | — | live | `skeleton` | — new |
 | 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` | — new |
+| 14 | Ranger | tower | 2 | live | `ranger` | — new |
 | — | Captain | tower | 2 | proposed | — | |
-| — | Ranger | tower | 2 | signed | — | |
 | — | Pyromancer | tower | 2a | proposed | — | |
 | — | Cryomancer | tower | 2b | proposed | — | |
 | — | Hero | tower | 3 | proposed | — | |
@@ -216,7 +216,7 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 > reading would have retuned the tower the committed defense is mostly made of, to buy early what tier 3 gives
 > anyway.
 
-### Ranger · tier 2 · status signed
+### 14 · Ranger · tier 2 · status live
 
 - **Does** — +1 hex of range.
 - **Looks** —
