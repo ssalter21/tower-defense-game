@@ -54,7 +54,8 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # edit-mode test fails if the two disagree -- a file in one and not the other is
 # either content that ships and is never read, or content that is read and does
 # not ship, and the second presents as an empty playfield in a build that worked
-# perfectly in the editor.
+# perfectly in the editor. See the note on upgrades.txt below for a third case
+# this list has since grown.
 #
 # match.replay joined the list when the player stopped deriving its match from
 # the four text files and started playing the RECORD. The seed is in there and
@@ -66,9 +67,17 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # The tick loop resolves every landing through ruleset.txt -- the damage matrix,
 # the armour expression and the floor -- so a player without it draws its floor
 # and throws on the first hit.
+#
+# upgrades.txt is an HONEST THIRD CASE, and it is worth naming because it is
+# neither of the two the paragraph above catches. Nothing on the view side reads
+# an upgrade edge. But the ladder is folded into the unit table's content hash,
+# and that hash is what the replay gate compares the shipped record's stamped one
+# against -- so a player without this file rebuilds the wrong hash and
+# match.replay is refused. It ships because a hash covers it.
 $files = @(
     'map.txt',
     'units.txt',
+    'upgrades.txt',
     'ruleset.txt',
     'defense.txt',
     'wave.txt',
