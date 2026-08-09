@@ -38,6 +38,107 @@ namespace Sim
     }
 
     /// <summary>
+    /// The kinds of thing a walk over a whole ladder can have to say about it.
+    /// </summary>
+    /// <remarks>
+    /// The first two are faults and the last three are notes, and which is which
+    /// is <see cref="LadderReport"/>'s to say rather than this enum's: a caller
+    /// reads the two lists it is given and never sorts one kind out of the
+    /// other.
+    /// </remarks>
+    public enum LadderRemark
+    {
+        /// <summary>The two ends of one edge are units of different roles.</summary>
+        MixedRoles,
+
+        /// <summary>Two units are joined by paths that are not all the same length.</summary>
+        UnequalRoads,
+
+        /// <summary>A unit the ladder names that nothing upgrades into.</summary>
+        Root,
+
+        /// <summary>A unit the ladder names that upgrades into nothing.</summary>
+        Leaf,
+
+        /// <summary>An edge whose target costs no more than its source.</summary>
+        FlatOrFallingPrice,
+    }
+
+    /// <summary>
+    /// One thing a completeness walk found, the units it is about, and the
+    /// sentence a person reads.
+    /// </summary>
+    public readonly struct LadderFinding
+    {
+        internal LadderFinding(LadderRemark remark, int subject, int other, string sentence)
+        {
+            Remark = remark;
+            Subject = subject;
+            Other = other;
+            Sentence = sentence;
+        }
+
+        /// <summary>Which of the five this is.</summary>
+        public LadderRemark Remark { get; }
+
+        /// <summary>The unit id this is about: the source of an edge, or the unit itself.</summary>
+        public int Subject { get; }
+
+        /// <summary>
+        /// The second unit id, or zero where the remark is about one unit. Zero
+        /// is already "no unit" in this id space.
+        /// </summary>
+        public int Other { get; }
+
+        /// <summary>What it says, in one line, with the labels and the numbers in it.</summary>
+        public string Sentence { get; }
+
+        public override string ToString() => Sentence;
+    }
+
+    /// <summary>
+    /// What a walk over a whole ladder came to: the faults, which are never a
+    /// legitimate roster, and the notes, which are design statements.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Both lists are returned and neither is thrown.</b> A second pass
+    /// inside the loader would apply this roster's design rules to every ladder
+    /// -- a test fixture, a hand-typed file, a branch mid-edit -- and make a
+    /// design statement an unloadable file, so a half-authored roster could not
+    /// be run at all.
+    /// </para>
+    /// <para>
+    /// <b>Two postures and no third.</b> A fault is never a legitimate roster
+    /// and the build gate goes red on one. A note is a design statement, printed
+    /// and never judged. There is no suppression mechanism, because a warning
+    /// nobody has to clear is the stale-content failure this whole arrangement
+    /// exists to prevent, wearing a different hat.
+    /// </para>
+    /// </remarks>
+    public sealed class LadderReport
+    {
+        private readonly LadderFinding[] _faults;
+
+        private readonly LadderFinding[] _notes;
+
+        internal LadderReport(LadderFinding[] faults, LadderFinding[] notes)
+        {
+            _faults = faults;
+            _notes = notes;
+        }
+
+        /// <summary>Mixed roles and unequal roads. A build gate fails on any of these.</summary>
+        public IReadOnlyList<LadderFinding> Faults => _faults;
+
+        /// <summary>Roots, leaves and flat or falling prices. Printed, never judged.</summary>
+        public IReadOnlyList<LadderFinding> Notes => _notes;
+
+        /// <summary>Whether there is nothing here a build gate should fail on.</summary>
+        public bool HasNoFaults => _faults.Length == 0;
+    }
+
+    /// <summary>
     /// Which unit follows which: the upgrade edges, in canonical order,
     /// validated against the unit type table that has to already know every id
     /// they name.
@@ -260,6 +361,149 @@ namespace Sim
         }
 
         /// <summary>
+        /// Walks the whole ladder against the roster and says what is wrong with
+        /// it and what is merely worth knowing. Returns both; throws neither.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One sweep, in id order, and no path enumeration.</b> A target id
+        /// always exceeds its source, so the edge list is a topological order by
+        /// construction: when an edge leaving a unit is reached, every path into
+        /// that unit is already complete. The shortest and longest path between
+        /// every reachable pair therefore fall out of a single pass over the
+        /// edges, and unequal roads is the pairs where those two differ. There is
+        /// no visited set and no cycle handling, because a cycle cannot be
+        /// written down.
+        /// </para>
+        /// <para>
+        /// <b>Roots and leaves are units the ladder names.</b> A unit in no edge
+        /// at all is neither, so an empty ladder has nothing to say about a
+        /// roster rather than calling every row both.
+        /// </para>
+        /// </remarks>
+        public LadderReport Completeness(UnitTypeTable types)
+        {
+            if (types is null)
+            {
+                throw new ArgumentNullException(nameof(types));
+            }
+
+            var faults = new List<LadderFinding>();
+            var notes = new List<LadderFinding>();
+
+            int count = types.Count;
+            var named = new bool[count];
+            var hasIncoming = new bool[count];
+            var hasOutgoing = new bool[count];
+
+            // Path length between every pair, as two n-by-n grids of "no path
+            // yet is zero". A ladder is a handful of rows over a handful of
+            // units, so a grid costs less than anything cleverer would.
+            var shortest = new int[count * count];
+            var longest = new int[count * count];
+
+            for (int index = 0; index < _edges.Length; index++)
+            {
+                UpgradeEdge edge = _edges[index];
+                UnitType from = types.ById(edge.From);
+                UnitType to = types.ById(edge.To);
+
+                if (from.Role != to.Role)
+                {
+                    faults.Add(new LadderFinding(
+                        LadderRemark.MixedRoles,
+                        from.Id,
+                        to.Id,
+                        Describe(from) + " and " + Describe(to)
+                        + ", so this edge joins two different kinds of thing rather than two rungs of "
+                        + "one line."));
+                }
+
+                if (to.Cost <= from.Cost)
+                {
+                    notes.Add(new LadderFinding(
+                        LadderRemark.FlatOrFallingPrice,
+                        from.Id,
+                        to.Id,
+                        from.ToString() + " costs " + Gold(from.Cost) + " and " + to.ToString() + " costs "
+                        + Gold(to.Cost) + ", so the upgrade is not dearer than what it replaces."));
+                }
+
+                int source = IndexOf(types, edge.From);
+                int target = IndexOf(types, edge.To);
+
+                named[source] = true;
+                named[target] = true;
+                hasOutgoing[source] = true;
+                hasIncoming[target] = true;
+
+                Reach(shortest, longest, count, source, target, 1, 1);
+
+                // Every unit that already reaches this edge's source now reaches
+                // its target one step further along. The loop stops at the
+                // source's own index because an edge only ever points at a
+                // larger id, so nothing above it can reach it.
+                for (int start = 0; start < source; start++)
+                {
+                    int at = (start * count) + source;
+
+                    if (shortest[at] > 0)
+                    {
+                        Reach(shortest, longest, count, start, target, shortest[at] + 1, longest[at] + 1);
+                    }
+                }
+            }
+
+            for (int start = 0; start < count; start++)
+            {
+                for (int end = 0; end < count; end++)
+                {
+                    int at = (start * count) + end;
+
+                    if (shortest[at] == 0 || shortest[at] == longest[at])
+                    {
+                        continue;
+                    }
+
+                    faults.Add(new LadderFinding(
+                        LadderRemark.UnequalRoads,
+                        types.Types[start].Id,
+                        types.Types[end].Id,
+                        types.Types[start].ToString() + " reaches " + types.Types[end].ToString()
+                        + " by paths of " + Upgrades(shortest[at]) + " and " + Upgrades(longest[at])
+                        + ", so one route to the same unit costs fewer upgrades than another."));
+                }
+            }
+
+            for (int index = 0; index < count; index++)
+            {
+                if (named[index] && !hasIncoming[index])
+                {
+                    notes.Add(new LadderFinding(
+                        LadderRemark.Root,
+                        types.Types[index].Id,
+                        0,
+                        types.Types[index].ToString() + " has no incoming edge, so nothing upgrades into it."));
+                }
+            }
+
+            for (int index = 0; index < count; index++)
+            {
+                if (named[index] && !hasOutgoing[index])
+                {
+                    notes.Add(new LadderFinding(
+                        LadderRemark.Leaf,
+                        types.Types[index].Id,
+                        0,
+                        types.Types[index].ToString()
+                        + " has no outgoing edge, so it is the top of its line."));
+                }
+            }
+
+            return new LadderReport(faults.ToArray(), notes.ToArray());
+        }
+
+        /// <summary>
         /// Whether this reader has a branch for that row layout.
         /// </summary>
         /// <remarks>
@@ -315,6 +559,67 @@ namespace Sim
 
             return layout;
         }
+
+        /// <summary>
+        /// Records a path from one unit to another, keeping the shortest and the
+        /// longest seen so far. A pair whose two answers differ is unequal roads.
+        /// </summary>
+        private static void Reach(
+            int[] shortest,
+            int[] longest,
+            int count,
+            int start,
+            int end,
+            int shorter,
+            int longer)
+        {
+            int at = (start * count) + end;
+
+            if (shortest[at] == 0 || shorter < shortest[at])
+            {
+                shortest[at] = shorter;
+            }
+
+            if (longer > longest[at])
+            {
+                longest[at] = longer;
+            }
+        }
+
+        /// <summary>
+        /// Where in the table a unit id sits. A linear scan for the reason
+        /// <see cref="UnitTypeTable.TryById"/> is one: the table has a handful of
+        /// rows and the obvious dictionary is a banned type.
+        /// </summary>
+        private static int IndexOf(UnitTypeTable types, int id)
+        {
+            for (int index = 0; index < types.Count; index++)
+            {
+                if (types.Types[index].Id == id)
+                {
+                    return index;
+                }
+            }
+
+            // Unreachable: every id in an edge was resolved against this table at
+            // parse. Stated as a throw rather than a comment, because a silent -1
+            // would index a grid.
+            throw new ContentException(
+                "upgrade ladder",
+                0,
+                "names type id "
+                + id.ToString(CultureInfo.InvariantCulture)
+                + ", which is not in the table this ladder was parsed against.");
+        }
+
+        /// <summary>A unit and what its role does, for a sentence naming both ends of an edge.</summary>
+        private static string Describe(UnitType type) =>
+            type.ToString() + " " + (type.Role == UnitRole.Placed ? "stands" : "walks");
+
+        private static string Gold(int cost) => cost.ToString(CultureInfo.InvariantCulture) + " gold";
+
+        private static string Upgrades(int length) =>
+            length.ToString(CultureInfo.InvariantCulture) + (length == 1 ? " upgrade" : " upgrades");
 
         /// <summary>
         /// An id required to name a row of the table. An unknown id refuses to

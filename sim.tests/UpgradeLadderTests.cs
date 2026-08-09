@@ -286,6 +286,129 @@ public class UpgradeLadderTests
     }
 
     [Fact]
+    public void A_diamond_whose_sides_are_equal_reports_no_fault()
+    {
+        // Two routes from the Mage to the Archmage, two edges each. A fork that
+        // rejoins is the shape the ladder is a graph rather than a list FOR, so
+        // it has to be the case that reports nothing.
+        LadderReport report = Parse(Diamond).Completeness(Types());
+
+        Assert.True(report.HasNoFaults);
+        Assert.Empty(report.Faults);
+    }
+
+    [Fact]
+    public void A_diamond_with_a_shortcut_across_it_reports_unequal_roads()
+    {
+        // The same diamond plus a direct Mage-to-Archmage edge: one route costs
+        // one upgrade and the other costs two, so a player who took the long way
+        // paid more for the same tower.
+        //
+        // OBSERVED: compare only the shortest paths. This goes red having caught
+        // nothing, and a ladder where one branch is strictly a worse deal than
+        // another passes the build gate.
+        LadderReport report = Parse("""
+            layout 1
+            upgrade 4 5
+            upgrade 4 6
+            upgrade 4 7
+            upgrade 5 7
+            upgrade 6 7
+            """).Completeness(Types());
+
+        LadderFinding fault = Assert.Single(report.Faults);
+
+        Assert.Equal(LadderRemark.UnequalRoads, fault.Remark);
+        Assert.Equal(4, fault.Subject);
+        Assert.Equal(7, fault.Other);
+        Assert.Contains("paths of 1 upgrade and 2 upgrades", fault.Sentence, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_edge_whose_ends_have_different_roles_reports_mixed_roles()
+    {
+        // A tower that upgrades into a creep is not a tier, and the parser lets
+        // it load on purpose -- the edge joins two unit ids. This is where it is
+        // caught.
+        LadderReport report = Parse("layout 1\nupgrade 1 2").Completeness(Types());
+
+        LadderFinding fault = Assert.Single(report.Faults);
+
+        Assert.Equal(LadderRemark.MixedRoles, fault.Remark);
+        Assert.Equal(1, fault.Subject);
+        Assert.Equal(2, fault.Other);
+        Assert.Contains("walks", fault.Sentence, StringComparison.Ordinal);
+        Assert.Contains("stands", fault.Sentence, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_ladder_reports_the_roots_and_the_leaves_it_has()
+    {
+        // The Mage is the root of its line and the Archmage is its leaf; the two
+        // middle rungs are neither. Every other row of the roster is in no edge
+        // at all and is therefore not mentioned -- an empty ladder saying every
+        // unit is both a root and a leaf would be noise standing in for a
+        // reading.
+        LadderReport report = Parse(Diamond).Completeness(Types());
+
+        Assert.Equal(new[] { 4 }, Subjects(report, LadderRemark.Root));
+        Assert.Equal(new[] { 7 }, Subjects(report, LadderRemark.Leaf));
+    }
+
+    [Fact]
+    public void An_empty_ladder_says_nothing_at_all_about_a_roster()
+    {
+        LadderReport report = Parse("layout 1").Completeness(Types());
+
+        Assert.True(report.HasNoFaults);
+        Assert.Empty(report.Notes);
+    }
+
+    [Fact]
+    public void An_upgrade_that_costs_no_more_than_its_source_is_a_note_and_never_a_fault()
+    {
+        // The Ranger's own case: one extra hex of range at the Archer's price,
+        // because the cost rule does not price range. It is printed and it is
+        // not judged, which is the whole difference between the two lists.
+        LadderReport report = Parse(OneRung).Completeness(Types());
+
+        Assert.True(report.HasNoFaults);
+        Assert.Equal(new[] { 2 }, Subjects(report, LadderRemark.FlatOrFallingPrice));
+        Assert.Contains("40 gold", Assert.Single(report.Notes, note =>
+            note.Remark == LadderRemark.FlatOrFallingPrice).Sentence, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_rising_price_is_not_remarked_on()
+    {
+        LadderReport report = Parse("layout 1\nupgrade 4 5").Completeness(Types());
+
+        Assert.Empty(Subjects(report, LadderRemark.FlatOrFallingPrice));
+    }
+
+    [Fact]
+    public void A_long_line_with_one_route_reports_no_fault_however_many_rungs_it_has()
+    {
+        // Unequal roads is about two routes to one unit, not about length. A
+        // three-rung line reaches its top by exactly one path, so the shortest
+        // and the longest agree at every pair along it.
+        LadderReport report = Parse("""
+            layout 1
+            upgrade 4 5
+            upgrade 5 6
+            upgrade 6 7
+            """).Completeness(Types());
+
+        Assert.True(report.HasNoFaults);
+    }
+
+    private static int[] Subjects(LadderReport report, LadderRemark remark) =>
+        report.Notes.Concat(report.Faults)
+            .Where(finding => finding.Remark == remark)
+            .Select(finding => finding.Subject)
+            .ToArray();
+
+    [Fact]
     public void An_edge_between_two_walking_units_is_not_refused_by_the_parser()
     {
         // Deliberately legal. The edge is between two unit IDS rather than
