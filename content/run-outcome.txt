@@ -7,11 +7,13 @@
 # compounded differently, a slot width that widened at the wrong anchor -- is a diff rather
 # than an argument. It is deliberately not produced by whatever is checking it.
 #
-# EVERY ROUND IS A DECISION AND A PAIR. The decision came out of the command file and
-# nothing else: a run consumes build phases from a record, and there is no other route into
-# the tick loop. The pair is what that round's wave got past the field and what the field's
-# waves got past this run's defense, both priced in gold and both the average over the
-# field rather than the sum.
+# EVERY ROUND IS A DECISION, A PAIR AND AN ECONOMY. The decision came out of the command
+# file and nothing else: a run consumes build phases from a record, and there is no other
+# route into the tick loop. The pair is what that round's wave got past the field and what
+# the field's waves got past this run's defense, both priced in gold and both the average
+# over the field rather than the sum. Then what the wave cost to buy, and what it paid the
+# purse back: the bank it opened on, the interest that bank earned, the flat base, the
+# band its offense reached in the field, and the gold it closed on.
 #
 # The run this came from:
 #
@@ -22,15 +24,15 @@
 # Any of those moving moves every line below it. That is the point: the outcome is retired
 # loudly rather than quietly comparing a run against a different one.
 #
-#   decision                                                    round
+#   decision                                                    round, cost and payment
 
-wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 102
-wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 99
-wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 105
-wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 105
-wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 104
-wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 98
-wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 102
-wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 107
-wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 101
-wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 99
+wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 102, spent 0, paid 100 + 10 interest + 100 base + 0 bonus = 210 gold
+wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 99, spent 0, paid 210 + 21 interest + 100 base + 0 bonus = 331 gold
+wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 105, spent 0, paid 331 + 34 interest + 100 base + 0 bonus = 465 gold
+wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 105, spent 90, paid 375 + 38 interest + 100 base + 0 bonus = 513 gold
+wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 104, spent 180, paid 333 + 34 interest + 100 base + 0 bonus = 467 gold
+wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 98, spent 280, paid 187 + 19 interest + 100 base + 20 bonus = 326 gold
+wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 102, spent 126, paid 200 + 20 interest + 100 base + 0 bonus = 320 gold
+wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 107, spent 145, paid 175 + 18 interest + 100 base + 0 bonus = 293 gold
+wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 101, spent 219, paid 74 + 8 interest + 100 base + 20 bonus = 202 gold
+wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 99, spent 198, paid 4 + 1 interest + 100 base + 0 bonus = 105 gold

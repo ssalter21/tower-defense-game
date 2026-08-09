@@ -137,11 +137,12 @@ public class CommandStreamTests
         }
 
         Run fromRecord = TheCommands.Fresh();
-        RunOutcome outcome = CommandStream
+        IReadOnlyList<RoundReport> rounds = CommandStream
             .FromBytes(CommandStream.Of(recorded, decisions).ToBytes())
             .Replay(fromRecord, defense);
 
-        Assert.Equal(live.Outcome.Rounds, outcome.Rounds);
+        Assert.Equal(live.Outcome.Rounds, fromRecord.Outcome.Rounds);
+        Assert.Equal(live.Outcome.Rounds, rounds.Select(round => round.Outcome));
         Assert.Equal(live.Health, fromRecord.Health);
         Assert.Equal(live.Purse.Gold, fromRecord.Purse.Gold);
         Assert.Equal(live.Unlocks.Count, fromRecord.Unlocks.Count);
@@ -443,14 +444,26 @@ public class CommandStreamTests
         // first three assertions stay green; Assert.Throws goes red having
         // caught nothing, and a stream that refuses to play is written out
         // anyway -- which is the whole failure this surface exists to prevent.
+        //
+        // OBSERVED, on the rounds: hand back a fresh empty list of them beside
+        // the bytes while still replaying. Everything about the bytes stays
+        // green and the round count goes red, 4 against 0 -- proving the stream
+        // by playing it and then throwing away what the playing worked out is
+        // exactly how a caller ends up playing it a second time.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
 
-        byte[] bytes = CommandStream.Recorded(run, TheCommands.Defense(), decisions);
+        (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
+            CommandStream.Recorded(run, TheCommands.Defense(), decisions);
 
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(CommandStream.Of(TheCommands.Fresh(), decisions).ToBytes(), bytes);
         Assert.Equal(CommandStream.FromBytes(bytes).Commands, decisions);
+
+        // The rounds the proving played come back with the bytes, so nothing
+        // that wants what the stored run cost has to play it a second time.
+        Assert.Equal(TheCommands.Waves, rounds.Count);
+        Assert.Equal(run.Purse.Gold, rounds[rounds.Count - 1].Payment.Purse.Gold);
 
         // And a stream that will not replay yields no bytes at all.
         Run doomed = TheCommands.Fresh();

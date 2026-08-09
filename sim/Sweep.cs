@@ -679,10 +679,11 @@ namespace Sim
 
             while (!run.IsOver)
             {
-                BuildPhase phase = Decide(run, creep.Id);
-
-                spent += GoldOf(run.Costs, phase);
-                run.Advance(phase, plan.Defense);
+                // What the wave cost is read off the round rather than priced
+                // again out here: the build phase works it out to spend it, and
+                // a second walk over the slots is a second copy of the pricing
+                // rule free to disagree with the one the purse was charged by.
+                spent += run.Advance(Decide(run, creep.Id), plan.Defense).Build.Spent;
             }
 
             // The bonus is read off the finished vector rather than added up as
@@ -827,24 +828,6 @@ namespace Sim
                 + "health equal to what the creep cost one for one -- so a free creep is one a purse buys "
                 + "without bound and a defense concedes for free, and there is no share of a purse to "
                 + "divide by its price.");
-        }
-
-        /// <summary>What a build phase's slots cost, priced out of the run's own table.</summary>
-        private static long GoldOf(CostTable costs, BuildPhase phase)
-        {
-            long spent = 0;
-
-            for (int index = 0; index < phase.Slots.Count; index++)
-            {
-                WaveSlot slot = phase.Slots[index];
-
-                if (!slot.IsEmpty)
-                {
-                    spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
-                }
-            }
-
-            return spent;
         }
 
         /// <summary>

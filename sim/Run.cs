@@ -5,6 +5,51 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
+    /// What one round came to: the pair it resolved to, the decision it was
+    /// played from, and what its wave paid the purse.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Three answers, handed back together, because a round settles all
+    /// three at once.</b> The pair is what got past whom. The build is what was
+    /// taken off the offering and what the wave cost to buy. The payment is what
+    /// the wave earned, itemised into the interest, the base and the band. Each
+    /// is worked out once, while the round is being played, so nothing holding
+    /// this has to resolve a decision a second time or price a wave again to
+    /// find out what a round did.
+    /// </para>
+    /// <para>
+    /// <b>What a run's economics are is a walk over these.</b> Round by round:
+    /// what was spent, what came back and which line it came back on.
+    /// </para>
+    /// </remarks>
+    public sealed class RoundReport
+    {
+        internal RoundReport(RoundOutcome outcome, Build build, WavePayment payment)
+        {
+            Outcome = outcome;
+            Build = build;
+            Payment = payment;
+        }
+
+        /// <summary>What this round's wave got past the field, and what the field got past it.</summary>
+        public RoundOutcome Outcome { get; }
+
+        /// <summary>What the build phase took, what its wave cost, and what it left in the purse.</summary>
+        public Build Build { get; }
+
+        /// <summary>What the wave paid the purse, line by line, and the purse afterwards.</summary>
+        public WavePayment Payment { get; }
+
+        public override string ToString() =>
+            Outcome.ToString()
+            + ", spent "
+            + Build.Spent.ToString(CultureInfo.InvariantCulture)
+            + ", paid "
+            + Payment.ToString();
+    }
+
+    /// <summary>
     /// One run: N waves, a build phase before each, every round resolved against
     /// a field of K opponents, against a health pool denominated in gold.
     /// </summary>
@@ -328,6 +373,13 @@ namespace Sim
         /// exactly where it was, structurally rather than by the order the
         /// statements happen to be in.
         /// </para>
+        /// <para>
+        /// <b>What comes back is the pair, and only the pair.</b> Orders
+        /// composed by hand took nothing off an offering and bought nothing out
+        /// of the purse, so there is no build behind this round to report --
+        /// which is what the other overload hands back in a
+        /// <see cref="RoundReport"/> and this one has none of.
+        /// </para>
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         public RoundOutcome Advance(RoundOrders orders)
@@ -339,7 +391,7 @@ namespace Sim
 
             RequireUnfinished();
 
-            return Play(orders, Unlocks, Purse);
+            return Play(orders, Unlocks, Purse).Outcome;
         }
 
         /// <summary>
@@ -370,10 +422,17 @@ namespace Sim
         /// the run to send is a state that cannot be reached rather than an
         /// ordering to get right.
         /// </para>
+        /// <para>
+        /// <b>What comes back is the whole round</b> -- see
+        /// <see cref="RoundReport"/>. The pair, the decision as it resolved and
+        /// what the wave paid are all settled here, so a caller that wants what
+        /// a round cost reads it rather than resolving the decision again
+        /// against a run the round has already moved.
+        /// </para>
         /// </remarks>
         /// <param name="phase">What this round took, and how it filled its slots.</param>
         /// <param name="defense">What stands against every wave the field sends this round.</param>
-        public RoundOutcome Advance(BuildPhase phase, TowerLayout defense)
+        public RoundReport Advance(BuildPhase phase, TowerLayout defense)
         {
             if (phase is null)
             {
@@ -385,7 +444,9 @@ namespace Sim
 
             RequireUnfinished();
 
-            return Play(orders, build.Unlocks, build.Purse);
+            (RoundOutcome outcome, WavePayment payment) = Play(orders, build.Unlocks, build.Purse);
+
+            return new RoundReport(outcome, build, payment);
         }
 
         /// <summary>
@@ -400,7 +461,8 @@ namespace Sim
             Sim.Offering.Draw(Rules, Types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
 
         /// <summary>
-        /// Works one round out in full, and commits it.
+        /// Works one round out in full, commits it, and hands back the pair it
+        /// resolved to beside what its wave paid.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -423,7 +485,10 @@ namespace Sim
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         /// <param name="unlocks">What the run may field this round, this round's take included.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
-        private RoundOutcome Play(RoundOrders orders, Unlocks unlocks, Purse purse)
+        private (RoundOutcome Outcome, WavePayment Payment) Play(
+            RoundOrders orders,
+            Unlocks unlocks,
+            Purse purse)
         {
             // Measured ahead of the round's own matches: what a round of the
             // pool is worth depends on the seed, the pool and K, so the round
@@ -453,9 +518,11 @@ namespace Sim
             // in the field on top. Nothing is taken off anybody to pay it: the
             // wave is placed against the spread of what a round of the pool is
             // worth, not against whichever opponent it was drawn against.
-            Purse closed = purse.CloseWave(Rules, field, outcome.LeakCostDealt).Purse;
+            WavePayment payment = purse.CloseWave(Rules, field, outcome.LeakCostDealt);
 
-            return Commit(orders, outcome, unlocks, closed, FoldedWith(outcome));
+            Commit(orders, outcome, unlocks, payment.Purse, FoldedWith(outcome));
+
+            return (outcome, payment);
         }
 
         /// <summary>
@@ -468,7 +535,7 @@ namespace Sim
         /// a property of where the writes are rather than of what order the work
         /// above them happens in.
         /// </remarks>
-        private RoundOutcome Commit(
+        private void Commit(
             RoundOrders orders,
             RoundOutcome outcome,
             Unlocks unlocks,
@@ -480,8 +547,6 @@ namespace Sim
             Unlocks = unlocks;
             Purse = purse;
             _outcome = folded;
-
-            return outcome;
         }
 
         /// <summary>

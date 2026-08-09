@@ -402,16 +402,16 @@ public class ReplayGateTests
         // bytes reproduce the run, round for round, through the same two gates
         // a bundle goes through.
         //
-        // OBSERVED: have CommandStream.Replay return run.Outcome without the
-        // loop that plays the commands. This goes red, 4 against 0 -- a gate
-        // that opened onto nothing, handing back the outcome of a run that never
+        // OBSERVED: have CommandStream.Replay hand back its empty list of rounds
+        // without the loop that plays the commands. This goes red, 4 against 0
+        // -- a gate that opened onto nothing, reporting a run that never
         // started.
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
         Run run = TheCommands.Fresh();
 
-        RunOutcome outcome = stream.Replay(run, TheCommands.Defense());
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheCommands.Defense());
 
-        Assert.Equal(TheCommands.Waves, outcome.Rounds.Count);
+        Assert.Equal(TheCommands.Waves, rounds.Count);
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(TheRun.Seed, stream.Seed);
     }
@@ -471,16 +471,14 @@ public class ReplayGateTests
         Assert.NotEqual(TheRuleset.CommittedText(), TheRuleset.ReformattedText());
         Assert.Equal(TheRuleset.Committed().ContentHash, reformatted.ContentHash);
 
-        RunOutcome committed = CommandStream
-            .FromBytes(TheCommands.Stream().ToBytes())
-            .Replay(TheCommands.Fresh(), TheCommands.Defense());
+        Run committed = TheCommands.Fresh();
+        Run against = TheCommands.Against(reformatted);
 
-        RunOutcome against = CommandStream
-            .FromBytes(TheCommands.Stream().ToBytes())
-            .Replay(TheCommands.Against(reformatted), TheCommands.Defense());
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(committed, TheCommands.Defense());
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(against, TheCommands.Defense());
 
-        Assert.Equal(committed.Rounds, against.Rounds);
-        Assert.Equal(committed.HealthRemaining, against.HealthRemaining);
+        Assert.Equal(committed.Outcome.Rounds, against.Outcome.Rounds);
+        Assert.Equal(committed.Outcome.HealthRemaining, against.Outcome.HealthRemaining);
     }
 
     [Fact]

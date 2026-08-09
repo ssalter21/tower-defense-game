@@ -303,14 +303,18 @@ namespace Sim
         /// </para>
         /// <para>
         /// The run handed in is the one the stream is played into, so it has to
-        /// be a run that has not started; it comes back played, and whatever
-        /// asked for the recording reads the outcome off it.
+        /// be a run that has not started; it comes back played, and the rounds
+        /// that proving the bytes produced come back beside them rather than
+        /// being thrown away for whoever wants them to play the stream again.
         /// </para>
         /// </remarks>
         /// <param name="run">A fresh run, on the seed and the tables the stream is stamped with.</param>
         /// <param name="defense">What stands while each of the run's waves is sent.</param>
         /// <param name="commands">The build phases to record.</param>
-        public static byte[] Recorded(Run run, TowerLayout defense, IReadOnlyList<RecordCommand> commands)
+        public static (byte[] Bytes, IReadOnlyList<RoundReport> Rounds) Recorded(
+            Run run,
+            TowerLayout defense,
+            IReadOnlyList<RecordCommand> commands)
         {
             if (run is null)
             {
@@ -328,9 +332,7 @@ namespace Sim
 
             byte[] bytes = Of(run, commands).ToBytes();
 
-            FromBytes(bytes).Replay(run, defense);
-
-            return bytes;
+            return (bytes, FromBytes(bytes).Replay(run, defense));
         }
 
         /// <summary>Reads a command stream from bytes. The read gate, and nothing else.</summary>
@@ -511,10 +513,16 @@ namespace Sim
         /// under the best band the run did not reach is the one refusal that
         /// still lands mid-run.
         /// </para>
+        /// <para>
+        /// <b>Every round comes back.</b> What each one took, what its wave cost
+        /// and what the wave paid are settled while it is played, so they are
+        /// handed over rather than dropped -- a report of a stored run's
+        /// economics is then a walk over these, and never a second play.
+        /// </para>
         /// </remarks>
         /// <param name="run">The run to play, on the seed and the tables this stream is stamped with.</param>
         /// <param name="defense">What stands while each of the run's waves is sent.</param>
-        public RunOutcome Replay(Run run, TowerLayout defense)
+        public IReadOnlyList<RoundReport> Replay(Run run, TowerLayout defense)
         {
             if (run is null)
             {
@@ -545,12 +553,14 @@ namespace Sim
 
             Check(run);
 
+            var rounds = new List<RoundReport>();
+
             for (int index = 0; index < _commands.Length; index++)
             {
-                run.Advance(_commands[index].ToPhase(), defense);
+                rounds.Add(run.Advance(_commands[index].ToPhase(), defense));
             }
 
-            return run.Outcome;
+            return rounds;
         }
 
         public bool Equals(CommandStream? other)

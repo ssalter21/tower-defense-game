@@ -101,9 +101,15 @@ public class GoldenRunTests
         // difference to compound.
         //
         // Every comparison is anchored on both sides -- the decision on the
-        // left, the pair on the right -- because "dealt 0, took 12" sits inside
+        // left, the round on the right -- because "dealt 0, took 12" sits inside
         // "dealt 0, took 128", so a number that lost a digit would be found in
         // the committed line and pass.
+        //
+        // The round is the whole of what a round reported: the pair, what the
+        // wave cost and what it paid the purse. The economy is pinned round by
+        // round for the reason the pair is -- an interest rate that compounded
+        // differently or a band that paid the wrong share moves a number here
+        // long before it moves health.
         //
         // OBSERVED: doctor content/run-outcome.txt. Wave six's "dealt 206" to
         // "dealt 260" reddens the round-six assertion and nothing else; the
@@ -111,22 +117,28 @@ public class GoldenRunTests
         // summary assertion alone. Without watching those, a Contains against a
         // file nobody regenerates is a test that passes because the substring is
         // short.
+        //
+        // OBSERVED, on the economy half: wave four's "spent 90" to "spent 91"
+        // reddens the round-four assertion and nothing else -- so what a round
+        // cost is pinned to the same standard as what it dealt rather than
+        // riding along on a line checked for its other half.
+        Run run = Fresh();
         CommandStream stream = Committed();
-        RunOutcome outcome = stream.Replay(Fresh(), TheMatch.Layout(TheMatch.Types()));
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheMatch.Layout(TheMatch.Types()));
         string committed = File.ReadAllText(RepoLayout.RunOutcomeFile);
 
-        Assert.Equal(stream.Count, outcome.Rounds.Count);
+        Assert.Equal(stream.Count, rounds.Count);
 
         for (int index = 0; index < stream.Count; index++)
         {
             Assert.Contains(
-                stream.Commands[index].ToString() + "   ->   " + outcome.Rounds[index].ToString() + "\n",
+                stream.Commands[index].ToString() + "   ->   " + rounds[index].ToString() + "\n",
                 committed,
                 StringComparison.Ordinal);
         }
 
         Assert.Contains(
-            "outcome    " + outcome.ToString() + ", ended " + outcome.Ending.ToString() + "\n",
+            "outcome    " + run.Outcome.ToString() + ", ended " + run.Outcome.Ending.ToString() + "\n",
             committed,
             StringComparison.Ordinal);
     }

@@ -958,6 +958,51 @@ public class RunTests
     }
 
     [Fact]
+    public void A_round_hands_back_what_it_took_what_it_cost_and_how_its_wave_was_paid()
+    {
+        // A round settles all three while it is being played, so all three come
+        // back. What is asserted is that they are the round's own numbers and
+        // not a second computation beside it: the pair is the one the run folded
+        // in, the build's purse is the one the payment opened on, and the
+        // payment's purse is the one the run now holds.
+        //
+        // OBSERVED: compose the report's payment from
+        // build.Purse.CloseWaveAtBest(Rules) -- the ceiling the load walk
+        // carries -- rather than from the payment the round made. The closing
+        // assertion goes red, 192 against 212: a report of what a wave earned
+        // that says what it could have earned instead.
+        Run run = TheBuild.Fresh(waves: 2);
+        TowerLayout defense = TheBuild.Defense();
+
+        Option first = run.Offering.Options[0];
+        int opening = run.Purse.Gold;
+        int price = run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+
+        RoundReport round = run.Advance(
+            BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense);
+
+        // The pair is the one on the run's own vector.
+        Assert.Equal(run.Outcome.Rounds[0].LeakCostDealt, round.Outcome.LeakCostDealt);
+        Assert.Equal(run.Outcome.Rounds[0].LeakCostTaken, round.Outcome.LeakCostTaken);
+
+        // The build is the decision as it resolved, priced out of the run's own
+        // table and leaving the purse it charged.
+        Assert.True(price > 0, "The creep on this round's menu is free, so nothing here costs anything.");
+        Assert.Equal(first.Id, round.Build.Taken.Id);
+        Assert.Equal(price, round.Build.Spent);
+        Assert.Equal(opening - price, round.Build.Purse.Gold);
+
+        // And the payment runs from what the wave left to what the run holds,
+        // itemised into the three lines that make up the difference.
+        Assert.Equal(round.Build.Purse.Gold, round.Payment.Opening);
+        Assert.Equal(run.Purse.Gold, round.Payment.Purse.Gold);
+        Assert.Equal(run.Rules.IncomeBasePerWave, round.Payment.IncomeBase);
+        Assert.Equal(
+            run.Purse.Gold - round.Payment.Opening,
+            round.Payment.Interest + round.Payment.IncomeBase + round.Payment.Bonus);
+    }
+
+    [Fact]
     public void A_match_counts_its_leaks_by_the_order_that_sent_them_because_a_total_cannot_be_priced()
     {
         // What a leak costs is what the thing that leaked cost, so the count a

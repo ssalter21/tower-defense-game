@@ -657,11 +657,10 @@ public class BuildPhaseTests
                 cheapest.Id,
                 affordable > 0 ? WaveSlot.Of(cheapest.TypeId, affordable) : WaveSlot.Empty);
 
-            // The same surface a stored command stream is checked against,
-            // called here for what the wave came to before the round pays out.
-            spent.Add(phase.Resolve(offering, run.Unlocks, run.Purse, run.Costs).Spent);
-
-            run.Advance(phase, defense);
+            // What the wave cost comes off the round the phase was played into.
+            // The build phase resolves once, where the round is played, and says
+            // what it came to.
+            spent.Add(run.Advance(phase, defense).Build.Spent);
         }
 
         Assert.Equal(10, run.Round);

@@ -25,11 +25,13 @@ namespace Sim.Cli;
 /// </remarks>
 internal sealed class PlayedRun
 {
-    private PlayedRun(CommandStream stream, Run run, RunOutcome outcome)
+    private readonly IReadOnlyList<RoundReport> _rounds;
+
+    private PlayedRun(CommandStream stream, Run run, IReadOnlyList<RoundReport> rounds)
     {
         Stream = stream;
         Run = run;
-        Outcome = outcome;
+        _rounds = rounds;
     }
 
     /// <summary>The record that was played, as it came off the disk.</summary>
@@ -37,9 +39,6 @@ internal sealed class PlayedRun
 
     /// <summary>The run the stream was played into, after every round of it resolved.</summary>
     public Run Run { get; }
-
-    /// <summary>The vector: the per-round pairs, and every fold over them.</summary>
-    public RunOutcome Outcome { get; }
 
     /// <summary>
     /// Reads a command file, builds the run it says it is about, and plays it
@@ -67,8 +66,9 @@ internal sealed class PlayedRun
     /// already follows for a replay bundle, and the reason a stored run is never
     /// something somebody finds out about when they try to play it.
     /// <see cref="CommandStream.Recorded"/> is where that happens, so this does
-    /// not re-implement it; the run handed in comes back played, and the outcome
-    /// is read off it.
+    /// not re-implement it; the run handed in comes back played, and the rounds
+    /// the proving resolved come back with the bytes rather than being played
+    /// for a second time out here to report them.
     /// </remarks>
     public static (byte[] Bytes, PlayedRun Proof) Recorded(
         string source,
@@ -79,9 +79,11 @@ internal sealed class PlayedRun
     {
         IReadOnlyList<RecordCommand> commands = CommandScript.Parse(source, scriptText);
         Run run = content.Fresh(seed, shape);
-        byte[] bytes = CommandStream.Recorded(run, content.Defense, commands);
 
-        return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, run.Outcome));
+        (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
+            CommandStream.Recorded(run, content.Defense, commands);
+
+        return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, rounds));
     }
 
     /// <summary>The shape the run was played at: N, K, and whether death ends it.</summary>
@@ -94,22 +96,23 @@ internal sealed class PlayedRun
 
     /// <summary>What a person reads: the folds, and how the run stopped.</summary>
     public string Summary() =>
-        "outcome    " + Outcome.ToString() + ", ended " + Outcome.Ending.ToString();
+        "outcome    " + Run.Outcome.ToString() + ", ended " + Run.Outcome.Ending.ToString();
 
     /// <summary>
-    /// One line per round: the decision that was stored, and what it came to.
+    /// One line per round: the decision that was stored, what it came to, what
+    /// its wave cost and what the wave paid back.
     /// </summary>
     /// <remarks>
-    /// Walked over the vector rather than over the stream, because the vector
-    /// is what happened. A stream is played to its end or refused, so the two
-    /// are the same length -- and a report that walked the longer of them would
-    /// invent a round on the day that stopped being true.
+    /// Walked over what the rounds reported rather than over the stream, because
+    /// the rounds are what happened. A stream is played to its end or refused,
+    /// so the two are the same length -- and a report that walked the longer of
+    /// them would invent a round on the day that stopped being true.
     /// </remarks>
     public string Rounds()
     {
         var text = new StringBuilder();
 
-        for (int index = 0; index < Outcome.Rounds.Count; index++)
+        for (int index = 0; index < _rounds.Count; index++)
         {
             if (index > 0)
             {
@@ -118,7 +121,7 @@ internal sealed class PlayedRun
 
             text.Append(Stream.Commands[index].ToString())
                 .Append("   ->   ")
-                .Append(Outcome.Rounds[index].ToString());
+                .Append(_rounds[index].ToString());
         }
 
         return text.ToString();
@@ -156,11 +159,13 @@ internal sealed class PlayedRun
                 "compounded differently, a slot width that widened at the wrong anchor -- is a diff rather",
                 "than an argument. It is deliberately not produced by whatever is checking it.",
                 string.Empty,
-                "EVERY ROUND IS A DECISION AND A PAIR. The decision came out of the command file and",
-                "nothing else: a run consumes build phases from a record, and there is no other route into",
-                "the tick loop. The pair is what that round's wave got past the field and what the field's",
-                "waves got past this run's defense, both priced in gold and both the average over the",
-                "field rather than the sum.",
+                "EVERY ROUND IS A DECISION, A PAIR AND AN ECONOMY. The decision came out of the command",
+                "file and nothing else: a run consumes build phases from a record, and there is no other",
+                "route into the tick loop. The pair is what that round's wave got past the field and what",
+                "the field's waves got past this run's defense, both priced in gold and both the average",
+                "over the field rather than the sum. Then what the wave cost to buy, and what it paid the",
+                "purse back: the bank it opened on, the interest that bank earned, the flat base, the",
+                "band its offense reached in the field, and the gold it closed on.",
                 string.Empty,
                 "The run this came from:",
                 string.Empty,
@@ -171,7 +176,7 @@ internal sealed class PlayedRun
                 "Any of those moving moves every line below it. That is the point: the outcome is retired",
                 "loudly rather than quietly comparing a run against a different one.",
                 string.Empty,
-                "  decision                                                    round",
+                "  decision                                                    round, cost and payment",
             },
             Rounds());
 }
