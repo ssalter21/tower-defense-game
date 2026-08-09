@@ -42,6 +42,13 @@ public static class RepoLayout
 
     public static string WaveFile => Path.Combine(ContentDirectory, "wave.txt");
 
+    /// <summary>
+    /// Which unit follows which: one row per upgrade edge, both ends naming a
+    /// row of <see cref="UnitsFile"/>. Read and handed over as text, exactly
+    /// like the unit table, and legal with no edges in it at all.
+    /// </summary>
+    public static string UpgradesFile => Path.Combine(ContentDirectory, "upgrades.txt");
+
     public static string MapFile => Path.Combine(ContentDirectory, "map.txt");
 
     public static string DefenseFile => Path.Combine(ContentDirectory, "defense.txt");
@@ -185,6 +192,7 @@ public static class RepoLayout
         get
         {
             yield return UnitsFile;
+            yield return UpgradesFile;
             yield return WaveFile;
             yield return FieldFile;
             yield return DefenseFile;
