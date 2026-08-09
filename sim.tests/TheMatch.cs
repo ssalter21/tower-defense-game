@@ -22,10 +22,10 @@ public static class TheMatch
     public const ulong Seed = 20260801UL;
 
     /// <summary>How many creeps get through, in the committed run.</summary>
-    public const int LeakedInTheCommittedRun = 17;
+    public const int LeakedInTheCommittedRun = 12;
 
     /// <summary>The tick the committed run ends on.</summary>
-    public const int FinalTickOfTheCommittedRun = 5692;
+    public const int FinalTickOfTheCommittedRun = 5283;
 
     /// <summary>
     /// The handle the committed map is filed under, and the one
@@ -37,7 +37,27 @@ public static class TheMatch
 
     public static HexMap Map() => HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
-    public static UnitTypeTable Types() => UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+    /// <summary>
+    /// The committed roster: the table, with the committed upgrade ladder folded
+    /// into its content hash.
+    /// </summary>
+    /// <remarks>
+    /// The ladder is folded because this is what "the committed roster" means to
+    /// every writer -- the bundle and the command stream both stamp this hash, and
+    /// the replay gate compares it. A fixture that parsed the table alone would
+    /// build records the committed ones do not match, and would report that as a
+    /// record that had gone stale.
+    /// </remarks>
+    public static UnitTypeTable Types()
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        return types.WithLadder(Ladder(types));
+    }
+
+    /// <summary>The committed upgrade ladder, read against a roster.</summary>
+    public static UpgradeLadder Ladder(UnitTypeTable types) =>
+        UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
 
     public static WaveScript Wave(UnitTypeTable types) =>
         WaveScript.Parse(File.ReadAllText(RepoLayout.WaveFile), types);

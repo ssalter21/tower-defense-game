@@ -61,12 +61,22 @@ public static class Program
     private const int MaximumCreeps = 65535;
 
     /// <summary>
-    /// The six content files a run is built from, and the three arguments that
+    /// The seven content files a run is built from, and the three arguments that
     /// say how long it lasts, how wide its field is and whether death ends it.
-    /// Every run verb takes all nine, so the list is written once.
+    /// Every run verb takes all ten, so the list is written once.
     /// </summary>
+    /// <remarks>
+    /// <b><c>--upgrades</c> is required and never optional</b>, which is why it
+    /// is in this list rather than read with a default behind it. An optional
+    /// content file is a default, and a default is a number nobody authored
+    /// folded into a content hash as though somebody had. The cost is that every
+    /// invocation in the repository names one file more; it is paid once.
+    /// </remarks>
     private static readonly string[] RunOptions =
-        { "map", "units", "rules", "schedule", "defense", "wave", "waves", "field-size", "no-death" };
+    {
+        "map", "units", "upgrades", "rules", "schedule", "defense", "wave",
+        "waves", "field-size", "no-death",
+    };
 
     /// <summary>
     /// The options across every verb that are switches rather than pairs. Named
@@ -76,7 +86,8 @@ public static class Program
     private static readonly string[] Switches = { "no-death" };
 
     private const string RunContentUsage =
-        "--map <file> --units <file> --rules <file> --schedule <file> --defense <file> --wave <file>";
+        "--map <file> --units <file> --upgrades <file> --rules <file> --schedule <file>\n"
+        + "             --defense <file> --wave <file>";
 
     private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
 
@@ -84,13 +95,24 @@ public static class Program
     {
         "Sim.Cli -- one match or one run, played headless.",
         string.Empty,
-        "  run    --bundle <file> --units <file> --rules <file> [--out <directory>]",
+        "  run    --bundle <file> --units <file> --upgrades <file> --rules <file>",
+        "         [--out <directory>]",
         string.Empty,
         "         Plays the bundle to the end and prints the result and the landmarks.",
         "         With --out, writes " + TraceFileName + " and " + LandmarkFileName + " there.",
         string.Empty,
-        "  record --map <file> --units <file> --rules <file> --defense <file>",
-        "         --wave <file> --seed <number> --out <file> [--map-handle <number>]",
+        "  restage --bundle <file> --units <file> --upgrades <file> --rules <file>",
+        "          [--out <directory>]",
+        string.Empty,
+        "         The same, with the simulation version and content hash gates set",
+        "         aside, and every line it writes labelled as a restaging. The",
+        "         outcome is what that defense and that wave do today; it is not",
+        "         that record's result, and this verb exists so that asking the",
+        "         question cannot be confused with replaying.",
+        string.Empty,
+        "  record --map <file> --units <file> --upgrades <file> --rules <file>",
+        "         --defense <file> --wave <file> --seed <number> --out <file>",
+        "         [--map-handle <number>]",
         string.Empty,
         "         Records the content as one self-contained replay bundle, having",
         "         first read it back and played it. Nothing is written if it will",
@@ -123,6 +145,16 @@ public static class Program
         "         Prints every wave's public menu for that seed. A take names a",
         "         kind and an id off one of these, so this is what a command",
         "         script is written from.",
+        string.Empty,
+        "  ladder     --units <file> --upgrades <file>",
+        string.Empty,
+        "         Prints which unit follows which, with the price of each tier,",
+        "         then what a walk over the whole ladder had to say about it --",
+        "         its roots, its leaves and any upgrade that is not dearer than",
+        "         what it replaces, then any fault.",
+        string.Empty,
+        "         It always exits zero, faults included. What fails a build on a",
+        "         fault is a test; this reads a roster and enforces nothing.",
         string.Empty,
         "  sweep      --seed <number> [--runs <number>] [--out <file>]",
         "             " + RunContentUsage,
@@ -187,20 +219,31 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of six things.");
+            throw new UsageException("No verb. This program does one of eight things.");
         }
 
         switch (args[0])
         {
             case "run":
-                return Run(Arguments.Parse("run", args, 1, new[] { "bundle", "units", "rules", "out" }));
+                return Run(Arguments.Parse(
+                    "run",
+                    args,
+                    1,
+                    new[] { "bundle", "units", "upgrades", "rules", "out" }));
+
+            case "restage":
+                return Restage(Arguments.Parse(
+                    "restage",
+                    args,
+                    1,
+                    new[] { "bundle", "units", "upgrades", "rules", "out" }));
 
             case "record":
                 return Record(Arguments.Parse(
                     "record",
                     args,
                     1,
-                    new[] { "map", "units", "rules", "defense", "wave", "seed", "out", "map-handle" }));
+                    new[] { "map", "units", "upgrades", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
             case "play-run":
                 return PlayRun(RunVerb("play-run", args, "commands", "out"));
@@ -210,6 +253,13 @@ public static class Program
 
             case "offerings":
                 return ShowOfferings(RunVerb("offerings", args, "seed"));
+
+            // Two files and not a RunVerb: a ladder is read against the roster
+            // and against nothing else, so asking for a map, a schedule, a
+            // defense and a wave to print one would be six arguments nobody's
+            // answer depends on.
+            case "ladder":
+                return ShowLadder(Arguments.Parse("ladder", args, 1, new[] { "units", "upgrades" }));
 
             case "sweep":
                 return RunSweep(RunVerb(
@@ -236,16 +286,37 @@ public static class Program
     /// <summary>
     /// Plays a committed bundle and writes down what happened.
     /// </summary>
-    private static int Run(Arguments arguments)
+    private static int Run(Arguments arguments) => Play(arguments, HeadlessRun.Of);
+
+    /// <summary>
+    /// Runs a committed bundle's defense and wave under today's rules, and says
+    /// in what it writes that this is not that record's result.
+    /// </summary>
+    /// <remarks>
+    /// The verb <c>content/golden/</c> is checked with. Those bundles are kept
+    /// forever and cannot be made again, so a simulation version bump would
+    /// otherwise retire the only evidence that each retired reader branch still
+    /// reads. See <see cref="HeadlessRun.Restaged"/>.
+    /// </remarks>
+    private static int Restage(Arguments arguments) => Play(arguments, HeadlessRun.Restaged);
+
+    /// <summary>
+    /// The two bundle verbs, which differ in one call and in nothing else. Both
+    /// read the same three files, print the same report and write the same two
+    /// generated files, so the difference between them stays visible as the one
+    /// thing it is.
+    /// </summary>
+    private static int Play(Arguments arguments, Func<byte[], string, string, string, HeadlessRun> play)
     {
         // The caller opens the file. The simulation receives bytes and text,
         // never a path -- it cannot open anything, and the build gate scans the
         // compiled image to keep it that way.
         byte[] bundle = File.ReadAllBytes(arguments.Required("bundle"));
         string units = File.ReadAllText(arguments.Required("units"));
+        string upgrades = File.ReadAllText(arguments.Required("upgrades"));
         string rules = File.ReadAllText(arguments.Required("rules"));
 
-        HeadlessRun run = HeadlessRun.Of(bundle, units, rules);
+        HeadlessRun run = play(bundle, units, upgrades, rules);
 
         Report(run);
 
@@ -270,6 +341,7 @@ public static class Program
         (byte[] bytes, HeadlessRun proof) = Recording.Of(
             File.ReadAllText(arguments.Required("map")),
             File.ReadAllText(arguments.Required("units")),
+            File.ReadAllText(arguments.Required("upgrades")),
             File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("defense")),
             File.ReadAllText(arguments.Required("wave")),
@@ -347,6 +419,26 @@ public static class Program
     }
 
     /// <summary>
+    /// Prints the upgrade ladder, and exits zero whatever it found.
+    /// </summary>
+    /// <remarks>
+    /// Faults included. What fails a build on one is a test in <c>sim.tests</c>;
+    /// this verb is for reading a roster, and a second enforcer here would be one
+    /// rule with two homes.
+    /// </remarks>
+    private static int ShowLadder(Arguments arguments)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(arguments.Required("units")));
+        UpgradeLadder ladder = UpgradeLadder.Parse(
+            File.ReadAllText(arguments.Required("upgrades")),
+            types);
+
+        Console.Out.Write(Ladder.ToText(types, ladder));
+
+        return 0;
+    }
+
+    /// <summary>
     /// Plays a population of runs per creep and writes the balance report.
     /// </summary>
     /// <remarks>
@@ -407,11 +499,12 @@ public static class Program
             arguments.Optional("field-size", Sim.Run.DefaultFieldSize, 1, MaximumFieldSize),
             !arguments.Given("no-death"));
 
-    /// <summary>The six files every run verb is handed, read here and parsed there.</summary>
+    /// <summary>The seven files every run verb is handed, read here and parsed there.</summary>
     private static RunContent ContentOf(Arguments arguments) =>
         RunContent.Of(
             File.ReadAllText(arguments.Required("map")),
             File.ReadAllText(arguments.Required("units")),
+            File.ReadAllText(arguments.Required("upgrades")),
             File.ReadAllText(arguments.Required("rules")),
             File.ReadAllText(arguments.Required("schedule")),
             File.ReadAllText(arguments.Required("defense")),
@@ -455,8 +548,19 @@ public static class Program
     }
 
     /// <summary>The result triple, the final hash, and the landmark table.</summary>
+    /// <remarks>
+    /// A restaging says so on its own line, above everything the run produced.
+    /// The label is emitted by <see cref="Sim.Restaging"/> itself rather than
+    /// composed here, so nothing that prints one of these can present the
+    /// outcome as the record's own by forgetting to.
+    /// </remarks>
     private static void Report(HeadlessRun run)
     {
+        if (run.Restaging is not null)
+        {
+            Console.Out.Write("restaged   " + run.Restaging.ToString() + "\n");
+        }
+
         Console.Out.Write(
             run.Bundle.Header.ToString()
             + "\nseed       "
@@ -468,7 +572,7 @@ public static class Program
             + "\n"
             + run.Summary()
             + "\n"
-            + run.Landmarks.ToText()
+            + run.Landmarks.ToReportText()
             + "\n");
     }
 

@@ -88,21 +88,34 @@ namespace Tests.PlayMode
         /// release — until the claims are in, nothing knows which ids stopped
         /// appearing. What is asserted is the property that matters: objects
         /// are built for the busiest moment, not for every creep in the wave.
+        /// Every bound here is taken off the match this run actually played, so
+        /// a content change that moves where the busiest moment falls does not
+        /// redden a claim about pooling.
         /// </remarks>
         [Test]
         public void ObjectsArePooledAcrossTheWholeMatch()
         {
             MatchView view = Begin();
             int mostAtOnce = 0;
-            int halfway = 0;
+            int created = 0;
+            int lastBuiltOnTick = 0;
 
             RunUntil(view, () =>
             {
                 mostAtOnce = Mathf.Max(mostAtOnce, view.Creeps.LiveCount);
 
-                if (view.Current.Tick == 1000)
+                // WHEN the pool last grew, rather than what it had grown to by
+                // some named tick. The named tick was 1000, which stopped being
+                // in the second half of anything when the release cadence was
+                // dilated on 8 August 2026 and the busiest moment moved past it:
+                // the assertion went red at 14 against 12 without a single
+                // object having failed to be reused. A tick number written here
+                // is a claim about the shape of the committed match, and this
+                // test has no business making one.
+                if (view.Creeps.EverCreated > created)
                 {
-                    halfway = view.Creeps.EverCreated;
+                    created = view.Creeps.EverCreated;
+                    lastBuiltOnTick = view.Current.Tick;
                 }
 
                 return false;
@@ -118,8 +131,9 @@ namespace Tests.PlayMode
             Assert.That(view.Creeps.EverCreated, Is.LessThan(total),
                 $"{view.Creeps.EverCreated} objects for {total} creeps is one per creep, not a pool");
 
-            Assert.That(view.Creeps.EverCreated, Is.EqualTo(halfway),
-                "the pool was still building objects in the second half of the match");
+            Assert.That(lastBuiltOnTick, Is.LessThan(view.Current.Tick / 2),
+                $"the pool built its last object on tick {lastBuiltOnTick} of {view.Current.Tick}, which is "
+                + "the second half of the match");
         }
 
         // ---------------------------------------------------------------

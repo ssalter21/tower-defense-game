@@ -26,13 +26,27 @@ namespace Sim.Tests;
 /// more can be noticed at all.
 /// </para>
 /// <para>
-/// <b>Each bundle is replayed against the table committed beside it, not
-/// against <c>content/units.txt</c>.</b> See
-/// <see cref="RepoLayout.GoldenUnitsFile"/> for what that buys.
+/// <b>Each bundle is run against the table committed beside it, not against
+/// <c>content/units.txt</c>.</b> See <see cref="RepoLayout.GoldenUnitsFile"/>
+/// for what that buys.
+/// </para>
+/// <para>
+/// <b>And it is restaged rather than replayed, which is what lets an
+/// irreplaceable record survive a simulation version bump.</b> A bump retires
+/// every record made under the previous value -- that is what it is for -- and
+/// these are records nobody can make again, so replaying them would mean every
+/// bump quietly took a version out of this pool and left its reader branch
+/// unproven from then on. Nothing a golden claims is weakened by asking the
+/// question this way: what these files are evidence for is a reader, and
+/// restaging parses them exactly as replaying does before running the result to
+/// a pinned outcome. What it sets aside -- "were these the same rules?" -- is a
+/// question about a competitive record, it is set aside by name rather than by
+/// a gate not running, and it is asserted below on the one bundle that can
+/// always answer it.
 /// </para>
 /// <para>
 /// The end-to-end half of this lives in <c>tools/run-headless-match.ps1
-/// -Verify</c>, which replays every golden through the actual command line
+/// -Verify</c>, which restages every golden through the actual command line
 /// against that golden's pinned table and compares what it printed against the
 /// committed <c>.result</c> beside it. The gate runs both.
 /// </para>
@@ -150,11 +164,13 @@ public class GoldenRecordTests
 
     [Theory]
     [MemberData(nameof(EveryDefenseVersion))]
-    public void The_golden_at_every_version_replays_to_the_committed_result(int version)
+    public void The_golden_at_every_version_restages_to_the_committed_result(int version)
     {
-        // Through the replay gate, not around it. The map handle is not a
-        // simulation input, so a version-0 record whose handle was defaulted is
-        // still a record this build may simulate.
+        // Restaged, and the class remarks say why: these bundles cannot be made
+        // again, so the operation that runs them has to be one that survives a
+        // simulation version bump. The map handle is not a simulation input, so
+        // a version-0 record whose handle was defaulted is still a record this
+        // build can run.
         //
         // The oracle is the committed file rather than a second run made here:
         // a result the checker computes is a result that agrees with itself
@@ -174,7 +190,10 @@ public class GoldenRecordTests
         // and "state CA3F66473C4B975D" to "state 0123456789ABCDEF" reddens the
         // second. Without watching those, a Contains against a file nobody
         // checks is a test that passes because the substring is short.
-        MatchResult result = Golden(version).Replay(PinnedTypes(version), TheRuleset.Committed()).Resolve();
+        MatchResult result = Golden(version)
+            .RestageUnderCurrentRules(PinnedTypes(version), TheRuleset.Committed())
+            .Match
+            .Resolve();
         string committed = File.ReadAllText(RepoLayout.GoldenResultFile(version));
 
         Assert.Contains(
@@ -208,14 +227,27 @@ public class GoldenRecordTests
         // The hash is folded over the parsed integers, so it does not move, the
         // bundle replays, and Assert.Throws goes red having caught nothing at
         // all. That is what this assertion would look like if the pinned copy
-        // were compared against nothing.
+        // were compared against nothing. Watched on the current version, which
+        // is the row where the content hash is the gate that fires.
         string pinned = File.ReadAllText(RepoLayout.GoldenUnitsFile(version));
         UnitTypeTable tampered = UnitTypeTable.Parse("tampered pinned table", WithoutItsLastType(pinned));
 
         RetiredRecordException thrown =
             Assert.Throws<RetiredRecordException>(() => Golden(version).Replay(tampered, TheRuleset.Committed()));
 
-        Assert.Equal("content hash", thrown.Gate);
+        // WHICH gate depends on the version, and naming it rather than accepting
+        // any refusal is the point. The three gates are ordered, so a record
+        // made under retired rules is refused before its table is looked at all
+        // -- a stronger refusal than the content hash, not a weaker one, and one
+        // that would be indistinguishable from it if this only asserted that
+        // something threw. The content hash is the gate for whichever version is
+        // current, which is the row that can always be re-recorded and is
+        // therefore where that claim belongs.
+        Assert.Equal(
+            Golden(version).Header.SimVersion == SimulationVersion.Current
+                ? "content hash"
+                : "simulation version",
+            thrown.Gate);
     }
 
     [Fact]
@@ -333,6 +365,33 @@ public class GoldenRecordTests
             File.ReadAllBytes(RepoLayout.GoldenUnitsFile(RecordFormat.GhostVersion)));
     }
 
+    [Fact]
+    public void The_current_versions_pinned_ladder_is_content_upgrades_txt_byte_for_byte()
+    {
+        // The sibling of the assertion above, and it exists because that one was
+        // once FOUND out of sync: a second pinned file is a second thing that can
+        // drift, and the hash assertion cannot see it -- the fold covers the
+        // parsed edges, so comment text is free to drift between the two forever.
+        //
+        // Only the current version. Older versions were recorded before this file
+        // existed and have no ladder pinned beside them at all, which is what
+        // keeps the hashes frozen in their headers standing.
+        Assert.Equal(
+            File.ReadAllBytes(RepoLayout.UpgradesFile),
+            File.ReadAllBytes(RepoLayout.GoldenUpgradesFile(RecordFormat.GhostVersion)));
+    }
+
+    [Fact]
+    public void The_oldest_golden_has_no_ladder_pinned_beside_it_and_never_will()
+    {
+        // Stated as an assertion rather than left to the absence of a file.
+        // content/golden/defense-0.replay cannot be recorded again, and its header
+        // carries the hash of a table with no ladder folded into it; a ladder
+        // appearing beside it -- empty or not -- would fold something and retire
+        // the only version-0 defense record that will ever exist.
+        Assert.False(File.Exists(RepoLayout.GoldenUpgradesFile(0)));
+    }
+
     [Theory]
     [MemberData(nameof(EveryDefenseVersion))]
     public void The_committed_result_says_which_branch_read_it(int version)
@@ -354,14 +413,39 @@ public class GoldenRecordTests
         ReplayBundle.FromBytes(File.ReadAllBytes(RepoLayout.GoldenBundleFile(version)));
 
     /// <summary>
-    /// The ruleset that bundle was recorded against, read from the copy
-    /// committed beside it. Named after the file so that a row that will not
-    /// parse says which of the pinned tables it was.
+    /// The roster that bundle was recorded against, read from the copies
+    /// committed beside it: the table, and the upgrade ladder folded into its
+    /// content hash. Named after the files so that a row that will not parse says
+    /// which of the pinned copies it was.
     /// </summary>
-    private static UnitTypeTable PinnedTypes(int version) =>
-        UnitTypeTable.Parse(
-            "golden/defense-" + version.ToString(CultureInfo.InvariantCulture) + ".units",
+    /// <remarks>
+    /// <b>The ladder is folded when the file is there and nothing is folded when
+    /// it is not, and that second half is what keeps version 0 legal forever.</b>
+    /// <c>content/golden/defense-0.replay</c> was recorded before
+    /// <c>content/upgrades.txt</c> existed, so no ladder is pinned beside it, so
+    /// the hash frozen in its header is the hash of the table alone -- and that
+    /// bundle is the only evidence the version-0 reader branch will ever have.
+    /// Folding an empty ladder here in place of folding none would be the same
+    /// mistake as folding a live one.
+    /// </remarks>
+    private static UnitTypeTable PinnedTypes(int version)
+    {
+        string number = version.ToString(CultureInfo.InvariantCulture);
+
+        UnitTypeTable types = UnitTypeTable.Parse(
+            "golden/defense-" + number + ".units",
             File.ReadAllText(RepoLayout.GoldenUnitsFile(version)));
+
+        string ladder = RepoLayout.GoldenUpgradesFile(version);
+
+        if (!File.Exists(ladder))
+        {
+            return types;
+        }
+
+        return types.WithLadder(
+            UpgradeLadder.Parse("golden/defense-" + number + ".upgrades", File.ReadAllText(ladder), types));
+    }
 
     /// <summary>
     /// The same table with its last unit row removed, whatever columns the rows

@@ -26,7 +26,9 @@ Two consequences, and both are load-bearing for the sweep:
   the release cadence — plus how much health one concession costs. It does not control whether a creep is worth
   taking.
 - **A row whose effective health is under the per-creep damage budget is a dead option at any price.** Against
-  the committed defense that budget is a little over a thousand: `SpawnIntervalTicks` is 15 and the six towers
+  the committed defense that budget is a little over a thousand: `SpawnIntervalTicks` was 15 when this was
+  measured — it is 45 from simulation version 2, which raises the budget without changing the argument — and the
+  six towers
   deal roughly 62 damage a tick before typing, so a creep released into a single-order column meets about 930
   raw damage while it crosses, and about 1100 once the pierce-heavy line's cells are applied. An earlier draft of
   the roster carried a 500-health swarm creep at 3 gold; it returned **zero** health per gold at every budget

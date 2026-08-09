@@ -33,7 +33,7 @@
 
 .EXAMPLE
     ./tools/show-offerings.ps1 -Schedule maps/second-schedule.txt
-    Another shape. Every one of the six content files is a parameter, so
+    Another shape. Every one of the seven content files is a parameter, so
     pointing this somewhere else is an argument rather than an edit.
 #>
 param(
@@ -46,11 +46,12 @@ param(
     [int]$Waves = 10,
     [int]$FieldSize = 10,
 
-    # The six content files. All six are parameters so that pointing this at
+    # The seven content files. All seven are parameters so that pointing this at
     # another roster or another shape costs an argument here rather than a
     # retrofit across every call site.
     [string]$Map,
     [string]$Units,
+    [string]$Upgrades,
     [string]$Rules,
     [string]$Schedule,
     [string]$Defense,
@@ -64,6 +65,7 @@ $content = Join-Path $repoRoot 'content'
 
 if (-not $Map)      { $Map = Join-Path $content 'map.txt' }
 if (-not $Units)    { $Units = Join-Path $content 'units.txt' }
+if (-not $Upgrades) { $Upgrades = Join-Path $content 'upgrades.txt' }
 if (-not $Rules)    { $Rules = Join-Path $content 'ruleset.txt' }
 if (-not $Schedule) { $Schedule = Join-Path $content 'schedule.txt' }
 if (-not $Defense)  { $Defense = Join-Path $content 'defense.txt' }
@@ -88,6 +90,7 @@ Invoke-SimCli @(
     'offerings',
     '--map', $Map,
     '--units', $Units,
+    '--upgrades', $Upgrades,
     '--rules', $Rules,
     '--schedule', $Schedule,
     '--defense', $Defense,

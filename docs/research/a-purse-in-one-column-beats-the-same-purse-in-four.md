@@ -33,6 +33,12 @@ every fifteen ticks, and a build phase sends every slot on tick zero — so *n* 
 the corridor every fifteen ticks instead of one. What decides a leak is whether bodies arrive faster than six
 towers can chew them: a column of ten does, and two columns of five are killed as they come.
 
+> **The cadence has moved since this was measured.** Later on 8 August 2026 `Match.SpawnIntervalTicks` went
+> from fifteen to forty-five, finishing the clock dilation, and simulation version 2 retired every record made
+> before it. The mechanism above is unchanged and so is the direction of the finding — a column is still the
+> dense arrangement and spread slots are still killed as they come — but every number on this page was taken
+> at fifteen and none of them has been re-measured at forty-five. Read the ordering, not the magnitudes.
+
 ## The same effect from the player's side
 
 Win rate, binned by how many distinct creeps a run ended up able to field, over 192 runs — thirty-two seeds for

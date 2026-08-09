@@ -38,7 +38,7 @@ its own id and its own row** — the Captain is not the Soldier with a flag set.
 **Ids are taken when a unit is built, never reserved.** An earlier draft of this document held 11–20 for the
 tower tiers and 21–25 for the creeps. That reservation is abandoned: nine of those ids were being held for
 units that may never exist, and a file whose gaps only make sense if you have read a document is exactly the
-drift this roster exists to close. The next unit built takes id 14, whatever it is.
+drift this roster exists to close. The next unit built takes id 15, whatever it is.
 
 ## What things cost
 
@@ -125,8 +125,8 @@ deletes one of those two cases.
 | 11 | Soldier | tower | 1 | live | `soldier` | — new |
 | 12 | Skeleton | creep | — | live | `skeleton` | — new |
 | 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` | — new |
+| 14 | Ranger | tower | 2 | live | `ranger` | — new |
 | — | Captain | tower | 2 | proposed | — | |
-| — | Ranger | tower | 2 | proposed | — | |
 | — | Pyromancer | tower | 2a | proposed | — | |
 | — | Cryomancer | tower | 2b | proposed | — | |
 | — | Hero | tower | 3 | proposed | — | |
@@ -216,14 +216,27 @@ with an upgrade edge; see [what the schema does not have](#what-this-roster-need
 > reading would have retuned the tower the committed defense is mostly made of, to buy early what tier 3 gives
 > anyway.
 
-### Ranger · tier 2 · status proposed
+### 14 · Ranger · tier 2 · status live
 
 - **Does** — +1 hex of range.
-- **Looks** — stands a block higher.
-- **Numbers** — range 4200.
+- **Looks** —
+- **Numbers** — range 4200, and every other number the Archer's: cooldown 18, damage 90–150, windup 9,
+  backswing 6, hitscan, pierce, **cost 40**.
 - **Needs** — nothing. Authorable today, and it is the only tier on this page that is purely a number.
-- **Open** — a tier that is one stat is cheap to build and thin to play. Is that acceptable as the middle rung,
-  or does it want a second clause?
+- **Open** — none. A tier that is one stat was the question, and the answer is yes, for now: it is the middle
+  rung, it is what the upgrade edge was built to be able to state, and a second clause can be added to it
+  later without moving its id.
+
+> **It costs the same as the Archer, and that is the rule rather than a mistake.** A tower is priced at one gold
+> per five damage a second times the bodies a shot hits, and **the rule does not price range** — so a tower that
+> differs from the Archer in range alone prices identically to it. `./tools/show-ladder.ps1` prints a *flat or
+> falling price* note against the `archer → ranger` edge for exactly this reason. It is a note and not a fault,
+> nothing goes red, and there is nothing here for anybody to go and fix.
+>
+> The gap is [already written down beside the rule](#what-things-cost) and this leans on it rather than
+> tripping over it. Two futures were named and neither gates this row: range may become an input to the cost
+> algorithm, or the algorithm may be replaced by something derived from **many simulations rather than from a
+> row's stats**. Both sit with the capstone exemption, and neither is this effort's.
 
 ### Marksman · tier 3 · status proposed
 
@@ -434,13 +447,19 @@ was not on the list:
 The third is what the "measure before you retune" rule was for. Left alone, `content/wave.txt` would have
 compressed the whole wave threefold against the new clock, and the leak landed at **25 of 40** — outside the
 quarter-to-half band. Multiplying every order tick in that file by three, which is the one lever the signature
-authorised, brought it to **17 of 40**. No creep row moved.
+authorised, brought it to **17 of 40**, and finishing the dilation in code brought it to **12 of 40**. No creep
+row moved for any of it.
 
-> **One part of the dilation could not reach content at all.** The fifteen-tick release cadence inside a column
-> is a simulation constant, not a number in `wave.txt`, so a column of ten still empties over a hundred and
-> fifty ticks while its units walk a third as far in them — leaving columns three times denser in space than
-> they were. That is a real change in wave shape. It cannot be undone from content: the constant is covered by
-> the simulation version and moving it would retire every stored replay.
+> **One part of the dilation could not reach content at all, and was finished in code later the same day.**
+> The fifteen-tick release cadence inside a column is a simulation constant, not a number in `wave.txt`, so a
+> column of ten still emptied over a hundred and fifty ticks while its units walked a third as far in them —
+> leaving columns three times denser in space than they were. That was a real change in wave shape, and it
+> could not be undone from content. It was undone in `Match.SpawnIntervalTicks`, fifteen to forty-five, at the
+> price the constant carries: a simulation version bump to 2, which retires every record made under version 1.
+> The bump was spent then rather than later because the only records that existed were this repository's own
+> and all but the historical goldens are regenerable by one command. **With the cadence dilated the leak lands
+> at 12 of 40**, back inside the quarter-to-half band and close to the 13 it sat at before the clock moved,
+> which is what a change that promised to be pure time was always supposed to do.
 
 ## What this roster needs that the schema does not have
 
