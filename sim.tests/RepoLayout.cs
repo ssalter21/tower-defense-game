@@ -202,18 +202,24 @@ public static class RepoLayout
     public static string CliProject => Path.Combine(Root, "simcli", "Sim.Cli.csproj");
 
     /// <summary>Every committed data file that holds numbers, and must therefore hold no decimal point.</summary>
+    /// <remarks>
+    /// Derived from <see cref="ContentParsers.All"/> rather than listed here, so
+    /// that this and the hostile-locale sweep cannot drift apart. A content file
+    /// arrives with a parser, and the two gates a parser owes -- no decimal point
+    /// in the committed bytes, and the same digest under a hostile culture -- are
+    /// both taken from the one declaration.
+    /// </remarks>
     public static IEnumerable<string> NumericContentFiles
     {
         get
         {
-            yield return UnitsFile;
-            yield return UpgradesFile;
-            yield return WaveFile;
-            yield return FieldFile;
-            yield return DefenseFile;
-            yield return RulesetFile;
-            yield return ScheduleFile;
-            yield return CommandScriptFile;
+            foreach (ContentParser parser in ContentParsers.All)
+            {
+                if (parser.IntegersOnly)
+                {
+                    yield return parser.File;
+                }
+            }
         }
     }
 
