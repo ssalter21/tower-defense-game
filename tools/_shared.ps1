@@ -18,10 +18,7 @@
 # simcli/ContentFiles.cs. --content hands it the directory and it takes them out
 # by those names.
 #
-# So a content file added to the runner needs no edit in any script here. What
-# these scripts used to carry was a block of seven defaults each, three times
-# over, and a file added to the runner reached whichever of them somebody
-# remembered.
+# So a content file added to the runner needs no edit in any script here.
 #
 # -Elsewhere points single files somewhere else: @{ map = 'maps/second.txt' }
 # scores another board and leaves the other six where they were. The key is the

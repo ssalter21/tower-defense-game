@@ -169,12 +169,6 @@ namespace Sim
                     continue;
                 }
 
-                // OBSERVED: return zero from Ingredients. Every sweep in the
-                // suite refuses by this name. Without it the report comes back
-                // with those runs in a row nothing can tell from the population
-                // row above them, and the bins-add-up test goes red having found
-                // no bins at all -- 0 runs binned against the 6 in the
-                // population, which reads as a fold that dropped them.
                 if (ingredients == SweepRow.AllIngredients)
                 {
                     throw new SimulationException(

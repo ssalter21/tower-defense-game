@@ -227,7 +227,7 @@ $program = Join-Path $build 'Sim.Cli.dll'
 # in this economy can compose -- so a run against one is measured against an
 # opponent no player could be. content/field.txt's own header carries the
 # measurements; see also docs/adr/0040. The run verbs refuse a wave released
-# over time by name, so this cannot go quietly wrong again.
+# over time by name.
 $runContent = Get-ContentArguments $content
 
 $committedSim = Join-Path $repoRoot 'client/Packages/com.ssalter.sim/Runtime/Sim.dll'
