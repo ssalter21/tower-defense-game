@@ -11,13 +11,21 @@ listener that answers — contaminates the one guarantee everything else in this
 buys the submission barrier nearly free later, because a submitted turn *is* a command batch, and it makes a
 played run a replayable record, which makes every playtest a determinism test.
 
-That claim is asserted structurally rather than described: `Run`'s public surface is exactly two overloads of
-`Advance` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the only interface either
-accepts is the decorative event listener, whose every method returns void. A run cannot be asked a question it
-could answer with something a record does not carry. The direct overload — `Advance(BuildPhase, TowerLayout)` —
-is not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
+That claim is asserted structurally rather than described: `Run`'s public surface is exactly
+`Advance(BuildPhase, TowerLayout)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the
+only interface either accepts is the decorative event listener, whose every method returns void. A run cannot
+be asked a question it could answer with something a record does not carry. Handing a decision straight in is
+not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
 data surface is `Take`, `TakeId` and `Slots`, which are the three fields a stored command carries, so every
 decision reachable by handing one in is a decision a command could have made.
+
+**A wave nobody was charged for cannot be handed to a run at all.** `Advance` once had a second overload
+taking a `RoundOrders` — a defense and a wave, composed by anybody, resolved against no offering, checked
+against no unlock, held to no slot width and bought out of no purse. It survived because the economy suite was
+written through it: a fold of `Purse.CloseWave` over the outcome vector reproduced the run's own purse, which
+is an identity that holds only while nothing is ever bought. Both are gone. The fold takes each round's
+`Build.Spent` off the purse before closing the wave, and what a run may send is what its build phases paid
+for.
 
 **A build phase is stored as exactly what a decision is.** `u16 wave`, `u8 take kind`, `u16 take id`, and the
 slots as `(u16 type_id, u16 count)` pairs with `(0, 0)` meaning empty. Nothing else: the offering a take was

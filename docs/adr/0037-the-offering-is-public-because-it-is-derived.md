@@ -10,8 +10,8 @@ A build phase is three things and one seam:
   and any of them may be left empty.
 
 `BuildPhase` is the decision as data. `BuildPhase.Resolve(offering, unlocks, purse, costs)` is where the four
-checks live, and `Run.Advance(BuildPhase, TowerLayout)` is an overload that calls it and hands the wave it
-composed to `Run.Advance(RoundOrders)`.
+checks live, and `Run.Advance(BuildPhase, TowerLayout)` — the only way into a round — calls it and resolves the
+wave it composed against the round's field.
 
 ## What was decided
 
@@ -105,5 +105,5 @@ let through.
 
 `sim/Offering.cs`, `sim/Unlocks.cs`, `sim/BuildPhase.cs`, `sim/Draws.cs` — the partial Fisher-Yates an anchor's
 menu and a round's offering now share — `sim/WaveScript.cs` — `FromSlots` — `sim/Run.cs` —
-the `OfferingLabel` constant, `Unlocks`, `Offering`, `OfferingAt` and the `Advance` overload —
+the `OfferingLabel` constant, `Unlocks`, `Offering`, `OfferingAt` and `Advance` —
 `content/ruleset.txt`, and `sim.tests/BuildPhaseTests.cs`.

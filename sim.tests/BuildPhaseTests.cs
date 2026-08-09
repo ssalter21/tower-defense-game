@@ -153,8 +153,8 @@ public class BuildPhaseTests
         // whole of what "competes head to head" means.
         TowerLayout defense = TheBuild.Defense();
 
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
 
         Option changerOption = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
         run.Advance(BuildPhase.Of(OptionKind.GameChanger, changerOption.Id, WaveSlot.Empty), defense);
@@ -196,7 +196,7 @@ public class BuildPhaseTests
         // between, the first one is still fieldable.
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+            run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
         }
 
         Assert.Equal(4, run.Unlocks.Count);
@@ -604,8 +604,8 @@ public class BuildPhaseTests
         TowerLayout defense = TheBuild.Defense();
         AnchorSchedule schedule = TheSchedule.Committed();
 
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
-        run.Advance(TheBuild.TakeFirst(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
 
         Option steepless = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
         run.Advance(BuildPhase.Of(OptionKind.GameChanger, steepless.Id, WaveSlot.Empty), defense);
@@ -694,7 +694,7 @@ public class BuildPhaseTests
         TowerLayout defense = TheBuild.Defense();
         Run over = TheBuild.Fresh(waves: 1);
 
-        over.Advance(TheBuild.TakeFirst(over.Offering), defense);
+        over.Advance(TheBuild.BuyingNothing(over.Offering), defense);
         Assert.True(over.IsOver);
 
         int purse = over.Purse.Gold;

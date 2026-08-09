@@ -353,9 +353,21 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The argument is the build phase slot.</b> A round is one decision
+        /// <b>This is the only way into a round.</b> A round is one decision
         /// plus the wave that resolves it, and the decision reaches the
-        /// simulation as a value handed in here and by no other route.
+        /// simulation as a <see cref="BuildPhase"/> handed in here and by no
+        /// other route -- a value a stored command carries every field of, so
+        /// nothing can be played into a run that could not have been written
+        /// down.
+        /// </para>
+        /// <para>
+        /// The decision is checked against this round's offering, this run's
+        /// unlocks, this round's slot width and this run's purse -- by
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
+        /// which is the surface a stored command stream is validated against
+        /// too, so there is one implementation of the rules and not two. The
+        /// defense arrives beside it because a build phase composes what is
+        /// sent; what stands is the other half of a round's orders.
         /// </para>
         /// <para>
         /// K opponents are drawn, and each is fought in both directions: this
@@ -365,62 +377,18 @@ namespace Sim
         /// damage rule, so the ladder rewards robust play.
         /// </para>
         /// <para>
-        /// <b>Nothing moves until everything that can refuse has refused.</b>
-        /// The whole round is worked out into locals -- see <see cref="Play"/> --
-        /// and reaches the run through <see cref="Commit"/>, which writes
-        /// everything a round moves, together, and is the only place any of it
-        /// is written. A throw anywhere in a round therefore leaves the run
-        /// exactly where it was, structurally rather than by the order the
-        /// statements happen to be in.
-        /// </para>
-        /// <para>
-        /// <b>What comes back is the pair, and only the pair.</b> Orders
-        /// composed by hand took nothing off an offering and bought nothing out
-        /// of the purse, so there is no build behind this round to report --
-        /// which is what the other overload hands back in a
-        /// <see cref="RoundReport"/> and this one has none of.
-        /// </para>
-        /// </remarks>
-        /// <param name="orders">The defense that stands and the wave that is sent.</param>
-        public RoundOutcome Advance(RoundOrders orders)
-        {
-            if (orders is null)
-            {
-                throw new ArgumentNullException(nameof(orders));
-            }
-
-            RequireUnfinished();
-
-            return Play(orders, Unlocks, Purse).Outcome;
-        }
-
-        /// <summary>
-        /// Resolves one round from the decision a build phase made rather than
-        /// from orders somebody composed by hand.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The same round, entered a step earlier. The decision is checked
-        /// against this round's offering, this run's unlocks, this round's slot
-        /// width and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
-        /// which is the surface a stored command stream is validated against
-        /// too, so there is one implementation of the rules and not two.
-        /// </para>
-        /// <para>
-        /// The defense arrives beside it because a build phase composes what is
-        /// sent; what stands is the other half of a round's orders.
-        /// </para>
-        /// <para>
         /// <b>Everything that can refuse this round refuses before a coin
         /// moves</b> -- the decision against the offering, the orders against
         /// the defense, the run against being over, and then everything the
-        /// round itself can refuse at. What the decision unlocked and what it
-        /// left in the purse travel into <see cref="Play"/> as arguments and
-        /// reach the run through the same <see cref="Commit"/> the other route
-        /// uses, so a purse spent and an unlock taken for a wave nobody was in
-        /// the run to send is a state that cannot be reached rather than an
-        /// ordering to get right.
+        /// round itself can refuse at. The whole round is worked out into
+        /// locals -- see <see cref="Play"/> -- and reaches the run through
+        /// <see cref="Commit"/>, which writes everything a round moves,
+        /// together, and is the only place any of it is written. What the
+        /// decision unlocked and what it left in the purse travel into
+        /// <see cref="Play"/> as arguments rather than being written first, so
+        /// a purse spent and an unlock taken for a wave nobody was in the run
+        /// to send is a state that cannot be reached rather than an ordering to
+        /// get right.
         /// </para>
         /// <para>
         /// <b>What comes back is the whole round</b> -- see
@@ -531,7 +499,7 @@ namespace Sim
         /// <remarks>
         /// Every field a round moves moves here, from arguments that are already
         /// settled, and nothing between the first write and the last can refuse.
-        /// That is the whole of the guarantee both ways into a round make: it is
+        /// That is the whole of the guarantee <see cref="Advance"/> makes: it is
         /// a property of where the writes are rather than of what order the work
         /// above them happens in.
         /// </remarks>
@@ -684,11 +652,7 @@ namespace Sim
             return (int)cost;
         }
 
-        /// <summary>
-        /// Refuses a round past the end of a run. One implementation, called
-        /// from both ways in, so that entering a round from a build phase
-        /// cannot reach a run the other way in would have turned away.
-        /// </summary>
+        /// <summary>Refuses a round past the end of a run.</summary>
         private void RequireUnfinished()
         {
             if (!IsOver)
