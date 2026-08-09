@@ -491,11 +491,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Four checks, each refusing by name and with both values: the
-        /// simulation version against this build, and the unit table, the
-        /// ruleset and the anchor schedule against the ones the run is playing.
-        /// They are independent, so a stream can fail exactly one of them and
-        /// the message says which.
+        /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
+        /// version against this build, and the unit table, the ruleset and the
+        /// anchor schedule against the ones the run is playing. They are
+        /// independent, so a stream can fail exactly one of them; a stream that
+        /// fails several is named by the first declared.
         /// </para>
         /// <para>
         /// The seed is checked before any of them and refuses differently,
@@ -537,37 +537,11 @@ namespace Sim
                     + "two different runs and the decisions of one were read off the other's menus.");
             }
 
-            if (Header.SimVersion != SimulationVersion.Current)
-            {
-                throw new RetiredRecordException(
-                    "simulation version",
-                    "simulation version " + Header.SimVersion.ToString(CultureInfo.InvariantCulture),
-                    "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (Header.ContentHash != run.Types.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "content hash",
-                    "content " + Header.ContentHash.ToString(),
-                    "content " + run.Types.ContentHash.ToString());
-            }
-
-            if (RulesetHash != run.Rules.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "ruleset hash",
-                    "ruleset " + RulesetHash.ToString(),
-                    "ruleset " + run.Rules.ContentHash.ToString());
-            }
-
-            if (ScheduleHash != run.Schedule.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "schedule hash",
-                    "schedule " + ScheduleHash.ToString(),
-                    "schedule " + run.Schedule.ContentHash.ToString());
-            }
+            ReplayGate.Require(
+                Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
+                Stamp.Of("content", Header.ContentHash, run.Types.ContentHash),
+                Stamp.Of("ruleset", RulesetHash, run.Rules.ContentHash),
+                Stamp.Of("schedule", ScheduleHash, run.Schedule.ContentHash));
 
             Check(run);
 

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Sim.Tests;
 
 /// <summary>
@@ -6,14 +8,85 @@ namespace Sim.Tests;
 /// of it, and a record that fails the second gate is still perfectly readable.
 /// </summary>
 /// <remarks>
-/// How many things the second gate compares is the record kind's business: a
-/// bundle checks the simulation version, the unit table, the ruleset and the map
-/// it inlined; a command stream checks the simulation version, the unit table,
-/// the ruleset and the anchor schedule, because those are what a stored decision
-/// means anything against.
+/// Which things the second gate compares is the record kind's business, and each
+/// kind declares them to one walk: a bundle declares the simulation version, the
+/// unit table, the ruleset and the map it inlined; a command stream declares the
+/// simulation version, the unit table, the ruleset and the anchor schedule,
+/// because those are what a stored decision means anything against.
 /// </remarks>
 public class ReplayGateTests
 {
+    [Fact]
+    public void The_gate_walks_the_declared_stamps_in_order_and_names_the_first_that_disagrees()
+    {
+        // What a record kind hands the gate is a list, and the list's order is
+        // what a refusal reports. Two rows wrong at once names the one declared
+        // first, so a record whose whole world has moved is described by the
+        // coarsest thing that moved.
+        //
+        // OBSERVED: have ReplayGate.Require walk the whole list and throw on
+        // the last mismatch rather than the first. This goes red naming
+        // "ruleset hash" for a record the simulation version retires whatever
+        // any ruleset says.
+        Hash64 recorded = TheRuleset.Committed().ContentHash;
+        Hash64 live = TheRuleset.RetunedDamage().ContentHash;
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(() => ReplayGate.Require(
+            Stamp.Of("simulation version", SimulationVersion.Current + 1, SimulationVersion.Current),
+            Stamp.Of("content", recorded, live),
+            Stamp.Of("ruleset", recorded, live)));
+
+        Assert.Equal("simulation version", thrown.Gate);
+        Assert.Equal(
+            "simulation version " + (SimulationVersion.Current + 1).ToString(CultureInfo.InvariantCulture),
+            thrown.Recorded);
+        Assert.Equal(
+            "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture),
+            thrown.Live);
+    }
+
+    [Fact]
+    public void A_stamp_the_record_does_not_carry_agrees_with_no_live_value()
+    {
+        // The row a kind declares for a stamp its older records may not have.
+        // Absence is not a value that happens to differ, it is the record
+        // making no claim, so it refuses against the hash it was actually
+        // recorded under as firmly as against any other.
+        //
+        // OBSERVED: let a null recorded value pass. This goes red having caught
+        // nothing, and every bundle written before the ruleset field existed
+        // replays under whatever numbers happen to be loaded.
+        Hash64 live = TheRuleset.Committed().ContentHash;
+
+        RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
+            () => ReplayGate.Require(Stamp.Of("ruleset", (Hash64?)null, live)));
+
+        Assert.Equal("ruleset hash", thrown.Gate);
+        Assert.Equal("no ruleset stamp", thrown.Recorded);
+        Assert.Equal("ruleset " + live, thrown.Live);
+    }
+
+    [Fact]
+    public void The_restagings_label_is_the_same_walk_as_the_refusal()
+    {
+        // A restaging asks the gate for a label rather than a refusal, over the
+        // three stamps it sets aside. One walk, so the label and the refusal
+        // cannot come to different answers about one pair -- which is what a
+        // second hand-written chain of comparisons was free to do.
+        //
+        // OBSERVED: drop the ruleset row from RulesetsCoincide. This goes red,
+        // and a restaging run under a retuned ruleset reports that today's
+        // rules are the record's own. The version-0 retirement assertion goes
+        // with it, which is what a second list of comparisons costs.
+        UnitTypeTable types = TheMatch.Types();
+        ReplayBundle bundle = ReplayBundle.FromBytes(TheMatch.Bundle().ToBytes());
+
+        Assert.True(bundle.RestageUnderCurrentRules(types, TheRuleset.Committed()).RulesetsCoincide);
+        Assert.False(bundle.RestageUnderCurrentRules(types, TheRuleset.RetunedDamage()).RulesetsCoincide);
+        Assert.False(
+            bundle.RestageUnderCurrentRules(TheMatch.RetunedTypes(), TheRuleset.Committed()).RulesetsCoincide);
+    }
+
     [Fact]
     public void A_bundle_that_passes_both_gates_replays_the_match_it_recorded()
     {

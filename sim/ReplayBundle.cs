@@ -232,12 +232,12 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Four checks, each refusing by name and with both values: the
-        /// simulation version against this build, the content hash against the
-        /// tables handed in, the ruleset hash against the rules handed in, and
-        /// the map hash the defense recorded against the map actually inlined
-        /// here. They are independent, so a record can fail exactly one of them
-        /// and the message says which.
+        /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
+        /// version against this build, the content hash against the tables
+        /// handed in, the ruleset hash against the rules handed in, and the map
+        /// hash the defense recorded against the map actually inlined here.
+        /// They are independent, so a record can fail exactly one of them; a
+        /// record that fails several is named by the first declared.
         /// </para>
         /// <para>
         /// <b>The ruleset is compared because a landing resolves through it.</b>
@@ -275,41 +275,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            if (Header.SimVersion != SimulationVersion.Current)
-            {
-                throw new RetiredRecordException(
-                    "simulation version",
-                    "simulation version " + Header.SimVersion.ToString(CultureInfo.InvariantCulture),
-                    "simulation version " + SimulationVersion.Current.ToString(CultureInfo.InvariantCulture));
-            }
-
-            if (Header.ContentHash != types.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "content hash",
-                    "content " + Header.ContentHash.ToString(),
-                    "content " + types.ContentHash.ToString());
-            }
-
-            // One comparison covers both refusals. A record that names no
-            // ruleset compares unequal to every ruleset there is, which is the
-            // answer wanted: what is missing is the record's claim, and a
-            // missing claim agrees with nothing.
-            if (RulesetHash != rules.ContentHash)
-            {
-                throw new RetiredRecordException(
-                    "ruleset hash",
-                    Stamp(RulesetHash),
-                    "ruleset " + rules.ContentHash.ToString());
-            }
-
-            if (Ghost.MapHash != Map.MapHash)
-            {
-                throw new RetiredRecordException(
-                    "map hash",
-                    "map " + Ghost.MapHash.ToString(),
-                    "map " + Map.MapHash.ToString());
-            }
+            ReplayGate.Require(
+                Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
+                Stamp.Of("content", Header.ContentHash, types.ContentHash),
+                Stamp.Of("ruleset", RulesetHash, rules.ContentHash),
+                Stamp.Of("map", Ghost.MapHash, Map.MapHash));
 
             return ToMatch(types, rules);
         }
@@ -329,11 +299,12 @@ namespace Sim
         /// <c>ToString</c> that it is not a replay.
         /// </para>
         /// <para>
-        /// The map hash is still enforced, and that is not an inconsistency. The
-        /// other three gates ask "were these the same rules?", which is the
-        /// question this operation is deliberately setting aside; the map hash
-        /// asks "are these bytes internally consistent?", which nothing sets
-        /// aside.
+        /// The map hash is the one stamp this still declares, and that is not an
+        /// inconsistency. The other three ask "were these the same rules?",
+        /// which is the question this operation is deliberately setting aside;
+        /// the map hash asks "are these bytes internally consistent?", which
+        /// nothing sets aside. The three it drops are three rows a reader can
+        /// see are not there.
         /// </para>
         /// <para>
         /// <b>The <see cref="Restaging"/> carries out the ruleset it was
@@ -355,13 +326,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            if (Ghost.MapHash != Map.MapHash)
-            {
-                throw new RetiredRecordException(
-                    "map hash",
-                    "map " + Ghost.MapHash.ToString(),
-                    "map " + Map.MapHash.ToString());
-            }
+            ReplayGate.Require(Stamp.Of("map", Ghost.MapHash, Map.MapHash));
 
             return new Restaging(
                 ToMatch(types, rules),
@@ -512,15 +477,6 @@ namespace Sim
             }
         }
 
-        /// <summary>
-        /// A ruleset stamp as a person reads it, and what a record that has none
-        /// says instead. One spelling, used by the gate that refuses a record
-        /// and by the restaging that runs one anyway, so the two cannot describe
-        /// the same absence differently.
-        /// </summary>
-        internal static string Stamp(Hash64? rulesetHash) =>
-            rulesetHash is null ? "no ruleset stamp" : "ruleset " + rulesetHash.Value.ToString();
-
         private Match ToMatch(UnitTypeTable types, Ruleset rules) =>
             new Match(Map, rules, Ghost.ToLayout(types), Wave.ToScript(types), Seed);
     }
@@ -586,14 +542,23 @@ namespace Sim
         /// depended on the numbers rather than on what was asked for.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// The three stamps the replay gate would have compared, declared to
+        /// the same walk and asked for a label rather than a refusal. The map
+        /// hash is the visibly absent fourth: it was enforced before the
+        /// restaging ran, because it asks about the bytes rather than the
+        /// rules.
+        /// </para>
+        /// <para>
         /// A record that names no ruleset never coincides, whatever ruleset is
         /// in front of it. Nothing has been shown to agree with anything: the
         /// record did not say, and "did not say" is not "said this".
+        /// </para>
         /// </remarks>
-        public bool RulesetsCoincide =>
-            RecordedSimVersion == SimVersionUsed
-            && RecordedContentHash == ContentHashUsed
-            && RecordedRulesetHash == RulesetHashUsed;
+        public bool RulesetsCoincide => ReplayGate.Agree(
+            Stamp.Of("simulation version", RecordedSimVersion, SimVersionUsed),
+            Stamp.Of("content", RecordedContentHash, ContentHashUsed),
+            Stamp.Of("ruleset", RecordedRulesetHash, RulesetHashUsed));
 
         public override string ToString() =>
             "Restaged, not replayed: recorded under simulation version "
@@ -601,13 +566,13 @@ namespace Sim
             + ", content "
             + RecordedContentHash.ToString()
             + " and "
-            + ReplayBundle.Stamp(RecordedRulesetHash)
+            + Stamp.Spell("ruleset", RecordedRulesetHash)
             + ", run under simulation version "
             + SimVersionUsed.ToString(CultureInfo.InvariantCulture)
             + ", content "
             + ContentHashUsed.ToString()
-            + " and ruleset "
-            + RulesetHashUsed.ToString()
+            + " and "
+            + Stamp.Spell("ruleset", RulesetHashUsed)
             + ". The outcome is what this defense and this wave do today, and it is not this record's "
             + "result.";
     }
