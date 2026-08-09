@@ -198,10 +198,11 @@ namespace Sim
 
         private readonly UpgradeEdge[] _edges;
 
-        private UpgradeLadder(UpgradeEdge[] edges, int layout)
+        private UpgradeLadder(UpgradeEdge[] edges, int layout, Hash64 contentHash)
         {
             _edges = edges;
             Layout = layout;
+            ContentHash = contentHash;
         }
 
         /// <summary>The edges, in canonical order -- ascending by source and then by target.</summary>
@@ -212,6 +213,19 @@ namespace Sim
 
         /// <summary>Which row layout this ladder was written in and read through.</summary>
         public int Layout { get; }
+
+        /// <summary>
+        /// A fold over the edges in file order, under a label naming this file
+        /// and its layout.
+        /// </summary>
+        /// <remarks>
+        /// This is not a hash anything is stamped with. It exists to be folded
+        /// into a unit table's own content hash by
+        /// <see cref="UnitTypeTable.WithLadder"/>, which is where the rule that
+        /// an empty ladder changes nothing lives -- so a caller that folds this
+        /// value by hand has bypassed that rule rather than reimplemented it.
+        /// </remarks>
+        public Hash64 ContentHash { get; }
 
         /// <summary>Parses a ladder from text, against the types its ids may name.</summary>
         public static UpgradeLadder Parse(string text, UnitTypeTable types) =>
@@ -357,7 +371,35 @@ namespace Sim
                     + "rows are written is not.");
             }
 
-            return new UpgradeLadder(edges.ToArray(), layout);
+            Hash64 hash = Hash64.Start(HashLabelOf(layout)).Add(edges.Count);
+
+            foreach (UpgradeEdge edge in edges)
+            {
+                hash = hash.Add(edge.From, edge.To);
+            }
+
+            return new UpgradeLadder(edges.ToArray(), layout, hash);
+        }
+
+        /// <summary>
+        /// The label this layout's edges fold under. It names both the file and
+        /// its row layout, so a ladder read through one branch cannot hash equal
+        /// to a ladder read through another.
+        /// </summary>
+        private static string HashLabelOf(int layout)
+        {
+            switch (layout)
+            {
+                case 1:
+                    return "upgrade-ladder/1";
+
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(layout),
+                        "Row layout "
+                        + layout.ToString(CultureInfo.InvariantCulture)
+                        + " has no reader branch in this ladder.");
+            }
         }
 
         /// <summary>

@@ -530,6 +530,71 @@ public class ContentTests
     }
 
     [Fact]
+    public void An_empty_ladder_folds_nothing_and_hands_back_the_table_it_was_given()
+    {
+        // The identity every record made before content/upgrades.txt existed
+        // rests on. content/golden/defense-0.replay cannot be recorded again and
+        // its header carries the hash of the table pinned beside it; no ladder is
+        // pinned there, so nothing folds and that hash stands forever.
+        //
+        // OBSERVED: drop the empty-ladder branch out of WithLadder, so that a
+        // ladder with no edges folds its label and a zero count anyway. This goes
+        // red and so does the committed-pair assertion below it, and nothing else
+        // in the suite notices -- because nothing folds a ladder into a golden
+        // yet. That is why the identity is asserted here, on the method, rather
+        // than left to whichever gate happens to fold one first.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeCurrentRows);
+        UpgradeLadder empty = UpgradeLadder.Parse("layout 1", table);
+
+        Assert.Same(table, table.WithLadder(empty));
+        Assert.Equal(table.ContentHash, table.WithLadder(empty).ContentHash);
+    }
+
+    [Fact]
+    public void One_edge_moves_the_content_hash()
+    {
+        // The other half: a ladder with something in it is content, and content
+        // that changes what a roster means has to retire the records pinned to
+        // the roster before it.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeCurrentRows);
+        UpgradeLadder rung = UpgradeLadder.Parse("layout 1\nupgrade 1 2", table);
+
+        Assert.NotEqual(table.ContentHash, table.WithLadder(rung).ContentHash);
+
+        // And the rows are untouched, because an edge is an annotation on a
+        // roster rather than a column on a row.
+        Assert.Equal(table.Count, table.WithLadder(rung).Count);
+        Assert.Equal(table.ById(1).Cost, table.WithLadder(rung).ById(1).Cost);
+    }
+
+    [Fact]
+    public void Two_different_ladders_over_one_table_do_not_hash_alike()
+    {
+        // Which edges there are is what the fold is over, so an edge set that
+        // was retuned rather than added moves the hash too.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeCurrentRows);
+
+        Assert.NotEqual(
+            table.WithLadder(UpgradeLadder.Parse("layout 1\nupgrade 1 2", table)).ContentHash,
+            table.WithLadder(UpgradeLadder.Parse("layout 1\nupgrade 1 7", table)).ContentHash);
+    }
+
+    [Fact]
+    public void The_committed_ladder_moves_the_committed_tables_hash_exactly_when_it_has_an_edge()
+    {
+        // The rule rather than today's answer, so that authoring the first edge
+        // is not also the commit that has to rewrite this test. While
+        // content/upgrades.txt is empty this says the committed hash has not
+        // moved, which is what makes every commit that lands before the first
+        // edge safe; the moment an edge exists it says the hash moved, which is
+        // what the regeneration beside that commit answers.
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UpgradeLadder ladder = UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
+
+        Assert.Equal(ladder.Count == 0, types.ContentHash == types.WithLadder(ladder).ContentHash);
+    }
+
+    [Fact]
     public void The_committed_wave_parses_against_the_committed_types()
     {
         UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
