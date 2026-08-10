@@ -2,7 +2,7 @@
 
 Working rules for anything — human or agent — doing execution work in this repo.
 
-Four rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
+Five rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
 most to find later. Keep this file short: it is loaded into every agent's context, so anything that is a
 *finding* rather than an *instruction* belongs in [`docs/research/`](docs/research/).
 
@@ -48,6 +48,21 @@ a generated file must **not** be committed, that has to be arranged by construct
 by remembering. Ignore rules only govern untracked files, so a *tracked* generated file like
 `client/Packages/packages-lock.json` has to be watched for by hand. See `client/.gitignore`, which carries the
 scars.
+
+## 5. A worktree is finished when `git worktree list` stops naming it
+
+`git worktree remove` is two operations in one command: it unregisters the worktree, *then* deletes the files.
+**Close the editor before removing one.** An open Unity holds handles on `client/Library`, the delete half
+fails, and the unregister half has already happened.
+
+What survives is the quiet part: a full directory under `.claude/worktrees/` whose `.git` file is gone. Neither
+`git worktree list` nor `git worktree prune` can see it — it is no longer a stale worktree, just a directory,
+and nothing will ever come back for it. Five accumulated here before anyone looked, about 130,000 files. The
+check that finds them is `ls .claude/worktrees` against `git worktree list`; anything in the first and not the
+second is an orphan.
+
+Delete the branch too once its pull request merges. GitHub drops the remote branch on merge, but the local one
+is yours to remove; `git branch --merged origin/main` lists everything that has already landed.
 
 ## Waiting on Unity
 
