@@ -5,15 +5,17 @@ there is nowhere for a claim to sit and go quietly out of date.
 
 ## Start here
 
-**[The Vision](vision.md)** is the standing document — what this game is, what it is not, and the order it
-gets built in. Where anything else in this directory disagrees with it, the vision is current.
+**[The Vision](vision.md)** is the standing document — what this game is and what it is not. Where anything
+else in this directory disagrees with it, the vision is current.
 
 In one line: *a technically excellent tower defense, built for the pleasure of building it, whose multiplayer
 is real — and every mode of it is the same machine at a different latency.*
 
 | | |
 |---|---|
-| [The Vision](vision.md) | The destination, the pillars, the open questions, and [the build order](vision.md#8-the-build-order) — a seven-step sequence with the nine seams it serves mapped onto it |
+| [The Vision](vision.md) | The destination and the pillars — what is decided, and nothing else |
+| [The build order](build-order.md) | The seven-step sequence, and the nine seams it serves |
+| [Open questions](open-questions.md) | In scope, undecided, and what each one is waiting on |
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |

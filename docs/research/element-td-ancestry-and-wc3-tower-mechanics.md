@@ -152,7 +152,7 @@ Implemented by **remapping Warcraft 3's hardcoded armor and attack types** onto 
 icons imported to display the relationships [[4]](#s4) — which is also *why* the multipliers are exactly
 200/100/50: those were the numbers the engine would give them.
 
-⚠️ Note for [the open damage-matrix question](../vision.md#the-open-questions): this is a **4:1 spread** (200% vs 50%), the
+⚠️ Note for [the open damage-matrix question](../open-questions.md): this is a **4:1 spread** (200% vs 50%), the
 same figure [Part V §4.1](../archive/variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one)
 records for Element TD 2 — so the spread has survived unchanged from 2006 to today across four engines. That is a
 much stronger datum for "4:1 works" than a single game's current patch.
@@ -237,7 +237,7 @@ purchased with a second currency, and Element TD never needed one because it nev
 Three things, all small, none of them a decision:
 
 1. **The 4:1 damage spread has a fifteen-year track record**, not a one-patch one (§2.4). That strengthens one side
-   of [the open damage-matrix question](../vision.md#the-open-questions).
+   of [the open damage-matrix question](../open-questions.md).
 2. **Interest-as-a-pick is a shipped answer to the one-purse problem** (§2.2) — an economy upgrade and a tech
    upgrade competing for the same metered offering, with a hard cap so it cannot run away. It is worth
    [the attacking half](attack-composition-and-sending.md) §5 knowing that this existed and was capped at two.

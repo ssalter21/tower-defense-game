@@ -10,7 +10,7 @@
 >
 > **Its schema verdict stands and is now being built against**: one unit with two roles, levers as components,
 > the vocabulary versioned apart from the numbers.
-> [Seam 3](../vision.md#3--the-roster) fills it in. One thing has changed under it since it was written:
+> [Seam 3](../build-order.md#3--the-roster) fills it in. One thing has changed under it since it was written:
 >
 > - **The six mazing-dependent levers are alive again** — `Path policy`, `Repath trigger`, `blocksPath`, the
 >   maze/gun resource split, geometry-driven stats and route choice. They were written off when the corridor

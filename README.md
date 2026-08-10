@@ -11,7 +11,7 @@ balance sweep, and a Unity 6 view that scrubs a recorded match from snapshots.
 A run is ten rounds of build phase and wave, authored as text and compiled to a
 command stream, against a canned field.
 
-[The build order](docs/vision.md#8-the-build-order) sequences the rest by what
+[The build order](docs/build-order.md) sequences the rest by what
 is cheapest to learn rather than by what depends on what. Its first four steps —
 the economy, the run lifecycle, the roster and the sweep — are built and run
 from a shell with no engine in them. **Step 5, build-phase interaction in the
@@ -20,9 +20,11 @@ client, is what comes next**; the loop against stored ghosts is step 6.
 ## Ideas / scope
 
 [The Vision](docs/vision.md) fixes the destination and holds only what is
-current; [the decision log](docs/decision-log.md) holds every time it changed
-its mind, and [`docs/archive/`](docs/archive/README.md) holds the five deep
-dives it was built on.
+decided. [The build order](docs/build-order.md) is the sequence,
+[open questions](docs/open-questions.md) is what is in scope but unsettled,
+[the decision log](docs/decision-log.md) holds every time the vision changed its
+mind, and [`docs/archive/`](docs/archive/README.md) holds the five deep dives it
+was built on.
 
 ## Getting started
 

@@ -1,9 +1,9 @@
 # Where combinatorial build depth comes from, and which mechanisms survive a one-hex corridor
 
 **Research note** · 3 August 2026 · commissioned by
-[The Vision §10](../vision.md#9-not-yet-specified); input to
-[seam 1 — the match format](../vision.md#1--the-match-format),
-[seam 3 — the roster](../vision.md#3--the-roster) and [seam 7 — the interface](../vision.md#7--the-interface)
+[Open questions](../open-questions.md); input to
+[seam 1 — the match format](../build-order.md#1--the-match-format),
+[seam 3 — the roster](../build-order.md#3--the-roster) and [seam 7 — the interface](../build-order.md#7--the-interface)
 
 > ⚠️ **The premise moved on 6 August 2026. The findings stand; the geometry does not.**
 > This note was written against a corridor exactly one hex wide that never branched, and it asks which
@@ -18,7 +18,7 @@
 mechanisms survive this project's settled decisions; and how do the games that are both deep *and* accessible
 pull it off without an unlock ramp?
 **Inputs:** [The Vision](../vision.md) §3 ([Depth is the point](../vision.md#depth-is-the-point)),
-§4, §5, §6 ([Juicy, and readable by a stranger](../vision.md#juicy-and-readable-by-a-stranger)), §11;
+§4, §5, §6 ([Juicy, and readable by a stranger](../vision.md#legible-to-a-stranger)), §11;
 [Part V — Tower & Creep Variance Levers](../archive/variance-levers-and-unit-schema.md) §3.11, §4.1, §10.
 **The developer's stated anchor:** Element TD (Karawasa, Warcraft 3, 2006) and its successor Element TD 2.
 
@@ -182,7 +182,7 @@ intact, because nothing persists past the run — and it is a far better answer 
 
 **The pick is public.** In a two-boards-at-once format, the elements an opponent has taken are readable off
 their defense, and eleven picks over fifty waves is eleven readable commitments. That is free feed for
-[seam 6's social layer](../vision.md#6--the-social-layer) and free feed for the counter-reading half of the loop.
+[seam 6's social layer](../build-order.md#6--the-social-layer) and free feed for the counter-reading half of the loop.
 
 ### 2.3 The Warcraft 3 original — better sourced than expected, via the archive
 
@@ -290,7 +290,7 @@ value is a function of — the thing [§6](#6-how-big-the-balance-surface-actual
 Plus one that must be named to be dismissed: **M12, meta-progression** — Monkey Knowledge's 100+ meta-upgrades
 [[6]](#s6), Mazebert's card collection, YouTD's builders. It is the standard answer to both depth and
 onboarding and it is ruled out by [§4](../vision.md#4-what-persists) and
-[§11](../vision.md#10-out-of-scope). It gets no further consideration — except as evidence, because Ninja Kiwi's
+[§11](../vision.md#8-out-of-scope). It gets no further consideration — except as evidence, because Ninja Kiwi's
 own v25.0 notes say out loud that Monkey Knowledge is a **balance liability tied to account progression**:
 Veteran Levels exist so that dedicated players *"keep earning XP … but **without unbalancing the Monkey Knowledge
 system**"* [[17]](#s17). The company that ships the genre's most successful meta-progression system publicly
@@ -559,7 +559,7 @@ paid once for both.
 
 ## 4. The accessibility question
 
-[§6 of the vision](../vision.md#juicy-and-readable-by-a-stranger) states the problem and the constraint exactly:
+[§6 of the vision](../vision.md#legible-to-a-stranger) states the problem and the constraint exactly:
 the game must be *"juicy and accessible — anyone could pick it up"*, Bloons TD 6 is *"the standing proof that a
 game can be legible to a child and still have a competitive meta"*, and — the hard part —
 
@@ -576,14 +576,14 @@ because it resets.
 
 | # | Mechanism | How it actually works | Needs between-run persistence? | Verdict here |
 |---|---|---|---|---|
-| A1 | **Progressive disclosure by account unlock** | BTD6 gates towers behind account XP levels; Mazebert gates cards behind a collection | **Yes** | ☠️ **Dead** — [§4](../vision.md#4-what-persists), [§11](../vision.md#10-out-of-scope) |
+| A1 | **Progressive disclosure by account unlock** | BTD6 gates towers behind account XP levels; Mazebert gates cards behind a collection | **Yes** | ☠️ **Dead** — [§4](../vision.md#4-what-persists), [§11](../vision.md#8-out-of-scope) |
 | A2 | **Meta-progression as a difficulty crutch** | Monkey Knowledge — *"Over 100 meta-upgrades"*, and the shipped achievement *"Dr. Monkey — Spend 106 Monkey Knowledge points"* [[6]](#s6)[[17]](#s17) — makes an early loss recoverable | **Yes** | ☠️ **Dead** — and BTD6 itself ships a per-event `disableMK` switch [[15]](#s15) |
-| A3 | **A campaign / tutorial ladder** | Element TD 2 ships a 28-mission campaign [[1]](#s1); BTD6 delivers onboarding *as a Quest* rather than a bolt-on tutorial (*"First Steps — Complete the First Time Tutorial Quest"*) [[17]](#s17) | No, but it is authored content | ⚠️ Available, unbudgeted; the vision has no campaign and co-op is [not yet specified](../vision.md#9-not-yet-specified) |
+| A3 | **A campaign / tutorial ladder** | Element TD 2 ships a 28-mission campaign [[1]](#s1); BTD6 delivers onboarding *as a Quest* rather than a bolt-on tutorial (*"First Steps — Complete the First Time Tutorial Quest"*) [[17]](#s17) | No, but it is authored content | ⚠️ Available, unbudgeted; the vision has no campaign and co-op is [not yet specified](../open-questions.md) |
 | A4 | **Difficulty modes and map tiers** | BTD6 has three difficulties — **Easy / Medium / Hard** — with Impoppable, Half Cash and CHIMPS as *modes under Hard*, plus Beginner→Advanced map tiers, and CHIMPS is itself gated per map behind beating Impoppable [[17]](#s17) | No | ⚠️ Awkward — one ladder, one rating, and a stage-matched pool means difficulty is the *opponent*, not a setting |
 | **A5** | **Progressive disclosure *inside the run*** | ETD2: 11 picks over 50 waves, each gated behind an elemental boss. Super Auto Pets: shop tier *X* unlocks on turn 2*X*−1 [[14]](#s14). BTD6: a hero that starts at level 1 **every game** and climbs to 20 during it [[15]](#s15)[[17]](#s17); money gates upgrades | **No — resets every run** | ✅ **The replacement for A1, and it is strictly better here** |
 | **A6** | **A small offering out of a large pool** | LTD2 shows 10 of ~116 [[4]](#s4); Mazebert draws 1 card of 210 per round [[8]](#s8) | **No** | ✅ Works, at the variance cost in §3.3 |
 | **A7** | **A generative, compressible roster** | Six element names predict fifty-six towers | **No** | ✅ **The strongest mechanism available, and the only one that reduces what must be *learned* rather than what must be *seen*** |
-| **A8** | **Legibility furniture** — all upgrade options with prices and descriptions in one panel; safe defaults (BTD6's targeting priority ships set to *First*); a per-tower **performance readout** (BTD6 v54.0 added *"an extra button listing a performance summary with pops, damage, cash earned, value and lives earned"* [[16]](#s16)); counter-hints authored as data; colour-coded tells | BTD6's upgrade panel and info panel; ETD2's per-creep "weak to single-target / AoE / long range" annotations (recorded in [Part V §9](../archive/variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this)) | **No** | ✅ Pure UI and data. Free, and it lands on [seam 7](../vision.md#7--the-interface). The performance readout is the cheapest of the lot and the one most likely to be skipped |
+| **A8** | **Legibility furniture** — all upgrade options with prices and descriptions in one panel; safe defaults (BTD6's targeting priority ships set to *First*); a per-tower **performance readout** (BTD6 v54.0 added *"an extra button listing a performance summary with pops, damage, cash earned, value and lives earned"* [[16]](#s16)); counter-hints authored as data; colour-coded tells | BTD6's upgrade panel and info panel; ETD2's per-creep "weak to single-target / AoE / long range" annotations (recorded in [Part V §9](../archive/variance-levers-and-unit-schema.md#9-what-the-build-helper-actually-needs-from-this)) | **No** | ✅ Pure UI and data. Free, and it lands on [seam 7](../build-order.md#7--the-interface). The performance readout is the cheapest of the lot and the one most likely to be skipped |
 
 **The sharp claim.** A1 through A4 are all mechanisms for controlling *how much a player sees at once*. A7 is the
 only one that controls *how much a player has to remember*, and it is the only one that scales the roster and the
@@ -605,13 +605,13 @@ whole composition.
 
 ### 4.1 Running the taxonomy past §6's legibility veto
 
-[§6](../vision.md#juicy-and-readable-by-a-stranger) arms a veto and says to use it as one: *"If a mechanism
+[§6](../vision.md#legible-to-a-stranger) arms a veto and says to use it as one: *"If a mechanism
 cannot be read off the screen, it fails the accessibility pillar however deep it is."* Applied to §3’s eleven
 mechanisms, at a fixed isometric camera, while watching two boards, by somebody who has never played it:
 
 | Mechanism | Can it be read off the screen? | Cost of making it readable |
 |---|---|---|
-| **M1** Combination | ✅ **Best in class.** Element = colour, combination count = silhouette complexity. It is the one depth mechanism whose entire state is a *material swap*, which is the pipeline [§6](../vision.md#the-pipeline) already bought — one small PNG per palette | Near zero. It is the same recolour job as the faction colours |
+| **M1** Combination | ✅ **Best in class.** Element = colour, combination count = silhouette complexity. It is the one depth mechanism whose entire state is a *material swap*, which is the pipeline [§6](../vision.md#the-art-pipeline) already bought — one small PNG per palette | Near zero. It is the same recolour job as the faction colours |
 | **M7** Tiered exclusivity | ✅ A pick is a banner and a persistent header showing what you took | Near zero — UI |
 | **M9** Economy | ✅ It is a number that goes up | Zero |
 | **M3** Offering | ✅ It is a menu; the whole point is that it is small | Zero |
@@ -637,7 +637,7 @@ plus palette swaps. Direction B in [§7](#7-three-directions-ranked) is priced a
 
 Graded against [the vision's](../vision.md) settled decisions. "Corridor" means the one-hex non-branching
 playfield with no mazing and no pathfinding, permanently
-([§11](../vision.md#10-out-of-scope), and closed in [The Vision §11](../vision.md#10-out-of-scope)).
+([§11](../vision.md#8-out-of-scope), and closed in [The Vision §11](../vision.md#8-out-of-scope)).
 
 | Mechanism | Corridor | One purse | Nothing persists | Integer determinism | Verdict |
 |---|---|---|---|---|---|
@@ -667,7 +667,7 @@ playfield with no mazing and no pathfinding, permanently
 - The maze/gun resource split (Sanctum's base-versus-tower economy).
 - Path policy and repath triggers ([Part V §3.5](../archive/variance-levers-and-unit-schema.md#35-movement)).
 
-Those are the six levers [The Vision §11](../vision.md#10-out-of-scope) already lists as dead, plus
+Those are the six levers [The Vision §11](../vision.md#8-out-of-scope) already lists as dead, plus
 the activity they existed to support. **This note adds no new ones and removes none** — which is the useful
 finding, because it means the corridor's cost was correctly priced when it was settled and nothing in this survey
 raises it.
@@ -786,8 +786,8 @@ had an idea for it, and Element TD 2 needed twenty-two months post-launch to del
 mechanism in the survey that is simultaneously a depth mechanism, an accessibility mechanism (A7) and a harness
 mechanism; the pick schedule is the in-run disclosure ramp (A5) that replaces the ramp §4 deleted; the picks are
 readable off an opponent's board, which feeds both the counter-reading half of the loop and
-[seam 6](../vision.md#6--the-social-layer); and it commits you to a decision the vision already flags as open —
-[how wide the damage-type matrix should be](../vision.md#9-not-yet-specified) — because a six-element cycle at
+[seam 6](../build-order.md#6--the-social-layer); and it commits you to a decision the vision already flags as open —
+[how wide the damage-type matrix should be](../open-questions.md) — because a six-element cycle at
 Element TD 2's 4:1 spread is a *much* more decisive matrix than Legion TD 2's 1.67:1.
 
 **The one thing it delivers for free, flagged and handed on.**
@@ -830,7 +830,7 @@ mismatch with a match format whose signature is reading an opponent's *compositi
 ([§3](../vision.md#3-what-a-match-is)). A cross-path is a private optimisation; an element pick is a public
 commitment. Also: 180 authored upgrades with meaningful non-uniform crosspath bonuses is a great deal of writing
 for a personal build, and BTD6's five-tier ladders need a long run to pay off, which collides with
-[what a run is](../vision.md#9-not-yet-specified) still being open.
+[what a run is](../open-questions.md) still being open.
 
 **Ranked second**, and worth noting that it is the *cheapest* thing on this list to add to Direction A later —
 a legality predicate is free content and it does not touch the roster.
@@ -979,4 +979,4 @@ is badly under-documented first-party and several of its most-cited numbers are 
 **Inherited**
 
 30. **[Part V — Tower & Creep Variance Levers](../archive/variance-levers-and-unit-schema.md)**, especially §3.9 (placement and surface classes), §3.11 (upgrade topology, GemCraft's supergemming, Rogue Tower's diversity levers), §4.1 (the matrix-width question and the 1.67 : 1 / 4 : 1 / 40 : 1 spreads), §4.3 (capability gates), §4.5 (adaptive counters), §5.4 (named RNG streams), §10.2 and §10.5 (variance and per-instance experience). This note is written to sit **above** Part V: Part V catalogues *levers*, this catalogues *mechanisms that combine levers into builds*. Where they overlap, Part V is the more detailed and is not repeated.
-31. **[The Vision](../vision.md)** §1, §3, §4, §5, §11 and [The Vision §11](../vision.md#10-out-of-scope) — the settled decisions the filter in §5 grades against.
+31. **[The Vision](../vision.md)** §1, §3, §4, §5, §11 and [The Vision §11](../vision.md#8-out-of-scope) — the settled decisions the filter in §5 grades against.

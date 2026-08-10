@@ -56,7 +56,7 @@ the wave's *result*, and they cost one income rule instead of a whole parallel w
 its own prices and its own balance surface.
 
 Worth keeping for its own sake: **the two-purse decision survived less than a day of being written down, and
-cost nothing but a section.** That is the sequence in [§8](vision.md#8-the-build-order) working exactly as
+cost nothing but a section.** That is the sequence in [the build order](build-order.md) working exactly as
 designed — a decision made on paper before any content exists is a decision that can be unmade for the price of
 editing a paragraph. Had it been reversed after step 3, it would have cost a roster, a cost column and a record
 format.

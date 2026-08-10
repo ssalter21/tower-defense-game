@@ -65,8 +65,10 @@ Three facts, measured. The evidence is in
 
 ## Where things are written down
 
-- [`docs/vision.md`](docs/vision.md) — the standing document: what the game is, and the order it gets built in.
-  It holds only what is current; [`docs/decision-log.md`](docs/decision-log.md) holds every reversal.
+- [`docs/vision.md`](docs/vision.md) — the standing document: what the game is. It holds only what is decided;
+  [`docs/build-order.md`](docs/build-order.md) holds the sequence and the nine seams,
+  [`docs/open-questions.md`](docs/open-questions.md) what is in scope but undecided, and
+  [`docs/decision-log.md`](docs/decision-log.md) every reversal.
 - [`docs/roster.md`](docs/roster.md) — the design side of `content/units.txt`: what each unit is for and what
   about it is still unsigned.
 - [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. Source comments say *what* the code does; the
