@@ -1049,6 +1049,32 @@ public class RunTests
     }
 
     [Fact]
+    public void A_rounds_line_counts_what_stands_after_its_own_building()
+    {
+        // The count is read off the board the phase left rather than off the
+        // one it was handed, because the purse walks the take, then the
+        // actions, then the slots: the board this round's incoming waves meet
+        // is the built one, so the line beside those waves has to say so.
+        //
+        // OBSERVED: hand the board the phase was given to the Build it returns
+        // -- `board` rather than `built` at the bottom of BuildPhase.Resolve.
+        // This goes red, the line reading 6 towers standing where 7 was
+        // wanted: a board from before the round it is written on.
+        Run run = TheBuild.Fresh(waves: 2);
+        int opening = run.Board.Count;
+
+        RoundReport round = run.Advance(
+            TheBuild.BuyingNothing(run.Offering).With(TheCommands.PlacedOnFreeCell));
+
+        Assert.Contains(
+            ", "
+            + (opening + 1).ToString(CultureInfo.InvariantCulture)
+            + " towers standing, spent ",
+            round.ToString(),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_match_counts_its_leaks_by_the_order_that_sent_them_because_a_total_cannot_be_priced()
     {
         // What a leak costs is what the thing that leaked cost, so the count a

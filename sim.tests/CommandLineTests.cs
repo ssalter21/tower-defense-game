@@ -40,6 +40,13 @@ public class CommandLineTests
         // anything, "A command stream stores the run seeded 20260807 and it was
         // handed the run seeded 20260801", and the succeeded-assertion carries
         // that refusal into the message.
+        //
+        // OBSERVED, on the two spellings of a round: give Report(PlayedRun) a
+        // round line of its own -- drop the standing count out of what it
+        // prints and leave PlayedRun.OutcomeFile alone. The round loop goes red
+        // on wave one, quoting the line the file carries, which is what a
+        // terminal and a committed file that have grown apart look like from a
+        // shell.
         string scratch = TheCommandLine.Scratch("play-run");
         string outcome = Path.Combine(scratch, "run-outcome.txt");
 
@@ -54,10 +61,29 @@ public class CommandLineTests
             StringComparison.Ordinal);
 
         Assert.Contains("outcome    ", played.Output, StringComparison.Ordinal);
-        Assert.Contains("wave 10: take ", played.Output, StringComparison.Ordinal);
 
         Assert.True(File.Exists(outcome), outcome + " was asked for and nothing landed there.");
         Assert.Equal(File.ReadAllText(RepoLayout.RunOutcomeFile), File.ReadAllText(outcome));
+
+        // The round lines a person watched are the round lines that were
+        // committed, which is what one code path behind both of them buys.
+        // The count is asserted because a loop over nothing agrees with
+        // everything.
+        //
+        // OBSERVED, on the count: filter the file on "round " instead of
+        // "wave ". Nothing matches, the loop below passes over an empty array,
+        // and this goes red -- 0 against 10 -- rather than the pass a filter
+        // that had stopped selecting anything would otherwise be.
+        string[] rounds = File.ReadAllLines(outcome)
+            .Where(line => line.StartsWith("wave ", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Equal(Run.DefaultWaves, rounds.Length);
+
+        foreach (string round in rounds)
+        {
+            Assert.Contains(round, played.Output, StringComparison.Ordinal);
+        }
     }
 
     [Fact]

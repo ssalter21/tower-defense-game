@@ -43,7 +43,9 @@ namespace Sim
 
         public override string ToString() =>
             Outcome.ToString()
-            + ", spent "
+            + ", "
+            + Build.Board.Count.ToString(CultureInfo.InvariantCulture)
+            + " towers standing, spent "
             + Build.Spent.ToString(CultureInfo.InvariantCulture)
             + ", paid "
             + Payment.ToString();

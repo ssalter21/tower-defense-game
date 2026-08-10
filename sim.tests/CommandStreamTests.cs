@@ -169,6 +169,45 @@ public class CommandStreamTests
     }
 
     [Fact]
+    public void A_decision_prints_its_actions_between_the_take_and_the_slots()
+    {
+        // The decision half of a round line, which a run's report prints
+        // whole: the take, then what the phase built in the order it was
+        // written, then the wave's slots. One line, because the column header
+        // over it promises one per round.
+        //
+        // The cell is the column and row an action row of a command script
+        // names, so what is printed reads back into the file a person would
+        // write.
+        //
+        // OBSERVED: print the actions after the slots in
+        // RecordCommand.ToString. The action assertion goes red -- the run no
+        // longer has the slots' comma behind it -- on a line reading take,
+        // slots, actions, which is an order no purse ever walked.
+        //
+        // OBSERVED, on the spelling: swap the two coordinates for
+        // Hex.FromOddRowOffset(Column, Row) in BuildAction.ToString. The
+        // action assertion goes red, "at column 9, row 0" having become
+        // "at (9, 0)" -- and on any row but the top the numbers move as well,
+        // so one cell would be one pair here and another in
+        // content/defense.txt.
+        RecordCommand acting = TheCommands.Acting(TheCommands.Fresh())[0];
+        string line = acting.ToString();
+
+        Assert.Contains(
+            ", place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
+            line,
+            StringComparison.Ordinal);
+
+        Assert.True(
+            line.IndexOf("take ", StringComparison.Ordinal)
+                < line.IndexOf("place type 3", StringComparison.Ordinal)
+            && line.IndexOf("upgrade type 4", StringComparison.Ordinal)
+                < line.IndexOf(" of type ", StringComparison.Ordinal),
+            line + " does not put its actions between the take and the slots.");
+    }
+
+    [Fact]
     public void The_run_consumes_the_record_and_gets_the_run_the_decisions_played()
     {
         // The whole point of the kind, in one assertion: the bytes reproduce the

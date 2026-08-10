@@ -11,9 +11,13 @@
 # file and nothing else: a run consumes build phases from a record, and there is no other
 # route into the tick loop. The pair is what that round's wave got past the field and what
 # the field's waves got past this run's defense, both priced in gold and both the average
-# over the field rather than the sum. Then what the wave cost to buy, and what it paid the
-# purse back: the bank it opened on, the interest that bank earned, the flat base, the
-# band its offense reached in the field, and the gold it closed on.
+# over the field rather than the sum. Then how many towers stood while that pair was
+# resolved, which is the board after this round's own building: the purse walks the take,
+# then the actions, then the slots, so a tower bought here is standing when this round's
+# waves arrive. Then what the whole phase cost -- what it took, what it built and what it
+# sends, out of the one wallet -- and what the wave paid the purse back: the bank it opened
+# on, the interest that bank earned, the flat base, the band its offense reached in the
+# field, and the gold it closed on.
 #
 # The run this came from:
 #
@@ -26,13 +30,13 @@
 #
 #   decision                                                    round, cost and payment
 
-wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 0, spent 0, paid 100 + 10 interest + 100 base + 0 bonus = 210 gold
-wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 0, spent 0, paid 210 + 21 interest + 100 base + 0 bonus = 331 gold
-wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 0, spent 0, paid 331 + 34 interest + 100 base + 0 bonus = 465 gold
-wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 0, spent 90, paid 375 + 38 interest + 100 base + 0 bonus = 513 gold
-wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 0, spent 180, paid 333 + 34 interest + 100 base + 20 bonus = 487 gold
-wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 0, spent 280, paid 207 + 21 interest + 100 base + 20 bonus = 348 gold
-wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 0, spent 126, paid 222 + 23 interest + 100 base + 20 bonus = 365 gold
-wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 0, spent 145, paid 220 + 22 interest + 100 base + 20 bonus = 362 gold
-wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 0, spent 219, paid 143 + 15 interest + 100 base + 20 bonus = 278 gold
-wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 0, spent 198, paid 80 + 8 interest + 100 base + 20 bonus = 208 gold
+wave 1: take ordinary option 1, empty | empty   ->   dealt 0, took 0, 6 towers standing, spent 0, paid 100 + 10 interest + 100 base + 0 bonus = 210 gold
+wave 2: take ordinary option 2, empty | empty   ->   dealt 0, took 0, 6 towers standing, spent 0, paid 210 + 21 interest + 100 base + 0 bonus = 331 gold
+wave 3: take game changer 4, empty | empty | empty   ->   dealt 0, took 0, 6 towers standing, spent 0, paid 331 + 34 interest + 100 base + 0 bonus = 465 gold
+wave 4: take ordinary option 12, empty | empty | 10 of type 2   ->   dealt 0, took 0, 6 towers standing, spent 90, paid 375 + 38 interest + 100 base + 0 bonus = 513 gold
+wave 5: take ordinary option 13, empty | empty | 20 of type 2   ->   dealt 39, took 0, 6 towers standing, spent 180, paid 333 + 34 interest + 100 base + 20 bonus = 487 gold
+wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 0, 6 towers standing, spent 280, paid 207 + 21 interest + 100 base + 20 bonus = 348 gold
+wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 0, 6 towers standing, spent 126, paid 222 + 23 interest + 100 base + 20 bonus = 365 gold
+wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 0, 6 towers standing, spent 145, paid 220 + 22 interest + 100 base + 20 bonus = 362 gold
+wave 9: take game changer 9, 5 of type 1 | 15 of type 2 | 2 of type 12 | empty | empty   ->   dealt 119, took 0, 6 towers standing, spent 219, paid 143 + 15 interest + 100 base + 20 bonus = 278 gold
+wave 10: take ordinary option 1, 5 of type 1 | 9 of type 2 | 1 of type 7 | 1 of type 12 | 1 of type 13   ->   dealt 78, took 0, 6 towers standing, spent 198, paid 80 + 8 interest + 100 base + 20 bonus = 208 gold
