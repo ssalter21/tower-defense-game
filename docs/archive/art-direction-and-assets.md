@@ -15,7 +15,7 @@ assumption and then closes it.
 > still want a browser check ([#56](https://github.com/ssalter21/tower-defense-game/issues/56)). Two things
 > here are closed: the rig-and-animate question is moot because KayKit ships animations, and the fixed-camera
 > assumption was overturned by the isometric orbit. ⚠️ **Its art rules assume a one-hex corridor**, withdrawn
-> 6 August 2026 — see [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026).
+> 6 August 2026 — see [the maze reversal](../vision.md#the-board-is-a-maze).
 
 ---
 

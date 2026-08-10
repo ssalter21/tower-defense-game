@@ -15,7 +15,7 @@
 > - **The six mazing-dependent levers are alive again** — `Path policy`, `Repath trigger`, `blocksPath`, the
 >   maze/gun resource split, geometry-driven stats and route choice. They were written off when the corridor
 >   was one hex wide and never branched; that was withdrawn 6 August 2026. See
->   [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026). Where the text below
+>   [the maze reversal](../vision.md#the-board-is-a-maze). Where the text below
 >   calls them dead weight, they are not.
 >
 > §3.11's Element TD 2 figures were corrected in place by
@@ -103,7 +103,7 @@ of the design space, not edge cases to be excluded:
   walks through. It is the *minority* choice — Warcraft 3 does not do this by default at the engine level, it is
   a mapmaker's trigger — and it only arises at all if the player authors the geometry. **In a preset-path
   design it has no justification whatsoever.** See the mazing-versus-preset-path question in the
-  [the maze reversal](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026); this lever, `blocksPath` (3.9) and `Path policy` (3.5) all stand or fall with it.
+  [the maze reversal](../vision.md#the-board-is-a-maze); this lever, `blocksPath` (3.9) and `Path policy` (3.5) all stand or fall with it.
 - A **tower with bounty** is a defense that pays its attacker for killing it.
 
 A schema that treats these as special cases will need surgery for each one. A schema where they are the natural

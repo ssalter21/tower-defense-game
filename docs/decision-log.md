@@ -9,12 +9,12 @@ vision and forgotten.
 This file exists so the vision can stay readable. It grows; the vision should not.
 
 **What is *not* here:** where the vision replaces a claim in one of the five archived deep dives. That is
-[§9 of the vision itself](vision.md#9-what-this-overturns), because it is how you read
-[`archive/`](archive/) rather than a record of churn, and it is stable.
+[the archive index](archive/README.md#what-the-vision-overturns), because it is how you read
+[`archive/`](archive/README.md) rather than a record of churn, and it is stable.
 
 ---
 
-## What the vision overturns in itself
+## Before 6 August 2026 — reading the finished skeleton
 
 Three claims were written before the walking skeleton existed, and reading the finished skeleton changed them.
 

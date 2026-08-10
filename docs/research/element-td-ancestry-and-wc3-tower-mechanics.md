@@ -37,7 +37,7 @@ name is based on the 'Element TD' map created for Warcraft III"* [[3]](#s3). See
 idea about randomness.** In the WC3 map, **Interest was itself a pick** competing with elements in the same random
 offering — capped at two per game, at 1/7 odds per offer [[4]](#s4). That is an economy upgrade priced against a
 tech upgrade *on one dial*, which is structurally the "one purse" problem this project has already chosen to have
-([The Vision §3](../vision.md#one-purse--restored-6-august-2026)), solved by a game that shipped it. The other three: **support towers**
+([The Vision §3](../vision.md#one-purse)), solved by a game that shipped it. The other three: **support towers**
 (Well → attack speed, Blacksmith → damage per shot) [[5]](#s5), a **creep special-ability layer** independent of
 armor (Fast / Healing / Mechanical / Undead) [[5]](#s5), and the fact that the whole element ring was **built out
 of Warcraft 3's hardcoded armor and attack types**, remapped, with only 200% / 100% / 50% available as multipliers
@@ -226,7 +226,7 @@ mythium**, where spending mythium *permanently and immediately* raises your gold
 
 **The one line worth keeping.** Element TD's tension is *internal* — eleven picks, eighteen picks' worth of
 ambition. Legion TD's tension is *external* — every coin is a bet about a person. This project's vision
-([both boards, one purse](../vision.md#one-purse--restored-6-august-2026)) is asking for **both at once**, which is why the
+([both boards, one purse](../vision.md#one-purse)) is asking for **both at once**, which is why the
 [attacking-half note](attack-composition-and-sending.md) §1.1 found the income loop missing: Legion TD's tension is
 purchased with a second currency, and Element TD never needed one because it never had an opponent.
 

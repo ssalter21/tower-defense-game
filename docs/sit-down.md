@@ -59,11 +59,9 @@ than quietly sending somebody to the wrong second.
 
 The match ends on tick 5283. Twelve of forty creeps get through.
 
-**The first two used to land on the same tick and no longer do.** Until the
-release cadence was dilated on 8 August 2026 both sat on tick 347, and one drag
-put the shell and the pass on screen together — which the rows below leaned on.
-They are now four rows apart in time as well as in kind, so row 6 and row 10 are
-two separate visits and neither read can stand in for the other.
+**Row 6 and row 10 are two separate visits.** The orphaned shell and the
+overtake are far apart in time as well as in kind, so neither read can stand in
+for the other.
 
 ## The twelve
 

@@ -6,14 +6,14 @@
 >
 > - **The corridor is gone.** This note's strongest positive finding — that send *ordering* is rescued by a
 >   one-hex corridor, because a corridor that never branches already *is* a single-file column — lost its
->   support when [the board became a maze again](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026).
+>   support when [the board became a maze again](../vision.md#the-board-is-a-maze).
 >   Ordering is not repealed, but it is now something the map must be *designed* to preserve rather than a free
 >   consequence of the geometry. [The Vision §3](../vision.md#depth-is-the-point) records the downgrade.
 > - **The one-purse problem has been answered.** The note's central warning — that under a single purse a coin
 >   spent attacking is simply gone, so attacking is dominated — was taken seriously and resolved by
 >   [#72](https://github.com/ssalter21/tower-defense-game/issues/72): the purse is still one, and the payback
 >   comes from percentile performance bands, an unlock gate and scarce wave slots rather than a second wallet.
->   See [The Vision §3](../vision.md#one-purse--restored-6-august-2026).
+>   See [The Vision §3](../vision.md#one-purse).
 >
 > Everything else — the seven mechanisms, the five survivors, the thin precedent for defense-gated sending — is
 > unaffected.
@@ -37,7 +37,7 @@ Four claims carry this note.
 **One. The north star's central tension is not available to copy.** Legion TD 2's send system is a two-currency
 loop: gold buys workers, workers make mythium, mythium buys mercenaries, and *spending mythium permanently raises
 your gold income* [[1]](#s1). Every send is an investment that pays you back. Under
-[one purse](../vision.md#one-purse--restored-6-august-2026) a coin spent on an attacker is simply gone, which makes attacking a pure tempo
+[one purse](../vision.md#one-purse) a coin spent on an attacker is simply gone, which makes attacking a pure tempo
 loss and — at equilibrium — dominated. **The one-purse precedent is Bloons TD Battles 2, not Legion TD 2**, and its
 answer is that the send and the income are *the same purchase on one continuous dial* [[10]](#s10)[[24]](#s24).
 §1.1 and §5 are about which of the three available answers this project takes; there is no fourth.
@@ -93,7 +93,7 @@ three shipped shapes for that payback:
 
 | Shape | Who | Mechanism | Compatible with one purse? |
 |---|---|---|---|
-| **Second currency that cross-feeds** | Legion TD (gold ⇄ lumber via wisps) [[15]](#s15); Legion TD 2 (gold → workers → mythium → income → gold) [[1]](#s1)[[4]](#s4) | Sending is an investment in a *different* pool | **No.** This is precisely what [§3 One purse](../vision.md#one-purse--restored-6-august-2026) rules out, and what Part II's cross-feed proposal was declined for |
+| **Second currency that cross-feeds** | Legion TD (gold ⇄ lumber via wisps) [[15]](#s15); Legion TD 2 (gold → workers → mythium → income → gold) [[1]](#s1)[[4]](#s4) | Sending is an investment in a *different* pool | **No.** This is precisely what [§3 One purse](../vision.md#one-purse) rules out, and what Part II's cross-feed proposal was declined for |
 | **One currency, income as a continuous dial** | Bloons TD Battles 2 — *"Money … is used to buy towers, upgrades, and Bloon sends"*, and each send carries an eco change from +$1.00 (Grouped Reds, $20) to −$400 (Tight ZOMGs, $12,000) [[10]](#s10)[[24]](#s24) | The rush and the eco send are the same button with a different coefficient | **Yes.** This is the only shipped one-purse answer |
 | **Outcome-driven transfer** | Legion TD 2 — when the defender leaks, *"You miss out on gold"* and *"Your opponents earn extra gold"* [[1]](#s1) | Attacking pays only if it *works* | **Yes.** It is a payout rule, not a currency |
 
@@ -293,10 +293,10 @@ legible:
 
 ### 3.5 The four failure modes, named
 
-**1. Double-dominance collapse — the serious one.** Under [one purse](../vision.md#one-purse--restored-6-august-2026), a build that is best
+**1. Double-dominance collapse — the serious one.** Under [one purse](../vision.md#one-purse), a build that is best
 on defense would also be the gate to the best offense. Any mispricing compounds instead of trading off: in a
 two-purse game an overtuned tower costs you mythium efficiency; here it wins both halves at once. This lands
-squarely on [seam 4](../vision.md#4--the-balance-harness--pulled-forward-to-step-4), because the harness's method is to sweep every unit
+squarely on [seam 4](../vision.md#4--the-balance-harness), because the harness's method is to sweep every unit
 against every defense and let a red cell name what is mispriced. **A gated pool makes a tower's contribution
 non-separable from the pool it unlocks**, so a red cell stops naming one thing and starts naming a bundle. That is a
 direct tax on the one balancing method [Vision §5](../vision.md#5-how-it-is-balanced) says is the only one that
@@ -323,7 +323,7 @@ that screen.
 ### 3.6 The upside, stated as strongly as it deserves
 
 **One coherent identity per run.** With one purse and two independent menus, a build phase is arguably two small
-decisions sharing a wallet — the exact failure [Vision §3](../vision.md#one-purse--restored-6-august-2026) chose one purse to avoid, arriving
+decisions sharing a wallet — the exact failure [Vision §3](../vision.md#one-purse) chose one purse to avoid, arriving
 by a different door. Gating makes it one decision with two consequences, and it gives a run a *name*: "I went frost."
 That matters more here than it would elsewhere, because [seam 6](../vision.md#6--the-social-layer) needs an absent
 opponent to feel like a person, and *"presence is made of specifics"*. A defense with a legible identity is a

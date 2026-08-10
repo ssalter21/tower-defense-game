@@ -10,7 +10,7 @@ archer squad standing on them — all of them shooting, all of them upgradable �
 > ⚠️ **The premise moved on 6 August 2026, and it reopens one closed branch.**
 > This note reasons about ramparts running *alongside a one-hex corridor*, and records "pathfinding stays out
 > permanently" as settled. The corridor was withdrawn —
-> [the board is a maze again](../vision.md#the-board-is-a-maze-again--reversed-6-august-2026), at several
+> [the board is a maze again](../vision.md#the-board-is-a-maze), at several
 > elevation levels, with an integer pathfinder now owed to `sim/`. The note's central finding is untouched,
 > because it is about arithmetic rather than geometry: projectile volume lands on `FlyProjectiles` at
 > **O(projectiles × creeps)**, and N identical shooters are behaviourally identical to one shooter firing N
