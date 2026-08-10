@@ -32,8 +32,6 @@ namespace Sim
     /// </remarks>
     public sealed class RecordCommand : IEquatable<RecordCommand>
     {
-        private static readonly BuildAction[] NoActions = new BuildAction[0];
-
         private readonly WaveSlot[] _slots;
 
         private readonly BuildAction[] _actions;
@@ -68,8 +66,9 @@ namespace Sim
         /// <remarks>
         /// Stored from command stream format version 1, in the order they are
         /// held here. A version-0 stream has no field for them and reads back
-        /// with none, and <see cref="ToPhase"/> hands on the take and the slots
-        /// without them.
+        /// with none, so <see cref="ToPhase"/> hands on a phase that builds
+        /// nothing -- which is a decision, and the one every version-0 stream
+        /// made.
         /// </remarks>
         public IReadOnlyList<BuildAction> Actions => _actions;
 
@@ -121,7 +120,18 @@ namespace Sim
                 slots[index] = slot;
             }
 
-            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, NoActions);
+            // The actions travel across in the order the phase holds them and
+            // are asserted against nothing, because their order is the phase's
+            // own meaning. A phase whose actions were dropped here would record
+            // a run that built nothing and replay as a different run.
+            var actions = new BuildAction[decision.Actions.Count];
+
+            for (int index = 0; index < actions.Length; index++)
+            {
+                actions[index] = decision.Actions[index];
+            }
+
+            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, actions);
         }
 
         /// <summary>
@@ -162,10 +172,19 @@ namespace Sim
 
         /// <summary>
         /// The decision as the build phase surface wants it, with nothing
-        /// reshaped: the three things stored are the three things
-        /// <see cref="BuildPhase.Of"/> takes.
+        /// reshaped: the four things stored are the four things a phase is.
         /// </summary>
-        public BuildPhase ToPhase() => BuildPhase.Of(Take, TakeId, _slots);
+        public BuildPhase ToPhase()
+        {
+            BuildPhase phase = BuildPhase.Of(Take, TakeId, _slots);
+
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                phase = phase.With(_actions[index]);
+            }
+
+            return phase;
+        }
 
         public bool Equals(RecordCommand? other)
         {
@@ -487,11 +506,22 @@ namespace Sim
         /// <para>
         /// <b>Every failure here is a refusal and never a skip.</b> A take
         /// naming an option that round's offering did not carry, a slot naming a
-        /// creep the run never unlocked, a slot beyond the round's width and a
-        /// wave nobody can afford are all
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>
+        /// creep the run never unlocked, a slot beyond the round's width, an
+        /// action on a cell no tower could stand on and a wave nobody can afford
+        /// are all
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// refusing -- the same surface a live build phase is checked by, so
         /// there is one implementation of the rules and not two.
+        /// </para>
+        /// <para>
+        /// <b>The board this walk checks against is the run's, unfolded.</b>
+        /// Every phase is held up against what stands now rather than against
+        /// what the phase before it built, and that is wrong in both
+        /// directions: a stream whose fourth round places on a cell its second
+        /// round took is admitted here and refused mid-run, and a stream whose
+        /// fourth round upgrades what its second round placed is refused here
+        /// for a cell that would not have been empty by then. The purse and the
+        /// unlocks are folded across the stream and the board is not yet.
         /// </para>
         /// <para>
         /// <b>The one check that surface cannot make is the wave index.</b>
@@ -517,7 +547,7 @@ namespace Sim
         /// decision refused here is one no run could have afforded however well
         /// it played; a decision the ceiling admits is checked again, against the
         /// purse the round really holds, by the same
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
         /// </para>
@@ -555,7 +585,8 @@ namespace Sim
                         + "another round would resolve it against an offering nobody was shown.");
                 }
 
-                Build build = command.ToPhase().Resolve(run.OfferingAt(round), unlocks, purse, run.Costs);
+                Build build = command.ToPhase().Resolve(
+                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, run.Board);
 
                 unlocks = build.Unlocks;
                 purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;

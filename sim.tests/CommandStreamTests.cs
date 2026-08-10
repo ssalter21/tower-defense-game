@@ -243,7 +243,7 @@ public class CommandStreamTests
         // board. The list goes red at position 0, and a defense composed by
         // anybody and applied against no map is back inside the tick loop.
         //
-        // OBSERVED, on the decision surface below: add a fourth public property
+        // OBSERVED, on the decision surface below: add a fifth public property
         // to BuildPhase. It goes red naming the new member, which is the case
         // that matters -- a decision carrying something the record has no field
         // for is a decision that reaches a run and cannot be written down.
@@ -253,11 +253,11 @@ public class CommandStreamTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        // Everything a build phase is, and every one of the three is a field of
+        // Everything a build phase is, and every one of the four is a field of
         // a stored command. So a decision handed straight to Advance is a
         // decision a command could have carried, and the direct overload is the
         // record's own shape rather than a way around it.
-        Assert.Equal(new[] { "Slots", "Take", "TakeId" }, carried);
+        Assert.Equal(new[] { "Actions", "Slots", "Take", "TakeId" }, carried);
 
         string[] moves = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)

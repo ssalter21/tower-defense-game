@@ -193,6 +193,11 @@ namespace Sim
         /// This board with the placement on that cell standing as another type.
         /// Its id and its position in placement order are both untouched.
         /// </summary>
+        /// <remarks>
+        /// Another type, and not the one already standing: an upgrade pays the
+        /// full price of the row it names, so one that swaps a type for itself
+        /// is a purchase that changes nothing.
+        /// </remarks>
         public Board Upgrade(UnitType type, int column, int row)
         {
             if (type is null)
@@ -211,6 +216,21 @@ namespace Sim
                     + ToString()
                     + ". An upgrade swaps the type of a placement that is already standing, so a cell with "
                     + "nothing on it names none to swap.");
+            }
+
+            if (_placements[standing].Type.Id == type.Id)
+            {
+                throw new SimulationException(
+                    "An upgrade puts "
+                    + type.ToString()
+                    + " on "
+                    + CellOf(column, row)
+                    + ", where "
+                    + _placements[standing].ToString()
+                    + " already stands as that type. An upgrade pays the full price of the row it names, "
+                    + "so one that swaps a type for itself is a purchase that changes nothing -- refused "
+                    + "rather than charged for, because a script that meant a different row has a typo in "
+                    + "it and a script that meant this one has a line it does not need.");
             }
 
             var swapped = new Placement[_placements.Length];

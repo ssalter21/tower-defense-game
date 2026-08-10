@@ -202,4 +202,21 @@ public class BoardTests
 
         Assert.Contains("where nothing stands", thrown.Message, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void An_upgrade_to_the_type_already_standing_is_refused()
+    {
+        // An upgrade pays the full price of the row it names, so swapping a
+        // type for itself is a purchase that changes nothing.
+        UnitTypeTable types = TheMatch.Types();
+        Board board = Board.Empty.Place(Bolt(types), 6, 4);
+
+        SimulationException thrown = Assert.Throws<SimulationException>(
+            () => board.Upgrade(Bolt(types), 6, 4));
+
+        Assert.Contains("already stands as that type", thrown.Message, StringComparison.Ordinal);
+
+        // Another row of the table is exactly what an upgrade is.
+        Assert.Equal(4, board.Upgrade(Mortar(types), 6, 4).Placements[0].Type.Id);
+    }
 }

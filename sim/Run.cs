@@ -149,15 +149,7 @@ namespace Sim
         /// </summary>
         private const string OfferingLabel = "run-offering/1";
 
-        private readonly HexMap _map;
-
         private readonly FieldPool _pool;
-
-        /// <summary>
-        /// What this run has standing on the map. Every round derives its
-        /// layout from here rather than being handed one.
-        /// </summary>
-        private readonly Board _board;
 
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
         private readonly List<RoundOutcome> _rounds = new List<RoundOutcome>();
@@ -207,9 +199,9 @@ namespace Sim
             int fieldSize = DefaultFieldSize,
             bool deathEndsTheRun = true)
         {
-            _map = map ?? throw new ArgumentNullException(nameof(map));
+            Map = map ?? throw new ArgumentNullException(nameof(map));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
-            _board = board ?? throw new ArgumentNullException(nameof(board));
+            Board = board ?? throw new ArgumentNullException(nameof(board));
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Types = types ?? throw new ArgumentNullException(nameof(types));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
@@ -254,6 +246,21 @@ namespace Sim
 
         /// <summary>The seed every draw in this run is derived from.</summary>
         public ulong Seed { get; }
+
+        /// <summary>
+        /// The map every match in this run is fought on. Held rather than only
+        /// consumed, for the reason <see cref="Rules"/> is: whatever checks a
+        /// decision against this run has to ask the map this run is playing
+        /// whether a cell is one a tower could stand on.
+        /// </summary>
+        public HexMap Map { get; }
+
+        /// <summary>
+        /// What this run has standing on the map. Every round derives its
+        /// layout from here rather than being handed one, and every build phase
+        /// acts on it and hands back what it left.
+        /// </summary>
+        public Board Board { get; private set; }
 
         /// <summary>
         /// The health pool, the interest, the base, the bands and the damage
@@ -375,18 +382,21 @@ namespace Sim
         /// </para>
         /// <para>
         /// The decision is checked against this round's offering, this run's
-        /// unlocks, this round's slot width and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
+        /// unlocks, this round's slot width, this run's board and map, and this
+        /// run's purse -- by
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
         /// <para>
         /// <b>What stands is derived and never handed in.</b> The other half of
-        /// a round's orders is this run's own <see cref="Board"/>, sorted into
-        /// a layout here. A defense a caller composed each round would be a
+        /// a round's orders is the <see cref="Board"/> the phase left, sorted
+        /// into a layout here. A defense a caller composed each round would be a
         /// decision reaching the simulation by a route no record carries --
         /// assembled by anybody, applied against no map and paid for out of no
-        /// purse.
+        /// purse. It is the board <i>after</i> this round's building, because
+        /// the purse walks the take, then the actions, then the slots: a tower
+        /// bought this round is standing when this round's waves arrive.
         /// </para>
         /// <para>
         /// K opponents are drawn, and each is fought in both directions: this
@@ -425,12 +435,13 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Offering, Unlocks, Purse, Costs);
-            RoundOrders orders = RoundOrders.Of(_board.Layout(), build.Wave);
+            Build build = phase.Resolve(Offering, Unlocks, Purse, Costs, Types, Map, Board);
+            RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();
 
-            (RoundOutcome outcome, WavePayment payment) = Play(orders, build.Unlocks, build.Purse);
+            (RoundOutcome outcome, WavePayment payment) = Play(
+                orders, build.Unlocks, build.Purse, build.Board);
 
             return new RoundReport(outcome, build, payment);
         }
@@ -452,11 +463,12 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The unlocks and the purse arrive as arguments.</b> A build phase's
-        /// decision governs the round it was made in -- the creep it just
-        /// unlocked is fielded in this round's wave, and the wave is bought out
-        /// of this round's purse -- and passing them is what lets that happen
-        /// without either having been written to the run first.
+        /// <b>The unlocks, the purse and the board arrive as arguments.</b> A
+        /// build phase's decision governs the round it was made in -- the creep
+        /// it just unlocked is fielded in this round's wave, the wave is bought
+        /// out of this round's purse, and what it built stands against this
+        /// round's opponents -- and passing them is what lets that happen
+        /// without any of the three having been written to the run first.
         /// </para>
         /// <para>
         /// <b>Nothing above the commit moves the run.</b> Measuring the field,
@@ -471,10 +483,12 @@ namespace Sim
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         /// <param name="unlocks">What the run may field this round, this round's take included.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
+        /// <param name="board">What stands after whatever the round built.</param>
         private (RoundOutcome Outcome, WavePayment Payment) Play(
             RoundOrders orders,
             Unlocks unlocks,
-            Purse purse)
+            Purse purse,
+            Board board)
         {
             // Measured ahead of the round's own matches: what a round of the
             // pool is worth depends on the seed, the pool and K, so the round
@@ -506,7 +520,7 @@ namespace Sim
             // worth, not against whichever opponent it was drawn against.
             WavePayment payment = purse.CloseWave(Rules, field, outcome.LeakCostDealt);
 
-            Commit(orders, outcome, unlocks, payment.Purse, FoldedWith(outcome));
+            Commit(orders, outcome, unlocks, payment.Purse, board, FoldedWith(outcome));
 
             return (outcome, payment);
         }
@@ -526,12 +540,14 @@ namespace Sim
             RoundOutcome outcome,
             Unlocks unlocks,
             Purse purse,
+            Board board,
             RunOutcome folded)
         {
             _rounds.Add(outcome);
             _sent.Add(orders);
             Unlocks = unlocks;
             Purse = purse;
+            Board = board;
             _outcome = folded;
         }
 
@@ -646,7 +662,7 @@ namespace Sim
                 ? ShotBonus.Fielded(wave, defense, unlocks, Schedule)
                 : ShotBonus.None;
 
-            var match = new Match(_map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
+            var match = new Match(Map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
             match.Resolve();
 
             IReadOnlyList<int> leaked = match.LeakedByOrder;
