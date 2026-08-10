@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace Sim
 {
@@ -74,9 +75,10 @@ namespace Sim
     /// <c>docs/adr/0048-a-board-is-not-a-layout.md</c>.
     /// </para>
     /// <para>
-    /// <b><see cref="Layout"/> is the seam.</b> It is the one place placement
-    /// order becomes canonical order: everything upstream of it is a sequence
-    /// of decisions, everything downstream of it is a position.
+    /// <b>The sort is the seam.</b> One place turns placement order into
+    /// canonical order, and everything derived from a board comes out the far
+    /// side of it: everything upstream is a sequence of decisions, everything
+    /// downstream is a position.
     /// </para>
     /// <para>
     /// <b>An empty board is a position and not a fault.</b> A board with
@@ -101,6 +103,27 @@ namespace Sim
         /// what a placement made at wave 4 is.
         /// </summary>
         private const int NoLine = 0;
+
+        /// <summary>What the reported block is called, on the line its columns are named on.</summary>
+        private const string Label = "the board at the end";
+
+        /// <summary>What the label is indented by, and with it the whole block.</summary>
+        private const string Indent = "  ";
+
+        /// <summary>The row a board with nothing on it reports instead of numbers.</summary>
+        private const string NothingBuilt = "nothing was built";
+
+        /// <summary>How wide the id column is, header word included.</summary>
+        private const int IdWidth = 7;
+
+        /// <summary>How wide the type column is.</summary>
+        private const int TypeWidth = 7;
+
+        /// <summary>How wide each of the two cell columns is.</summary>
+        private const int CellWidth = 6;
+
+        /// <summary>What a row is indented by: the label's own width, so the numbers clear it.</summary>
+        private static readonly string RowIndent = new string(' ', Indent.Length + Label.Length);
 
         private readonly Placement[] _placements;
 
@@ -249,30 +272,70 @@ namespace Sim
         /// The defense this board is, in the canonical order a match, a record
         /// and the field pool all read: ascending by row and then by column.
         /// </summary>
-        /// <remarks>
-        /// The ordering is an insertion by hand because the framework's sorts
-        /// are unstable and banned here. It needs no tie-break: one cell holds
-        /// one placement, so no two of them share a <c>(row, column)</c>.
-        /// </remarks>
         public TowerLayout Layout()
         {
-            var towers = new PlacedTower[_placements.Length];
+            Placement[] ordered = InCanonicalOrder();
+            var towers = new PlacedTower[ordered.Length];
 
-            for (int index = 0; index < _placements.Length; index++)
+            for (int index = 0; index < ordered.Length; index++)
             {
-                Placement placement = _placements[index];
-                int place = index;
+                Placement placement = ordered[index];
 
-                while (place > 0 && SortsAhead(placement, towers[place - 1]))
-                {
-                    towers[place] = towers[place - 1];
-                    place--;
-                }
-
-                towers[place] = new PlacedTower(placement.Type, placement.Column, placement.Row, NoLine);
+                towers[index] = new PlacedTower(placement.Type, placement.Column, placement.Row, NoLine);
             }
 
             return TowerLayout.FromBoard(towers);
+        }
+
+        /// <summary>
+        /// The block a report prints at the bottom: a line naming the columns,
+        /// then one row per placement in the same canonical order
+        /// <see cref="Layout"/> derives, spelled the way a row of
+        /// <c>content/defense.txt</c> is with the placement id beside it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The id is here and not on the layout, and that is the whole reason
+        /// this is not a walk over one: a <see cref="TowerLayout"/> carries no
+        /// ordinals, so the block that ties a standing tower back to the
+        /// decision that built it can only be written from a board.
+        /// </para>
+        /// <para>
+        /// A board with nothing on it reports the header and a row saying so,
+        /// because a header over no rows reads as a report that was cut off.
+        /// </para>
+        /// </remarks>
+        public string ToReportText()
+        {
+            var text = new StringBuilder();
+
+            text.Append(Indent)
+                .Append(Label)
+                .Append("id".PadLeft(IdWidth))
+                .Append("type".PadLeft(TypeWidth))
+                .Append("col".PadLeft(CellWidth))
+                .Append("row".PadLeft(CellWidth));
+
+            if (_placements.Length == 0)
+            {
+                return text.Append('\n').Append(RowIndent).Append(NothingBuilt).ToString();
+            }
+
+            Placement[] ordered = InCanonicalOrder();
+
+            for (int index = 0; index < ordered.Length; index++)
+            {
+                Placement placement = ordered[index];
+
+                text.Append('\n')
+                    .Append(RowIndent)
+                    .Append(Number(placement.Id, IdWidth))
+                    .Append(Number(placement.Type.Id, TypeWidth))
+                    .Append(Number(placement.Column, CellWidth))
+                    .Append(Number(placement.Row, CellWidth));
+            }
+
+            return text.ToString();
         }
 
         public override string ToString() =>
@@ -282,15 +345,49 @@ namespace Sim
                     + " placed: "
                     + string.Join(", ", Array.ConvertAll(_placements, placement => placement.ToString()));
 
-        /// <summary>Whether a placement belongs before a tower already ordered.</summary>
-        private static bool SortsAhead(Placement placement, PlacedTower tower) =>
-            placement.Row < tower.Row || (placement.Row == tower.Row && placement.Column < tower.Column);
+        /// <summary>Whether a placement belongs before one that is already ordered.</summary>
+        private static bool SortsAhead(Placement placement, Placement ordered) =>
+            placement.Row < ordered.Row || (placement.Row == ordered.Row && placement.Column < ordered.Column);
+
+        /// <summary>One number, right-aligned under the word naming its column.</summary>
+        private static string Number(int value, int width) =>
+            value.ToString(CultureInfo.InvariantCulture).PadLeft(width);
 
         private static string CellOf(int column, int row) =>
             "column "
             + column.ToString(CultureInfo.InvariantCulture)
             + ", row "
             + row.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// The placements ascending by row and then by column, which is the
+        /// order a match, a record and the field pool all read a defense in.
+        /// </summary>
+        /// <remarks>
+        /// The ordering is an insertion by hand because the framework's sorts
+        /// are unstable and banned here. It needs no tie-break: one cell holds
+        /// one placement, so no two of them share a <c>(row, column)</c>.
+        /// </remarks>
+        private Placement[] InCanonicalOrder()
+        {
+            var ordered = new Placement[_placements.Length];
+
+            for (int index = 0; index < _placements.Length; index++)
+            {
+                Placement placement = _placements[index];
+                int place = index;
+
+                while (place > 0 && SortsAhead(placement, ordered[place - 1]))
+                {
+                    ordered[place] = ordered[place - 1];
+                    place--;
+                }
+
+                ordered[place] = placement;
+            }
+
+            return ordered;
+        }
 
         /// <summary>Where the placement on that cell sits in placement order, or -1 where the cell is free.</summary>
         private int IndexOn(int column, int row)

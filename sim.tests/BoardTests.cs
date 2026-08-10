@@ -149,6 +149,48 @@ public class BoardTests
     }
 
     [Fact]
+    public void A_reported_board_ascends_by_row_and_then_by_column_carrying_its_ids()
+    {
+        // Built in the reverse of canonical order, so a report walking placement
+        // order would print these three rows upside down -- and the ids, which
+        // are placement order, are what makes that visible in the text.
+        //
+        // OBSERVED: walk _placements instead of InCanonicalOrder in
+        // ToReportText. This goes red on the first row, row 8 arriving where
+        // row 0 belongs, which is the board printed in the order somebody built
+        // it rather than in the order a defense file is read.
+        UnitTypeTable types = TheMatch.Types();
+
+        Board board = Board.Empty
+            .Place(Bolt(types), 10, 8)
+            .Place(Bolt(types), 12, 4)
+            .Place(Mortar(types), 9, 0);
+
+        Assert.Equal(
+            "  the board at the end     id   type   col   row\n"
+            + "                            3      4     9     0\n"
+            + "                            2      3    12     4\n"
+            + "                            1      3    10     8",
+            board.ToReportText());
+    }
+
+    [Fact]
+    public void A_reported_empty_board_says_that_nothing_was_built()
+    {
+        // A run may legally build nothing, and a run that died stopped wherever
+        // it stopped. A header over no rows, or no block at all, would read as a
+        // report that was truncated rather than as a board with nothing on it.
+        //
+        // OBSERVED: return the header alone out of the empty branch. This goes
+        // red with the whole row missing, which is exactly the shape a reader
+        // could not tell from a report that had been cut off.
+        Assert.Equal(
+            "  the board at the end     id   type   col   row\n"
+            + "                      nothing was built",
+            Board.Empty.ToReportText());
+    }
+
+    [Fact]
     public void A_match_against_an_empty_board_resolves()
     {
         // A run starts with the purse and nothing on the map. Standing nothing

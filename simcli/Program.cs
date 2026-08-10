@@ -630,7 +630,14 @@ public static class Program
         return string.Join("\n" + indent, lines);
     }
 
-    /// <summary>The stream's stamps, the shape it was played at, and the vector.</summary>
+    /// <summary>
+    /// The stream's stamps, the shape it was played at, the vector, and the
+    /// board the run ended on.
+    /// </summary>
+    /// <remarks>
+    /// Both run verbs print through here, so a recording and a replay say the
+    /// same things about the same run in the same order.
+    /// </remarks>
     private static void Report(PlayedRun run)
     {
         Console.Out.Write(
@@ -640,7 +647,7 @@ public static class Program
             + "\n"
             + run.Summary()
             + "\n"
-            + run.Rounds()
+            + run.RoundsAndBoard()
             + "\n");
     }
 

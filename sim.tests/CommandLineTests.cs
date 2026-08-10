@@ -27,6 +27,9 @@ namespace Sim.Tests;
 /// </remarks>
 public class CommandLineTests
 {
+    /// <summary>The line an outcome file's closing block opens on.</summary>
+    private const string BoardLabel = "the board at the end";
+
     [Fact]
     public void The_play_run_verb_plays_a_command_file_and_reports_the_outcome()
     {
@@ -84,6 +87,15 @@ public class CommandLineTests
         {
             Assert.Contains(round, played.Output, StringComparison.Ordinal);
         }
+
+        // The block a person watched is the block that was committed, the blank
+        // line above it included, and it is there once.
+        //
+        // OBSERVED, on the count: append run.Run.Board.ToReportText() to what
+        // Report writes. The Contains stays green -- a second copy of a block
+        // still contains the first -- and this goes red, 2 against 1.
+        Assert.Contains(BoardBlock(outcome), played.Output, StringComparison.Ordinal);
+        Assert.Equal(1, Occurrences(played.Output, BoardLabel));
     }
 
     [Fact]
@@ -97,7 +109,7 @@ public class CommandLineTests
         string scratch = TheCommandLine.Scratch("record-run");
         string written = Path.Combine(scratch, "run.commands");
 
-        TheCommandLine.Invoke(
+        CommandLineResult wrote = TheCommandLine.Invoke(
             new[]
             {
                 "record-run",
@@ -114,6 +126,16 @@ public class CommandLineTests
 
         Assert.Equal(TheCommandLine.RunSeed, recorded.Seed);
         Assert.Equal(File.ReadAllBytes(RepoLayout.CommandFile), File.ReadAllBytes(written));
+
+        // Recording plays the run to the end to prove it, and a recorder that
+        // reported less than a replay of the same decisions would be two verbs
+        // with one run between them.
+        //
+        // OBSERVED: delete the Report(proof) call from RecordRun, which is what
+        // a recorder that only wrote a file would be. This goes red and the
+        // play-run test stays green, which is the pair that would otherwise
+        // leave one verb reporting less than the other.
+        Assert.Contains(BoardBlock(RepoLayout.RunOutcomeFile), wrote.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -549,5 +571,37 @@ public class CommandLineTests
 
         Assert.Equal(1, refused.ExitCode);
         Assert.Contains("'--schedul' is not an option of 'play-run'", refused.Error, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The block an outcome file ends on, and the blank line above it, read off
+    /// the file rather than spelled here -- so that what a verb printed is held
+    /// against a committed copy of itself and not against a second copy of the
+    /// format, and so that where the block sits is asserted and not only what
+    /// is in it.
+    /// </summary>
+    private static string BoardBlock(string path)
+    {
+        string[] lines = File.ReadAllText(path).TrimEnd('\n').Split('\n');
+        int opens = Array.FindIndex(lines, line => line.Contains(BoardLabel, StringComparison.Ordinal));
+
+        Assert.True(opens >= 1, path + " ends on no board block at all.");
+
+        return string.Join("\n", lines.Skip(opens - 1));
+    }
+
+    /// <summary>How many times a phrase appears in what a verb printed.</summary>
+    private static int Occurrences(string text, string phrase)
+    {
+        int found = 0;
+
+        for (int at = text.IndexOf(phrase, StringComparison.Ordinal);
+            at >= 0;
+            at = text.IndexOf(phrase, at + phrase.Length, StringComparison.Ordinal))
+        {
+            found++;
+        }
+
+        return found;
     }
 }
