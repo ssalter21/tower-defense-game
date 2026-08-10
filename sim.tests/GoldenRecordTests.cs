@@ -469,6 +469,20 @@ public class GoldenRecordTests
 
         Assert.Equal(0, stream.Header.FormatVersion);
 
+        // And every build phase in it built nothing, which is what a stream
+        // with no field for an action says rather than a value invented for it.
+        // A run of these decisions therefore stands whatever board it is handed,
+        // which is the other half of why nothing here holds this file against an
+        // outcome.
+        //
+        // OBSERVED: have ReadVersion0 read an action run too -- pass
+        // storesActions: true. The file is refused outright rather than read
+        // with actions in it, because the two bytes a version-1 reader takes
+        // for an action count are this record's slot count: "action 1 of build
+        // phase 1 of 10 names type id 0". Every offset behind them has moved,
+        // which is what a version branch reading another version's bytes is.
+        Assert.All(stream.Commands, command => Assert.Empty(command.Actions));
+
         // The count and the last decision together, rather than the count alone.
         // That command sits at the far end of the byte run, so reading it back
         // whole -- its wave, its take, and five slots in the order they were

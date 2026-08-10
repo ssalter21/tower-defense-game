@@ -378,7 +378,7 @@ public class RecordNegativeTests
         // Format versions are counted per kind, so the command stream's gate is
         // its own. A defense, a wave and a bundle beside it read perfectly well.
         //
-        // OBSERVED: make IsKnown accept version 1 of the command stream. The
+        // OBSERVED: make IsKnown accept version 2 of the command stream. The
         // "cannot know what it is missing" assertion goes red: the read gate
         // waves the record through and the reader's own switch refuses it
         // instead, with a message that says the fault is in this build rather
@@ -391,7 +391,7 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
 
-        Assert.Contains("command stream format version 1", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("command stream format version 2", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("cannot know what it is missing", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(6, GhostRecord.FromBytes(TheMatch.Ghost(types).ToBytes()).Count);
         Assert.Equal(6, WaveRecord.FromBytes(TheMatch.WaveOf(types).ToBytes()).Count);
@@ -485,6 +485,88 @@ public class RecordNegativeTests
 
         Assert.Contains("at or below the 2 above it", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("ascend strictly by wave", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_action_of_a_kind_no_board_has_a_branch_for_refuses()
+    {
+        // One byte, and it is the byte that says which of the two things an
+        // action does. A place onto a taken cell and an upgrade of an empty one
+        // are each the other's mistake, so a third kind is an instruction
+        // nothing could carry out.
+        //
+        // OBSERVED: drop the rewrap from ReadActions -- let BuildAction.Of's
+        // refusal out as it is. This goes red on the exception type,
+        // SimulationException against RecordException, so damaged bytes are
+        // reported as a fault in this program rather than in the record. The
+        // sentence naming the kind survives either way; what is lost is which
+        // action of which build phase it was, which on a ten-round record is
+        // the whole of what a person needs.
+        byte[] bytes = RecordBytes.With(
+            TheCommands.ActingBytes(),
+            RecordBytes.CommandsOffset + RecordBytes.CommandActionsOffset,
+            2);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("action 1 of build phase 1 of 4 cannot be read", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("is of kind 2", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_action_naming_no_type_at_all_refuses()
+    {
+        // Rows of the unit table are identified from one, so zero is not a type
+        // this build has never heard of -- it is the subject of the instruction
+        // missing.
+        //
+        // The second rule the rewrap carries, and it is here as well as above
+        // because a rewrap that caught one refusal and not the other would look
+        // exactly the same from the outside.
+        //
+        // OBSERVED: drop the rewrap from ReadActions. This goes red on the
+        // exception type for the reason the kind above does.
+        byte[] bytes = RecordBytes.WithU16(
+            TheCommands.ActingBytes(),
+            RecordBytes.CommandsOffset + RecordBytes.CommandActionsOffset + 1,
+            0);
+
+        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
+
+        Assert.Contains("action 1 of build phase 1 of 4 cannot be read", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("names type id 0", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_truncation_in_the_middle_of_an_action_run_refuses_and_names_the_action()
+    {
+        // A stream that says it built two things and carries one and a half.
+        // Reading it as far as it goes would be a run whose second placement
+        // stood on whatever the following bytes happened to spell -- here, the
+        // slot count of the wave behind it.
+        //
+        // The cut takes the slots, the slot count and the last two bytes of the
+        // second action, so what runs out is that action's row.
+        //
+        // OBSERVED: have ReadActions stop at the bytes it has -- return early
+        // when the cursor has fewer than ActionBytes left. The record is still
+        // refused and it still says it ran out of bytes, so a case that stopped
+        // at that clause would stay green; what goes red is the element,
+        // "the count of slot 1 of build phase 1 of 1". The reader took the
+        // second action's kind and type id for a slot count of 1025 and went
+        // looking for slots inside an action, which is what reading short does
+        // to everything behind it.
+        Run run = TheCommands.Fresh();
+
+        // One command, so the action run is the last thing in the record that
+        // can be cut into.
+        byte[] bytes = CommandStream.Of(run, new[] { TheCommands.Acting(run)[0] }).ToBytes();
+
+        RecordException thrown = Assert.Throws<RecordException>(
+            () => CommandStream.FromBytes(RecordBytes.Truncated(bytes, RecordFormat.SlotBytes + 2 + 2)));
+
+        Assert.Contains("ran out of bytes", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("the row of action 2 of build phase 1 of 1", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

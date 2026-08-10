@@ -111,6 +111,64 @@ public class CommandStreamTests
     }
 
     [Fact]
+    public void What_a_phase_built_survives_the_round_trip_through_bytes_in_the_order_it_was_written()
+    {
+        // The other half of a decision, which format version 1 is the bump for:
+        // what the round took, and what it built. The actions come back in the
+        // order they went in -- a phase may upgrade what it has just placed, so
+        // the sequence is meaning rather than spelling -- and writing what was
+        // read produces the same bytes, which is the round trip asserted on the
+        // current format.
+        //
+        // OBSERVED: write the action count and skip the action loop in ToBytes.
+        // The length assertion goes red, 110 against 96, on a stream that says
+        // it built two things and carries neither.
+        //
+        // OBSERVED: reverse the actions as ReadActions returns them. The length
+        // stays green, because the same seven bytes came back either way, and
+        // the comparison against the decisions that went in goes red naming
+        // both commands in full -- a phase upgrading a cell before it stood
+        // anything on it.
+        Run run = TheCommands.Fresh();
+        IReadOnlyList<RecordCommand> decisions = TheCommands.Acting(run);
+        byte[] bytes = CommandStream.Of(run, decisions).ToBytes();
+
+        // Two actions on the first phase and none on the other three, so the
+        // action run is exactly what the length grew by.
+        Assert.Equal(
+            RecordFormat.HeaderBytes
+            + 8
+            + 8
+            + 8
+            + 2
+            + (TheCommands.Waves * (RecordFormat.CommandBytes + RecordFormat.SlotBytes))
+            + (2 * RecordFormat.ActionBytes),
+            bytes.Length);
+
+        CommandStream read = CommandStream.FromBytes(bytes);
+
+        Assert.Equal(RecordFormat.CommandVersion, read.Header.FormatVersion);
+        Assert.Equal(decisions, read.Commands);
+        Assert.Equal(bytes, read.ToBytes());
+
+        Assert.Equal(new[] { TheCommands.Placed, TheCommands.Upgraded }, read.Commands[0].Actions);
+        Assert.Empty(read.Commands[1].Actions);
+
+        // And the same two the other way round are different bytes, because
+        // nothing here sorts them: two orderings of one pair of actions are two
+        // runs rather than two spellings of one.
+        //
+        // OBSERVED, on this clause: sort the actions by type id as ToBytes
+        // writes them. Everything above stays green -- the place is type 3 and
+        // the upgrade type 4, so sorting leaves the forward order alone -- and
+        // this goes red, the two orderings having become one set of bytes.
+        var reversed = new List<RecordCommand>(TheCommands.Decisions(run));
+        reversed[0] = reversed[0].With(TheCommands.Upgraded).With(TheCommands.Placed);
+
+        Assert.NotEqual(bytes, CommandStream.Of(run, reversed).ToBytes());
+    }
+
+    [Fact]
     public void The_run_consumes_the_record_and_gets_the_run_the_decisions_played()
     {
         // The whole point of the kind, in one assertion: the bytes reproduce the

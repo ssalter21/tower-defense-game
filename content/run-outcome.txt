@@ -17,7 +17,7 @@
 #
 # The run this came from:
 #
-#   command stream format 0, simulation version 2, content 51BC7297223A70E8, ruleset B8D395FFBCA5BCCC, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
+#   command stream format 1, simulation version 2, content 51BC7297223A70E8, ruleset B8D395FFBCA5BCCC, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
 #   shape      10 waves, a field of 10, death ends the run
 #   outcome    10 waves survived, 1500 of 1500 health left, 520 dealt over 10 rounds, ended OutOfWaves
 #

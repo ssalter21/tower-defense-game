@@ -66,11 +66,10 @@ namespace Sim
 
         /// <summary>What this phase did to the board, in the order it was written.</summary>
         /// <remarks>
-        /// <b>Command stream format version 0 has no field for these.</b> A
-        /// command carrying actions writes the same bytes as one without them
-        /// and reads back with none, so an authored script is the only thing
-        /// that carries an action today. The format bump that stores them is
-        /// where <see cref="ToPhase"/> starts handing them on as well.
+        /// Stored from command stream format version 1, in the order they are
+        /// held here. A version-0 stream has no field for them and reads back
+        /// with none, and <see cref="ToPhase"/> hands on the take and the slots
+        /// without them.
         /// </remarks>
         public IReadOnlyList<BuildAction> Actions => _actions;
 
@@ -416,6 +415,10 @@ namespace Sim
                     read = ReadVersion0(cursor, header);
                     break;
 
+                case 1:
+                    read = ReadVersion1(cursor, header);
+                    break;
+
                 default:
                     throw cursor.Fault(
                         "is command stream format version "
@@ -436,7 +439,9 @@ namespace Sim
 
             for (int index = 0; index < _commands.Length; index++)
             {
-                size += RecordFormat.CommandBytes + (_commands[index].Slots.Count * RecordFormat.SlotBytes);
+                size += RecordFormat.CommandBytes
+                    + (_commands[index].Actions.Count * RecordFormat.ActionBytes)
+                    + (_commands[index].Slots.Count * RecordFormat.SlotBytes);
             }
 
             var writer = new ByteWriter(size);
@@ -454,6 +459,16 @@ namespace Sim
                 writer.U16("command wave", command.Wave);
                 writer.U8("command take kind", (int)command.Take);
                 writer.U16("command take id", command.TakeId);
+                writer.U16("command action count", command.Actions.Count);
+
+                for (int action = 0; action < command.Actions.Count; action++)
+                {
+                    writer.U8("action kind", (int)command.Actions[action].Kind);
+                    writer.U16("action type id", command.Actions[action].TypeId);
+                    writer.I16("action column", command.Actions[action].Column);
+                    writer.I16("action row", command.Actions[action].Row);
+                }
+
                 writer.U16("command slot count", command.Slots.Count);
 
                 for (int slot = 0; slot < command.Slots.Count; slot++)
@@ -670,12 +685,38 @@ namespace Sim
         /// Version 0: <c>u64 ruleset_hash + u64 schedule_hash + u64 seed +
         /// u16 command_count + Command[]</c>, where a command is
         /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>
-        /// followed by that many <c>(u16 type_id, u16 count)</c> slots.
+        /// followed by that many <c>(u16 type_id, u16 count)</c> slots. No
+        /// action run, so every build phase reads back having built nothing.
         /// </summary>
         /// <remarks>
-        /// This branch never goes away; a later version gets a branch beside it.
+        /// <b>This branch never goes away.</b> Version 1 sits beside it and this
+        /// one keeps reading version-0 streams forever.
+        /// <c>content/golden/command-0.commands</c> is the evidence: a real
+        /// recorded stream, kept so that deleting this branch is a red gate
+        /// rather than a quiet loss.
         /// </remarks>
-        private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header)
+        private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: false);
+
+        /// <summary>
+        /// Version 1: the same, with <c>u16 action_count</c> and that many
+        /// <c>(u8 kind, u16 type_id, i16 column, i16 row)</c> actions in each
+        /// command, between the take and the slot count.
+        /// </summary>
+        private static CommandStream ReadVersion1(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true);
+
+        /// <summary>
+        /// The body both versions share, told whether the bytes in front of it
+        /// carry an action run.
+        /// </summary>
+        /// <remarks>
+        /// Shared because it is the same bytes and not because it is
+        /// convenient: a copy per branch would let the wave-order and take
+        /// checks drift between them, and the version that lost one would go on
+        /// loading streams the other refuses.
+        /// </remarks>
+        private static CommandStream ReadCommands(ByteCursor cursor, RecordHeader header, bool storesActions)
         {
             ulong rulesetHash = cursor.U64("the ruleset hash");
             ulong scheduleHash = cursor.U64("the schedule hash");
@@ -703,7 +744,6 @@ namespace Sim
                 int wave = cursor.U16("the wave of " + what);
                 int take = cursor.U8("the take kind of " + what);
                 int takeId = cursor.U16("the take id of " + what);
-                int slotCount = cursor.U16("the slot count of " + what);
 
                 if (wave == 0)
                 {
@@ -746,8 +786,20 @@ namespace Sim
                 }
 
                 previousWave = wave;
-                commands[index] = RecordCommand.Of(
+
+                int actionCount = storesActions ? cursor.U16("the action count of " + what) : 0;
+                BuildAction[] actions = ReadActions(cursor, what, actionCount);
+                int slotCount = cursor.U16("the slot count of " + what);
+
+                RecordCommand command = RecordCommand.Of(
                     wave, (OptionKind)take, takeId, ReadSlots(cursor, what, slotCount));
+
+                for (int action = 0; action < actions.Length; action++)
+                {
+                    command = command.With(actions[action]);
+                }
+
+                commands[index] = command;
             }
 
             return new CommandStream(
@@ -756,6 +808,60 @@ namespace Sim
                 Hash64.FromValue(scheduleHash),
                 seed,
                 commands);
+        }
+
+        /// <summary>
+        /// One command's defensive actions, in the order they were stored.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// No order is asserted over them, which is the opposite of the slots
+        /// below: a phase may upgrade what it has just placed and the placement
+        /// ordinals fall out of the sequence, so the same two actions the other
+        /// way round are a different run rather than a second spelling of one.
+        /// </para>
+        /// <para>
+        /// What an action may say is <see cref="BuildAction.Of"/>'s rule and
+        /// where it sits in the record is this side's, so a refusal from there
+        /// is rewrapped rather than reimplemented -- one implementation of each
+        /// rule, and damaged bytes reported as a fault in the record rather
+        /// than in this program.
+        /// </para>
+        /// <para>
+        /// What the cell names is nobody's business here. A column and a row
+        /// are read as <c>i16</c> and every <c>i16</c> is a cell some map might
+        /// have, so whether one is on this map is a question for whatever
+        /// applies the action.
+        /// </para>
+        /// </remarks>
+        private static BuildAction[] ReadActions(ByteCursor cursor, string what, int count)
+        {
+            var actions = new BuildAction[count];
+
+            for (int index = 0; index < count; index++)
+            {
+                string which =
+                    "action "
+                    + (index + 1).ToString(CultureInfo.InvariantCulture)
+                    + " of "
+                    + what;
+
+                int kind = cursor.U8("the kind of " + which);
+                int typeId = cursor.U16("the type id of " + which);
+                int column = cursor.I16("the column of " + which);
+                int row = cursor.I16("the row of " + which);
+
+                try
+                {
+                    actions[index] = BuildAction.Of((ActionKind)kind, typeId, column, row);
+                }
+                catch (SimulationException refused)
+                {
+                    throw cursor.Fault(which + " cannot be read. " + refused.Message);
+                }
+            }
+
+            return actions;
         }
 
         /// <summary>

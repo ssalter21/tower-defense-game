@@ -78,16 +78,20 @@ public static class RecordBytes
     /// <summary>Where the take's id sits inside one build phase.</summary>
     public const int CommandTakeIdOffset = 3;
 
-    /// <summary>Where the slot count sits inside one build phase.</summary>
-    public const int CommandSlotCountOffset = 5;
+    /// <summary>Where the action count sits inside one build phase.</summary>
+    public const int CommandActionCountOffset = 5;
 
-    /// <summary>Where a build phase's slots start inside it.</summary>
+    /// <summary>Where a build phase's actions start inside it.</summary>
+    public const int CommandActionsOffset = CommandActionCountOffset + 2;
+
+    /// <summary>Where the slots of a build phase with no actions start inside it.</summary>
     public const int CommandSlotsOffset = RecordFormat.CommandBytes;
 
     /// <summary>
     /// Where a build phase starts in a stream out of <see cref="TheCommands"/>.
-    /// Every command in one fills a single slot, which is what makes the stride
-    /// a constant and lets a test name a byte inside a command by index.
+    /// Every command in one fills a single slot and builds nothing, which is
+    /// what makes the stride a constant and lets a test name a byte inside a
+    /// command by index.
     /// </summary>
     public static int CommandAt(int index) =>
         CommandsOffset
