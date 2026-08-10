@@ -143,18 +143,21 @@ band           90       20
 #
 # WHICH LEAVES 1500 AS AN OPEN DECISION RATHER THAN A SETTLED ONE. Story 20
 # wants the pool worth about three waves of average creep value, so that one
-# deliberate concession is affordable and a second is a real decision. At about
-# 99 a round this is fifteen concessions, which is far off that; something
-# nearer 400 to 500 would restore the reading the story asked for.
+# deliberate concession is affordable and a second is a real decision. A wave
+# conceded whole against an empty board costs 100, which makes this fifteen of
+# them; something nearer 400 to 500 would restore the reading the story asked
+# for.
 #
-# IT IS NOT BLOCKED ON SOMEBODY PICKING A VALUE. The taken column across the
-# committed run is 91 91 92 99 99 91 86 97 87 85 -- fourteen gold of spread over
-# ten rounds, while dealt swings from 0 to 224. The pool is not a resource the
-# player manages, it is a timer: nothing the player does moves it, because
-# Run.Advance takes the defense as a free argument and only creeps are charged.
-# Setting this to 450 today would not produce three meaningful concessions, it
-# would produce a run that ends on round five whatever anybody did. The number
-# is waiting on the purse being able to buy the defense, and not on a value.
+# WHAT IT WAS WAITING ON HAS HAPPENED, AND THE MEASUREMENT IT WAS WAITING FOR
+# HAS NOT. The taken column across the committed run is 100 90 65 30 33 32 32 32
+# 31 33, which adds up to 478: it opens at a whole wave a round on an empty
+# board and falls as the run's own build phases put towers up. So the pool is a
+# resource the player manages now rather than a timer, which is what a value for
+# it can finally be chosen against -- and nobody has chosen one. At 450 that run
+# would have died in its tenth round, having spent the first three conceding 255
+# while it built. This number, the opening purse and the income curve are one
+# decision rather than three now, and none of the three has been measured
+# against an empty opening board.
 
 health       1500
 

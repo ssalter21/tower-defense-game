@@ -12,9 +12,9 @@ buys the submission barrier nearly free later, because a submitted turn *is* a c
 played run a replayable record, which makes every playtest a determinism test.
 
 That claim is asserted structurally rather than described: `Run`'s public surface is exactly
-`Advance(BuildPhase, TowerLayout)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the
-only interface either accepts is the decorative event listener, whose every method returns void. A run cannot
-be asked a question it could answer with something a record does not carry. Handing a decision straight in is
+`Advance(BuildPhase)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the only interface
+either accepts is the decorative event listener, whose every method returns void. A run cannot be asked a
+question it could answer with something a record does not carry. Handing a decision straight in is
 not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
 data surface is `Take`, `TakeId` and `Slots`, which are the three fields a stored command carries, so every
 decision reachable by handing one in is a decision a command could have made.
@@ -37,10 +37,18 @@ it arrived and no stored defense, wave or bundle looks newer than it is. That is
 [0010](0010-format-versions-per-record-kind.md) paying for itself the first time a fourth kind was added.
 
 **The whole stream is validated before the first round is played.** `Check` walks it against the run and folds
-the unlocks and the purse forward through values of its own, applying nothing, so a stream that would be
-refused at round four is refused before round one resolves. A run that partially validates produces three
-rounds of outcome that somebody keeps. The validation is `BuildPhase.Resolve` — the same surface a live build
-phase is checked by, so there is one implementation of the rules and not two.
+the three things a round moves — the unlocks, the purse and the board — forward through values of its own,
+applying nothing, so a stream that would be refused at round four is refused before round one resolves. A run
+that partially validates produces three rounds of outcome that somebody keeps. The validation is
+`BuildPhase.Resolve` — the same surface a live build phase is checked by, so there is one implementation of
+the rules and not two.
+
+**Affordability is the one thing a decision can be refused for after a round has resolved.** What a wave can
+afford depends on the band its offense reached, which is a number only a resolved round has, so the walk
+carries a ceiling rather than the run's own purse and admits every decision the run could have afforded however
+well it played. Everything else a stored decision can be wrong about — the take, the unlocks, the slot width,
+the cell, the wave index — is settled by the walk, over values that do not depend on how a round played. (A run
+whose health empties still stops mid-`Replay`, which is the run ending rather than a decision being refused.)
 
 **The wave index is the one check `Resolve` cannot make.** It is handed an offering and has no way to know
 which round is about to be played, so a decision made at wave seven and stored at wave three resolves perfectly

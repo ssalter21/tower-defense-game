@@ -111,6 +111,103 @@ public class CommandStreamTests
     }
 
     [Fact]
+    public void What_a_phase_built_survives_the_round_trip_through_bytes_in_the_order_it_was_written()
+    {
+        // The other half of a decision, which format version 1 is the bump for:
+        // what the round took, and what it built. The actions come back in the
+        // order they went in -- a phase may upgrade what it has just placed, so
+        // the sequence is meaning rather than spelling -- and writing what was
+        // read produces the same bytes, which is the round trip asserted on the
+        // current format.
+        //
+        // OBSERVED: write the action count and skip the action loop in ToBytes.
+        // The length assertion goes red, 110 against 96, on a stream that says
+        // it built two things and carries neither.
+        //
+        // OBSERVED: reverse the actions as ReadActions returns them. The length
+        // stays green, because the same seven bytes came back either way, and
+        // the comparison against the decisions that went in goes red naming
+        // both commands in full -- a phase upgrading a cell before it stood
+        // anything on it.
+        Run run = TheCommands.Fresh();
+        IReadOnlyList<RecordCommand> decisions = TheCommands.Acting(run);
+        byte[] bytes = CommandStream.Of(run, decisions).ToBytes();
+
+        // Two actions on the first phase and none on the other three, so the
+        // action run is exactly what the length grew by.
+        Assert.Equal(
+            RecordFormat.HeaderBytes
+            + 8
+            + 8
+            + 8
+            + 2
+            + (TheCommands.Waves * (RecordFormat.CommandBytes + RecordFormat.SlotBytes))
+            + (2 * RecordFormat.ActionBytes),
+            bytes.Length);
+
+        CommandStream read = CommandStream.FromBytes(bytes);
+
+        Assert.Equal(RecordFormat.CommandVersion, read.Header.FormatVersion);
+        Assert.Equal(decisions, read.Commands);
+        Assert.Equal(bytes, read.ToBytes());
+
+        Assert.Equal(new[] { TheCommands.Placed, TheCommands.Upgraded }, read.Commands[0].Actions);
+        Assert.Empty(read.Commands[1].Actions);
+
+        // And the same two the other way round are different bytes, because
+        // nothing here sorts them: two orderings of one pair of actions are two
+        // runs rather than two spellings of one.
+        //
+        // OBSERVED, on this clause: sort the actions by type id as ToBytes
+        // writes them. Everything above stays green -- the place is type 3 and
+        // the upgrade type 4, so sorting leaves the forward order alone -- and
+        // this goes red, the two orderings having become one set of bytes.
+        var reversed = new List<RecordCommand>(TheCommands.Decisions(run));
+        reversed[0] = reversed[0].With(TheCommands.Upgraded).With(TheCommands.Placed);
+
+        Assert.NotEqual(bytes, CommandStream.Of(run, reversed).ToBytes());
+    }
+
+    [Fact]
+    public void A_decision_prints_its_actions_between_the_take_and_the_slots()
+    {
+        // The decision half of a round line, which a run's report prints
+        // whole: the take, then what the phase built in the order it was
+        // written, then the wave's slots. One line, because the column header
+        // over it promises one per round.
+        //
+        // The cell is the column and row an action row of a command script
+        // names, so what is printed reads back into the file a person would
+        // write.
+        //
+        // OBSERVED: print the actions after the slots in
+        // RecordCommand.ToString. The action assertion goes red -- the run no
+        // longer has the slots' comma behind it -- on a line reading take,
+        // slots, actions, which is an order no purse ever walked.
+        //
+        // OBSERVED, on the spelling: swap the two coordinates for
+        // Hex.FromOddRowOffset(Column, Row) in BuildAction.ToString. The
+        // action assertion goes red, "at column 9, row 0" having become
+        // "at (9, 0)" -- and on any row but the top the numbers move as well,
+        // so one cell would be one pair here and another in
+        // content/defense.txt.
+        RecordCommand acting = TheCommands.Acting(TheCommands.Fresh())[0];
+        string line = acting.ToString();
+
+        Assert.Contains(
+            ", place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
+            line,
+            StringComparison.Ordinal);
+
+        Assert.True(
+            line.IndexOf("take ", StringComparison.Ordinal)
+                < line.IndexOf("place type 3", StringComparison.Ordinal)
+            && line.IndexOf("upgrade type 4", StringComparison.Ordinal)
+                < line.IndexOf(" of type ", StringComparison.Ordinal),
+            line + " does not put its actions between the take and the slots.");
+    }
+
+    [Fact]
     public void The_run_consumes_the_record_and_gets_the_run_the_decisions_played()
     {
         // The whole point of the kind, in one assertion: the bytes reproduce the
@@ -127,19 +224,18 @@ public class CommandStreamTests
         // the order is load-bearing for is the playing.
         Run recorded = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(recorded);
-        TowerLayout defense = TheCommands.Defense();
 
         Run live = TheCommands.Fresh();
 
         for (int index = 0; index < decisions.Count; index++)
         {
-            live.Advance(decisions[index].ToPhase(), defense);
+            live.Advance(decisions[index].ToPhase());
         }
 
         Run fromRecord = TheCommands.Fresh();
         IReadOnlyList<RoundReport> rounds = CommandStream
             .FromBytes(CommandStream.Of(recorded, decisions).ToBytes())
-            .Replay(fromRecord, defense);
+            .Replay(fromRecord);
 
         Assert.Equal(live.Outcome.Rounds, fromRecord.Outcome.Rounds);
         Assert.Equal(live.Outcome.Rounds, rounds.Select(round => round.Outcome));
@@ -160,11 +256,11 @@ public class CommandStreamTests
     {
         // The structural half of "no input reaches the simulation". A run moves
         // forward through one method and nothing else, and every parameter of
-        // every public member of both surfaces is a defense, a decision or a
-        // number. There is no delegate to call back into, no reader, no path,
-        // and the one interface either of them accepts is the decorative event
-        // listener, whose every method returns void -- so it can be told things
-        // and can answer nothing.
+        // every public member of both surfaces is a decision, a defense a
+        // record carries or a number. There is no delegate to call back into,
+        // no reader, no path, and the one interface either of them accepts is
+        // the decorative event listener, whose every method returns void -- so
+        // it can be told things and can answer nothing.
         //
         // The one route in is a fact about the type rather than about this
         // list: a wave a view composed cannot be handed to a run at all, because
@@ -172,17 +268,21 @@ public class CommandStreamTests
         // the list still catches is a second route being added beside it.
         //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
-        // choose, TowerLayout defense)` to Run, which is exactly the shape a
-        // view would reach for. The member list goes red naming it --
-        // "Advance(Func`2, TowerLayout)" at position 1 -- and a run that asks a
-        // caller what to do mid-round is a run whose input never went through a
-        // record and never could.
+        // choose)` to Run, which is exactly the shape a view would reach for.
+        // The member list goes red naming it -- "Advance(Func`2)" at position 1
+        // -- and a run that asks a caller what to do mid-round is a run whose
+        // input never went through a record and never could.
         //
         // OBSERVED: put `public RoundOutcome Advance(RoundOrders orders)` back
         // on Run -- the route this suite was written around, which took a wave
         // nobody was charged for. The list goes red naming it at position 1.
         //
-        // OBSERVED, on the decision surface below: add a fourth public property
+        // OBSERVED: hand the defense back in -- `Advance(BuildPhase phase,
+        // TowerLayout defense)`, the shape this took before the run owned its
+        // board. The list goes red at position 0, and a defense composed by
+        // anybody and applied against no map is back inside the tick loop.
+        //
+        // OBSERVED, on the decision surface below: add a fifth public property
         // to BuildPhase. It goes red naming the new member, which is the case
         // that matters -- a decision carrying something the record has no field
         // for is a decision that reaches a run and cannot be written down.
@@ -192,11 +292,11 @@ public class CommandStreamTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        // Everything a build phase is, and every one of the three is a field of
+        // Everything a build phase is, and every one of the four is a field of
         // a stored command. So a decision handed straight to Advance is a
         // decision a command could have carried, and the direct overload is the
         // record's own shape rather than a way around it.
-        Assert.Equal(new[] { "Slots", "Take", "TakeId" }, carried);
+        Assert.Equal(new[] { "Actions", "Slots", "Take", "TakeId" }, carried);
 
         string[] moves = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -208,7 +308,7 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase, TowerLayout)", "OfferingAt(Int32)" },
+            new[] { "Advance(BuildPhase)", "OfferingAt(Int32)" },
             moves);
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
@@ -267,7 +367,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("which that round's offering does not carry", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -303,7 +403,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("which this run never unlocked", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -342,7 +442,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("slots where that round has 2", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -377,7 +477,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => CommandStream.Of(run, decisions).Replay(into, TheCommands.Defense()));
+            () => CommandStream.Of(run, decisions).Replay(into));
 
         Assert.Contains(
             "is stored for wave 5 where the run is about to play round 3",
@@ -404,7 +504,7 @@ public class CommandStreamTests
         Run shorter = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(shorter, TheCommands.Defense()));
+            () => stream.Replay(shorter));
 
         Assert.Contains("holds 6 build phases and the run has 4 rounds left", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, shorter.Round);
@@ -428,7 +528,7 @@ public class CommandStreamTests
         Run elsewhere = TheCommands.Fresh(seed: TheRun.Seed + 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(elsewhere, TheCommands.Defense()));
+            () => stream.Replay(elsewhere));
 
         Assert.Contains("these are two different runs", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, elsewhere.Round);
@@ -463,7 +563,7 @@ public class CommandStreamTests
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
 
         (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
-            CommandStream.Recorded(run, TheCommands.Defense(), decisions);
+            CommandStream.Recorded(run, decisions);
 
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(CommandStream.Of(TheCommands.Fresh(), decisions).ToBytes(), bytes);
@@ -482,7 +582,7 @@ public class CommandStreamTests
         };
 
         Assert.Throws<SimulationException>(
-            () => CommandStream.Recorded(doomed, TheCommands.Defense(), wrong));
+            () => CommandStream.Recorded(doomed, wrong));
 
         Assert.Equal(0, doomed.Round);
     }
@@ -525,7 +625,7 @@ public class CommandStreamTests
         IReadOnlyList<Build> walked = stream.Check(TheCommands.Fresh());
 
         Run played = TheCommands.Fresh();
-        stream.Replay(played, TheCommands.Defense());
+        stream.Replay(played);
 
         Assert.Equal(TheCommands.Waves, walked.Count);
         Assert.Equal(played.Unlocks.Count, walked[walked.Count - 1].Unlocks.Count);
@@ -544,23 +644,96 @@ public class CommandStreamTests
 
         beyond.Check(TheCommands.Fresh());
 
+        // Admitted by the walk and refused by the round, which is what a
+        // refusal surviving to mid-run looks like from the outside: three
+        // rounds resolved and folded into an outcome before the fourth is
+        // found to be a wave this run could not pay for. Affordability is the
+        // only decision a stream can be refused for here, because everything
+        // else the walk can settle it has settled.
+        //
+        // OBSERVED: the round count is what makes that a claim rather than a
+        // comment. Assert 0 instead and it goes red, 3 against 0.
+        Run partway = TheCommands.Fresh();
+
         SimulationException refused = Assert.Throws<SimulationException>(
-            () => beyond.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+            () => beyond.Replay(partway));
 
         Assert.Contains("400", refused.Message, StringComparison.Ordinal);
+        Assert.Equal(TheCommands.Waves - 1, partway.Round);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above
-        // these three, and the reason is that they are guarded by construction:
-        // Check is handed no defense to play a round with, and a run's purse and
-        // unlocks have private setters, so nothing outside a run can move one.
-        // They are here to go red the day either of those stops being true.
+        // these four, and the reason is that they are guarded by construction:
+        // a run's unlocks, purse and board all have private setters, and the
+        // board the walk folds is a value of its own, so nothing outside a run
+        // can move one. They are here to go red the day that stops being true.
         Run untouched = TheCommands.Fresh();
         stream.Check(untouched);
 
         Assert.Equal(0, untouched.Round);
         Assert.Equal(0, untouched.Unlocks.Count);
         Assert.Equal(TheRuleset.Committed().StartingPurseGold, untouched.Purse.Gold);
+        Assert.Equal(0, untouched.Board.Count);
+    }
+
+    [Fact]
+    public void The_load_walk_folds_the_board_forward_the_way_a_played_round_does()
+    {
+        // The third thing a round moves, folded through a value of the walk's
+        // own beside the unlocks and the purse. Held against the run's opening
+        // board instead, every phase is checked against what stands now rather
+        // than against what the phase before it built -- which is wrong in both
+        // directions, and both are asserted here.
+        //
+        // OBSERVED: hand run.Board to Resolve in Check rather than the folded
+        // one. The upgrade below goes red on an exception -- "An upgrade names
+        // column 0, row 0, where nothing stands" -- refusing at load a phase
+        // upgrading a cell its own stream took two rounds earlier; and the
+        // place-on-place below goes red having caught nothing at load, the run
+        // instead refusing at round four with three rounds already resolved
+        // and folded into an outcome.
+        Run run = TheCommands.Fresh();
+        IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
+
+        // Wave two puts an archer on a cell the opening board leaves empty.
+        var placing = new List<RecordCommand>(decisions)
+        {
+            [1] = decisions[1].With(TheCommands.PlacedOnFreeCell),
+        };
+
+        // Wave four upgrades it, which is only legal because wave two placed.
+        var upgrading = new List<RecordCommand>(placing)
+        {
+            [3] = placing[3].With(TheCommands.UpgradedOnFreeCell),
+        };
+
+        CommandStream ahead = CommandStream.Of(run, upgrading);
+
+        IReadOnlyList<Build> walked = ahead.Check(TheCommands.Fresh());
+
+        Run played = TheCommands.Fresh();
+        ahead.Replay(played);
+
+        // One more placement than the run opened with, on both sides: the walk
+        // ends on the board the play ends on.
+        Assert.Equal(1, walked[walked.Count - 1].Board.Count);
+        Assert.Equal(played.Board.Count, walked[walked.Count - 1].Board.Count);
+
+        // And the other direction. Wave four places on the cell wave two took,
+        // which the walk refuses before round one resolves.
+        var twice = new List<RecordCommand>(placing)
+        {
+            [3] = placing[3].With(TheCommands.PlacedOnFreeCell),
+        };
+
+        CommandStream doubled = CommandStream.Of(run, twice);
+        Run into = TheCommands.Fresh();
+
+        SimulationException refused = Assert.Throws<SimulationException>(() => doubled.Replay(into));
+
+        Assert.Contains("A build phase at wave 4 cannot act.", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("A place puts a second thing on", refused.Message, StringComparison.Ordinal);
+        Assert.Equal(0, into.Round);
     }
 
     /// <summary>

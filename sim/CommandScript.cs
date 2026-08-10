@@ -5,9 +5,9 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// A run's build phases as authored text: one row per round, naming the
-    /// wave, what was taken off that round's offering, and how the wave's slots
-    /// were filled.
+    /// A run's build phases as authored text: a row per round naming the wave,
+    /// what was taken off that round's offering and how the wave's slots were
+    /// filled, and a row per defensive action beneath it.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -29,6 +29,26 @@ namespace Sim
     /// to become a record.
     /// </para>
     /// <para>
+    /// <b>An action row has fixed arity instead:</b> <c>place wave type-id
+    /// column row</c>, and <c>upgrade</c> the same, five fields either way. The
+    /// cell is the column and row <c>content/map.txt</c> is written in, so an
+    /// action can be composed by counting characters in the map.
+    /// </para>
+    /// <para>
+    /// <b>Only three refusals are this parser's:</b> the keyword, the field
+    /// count and the integer ranges. Every interesting refusal about an action
+    /// -- what the type id names, whether the cell is on the map, whether
+    /// anything stands there already, whether the round can afford it -- needs
+    /// the board, the map, the roster or the purse, and nothing here holds any
+    /// of them. That is what keeps <see cref="Parse(string)"/> text-only.
+    /// </para>
+    /// <para>
+    /// <b>Three rules about the file's own shape are this parser's, though</b>,
+    /// because nothing but a file has them: rows ascend by wave, a wave's action
+    /// rows follow its <c>build</c> row, and an action row for a wave with no
+    /// build row is refused.
+    /// </para>
+    /// <para>
     /// <b>Nothing here knows what is on an offering.</b> The take is a kind and
     /// an id, checked against the round's menu when the stream is played, which
     /// is the only place the menu exists -- an offering is drawn from the run's
@@ -39,11 +59,22 @@ namespace Sim
     {
         private const string Keyword = "build";
 
+        private const string PlaceWord = "place";
+
+        private const string UpgradeWord = "upgrade";
+
         /// <summary>Fields before the slots: the keyword, the wave, the take kind and the take id.</summary>
         private const int FixedFields = 4;
 
         /// <summary>Fields per slot: a type id and a count.</summary>
         private const int FieldsPerSlot = 2;
+
+        /// <summary>
+        /// Fields on an action row: the keyword, the wave, the type id, the
+        /// column and the row. Fixed, unlike a build row's -- an action names
+        /// one cell and one type, and there is nothing on it to repeat.
+        /// </summary>
+        private const int ActionFields = 5;
 
         /// <summary>
         /// The largest any number on a row may be. The wave, the take id, a
@@ -60,8 +91,15 @@ namespace Sim
         /// </summary>
         private static readonly string[] TakeKinds = { "ordinary", "changer" };
 
-        /// <summary>The words a row here may open with. There is one.</summary>
-        private static readonly string[] RowWords = { Keyword };
+        /// <summary>
+        /// What each defensive action is called on a row. The position in this
+        /// list is the <see cref="ActionKind"/>, on the same terms
+        /// <see cref="TakeKinds"/> is.
+        /// </summary>
+        private static readonly string[] ActionWords = { PlaceWord, UpgradeWord };
+
+        /// <summary>The words a row here may open with: the build phase, and the two actions.</summary>
+        private static readonly string[] RowWords = { Keyword, PlaceWord, UpgradeWord };
 
         /// <summary>
         /// The word a row spells this half of a round's menu with.
@@ -107,38 +145,22 @@ namespace Sim
 
                 DataText.RequireRow(source, row, RowWords);
 
-                if (fields.Length < FixedFields || (fields.Length - FixedFields) % FieldsPerSlot != 0)
-                {
-                    throw new ContentException(
-                        source,
-                        row.Line,
-                        "has "
-                        + fields.Length.ToString(CultureInfo.InvariantCulture)
-                        + " fields. A '"
-                        + Keyword
-                        + "' row carries the wave, the take kind and the take id, and then a type id and a "
-                        + "count for each of the round's slots -- "
-                        + FixedFields.ToString(CultureInfo.InvariantCulture)
-                        + " fields plus two per slot. A row outside that is a slot with half of it missing, "
-                        + "and guessing which half is how a wave nobody composed gets sent.");
-                }
+                bool decides = string.Equals(row.Keyword, Keyword, StringComparison.Ordinal);
+
+                RequireFields(source, row, decides);
 
                 int wave = DataText.IntegerInRange(source, row.Line, "the wave", fields[1], 1, Largest);
-                int take = DataText.Keyword(source, row.Line, "the take kind", fields[2], TakeKinds);
-                int takeId = DataText.IntegerInRange(source, row.Line, "the take id", fields[3], 1, Largest);
 
-                try
+                if (decides)
                 {
-                    commands.Add(
-                        RecordCommand.Of(wave, (OptionKind)take, takeId, Slots(source, row.Line, fields)));
+                    RequireAscends(source, row.Line, wave, commands);
+                    commands.Add(Decision(source, row.Line, wave, fields));
+                    continue;
                 }
-                catch (SimulationException refused)
-                {
-                    // The rule is the record's and the line number is this
-                    // file's. Rewrapped rather than reimplemented, so that
-                    // moving the rule moves both the bytes and the text.
-                    throw new ContentException(source, row.Line, refused.Message);
-                }
+
+                RequireAnOpenPhase(source, row.Line, wave, commands);
+                commands[commands.Count - 1] =
+                    commands[commands.Count - 1].With(Action(source, row.Line, fields));
             }
 
             if (commands.Count == 0)
@@ -151,6 +173,189 @@ namespace Sim
             }
 
             return commands;
+        }
+
+        /// <summary>
+        /// A row required to carry the fields its keyword has: a build row's
+        /// four plus two per slot, or an action row's five.
+        /// </summary>
+        private static void RequireFields(string source, DataText.Row row, bool decides)
+        {
+            int count = row.Fields.Length;
+
+            if (decides)
+            {
+                if (count >= FixedFields && (count - FixedFields) % FieldsPerSlot == 0)
+                {
+                    return;
+                }
+
+                throw new ContentException(
+                    source,
+                    row.Line,
+                    "has "
+                    + count.ToString(CultureInfo.InvariantCulture)
+                    + " fields. A '"
+                    + Keyword
+                    + "' row carries the wave, the take kind and the take id, and then a type id and a "
+                    + "count for each of the round's slots -- "
+                    + FixedFields.ToString(CultureInfo.InvariantCulture)
+                    + " fields plus two per slot. A row outside that is a slot with half of it missing, "
+                    + "and guessing which half is how a wave nobody composed gets sent.");
+            }
+
+            if (count == ActionFields)
+            {
+                return;
+            }
+
+            throw new ContentException(
+                source,
+                row.Line,
+                "has "
+                + count.ToString(CultureInfo.InvariantCulture)
+                + " fields. A '"
+                + row.Keyword
+                + "' row carries the wave, the type id, the column and the row -- "
+                + ActionFields.ToString(CultureInfo.InvariantCulture)
+                + " fields, always. An action names one cell and one type, so there is nothing on it that "
+                + "repeats and no count of fields but this one that could be read.");
+        }
+
+        /// <summary>One build row's decision, with a refusal from the record given the line it came from.</summary>
+        private static RecordCommand Decision(string source, int line, int wave, string[] fields)
+        {
+            int take = DataText.Keyword(source, line, "the take kind", fields[2], TakeKinds);
+            int takeId = DataText.IntegerInRange(source, line, "the take id", fields[3], 1, Largest);
+
+            try
+            {
+                return RecordCommand.Of(wave, (OptionKind)take, takeId, Slots(source, line, fields));
+            }
+            catch (SimulationException refused)
+            {
+                // The rule is the record's and the line number is this file's.
+                // Rewrapped rather than reimplemented, so that moving the rule
+                // moves both the bytes and the text.
+                throw new ContentException(source, line, refused.Message);
+            }
+        }
+
+        /// <summary>
+        /// One action row's action. The kind comes off the keyword, on the same
+        /// terms the take kind comes off its own word.
+        /// </summary>
+        private static BuildAction Action(string source, int line, string[] fields)
+        {
+            int kind = DataText.Keyword(source, line, "the action", fields[0], ActionWords);
+            int typeId = DataText.IntegerInRange(source, line, "the type id", fields[2], 1, Largest);
+            int column = DataText.IntegerInRange(
+                source,
+                line,
+                "the column",
+                fields[3],
+                BuildAction.LeastCoordinate,
+                BuildAction.GreatestCoordinate);
+            int row = DataText.IntegerInRange(
+                source,
+                line,
+                "the row",
+                fields[4],
+                BuildAction.LeastCoordinate,
+                BuildAction.GreatestCoordinate);
+
+            return BuildAction.Of((ActionKind)kind, typeId, column, row);
+        }
+
+        /// <summary>
+        /// A build row required to name a wave above every wave above it.
+        /// </summary>
+        /// <remarks>
+        /// The same rule <see cref="CommandStream"/> asserts over the bytes,
+        /// checked here as well because only a file has a line to name -- a
+        /// person editing one needs to be told which row is out of order, and a
+        /// stream refusing later would name neither.
+        /// </remarks>
+        private static void RequireAscends(
+            string source,
+            int line,
+            int wave,
+            IReadOnlyList<RecordCommand> commands)
+        {
+            if (commands.Count == 0 || wave > commands[commands.Count - 1].Wave)
+            {
+                return;
+            }
+
+            throw new ContentException(
+                source,
+                line,
+                "decides wave "
+                + wave.ToString(CultureInfo.InvariantCulture)
+                + ", at or below the "
+                + commands[commands.Count - 1].Wave.ToString(CultureInfo.InvariantCulture)
+                + " a row above it already decided. Rows ascend by wave across the whole file: a run plays "
+                + "its rounds in the order they are written, and two build rows for one round is two runs "
+                + "written down as one.");
+        }
+
+        /// <summary>
+        /// An action row required to sit under the build row of its own wave.
+        /// </summary>
+        /// <remarks>
+        /// Three ways to fail and three sentences, because they are three
+        /// different mistakes: a row that has fallen below the phase it belongs
+        /// to, a row that has been written above it, and a row belonging to a
+        /// phase nobody composed.
+        /// </remarks>
+        private static void RequireAnOpenPhase(
+            string source,
+            int line,
+            int wave,
+            IReadOnlyList<RecordCommand> commands)
+        {
+            if (commands.Count == 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "acts on wave "
+                    + wave.ToString(CultureInfo.InvariantCulture)
+                    + ", and no build row stands above it. An action row for a wave with no build row is "
+                    + "refused: an action is paid for out of its round's purse and applied in its round's "
+                    + "order, so one belonging to no build phase belongs to no round either.");
+            }
+
+            int open = commands[commands.Count - 1].Wave;
+
+            if (wave == open)
+            {
+                return;
+            }
+
+            if (wave < open)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "acts on wave "
+                    + wave.ToString(CultureInfo.InvariantCulture)
+                    + ", below the "
+                    + open.ToString(CultureInfo.InvariantCulture)
+                    + " a row above it already decided. Rows ascend by wave across the whole file, so an "
+                    + "action for a round the file has already left is one nothing would ever apply.");
+            }
+
+            throw new ContentException(
+                source,
+                line,
+                "acts on wave "
+                + wave.ToString(CultureInfo.InvariantCulture)
+                + " where the build row above it decided wave "
+                + open.ToString(CultureInfo.InvariantCulture)
+                + ". A wave's action rows follow its own build row, because a round's take is decided "
+                + "before what it spends the rest of its gold on, and an action above its build row would "
+                + "be paid for by the round before it.");
         }
 
         /// <summary>

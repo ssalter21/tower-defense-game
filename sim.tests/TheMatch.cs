@@ -65,6 +65,18 @@ public static class TheMatch
     public static TowerLayout Layout(UnitTypeTable types) =>
         TowerLayout.Parse(File.ReadAllText(RepoLayout.DefenseFile), types);
 
+    /// <summary>
+    /// A layout written out, so two of them can be compared as one value.
+    /// </summary>
+    /// <remarks>
+    /// Everything a layout carries that a match reads, and nothing else: an
+    /// authored layout and one a board derived differ in the source line, which
+    /// is a fact about where the towers were written down rather than about
+    /// where they stand.
+    /// </remarks>
+    public static string[] Spelling(TowerLayout layout) =>
+        layout.Towers.Select(tower => $"{tower.Type.Id} {tower.Column} {tower.Row} {tower.Hex}").ToArray();
+
     public static GoldenTrace Trace() => GoldenTrace.Parse(File.ReadAllText(RepoLayout.GoldenTraceFile));
 
     /// <summary>A fresh match on the committed content. Every scenario starts here.</summary>

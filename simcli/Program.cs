@@ -227,11 +227,10 @@ public static class Program
         "         from the build phases on the command stream and are read from no",
         "         file at all.",
         string.Empty,
-        "         --defense is read twice by a run verb, deliberately: it is what",
-        "         stands while this run's waves are sent AND the defense the canned",
-        "         opponent stands behind. Both directions of a round are then",
-        "         measured through the same wall, which is what makes out-dealing",
-        "         the field a fair comparison rather than a flattering one.",
+        "         --defense is the OPPONENTS' defense and never this run's. It is",
+        "         the wall every member of the canned field stands behind. A run",
+        "         opens on an empty board and stands whatever its own build",
+        "         phases put on the map, so nothing hands it a defense at all.",
     };
 
     /// <summary>The entry point. Zero if the run happened, non-zero if it did not.</summary>
@@ -630,7 +629,14 @@ public static class Program
         return string.Join("\n" + indent, lines);
     }
 
-    /// <summary>The stream's stamps, the shape it was played at, and the vector.</summary>
+    /// <summary>
+    /// The stream's stamps, the shape it was played at, the vector, and the
+    /// board the run ended on.
+    /// </summary>
+    /// <remarks>
+    /// Both run verbs print through here, so a recording and a replay say the
+    /// same things about the same run in the same order.
+    /// </remarks>
     private static void Report(PlayedRun run)
     {
         Console.Out.Write(
@@ -640,7 +646,7 @@ public static class Program
             + "\n"
             + run.Summary()
             + "\n"
-            + run.Rounds()
+            + run.RoundsAndBoard()
             + "\n");
     }
 

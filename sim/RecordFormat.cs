@@ -73,10 +73,31 @@ namespace Sim
 
         /// <summary>
         /// The fixed part of one build phase in a command stream:
-        /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>. The
-        /// slots follow it, <see cref="SlotBytes"/> each.
+        /// <c>u16 wave + u8 take_kind + u16 take_id + u16 action_count +
+        /// u16 slot_count</c>. The actions follow the action count,
+        /// <see cref="ActionBytes"/> each, and the slots follow the slot count,
+        /// <see cref="SlotBytes"/> each.
         /// </summary>
-        public const int CommandBytes = 7;
+        /// <remarks>
+        /// Both counts are <c>u16</c>, and the action one is not narrower than
+        /// the slot one because a phase performs as many actions as its gold
+        /// pays for -- the list is bounded by a purse rather than by a round's
+        /// width.
+        /// </remarks>
+        public const int CommandBytes = 9;
+
+        /// <summary>
+        /// Bytes per defensive action in a command stream: <c>u8 kind +
+        /// u16 type_id + i16 column + i16 row</c>.
+        /// </summary>
+        /// <remarks>
+        /// A tower entry plus a kind byte, and the cell is the column and row
+        /// <c>content/map.txt</c> is written in rather than the axial pair
+        /// <see cref="TowerBytes"/> carries. That is what
+        /// <see cref="BuildAction"/> holds, and converting on the way past
+        /// would need the map -- which is exactly what a reader does not have.
+        /// </remarks>
+        public const int ActionBytes = 7;
 
         /// <summary>
         /// Bytes per wave slot in a command stream: <c>u16 type_id +
@@ -156,10 +177,39 @@ namespace Sim
         public const int ReplayVersion = 1;
 
         /// <summary>
-        /// The command stream layout, version 0. Counted on its own, so a
-        /// stored defense, wave or bundle carries no version this kind moved.
+        /// The command stream layout, version 1: the version-0 fields with a
+        /// <c>u16 action_count</c> and that many actions in every build phase,
+        /// between the take and the slots. Counted on its own, so a stored
+        /// defense, wave or bundle carries no version this kind moved.
         /// </summary>
-        public const int CommandVersion = 0;
+        /// <remarks>
+        /// <para>
+        /// <b>Version 0 stored no defensive actions, and version 1 is the bump
+        /// that stores them.</b> A build phase decides two things -- what the
+        /// round takes off its menu and what it builds -- and version 0 wrote
+        /// down only the first, so a phase that placed a tower and one that
+        /// placed nothing were the same bytes.
+        /// </para>
+        /// <para>
+        /// <b>The actions sit after the take and before the slots</b>, which is
+        /// the order a round plays them in: the take and the defensive build
+        /// both happen before the wave is sent, and the slots are the wave.
+        /// Either position parses -- each run carries its own count -- so what
+        /// the order buys is a hexdump that explains itself.
+        /// </para>
+        /// <para>
+        /// <b>A version-0 stream reads back with no actions, and that is what
+        /// those bytes say rather than a value invented for them.</b> The
+        /// distinction <see cref="GhostVersion"/> draws is between a field a
+        /// reader can supply honestly and one it cannot, and an absent run of
+        /// actions is not a defaulted field at all: the record carries none,
+        /// so a phase read from it built nothing. What that costs is that the
+        /// board such a stream is replayed onto is the board the run is handed,
+        /// which is why <c>content/golden/command-0.commands</c> is read and
+        /// never held against an outcome.
+        /// </para>
+        /// </remarks>
+        public const int CommandVersion = 1;
 
         /// <summary>The four bytes a record of this kind begins with.</summary>
         public static string MagicOf(RecordKind kind)
@@ -292,7 +342,13 @@ namespace Sim
                     return formatVersion == 0 || formatVersion == 1;
 
                 case RecordKind.Command:
-                    return formatVersion == 0;
+                    // Version 0 is here on the terms the defense's and the
+                    // bundle's are: content/golden/command-0.commands is
+                    // committed against it forever, and the branch stays for as
+                    // long as any version-0 bytes exist. It reads a stream
+                    // whose build phases carry no actions, which is what those
+                    // bytes say.
+                    return formatVersion == 0 || formatVersion == 1;
 
                 default:
                     throw NoSuchKind(kind);

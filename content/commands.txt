@@ -15,9 +15,11 @@
 #         build  wave  take-kind  take-id   type-id count   type-id count  ...
 #
 # wave      : which round of the run this decision was made in, counted from
-#             one. WAVES ASCEND STRICTLY and there is one row per round: a run
-#             plays them in the order they are stored, and two decisions for one
-#             round is two runs written down as one.
+#             one. BUILD ROWS ASCEND STRICTLY BY WAVE and there is one of them
+#             per round: a run plays them in the order they are stored, and two
+#             decisions for one round is two runs written down as one. The
+#             action rows below repeat their own wave, which is how they say
+#             which build row they belong to.
 # take-kind : ordinary, or changer for one of an anchor's game changers. Which
 #             half of that round's menu the take came off, and what scopes the
 #             id -- an ordinary option is identified by the creep it unlocks, a
@@ -34,6 +36,36 @@
 #             omission: what is not sent is banked at the ruleset's interest.
 #             A row may fill fewer slots than the round has; it may not fill
 #             more, and the width comes from the anchor schedule.
+#
+# ---------------------------------------------------------------------------
+# THE ACTION ROW
+#
+#         place    wave  type-id  column  row
+#         upgrade  wave  type-id  column  row
+#
+# What the round does to the board, under the build row of its own wave. Five
+# fields either way, because an action names one cell and one type and there is
+# nothing on it that repeats.
+#
+# place     : stand a new tower on an empty cell. It takes the next placement
+#             ordinal, which is what the ending-board block down in
+#             content/run-outcome.txt lists it under.
+# upgrade   : change the type of the tower already standing on a cell, keeping
+#             its identity. IT PAYS THE TARGET ROW'S FULL PRICE, and the
+#             simulation reads no ladder to check it -- content/upgrades.txt is
+#             where the intended tiers are written down, and an upgrade in here
+#             that is not one of its edges is legal and is a mistake.
+# cell      : the column and the row map.txt is written in, so a tower can be
+#             placed by counting characters in that file.
+#
+# ACTION ROWS ARE NOT SORTED AND MUST NOT BE. Their order is meaning: a round
+# may upgrade what it has just placed, and the placement ordinals fall out of
+# the sequence. This is exactly the opposite of the wave slots above them.
+#
+# THE ORDER A ROUND PAYS IN IS THE TAKE, THEN THE ACTIONS, THEN THE SLOTS. A
+# tower bought here is standing when this round's waves arrive, and the wave is
+# bought out of what the towers left. A round whose towers ate its wave is
+# refused whole rather than sent short, so the arithmetic below has to add up.
 #
 # ---------------------------------------------------------------------------
 # HOW A ROW IS WRITTEN
@@ -66,22 +98,60 @@
 # Ten waves against the canned field, taking a game changer at each of the three
 # anchors -- waves 3, 6 and 9 -- and an ordinary unlock everywhere else.
 #
-# THE OPENING BANKS AND THE MIDDLE SPENDS IT. Nothing is sent for three rounds,
-# which is the position an empty slot is: what is not spent compounds at the
+# THE OPENING BUILDS AND THE MIDDLE SENDS. The board is empty when wave one's
+# build phase opens, so the opening rounds put a wall up and send almost
+# nothing: an empty slot is a position, what is not spent compounds at the
 # ruleset's interest, and a wave big enough to get past a full defense costs
-# more than one round of income. Waves five and six are what that bought, and
-# every round after them is what a purse can sustain out of income alone.
+# more than one round of income. Waves six onwards are what that opening bought.
 #
-# EVERY ROW FILLS EXACTLY THE ROUND'S WIDTH, empties included, so the widening
-# at each anchor is legible down the file: 2 2 3 3 3 4 4 4 5 5.
+# THE WALL IS FOUR ARCHERS AND IT GOES UP ONE A ROUND. The corridor crosses the
+# map four times -- east along row 1, back west along row 3, east again along
+# row 5, west to the exit along row 7 -- and each ground row between them
+# touches two of those crossings. So a tower on row 2 watches the first and the
+# second, one on row 4 the second and the third, and one on row 6 the third and
+# the fourth. Three of them stacked around columns six and seven is four
+# separate chances at every creep that walks past, which is worth more than four
+# towers spread thinly enough that each sees a creep once. The fourth, at column
+# four, watches the western turn instead: the single hex at row 4 where the
+# corridor doubles back, and the stretch either side of it, which nothing at
+# column seven reaches. It is the cheapest forty gold in the file -- the round
+# it goes up is the round the leak halves.
+#
+# THEN REACH. Wave five upgrades the first archer into a ranger, which is
+# content/upgrades.txt's one edge, paid at the ranger's full price for a hex of
+# extra range on the seam that meets the entrance run. It is the whole round:
+# nothing is sent, so the bank carries into wave six.
+#
+# NOTHING IS BUILT AFTER WAVE FIVE. From there the purse buys waves, because a
+# round is scored on what it got past the field and a fifth tower is worth less
+# than the bodies it would cost. Wave six is what five rounds of banking paid
+# for, and every round after it is what income alone sustains.
+#
+# THE LAST TWO ROWS LEAVE THREE OF THEIR FIVE SLOTS EMPTY ON PURPOSE. The
+# anchors have opened five slots by then and income alone is buying the wave, so
+# there is only about a hundred and thirty gold to put in them. A count is
+# released one body every forty-five ticks, so gold split across more columns
+# arrives as more bodies per tick over fewer ticks and saturates the towers
+# less; content/field.txt's header carries the measurements. Two columns is what
+# that much money can fill and still arrive as a wave -- and it is not much of
+# one. Wave nine gets nothing past at all, which is the shape of a run that
+# spent its opening on a wall.
+#
+# EVERY BUILD ROW FILLS EXACTLY THE ROUND'S WIDTH, empties included, so the
+# widening at each anchor is legible down the file: 2 2 3 3 3 4 4 4 5 5.
 
 build    1  ordinary   1     0 0   0 0
+place    1  3   6  2
 build    2  ordinary   2     0 0   0 0
+place    2  3   7  4
 build    3  changer    4     0 0   0 0   0 0
-build    4  ordinary  12     0 0   0 0   2 10
-build    5  ordinary  13     0 0   0 0   2 20
+place    3  3   7  6
+build    4  ordinary  12     0 0   0 0   2 20
+place    4  3   4  4
+build    5  ordinary  13     0 0   0 0   0 0
+upgrade  5  14  6  2
 build    6  changer    7     1 10  2 20  0 0   0 0
 build    7  ordinary   7     1 2   2 8   12 2  0 0
 build    8  ordinary  13     1 2   2 8   7 1   12 2
-build    9  changer    9     1 5   2 15  12 2  0 0   0 0
-build   10  ordinary   1     1 5   2 9   7 1   12 1  13 1
+build    9  changer    9     1 5   2 4   0 0   0 0   0 0
+build   10  ordinary   1     1 6   2 9   0 0   0 0   0 0

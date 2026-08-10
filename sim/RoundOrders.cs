@@ -50,12 +50,6 @@ namespace Sim
 
             return new RoundOrders(defense, wave);
         }
-
-        public override string ToString() =>
-            Defense.Count.ToString(CultureInfo.InvariantCulture)
-            + " towers standing, "
-            + Wave.TotalUnits.ToString(CultureInfo.InvariantCulture)
-            + " units sent";
     }
 
     /// <summary>

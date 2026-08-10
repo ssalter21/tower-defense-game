@@ -124,7 +124,7 @@ public class GoldenRunTests
         // riding along on a line checked for its other half.
         Run run = Fresh();
         CommandStream stream = Committed();
-        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheMatch.Layout(TheMatch.Types()));
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run);
         string committed = File.ReadAllText(RepoLayout.RunOutcomeFile);
 
         Assert.Equal(stream.Count, rounds.Count);
@@ -166,9 +166,9 @@ public class GoldenRunTests
         CommandStream.FromBytes("run.commands", File.ReadAllBytes(RepoLayout.CommandFile));
 
     /// <summary>
-    /// The run the command line builds for that record: the committed board,
-    /// tables and shape, and the canned field of one the committed defense and
-    /// the committed field file make.
+    /// The run the command line builds for that record: the committed tables
+    /// and shape, and the canned field of one the committed defense and the
+    /// committed field file make.
     /// </summary>
     /// <remarks>
     /// <para>

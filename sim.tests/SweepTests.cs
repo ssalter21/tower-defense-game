@@ -29,10 +29,11 @@ public class SweepTests
         // or something in there is reading the machine.
         //
         // The rows are compared field by field rather than by their printed
-        // form, because ToString carries three of the twelve numbers and a sweep
-        // that moved the other nine would compare equal. The two payment columns
-        // are in that comparison for the same reason; what pins their values
-        // rather than their determinism is the row test below.
+        // form, because ToString carries three of the fourteen numbers and a
+        // sweep that moved the other eleven would compare equal. The two payment
+        // columns and the two gold columns are in that comparison for the same
+        // reason; what pins their values rather than their determinism is the
+        // row test below.
         //
         // OBSERVED: seed the runs from the run index alone -- drop the plan's
         // seed out of Hash64.Start(RunLabel) in SweepPlan.SeedOf. This stays
@@ -63,6 +64,8 @@ public class SweepTests
             Assert.Equal(left.LeakCostDealt, right.LeakCostDealt);
             Assert.Equal(left.LeakCostTaken, right.LeakCostTaken);
             Assert.Equal(left.GoldSpent, right.GoldSpent);
+            Assert.Equal(left.DefenseGold, right.DefenseGold);
+            Assert.Equal(left.UnspentGold, right.UnspentGold);
             Assert.Equal(left.DealtPerHundredGold, right.DealtPerHundredGold);
             Assert.Equal(left.IncomeBaseGold, right.IncomeBaseGold);
             Assert.Equal(left.BonusGold, right.BonusGold);
@@ -82,13 +85,17 @@ public class SweepTests
         // runs resolved between them -- which is what makes the bonus beside it
         // readable as a share.
         //
+        // The base is doubled here, and that is a statement about the player
+        // rather than about the column -- see TheSweep.RicherBase.
+        //
         // OBSERVED: pass PerformanceField.Absent in place of run.Field to
         // Purse.BonusOver in Sweep.Play. This goes red saying "Every creep in
-        // the report earned nothing at all for what it sent, over 4800 gold of
+        // the report earned nothing at all for what it sent, over 9600 gold of
         // flat base", and every other number in the report stays exactly as it
         // was -- which is what an economy paying the base alone looks like from
         // every other column.
-        SweepReport report = Sweep.Of(TheSweep.Plan());
+        Ruleset rules = TheSweep.RicherBase();
+        SweepReport report = Sweep.Of(TheSweep.Plan(rules: rules));
         long bonus = 0;
         long incomeBase = 0;
 
@@ -108,7 +115,7 @@ public class SweepTests
                 continue;
             }
 
-            Assert.Equal(TheRuleset.Committed().IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseGold);
+            Assert.Equal(rules.IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseGold);
 
             bonus += row.BonusGold;
             incomeBase += row.IncomeBaseGold;
@@ -129,6 +136,14 @@ public class SweepTests
         // seed have to disagree, or the seed is not reaching the runs and the
         // sample size is a lie.
         //
+        // What separates them is what they bought. Leak cost dealt cannot: the
+        // scripted player spends half of every purse on a board, and the wave
+        // half of a purse buys gets nothing past the canned field's six towers,
+        // so every row of this plan deals zero and two populations of zero are
+        // equal. Gold spent is a number off the same rows and it moves with the
+        // whole run -- which offering was drawn, which creep was taken, what it
+        // cost to send.
+        //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
         // minion's whole-population row is identical across the two plans -- and
@@ -137,7 +152,7 @@ public class SweepTests
         SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
         SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "minion");
 
-        Assert.NotEqual(one.LeakCostDealt, other.LeakCostDealt);
+        Assert.NotEqual(one.GoldSpent, other.GoldSpent);
     }
 
     [Fact]
@@ -204,7 +219,6 @@ public class SweepTests
             TheRuleset.Committed(),
             TheMatch.Types(),
             TheSchedule.Committed(),
-            TheMatch.Layout(TheMatch.Types()),
             TheSweep.Field(TheMatch.Types()),
             TheSweep.Seed,
             TheSweep.Runs).DeathEndsTheRun);
@@ -317,6 +331,81 @@ public class SweepTests
     }
 
     [Fact]
+    public void Gold_spent_is_what_walked_and_the_defense_has_a_column_of_its_own()
+    {
+        // A phase pays for its towers and its creeps out of one purse, and the
+        // report splits that bill in two. Gold spent is the denominator of the
+        // cost-efficiency column, so a player that builds a board and sends
+        // nothing has spent nothing on creeps however much its purse moved --
+        // and what it did spend is on the row beside it rather than nowhere.
+        //
+        // OBSERVED: report the whole bill as the wave's -- add Build.Spent to
+        // Sweep.Play's spent total and leave the defense out of it. The first
+        // row goes red, 1800 gold of creeps where nothing walked, and the
+        // cost-efficiency column quietly becomes leak cost per hundred gold of
+        // tower.
+        SweepReport built = Sweep.Of(TheSweep.Plan(policy: TheSweep.Builds));
+
+        for (int index = 0; index < built.Rows.Count; index++)
+        {
+            SweepRow row = built.Rows[index];
+
+            Assert.Equal(0, row.GoldSpent);
+            Assert.True(
+                row.DefenseGold > 0,
+                "A player that spends half of every purse on towers built nothing at all: " + row);
+        }
+
+        // And a player that builds nothing reports nothing built, so the column
+        // above is about what the policy did rather than about a number that is
+        // always positive.
+        SweepReport banked = Sweep.Of(TheSweep.Plan(policy: TheSweep.Banks));
+
+        for (int index = 0; index < banked.Rows.Count; index++)
+        {
+            Assert.Equal(0, banked.Rows[index].DefenseGold);
+        }
+
+        // The default player does both halves, which is what every row of the
+        // committed report is played by.
+        SweepRow whole = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
+
+        Assert.True(whole.GoldSpent > 0 && whole.DefenseGold > 0, whole.ToString());
+    }
+
+    [Fact]
+    public void A_run_that_died_holding_gold_reports_it_like_any_other()
+    {
+        // What a run ended holding is the other half of what it earned, and a
+        // report that counted it only for the runs that survived would read the
+        // banking rule off the survivors alone -- which is the population that
+        // banked well enough to still be alive.
+        //
+        // The field here kills every run in its first round, so every gold in
+        // the unspent column of this report was in a dead run's purse.
+        //
+        // OBSERVED: count the purse only where the run ran out of waves --
+        // guard run.Purse.Gold in Sweep.Play on run.Ending. This goes red on the
+        // first row, "a run that died reported an empty purse", and the no-death
+        // sweep the committed report is produced by stays green.
+        UnitTypeTable types = TheMatch.Types();
+
+        SweepReport dying = Sweep.Of(TheSweep.Plan(
+            types: types,
+            rules: TheSweep.ThinHealth(),
+            field: TheSweep.LethalField(types),
+            deathEndsTheRun: true));
+
+        for (int index = 0; index < dying.Rows.Count; index++)
+        {
+            SweepRow row = dying.Rows[index];
+
+            Assert.Equal(row.Runs, row.Rounds);
+            Assert.True(row.UnspentGold > 0, "A run that died reported an empty purse: " + row);
+        }
+    }
+
+    [Fact]
     public void A_win_rate_is_the_wins_over_the_runs_in_basis_points()
     {
         // There is no floating point in the simulation and the build gate scans
@@ -416,6 +505,11 @@ public class SweepTests
         // runs come out different -- a dial that reached the ruleset and not the
         // offering would pass the first half alone.
         //
+        // What the runs come out different in is gold spent rather than leak
+        // cost dealt, for the reason the seed test above gives: a wave bought
+        // out of half a purse gets nothing past the canned field, so every row
+        // of this plan deals zero.
+        //
         // OBSERVED: drop the argument on the floor in SweepPlan -- pass
         // rules.OrdinaryOptionsPerRound to Ruleset.With in place of the Or that
         // reads it. The parameter assertion goes red, 3 where 1 was expected,
@@ -428,8 +522,8 @@ public class SweepTests
         Assert.NotEqual(authored.Rules.ContentHash, narrow.Rules.ContentHash);
 
         Assert.NotEqual(
-            TheSweep.Whole(Sweep.Of(authored), "minion").LeakCostDealt,
-            TheSweep.Whole(Sweep.Of(narrow), "minion").LeakCostDealt);
+            TheSweep.Whole(Sweep.Of(authored), "minion").GoldSpent,
+            TheSweep.Whole(Sweep.Of(narrow), "minion").GoldSpent);
     }
 
     [Fact]

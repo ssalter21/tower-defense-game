@@ -115,6 +115,25 @@ public class GoldenSweepTests
     }
 
     [Fact]
+    public void The_committed_report_says_who_built_the_defense_its_rows_were_played_against()
+    {
+        // The gold in the defense column bought a board a deliberately simple
+        // bot chose, so every row of this file describes a game rather than
+        // skilled play. That caveat travels in the file for the reason the
+        // cost-efficiency one does: a caveat in a document nobody opened is a
+        // caveat nobody read, and this is the file somebody opens.
+        //
+        // OBSERVED: write the note with the comma the sentence wants after
+        // "unshot route". -Regenerate refuses by name -- "which carries a
+        // separator, a quote or a line break" -- and writes nothing, so what
+        // this catches is the note dropped rather than the note mangled: take
+        // the Note call out of SweepCsv and regenerate, and this goes red having
+        // found no note row for defense_gold at all.
+        Assert.Contains("deliberately simple bot", Note("defense_gold"), StringComparison.Ordinal);
+        Assert.Contains("a price", Note("cost_efficiency_dealt_per_100_gold"), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void The_ingredient_bins_of_the_committed_report_add_up_to_the_rows_above_them()
     {
         // The report carries two kinds of creep row -- a creep's whole
@@ -159,6 +178,9 @@ public class GoldenSweepTests
 
     /// <summary>The one number a parameter row carries.</summary>
     private static string Parameter(string name) => Cell("parameter", name, ValueColumn, 1);
+
+    /// <summary>What the file says about how a column is not to be read.</summary>
+    private static string Note(string column) => Cell("note", column, ValueColumn, 1);
 
     /// <summary>A coverage row's three cells: covered, of, and whether it is bounded.</summary>
     private static string Coverage(string axis) => Cell("coverage", axis, ValueColumn, 3);

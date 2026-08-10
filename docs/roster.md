@@ -479,11 +479,16 @@ old one retired.
    emitted rather than possessed, so it is not a unit stat.
 6. **A second health pool that absorbs first**, for the Necromancer's shield.
 
-**And one thing that is not a lever but is engine work: the purse has to buy the defense.** Today
-`Run.Advance` takes the defense as a free argument and only creeps are charged, so there is one wallet because
-there is only one thing to buy. The tower costs above are now *based* rather than arbitrary, which makes them
-worth spending — but nothing spends them yet. This is what story 17 (*"underbuilding my defense to fund my
-offense **is** spending health"*) is still missing.
+**And one thing that was not a lever but was engine work: the purse buys the defense now.** A run opens on an
+empty board and a build phase pays for its placements and its upgrades out of the same wallet its wave comes
+out of — see [ADR-0048](adr/0048-a-board-is-not-a-layout.md). So the tower costs above are *based* rather than
+arbitrary and something spends them, which is what story 17 (*"underbuilding my defense to fund my offense
+**is** spending health"*) was waiting on.
+
+What is missing now is a measurement rather than a mechanism. The opening purse, the income curve and the
+health pool were every one of them tuned against a six-tower defense the run was handed for free, and none of
+the three has been measured against an empty opening board. `content/ruleset.txt`'s health block says what
+that leaves open.
 
 ## Which pack is which side — *decided 8 August 2026*
 

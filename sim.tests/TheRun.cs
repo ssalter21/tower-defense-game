@@ -53,11 +53,13 @@ public static class TheRun
     /// regenerates them.
     /// </para>
     /// <para>
-    /// <b>This is a run that shopped.</b> Every round of it took the first thing
-    /// on its menu and spent the purse on the creep that unlocked, so what it
-    /// dealt is bounded by what a hundred gold and a wave's income could buy.
-    /// What it took back is the field's business and not the purse's, which is
-    /// why the second column of every pair is what it always was.
+    /// <b>This is a run that built and then shopped</b> -- see
+    /// <see cref="TheBuild.Fortifying"/>. Every round of it took the first thing
+    /// on its menu, added a tower to the wall while there was one left to add,
+    /// and spent what remained of the purse on the creep that unlocked. So the
+    /// second column falls by more than half over the six rounds the wall is
+    /// going up, and the first only becomes real from the seventh, which is the
+    /// first round the wall is not eating the purse.
     /// </para>
     /// <para>
     /// The run finishes its last wave on <see cref="HealthLeftInTheCommittedRun"/>
@@ -68,12 +70,12 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(51, 91),
-        new RoundOutcome(71, 91),
-        new RoundOutcome(74, 92),
-        new RoundOutcome(40, 99),
-        new RoundOutcome(66, 99),
-        new RoundOutcome(57, 91),
+        new RoundOutcome(22, 239),
+        new RoundOutcome(37, 220),
+        new RoundOutcome(33, 178),
+        new RoundOutcome(20, 177),
+        new RoundOutcome(0, 144),
+        new RoundOutcome(3, 91),
         new RoundOutcome(83, 86),
         new RoundOutcome(72, 97),
         new RoundOutcome(70, 87),
@@ -81,7 +83,7 @@ public static class TheRun
     };
 
     /// <summary>What that run had left of the pool when its last wave resolved.</summary>
-    public const int HealthLeftInTheCommittedRun = 582;
+    public const int HealthLeftInTheCommittedRun = 96;
 
     /// <summary>
     /// The wave the committed canned field sends: <c>content/field.txt</c>,
@@ -128,15 +130,11 @@ public static class TheRun
     /// than about the dice.
     /// </para>
     /// </remarks>
-    public static RoundReport Against(UnitTypeTable types, TowerLayout defense, params RoundOrders[] pool) =>
-        Against(types, defense, 10, pool);
+    public static RoundReport Against(UnitTypeTable types, params RoundOrders[] pool) =>
+        Against(types, 10, pool);
 
     /// <summary>One round at a field of this many, against a population written out here.</summary>
-    public static RoundReport Against(
-        UnitTypeTable types,
-        TowerLayout defense,
-        int fieldSize,
-        params RoundOrders[] pool)
+    public static RoundReport Against(UnitTypeTable types, int fieldSize, params RoundOrders[] pool)
     {
         var run = new Run(
             TheMatch.Map(),
@@ -148,7 +146,7 @@ public static class TheRun
             waves: 1,
             fieldSize: fieldSize);
 
-        return run.Advance(TheBuild.Shopping(run), defense);
+        return run.Advance(TheBuild.Shopping(run));
     }
 
     /// <summary>
@@ -169,7 +167,13 @@ public static class TheRun
         });
     }
 
-    /// <summary>A fresh run on the committed content. Every scenario starts here.</summary>
+    /// <summary>
+    /// A fresh run on the committed content. Every scenario starts here.
+    /// </summary>
+    /// <remarks>
+    /// It opens on an empty board, as every run does. A scenario that wants
+    /// something standing builds it, through the build phases it advances.
+    /// </remarks>
     public static Run Fresh(
         int waves = Run.DefaultWaves,
         int fieldSize = Run.DefaultFieldSize,
@@ -195,6 +199,7 @@ public static class TheRun
     /// field can be scored against.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The committed hundred buys five bodies, and five bodies get past nobody
     /// in a field drawn from <see cref="Pool"/>: every round of such a run is
     /// placed in the bottom band, so what it earned for its offense is a column
@@ -203,6 +208,14 @@ public static class TheRun
     /// in front of the bands the pool is measured into, so that the three lines
     /// a purse moves on are three real numbers and a fold over them has
     /// something to be wrong about.
+    /// </para>
+    /// <para>
+    /// Death does not end it, because it builds nothing and a run standing
+    /// behind nothing runs out of health part-way through. Health never pays
+    /// the purse anything, so the ten rounds this reaches are the ten a wealthy
+    /// run's economy is made of either way -- and what would otherwise end it is
+    /// the wall it never bought rather than the money it is about.
+    /// </para>
     /// </remarks>
     public static Run Wealthy(int purse)
     {
@@ -221,7 +234,8 @@ public static class TheRun
             Pool(types),
             Seed,
             Run.DefaultWaves,
-            Run.DefaultFieldSize);
+            Run.DefaultFieldSize,
+            deathEndsTheRun: false);
     }
 
     /// <summary>

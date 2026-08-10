@@ -24,8 +24,9 @@ namespace Sim.Cli;
 /// <item><c>parameter</c> -- what the sweep was played under, one row a number,
 /// so that two sweeps concatenated cannot be mistaken for one.</item>
 /// <item><c>note</c> -- what a column does not mean, where reading it the
-/// obvious way is wrong. There is one, and the remarks on <see cref="Notes"/>
-/// say why it travels with the file rather than living beside it.</item>
+/// obvious way is wrong. One a column, in the order the columns are declared,
+/// and the remarks on <see cref="Notes"/> say why they travel with the file
+/// rather than living beside it.</item>
 /// <item><c>coverage</c> -- how far the sweep reached on each axis it could
 /// have bounded. <b>Always present, bounded or not</b>, because a truncated
 /// sweep that said nothing would read exactly like a complete one.</item>
@@ -81,28 +82,45 @@ internal static class SweepCsv
     /// </summary>
     /// <remarks>
     /// <para>
-    /// There is exactly one, and it earns its row. Under a one-for-one leak
-    /// charge the price level cancels out of leak cost dealt over gold spent
-    /// exactly -- halve a creep's price and a purse buys twice as many while
-    /// each leak charges half -- so the cost-efficiency column is the
-    /// cost-weighted leak rate of what was sent and it cannot say a creep is
-    /// overpriced. That is measured rather than argued, in
+    /// <b>They travel in the file rather than beside it</b> because this file is
+    /// what somebody opens six months from now in a spreadsheet, and both of the
+    /// columns below invite exactly the reading the note exists to prevent. A
+    /// caveat that lives in a document nobody opened is a caveat nobody read.
+    /// </para>
+    /// <para>
+    /// The defense column is the gold a scripted bot put on the board -- see
+    /// <see cref="CoverThenUpgradeBot"/> -- so what every row of this report was
+    /// played against is one simple rule rather than a person, and a row is a
+    /// statement about a game rather than about skilled play.
+    /// </para>
+    /// <para>
+    /// Under a one-for-one leak charge the price level cancels out of leak cost
+    /// dealt over gold spent exactly -- halve a creep's price and a purse buys
+    /// twice as many while each leak charges half -- so the cost-efficiency
+    /// column is the cost-weighted leak rate of what was sent and it cannot say
+    /// a creep is overpriced. That is measured rather than argued, in
     /// docs/research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md.
     /// </para>
     /// <para>
-    /// <b>It travels in the file rather than beside it</b> because this file is
-    /// what somebody opens six months from now in a spreadsheet, and a column
-    /// headed "cost efficiency" invites exactly the reading the research note
-    /// exists to prevent. A caveat that lives in a document nobody opened is a
-    /// caveat nobody read.
+    /// <b>The sentences carry no comma</b>, because a cell that did would be
+    /// refused by <see cref="CsvRow"/> rather than quoted.
     /// </para>
     /// </remarks>
-    private static void Notes(StringBuilder text) =>
+    private static void Notes(StringBuilder text)
+    {
+        Note(
+            text,
+            "defense_gold",
+            "the defense these rows were played against was built by a deliberately simple bot -- the tower "
+            + "that covers the most unshot route per gold then upgrade the oldest -- so a row describes a "
+            + "game and never skilled play; see #163");
+
         Note(
             text,
             "cost_efficiency_dealt_per_100_gold",
             "a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one "
             + "so the price cancels out; see docs/adr/0041");
+    }
 
     private static void Note(StringBuilder text, string column, string what) =>
         Row(
@@ -178,6 +196,8 @@ internal static class SweepCsv
                 .With("dealt_gold", Number(row.LeakCostDealt))
                 .With("taken_gold", Number(row.LeakCostTaken))
                 .With("spent_gold", Number(row.GoldSpent))
+                .With("defense_gold", Number(row.DefenseGold))
+                .With("unspent_gold", Number(row.UnspentGold))
                 .With("cost_efficiency_dealt_per_100_gold", Number(row.DealtPerHundredGold))
                 .With("income_base_gold", Number(row.IncomeBaseGold))
                 .With("bonus_gold", Number(row.BonusGold)));

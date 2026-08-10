@@ -207,5 +207,19 @@ namespace Sim
         /// about would be the interesting ones.
         /// </remarks>
         internal static TowerLayout FromRecord(PlacedTower[] towers) => new TowerLayout(towers);
+
+        /// <summary>
+        /// The defense a <see cref="Board"/> derives, sorted there rather than
+        /// authored in order.
+        /// </summary>
+        /// <remarks>
+        /// There is no order assertion here either, and for a different reason
+        /// than <see cref="FromRecord"/>'s: the board sorts, so the order is
+        /// produced rather than read. A board with nothing on it derives a
+        /// layout with no towers in it, which is a run that has built nothing
+        /// and not a defense somebody did not finish -- the refusal of an empty
+        /// one belongs to <see cref="Parse"/>, where the files are.
+        /// </remarks>
+        internal static TowerLayout FromBoard(PlacedTower[] towers) => new TowerLayout(towers);
     }
 }

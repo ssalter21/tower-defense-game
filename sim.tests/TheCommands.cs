@@ -26,6 +26,23 @@ public static class TheCommands
     /// <summary>How many slots every command in these streams fills.</summary>
     public const int SlotsPerCommand = 1;
 
+    /// <summary>The place every stream carrying an action stores first.</summary>
+    public static readonly BuildAction Placed = BuildAction.Of(ActionKind.Place, 3, 9, 0);
+
+    /// <summary>The upgrade stored after it, on the cell that place named.</summary>
+    public static readonly BuildAction Upgraded = BuildAction.Of(ActionKind.Upgrade, 4, 9, 0);
+
+    /// <summary>An archer on a cell the committed defense leaves empty.</summary>
+    /// <remarks>
+    /// The pair above names a cell the defense file already stands a mage on,
+    /// which is nothing to a case that only reads bytes and everything to a
+    /// case that applies one.
+    /// </remarks>
+    public static readonly BuildAction PlacedOnFreeCell = BuildAction.Of(ActionKind.Place, 3, 0, 0);
+
+    /// <summary>The mage that archer becomes, on the cell it stands on.</summary>
+    public static readonly BuildAction UpgradedOnFreeCell = BuildAction.Of(ActionKind.Upgrade, 4, 0, 0);
+
     /// <summary>How many creeps a filled slot sends. Two of anything on this roster opens affordable.</summary>
     private const int Sent = 2;
 
@@ -71,6 +88,33 @@ public static class TheCommands
         return commands;
     }
 
+    /// <summary>
+    /// The same decisions with two actions hung on the first of them: a place
+    /// and an upgrade, in that order. What every case that needs a stored
+    /// action starts from.
+    /// </summary>
+    /// <remarks>
+    /// Nothing checks what these name. An action's type id, its cell and what
+    /// stands there are questions for whatever applies one, and a stream is
+    /// read, walked and replayed without any of them being asked.
+    /// </remarks>
+    public static IReadOnlyList<RecordCommand> Acting(Run run)
+    {
+        var commands = new List<RecordCommand>(Decisions(run));
+
+        commands[0] = commands[0].With(Placed).With(Upgraded);
+
+        return commands;
+    }
+
+    /// <summary>The bytes of a stream whose first build phase carries both of them.</summary>
+    public static byte[] ActingBytes()
+    {
+        Run run = Fresh();
+
+        return CommandStream.Of(run, Acting(run)).ToBytes();
+    }
+
     /// <summary>The stream those decisions record as, stamped with that run's tables.</summary>
     public static CommandStream Stream(Run? run = null, int waves = Waves)
     {
@@ -81,9 +125,6 @@ public static class TheCommands
 
     /// <summary>Those bytes, which is what every negative case starts from.</summary>
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
-
-    /// <summary>The defense that stands while each of a run's waves is sent.</summary>
-    public static TowerLayout Defense() => TheMatch.Layout(TheMatch.Types());
 
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
     public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)

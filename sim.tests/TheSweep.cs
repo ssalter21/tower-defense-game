@@ -75,14 +75,12 @@ public static class TheSweep
         BuildPolicy? policy = null)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
-        TowerLayout defense = TheMatch.Layout(table);
 
         return new SweepPlan(
             TheMatch.Map(),
             rules ?? TheRuleset.Committed(),
             table,
             schedule ?? TheSchedule.Committed(table),
-            defense,
             field ?? Field(table),
             seed,
             runs,
@@ -118,6 +116,31 @@ public static class TheSweep
     }
 
     /// <summary>
+    /// A third scripted player: it takes its option, builds whatever the
+    /// defensive bot decides, and fills no slot at all.
+    /// </summary>
+    /// <remarks>
+    /// The even-share bot with its wave taken off, so every gold a run of it
+    /// spends stands on the board and none of it walks. That is what makes a row
+    /// played under it a statement about one half of a phase's one bill. It
+    /// ignores <paramref name="preferred"/> for the reason <see cref="Banks"/>
+    /// does: a row's creep is a preference a policy is free not to have.
+    /// </remarks>
+    public static BuildPhase Builds(Run run, int preferred)
+    {
+        Option first = run.Offering.Options[0];
+        IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
+        BuildPhase phase = BuildPhase.Of(first.Kind, first.Id);
+
+        for (int index = 0; index < built.Count; index++)
+        {
+            phase = phase.With(built[index]);
+        }
+
+        return phase;
+    }
+
+    /// <summary>
     /// The canned field the harness ships with: the committed defense standing
     /// behind <c>content/field.txt</c>, drawn with replacement.
     /// </summary>
@@ -141,6 +164,28 @@ public static class TheSweep
         Ruleset.Parse(PlantedText.Replace(TheRuleset.CommittedText(), "health       1500", "health        200"));
 
     /// <summary>
+    /// The committed rules with twice the flat base.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>What a wave sends is what half a purse buys</b>, because the scripted
+    /// player spends the other half on a board -- and half of the committed base
+    /// gets nothing at all past the six-tower wall the canned field stands
+    /// behind. A sweep played at the authored income therefore deals zero on
+    /// every row, which leaves nothing to reach a band with and no two
+    /// populations to tell apart.
+    /// </para>
+    /// <para>
+    /// It is the income that moves and not the field, because the field is what
+    /// every row of the committed report is scored against: a fixture that
+    /// thinned the opponent would be answering a question the harness is not
+    /// asked.
+    /// </para>
+    /// </remarks>
+    public static Ruleset RicherBase() =>
+        Ruleset.Parse(PlantedText.Replace(TheRuleset.CommittedText(), "income        100", "income        200"));
+
+    /// <summary>
     /// A plan whose roster is towers alone: a schedule loaded against the
     /// committed roster, and every other part of the plan built from one that
     /// walks nowhere.
@@ -161,7 +206,6 @@ public static class TheSweep
             TheRuleset.Committed(),
             towers,
             TheSchedule.Committed(),
-            defense,
             FieldPool.Canned(defense, TheRun.FieldWave(TheMatch.Types())),
             Seed,
             Runs,

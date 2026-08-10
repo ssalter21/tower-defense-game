@@ -54,7 +54,7 @@ internal sealed class PlayedRun
         // are held against the run in front of them.
         Run run = content.Fresh(stream.Seed, shape);
 
-        return new PlayedRun(stream, run, stream.Replay(run, content.Defense));
+        return new PlayedRun(stream, run, stream.Replay(run));
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ internal sealed class PlayedRun
         Run run = content.Fresh(seed, shape);
 
         (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
-            CommandStream.Recorded(run, content.Defense, commands);
+            CommandStream.Recorded(run, commands);
 
         return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, rounds));
     }
@@ -108,7 +108,7 @@ internal sealed class PlayedRun
     /// so the two are the same length -- and a report that walked the longer of
     /// them would invent a round on the day that stopped being true.
     /// </remarks>
-    public string Rounds()
+    private string Rounds()
     {
         var text = new StringBuilder();
 
@@ -128,8 +128,21 @@ internal sealed class PlayedRun
     }
 
     /// <summary>
+    /// What a report says a run did: the round lines, a blank line, and the
+    /// board the last of them left.
+    /// </summary>
+    /// <remarks>
+    /// One method rather than two beside each other, because where the block
+    /// sits is a layout decision and a terminal and a committed file that made
+    /// it separately would drift. The board is read off the run itself, which
+    /// is what every build phase acted on and handed back, rather than walked
+    /// out of the decisions a second time.
+    /// </remarks>
+    public string RoundsAndBoard() => Rounds() + "\n\n" + Run.Board.ToReportText();
+
+    /// <summary>
     /// The outcome as the committed file: the prose that says what it is, what
-    /// run produced it, and then a line per round.
+    /// run produced it, a line per round, and the board it ended on.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -163,9 +176,23 @@ internal sealed class PlayedRun
                 "file and nothing else: a run consumes build phases from a record, and there is no other",
                 "route into the tick loop. The pair is what that round's wave got past the field and what",
                 "the field's waves got past this run's defense, both priced in gold and both the average",
-                "over the field rather than the sum. Then what the wave cost to buy, and what it paid the",
-                "purse back: the bank it opened on, the interest that bank earned, the flat base, the",
-                "band its offense reached in the field, and the gold it closed on.",
+                "over the field rather than the sum. Then how many towers stood while that pair was",
+                "resolved, which is the board after this round's own building: the purse walks the take,",
+                "then the actions, then the slots, so a tower bought here is standing when this round's",
+                "waves arrive. Then what the whole phase cost -- what it took, what it built and what it",
+                "sends, out of the one wallet -- and what the wave paid the purse back: the bank it opened",
+                "on, the interest that bank earned, the flat base, the band its offense reached in the",
+                "field, and the gold it closed on.",
+                string.Empty,
+                "THE LAST BLOCK IS THE BOARD AT THE END. A run's ending position is not a round and no",
+                "round line adds up to it, so it is printed once, under everything, with a column header of",
+                "its own. It is a position, so it is the layout and not the board: the type, the column and",
+                "the row of every tower standing when the run stopped, in the order a defense file writes",
+                "them -- ascending by row and then by column. The column beside them is the placement id,",
+                "the ordinal of the place that put the tower there, which survives an upgrade swapping its",
+                "type and is what ties a row down there to a decision up here. A run that built nothing says",
+                "so on a row of its own, and a run that died prints the board it died on: there is no run",
+                "the block is missing from.",
                 string.Empty,
                 "The run this came from:",
                 string.Empty,
@@ -178,5 +205,5 @@ internal sealed class PlayedRun
                 string.Empty,
                 "  decision                                                    round, cost and payment",
             },
-            Rounds());
+            RoundsAndBoard());
 }

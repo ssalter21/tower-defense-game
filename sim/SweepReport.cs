@@ -95,6 +95,8 @@ namespace Sim
             long leakCostDealt,
             long leakCostTaken,
             long goldSpent,
+            long defenseGold,
+            long unspentGold,
             int dealtPerHundredGold,
             long incomeBaseGold,
             long bonusGold)
@@ -109,6 +111,8 @@ namespace Sim
             LeakCostDealt = leakCostDealt;
             LeakCostTaken = leakCostTaken;
             GoldSpent = goldSpent;
+            DefenseGold = defenseGold;
+            UnspentGold = unspentGold;
             DealtPerHundredGold = dealtPerHundredGold;
             IncomeBaseGold = incomeBaseGold;
             BonusGold = bonusGold;
@@ -154,6 +158,37 @@ namespace Sim
 
         /// <summary>What these runs bought creeps with, in gold, summed.</summary>
         public long GoldSpent { get; }
+
+        /// <summary>
+        /// What these runs put on the board, in gold, summed.
+        /// </summary>
+        /// <remarks>
+        /// Beside <see cref="GoldSpent"/> rather than inside it, because that
+        /// one is what <see cref="DealtPerHundredGold"/> is per: folding the
+        /// towers into it would move what the ratio means without moving what it
+        /// is called, and every row already written down would stop being
+        /// comparable with its own history.
+        /// </remarks>
+        public long DefenseGold { get; }
+
+        /// <summary>
+        /// What these runs were still holding when they ended, in gold, summed.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Every run of the row contributes, the ones that died included: what
+        /// was banked and never spent is a fact about the player, and counting
+        /// it off the survivors alone would read the banking rule off the
+        /// population that banked well enough to survive.
+        /// </para>
+        /// <para>
+        /// It is the purse a run's last round closed on, so the money that
+        /// round's wave was paid is in it -- the run stopped after the payment
+        /// rather than before it, and a number that took the payment back out
+        /// would be describing a moment no run was ever in.
+        /// </para>
+        /// </remarks>
+        public long UnspentGold { get; }
 
         /// <summary>
         /// <see cref="LeakCostDealt"/> per hundred gold spent, truncated. Read

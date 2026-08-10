@@ -107,7 +107,10 @@ public class CommandScriptTests
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("starts with 'order'", thrown.Message, StringComparison.Ordinal);
-        Assert.Contains("the rows this file has: build", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "the rows this file has: build, place, upgrade",
+            thrown.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -164,6 +167,188 @@ public class CommandScriptTests
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("Filled slots ascend strictly by type id", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_action_row_becomes_an_action_on_its_waves_command()
+    {
+        // Two keywords, one shape: the wave, the type, then the cell as a
+        // column and a row, which is how content/map.txt and content/defense.txt
+        // spell one. Read off the value rather than off a re-parse.
+        //
+        // OBSERVED: read the column out of fields[4] and the row out of
+        // fields[3]. Both rows parse, both actions land on the command, and the
+        // comparisons go red -- column 0, row 9 against column 9, row 0, which
+        // is a tower somewhere nobody put one.
+        //
+        // OBSERVED: reverse CommandScript's ActionWords. The kind assertions go
+        // red both ways round, Upgrade against Place, which is what pins the
+        // words to the kinds -- the list's position IS the ActionKind.
+        IReadOnlyList<RecordCommand> commands = CommandScript.Parse(
+            "build 1 ordinary 5 5 2\nplace 1 3 9 0\nupgrade 1 4 9 0\n");
+
+        RecordCommand command = Assert.Single(commands);
+
+        Assert.Equal(2, command.Actions.Count);
+        Assert.Equal(BuildAction.Of(ActionKind.Place, 3, 9, 0), command.Actions[0]);
+        Assert.Equal(BuildAction.Of(ActionKind.Upgrade, 4, 9, 0), command.Actions[1]);
+        Assert.Equal(new[] { WaveSlot.Of(5, 2) }, command.Slots);
+    }
+
+    [Fact]
+    public void The_same_two_actions_in_the_other_order_are_a_different_parse()
+    {
+        // Actions have no canonical order and must not get one. A phase may
+        // upgrade what it just placed and the placement ordinals fall out of the
+        // sequence, so these two scripts are two runs rather than two spellings
+        // of one -- which is the opposite of the slots beside them, where an
+        // order is asserted precisely so that two spellings cannot exist.
+        //
+        // OBSERVED: sort the actions by type id as they are appended. Both
+        // scripts parse to the same command, the inequality goes red, and the
+        // second placement silently becomes the first.
+        IReadOnlyList<RecordCommand> written = CommandScript.Parse(
+            "build 1 ordinary 5 5 2\nplace 1 3 9 0\nplace 1 4 3 2\n");
+
+        IReadOnlyList<RecordCommand> reversed = CommandScript.Parse(
+            "build 1 ordinary 5 5 2\nplace 1 4 3 2\nplace 1 3 9 0\n");
+
+        Assert.NotEqual(written[0], reversed[0]);
+
+        Assert.Equal(BuildAction.Of(ActionKind.Place, 3, 9, 0), written[0].Actions[0]);
+        Assert.Equal(BuildAction.Of(ActionKind.Place, 4, 3, 2), reversed[0].Actions[0]);
+    }
+
+    [Theory]
+    [InlineData("place 1 3 9")]
+    [InlineData("place 1 3 9 0 0")]
+    [InlineData("upgrade 1 3 9")]
+    public void An_action_row_of_another_length_is_refused(string action)
+    {
+        // An action row has fixed arity, unlike a build row's four plus two per
+        // slot: it names one cell and one type, so there is nothing on it that
+        // repeats. A row of another length is a coordinate missing or a field
+        // nobody reads.
+        //
+        // OBSERVED: check the action row against the build row's arity instead
+        // -- at least four, then pairs. The four-field rows pass it and then
+        // reach for a row that is not there, so the refusal is an
+        // IndexOutOfRangeException with no line in it; the six-field row passes
+        // as "four plus a pair", its trailing two fields are read by nothing,
+        // and no exception is thrown at all.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => CommandScript.Parse("build 1 ordinary 5 5 2\n" + action + "\n"));
+
+        Assert.Equal(2, thrown.Line);
+        Assert.Contains("5 fields, always", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("place 0 3 9 0", "the wave")]
+    [InlineData("place 65536 3 9 0", "the wave")]
+    [InlineData("place 1 0 9 0", "the type id")]
+    [InlineData("place 1 65536 9 0", "the type id")]
+    [InlineData("place 1 3 32768 0", "the column")]
+    [InlineData("place 1 3 9 -32769", "the row")]
+    public void A_number_an_action_row_could_not_store_is_refused_by_name(string action, string named)
+    {
+        // The third and last of the parser's refusals. The wave and the type id
+        // are u16 and the cell is a pair of i16, which is what a record stores
+        // them as -- a row that could be authored and not written down would be
+        // a file its own writer refuses.
+        //
+        // OBSERVED: widen the cell to the u16 range. Column 32768 rides through
+        // the parser and is caught by BuildAction.Of instead, so the case goes
+        // red having caught a SimulationException -- the right refusal with the
+        // line a person editing the file needed stripped off it.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => CommandScript.Parse("build 1 ordinary 5 5 2\n" + action + "\n"));
+
+        Assert.Equal(2, thrown.Line);
+        Assert.Contains(named + " is", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Nothing_an_action_row_says_is_checked_against_a_roster()
+    {
+        // Parse takes text and nothing else. What a type id names, whether that
+        // row is a tower, whether the run unlocked it, whether the cell is on
+        // the map, whether anything stands there and whether the round can
+        // afford it all need the roster, the map, the board or the purse, and a
+        // parser that held one would be a second implementation of a rule that
+        // has to be applied when the stream is played anyway.
+        //
+        // OBSERVED: refuse a type id above the committed roster's largest. This
+        // goes red on an exception, and a script naming a creep type or a cell
+        // off the map is refused twice with two sentences instead of once.
+        RecordCommand command = Assert.Single(
+            CommandScript.Parse("build 1 ordinary 5 5 2\nplace 1 65535 -1 -1\n"));
+
+        Assert.Equal(BuildAction.Of(ActionKind.Place, 65535, -1, -1), Assert.Single(command.Actions));
+    }
+
+    [Theory]
+    [InlineData("build 2 ordinary 5 5 2\nbuild 1 ordinary 5 5 2\n", 2, "decides wave 1")]
+    [InlineData("build 1 ordinary 5 5 2\nbuild 1 ordinary 5 5 2\n", 2, "decides wave 1")]
+    [InlineData("build 1 ordinary 5 5 2\nbuild 2 ordinary 5 5 2\nplace 1 3 9 0\n", 3, "acts on wave 1")]
+    public void Rows_ascend_by_wave_across_the_whole_file(string script, int line, string named)
+    {
+        // The first of the three rules about the file's own shape. A run plays
+        // its rounds in the order they are written, so a row that goes backwards
+        // is a round decided twice or an action for a round the file has already
+        // left. CommandStream asserts the same over the bytes; only a file has a
+        // line to name, and a person editing one needs to be told which row.
+        //
+        // OBSERVED: drop the ascent check the build rows are held to. The first
+        // two scripts parse clean and both cases go red having caught nothing;
+        // what refuses them afterwards is CommandStream.Of, with a
+        // SimulationException naming no line at all.
+        //
+        // OBSERVED: let an action row attach to whatever phase is open whatever
+        // wave it names. The third case goes red having caught nothing, and
+        // wave 1's placement is hung on wave 2's phase -- made and paid for a
+        // round late, with nothing downstream in a position to notice.
+        ContentException thrown = Assert.Throws<ContentException>(() => CommandScript.Parse(script));
+
+        Assert.Equal(line, thrown.Line);
+        Assert.Contains(named, thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("ascend by wave across the whole file", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_waves_action_rows_follow_its_build_row()
+    {
+        // The second rule. A round's take is decided before what the rest of its
+        // gold is spent on, so an action written above its own build row would
+        // be paid for by the round before it.
+        //
+        // OBSERVED: attach an action to the last command whatever wave it names.
+        // The row parses onto wave 1's phase, this goes red having caught
+        // nothing, and wave 2's placement is made and paid for a round early.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => CommandScript.Parse("build 1 ordinary 5 5 2\nplace 2 3 9 0\nbuild 2 ordinary 5 5 2\n"));
+
+        Assert.Equal(2, thrown.Line);
+        Assert.Contains("acts on wave 2 where the build row above it decided wave 1",
+            thrown.Message,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void An_action_row_for_a_wave_with_no_build_row_is_refused()
+    {
+        // The third rule. An action is paid for out of its round's purse and
+        // applied in its round's order, so one belonging to no build phase
+        // belongs to no round either.
+        //
+        // OBSERVED: skip the check when no command is open. The parse walks off
+        // the end of an empty list with an ArgumentOutOfRangeException, which
+        // says nothing about a file and nothing about a line.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => CommandScript.Parse("place 1 3 9 0\nbuild 1 ordinary 5 5 2\n"));
+
+        Assert.Equal(1, thrown.Line);
+        Assert.Contains("no build row stands above it", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

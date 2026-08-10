@@ -203,6 +203,19 @@ public static class RepoLayout
         Path.Combine(GoldenDirectory, "defense-" + Number(defenseFormatVersion) + ".units");
 
     /// <summary>
+    /// A command stream frozen at this format version: a copy of
+    /// <see cref="CommandFile"/> taken while that version was the one the writer
+    /// emitted, and not rewritten afterwards.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is pinned beside it, because reading takes no tables at all. A
+    /// frozen stream is read and never replayed, and the test that reads it says
+    /// what that does and does not claim.
+    /// </remarks>
+    public static string GoldenCommandFile(int commandFormatVersion) =>
+        Path.Combine(GoldenDirectory, "command-" + Number(commandFormatVersion) + ".commands");
+
+    /// <summary>
     /// The upgrade ladder that bundle was recorded against, copied beside it and
     /// never rewritten afterwards.
     /// </summary>

@@ -190,3 +190,49 @@ reads a ladder, which stays true and turns out not to be the question. Recorded 
 thing the map settled and did not notice, and because the test that presents the bill —
 `MatchContentTests.TheShippedRecordPassesTheReplayGate` — is an engine-side test that only goes red in an
 editor.
+
+---
+
+## 10 August 2026 — the defense becomes a decision, and the obvious bot was measured and thrown away
+
+Charted and worked as [#142](https://github.com/ssalter21/tower-defense-game/issues/142), which holds five
+scoping answers taken before any ticket and four decisions taken in them. The vocabulary the map needed is in
+[ADR-0048](adr/0048-a-board-is-not-a-layout.md) and
+[ADR-0049](adr/0049-a-placement-identity-is-derived.md); this records only what changed its mind on the way.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[#114](https://github.com/ssalter21/tower-defense-game/issues/114)** — how a placement is named | A placement has a derived id, which is *therefore* how a later row points at it | **Reversed by [#143](https://github.com/ssalter21/tower-defense-game/issues/143). An action names the hex.** The id survives, and nothing in any file ever spells it | A row naming an id is unreadable in isolation — you would have to have counted every prior row to know what `upgrade 3` points at. The id's one advantage, surviving a placement rebuilt underneath, is dormant while selling is out of scope |
+| **`TowerCoverage`** — a tower that reaches no route | A refusal, in the same breath as off-the-map and inside-the-corridor | **Narrowed by [#144](https://github.com/ssalter21/tower-defense-game/issues/144). Still a refusal in an authored file; a *bad decision* for a placement made mid-run** | Off-map and in-corridor describe *impossible* positions; reaching nothing describes a bad one. Every other refusal in this repo is for something that could not have happened, and a player who builds where nothing walks has made a choice |
+| **[#145](https://github.com/ssalter21/tower-defense-game/issues/145)** — what the sweep's bot ranks by | Best coverage per gold, which is what "a deliberately dumb bot" obviously means | **Reversed on an argument, restored by [#163](https://github.com/ssalter21/tower-defense-game/issues/163) on the measurement. Best coverage per gold** | The argument was pacing: three rangers cover all 47 route hexes of `content/map.txt` for 120 gold, so a per-gold rule has bought the whole route by wave 2, where walking up the price list spreads 420 gold of soldiers across most of a run. The sweep it produced separated no creep from any other — 22 creep rows, every one of them zero dealt gold and zero cost-efficiency — because a bot buying 14 range-1 soldiers pays triple for a worse wall than the one its opponents stand behind, and the wave attacks it on what is left. A board that changes is not what anybody reads `sweep.csv` for |
+| **[#146](https://github.com/ssalter21/tower-defense-game/issues/146)** — which goldens retire on the format bump | An open question about `content/golden/`, assumed to have an answer | **Dissolved, then inverted.** #143 found `content/golden/` holds only replay bundles and **no golden command stream exists**, so nothing retires. The plan therefore *creates* one: today's version-0 `content/run.commands` is frozen as a golden before the bump | `RecordFormat` keeps a version-0 branch legal because *a golden record is committed against it forever*. Command stream version 0 had no such evidence, and after the bump would have had none at all |
+| **`RoundOrders.ToString()`** | A spelling of "N towers standing", presumed printed somewhere | **Deleted.** Nothing in `sim/`, `simcli/` or `sim.tests/` calls it, and never did | A spelling nobody prints is one that can be wrong forever. Found by [#147](https://github.com/ssalter21/tower-defense-game/issues/147) while deciding what a round line says about a board |
+
+### The sort that looks like ADR-0017 broken, and is not
+
+[#144](https://github.com/ssalter21/tower-defense-game/issues/144) decided that the run holds placements in
+placement order and *derives* a canonically-sorted `TowerLayout` per round. Read against
+[ADR-0017](adr/0017-canonical-order-is-asserted-not-restored.md) — *canonical order is asserted at load, never
+restored* — that is the prohibited move, and it is the first objection anybody will raise.
+
+ADR-0017 is a rule about **stored records**: two identical records must not have two byte spellings, or
+content-addressing one stops meaning anything. A run-built board is never stored as a layout. What is stored
+is the command stream, and the stream keeps placement order — which
+[#143](https://github.com/ssalter21/tower-defense-game/issues/143) had already made meaning-bearing, since the
+ordinals depend on it. So the sort creates no second spelling of anything.
+
+The rule that survives is shorter than either half of the argument: **assert what you read, compute what you
+derive.** It is [ADR-0048](adr/0048-a-board-is-not-a-layout.md), written because the decision reads as a
+violation right up until you know that a derived layout is a computation and not a load.
+
+### The bot was chosen against geometry that is going away, and that is on the record
+
+Every number this effort produces about placement is provisional by construction. Seam 9 replaces the one-hex
+corridor with a maze at elevation, and on one-wide geometry a great many placements are equivalent — so the
+build phase will feel thin until the maze lands, and the measurement above (three rangers, 120 gold, saturated
+by wave 2) is a fact about *this* corridor and not about the mechanism.
+
+Worth keeping for its own sake: **the corridor made the obvious bot rule useless, and the only way to find
+that out was to compute the coverage table by hand before writing any of it.** The instinct — rank by value
+for money — is right in a game where coverage is scarce. It is worthless in one where 120 gold buys all of it.
+

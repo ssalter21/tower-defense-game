@@ -35,7 +35,8 @@ public static class TheBuild
         int waves = Run.DefaultWaves,
         int fieldSize = 4,
         int ordinary = Ordinary,
-        ulong seed = TheRun.Seed)
+        ulong seed = TheRun.Seed,
+        bool deathEndsTheRun = true)
     {
         UnitTypeTable types = TheMatch.Types();
         Ruleset rules = RulesOffering(ordinary);
@@ -48,11 +49,60 @@ public static class TheBuild
             TheRun.Pool(types),
             seed,
             waves,
-            fieldSize);
+            fieldSize,
+            deathEndsTheRun);
     }
 
-    /// <summary>The defense that stands while a build phase decides what is sent.</summary>
+    /// <summary>The defense the canned opponents of this suite stand behind.</summary>
     public static TowerLayout Defense(UnitTypeTable? types = null) => TheMatch.Layout(types ?? TheMatch.Types());
+
+    /// <summary>
+    /// The wall a run of this suite builds for itself, in the order it builds
+    /// it: <see cref="Defense"/>'s own cells as place actions, cheapest row
+    /// first.
+    /// </summary>
+    /// <remarks>
+    /// A run opens on an empty board, so a scenario that means to reach its
+    /// tenth wave has to build one -- there is no authored defense behind it any
+    /// more. The cells are read out of the defense file rather than written down
+    /// here, because that file is a wall somebody sat down and made cover the
+    /// corridor and a second copy of it would be free to drift. The order is by
+    /// price, because an opening purse holds one archer and not one mage; the
+    /// sort is stable, so towers of one price stay in the order the file wrote
+    /// them.
+    /// </remarks>
+    private static BuildAction[] Wall(UnitTypeTable types) =>
+        Defense(types).Towers
+            .OrderBy(tower => tower.Type.Cost)
+            .Select(tower => BuildAction.Of(ActionKind.Place, tower.Type.Id, tower.Column, tower.Row))
+            .ToArray();
+
+    /// <summary>
+    /// A round that takes the first thing on its menu, adds the next tower of
+    /// the wall where the purse can pay for one, and spends what is left on the
+    /// creep the take unlocked.
+    /// </summary>
+    /// <remarks>
+    /// The tower comes off the purse before the wave does, which is the order
+    /// the payer walks in, so the wave this composes is one the round can still
+    /// afford after building.
+    /// </remarks>
+    public static BuildPhase Fortifying(Run run)
+    {
+        BuildAction[] wall = Wall(run.Types);
+
+        if (run.Board.Count >= wall.Length)
+        {
+            return Shopping(run);
+        }
+
+        BuildAction next = wall[run.Board.Count];
+        int tower = run.Costs.PriceOf(Purchase.Unit(next.TypeId));
+
+        return tower > run.Purse.Gold
+            ? Shopping(run)
+            : Shopping(run, run.Purse.Gold - tower).With(next);
+    }
 
     /// <summary>Every option on a round's menu, as the pair a decision names.</summary>
     public static (OptionKind Kind, int Id)[] Named(Offering offering) =>

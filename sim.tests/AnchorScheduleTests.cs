@@ -620,12 +620,11 @@ public class AnchorScheduleTests
         // resolves, [1, 3, 4, 6, 8, ...] against [3, 2, 1, 7, 5, ...]: the menu
         // a player prepared against is not the menu they are offered.
         Run run = TheRun.Fresh(waves: 4, fieldSize: 2);
-        TowerLayout defense = TheBuild.Defense();
         int[] before = Ids(run.Filling);
 
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.Shopping(run), defense);
+            run.Advance(TheBuild.Shopping(run));
             Assert.Equal(before, Ids(run.Filling));
         }
 
@@ -663,15 +662,13 @@ public class AnchorScheduleTests
         Assert.NotEqual(one.Schedule.ContentHash, two.Schedule.ContentHash);
         Assert.NotEqual(Ids(one.Filling), Ids(two.Filling));
 
-        TowerLayout defense = TheBuild.Defense();
+        Assert.Equal(
+            one.Advance(TheBuild.Shopping(one)).Outcome.LeakCostTaken,
+            two.Advance(TheBuild.Shopping(two)).Outcome.LeakCostTaken);
 
         Assert.Equal(
-            one.Advance(TheBuild.Shopping(one), defense).Outcome.LeakCostTaken,
-            two.Advance(TheBuild.Shopping(two), defense).Outcome.LeakCostTaken);
-
-        Assert.Equal(
-            one.Advance(TheBuild.Shopping(one), defense).Outcome.LeakCostTaken,
-            two.Advance(TheBuild.Shopping(two), defense).Outcome.LeakCostTaken);
+            one.Advance(TheBuild.Shopping(one)).Outcome.LeakCostTaken,
+            two.Advance(TheBuild.Shopping(two)).Outcome.LeakCostTaken);
     }
 
     [Fact]

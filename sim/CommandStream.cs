@@ -6,7 +6,8 @@ namespace Sim
 {
     /// <summary>
     /// One build phase as the record carries it: the wave it was decided in, and
-    /// the decision -- the take, and how the wave's slots were filled.
+    /// the decision -- the take, what it did to the board, and how the wave's
+    /// slots were filled.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -21,17 +22,32 @@ namespace Sim
     /// writer emitting bytes its own reader refuses, so the order is asserted
     /// where a command is made and asserted again where one is read.
     /// </para>
+    /// <para>
+    /// <b>The actions do not, and that is not an oversight.</b> Their order is
+    /// the phase's own: a phase may upgrade what it just placed, and the
+    /// placement ordinals depend on the sequence, so two orderings of the same
+    /// two actions are two different runs. Nothing here sorts them and nothing
+    /// asserts an order over them.
+    /// </para>
     /// </remarks>
     public sealed class RecordCommand : IEquatable<RecordCommand>
     {
         private readonly WaveSlot[] _slots;
 
-        private RecordCommand(int wave, OptionKind take, int takeId, WaveSlot[] slots)
+        private readonly BuildAction[] _actions;
+
+        private RecordCommand(
+            int wave,
+            OptionKind take,
+            int takeId,
+            WaveSlot[] slots,
+            BuildAction[] actions)
         {
             Wave = wave;
             Take = take;
             TakeId = takeId;
             _slots = slots;
+            _actions = actions;
         }
 
         /// <summary>Which wave of the run this decision was made in. Counted from one.</summary>
@@ -45,6 +61,16 @@ namespace Sim
 
         /// <summary>The slots, in the order they were filled. Empty ones included.</summary>
         public IReadOnlyList<WaveSlot> Slots => _slots;
+
+        /// <summary>What this phase did to the board, in the order it was written.</summary>
+        /// <remarks>
+        /// Stored from command stream format version 1, in the order they are
+        /// held here. A version-0 stream has no field for them and reads back
+        /// with none, so <see cref="ToPhase"/> hands on a phase that builds
+        /// nothing -- which is a decision, and the one every version-0 stream
+        /// made.
+        /// </remarks>
+        public IReadOnlyList<BuildAction> Actions => _actions;
 
         /// <summary>A build phase's decision, stamped with the wave it was made in.</summary>
         public static RecordCommand Of(int wave, BuildPhase decision)
@@ -94,7 +120,18 @@ namespace Sim
                 slots[index] = slot;
             }
 
-            return new RecordCommand(wave, decision.Take, decision.TakeId, slots);
+            // The actions travel across in the order the phase holds them and
+            // are asserted against nothing, because their order is the phase's
+            // own meaning. A phase whose actions were dropped here would record
+            // a run that built nothing and replay as a different run.
+            var actions = new BuildAction[decision.Actions.Count];
+
+            for (int index = 0; index < actions.Length; index++)
+            {
+                actions[index] = decision.Actions[index];
+            }
+
+            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, actions);
         }
 
         /// <summary>
@@ -105,6 +142,29 @@ namespace Sim
         public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots) =>
             Of(wave, BuildPhase.Of(take, takeId, slots));
 
+        /// <summary>
+        /// This command with one more action after the ones it already carries.
+        /// </summary>
+        /// <remarks>
+        /// A new command rather than a moved one, for the reason
+        /// <see cref="Board"/> is a value: a phase is composed a row at a time,
+        /// and appending is the only thing anything does to the list -- there is
+        /// no order for an insertion to find a place in.
+        /// </remarks>
+        public RecordCommand With(BuildAction action)
+        {
+            var grown = new BuildAction[_actions.Length + 1];
+
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                grown[index] = _actions[index];
+            }
+
+            grown[_actions.Length] = action;
+
+            return new RecordCommand(Wave, Take, TakeId, _slots, grown);
+        }
+
         public static bool operator ==(RecordCommand? a, RecordCommand? b) =>
             a is null ? b is null : a.Equals(b);
 
@@ -112,10 +172,19 @@ namespace Sim
 
         /// <summary>
         /// The decision as the build phase surface wants it, with nothing
-        /// reshaped: the three things stored are the three things
-        /// <see cref="BuildPhase.Of"/> takes.
+        /// reshaped: the four things stored are the four things a phase is.
         /// </summary>
-        public BuildPhase ToPhase() => BuildPhase.Of(Take, TakeId, _slots);
+        public BuildPhase ToPhase()
+        {
+            BuildPhase phase = BuildPhase.Of(Take, TakeId, _slots);
+
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                phase = phase.With(_actions[index]);
+            }
+
+            return phase;
+        }
 
         public bool Equals(RecordCommand? other)
         {
@@ -123,7 +192,8 @@ namespace Sim
                 || Wave != other.Wave
                 || Take != other.Take
                 || TakeId != other.TakeId
-                || _slots.Length != other._slots.Length)
+                || _slots.Length != other._slots.Length
+                || _actions.Length != other._actions.Length)
             {
                 return false;
             }
@@ -136,12 +206,21 @@ namespace Sim
                 }
             }
 
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                if (_actions[index] != other._actions[index])
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
         public override bool Equals(object? obj) => Equals(obj as RecordCommand);
 
-        public override int GetHashCode() => ((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length;
+        public override int GetHashCode() =>
+            (((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length) * 31 ^ _actions.Length;
 
         public override string ToString() =>
             "wave "
@@ -151,6 +230,9 @@ namespace Sim
             + " "
             + TakeId.ToString(CultureInfo.InvariantCulture)
             + ", "
+            + (_actions.Length == 0
+                ? string.Empty
+                : string.Join(", ", Array.ConvertAll(_actions, action => action.ToString())) + ", ")
             + string.Join(" | ", Array.ConvertAll(_slots, slot => slot.ToString()));
     }
 
@@ -309,11 +391,9 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="run">A fresh run, on the seed and the tables the stream is stamped with.</param>
-        /// <param name="defense">What stands while each of the run's waves is sent.</param>
         /// <param name="commands">The build phases to record.</param>
         public static (byte[] Bytes, IReadOnlyList<RoundReport> Rounds) Recorded(
             Run run,
-            TowerLayout defense,
             IReadOnlyList<RecordCommand> commands)
         {
             if (run is null)
@@ -332,7 +412,7 @@ namespace Sim
 
             byte[] bytes = Of(run, commands).ToBytes();
 
-            return (bytes, FromBytes(bytes).Replay(run, defense));
+            return (bytes, FromBytes(bytes).Replay(run));
         }
 
         /// <summary>Reads a command stream from bytes. The read gate, and nothing else.</summary>
@@ -350,6 +430,10 @@ namespace Sim
             {
                 case 0:
                     read = ReadVersion0(cursor, header);
+                    break;
+
+                case 1:
+                    read = ReadVersion1(cursor, header);
                     break;
 
                 default:
@@ -372,7 +456,9 @@ namespace Sim
 
             for (int index = 0; index < _commands.Length; index++)
             {
-                size += RecordFormat.CommandBytes + (_commands[index].Slots.Count * RecordFormat.SlotBytes);
+                size += RecordFormat.CommandBytes
+                    + (_commands[index].Actions.Count * RecordFormat.ActionBytes)
+                    + (_commands[index].Slots.Count * RecordFormat.SlotBytes);
             }
 
             var writer = new ByteWriter(size);
@@ -390,6 +476,16 @@ namespace Sim
                 writer.U16("command wave", command.Wave);
                 writer.U8("command take kind", (int)command.Take);
                 writer.U16("command take id", command.TakeId);
+                writer.U16("command action count", command.Actions.Count);
+
+                for (int action = 0; action < command.Actions.Count; action++)
+                {
+                    writer.U8("action kind", (int)command.Actions[action].Kind);
+                    writer.U16("action type id", command.Actions[action].TypeId);
+                    writer.I16("action column", command.Actions[action].Column);
+                    writer.I16("action row", command.Actions[action].Row);
+                }
+
                 writer.U16("command slot count", command.Slots.Count);
 
                 for (int slot = 0; slot < command.Slots.Count; slot++)
@@ -410,11 +506,20 @@ namespace Sim
         /// <para>
         /// <b>Every failure here is a refusal and never a skip.</b> A take
         /// naming an option that round's offering did not carry, a slot naming a
-        /// creep the run never unlocked, a slot beyond the round's width and a
-        /// wave nobody can afford are all
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>
+        /// creep the run never unlocked, a slot beyond the round's width, an
+        /// action on a cell no tower could stand on and a wave nobody can afford
+        /// are all
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// refusing -- the same surface a live build phase is checked by, so
         /// there is one implementation of the rules and not two.
+        /// </para>
+        /// <para>
+        /// <b>The board is folded forward, so each phase is checked against
+        /// what the phase before it built.</b> A stream whose fourth round
+        /// places on a cell its second round took is refused here rather than
+        /// mid-run, and a stream whose fourth round upgrades what its second
+        /// round placed is admitted here rather than refused for a cell that
+        /// would not have been empty by then.
         /// </para>
         /// <para>
         /// <b>The one check that surface cannot make is the wave index.</b>
@@ -424,12 +529,15 @@ namespace Sim
         /// menu. It is checked here, where both numbers are in hand.
         /// </para>
         /// <para>
-        /// <b>Nothing is applied.</b> The unlocks and the purse are folded
-        /// forward through local values exactly as a round moves them: a build
-        /// phase's take, then the wave's own purchases, then what the wave pays.
-        /// The run is untouched, so a stream can be checked and then refused
-        /// without the run having moved, and nothing here is handed a defense to
-        /// play a round with even by accident.
+        /// <b>Nothing is applied.</b> The three things a round moves -- the
+        /// unlocks, the purse and the board -- are folded forward through local
+        /// values exactly as a round moves them: a build phase's take, then
+        /// what it builds, then the wave's own purchases, then what the wave
+        /// pays. The run is untouched, so a stream can be checked and then
+        /// refused without the run having moved. The board the walk carries is
+        /// a value like the other two -- <see cref="Board.Place"/> and
+        /// <see cref="Board.Upgrade"/> return new boards -- so folding one
+        /// forward here cannot reach the run's.
         /// </para>
         /// <para>
         /// <b>The purse this walk carries is a ceiling and not the run's own.</b>
@@ -440,9 +548,16 @@ namespace Sim
         /// decision refused here is one no run could have afforded however well
         /// it played; a decision the ceiling admits is checked again, against the
         /// purse the round really holds, by the same
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>
+        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
+        /// </para>
+        /// <para>
+        /// <b>With the board folded, that ceiling is the last thing a decision
+        /// can be refused for after a round has resolved.</b> Everything else a
+        /// stored decision can be wrong about -- the take, the unlocks, the
+        /// slot width, the cell, the wave index -- is settled here, over values
+        /// that do not depend on how a round played.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -458,6 +573,7 @@ namespace Sim
             var builds = new List<Build>();
             Unlocks unlocks = run.Unlocks;
             Purse purse = run.Purse;
+            Board board = run.Board;
             int round = run.Round;
 
             for (int index = 0; index < _commands.Length; index++)
@@ -478,10 +594,12 @@ namespace Sim
                         + "another round would resolve it against an offering nobody was shown.");
                 }
 
-                Build build = command.ToPhase().Resolve(run.OfferingAt(round), unlocks, purse, run.Costs);
+                Build build = command.ToPhase().Resolve(
+                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, board);
 
                 unlocks = build.Unlocks;
                 purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
+                board = build.Board;
                 builds.Add(build);
             }
 
@@ -521,17 +639,11 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="run">The run to play, on the seed and the tables this stream is stamped with.</param>
-        /// <param name="defense">What stands while each of the run's waves is sent.</param>
-        public IReadOnlyList<RoundReport> Replay(Run run, TowerLayout defense)
+        public IReadOnlyList<RoundReport> Replay(Run run)
         {
             if (run is null)
             {
                 throw new ArgumentNullException(nameof(run));
-            }
-
-            if (defense is null)
-            {
-                throw new ArgumentNullException(nameof(defense));
             }
 
             if (run.Seed != Seed)
@@ -557,7 +669,7 @@ namespace Sim
 
             for (int index = 0; index < _commands.Length; index++)
             {
-                rounds.Add(run.Advance(_commands[index].ToPhase(), defense));
+                rounds.Add(run.Advance(_commands[index].ToPhase()));
             }
 
             return rounds;
@@ -606,12 +718,38 @@ namespace Sim
         /// Version 0: <c>u64 ruleset_hash + u64 schedule_hash + u64 seed +
         /// u16 command_count + Command[]</c>, where a command is
         /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>
-        /// followed by that many <c>(u16 type_id, u16 count)</c> slots.
+        /// followed by that many <c>(u16 type_id, u16 count)</c> slots. No
+        /// action run, so every build phase reads back having built nothing.
         /// </summary>
         /// <remarks>
-        /// This branch never goes away; a later version gets a branch beside it.
+        /// <b>This branch never goes away.</b> Version 1 sits beside it and this
+        /// one keeps reading version-0 streams forever.
+        /// <c>content/golden/command-0.commands</c> is the evidence: a real
+        /// recorded stream, kept so that deleting this branch is a red gate
+        /// rather than a quiet loss.
         /// </remarks>
-        private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header)
+        private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: false);
+
+        /// <summary>
+        /// Version 1: the same, with <c>u16 action_count</c> and that many
+        /// <c>(u8 kind, u16 type_id, i16 column, i16 row)</c> actions in each
+        /// command, between the take and the slot count.
+        /// </summary>
+        private static CommandStream ReadVersion1(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true);
+
+        /// <summary>
+        /// The body both versions share, told whether the bytes in front of it
+        /// carry an action run.
+        /// </summary>
+        /// <remarks>
+        /// Shared because it is the same bytes and not because it is
+        /// convenient: a copy per branch would let the wave-order and take
+        /// checks drift between them, and the version that lost one would go on
+        /// loading streams the other refuses.
+        /// </remarks>
+        private static CommandStream ReadCommands(ByteCursor cursor, RecordHeader header, bool storesActions)
         {
             ulong rulesetHash = cursor.U64("the ruleset hash");
             ulong scheduleHash = cursor.U64("the schedule hash");
@@ -639,7 +777,6 @@ namespace Sim
                 int wave = cursor.U16("the wave of " + what);
                 int take = cursor.U8("the take kind of " + what);
                 int takeId = cursor.U16("the take id of " + what);
-                int slotCount = cursor.U16("the slot count of " + what);
 
                 if (wave == 0)
                 {
@@ -682,8 +819,20 @@ namespace Sim
                 }
 
                 previousWave = wave;
-                commands[index] = RecordCommand.Of(
+
+                int actionCount = storesActions ? cursor.U16("the action count of " + what) : 0;
+                BuildAction[] actions = ReadActions(cursor, what, actionCount);
+                int slotCount = cursor.U16("the slot count of " + what);
+
+                RecordCommand command = RecordCommand.Of(
                     wave, (OptionKind)take, takeId, ReadSlots(cursor, what, slotCount));
+
+                for (int action = 0; action < actions.Length; action++)
+                {
+                    command = command.With(actions[action]);
+                }
+
+                commands[index] = command;
             }
 
             return new CommandStream(
@@ -692,6 +841,60 @@ namespace Sim
                 Hash64.FromValue(scheduleHash),
                 seed,
                 commands);
+        }
+
+        /// <summary>
+        /// One command's defensive actions, in the order they were stored.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// No order is asserted over them, which is the opposite of the slots
+        /// below: a phase may upgrade what it has just placed and the placement
+        /// ordinals fall out of the sequence, so the same two actions the other
+        /// way round are a different run rather than a second spelling of one.
+        /// </para>
+        /// <para>
+        /// What an action may say is <see cref="BuildAction.Of"/>'s rule and
+        /// where it sits in the record is this side's, so a refusal from there
+        /// is rewrapped rather than reimplemented -- one implementation of each
+        /// rule, and damaged bytes reported as a fault in the record rather
+        /// than in this program.
+        /// </para>
+        /// <para>
+        /// What the cell names is nobody's business here. A column and a row
+        /// are read as <c>i16</c> and every <c>i16</c> is a cell some map might
+        /// have, so whether one is on this map is a question for whatever
+        /// applies the action.
+        /// </para>
+        /// </remarks>
+        private static BuildAction[] ReadActions(ByteCursor cursor, string what, int count)
+        {
+            var actions = new BuildAction[count];
+
+            for (int index = 0; index < count; index++)
+            {
+                string which =
+                    "action "
+                    + (index + 1).ToString(CultureInfo.InvariantCulture)
+                    + " of "
+                    + what;
+
+                int kind = cursor.U8("the kind of " + which);
+                int typeId = cursor.U16("the type id of " + which);
+                int column = cursor.I16("the column of " + which);
+                int row = cursor.I16("the row of " + which);
+
+                try
+                {
+                    actions[index] = BuildAction.Of((ActionKind)kind, typeId, column, row);
+                }
+                catch (SimulationException refused)
+                {
+                    throw cursor.Fault(which + " cannot be read. " + refused.Message);
+                }
+            }
+
+            return actions;
         }
 
         /// <summary>
