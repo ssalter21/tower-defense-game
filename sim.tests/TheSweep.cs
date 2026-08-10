@@ -116,6 +116,31 @@ public static class TheSweep
     }
 
     /// <summary>
+    /// A third scripted player: it takes its option, builds whatever the
+    /// defensive bot decides, and fills no slot at all.
+    /// </summary>
+    /// <remarks>
+    /// The even-share bot with its wave taken off, so every gold a run of it
+    /// spends stands on the board and none of it walks. That is what makes a row
+    /// played under it a statement about one half of a phase's one bill. It
+    /// ignores <paramref name="preferred"/> for the reason <see cref="Banks"/>
+    /// does: a row's creep is a preference a policy is free not to have.
+    /// </remarks>
+    public static BuildPhase Builds(Run run, int preferred)
+    {
+        Option first = run.Offering.Options[0];
+        IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
+        BuildPhase phase = BuildPhase.Of(first.Kind, first.Id);
+
+        for (int index = 0; index < built.Count; index++)
+        {
+            phase = phase.With(built[index]);
+        }
+
+        return phase;
+    }
+
+    /// <summary>
     /// The canned field the harness ships with: the committed defense standing
     /// behind <c>content/field.txt</c>, drawn with replacement.
     /// </summary>

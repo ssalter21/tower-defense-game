@@ -38,6 +38,8 @@ internal static class SweepColumns
         "dealt_gold",
         "taken_gold",
         "spent_gold",
+        "defense_gold",
+        "unspent_gold",
         "cost_efficiency_dealt_per_100_gold",
         "income_base_gold",
         "bonus_gold",

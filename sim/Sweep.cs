@@ -206,24 +206,37 @@ namespace Sim
                 plan.DeathEndsTheRun);
 
             long spent = 0;
+            long defense = 0;
 
             while (!run.IsOver)
             {
-                // What the wave cost is read off the round rather than priced
+                // What the round cost is read off the round rather than priced
                 // again out here: the build phase works it out to spend it, and
                 // a second walk over the slots is a second copy of the pricing
                 // rule free to disagree with the one the purse was charged by.
-                spent += run.Advance(plan.Policy(run, creep.Id)).Build.Spent;
+                //
+                // The two halves of that one bill are reported separately,
+                // because gold spent is what the cost-efficiency column is per
+                // and towers do not walk.
+                Build build = run.Advance(plan.Policy(run, creep.Id)).Build;
+
+                defense += build.Defense;
+                spent += build.Spent - build.Defense;
             }
 
             // The bonus is read off the finished vector rather than added up as
             // the rounds went by: what each round dealt is on the vector, the
             // field is fixed for the run, and the bands are a lookup -- so what
             // a run earned for its offense is a fold and never a second play.
+            //
+            // The purse is read where the loop stopped, which is the end of the
+            // run by either of the two ways one ends.
             return new Played(
                 run.Outcome,
                 Ingredients(run.Unlocks),
                 spent,
+                defense,
+                run.Purse.Gold,
                 plan.Waves,
                 run.Round,
                 (long)plan.Rules.IncomeBasePerWave * run.Round,
@@ -257,6 +270,8 @@ namespace Sim
                 RunOutcome outcome,
                 int ingredients,
                 long spent,
+                long defense,
+                long unspent,
                 int waves,
                 int rounds,
                 long incomeBase,
@@ -264,6 +279,8 @@ namespace Sim
             {
                 Ingredients = ingredients;
                 Spent = spent;
+                Defense = defense;
+                Unspent = unspent;
                 Rounds = rounds;
                 IncomeBase = incomeBase;
                 Bonus = bonus;
@@ -279,6 +296,10 @@ namespace Sim
             internal int Ingredients { get; }
 
             internal long Spent { get; }
+
+            internal long Defense { get; }
+
+            internal long Unspent { get; }
 
             internal int Rounds { get; }
 
@@ -308,6 +329,10 @@ namespace Sim
 
             private long _spent;
 
+            private long _defense;
+
+            private long _unspent;
+
             private long _incomeBase;
 
             private long _bonus;
@@ -320,6 +345,8 @@ namespace Sim
                 _dealt += played.Dealt;
                 _taken += played.Taken;
                 _spent += played.Spent;
+                _defense += played.Defense;
+                _unspent += played.Unspent;
                 _incomeBase += played.IncomeBase;
                 _bonus += played.Bonus;
             }
@@ -352,6 +379,8 @@ namespace Sim
                     _dealt,
                     _taken,
                     _spent,
+                    _defense,
+                    _unspent,
                     _spent == 0 ? 0 : (int)(PerGold * _dealt / _spent),
                     _incomeBase,
                     _bonus);

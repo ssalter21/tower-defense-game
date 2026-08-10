@@ -337,6 +337,10 @@ namespace Sim
                 (built, left) = Applied(_actions[index], offering.Wave, built, left, costs, types, map);
             }
 
+            // What the board cost, taken off the purse the actions left rather
+            // than by pricing them a second time. The slots are bought below out
+            // of what is left, so this is the whole of the defensive half.
+            int defense = purse.Gold - left.Gold;
             var orders = new List<UnitOrder>();
             long spent = 0;
             int previousTypeId = 0;
@@ -413,6 +417,7 @@ namespace Sim
                 after,
                 left,
                 purse.Gold - left.Gold,
+                defense,
                 WaveScript.FromSlots(orders.ToArray()),
                 built);
         }
@@ -564,6 +569,7 @@ namespace Sim
             Unlocks unlocks,
             Purse purse,
             int spent,
+            int defense,
             WaveScript wave,
             Board board)
         {
@@ -571,6 +577,7 @@ namespace Sim
             Unlocks = unlocks;
             Purse = purse;
             Spent = spent;
+            Defense = defense;
             Wave = wave;
             Board = board;
         }
@@ -589,6 +596,19 @@ namespace Sim
         /// number because there is one wallet.
         /// </summary>
         public int Spent { get; }
+
+        /// <summary>
+        /// The part of <see cref="Spent"/> that stands on the board: what the
+        /// placements and the upgrades came to.
+        /// </summary>
+        /// <remarks>
+        /// One bill and two halves, said as a total and a part rather than as
+        /// two totals, so nothing holding this has to add them up to get what
+        /// the purse moved by. What the wave cost is the difference, and it is
+        /// what the cost-efficiency column of a balance report is per -- see
+        /// <c>docs/adr/0041</c>.
+        /// </remarks>
+        public int Defense { get; }
 
         /// <summary>The wave the filled slots compose. Empty where every slot was left so.</summary>
         public WaveScript Wave { get; }

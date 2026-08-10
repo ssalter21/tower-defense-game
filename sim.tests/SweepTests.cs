@@ -29,10 +29,11 @@ public class SweepTests
         // or something in there is reading the machine.
         //
         // The rows are compared field by field rather than by their printed
-        // form, because ToString carries three of the twelve numbers and a sweep
-        // that moved the other nine would compare equal. The two payment columns
-        // are in that comparison for the same reason; what pins their values
-        // rather than their determinism is the row test below.
+        // form, because ToString carries three of the fourteen numbers and a
+        // sweep that moved the other eleven would compare equal. The two payment
+        // columns and the two gold columns are in that comparison for the same
+        // reason; what pins their values rather than their determinism is the
+        // row test below.
         //
         // OBSERVED: seed the runs from the run index alone -- drop the plan's
         // seed out of Hash64.Start(RunLabel) in SweepPlan.SeedOf. This stays
@@ -63,6 +64,8 @@ public class SweepTests
             Assert.Equal(left.LeakCostDealt, right.LeakCostDealt);
             Assert.Equal(left.LeakCostTaken, right.LeakCostTaken);
             Assert.Equal(left.GoldSpent, right.GoldSpent);
+            Assert.Equal(left.DefenseGold, right.DefenseGold);
+            Assert.Equal(left.UnspentGold, right.UnspentGold);
             Assert.Equal(left.DealtPerHundredGold, right.DealtPerHundredGold);
             Assert.Equal(left.IncomeBaseGold, right.IncomeBaseGold);
             Assert.Equal(left.BonusGold, right.BonusGold);
@@ -325,6 +328,81 @@ public class SweepTests
             TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion").GoldSpent > 0,
             "The even-share bot bought nothing either, so a report of no spending says nothing about "
             + "which player produced it.");
+    }
+
+    [Fact]
+    public void Gold_spent_is_what_walked_and_the_defense_has_a_column_of_its_own()
+    {
+        // A phase pays for its towers and its creeps out of one purse, and the
+        // report splits that bill in two. Gold spent is the denominator of the
+        // cost-efficiency column, so a player that builds a board and sends
+        // nothing has spent nothing on creeps however much its purse moved --
+        // and what it did spend is on the row beside it rather than nowhere.
+        //
+        // OBSERVED: report the whole bill as the wave's -- add Build.Spent to
+        // Sweep.Play's spent total and leave the defense out of it. The first
+        // row goes red, 1800 gold of creeps where nothing walked, and the
+        // cost-efficiency column quietly becomes leak cost per hundred gold of
+        // tower.
+        SweepReport built = Sweep.Of(TheSweep.Plan(policy: TheSweep.Builds));
+
+        for (int index = 0; index < built.Rows.Count; index++)
+        {
+            SweepRow row = built.Rows[index];
+
+            Assert.Equal(0, row.GoldSpent);
+            Assert.True(
+                row.DefenseGold > 0,
+                "A player that spends half of every purse on towers built nothing at all: " + row);
+        }
+
+        // And a player that builds nothing reports nothing built, so the column
+        // above is about what the policy did rather than about a number that is
+        // always positive.
+        SweepReport banked = Sweep.Of(TheSweep.Plan(policy: TheSweep.Banks));
+
+        for (int index = 0; index < banked.Rows.Count; index++)
+        {
+            Assert.Equal(0, banked.Rows[index].DefenseGold);
+        }
+
+        // The default player does both halves, which is what every row of the
+        // committed report is played by.
+        SweepRow whole = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
+
+        Assert.True(whole.GoldSpent > 0 && whole.DefenseGold > 0, whole.ToString());
+    }
+
+    [Fact]
+    public void A_run_that_died_holding_gold_reports_it_like_any_other()
+    {
+        // What a run ended holding is the other half of what it earned, and a
+        // report that counted it only for the runs that survived would read the
+        // banking rule off the survivors alone -- which is the population that
+        // banked well enough to still be alive.
+        //
+        // The field here kills every run in its first round, so every gold in
+        // the unspent column of this report was in a dead run's purse.
+        //
+        // OBSERVED: count the purse only where the run ran out of waves --
+        // guard run.Purse.Gold in Sweep.Play on run.Ending. This goes red on the
+        // first row, "a run that died reported an empty purse", and the no-death
+        // sweep the committed report is produced by stays green.
+        UnitTypeTable types = TheMatch.Types();
+
+        SweepReport dying = Sweep.Of(TheSweep.Plan(
+            types: types,
+            rules: TheSweep.ThinHealth(),
+            field: TheSweep.LethalField(types),
+            deathEndsTheRun: true));
+
+        for (int index = 0; index < dying.Rows.Count; index++)
+        {
+            SweepRow row = dying.Rows[index];
+
+            Assert.Equal(row.Runs, row.Rounds);
+            Assert.True(row.UnspentGold > 0, "A run that died reported an empty purse: " + row);
+        }
     }
 
     [Fact]
