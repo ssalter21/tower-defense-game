@@ -172,6 +172,17 @@ namespace Sim
         public int Count => _placements.Length;
 
         /// <summary>
+        /// Whether that cell has nothing on it, which is what
+        /// <see cref="Place"/> requires and <see cref="Upgrade"/> refuses.
+        /// </summary>
+        /// <remarks>
+        /// Asked rather than found out by being refused, so that whatever is
+        /// choosing where to build walks the same one-placement-per-cell rule
+        /// this type enforces instead of keeping a second copy of it.
+        /// </remarks>
+        public bool IsFree(int column, int row) => IndexOn(column, row) < 0;
+
+        /// <summary>
         /// This board plus one more placement, which takes the next ordinal.
         /// </summary>
         /// <remarks>

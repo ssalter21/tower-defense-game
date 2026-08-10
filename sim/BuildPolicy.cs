@@ -33,7 +33,8 @@ namespace Sim
 
     /// <summary>
     /// The scripted player the sweep has always used: it takes the creep the row
-    /// is about and divides the purse evenly across the slots it fills.
+    /// is about, builds with half the purse, and divides the other half evenly
+    /// across the slots it fills.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -43,10 +44,18 @@ namespace Sim
     /// option on the menu otherwise.
     /// </para>
     /// <para>
+    /// <b>Then half the purse goes to the board.</b> What to build is
+    /// <see cref="CoverThenUpgradeBot"/>'s decision and not this one: a round is
+    /// one decision over one wallet, so both halves arrive as one build phase
+    /// carrying both the actions and the slots. What the defensive half declines
+    /// to spend banks rather than falling through to the wave.
+    /// </para>
+    /// <para>
     /// <b>Then every slot the round has is filled</b> -- that creep first, then
     /// whatever else the run has unlocked, ascending by type id -- with an equal
-    /// share of the purse each. What is left over banks and compounds, so a slot
-    /// whose share does not reach one body is an investment rather than a waste.
+    /// share of the <i>other</i> half each. What is left over banks and
+    /// compounds, so a slot whose share does not reach one body is an investment
+    /// rather than a waste.
     /// </para>
     /// <para>
     /// <b>An even share is a decision and not the only one.</b> It is the
@@ -67,9 +76,11 @@ namespace Sim
 
             Offering offering = run.Offering;
             Option take = Preferred(offering, preferred);
+            IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
             int[] chosen = Chosen(run.Unlocks.With(take), preferred, offering.WaveSlots);
             var slots = new WaveSlot[chosen.Length];
-            int share = chosen.Length == 0 ? 0 : run.Purse.Gold / chosen.Length;
+            int wave = run.Purse.Gold - CoverThenUpgradeBot.BudgetOf(run.Purse);
+            int share = chosen.Length == 0 ? 0 : wave / chosen.Length;
 
             for (int index = 0; index < chosen.Length; index++)
             {
@@ -82,7 +93,14 @@ namespace Sim
                     : WaveSlot.Of(chosen[index], count > WaveSlot.Largest ? WaveSlot.Largest : count);
             }
 
-            return BuildPhase.Of(take.Kind, take.Id, slots);
+            BuildPhase phase = BuildPhase.Of(take.Kind, take.Id, slots);
+
+            for (int index = 0; index < built.Count; index++)
+            {
+                phase = phase.With(built[index]);
+            }
+
+            return phase;
         }
 
         /// <summary>
