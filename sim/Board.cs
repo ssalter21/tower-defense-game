@@ -1,0 +1,259 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+
+namespace Sim
+{
+    /// <summary>
+    /// One thing a run has standing on the map: an identity, the type it is
+    /// now, and the cell it stands on.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A placement is not a tower.</b> A <see cref="PlacedTower"/> is a row
+    /// of an authored file and carries the line it was written on; a placement
+    /// was made by a decision at a wave, and there is no file for it to point
+    /// into. It also survives changing type, which is what an upgrade does to
+    /// one: the same id, a different <see cref="Type"/>.
+    /// </para>
+    /// <para>
+    /// The id is the ordinal of the <c>place</c> that made it, counted from
+    /// one. No format carries it and nothing stores it -- it is the placement's
+    /// position among the places a run has made, and <see cref="Board"/> is
+    /// what works it out. See
+    /// <c>docs/adr/0049-a-placement-identity-is-derived.md</c>.
+    /// </para>
+    /// </remarks>
+    public readonly struct Placement
+    {
+        internal Placement(int id, UnitType type, int column, int row)
+        {
+            Id = id;
+            Type = type;
+            Column = column;
+            Row = row;
+            Hex = Hex.FromOddRowOffset(column, row);
+        }
+
+        /// <summary>Which placement of the run this is, counted from one.</summary>
+        public int Id { get; }
+
+        /// <summary>The type standing here now. An upgrade swaps it.</summary>
+        public UnitType Type { get; }
+
+        /// <summary>The column. Offset coordinates, as the map grid is written and an action names one.</summary>
+        public int Column { get; }
+
+        /// <summary>The row.</summary>
+        public int Row { get; }
+
+        /// <summary>The cell, axial. This is what distances are computed from.</summary>
+        public Hex Hex { get; }
+
+        public override string ToString() =>
+            "placement "
+            + Id.ToString(CultureInfo.InvariantCulture)
+            + ", "
+            + Type.Label
+            + " at column "
+            + Column.ToString(CultureInfo.InvariantCulture)
+            + ", row "
+            + Row.ToString(CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// What a run has built: its placements, in the order they were placed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A board is not a layout, and deriving one is a computation.</b> Three
+    /// things live here that have no business on a <see cref="TowerLayout"/>:
+    /// the placement ordinals, placement order itself, and the absence of a
+    /// source line. Deriving rather than widening leaves every reader of a
+    /// layout reading exactly the type it reads today. See
+    /// <c>docs/adr/0048-a-board-is-not-a-layout.md</c>.
+    /// </para>
+    /// <para>
+    /// <b><see cref="Layout"/> is the seam.</b> It is the one place placement
+    /// order becomes canonical order: everything upstream of it is a sequence
+    /// of decisions, everything downstream of it is a position.
+    /// </para>
+    /// <para>
+    /// <b>An empty board is a position and not a fault.</b> A board with
+    /// nothing on it derives a layout with no towers in it, and a match
+    /// resolves against that. <see cref="TowerLayout.Parse"/>'s refusal of a
+    /// file with no towers is a rule about a <i>file</i> and stays one.
+    /// </para>
+    /// <para>
+    /// <b>A value, like the purse and the unlocks.</b> <see cref="Place"/> and
+    /// <see cref="Upgrade"/> return a new board rather than moving this one, so
+    /// a run's board is a fold over its build phases and a test can assert on
+    /// any intermediate without replaying anything.
+    /// </para>
+    /// </remarks>
+    public sealed class Board
+    {
+        private static readonly Board Nothing = new Board(new Placement[0]);
+
+        /// <summary>
+        /// The line a derived tower carries. Zero is what
+        /// <see cref="ContentException"/> reads as "not on a line", which is
+        /// what a placement made at wave 4 is.
+        /// </summary>
+        private const int NoLine = 0;
+
+        private readonly Placement[] _placements;
+
+        private Board(Placement[] placements)
+        {
+            _placements = placements;
+        }
+
+        /// <summary>A run that has built nothing yet. Every run opens here.</summary>
+        public static Board Empty => Nothing;
+
+        /// <summary>Every placement, in the order the run placed them.</summary>
+        public IReadOnlyList<Placement> Placements => _placements;
+
+        /// <summary>How many placements stand. One per <c>place</c> the run has made.</summary>
+        public int Count => _placements.Length;
+
+        /// <summary>
+        /// This board plus one more placement, which takes the next ordinal.
+        /// </summary>
+        /// <remarks>
+        /// The ordinal is the count of placements already standing plus one,
+        /// which is the count of <c>place</c> actions because an upgrade adds
+        /// none and nothing removes one.
+        /// </remarks>
+        public Board Place(UnitType type, int column, int row)
+        {
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            int standing = IndexOn(column, row);
+
+            if (standing >= 0)
+            {
+                throw new SimulationException(
+                    "A place puts a second thing on "
+                    + CellOf(column, row)
+                    + ", where "
+                    + _placements[standing].ToString()
+                    + " already stands. One cell holds one placement: two of them sharing a cell would be "
+                    + "two placements with one set of coordinates, and the layout this board derives could "
+                    + "not tell them apart.");
+            }
+
+            var grown = new Placement[_placements.Length + 1];
+
+            for (int index = 0; index < _placements.Length; index++)
+            {
+                grown[index] = _placements[index];
+            }
+
+            grown[_placements.Length] = new Placement(_placements.Length + 1, type, column, row);
+
+            return new Board(grown);
+        }
+
+        /// <summary>
+        /// This board with the placement on that cell standing as another type.
+        /// Its id and its position in placement order are both untouched.
+        /// </summary>
+        public Board Upgrade(UnitType type, int column, int row)
+        {
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            int standing = IndexOn(column, row);
+
+            if (standing < 0)
+            {
+                throw new SimulationException(
+                    "An upgrade names "
+                    + CellOf(column, row)
+                    + ", where nothing stands. "
+                    + ToString()
+                    + ". An upgrade swaps the type of a placement that is already standing, so a cell with "
+                    + "nothing on it names none to swap.");
+            }
+
+            var swapped = new Placement[_placements.Length];
+
+            for (int index = 0; index < _placements.Length; index++)
+            {
+                swapped[index] = _placements[index];
+            }
+
+            swapped[standing] = new Placement(_placements[standing].Id, type, column, row);
+
+            return new Board(swapped);
+        }
+
+        /// <summary>
+        /// The defense this board is, in the canonical order a match, a record
+        /// and the field pool all read: ascending by row and then by column.
+        /// </summary>
+        /// <remarks>
+        /// The ordering is an insertion by hand because the framework's sorts
+        /// are unstable and banned here. It needs no tie-break: one cell holds
+        /// one placement, so no two of them share a <c>(row, column)</c>.
+        /// </remarks>
+        public TowerLayout Layout()
+        {
+            var towers = new PlacedTower[_placements.Length];
+
+            for (int index = 0; index < _placements.Length; index++)
+            {
+                Placement placement = _placements[index];
+                int place = index;
+
+                while (place > 0 && SortsAhead(placement, towers[place - 1]))
+                {
+                    towers[place] = towers[place - 1];
+                    place--;
+                }
+
+                towers[place] = new PlacedTower(placement.Type, placement.Column, placement.Row, NoLine);
+            }
+
+            return TowerLayout.FromBoard(towers);
+        }
+
+        public override string ToString() =>
+            _placements.Length == 0
+                ? "nothing placed"
+                : _placements.Length.ToString(CultureInfo.InvariantCulture)
+                    + " placed: "
+                    + string.Join(", ", Array.ConvertAll(_placements, placement => placement.ToString()));
+
+        /// <summary>Whether a placement belongs before a tower already ordered.</summary>
+        private static bool SortsAhead(Placement placement, PlacedTower tower) =>
+            placement.Row < tower.Row || (placement.Row == tower.Row && placement.Column < tower.Column);
+
+        private static string CellOf(int column, int row) =>
+            "column "
+            + column.ToString(CultureInfo.InvariantCulture)
+            + ", row "
+            + row.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>Where the placement on that cell sits in placement order, or -1 where the cell is free.</summary>
+        private int IndexOn(int column, int row)
+        {
+            for (int index = 0; index < _placements.Length; index++)
+            {
+                if (_placements[index].Column == column && _placements[index].Row == row)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+    }
+}
