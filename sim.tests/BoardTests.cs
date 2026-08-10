@@ -6,8 +6,8 @@ namespace Sim.Tests;
 /// </summary>
 /// <remarks>
 /// What is asserted here is the type's own arithmetic -- the ordinals, the
-/// derivation, the fold an authored defense crosses to become one, and the two
-/// positions an empty board has to be legal in. A run holding one is
+/// derivation, and the two positions an empty board has to be legal in. A run
+/// holding one is
 /// <see cref="RunTests"/>'s business; every later ticket in this effort reads
 /// these rather than restating them.
 /// </remarks>
@@ -115,28 +115,6 @@ public class BoardTests
         Assert.Equal(committed.Leaked, played.Leaked);
         Assert.Equal(committed.FinalTick, played.FinalTick);
         Assert.Equal(committed.RollingStateHash, played.RollingStateHash);
-    }
-
-    [Fact]
-    public void An_authored_defense_folds_into_the_board_that_derives_it_back()
-    {
-        // The bridge every caller that still opens a run behind a defense file
-        // crosses: one fold, in one place, and what comes back out of it is the
-        // layout that went in.
-        //
-        // OBSERVED: walk the towers backwards in Board.Of. The spelling stays
-        // green -- the derivation sorts -- and the ordinals go red, the first
-        // tower of the file coming back as the last placement of the run.
-        UnitTypeTable types = TheMatch.Types();
-        TowerLayout authored = TheMatch.Layout(types);
-        Board board = Board.Of(authored);
-
-        Assert.Equal(authored.Count, board.Count);
-        Assert.Equal(TheMatch.Spelling(authored), TheMatch.Spelling(board.Layout()));
-
-        Assert.Equal(
-            authored.Towers.Select(tower => tower.Column).ToArray(),
-            board.Placements.Select(placement => placement.Column).ToArray());
     }
 
     [Fact]

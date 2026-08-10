@@ -33,7 +33,6 @@ namespace Sim
             Type = type;
             Column = column;
             Row = row;
-            Hex = Hex.FromOddRowOffset(column, row);
         }
 
         /// <summary>Which placement of the run this is, counted from one.</summary>
@@ -47,9 +46,6 @@ namespace Sim
 
         /// <summary>The row.</summary>
         public int Row { get; }
-
-        /// <summary>The cell, axial. This is what distances are computed from.</summary>
-        public Hex Hex { get; }
 
         public override string ToString() =>
             "placement "
@@ -134,36 +130,6 @@ namespace Sim
 
         /// <summary>A run that has built nothing yet. Every run opens here.</summary>
         public static Board Empty => Nothing;
-
-        /// <summary>
-        /// The board an authored defense stands as: its towers placed in the
-        /// order the file wrote them down.
-        /// </summary>
-        /// <remarks>
-        /// The one fold from a composed defense to a board, so a caller holding
-        /// a defense file has a board to open a run with and nowhere holds a
-        /// second copy of the walk. The towers arrive in canonical order and
-        /// <see cref="Layout"/> sorts into it, so the layout this derives is
-        /// the layout that went in.
-        /// </remarks>
-        public static Board Of(TowerLayout defense)
-        {
-            if (defense is null)
-            {
-                throw new ArgumentNullException(nameof(defense));
-            }
-
-            Board board = Nothing;
-
-            for (int index = 0; index < defense.Towers.Count; index++)
-            {
-                PlacedTower tower = defense.Towers[index];
-
-                board = board.Place(tower.Type, tower.Column, tower.Row);
-            }
-
-            return board;
-        }
 
         /// <summary>Every placement, in the order the run placed them.</summary>
         public IReadOnlyList<Placement> Placements => _placements;
