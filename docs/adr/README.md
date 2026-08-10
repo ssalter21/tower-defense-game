@@ -53,6 +53,8 @@ These were extracted from the source comments when the project moved to a commen
 | [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
 | [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing, and the content hash covers content the simulation never reads |
 | [0047](0047-a-bundle-stamps-its-ruleset.md) | A replay bundle stamps its ruleset, and a bundle that names none is retired |
+| [0048](0048-a-board-is-not-a-layout.md) | A board is not a layout, and deriving one is a computation |
+| [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
 
 ## Drawing the match
 
