@@ -9,12 +9,12 @@ vision and forgotten.
 This file exists so the vision can stay readable. It grows; the vision should not.
 
 **What is *not* here:** where the vision replaces a claim in one of the five archived deep dives. That is
-[§9 of the vision itself](vision.md#9-what-this-overturns), because it is how you read
-[`archive/`](archive/) rather than a record of churn, and it is stable.
+[the archive index](archive/README.md#what-the-vision-overturns), because it is how you read
+[`archive/`](archive/README.md) rather than a record of churn, and it is stable.
 
 ---
 
-## What the vision overturns in itself
+## Before 6 August 2026 — reading the finished skeleton
 
 Three claims were written before the walking skeleton existed, and reading the finished skeleton changed them.
 
@@ -56,7 +56,7 @@ the wave's *result*, and they cost one income rule instead of a whole parallel w
 its own prices and its own balance surface.
 
 Worth keeping for its own sake: **the two-purse decision survived less than a day of being written down, and
-cost nothing but a section.** That is the sequence in [§8](vision.md#8-the-build-order) working exactly as
+cost nothing but a section.** That is the sequence in [the build order](build-order.md) working exactly as
 designed — a decision made on paper before any content exists is a decision that can be unmade for the price of
 editing a paragraph. Had it been reversed after step 3, it would have cost a roster, a cost column and a record
 format.

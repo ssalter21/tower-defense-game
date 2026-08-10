@@ -65,9 +65,18 @@ Three facts, measured. The evidence is in
 
 ## Where things are written down
 
-- [`docs/vision.md`](docs/vision.md) — the standing document: what the game is, and the order it gets built in.
+- [`docs/vision.md`](docs/vision.md) — the standing document: what the game is. It holds only what is decided;
+  [`docs/build-order.md`](docs/build-order.md) holds the sequence and the nine seams,
+  [`docs/open-questions.md`](docs/open-questions.md) what is in scope but undecided, and
+  [`docs/decision-log.md`](docs/decision-log.md) every reversal.
+- [`docs/roster.md`](docs/roster.md) — the design side of `content/units.txt`: what each unit is for and what
+  about it is still unsigned.
 - [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. Source comments say *what* the code does; the
   reasoning lives here.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
 - [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the effort review
   boundary, and how blocking, claiming and closing a ticket are done here.
+
+**When a decision moves, the vision is edited and the reversal is recorded in the decision log.** Do not leave
+a struck-through claim, a "this used to say" aside or a dated amendment inside a standing document — that is
+what the log is for.

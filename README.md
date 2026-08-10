@@ -6,21 +6,25 @@ machine at a different latency. What it is and where it is going lives in
 
 ## Status
 
-The walking skeleton is built: a deterministic integer simulation, a ghost
-record format, a headless CLI, and a Unity 6 view that scrubs a recorded match
-from snapshots. It is a replay viewer — nothing a player does reaches the
-simulation, and the content it plays is four unit types, one fixed defense and
-one fixed wave.
+A deterministic integer simulation, a ghost record format, a headless CLI, a
+balance sweep, and a Unity 6 view that scrubs a recorded match from snapshots.
+A run is ten rounds of build phase and wave, authored as text and compiled to a
+command stream, against a canned field.
 
-What comes next is an **economy**, and then a run that is more than one wave.
-[The build order](docs/vision.md#8-the-build-order) sequences it by what is
-cheapest to learn rather than by what depends on what: its first four steps run
-from a shell with no engine in them, and interaction is the fifth.
+[The build order](docs/build-order.md) sequences the rest by what
+is cheapest to learn rather than by what depends on what. Its first four steps —
+the economy, the run lifecycle, the roster and the sweep — are built and run
+from a shell with no engine in them. **Step 5, build-phase interaction in the
+client, is what comes next**; the loop against stored ghosts is step 6.
 
 ## Ideas / scope
 
-[The Vision](docs/vision.md) fixes the destination; the
-[five deep dives](docs/README.md) behind it are the reading it was built on.
+[The Vision](docs/vision.md) fixes the destination and holds only what is
+decided. [The build order](docs/build-order.md) is the sequence,
+[open questions](docs/open-questions.md) is what is in scope but unsettled,
+[the decision log](docs/decision-log.md) holds every time the vision changed its
+mind, and [`docs/archive/`](docs/archive/README.md) holds the five deep dives it
+was built on.
 
 ## Getting started
 
