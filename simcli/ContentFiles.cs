@@ -94,9 +94,8 @@ internal static class RunContentFiles
         new ContentFile("schedule", "schedule.txt", typeof(AnchorSchedule));
 
     /// <summary>
-    /// What stands while this run's waves are sent, and what the canned opponent
-    /// stands behind. Read twice on purpose, so both directions of a round are
-    /// measured through the same wall.
+    /// What the canned opponent stands behind, and nothing this run stands: a
+    /// run opens on an empty board and builds its own.
     /// </summary>
     public static ContentFile Defense { get; } = new ContentFile("defense", "defense.txt", typeof(TowerLayout));
 

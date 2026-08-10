@@ -785,7 +785,6 @@ public class AnchorScheduleTests
             types,
             AnchorSchedule.Parse(schedule, types),
             TheRun.Pool(types),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 2,
             fieldSize: 4);

@@ -57,7 +57,6 @@ public static class TheCommands
             types,
             TheSchedule.Committed(types),
             TheRun.Pool(types),
-            TheBuild.Standing(types),
             seed,
             waves,
             fieldSize: 2);
@@ -138,7 +137,6 @@ public static class TheCommands
             types,
             schedule ?? TheSchedule.Committed(types),
             TheRun.Pool(types),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves,
             fieldSize: 2);

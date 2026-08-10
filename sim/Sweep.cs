@@ -29,9 +29,15 @@ namespace Sim
     /// Both halves are folds over the outcome vector and neither needs a
     /// re-simulation. Surviving is the placing -- waves survived, which the
     /// health pool decides. Out-dealing is leak cost dealt against leak cost
-    /// taken, and it is a fair comparison rather than a flattering one, because
-    /// the defense that stands against this run's waves is the same defense the
-    /// field stands: both sides are measured through the same wall.
+    /// taken.
+    /// </para>
+    /// <para>
+    /// <b>The two sides of that comparison stand different walls.</b> A run
+    /// opens on an empty board and stands whatever its own build phases put
+    /// there; the pool's members stand the defense the pool was canned with. So
+    /// leak cost taken is a measurement of the player and leak cost dealt is a
+    /// measurement against the canned opponent, and the difference between them
+    /// is not a wall both sides share.
     /// </para>
     /// <para>
     /// <b>The canned field is the economy's stand-in and not a tool pointed at
@@ -194,7 +200,6 @@ namespace Sim
                 plan.Types,
                 plan.Schedule,
                 plan.Field,
-                Board.Of(plan.Defense),
                 seed,
                 plan.Waves,
                 plan.FieldSize,

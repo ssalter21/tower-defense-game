@@ -25,7 +25,7 @@ namespace Sim.Tests;
 /// </remarks>
 public class BuildPhaseTests
 {
-    /// <summary>The committed archer: a tower, and the type the defense file stands one of at the cell below.</summary>
+    /// <summary>The committed archer: a tower, and the type these assertions stand one of at the cell below.</summary>
     private const int Archer = 3;
 
     /// <summary>The committed mage: a tower, and the priciest row on the roster.</summary>
@@ -37,13 +37,13 @@ public class BuildPhaseTests
     /// <summary>The committed minion: a creep, so a row no cell may hold.</summary>
     private const int Minion = 1;
 
-    /// <summary>A ground cell of the committed map that nothing in the committed defense stands on.</summary>
+    /// <summary>A ground cell of the committed map that these assertions leave empty.</summary>
     private const int FreeColumn = 0;
 
     /// <summary>Its row.</summary>
     private const int FreeRow = 0;
 
-    /// <summary>A cell the committed defense does stand on: the archer at column 3.</summary>
+    /// <summary>The other ground cell: the one <see cref="Standing"/> puts an archer on.</summary>
     private const int StandingColumn = 3;
 
     /// <summary>Its row.</summary>
@@ -632,7 +632,6 @@ public class BuildPhaseTests
             types,
             moved,
             TheRun.Pool(types),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 10,
             fieldSize: 4);
@@ -719,7 +718,12 @@ public class BuildPhaseTests
         // unlock-count assertion goes red, 10 against 0, and every round of the
         // run decides against a run that has never taken anything and never
         // spent a coin.
-        Run run = TheBuild.Fresh();
+        //
+        // Death is off, because this player spends every coin on creeps and
+        // never builds: an empty board against this pool runs out of health in
+        // the seventh round, and what is under test here is that ten decisions
+        // are ten rounds rather than how long a purely offensive run lives.
+        Run run = TheBuild.Fresh(deathEndsTheRun: false);
         var spent = new List<int>();
 
         while (!run.IsOver)
@@ -889,12 +893,12 @@ public class BuildPhaseTests
         Assert.Equal(purse, run.Purse.Gold);
         Assert.Equal(0, run.Unlocks.Count);
         Assert.Equal(0, run.Round);
-        Assert.Equal(TheBuild.Standing().Count, run.Board.Count);
+        Assert.Equal(0, run.Board.Count);
 
         // Buy what is left over instead and the same phase is a round: the
         // tower stands, the wave went, and one purse paid for both.
         Assert.Equal(
-            TheBuild.Standing().Count + 1,
+            1,
             run.Advance(
                 BuildPhase
                     .Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, affordable))
@@ -943,7 +947,7 @@ public class BuildPhaseTests
         //
         // OBSERVED: send a place on an occupied cell to Board.Upgrade in
         // BuildPhase.Applied. This goes red having caught nothing, and the
-        // committed defense's archer becomes a mage nobody asked for.
+        // archer already standing there becomes a mage nobody asked for.
         //
         // OBSERVED: return the board's refusal unwrapped from
         // BuildPhase.Standing. The round assertion goes red, and a ten-wave
@@ -952,7 +956,7 @@ public class BuildPhaseTests
         Run run = TheBuild.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Acting(run, ActionKind.Place, Mage, StandingColumn, StandingRow));
+            () => Acting(run, ActionKind.Place, Mage, StandingColumn, StandingRow, Standing(run)));
 
         Assert.Contains("A build phase at wave 1 cannot act", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("One cell holds one placement", thrown.Message, StringComparison.Ordinal);
@@ -990,7 +994,7 @@ public class BuildPhaseTests
         Run run = TheBuild.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Acting(run, ActionKind.Upgrade, Archer, StandingColumn, StandingRow));
+            () => Acting(run, ActionKind.Upgrade, Archer, StandingColumn, StandingRow, Standing(run)));
 
         Assert.Contains("A build phase at wave 1 cannot act", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("already stands as that type", thrown.Message, StringComparison.Ordinal);
@@ -1088,6 +1092,7 @@ public class BuildPhaseTests
         Run run = TheBuild.Fresh();
         Option first = run.Offering.Options[0];
         int mage = run.Costs.PriceOf(Purchase.Unit(Mage));
+        Board standing = Standing(run);
 
         Build built = Resolved(
             run,
@@ -1095,23 +1100,24 @@ public class BuildPhaseTests
                 .Of(first.Kind, first.Id)
                 .With(BuildAction.Of(ActionKind.Upgrade, Mage, StandingColumn, StandingRow)),
             Unlocks.None,
-            mage);
+            mage,
+            standing);
 
         Assert.Equal(mage, built.Spent);
         Assert.Equal(0, built.Purse.Gold);
 
         // The same count of placements, the same ids, and the cell that was
         // named standing as the type it was upgraded to.
-        Assert.Equal(run.Board.Count, built.Board.Count);
+        Assert.Equal(standing.Count, built.Board.Count);
         Assert.Equal(
-            run.Board.Placements.Select(placement => placement.Id),
+            standing.Placements.Select(placement => placement.Id),
             built.Board.Placements.Select(placement => placement.Id));
 
         Placement climbed = built.Board.Placements.First(
             placement => placement.Column == StandingColumn && placement.Row == StandingRow);
 
         Assert.Equal(Mage, climbed.Type.Id);
-        Assert.Equal(Archer, run.Board.Placements.First(
+        Assert.Equal(Archer, standing.Placements.First(
             placement => placement.Column == StandingColumn && placement.Row == StandingRow).Type.Id);
     }
 
@@ -1141,7 +1147,7 @@ public class BuildPhaseTests
                 .With(BuildAction.Of(ActionKind.Place, Soldier, FreeColumn, FreeRow)));
 
         Assert.Equal(1, run.Round);
-        Assert.Equal(TheBuild.Standing().Count + 1, run.Board.Count);
+        Assert.Equal(1, run.Board.Count);
         Assert.Equal(Soldier, run.Board.Placements[run.Board.Count - 1].Type.Id);
     }
 
@@ -1153,8 +1159,8 @@ public class BuildPhaseTests
         // A tower bought this round defends this round.
         //
         // OBSERVED: hand RoundOrders.Of the run's board rather than the build's
-        // in Run.Advance. This goes red on the tower count of what was sent, 6
-        // against 7, and every tower a run buys sits out the round it was
+        // in Run.Advance. This goes red on the tower count of what was sent, 0
+        // against 1, and every tower a run buys sits out the round it was
         // bought in.
         Run run = TheBuild.Fresh();
         Option first = run.Offering.Options[0];
@@ -1164,23 +1170,38 @@ public class BuildPhaseTests
                 .Of(first.Kind, first.Id)
                 .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow)));
 
-        Assert.Equal(TheBuild.Standing().Count + 1, run.Sent[0].Defense.Count);
+        Assert.Equal(1, run.Sent[0].Defense.Count);
         Assert.Equal(run.Board.Count, run.Sent[0].Defense.Count);
     }
+
+    /// <summary>
+    /// The board an assertion about a taken cell acts on: a run opens with
+    /// nothing standing, so the archer these upgrade and collide with is put
+    /// there here rather than read off an authored file.
+    /// </summary>
+    private static Board Standing(Run run) =>
+        run.Board.Place(run.Types.ById(Archer), StandingColumn, StandingRow);
 
     /// <summary>
     /// A phase that takes the round's first option, does one thing to the
     /// board and sends nothing, out of a purse none of these assertions is
     /// about.
     /// </summary>
-    private static Build Acting(Run run, ActionKind kind, int typeId, int column, int row) =>
+    private static Build Acting(
+        Run run,
+        ActionKind kind,
+        int typeId,
+        int column,
+        int row,
+        Board? board = null) =>
         Resolved(
             run,
             BuildPhase
                 .Of(run.Offering.Options[0].Kind, run.Offering.Options[0].Id)
                 .With(BuildAction.Of(kind, typeId, column, row)),
             Unlocks.None,
-            1000);
+            1000,
+            board);
 
     /// <summary>
     /// A decision resolved against the round in front of a run, and against
@@ -1188,12 +1209,13 @@ public class BuildPhaseTests
     /// </summary>
     /// <remarks>
     /// The purse is an argument because most of these assertions are about what
-    /// a decision costs; everything else comes off the run, because none of
-    /// them are about where a roster or a map came from.
+    /// a decision costs, and the board is one because a run opens holding
+    /// nothing; everything else comes off the run, because none of them are
+    /// about where a roster or a map came from.
     /// </remarks>
-    private static Build Resolved(Run run, BuildPhase phase, Unlocks unlocks, int gold) =>
+    private static Build Resolved(Run run, BuildPhase phase, Unlocks unlocks, int gold, Board? board = null) =>
         phase.Resolve(
-            run.Offering, unlocks, Purse.Holding(gold), run.Costs, run.Types, run.Map, run.Board);
+            run.Offering, unlocks, Purse.Holding(gold), run.Costs, run.Types, run.Map, board ?? run.Board);
 
     /// <summary>Every creep on a round's menu, unlocked, so a slot assertion is about the slot.</summary>
     private static Unlocks Everything(Offering offering)

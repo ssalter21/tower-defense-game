@@ -54,7 +54,12 @@ public class RunTests
         // against a run this test computed, so a lifecycle regression cannot
         // move both sides of the comparison at once.
         //
-        // The run survives its last wave by 582 gold of health, which is what
+        // Every row builds as well as shops, because a run opens on an empty
+        // board and one that only ever shops runs out of health in its seventh
+        // round. The wall it puts up is the same wall every round, so the four
+        // scenarios still differ in nothing but their arguments.
+        //
+        // The run survives its last wave by 96 gold of health, which is what
         // makes the death flag inert here: the no-death row produces the same
         // vector as the rest rather than a longer one, so the flag is an
         // argument and not a different lifecycle.
@@ -62,7 +67,7 @@ public class RunTests
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on the health it finished with,
-        // 582 against 1500, which is what a second code path hiding behind an
+        // 96 against 1500, which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -70,7 +75,7 @@ public class RunTests
 
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.Shopping(run));
+            run.Advance(TheBuild.Fortifying(run));
 
             if (readsTheOutcomeAsItGoes)
             {
@@ -88,7 +93,7 @@ public class RunTests
 
             while (!again.IsOver)
             {
-                again.Advance(TheBuild.Shopping(again));
+                again.Advance(TheBuild.Fortifying(again));
             }
 
             Assert.Equal(run.Outcome.LeakCostDealt, again.Outcome.LeakCostDealt);
@@ -209,15 +214,14 @@ public class RunTests
         // a field is only ever as costly as its worst member, and the nine
         // others in it stop counting for anything.
         UnitTypeTable types = TheRun.UnkillableTypes();
-        TowerLayout defense = TheBuild.Defense(types);
         RoundOrders heavy = TheRun.Orders(types, 6, 6);
         RoundOrders light = TheRun.Orders(types, 6, 1);
 
         Assert.Equal(383, TheRun.FullLeakCost(TheRuleset.Costs(), heavy.Wave));
         Assert.Equal(100, TheRun.FullLeakCost(TheRuleset.Costs(), light.Wave));
 
-        Assert.Equal(383, TheRun.Against(types, defense, heavy).Outcome.LeakCostTaken);
-        Assert.InRange(TheRun.Against(types, defense, heavy, light).Outcome.LeakCostTaken, 101, 382);
+        Assert.Equal(383, TheRun.Against(types, heavy).Outcome.LeakCostTaken);
+        Assert.InRange(TheRun.Against(types, heavy, light).Outcome.LeakCostTaken, 101, 382);
     }
 
     [Fact]
@@ -243,12 +247,11 @@ public class RunTests
         // ceiling every score is held under is what that wave cost rather than
         // a number this test named.
         UnitTypeTable types = TheMatch.Types();
-        TowerLayout defense = TheBuild.Defense(types);
         RoundOrders thin = TheRun.Orders(types, 1, 6);
         RoundOrders whole = TheRun.Orders(types, 6, 6);
 
         int[] widening = Enumerable.Range(1, 10)
-            .Select(fieldSize => TheRun.Against(types, defense, fieldSize, whole).Outcome.LeakCostDealt)
+            .Select(fieldSize => TheRun.Against(types, fieldSize, whole).Outcome.LeakCostDealt)
             .ToArray();
 
         bool fell = false;
@@ -266,8 +269,8 @@ public class RunTests
 
         // And what the field is made of moves the score, so it is a fold over
         // the whole of it rather than over whoever came first.
-        RoundReport against = TheRun.Against(types, defense, thin, whole);
-        int weakest = TheRun.Against(types, defense, thin).Outcome.LeakCostDealt;
+        RoundReport against = TheRun.Against(types, thin, whole);
+        int weakest = TheRun.Against(types, thin).Outcome.LeakCostDealt;
         int mixed = against.Outcome.LeakCostDealt;
         int ceiling = TheRun.FullLeakCost(TheRuleset.Costs(), against.Build.Wave);
 
@@ -579,32 +582,39 @@ public class RunTests
         // different openings and then send one wave into one field, and what
         // that wave got past has to come back identical.
         //
-        // OBSERVED: mix the previous round's leak cost into the field draw's
-        // position in Run.FieldFor -- the shape a draw taken from wherever the
-        // match stream left off has, since where that is depends on how many
-        // shots were fired. The offense assertion goes red, 47 against 82: two
-        // runs meet different fields in a round they sent one wave into.
+        // OBSERVED: mix the health the run has spent so far into the field
+        // draw's position in Run.FieldFor -- the shape a draw taken from
+        // wherever the match stream left off has, since where that is depends
+        // on how many shots were fired. The offense assertion goes red, 185
+        // against 122: two runs meet different fields in a round they sent one
+        // identical wave into.
         //
         // The two runs differ in the board each of them stands behind and in
-        // nothing else. What a round deals is a fact about the wave it sent and
-        // the defenses that met it, so a thinner board costs its run health
-        // without ever moving what it got past the field: both runs read one
-        // offering, shop one purse and send one wave, round for round. What the
-        // third round's draw must not be able to see is the health between them.
-        UnitTypeTable types = TheMatch.Types();
+        // nothing else: one of them opens by building a tower, the other by
+        // building nothing, and neither sends a creep until the third round.
+        // What a round deals is a fact about the wave it sent and the defenses
+        // that met it, so a tower costs its run gold and saves it health
+        // without ever moving what it got past the field. The third round is
+        // shopped to the smaller of the two purses, so both send one identical
+        // wave; what that round's draw must not be able to see is the health
+        // and the gold between them.
+        // A cell content/defense.txt stands a mortar on, so it is one a tower
+        // can be put on and one that watches the corridor.
+        BuildAction mortar = BuildAction.Of(ActionKind.Place, 4, 9, 0);
 
         Run one = TheRun.Fresh(waves: 3, fieldSize: 4);
-        Run two = TheRun.Fresh(
-            waves: 3, fieldSize: 4, board: Board.Of(TheRun.Orders(types, 2, 2).Defense));
+        Run two = TheRun.Fresh(waves: 3, fieldSize: 4);
 
-        for (int opening = 0; opening < 2; opening++)
-        {
-            one.Advance(TheBuild.Shopping(one));
-            two.Advance(TheBuild.Shopping(two));
-        }
+        one.Advance(TheBuild.BuyingNothing(one.Offering));
+        two.Advance(TheBuild.BuyingNothing(two.Offering).With(mortar));
 
-        RoundOutcome fromOne = one.Advance(TheBuild.Shopping(one)).Outcome;
-        RoundOutcome fromTwo = two.Advance(TheBuild.Shopping(two)).Outcome;
+        one.Advance(TheBuild.BuyingNothing(one.Offering));
+        two.Advance(TheBuild.BuyingNothing(two.Offering));
+
+        int budget = Math.Min(one.Purse.Gold, two.Purse.Gold);
+
+        RoundOutcome fromOne = one.Advance(TheBuild.Shopping(one, budget)).Outcome;
+        RoundOutcome fromTwo = two.Advance(TheBuild.Shopping(two, budget)).Outcome;
 
         Assert.True(
             fromOne.LeakCostDealt > 0,
@@ -639,14 +649,18 @@ public class RunTests
         // _sent.Add on Health being above zero. The no-death row goes red, 10
         // against 4, and the rounds a losing player played stop entering
         // anybody's field.
-        TowerLayout defense = TheBuild.Defense();
-        Run alive = Played(TheRun.Fresh(waves: 3, fieldSize: 2));
+        // What a run stands is what it built, so the wall goes up a tower a
+        // round and every set of orders it stored carries the board of the
+        // round it was sent in: one more tower each time, and the last of them
+        // the board the run finished on.
+        Run alive = Played(TheRun.Fresh(waves: 3, fieldSize: 2), TheBuild.Fortifying);
         Run dead = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(3, alive.Sent.Count);
-        Assert.All(
-            alive.Sent,
-            sent => Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(sent.Defense)));
+        Assert.Equal(new[] { 1, 2, 3 }, alive.Sent.Select(sent => sent.Defense.Count));
+        Assert.Equal(
+            TheMatch.Spelling(alive.Board.Layout()),
+            TheMatch.Spelling(alive.Sent[alive.Sent.Count - 1].Defense));
         Assert.All(alive.Sent, sent => Assert.True(sent.Wave.TotalUnits > 0));
         Assert.Equal(10, dead.Sent.Count);
 
@@ -725,7 +739,6 @@ public class RunTests
                 TheMatch.Types(),
                 TheSchedule.Committed(),
                 TheRun.Pool(),
-                TheBuild.Standing(),
                 TheRun.Seed,
                 Purse.RoundCapLifted,
                 4,
@@ -740,7 +753,6 @@ public class RunTests
             TheMatch.Types(),
             TheSchedule.Committed(),
             TheRun.Pool(),
-            TheBuild.Standing(),
             TheRun.Seed,
             Purse.RoundCapLifted,
             4);
@@ -831,7 +843,6 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types) }),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
@@ -874,7 +885,6 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             TheRun.Pool(types),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 2,
             fieldSize: 2);
@@ -931,7 +941,6 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types, 6, 1), TheRun.Orders(types, 6, 6) }),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
@@ -978,7 +987,6 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types, 6, 1) }),
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 3,
             fieldSize: 1,
@@ -1119,7 +1127,6 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             pool,
-            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 4);
@@ -1136,11 +1143,14 @@ public class RunTests
     }
 
     /// <summary>A run driven to its end, every round shopping behind its own board.</summary>
-    private static Run Played(Run run)
+    private static Run Played(Run run) => Played(run, TheBuild.Shopping);
+
+    /// <summary>The same, by whichever scripted player the scenario is about.</summary>
+    private static Run Played(Run run, Func<Run, BuildPhase> decide)
     {
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.Shopping(run));
+            run.Advance(decide(run));
         }
 
         return run;

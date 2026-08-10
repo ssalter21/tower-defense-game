@@ -673,7 +673,7 @@ public class CommandStreamTests
         Assert.Equal(0, untouched.Round);
         Assert.Equal(0, untouched.Unlocks.Count);
         Assert.Equal(TheRuleset.Committed().StartingPurseGold, untouched.Purse.Gold);
-        Assert.Equal(TheBuild.Standing().Count, untouched.Board.Count);
+        Assert.Equal(0, untouched.Board.Count);
     }
 
     [Fact]
@@ -716,7 +716,7 @@ public class CommandStreamTests
 
         // One more placement than the run opened with, on both sides: the walk
         // ends on the board the play ends on.
-        Assert.Equal(TheBuild.Standing().Count + 1, walked[walked.Count - 1].Board.Count);
+        Assert.Equal(1, walked[walked.Count - 1].Board.Count);
         Assert.Equal(played.Board.Count, walked[walked.Count - 1].Board.Count);
 
         // And the other direction. Wave four places on the cell wave two took,

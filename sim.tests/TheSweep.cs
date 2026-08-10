@@ -75,14 +75,12 @@ public static class TheSweep
         BuildPolicy? policy = null)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
-        TowerLayout defense = TheMatch.Layout(table);
 
         return new SweepPlan(
             TheMatch.Map(),
             rules ?? TheRuleset.Committed(),
             table,
             schedule ?? TheSchedule.Committed(table),
-            defense,
             field ?? Field(table),
             seed,
             runs,
@@ -161,7 +159,6 @@ public static class TheSweep
             TheRuleset.Committed(),
             towers,
             TheSchedule.Committed(),
-            defense,
             FieldPool.Canned(defense, TheRun.FieldWave(TheMatch.Types())),
             Seed,
             Runs,

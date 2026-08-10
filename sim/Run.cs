@@ -59,12 +59,17 @@ namespace Sim
     /// <para>
     /// <b>One surface, every scenario</b> -- the same claim <see cref="Match"/>
     /// makes, one level up. Construct from the map, the rules, the unit table,
-    /// the shape, the pool a field is drawn from, the board it opens with, a
-    /// seed, N, K and whether death ends it; hand <see cref="Advance"/> what the
-    /// build phase decided; read the <see cref="Outcome"/>. Normal play, a
-    /// sweep row, a no-death harness run and a server re-validating a submitted
-    /// run are those calls with different arguments. <b>None of them is a mode,
-    /// a flag or a branch.</b>
+    /// the shape, the pool a field is drawn from, a seed, N, K and whether death
+    /// ends it; hand <see cref="Advance"/> what the build phase decided; read the
+    /// <see cref="Outcome"/>. Normal play, a sweep row, a no-death harness run
+    /// and a server re-validating a submitted run are those calls with different
+    /// arguments. <b>None of them is a mode, a flag or a branch.</b>
+    /// </para>
+    /// <para>
+    /// <b>Every run opens on an empty board.</b> There is no opening defense to
+    /// hand in: what stands is what this run's own build phases put there, so
+    /// the first build phase is a decision rather than a position somebody else
+    /// composed. See <c>docs/adr/0048-a-board-is-not-a-layout.md</c>.
     /// </para>
     /// <para>
     /// <b>N, K and death are parameters and not constants.</b> Ten waves and ten
@@ -178,10 +183,6 @@ namespace Sim
         /// The population a round's field of K is drawn from, and the one the
         /// performance bonus is measured against. See <see cref="Field"/>.
         /// </param>
-        /// <param name="board">
-        /// What the run opens with standing on the map. Every round's defense
-        /// is derived from it, so nothing hands one in.
-        /// </param>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
         /// <param name="waves">
         /// N. <see cref="Purse.RoundCapLifted"/> for a run with no last wave,
@@ -195,7 +196,6 @@ namespace Sim
             UnitTypeTable types,
             AnchorSchedule schedule,
             FieldPool pool,
-            Board board,
             ulong seed,
             int waves = DefaultWaves,
             int fieldSize = DefaultFieldSize,
@@ -203,7 +203,7 @@ namespace Sim
         {
             Map = map ?? throw new ArgumentNullException(nameof(map));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
-            Board = board ?? throw new ArgumentNullException(nameof(board));
+            Board = Board.Empty;
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Types = types ?? throw new ArgumentNullException(nameof(types));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
@@ -258,9 +258,9 @@ namespace Sim
         public HexMap Map { get; }
 
         /// <summary>
-        /// What this run has standing on the map. Every round derives its
-        /// layout from here rather than being handed one, and every build phase
-        /// acts on it and hands back what it left.
+        /// What this run has standing on the map. It opens empty, every round
+        /// derives its layout from here rather than being handed one, and every
+        /// build phase acts on it and hands back what it left.
         /// </summary>
         public Board Board { get; private set; }
 

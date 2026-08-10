@@ -227,11 +227,10 @@ public static class Program
         "         from the build phases on the command stream and are read from no",
         "         file at all.",
         string.Empty,
-        "         --defense is read twice by a run verb, deliberately: it is what",
-        "         stands while this run's waves are sent AND the defense the canned",
-        "         opponent stands behind. Both directions of a round are then",
-        "         measured through the same wall, which is what makes out-dealing",
-        "         the field a fair comparison rather than a flattering one.",
+        "         --defense is the OPPONENTS' defense and never this run's. It is",
+        "         the wall every member of the canned field stands behind. A run",
+        "         opens on an empty board and stands whatever its own build",
+        "         phases put on the map, so nothing hands it a defense at all.",
     };
 
     /// <summary>The entry point. Zero if the run happened, non-zero if it did not.</summary>

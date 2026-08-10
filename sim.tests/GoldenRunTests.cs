@@ -166,9 +166,9 @@ public class GoldenRunTests
         CommandStream.FromBytes("run.commands", File.ReadAllBytes(RepoLayout.CommandFile));
 
     /// <summary>
-    /// The run the command line builds for that record: the committed board,
-    /// tables and shape, and the canned field of one the committed defense and
-    /// the committed field file make.
+    /// The run the command line builds for that record: the committed tables
+    /// and shape, and the canned field of one the committed defense and the
+    /// committed field file make.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -198,7 +198,6 @@ public class GoldenRunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Canned(defense, TheRun.FieldWave(types)),
-            Board.Of(defense),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

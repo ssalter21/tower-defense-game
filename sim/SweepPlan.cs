@@ -71,7 +71,6 @@ namespace Sim
         /// <param name="rules">The matrix, the purse, the bands and the dials below.</param>
         /// <param name="types">The roster the rows are scored over and every cost is read out of.</param>
         /// <param name="schedule">The shape: the anchors, their tiers and the derived slot widths.</param>
-        /// <param name="defense">What stands while each run's waves are sent.</param>
         /// <param name="field">
         /// The population a round's field of K is drawn from -- canned, until
         /// runs are stored and a real pool of them exists. See the remarks on
@@ -99,7 +98,6 @@ namespace Sim
             Ruleset rules,
             UnitTypeTable types,
             AnchorSchedule schedule,
-            TowerLayout defense,
             FieldPool field,
             ulong firstSeed,
             int runsPerCreep = DefaultRunsPerCreep,
@@ -116,7 +114,6 @@ namespace Sim
             Map = map ?? throw new ArgumentNullException(nameof(map));
             Types = types ?? throw new ArgumentNullException(nameof(types));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
-            Defense = defense ?? throw new ArgumentNullException(nameof(defense));
             Field = field ?? throw new ArgumentNullException(nameof(field));
 
             if (rules is null)
@@ -166,9 +163,6 @@ namespace Sim
 
         /// <summary>The shape.</summary>
         public AnchorSchedule Schedule { get; }
-
-        /// <summary>What stands while a run's waves are sent.</summary>
-        public TowerLayout Defense { get; }
 
         /// <summary>The population a round's field is drawn from.</summary>
         public FieldPool Field { get; }

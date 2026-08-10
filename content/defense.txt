@@ -1,4 +1,11 @@
-# The defense the skeleton's one match is fought by.
+# The defense the skeleton's one match is fought by, and the OPPONENTS' defense
+# everywhere else.
+#
+# THIS IS NOT WHAT A RUN STANDS BEHIND. A run opens on an empty board and stands
+# whatever its own build phases put on the map -- see content/commands.txt. This
+# file is the wall on the other side: the one the authored match's wave is sent
+# at, and the one every member of the canned field pool stands behind while a
+# run's waves are measured against it.
 #
 # Six towers, and they never change. There is no build phase, no economy and
 # nothing a mouse does that reaches the simulation: the defense is this file,

@@ -204,7 +204,6 @@ public class SweepTests
             TheRuleset.Committed(),
             TheMatch.Types(),
             TheSchedule.Committed(),
-            TheMatch.Layout(TheMatch.Types()),
             TheSweep.Field(TheMatch.Types()),
             TheSweep.Seed,
             TheSweep.Runs).DeathEndsTheRun);

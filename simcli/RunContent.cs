@@ -54,9 +54,9 @@ internal readonly struct RunShape
 /// and the engine call.
 /// </para>
 /// <para>
-/// <b>The defense is read twice on purpose.</b> It is what stands while this
-/// run's waves are sent, and it is also the defense the canned opponent stands
-/// behind, so both directions of a round are measured through the same wall.
+/// <b>The defense file is the opponents' and nothing else.</b> It is the wall
+/// the canned field stands behind; a run stands whatever its own build phases
+/// put on the map, and it opens with nothing there.
 /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
 /// </para>
 /// <para>
@@ -107,7 +107,6 @@ internal sealed class RunContent
         _pool = FieldPool.Canned(defense, field);
         Types = types;
         Ladder = ladder;
-        Defense = defense;
     }
 
     /// <summary>
@@ -121,9 +120,6 @@ internal sealed class RunContent
     /// see the remarks on <see cref="RunContent"/>.
     /// </summary>
     public UpgradeLadder Ladder { get; }
-
-    /// <summary>What stands while each of the run's waves is sent.</summary>
-    public TowerLayout Defense { get; }
 
     /// <summary>
     /// Parses the seven files a run needs. Order matters: the ladder and the
@@ -203,16 +199,15 @@ internal sealed class RunContent
             Types,
             _schedule,
             _pool,
-            Board.Of(Defense),
             seed,
             shape.Waves,
             shape.FieldSize,
             shape.DeathEndsTheRun);
 
     /// <summary>
-    /// A sweep over this content: the same map, rules, roster, shape, defense
-    /// and canned field a run is played against, with the economy's dials and
-    /// the harness's own bounds on top.
+    /// A sweep over this content: the same map, rules, roster, shape and canned
+    /// field a run is played against, with the economy's dials and the
+    /// harness's own bounds on top.
     /// </summary>
     /// <remarks>
     /// The dials arrive as <see cref="SweepPlan.AsAuthored"/> where the command
@@ -233,7 +228,6 @@ internal sealed class RunContent
             _rules,
             Types,
             _schedule,
-            Defense,
             _pool,
             firstSeed,
             runsPerCreep,

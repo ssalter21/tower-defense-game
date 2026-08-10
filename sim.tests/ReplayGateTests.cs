@@ -545,7 +545,6 @@ public class ReplayGateTests
             retuned,
             TheSchedule.Committed(retuned),
             TheRun.Pool(retuned),
-            TheBuild.Standing(retuned),
             TheRun.Seed,
             TheCommands.Waves,
             fieldSize: 2);

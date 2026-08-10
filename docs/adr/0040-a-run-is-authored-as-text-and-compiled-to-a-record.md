@@ -50,10 +50,12 @@ apart is structural: a field member stands in for a stored round, a stored round
 a build phase composes what is sent rather than when — so every order of one leaves on tick 0, and `RunContent`
 refuses a file whose orders arrive over time.
 
-**`--defense` is read twice, deliberately.** It is what stands while this run's waves are sent and it is the
-defense the canned opponent stands behind, so both directions of a round are measured through the same wall.
-That is what makes out-dealing the field a statement about the wave; a second defense file would be a second
-wall and the win condition would stop meaning anything.
+**`--defense` was read twice, deliberately** — it was what stood while this run's waves were sent and it was
+the defense the canned opponent stood behind, so both directions of a round were measured through the same
+wall. [ADR-0048](0048-a-board-is-not-a-layout.md) ended that half of it: a run opens on an empty board and
+stands whatever its own build phases put there, so the file is the opponents' wall and nothing else. The two
+directions of a round are no longer symmetric, and what that costs the win condition is a measurement nobody
+has taken.
 
 ## Consequences
 
