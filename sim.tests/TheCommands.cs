@@ -32,6 +32,17 @@ public static class TheCommands
     /// <summary>The upgrade stored after it, on the cell that place named.</summary>
     public static readonly BuildAction Upgraded = BuildAction.Of(ActionKind.Upgrade, 4, 9, 0);
 
+    /// <summary>An archer on a cell the committed defense leaves empty.</summary>
+    /// <remarks>
+    /// The pair above names a cell the defense file already stands a mage on,
+    /// which is nothing to a case that only reads bytes and everything to a
+    /// case that applies one.
+    /// </remarks>
+    public static readonly BuildAction PlacedOnFreeCell = BuildAction.Of(ActionKind.Place, 3, 0, 0);
+
+    /// <summary>The mage that archer becomes, on the cell it stands on.</summary>
+    public static readonly BuildAction UpgradedOnFreeCell = BuildAction.Of(ActionKind.Upgrade, 4, 0, 0);
+
     /// <summary>How many creeps a filled slot sends. Two of anything on this roster opens affordable.</summary>
     private const int Sent = 2;
 

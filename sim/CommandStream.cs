@@ -514,14 +514,12 @@ namespace Sim
         /// there is one implementation of the rules and not two.
         /// </para>
         /// <para>
-        /// <b>The board this walk checks against is the run's, unfolded.</b>
-        /// Every phase is held up against what stands now rather than against
-        /// what the phase before it built, and that is wrong in both
-        /// directions: a stream whose fourth round places on a cell its second
-        /// round took is admitted here and refused mid-run, and a stream whose
-        /// fourth round upgrades what its second round placed is refused here
-        /// for a cell that would not have been empty by then. The purse and the
-        /// unlocks are folded across the stream and the board is not yet.
+        /// <b>The board is folded forward, so each phase is checked against
+        /// what the phase before it built.</b> A stream whose fourth round
+        /// places on a cell its second round took is refused here rather than
+        /// mid-run, and a stream whose fourth round upgrades what its second
+        /// round placed is admitted here rather than refused for a cell that
+        /// would not have been empty by then.
         /// </para>
         /// <para>
         /// <b>The one check that surface cannot make is the wave index.</b>
@@ -531,12 +529,15 @@ namespace Sim
         /// menu. It is checked here, where both numbers are in hand.
         /// </para>
         /// <para>
-        /// <b>Nothing is applied.</b> The unlocks and the purse are folded
-        /// forward through local values exactly as a round moves them: a build
-        /// phase's take, then the wave's own purchases, then what the wave pays.
-        /// The run is untouched, so a stream can be checked and then refused
-        /// without the run having moved, and nothing here is handed a defense to
-        /// play a round with even by accident.
+        /// <b>Nothing is applied.</b> The three things a round moves -- the
+        /// unlocks, the purse and the board -- are folded forward through local
+        /// values exactly as a round moves them: a build phase's take, then
+        /// what it builds, then the wave's own purchases, then what the wave
+        /// pays. The run is untouched, so a stream can be checked and then
+        /// refused without the run having moved. The board the walk carries is
+        /// a value like the other two -- <see cref="Board.Place"/> and
+        /// <see cref="Board.Upgrade"/> return new boards -- so folding one
+        /// forward here cannot reach the run's.
         /// </para>
         /// <para>
         /// <b>The purse this walk carries is a ceiling and not the run's own.</b>
@@ -550,6 +551,13 @@ namespace Sim
         /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
+        /// </para>
+        /// <para>
+        /// <b>With the board folded, that ceiling is the last thing a decision
+        /// can be refused for after a round has resolved.</b> Everything else a
+        /// stored decision can be wrong about -- the take, the unlocks, the
+        /// slot width, the cell, the wave index -- is settled here, over values
+        /// that do not depend on how a round played.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -565,6 +573,7 @@ namespace Sim
             var builds = new List<Build>();
             Unlocks unlocks = run.Unlocks;
             Purse purse = run.Purse;
+            Board board = run.Board;
             int round = run.Round;
 
             for (int index = 0; index < _commands.Length; index++)
@@ -586,10 +595,11 @@ namespace Sim
                 }
 
                 Build build = command.ToPhase().Resolve(
-                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, run.Board);
+                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, board);
 
                 unlocks = build.Unlocks;
                 purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
+                board = build.Board;
                 builds.Add(build);
             }
 

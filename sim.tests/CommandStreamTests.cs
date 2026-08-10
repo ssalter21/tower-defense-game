@@ -605,23 +605,96 @@ public class CommandStreamTests
 
         beyond.Check(TheCommands.Fresh());
 
+        // Admitted by the walk and refused by the round, which is what a
+        // refusal surviving to mid-run looks like from the outside: three
+        // rounds resolved and folded into an outcome before the fourth is
+        // found to be a wave this run could not pay for. Affordability is the
+        // only decision a stream can be refused for here, because everything
+        // else the walk can settle it has settled.
+        //
+        // OBSERVED: the round count is what makes that a claim rather than a
+        // comment. Assert 0 instead and it goes red, 3 against 0.
+        Run partway = TheCommands.Fresh();
+
         SimulationException refused = Assert.Throws<SimulationException>(
-            () => beyond.Replay(TheCommands.Fresh()));
+            () => beyond.Replay(partway));
 
         Assert.Contains("400", refused.Message, StringComparison.Ordinal);
+        Assert.Equal(TheCommands.Waves - 1, partway.Round);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above
-        // these three, and the reason is that they are guarded by construction:
-        // Check is handed no defense to play a round with, and a run's purse and
-        // unlocks have private setters, so nothing outside a run can move one.
-        // They are here to go red the day either of those stops being true.
+        // these four, and the reason is that they are guarded by construction:
+        // a run's unlocks, purse and board all have private setters, and the
+        // board the walk folds is a value of its own, so nothing outside a run
+        // can move one. They are here to go red the day that stops being true.
         Run untouched = TheCommands.Fresh();
         stream.Check(untouched);
 
         Assert.Equal(0, untouched.Round);
         Assert.Equal(0, untouched.Unlocks.Count);
         Assert.Equal(TheRuleset.Committed().StartingPurseGold, untouched.Purse.Gold);
+        Assert.Equal(TheBuild.Standing().Count, untouched.Board.Count);
+    }
+
+    [Fact]
+    public void The_load_walk_folds_the_board_forward_the_way_a_played_round_does()
+    {
+        // The third thing a round moves, folded through a value of the walk's
+        // own beside the unlocks and the purse. Held against the run's opening
+        // board instead, every phase is checked against what stands now rather
+        // than against what the phase before it built -- which is wrong in both
+        // directions, and both are asserted here.
+        //
+        // OBSERVED: hand run.Board to Resolve in Check rather than the folded
+        // one. The upgrade below goes red on an exception -- "An upgrade names
+        // column 0, row 0, where nothing stands" -- refusing at load a phase
+        // upgrading a cell its own stream took two rounds earlier; and the
+        // place-on-place below goes red having caught nothing at load, the run
+        // instead refusing at round four with three rounds already resolved
+        // and folded into an outcome.
+        Run run = TheCommands.Fresh();
+        IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
+
+        // Wave two puts an archer on a cell the opening board leaves empty.
+        var placing = new List<RecordCommand>(decisions)
+        {
+            [1] = decisions[1].With(TheCommands.PlacedOnFreeCell),
+        };
+
+        // Wave four upgrades it, which is only legal because wave two placed.
+        var upgrading = new List<RecordCommand>(placing)
+        {
+            [3] = placing[3].With(TheCommands.UpgradedOnFreeCell),
+        };
+
+        CommandStream ahead = CommandStream.Of(run, upgrading);
+
+        IReadOnlyList<Build> walked = ahead.Check(TheCommands.Fresh());
+
+        Run played = TheCommands.Fresh();
+        ahead.Replay(played);
+
+        // One more placement than the run opened with, on both sides: the walk
+        // ends on the board the play ends on.
+        Assert.Equal(TheBuild.Standing().Count + 1, walked[walked.Count - 1].Board.Count);
+        Assert.Equal(played.Board.Count, walked[walked.Count - 1].Board.Count);
+
+        // And the other direction. Wave four places on the cell wave two took,
+        // which the walk refuses before round one resolves.
+        var twice = new List<RecordCommand>(placing)
+        {
+            [3] = placing[3].With(TheCommands.PlacedOnFreeCell),
+        };
+
+        CommandStream doubled = CommandStream.Of(run, twice);
+        Run into = TheCommands.Fresh();
+
+        SimulationException refused = Assert.Throws<SimulationException>(() => doubled.Replay(into));
+
+        Assert.Contains("A build phase at wave 4 cannot act.", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("A place puts a second thing on", refused.Message, StringComparison.Ordinal);
+        Assert.Equal(0, into.Round);
     }
 
     /// <summary>
