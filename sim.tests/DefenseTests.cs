@@ -6,6 +6,21 @@ namespace Sim.Tests;
 /// </summary>
 public class DefenseTests
 {
+    /// <summary>
+    /// A map with somewhere to stand that nothing walks past. The committed
+    /// corridor snakes through nearly the whole grid, so every cell of it is in
+    /// range of some part of the route -- which is a fact about that map and
+    /// not a reason to leave the reach question unobserved.
+    /// </summary>
+    private static readonly HexMap RoomToMissTheRoute = HexMap.Parse("""
+        SE...
+        .....
+        .....
+        .....
+        .....
+        .....
+        """);
+
     private const string ThreeGoodTypes = """
         unit 1 grunt  moving 200 85 0 0 0 0 0 0 none 0 12
         unit 3 bolt   placed 0 0 3200 6 3 2 9 15 hitscan 0 0
@@ -92,19 +107,96 @@ public class DefenseTests
         // snakes through nearly the whole grid, so there is nowhere on it far
         // enough from the route to be out of range of all of it -- which is a
         // fact about that map and not a reason to leave the check unobserved.
-        HexMap small = HexMap.Parse("""
-            SE...
-            .....
-            .....
-            .....
-            .....
-            .....
-            """);
-
         ContentException thrown = Assert.Throws<ContentException>(
-            () => TowerCoverage.For(small, TowerLayout.Parse("tower 3 4 5", TheMatch.Types())));
+            () => TowerCoverage.For(RoomToMissTheRoute, TowerLayout.Parse("tower 3 4 5", TheMatch.Types())));
 
         Assert.Contains("cannot reach", thrown.Message, StringComparison.Ordinal);
+        Assert.Equal(1, thrown.Line);
+    }
+
+    [Fact]
+    public void A_cell_answers_all_three_questions_with_no_file_and_no_line_involved()
+    {
+        UnitTypeTable types = TheMatch.Types();
+        HexMap map = TheMatch.Map();
+        UnitType bolt = types.ById(3);
+        PlacedTower standing = TheMatch.Layout(types).Towers[0];
+
+        // The same three questions the authored path asks, asked about a bare
+        // column and row. Nothing here has a source file to point into, and the
+        // answers do not invent one -- what comes back is a clause, and each
+        // caller supplies its own subject and its own exception.
+        Footing offMap = Footing.Of(map, bolt, 40, 40);
+        Footing corridor = Footing.Of(map, bolt, 3, 1);
+        Footing sound = Footing.Of(map, standing.Type, standing.Column, standing.Row);
+
+        Assert.False(offMap.Possible);
+        Assert.Contains("off a", offMap.Fault, StringComparison.Ordinal);
+
+        Assert.False(corridor.Possible);
+        Assert.Contains("corridor cell", corridor.Fault, StringComparison.Ordinal);
+
+        Assert.True(sound.Sound);
+        Assert.Equal(string.Empty, sound.Fault);
+    }
+
+    [Fact]
+    public void Reaching_nothing_is_a_separate_answer_from_standing_nowhere()
+    {
+        // The split the whole predicate exists for. Column 4, row 5 is on the
+        // grid and is ground -- a possible position -- and no part of the route
+        // is within a bolt's three hexes of it. A caller reading a file refuses
+        // that; a caller reading a player's decision may not.
+        Footing footing = Footing.Of(RoomToMissTheRoute, TheMatch.Types().ById(3), 4, 5);
+
+        Assert.True(footing.Possible);
+        Assert.False(footing.ReachesRoute);
+        Assert.False(footing.Sound);
+        Assert.Contains("cannot reach", footing.Fault, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_defense_a_run_built_may_stand_somewhere_that_reaches_nothing()
+    {
+        // The same cell the authored file was refused for, arriving off a board
+        // instead. A placement made at wave 4 was never in a file, so there is
+        // no line to blame and no typo to suspect -- the player built somewhere
+        // useless, which is a bad decision rather than an illegal one.
+        UnitTypeTable types = TheMatch.Types();
+        TowerLayout built = Board.Empty
+            .Place(types.ById(3), 4, 5)
+            .Place(types.ById(3), 1, 1)
+            .Layout();
+
+        var coverage = TowerCoverage.For(RoomToMissTheRoute, built);
+
+        Assert.Equal(0, coverage.IntervalCount(1));
+        Assert.False(coverage.Covers(1, Fix64.Zero));
+        Assert.False(coverage.Overlaps(0, 1));
+
+        // And the placement beside it is unaffected: reaching nothing is one
+        // tower's problem and not the defense's.
+        Assert.True(coverage.IntervalCount(0) > 0);
+    }
+
+    [Fact]
+    public void A_defense_a_run_built_still_cannot_stand_off_the_map_or_in_the_corridor()
+    {
+        UnitTypeTable types = TheMatch.Types();
+
+        // Zero, because a placement carries no line. The refusal survives the
+        // absence of one; only the reason changes.
+        ContentException corridor = Assert.Throws<ContentException>(
+            () => TowerCoverage.For(TheMatch.Map(), Board.Empty.Place(types.ById(3), 3, 1).Layout()));
+
+        Assert.Contains("corridor cell", corridor.Message, StringComparison.Ordinal);
+        Assert.Equal(0, corridor.Line);
+
+        ContentException offMap = Assert.Throws<ContentException>(
+            () => TowerCoverage.For(TheMatch.Map(), Board.Empty.Place(types.ById(3), 40, 40).Layout()));
+
+        Assert.Contains("off a", offMap.Message, StringComparison.Ordinal);
+        Assert.Equal(0, offMap.Line);
     }
 
     [Fact]

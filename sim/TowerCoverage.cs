@@ -35,19 +35,41 @@ namespace Sim
     /// range exactly when both of the cells it lies between are.
     /// </para>
     /// <para>
-    /// Three faults are load errors rather than surprises later: a tower off the
-    /// edge of the grid, a tower standing inside the corridor, and a tower that
-    /// cannot reach the route at all. The last one is the interesting one -- it
-    /// is the shape of a typo in a coordinate, and without this check it would
-    /// present as a tower that simply never fires, which looks exactly like a
-    /// balance problem.
+    /// <b>Three faults, and they do not all belong to the same caller.</b>
+    /// <see cref="Footing"/> is the one map-aware answer about a cell, and this
+    /// is one of the two callers that ask it.
+    /// </para>
+    /// <para>
+    /// A tower off the edge of the grid and a tower standing inside the corridor
+    /// are <i>impossible</i> positions, refused here and refused by anybody else
+    /// who asks. A tower that cannot reach the route at all is a <i>bad</i>
+    /// position rather than an impossible one, and that refusal belongs to the
+    /// authored file alone: in a file it is the shape of a typo in a coordinate,
+    /// which without the check would present as a tower that simply never fires
+    /// and look exactly like a balance problem. A player who builds where
+    /// nothing walks has made a bad decision rather than an illegal one, and
+    /// every other refusal in this repository is for something that could not
+    /// have happened.
+    /// </para>
+    /// <para>
+    /// The two are told apart by <see cref="PlacedTower.Line"/>, which is the
+    /// line of the file a tower was written on and is zero for a tower nobody
+    /// wrote: a defense derived from a <see cref="Board"/> carries no line
+    /// because a placement made at wave 4 was never in a file. So a layout that
+    /// came from text keeps all three refusals with its own line numbers in
+    /// them, and a layout a run built keeps the two that describe the
+    /// impossible. A tower that reaches nothing covers nothing, which is what
+    /// <see cref="Covers"/> then answers about it.
+    /// </para>
+    /// <para>
+    /// Every refusal here is a <see cref="ContentException"/>, because
+    /// everything with a line on it came out of authored content. A caller
+    /// holding a board rather than a file asks <see cref="Footing"/> directly
+    /// and refuses in its own vocabulary.
     /// </para>
     /// </remarks>
     public sealed class TowerCoverage
     {
-        /// <summary>Thousandths of a hex per hex. Ranges are authored in milli-hexes.</summary>
-        private const int MilliHexPerHex = 1000;
-
         private readonly int[] _firstInterval;
 
         private readonly int[] _intervalCount;
@@ -73,6 +95,13 @@ namespace Sim
         /// the bounding interval around its list of intervals, so the common
         /// answer of "nowhere near" costs two comparisons.
         /// </summary>
+        /// <remarks>
+        /// A tower that reaches no part of the route has an <i>empty</i>
+        /// bounding interval rather than a missing one: the start is above the
+        /// end, so both comparisons fail for every distance and
+        /// <see cref="Covers"/> answers false without a special case in the
+        /// inner loop.
+        /// </remarks>
         private readonly long[] _spanStart;
 
         private readonly long[] _spanEnd;
@@ -95,6 +124,13 @@ namespace Sim
 
             for (int tower = 0; tower < firstInterval.Length; tower++)
             {
+                if (intervalCount[tower] == 0)
+                {
+                    _spanStart[tower] = long.MaxValue;
+                    _spanEnd[tower] = long.MinValue;
+                    continue;
+                }
+
                 _spanStart[tower] = start[firstInterval[tower]];
                 _spanEnd[tower] = end[firstInterval[tower] + intervalCount[tower] - 1];
             }
@@ -109,7 +145,11 @@ namespace Sim
         /// </summary>
         public Fix64 RouteLength { get; }
 
-        /// <summary>Intersects a defense with a map's route. Every fault here throws.</summary>
+        /// <summary>
+        /// Intersects a defense with a map's route. Every fault a layout with
+        /// lines on it can have throws; a layout a run built keeps only the
+        /// refusals for positions that could not have happened.
+        /// </summary>
         public static TowerCoverage For(HexMap map, TowerLayout layout)
         {
             if (map is null)
@@ -130,26 +170,21 @@ namespace Sim
             for (int index = 0; index < layout.Count; index++)
             {
                 PlacedTower tower = layout.Towers[index];
+                Footing footing = Footing.Of(map, tower.Type, tower.Column, tower.Row);
 
-                RefuseOffMap(map, tower);
-                RefuseInsideCorridor(map, tower);
-
-                firstInterval[index] = start.Count;
-                intervalCount[index] = Intersect(map, tower, start, end);
-
-                if (intervalCount[index] == 0)
+                // Reaching nothing is a refusal only where there is a file to
+                // blame it on. A tower with no line came off a board, and a
+                // player is allowed to build somewhere useless.
+                if (!footing.Possible || (!footing.ReachesRoute && tower.Line > 0))
                 {
                     throw new ContentException(
                         "defense",
                         tower.Line,
-                        "places "
-                        + tower.ToString()
-                        + ", which cannot reach any part of the route: its range is "
-                        + tower.Type.RangeMilliHex.ToString(CultureInfo.InvariantCulture)
-                        + " thousandths of a hex and the nearest corridor cell is further than that. A "
-                        + "tower that can never fire is what a mistyped coordinate looks like, and it "
-                        + "would otherwise present as a balance problem.");
+                        "places " + tower.ToString() + ", " + footing.Fault);
                 }
+
+                firstInterval[index] = start.Count;
+                intervalCount[index] = Intersect(map, tower, start, end);
             }
 
             return new TowerCoverage(
@@ -228,10 +263,9 @@ namespace Sim
 
         /// <summary>
         /// Walks the route once, in order, collecting the runs of consecutive
-        /// cells the tower is within range of. Distance is whole-hex integer
-        /// arithmetic on cube coordinates, scaled to milli-hexes to compare
-        /// against the authored range -- so no division and no rounding rule is
-        /// involved, and the answer cannot depend on how anything is drawn.
+        /// cells the tower is within range of. The range test is
+        /// <see cref="Footing.Reaches"/> -- the same one that answered whether
+        /// there are any runs at all, so the two cannot come apart.
         /// </summary>
         private static int Intersect(HexMap map, PlacedTower tower, List<long> start, List<long> end)
         {
@@ -241,7 +275,7 @@ namespace Sim
 
             for (int step = 0; step < map.Route.Count; step++)
             {
-                bool inRange = tower.Hex.DistanceTo(map.Route[step]) * MilliHexPerHex <= range;
+                bool inRange = Footing.Reaches(tower.Hex, range, map.Route[step]);
 
                 if (inRange && runStart < 0)
                 {
@@ -264,38 +298,6 @@ namespace Sim
             }
 
             return intervals;
-        }
-
-        private static void RefuseOffMap(HexMap map, PlacedTower tower)
-        {
-            if (tower.Column >= map.Width || tower.Row >= map.Height)
-            {
-                throw new ContentException(
-                    "defense",
-                    tower.Line,
-                    "places "
-                    + tower.ToString()
-                    + ", which is off a "
-                    + map.Width.ToString(CultureInfo.InvariantCulture)
-                    + " by "
-                    + map.Height.ToString(CultureInfo.InvariantCulture)
-                    + " map.");
-            }
-        }
-
-        private static void RefuseInsideCorridor(HexMap map, PlacedTower tower)
-        {
-            if (map.CellAt(tower.Column, tower.Row) != MapCell.Ground)
-            {
-                throw new ContentException(
-                    "defense",
-                    tower.Line,
-                    "places "
-                    + tower.ToString()
-                    + ", which is a corridor cell. A tower standing in the corridor would be a wall, and "
-                    + "walls are how mazing gets in: this simulation derives its route by tracing and has "
-                    + "nothing that could reroute around one.");
-            }
         }
 
         private int Checked(int tower)
