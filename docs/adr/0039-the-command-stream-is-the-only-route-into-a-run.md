@@ -12,9 +12,9 @@ buys the submission barrier nearly free later, because a submitted turn *is* a c
 played run a replayable record, which makes every playtest a determinism test.
 
 That claim is asserted structurally rather than described: `Run`'s public surface is exactly
-`Advance(BuildPhase, TowerLayout)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the
-only interface either accepts is the decorative event listener, whose every method returns void. A run cannot
-be asked a question it could answer with something a record does not carry. Handing a decision straight in is
+`Advance(BuildPhase)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the only interface
+either accepts is the decorative event listener, whose every method returns void. A run cannot be asked a
+question it could answer with something a record does not carry. Handing a decision straight in is
 not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
 data surface is `Take`, `TakeId` and `Slots`, which are the three fields a stored command carries, so every
 decision reachable by handing one in is a decision a command could have made.

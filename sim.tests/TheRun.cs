@@ -144,11 +144,12 @@ public static class TheRun
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(pool),
+            Board.Of(defense),
             Seed,
             waves: 1,
             fieldSize: fieldSize);
 
-        return run.Advance(TheBuild.Shopping(run), defense);
+        return run.Advance(TheBuild.Shopping(run));
     }
 
     /// <summary>
@@ -169,12 +170,20 @@ public static class TheRun
         });
     }
 
-    /// <summary>A fresh run on the committed content. Every scenario starts here.</summary>
+    /// <summary>
+    /// A fresh run on the committed content. Every scenario starts here.
+    /// </summary>
+    /// <remarks>
+    /// The board defaults to the committed defense, so a scenario that says
+    /// nothing about what stands plays behind the same wall every other one
+    /// does; a scenario about the board names its own.
+    /// </remarks>
     public static Run Fresh(
         int waves = Run.DefaultWaves,
         int fieldSize = Run.DefaultFieldSize,
         bool deathEndsTheRun = true,
-        ulong seed = Seed)
+        ulong seed = Seed,
+        Board? board = null)
     {
         UnitTypeTable types = TheMatch.Types();
 
@@ -184,6 +193,7 @@ public static class TheRun
             types,
             TheSchedule.Committed(types),
             Pool(types),
+            board ?? TheBuild.Standing(types),
             seed,
             waves,
             fieldSize,
@@ -219,6 +229,7 @@ public static class TheRun
             types,
             TheSchedule.Committed(types),
             Pool(types),
+            TheBuild.Standing(types),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);
@@ -246,6 +257,7 @@ public static class TheRun
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { Orders(types) }),
+            TheBuild.Standing(types),
             Seed,
             waves,
             fieldSize,

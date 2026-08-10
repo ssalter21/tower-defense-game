@@ -717,7 +717,7 @@ public class RecordNegativeTests
         Assert.Equal(TheCommands.Waves, stream.Count);
 
         RetiredRecordException thrown = Assert.Throws<RetiredRecordException>(
-            () => stream.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+            () => stream.Replay(TheCommands.Fresh()));
 
         Assert.Equal("ruleset hash", thrown.Gate);
     }

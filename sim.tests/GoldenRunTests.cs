@@ -124,7 +124,7 @@ public class GoldenRunTests
         // riding along on a line checked for its other half.
         Run run = Fresh();
         CommandStream stream = Committed();
-        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheMatch.Layout(TheMatch.Types()));
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run);
         string committed = File.ReadAllText(RepoLayout.RunOutcomeFile);
 
         Assert.Equal(stream.Count, rounds.Count);
@@ -198,6 +198,7 @@ public class GoldenRunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Canned(defense, TheRun.FieldWave(types)),
+            Board.Of(defense),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

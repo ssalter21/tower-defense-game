@@ -46,6 +46,7 @@ public static class TheCommands
             types,
             TheSchedule.Committed(types),
             TheRun.Pool(types),
+            TheBuild.Standing(types),
             seed,
             waves,
             fieldSize: 2);
@@ -115,9 +116,6 @@ public static class TheCommands
     /// <summary>Those bytes, which is what every negative case starts from.</summary>
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
 
-    /// <summary>The defense that stands while each of a run's waves is sent.</summary>
-    public static TowerLayout Defense() => TheMatch.Layout(TheMatch.Types());
-
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
     public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)
     {
@@ -129,6 +127,7 @@ public static class TheCommands
             types,
             schedule ?? TheSchedule.Committed(types),
             TheRun.Pool(types),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves,
             fieldSize: 2);

@@ -54,7 +54,7 @@ internal sealed class PlayedRun
         // are held against the run in front of them.
         Run run = content.Fresh(stream.Seed, shape);
 
-        return new PlayedRun(stream, run, stream.Replay(run, content.Defense));
+        return new PlayedRun(stream, run, stream.Replay(run));
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ internal sealed class PlayedRun
         Run run = content.Fresh(seed, shape);
 
         (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
-            CommandStream.Recorded(run, content.Defense, commands);
+            CommandStream.Recorded(run, commands);
 
         return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, rounds));
     }

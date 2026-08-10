@@ -479,9 +479,9 @@ old one retired.
    emitted rather than possessed, so it is not a unit stat.
 6. **A second health pool that absorbs first**, for the Necromancer's shield.
 
-**And one thing that is not a lever but is engine work: the purse has to buy the defense.** Today
-`Run.Advance` takes the defense as a free argument and only creeps are charged, so there is one wallet because
-there is only one thing to buy. The tower costs above are now *based* rather than arbitrary, which makes them
+**And one thing that is not a lever but is engine work: the purse has to buy the defense.** Today a run opens
+holding its whole defense and only creeps are charged, so there is one wallet because there is only one thing
+to buy. The tower costs above are now *based* rather than arbitrary, which makes them
 worth spending — but nothing spends them yet. This is what story 17 (*"underbuilding my defense to fund my
 offense **is** spending health"*) is still missing.
 

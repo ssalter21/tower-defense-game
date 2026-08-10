@@ -194,6 +194,7 @@ namespace Sim
                 plan.Types,
                 plan.Schedule,
                 plan.Field,
+                Board.Of(plan.Defense),
                 seed,
                 plan.Waves,
                 plan.FieldSize,
@@ -207,7 +208,7 @@ namespace Sim
                 // again out here: the build phase works it out to spend it, and
                 // a second walk over the slots is a second copy of the pricing
                 // rule free to disagree with the one the purse was charged by.
-                spent += run.Advance(plan.Policy(run, creep.Id), plan.Defense).Build.Spent;
+                spent += run.Advance(plan.Policy(run, creep.Id)).Build.Spent;
             }
 
             // The bonus is read off the finished vector rather than added up as

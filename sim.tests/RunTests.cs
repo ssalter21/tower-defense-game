@@ -64,15 +64,13 @@ public class RunTests
         // anything. The no-death row goes red on the health it finished with,
         // 582 against 1500, which is what a second code path hiding behind an
         // argument looks like from the outside.
-        TowerLayout defense = TheBuild.Defense();
-
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
             : TheRun.Fresh(deathEndsTheRun: deathEndsTheRun);
 
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.Shopping(run), defense);
+            run.Advance(TheBuild.Shopping(run));
 
             if (readsTheOutcomeAsItGoes)
             {
@@ -90,7 +88,7 @@ public class RunTests
 
             while (!again.IsOver)
             {
-                again.Advance(TheBuild.Shopping(again), defense);
+                again.Advance(TheBuild.Shopping(again));
             }
 
             Assert.Equal(run.Outcome.LeakCostDealt, again.Outcome.LeakCostDealt);
@@ -136,10 +134,8 @@ public class RunTests
         Assert.Equal(Run.DefaultWaves, defaults.Waves);
         Assert.Equal(Run.DefaultFieldSize, defaults.FieldSize);
 
-        TowerLayout defense = TheBuild.Defense();
-
-        Run shorter = Played(TheRun.Fresh(waves: 3, fieldSize: 10), defense);
-        Run narrower = Played(TheRun.Fresh(waves: 3, fieldSize: 2), defense);
+        Run shorter = Played(TheRun.Fresh(waves: 3, fieldSize: 10));
+        Run narrower = Played(TheRun.Fresh(waves: 3, fieldSize: 2));
 
         Assert.Equal(3, shorter.Outcome.Rounds.Count);
         Assert.Equal(3, narrower.Outcome.Rounds.Count);
@@ -164,7 +160,6 @@ public class RunTests
         // the field's wave.
         UnitTypeTable types = TheRun.UnkillableTypes();
         Run run = TheRun.Unstoppable(fieldSize: 4);
-        TowerLayout defense = TheBuild.Defense(types);
         int incoming = TheRun.FullLeakCost(run.Costs, TheRun.Orders(types).Wave);
 
         Assert.Equal((23 * 10) + (17 * 9), incoming);
@@ -178,7 +173,7 @@ public class RunTests
 
         while (!run.IsOver)
         {
-            RoundReport round = run.Advance(TheBuild.Shopping(run), defense);
+            RoundReport round = run.Advance(TheBuild.Shopping(run));
             Assert.Equal(incoming, round.Outcome.LeakCostTaken);
             health.Add(run.Health);
         }
@@ -291,9 +286,7 @@ public class RunTests
         // OBSERVED: have Run.IsOver report true at zero health whatever the
         // flag says. The round-count assertion goes red, 10 against 4, and a
         // sweep's rows become as long as each row's luck.
-        Run run = Played(
-            TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1),
-            TheBuild.Defense(TheRun.UnkillableTypes()));
+        Run run = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.Equal(RunEnding.OutOfWaves, run.Ending);
@@ -313,8 +306,7 @@ public class RunTests
         // RunOutcome's ending. The round-count assertion goes red, 4 against
         // 10, and the run plays out its remaining six waves on a pool of
         // nothing.
-        TowerLayout defense = TheBuild.Defense(TheRun.UnkillableTypes());
-        Run run = Played(TheRun.Unstoppable(fieldSize: 1), defense);
+        Run run = Played(TheRun.Unstoppable(fieldSize: 1));
 
         Assert.Equal(0, run.Health);
         Assert.True(run.IsOver);
@@ -322,7 +314,7 @@ public class RunTests
         Assert.True(run.Waves > run.Round, "The run ran out of waves rather than out of health.");
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering), defense));
+            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
 
         Assert.Contains("This run is over", thrown.Message, StringComparison.Ordinal);
     }
@@ -343,8 +335,8 @@ public class RunTests
         // do anything yet.
         //
         // Two names are on the list and only one of them moves anything.
-        // Advance takes a build phase and a defense and nothing else, so what
-        // it spends and what it unlocks are read off a round's own offering.
+        // Advance takes a build phase and nothing else, so what it spends and
+        // what it unlocks are read off a round's own offering.
         // OfferingAt is a draw over the run's seed and is asserted below to
         // leave the run exactly where it found it.
         string[] movers = typeof(Run)
@@ -384,13 +376,12 @@ public class RunTests
         // appeared in the purse that no build phase and no wave payment
         // accounts for.
         Run run = TheRun.Fresh(waves: 4, fieldSize: 3);
-        TowerLayout defense = TheBuild.Defense();
         int previous = run.Health;
         int purse = run.Purse.Gold;
 
         while (!run.IsOver)
         {
-            RoundReport round = run.Advance(TheBuild.Shopping(run), defense);
+            RoundReport round = run.Advance(TheBuild.Shopping(run));
 
             Assert.True(
                 run.Health <= previous,
@@ -460,7 +451,7 @@ public class RunTests
         // does not carry. The first assertion goes red, 2237 against 737 --
         // which is what one number kept in two places looks like the moment the
         // two of them disagree.
-        Run run = Played(TheRun.Fresh(waves: 5, fieldSize: 4), TheBuild.Defense());
+        Run run = Played(TheRun.Fresh(waves: 5, fieldSize: 4));
 
         RunOutcome rebuilt = RunOutcome.Of(
             TheRuleset.Committed().HealthPoolGold,
@@ -510,7 +501,7 @@ public class RunTests
         // What the measurement says does not depend on when it is asked or on
         // what the run has done: it is the seed, the pool and K, and nothing a
         // round moves is in it.
-        againstThin.Advance(TheBuild.Shopping(againstThin), TheBuild.Defense(types));
+        againstThin.Advance(TheBuild.Shopping(againstThin));
 
         Assert.Equal(100, againstThin.Field.PercentileOf(200));
         Assert.Equal(Run.FieldSamples, againstThin.Field.Size);
@@ -545,12 +536,11 @@ public class RunTests
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
         Ruleset rules = run.Rules;
-        TowerLayout defense = TheBuild.Defense();
         var rounds = new List<RoundReport>();
 
         while (!run.IsOver)
         {
-            rounds.Add(run.Advance(TheBuild.Shopping(run, run.Purse.Gold / 3), defense));
+            rounds.Add(run.Advance(TheBuild.Shopping(run, run.Purse.Gold / 3)));
         }
 
         Purse folded = Purse.Holding(rules.StartingPurseGold);
@@ -585,36 +575,42 @@ public class RunTests
     {
         // The claim that makes a run reproducible from its record, and the one
         // an ambient stream fails: round three's field cannot depend on what
-        // rounds one and two did. Two runs on one seed play two different
-        // openings and then the same third round, and the third round has to
-        // come back identical.
+        // rounds one and two did. Two runs on one seed come out of two
+        // different openings and then send one wave into one field, and what
+        // that wave got past has to come back identical.
         //
         // OBSERVED: mix the previous round's leak cost into the field draw's
         // position in Run.FieldFor -- the shape a draw taken from wherever the
         // match stream left off has, since where that is depends on how many
-        // shots were fired. The first assertion goes red, 75 against 57: two
-        // runs meet different fields in a round they played identically.
+        // shots were fired. The offense assertion goes red, 47 against 82: two
+        // runs meet different fields in a round they sent one wave into.
         //
-        // The two openings differ in what stood rather than in what was sent,
-        // because the decision is read off an offering both runs share: two
-        // defenses take different damage from one field, and the third round is
-        // then the same decision at the same purse against the same draw.
+        // The two runs differ in the board each of them stands behind and in
+        // nothing else. What a round deals is a fact about the wave it sent and
+        // the defenses that met it, so a thinner board costs its run health
+        // without ever moving what it got past the field: both runs read one
+        // offering, shop one purse and send one wave, round for round. What the
+        // third round's draw must not be able to see is the health between them.
         UnitTypeTable types = TheMatch.Types();
-        TowerLayout whole = TheBuild.Defense(types);
-        TowerLayout thin = TheRun.Orders(types, 2, 2).Defense;
 
         Run one = TheRun.Fresh(waves: 3, fieldSize: 4);
-        one.Advance(TheBuild.Shopping(one), whole);
-        one.Advance(TheBuild.Shopping(one), whole);
-        RoundOutcome fromOne = one.Advance(TheBuild.Shopping(one), whole).Outcome;
+        Run two = TheRun.Fresh(
+            waves: 3, fieldSize: 4, board: Board.Of(TheRun.Orders(types, 2, 2).Defense));
 
-        Run two = TheRun.Fresh(waves: 3, fieldSize: 4);
-        two.Advance(TheBuild.Shopping(two), thin);
-        two.Advance(TheBuild.Shopping(two), thin);
-        RoundOutcome fromTwo = two.Advance(TheBuild.Shopping(two), whole).Outcome;
+        for (int opening = 0; opening < 2; opening++)
+        {
+            one.Advance(TheBuild.Shopping(one));
+            two.Advance(TheBuild.Shopping(two));
+        }
+
+        RoundOutcome fromOne = one.Advance(TheBuild.Shopping(one)).Outcome;
+        RoundOutcome fromTwo = two.Advance(TheBuild.Shopping(two)).Outcome;
+
+        Assert.True(
+            fromOne.LeakCostDealt > 0,
+            "Round three got nothing past anybody, so which field it met cannot be read off what it dealt.");
 
         Assert.Equal(fromOne.LeakCostDealt, fromTwo.LeakCostDealt);
-        Assert.Equal(fromOne.LeakCostTaken, fromTwo.LeakCostTaken);
 
         // The openings really were different, so the agreement above is about
         // the derivation rather than about two runs that played the same game.
@@ -622,12 +618,12 @@ public class RunTests
 
         // Same seed, same run. A different seed, a different run.
         Assert.Equal(
-            Played(TheRun.Fresh(waves: 2, fieldSize: 4), whole).Outcome.LeakCostTaken,
-            Played(TheRun.Fresh(waves: 2, fieldSize: 4), whole).Outcome.LeakCostTaken);
+            Played(TheRun.Fresh(waves: 2, fieldSize: 4)).Outcome.LeakCostTaken,
+            Played(TheRun.Fresh(waves: 2, fieldSize: 4)).Outcome.LeakCostTaken);
 
         Assert.NotEqual(
-            Played(TheRun.Fresh(waves: 2, fieldSize: 4), whole).Outcome.LeakCostTaken,
-            Played(TheRun.Fresh(2, 4, true, TheRun.Seed + 1), whole).Outcome.LeakCostTaken);
+            Played(TheRun.Fresh(waves: 2, fieldSize: 4)).Outcome.LeakCostTaken,
+            Played(TheRun.Fresh(2, 4, true, TheRun.Seed + 1)).Outcome.LeakCostTaken);
     }
 
     [Fact]
@@ -644,13 +640,13 @@ public class RunTests
         // against 4, and the rounds a losing player played stop entering
         // anybody's field.
         TowerLayout defense = TheBuild.Defense();
-        Run alive = Played(TheRun.Fresh(waves: 3, fieldSize: 2), defense);
-        Run dead = Played(
-            TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1),
-            TheBuild.Defense(TheRun.UnkillableTypes()));
+        Run alive = Played(TheRun.Fresh(waves: 3, fieldSize: 2));
+        Run dead = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(3, alive.Sent.Count);
-        Assert.All(alive.Sent, sent => Assert.Same(defense, sent.Defense));
+        Assert.All(
+            alive.Sent,
+            sent => Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(sent.Defense)));
         Assert.All(alive.Sent, sent => Assert.True(sent.Wave.TotalUnits > 0));
         Assert.Equal(10, dead.Sent.Count);
 
@@ -729,6 +725,7 @@ public class RunTests
                 TheMatch.Types(),
                 TheSchedule.Committed(),
                 TheRun.Pool(),
+                TheBuild.Standing(),
                 TheRun.Seed,
                 Purse.RoundCapLifted,
                 4,
@@ -743,6 +740,7 @@ public class RunTests
             TheMatch.Types(),
             TheSchedule.Committed(),
             TheRun.Pool(),
+            TheBuild.Standing(),
             TheRun.Seed,
             Purse.RoundCapLifted,
             4);
@@ -833,12 +831,13 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types) }),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering), TheBuild.Defense(types)));
+            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
     }
@@ -875,6 +874,7 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             TheRun.Pool(types),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 2,
             fieldSize: 2);
@@ -885,7 +885,7 @@ public class RunTests
             run.Offering, WaveSlot.Of(run.Offering.Options[0].TypeId, 1));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(phase, TheBuild.Defense(types)));
+            () => run.Advance(phase));
 
         Assert.Contains(
             "does not fit in the 32-bit integer a purse is kept in",
@@ -931,12 +931,13 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types, 6, 1), TheRun.Orders(types, 6, 6) }),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering), TheBuild.Defense(types)));
+            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
 
         Assert.Contains(
             "does not fit in the 32-bit integer health and gold",
@@ -977,21 +978,20 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types, 6, 1) }),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 3,
             fieldSize: 1,
             deathEndsTheRun: false);
 
-        TowerLayout defense = TheBuild.Defense(types);
-
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
 
         int purse = run.Purse.Gold;
         RunOutcome outcome = run.Outcome;
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering), defense));
+            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
 
         Assert.Contains(
             "in leak cost taken, which does not fit in the 32-bit integer gold is counted in",
@@ -1020,14 +1020,12 @@ public class RunTests
         // assertion goes red, 192 against 212: a report of what a wave earned
         // that says what it could have earned instead.
         Run run = TheBuild.Fresh(waves: 2);
-        TowerLayout defense = TheBuild.Defense();
 
         Option first = run.Offering.Options[0];
         int opening = run.Purse.Gold;
         int price = run.Costs.PriceOf(Purchase.Unit(first.TypeId));
 
-        RoundReport round = run.Advance(
-            BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense);
+        RoundReport round = run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
 
         // The pair is the one on the run's own vector.
         Assert.Equal(run.Outcome.Rounds[0].LeakCostDealt, round.Outcome.LeakCostDealt);
@@ -1095,6 +1093,7 @@ public class RunTests
             types,
             TheSchedule.Committed(types),
             pool,
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 1,
             fieldSize: 4);
@@ -1110,12 +1109,12 @@ public class RunTests
         return run;
     }
 
-    /// <summary>A run driven to its end, every round shopping behind the same defense.</summary>
-    private static Run Played(Run run, TowerLayout defense)
+    /// <summary>A run driven to its end, every round shopping behind its own board.</summary>
+    private static Run Played(Run run)
     {
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.Shopping(run), defense);
+            run.Advance(TheBuild.Shopping(run));
         }
 
         return run;

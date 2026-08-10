@@ -5,10 +5,11 @@ namespace Sim.Tests;
 /// canonical order.
 /// </summary>
 /// <remarks>
-/// Nothing is wired to this yet. What is asserted here is the type's own
-/// arithmetic -- the ordinals, the derivation, and the two positions an empty
-/// board has to be legal in -- because every later ticket in this effort reads
-/// them rather than restating them.
+/// What is asserted here is the type's own arithmetic -- the ordinals, the
+/// derivation, the fold an authored defense crosses to become one, and the two
+/// positions an empty board has to be legal in. A run holding one is
+/// <see cref="RunTests"/>'s business; every later ticket in this effort reads
+/// these rather than restating them.
 /// </remarks>
 public class BoardTests
 {
@@ -84,7 +85,7 @@ public class BoardTests
         Board other = Board.Empty.Place(Mortar(types), 3, 2).Place(Bolt(types), 6, 4);
 
         Assert.NotEqual(built.Placements[0].Id, other.Placements.First(placement => placement.Column == 6).Id);
-        Assert.Equal(Spelling(built.Layout()), Spelling(other.Layout()));
+        Assert.Equal(TheMatch.Spelling(built.Layout()), TheMatch.Spelling(other.Layout()));
     }
 
     [Fact]
@@ -105,7 +106,7 @@ public class BoardTests
 
         TowerLayout derived = board.Layout();
 
-        Assert.Equal(Spelling(authored), Spelling(derived));
+        Assert.Equal(TheMatch.Spelling(authored), TheMatch.Spelling(derived));
 
         MatchResult played = new Match(
             TheMatch.Map(), TheRuleset.Committed(), derived, TheMatch.Wave(types), TheMatch.Seed).Resolve();
@@ -114,6 +115,28 @@ public class BoardTests
         Assert.Equal(committed.Leaked, played.Leaked);
         Assert.Equal(committed.FinalTick, played.FinalTick);
         Assert.Equal(committed.RollingStateHash, played.RollingStateHash);
+    }
+
+    [Fact]
+    public void An_authored_defense_folds_into_the_board_that_derives_it_back()
+    {
+        // The bridge every caller that still opens a run behind a defense file
+        // crosses: one fold, in one place, and what comes back out of it is the
+        // layout that went in.
+        //
+        // OBSERVED: walk the towers backwards in Board.Of. The spelling stays
+        // green -- the derivation sorts -- and the ordinals go red, the first
+        // tower of the file coming back as the last placement of the run.
+        UnitTypeTable types = TheMatch.Types();
+        TowerLayout authored = TheMatch.Layout(types);
+        Board board = Board.Of(authored);
+
+        Assert.Equal(authored.Count, board.Count);
+        Assert.Equal(TheMatch.Spelling(authored), TheMatch.Spelling(board.Layout()));
+
+        Assert.Equal(
+            authored.Towers.Select(tower => tower.Column).ToArray(),
+            board.Placements.Select(placement => placement.Column).ToArray());
     }
 
     [Fact]
@@ -179,8 +202,4 @@ public class BoardTests
 
         Assert.Contains("where nothing stands", thrown.Message, StringComparison.Ordinal);
     }
-
-    /// <summary>A layout written out, so two of them can be compared as one value.</summary>
-    private static string[] Spelling(TowerLayout layout) =>
-        layout.Towers.Select(tower => $"{tower.Type.Id} {tower.Column} {tower.Row} {tower.Hex}").ToArray();
 }

@@ -57,11 +57,12 @@ namespace Sim
     /// <para>
     /// <b>One surface, every scenario</b> -- the same claim <see cref="Match"/>
     /// makes, one level up. Construct from the map, the rules, the unit table,
-    /// the shape, the pool a field is drawn from, a seed, N, K and whether death
-    /// ends it; hand <see cref="Advance"/> what the build phase decided; read the
-    /// <see cref="Outcome"/>. Normal play, a sweep row, a no-death harness run
-    /// and a server re-validating a submitted run are those calls with different
-    /// arguments. <b>None of them is a mode, a flag or a branch.</b>
+    /// the shape, the pool a field is drawn from, the board it opens with, a
+    /// seed, N, K and whether death ends it; hand <see cref="Advance"/> what the
+    /// build phase decided; read the <see cref="Outcome"/>. Normal play, a
+    /// sweep row, a no-death harness run and a server re-validating a submitted
+    /// run are those calls with different arguments. <b>None of them is a mode,
+    /// a flag or a branch.</b>
     /// </para>
     /// <para>
     /// <b>N, K and death are parameters and not constants.</b> Ten waves and ten
@@ -152,6 +153,12 @@ namespace Sim
 
         private readonly FieldPool _pool;
 
+        /// <summary>
+        /// What this run has standing on the map. Every round derives its
+        /// layout from here rather than being handed one.
+        /// </summary>
+        private readonly Board _board;
+
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
         private readonly List<RoundOutcome> _rounds = new List<RoundOutcome>();
 
@@ -177,6 +184,10 @@ namespace Sim
         /// The population a round's field of K is drawn from, and the one the
         /// performance bonus is measured against. See <see cref="Field"/>.
         /// </param>
+        /// <param name="board">
+        /// What the run opens with standing on the map. Every round's defense
+        /// is derived from it, so nothing hands one in.
+        /// </param>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
         /// <param name="waves">
         /// N. <see cref="Purse.RoundCapLifted"/> for a run with no last wave,
@@ -190,6 +201,7 @@ namespace Sim
             UnitTypeTable types,
             AnchorSchedule schedule,
             FieldPool pool,
+            Board board,
             ulong seed,
             int waves = DefaultWaves,
             int fieldSize = DefaultFieldSize,
@@ -197,6 +209,7 @@ namespace Sim
         {
             _map = map ?? throw new ArgumentNullException(nameof(map));
             _pool = pool ?? throw new ArgumentNullException(nameof(pool));
+            _board = board ?? throw new ArgumentNullException(nameof(board));
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Types = types ?? throw new ArgumentNullException(nameof(types));
             Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
@@ -365,9 +378,15 @@ namespace Sim
         /// unlocks, this round's slot width and this run's purse -- by
         /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable)"/>,
         /// which is the surface a stored command stream is validated against
-        /// too, so there is one implementation of the rules and not two. The
-        /// defense arrives beside it because a build phase composes what is
-        /// sent; what stands is the other half of a round's orders.
+        /// too, so there is one implementation of the rules and not two.
+        /// </para>
+        /// <para>
+        /// <b>What stands is derived and never handed in.</b> The other half of
+        /// a round's orders is this run's own <see cref="Board"/>, sorted into
+        /// a layout here. A defense a caller composed each round would be a
+        /// decision reaching the simulation by a route no record carries --
+        /// assembled by anybody, applied against no map and paid for out of no
+        /// purse.
         /// </para>
         /// <para>
         /// K opponents are drawn, and each is fought in both directions: this
@@ -399,8 +418,7 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="phase">What this round took, and how it filled its slots.</param>
-        /// <param name="defense">What stands against every wave the field sends this round.</param>
-        public RoundReport Advance(BuildPhase phase, TowerLayout defense)
+        public RoundReport Advance(BuildPhase phase)
         {
             if (phase is null)
             {
@@ -408,7 +426,7 @@ namespace Sim
             }
 
             Build build = phase.Resolve(Offering, Unlocks, Purse, Costs);
-            RoundOrders orders = RoundOrders.Of(defense, build.Wave);
+            RoundOrders orders = RoundOrders.Of(_board.Layout(), build.Wave);
 
             RequireUnfinished();
 

@@ -203,6 +203,7 @@ internal sealed class RunContent
             Types,
             _schedule,
             _pool,
+            Board.Of(Defense),
             seed,
             shape.Waves,
             shape.FieldSize,

@@ -185,19 +185,18 @@ public class CommandStreamTests
         // the order is load-bearing for is the playing.
         Run recorded = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(recorded);
-        TowerLayout defense = TheCommands.Defense();
 
         Run live = TheCommands.Fresh();
 
         for (int index = 0; index < decisions.Count; index++)
         {
-            live.Advance(decisions[index].ToPhase(), defense);
+            live.Advance(decisions[index].ToPhase());
         }
 
         Run fromRecord = TheCommands.Fresh();
         IReadOnlyList<RoundReport> rounds = CommandStream
             .FromBytes(CommandStream.Of(recorded, decisions).ToBytes())
-            .Replay(fromRecord, defense);
+            .Replay(fromRecord);
 
         Assert.Equal(live.Outcome.Rounds, fromRecord.Outcome.Rounds);
         Assert.Equal(live.Outcome.Rounds, rounds.Select(round => round.Outcome));
@@ -218,11 +217,11 @@ public class CommandStreamTests
     {
         // The structural half of "no input reaches the simulation". A run moves
         // forward through one method and nothing else, and every parameter of
-        // every public member of both surfaces is a defense, a decision or a
-        // number. There is no delegate to call back into, no reader, no path,
-        // and the one interface either of them accepts is the decorative event
-        // listener, whose every method returns void -- so it can be told things
-        // and can answer nothing.
+        // every public member of both surfaces is a decision, a defense a
+        // record carries or a number. There is no delegate to call back into,
+        // no reader, no path, and the one interface either of them accepts is
+        // the decorative event listener, whose every method returns void -- so
+        // it can be told things and can answer nothing.
         //
         // The one route in is a fact about the type rather than about this
         // list: a wave a view composed cannot be handed to a run at all, because
@@ -230,15 +229,19 @@ public class CommandStreamTests
         // the list still catches is a second route being added beside it.
         //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
-        // choose, TowerLayout defense)` to Run, which is exactly the shape a
-        // view would reach for. The member list goes red naming it --
-        // "Advance(Func`2, TowerLayout)" at position 1 -- and a run that asks a
-        // caller what to do mid-round is a run whose input never went through a
-        // record and never could.
+        // choose)` to Run, which is exactly the shape a view would reach for.
+        // The member list goes red naming it -- "Advance(Func`2)" at position 1
+        // -- and a run that asks a caller what to do mid-round is a run whose
+        // input never went through a record and never could.
         //
         // OBSERVED: put `public RoundOutcome Advance(RoundOrders orders)` back
         // on Run -- the route this suite was written around, which took a wave
         // nobody was charged for. The list goes red naming it at position 1.
+        //
+        // OBSERVED: hand the defense back in -- `Advance(BuildPhase phase,
+        // TowerLayout defense)`, the shape this took before the run owned its
+        // board. The list goes red at position 0, and a defense composed by
+        // anybody and applied against no map is back inside the tick loop.
         //
         // OBSERVED, on the decision surface below: add a fourth public property
         // to BuildPhase. It goes red naming the new member, which is the case
@@ -266,7 +269,7 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase, TowerLayout)", "OfferingAt(Int32)" },
+            new[] { "Advance(BuildPhase)", "OfferingAt(Int32)" },
             moves);
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
@@ -325,7 +328,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("which that round's offering does not carry", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -361,7 +364,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("which this run never unlocked", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -400,7 +403,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into, TheCommands.Defense()));
+            () => stream.Replay(into));
 
         Assert.Contains("slots where that round has 2", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, into.Round);
@@ -435,7 +438,7 @@ public class CommandStreamTests
         Run into = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => CommandStream.Of(run, decisions).Replay(into, TheCommands.Defense()));
+            () => CommandStream.Of(run, decisions).Replay(into));
 
         Assert.Contains(
             "is stored for wave 5 where the run is about to play round 3",
@@ -462,7 +465,7 @@ public class CommandStreamTests
         Run shorter = TheCommands.Fresh();
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(shorter, TheCommands.Defense()));
+            () => stream.Replay(shorter));
 
         Assert.Contains("holds 6 build phases and the run has 4 rounds left", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, shorter.Round);
@@ -486,7 +489,7 @@ public class CommandStreamTests
         Run elsewhere = TheCommands.Fresh(seed: TheRun.Seed + 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(elsewhere, TheCommands.Defense()));
+            () => stream.Replay(elsewhere));
 
         Assert.Contains("these are two different runs", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(0, elsewhere.Round);
@@ -521,7 +524,7 @@ public class CommandStreamTests
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
 
         (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
-            CommandStream.Recorded(run, TheCommands.Defense(), decisions);
+            CommandStream.Recorded(run, decisions);
 
         Assert.Equal(TheCommands.Waves, run.Round);
         Assert.Equal(CommandStream.Of(TheCommands.Fresh(), decisions).ToBytes(), bytes);
@@ -540,7 +543,7 @@ public class CommandStreamTests
         };
 
         Assert.Throws<SimulationException>(
-            () => CommandStream.Recorded(doomed, TheCommands.Defense(), wrong));
+            () => CommandStream.Recorded(doomed, wrong));
 
         Assert.Equal(0, doomed.Round);
     }
@@ -583,7 +586,7 @@ public class CommandStreamTests
         IReadOnlyList<Build> walked = stream.Check(TheCommands.Fresh());
 
         Run played = TheCommands.Fresh();
-        stream.Replay(played, TheCommands.Defense());
+        stream.Replay(played);
 
         Assert.Equal(TheCommands.Waves, walked.Count);
         Assert.Equal(played.Unlocks.Count, walked[walked.Count - 1].Unlocks.Count);
@@ -603,7 +606,7 @@ public class CommandStreamTests
         beyond.Check(TheCommands.Fresh());
 
         SimulationException refused = Assert.Throws<SimulationException>(
-            () => beyond.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+            () => beyond.Replay(TheCommands.Fresh()));
 
         Assert.Contains("400", refused.Message, StringComparison.Ordinal);
 

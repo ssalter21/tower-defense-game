@@ -51,19 +51,17 @@ public class BuildPhaseTests
         // often enough that comparing them only to each other would miss it.
         Run mine = TheBuild.Fresh(waves: 4);
         Run theirs = TheBuild.Fresh(waves: 4);
-        TowerLayout defense = TheBuild.Defense();
 
         Assert.Equal(TheBuild.Named(mine.Offering), TheBuild.Named(theirs.Offering));
 
         // Two different opening rounds: different takes, and one of them sends
         // a wave while the other banks the round.
-        mine.Advance(BuildPhase.Of(OptionKind.Ordinary, mine.Offering.Options[0].Id), defense);
+        mine.Advance(BuildPhase.Of(OptionKind.Ordinary, mine.Offering.Options[0].Id));
         theirs.Advance(
             BuildPhase.Of(
                 OptionKind.Ordinary,
                 theirs.Offering.Options[1].Id,
-                WaveSlot.Of(theirs.Offering.Options[1].TypeId, 2)),
-            defense);
+                WaveSlot.Of(theirs.Offering.Options[1].TypeId, 2)));
 
         Assert.NotEqual(mine.Unlocks.Taken[0].Id, theirs.Unlocks.Taken[0].Id);
         Assert.NotEqual(mine.Purse.Gold, theirs.Purse.Gold);
@@ -151,13 +149,12 @@ public class BuildPhaseTests
 
         // And a game changer is takeable off the merged list, which is the
         // whole of what "competes head to head" means.
-        TowerLayout defense = TheBuild.Defense();
 
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
 
         Option changerOption = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
-        run.Advance(BuildPhase.Of(OptionKind.GameChanger, changerOption.Id, WaveSlot.Empty), defense);
+        run.Advance(BuildPhase.Of(OptionKind.GameChanger, changerOption.Id, WaveSlot.Empty));
 
         Assert.Equal(OptionKind.GameChanger, run.Unlocks.Taken[2].Kind);
         Assert.Equal(3, run.Unlocks.Count);
@@ -178,14 +175,13 @@ public class BuildPhaseTests
         // on top of the wave, out of the same wallet, at the cost of a creep
         // nobody sent.
         Run run = TheBuild.Fresh(waves: 4);
-        TowerLayout defense = TheBuild.Defense();
         Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
 
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.Equal(0, run.Unlocks.Count);
 
         Option first = run.Offering.Options[0];
-        run.Advance(BuildPhase.Of(first.Kind, first.Id), defense);
+        run.Advance(BuildPhase.Of(first.Kind, first.Id));
 
         // Nothing was bought, so the purse is what it opened with plus the wave.
         Assert.Equal(rules.StartingPurseGold + 10 + rules.IncomeBasePerWave, run.Purse.Gold);
@@ -196,7 +192,7 @@ public class BuildPhaseTests
         // between, the first one is still fieldable.
         while (!run.IsOver)
         {
-            run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+            run.Advance(TheBuild.BuyingNothing(run.Offering));
         }
 
         Assert.Equal(4, run.Unlocks.Count);
@@ -253,19 +249,16 @@ public class BuildPhaseTests
         // sent: leaving a slot empty stops being a position and becomes a
         // command nobody may write down.
         Run run = TheBuild.Fresh(waves: 3);
-        TowerLayout defense = TheBuild.Defense();
         Option first = run.Offering.Options[0];
 
         // One filled, one empty.
-        run.Advance(
-            BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 2), WaveSlot.Empty),
-            defense);
+        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 2), WaveSlot.Empty));
 
         Assert.Equal(2, run.Sent[0].Wave.TotalUnits);
         Assert.Equal(1, run.Sent[0].Wave.Count);
 
         // Every slot empty, which is the whole round banked.
-        run.Advance(TheBuild.TakeFirst(run.Offering, WaveSlot.Empty, WaveSlot.Empty), defense);
+        run.Advance(TheBuild.TakeFirst(run.Offering, WaveSlot.Empty, WaveSlot.Empty));
 
         Assert.Equal(0, run.Sent[1].Wave.TotalUnits);
         Assert.Equal(0, run.Sent[1].Wave.Count);
@@ -593,6 +586,7 @@ public class BuildPhaseTests
             types,
             moved,
             TheRun.Pool(types),
+            TheBuild.Standing(types),
             TheRun.Seed,
             waves: 10,
             fieldSize: 4);
@@ -619,7 +613,7 @@ public class BuildPhaseTests
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
 
         Option first = run.Offering.Options[0];
-        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)), defense: TheBuild.Defense());
+        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
 
         Assert.Equal(1, run.Sent[0].Wave.TotalUnits);
     }
@@ -639,14 +633,13 @@ public class BuildPhaseTests
         // from the list of creeps it may send -- at which point nothing can say
         // which of two game changers over one body is on the map.
         Run run = TheBuild.Fresh();
-        TowerLayout defense = TheBuild.Defense();
         AnchorSchedule schedule = TheSchedule.Committed();
 
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
-        run.Advance(TheBuild.BuyingNothing(run.Offering), defense);
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
+        run.Advance(TheBuild.BuyingNothing(run.Offering));
 
         Option steepless = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
-        run.Advance(BuildPhase.Of(OptionKind.GameChanger, steepless.Id, WaveSlot.Empty), defense);
+        run.Advance(BuildPhase.Of(OptionKind.GameChanger, steepless.Id, WaveSlot.Empty));
 
         Assert.True(run.Unlocks.TryChangerFor(steepless.TypeId, out GameChanger? fielded));
         Assert.Equal(steepless.Id, fielded!.Id);
@@ -676,12 +669,11 @@ public class BuildPhaseTests
         //
         // OBSERVED: leave the purse and the unlocks on the build rather than
         // taking them back -- hand Run.Play the run's own Unlocks and Purse
-        // instead of the build's, in Run.Advance(BuildPhase, TowerLayout). The
+        // instead of the build's, in Run.Advance(BuildPhase). The
         // unlock-count assertion goes red, 10 against 0, and every round of the
         // run decides against a run that has never taken anything and never
         // spent a coin.
         Run run = TheBuild.Fresh();
-        TowerLayout defense = TheBuild.Defense();
         var spent = new List<int>();
 
         while (!run.IsOver)
@@ -698,7 +690,7 @@ public class BuildPhaseTests
             // What the wave cost comes off the round the phase was played into.
             // The build phase resolves once, where the round is played, and says
             // what it came to.
-            spent.Add(run.Advance(phase, defense).Build.Spent);
+            spent.Add(run.Advance(phase).Build.Spent);
         }
 
         Assert.Equal(10, run.Round);
@@ -720,19 +712,17 @@ public class BuildPhaseTests
         // OBSERVED: take the purse and the unlocks back where the decision is
         // made rather than where the round is committed -- add
         // `Unlocks = build.Unlocks; Purse = build.Purse;` above the
-        // RequireUnfinished call in Run.Advance(BuildPhase, TowerLayout). The
+        // RequireUnfinished call in Run.Advance(BuildPhase). The
         // first half goes red, 210 against 193: a finished run pays for a wave
         // it refused to send.
         //
-        // OBSERVED: put those two assignments below RequireUnfinished instead,
-        // with the RoundOrders.Of call moved down past them. The first half
-        // stays green and the second goes red, 0 against 1, because the defense
-        // is the last thing that can refuse a round and it is the only refusal
-        // that mutation leaves standing.
-        TowerLayout defense = TheBuild.Defense();
+        // OBSERVED: drop the null check at the top of Run.Advance. The second
+        // half goes red on a NullReferenceException where an
+        // ArgumentNullException was expected, and a round handed no decision
+        // at all stops being refused by name.
         Run over = TheBuild.Fresh(waves: 1);
 
-        over.Advance(TheBuild.BuyingNothing(over.Offering), defense);
+        over.Advance(TheBuild.BuyingNothing(over.Offering));
         Assert.True(over.IsOver);
 
         int purse = over.Purse.Gold;
@@ -745,19 +735,15 @@ public class BuildPhaseTests
         BuildPhase past = BuildPhase.Of(
             next.Kind, next.Id, WaveSlot.Of(over.Unlocks.Taken[0].TypeId, 1));
 
-        Assert.Throws<SimulationException>(() => over.Advance(past, defense));
+        Assert.Throws<SimulationException>(() => over.Advance(past));
 
         Assert.Equal(purse, over.Purse.Gold);
         Assert.Equal(unlocks, over.Unlocks.Count);
 
-        // And a round with no defense standing is refused the same way.
+        // And a round handed no decision at all is refused the same way.
         Run alive = TheBuild.Fresh(waves: 2);
-        Option first = alive.Offering.Options[0];
 
-        Assert.Throws<ArgumentNullException>(
-            () => alive.Advance(
-                BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)),
-                defense: null!));
+        Assert.Throws<ArgumentNullException>(() => alive.Advance(null!));
 
         Assert.Equal(0, alive.Unlocks.Count);
         Assert.Equal(TheBuild.RulesOffering(TheBuild.Ordinary).StartingPurseGold, alive.Purse.Gold);

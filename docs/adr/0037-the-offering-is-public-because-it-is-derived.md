@@ -10,8 +10,8 @@ A build phase is three things and one seam:
   and any of them may be left empty.
 
 `BuildPhase` is the decision as data. `BuildPhase.Resolve(offering, unlocks, purse, costs)` is where the four
-checks live, and `Run.Advance(BuildPhase, TowerLayout)` — the only way into a round — calls it and resolves the
-wave it composed against the round's field.
+checks live, and `Run.Advance(BuildPhase)` — the only way into a round — calls it and resolves the wave it
+composed against the round's field.
 
 ## What was decided
 
@@ -42,10 +42,10 @@ asserted "it threw" passes when the phase is refused for the wrong reason.
 reaching it means an unaffordable command was let through — so the affordability check belongs one layer up,
 over the summed slots, or a purse is left part-spent on a wave that was never legal.
 
-**And the same rule one layer up again.** `Run.Advance(BuildPhase, TowerLayout)` resolves the decision, composes
-the orders and checks the run is unfinished *before* it takes the new purse and unlocks back. A run that
-refused a round and paid for it anyway is indistinguishable afterwards from a run that played one, which is the
-same defect at the round's scale.
+**And the same rule one layer up again.** `Run.Advance(BuildPhase)` resolves the decision, composes the orders
+and checks the run is unfinished *before* it takes the new purse and unlocks back. A run that refused a round
+and paid for it anyway is indistinguishable afterwards from a run that played one, which is the same defect at
+the round's scale.
 
 **Filled slots ascend strictly by type id.** A slot becomes one line of a wave, and a wave's lines ascend and
 are unique on `(tick, type)` — asserted rather than sorted, because sorting would leave two identical waves

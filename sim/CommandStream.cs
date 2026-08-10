@@ -372,11 +372,9 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="run">A fresh run, on the seed and the tables the stream is stamped with.</param>
-        /// <param name="defense">What stands while each of the run's waves is sent.</param>
         /// <param name="commands">The build phases to record.</param>
         public static (byte[] Bytes, IReadOnlyList<RoundReport> Rounds) Recorded(
             Run run,
-            TowerLayout defense,
             IReadOnlyList<RecordCommand> commands)
         {
             if (run is null)
@@ -395,7 +393,7 @@ namespace Sim
 
             byte[] bytes = Of(run, commands).ToBytes();
 
-            return (bytes, FromBytes(bytes).Replay(run, defense));
+            return (bytes, FromBytes(bytes).Replay(run));
         }
 
         /// <summary>Reads a command stream from bytes. The read gate, and nothing else.</summary>
@@ -600,17 +598,11 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="run">The run to play, on the seed and the tables this stream is stamped with.</param>
-        /// <param name="defense">What stands while each of the run's waves is sent.</param>
-        public IReadOnlyList<RoundReport> Replay(Run run, TowerLayout defense)
+        public IReadOnlyList<RoundReport> Replay(Run run)
         {
             if (run is null)
             {
                 throw new ArgumentNullException(nameof(run));
-            }
-
-            if (defense is null)
-            {
-                throw new ArgumentNullException(nameof(defense));
             }
 
             if (run.Seed != Seed)
@@ -636,7 +628,7 @@ namespace Sim
 
             for (int index = 0; index < _commands.Length; index++)
             {
-                rounds.Add(run.Advance(_commands[index].ToPhase(), defense));
+                rounds.Add(run.Advance(_commands[index].ToPhase()));
             }
 
             return rounds;

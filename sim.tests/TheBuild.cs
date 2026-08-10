@@ -46,6 +46,7 @@ public static class TheBuild
             types,
             TheSchedule.Committed(types),
             TheRun.Pool(types),
+            Standing(types),
             seed,
             waves,
             fieldSize);
@@ -53,6 +54,9 @@ public static class TheBuild
 
     /// <summary>The defense that stands while a build phase decides what is sent.</summary>
     public static TowerLayout Defense(UnitTypeTable? types = null) => TheMatch.Layout(types ?? TheMatch.Types());
+
+    /// <summary>That same defense as the board a run opens holding.</summary>
+    public static Board Standing(UnitTypeTable? types = null) => Board.Of(Defense(types));
 
     /// <summary>Every option on a round's menu, as the pair a decision names.</summary>
     public static (OptionKind Kind, int Id)[] Named(Offering offering) =>

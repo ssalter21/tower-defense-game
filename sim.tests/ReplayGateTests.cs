@@ -409,7 +409,7 @@ public class ReplayGateTests
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
         Run run = TheCommands.Fresh();
 
-        IReadOnlyList<RoundReport> rounds = stream.Replay(run, TheCommands.Defense());
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run);
 
         Assert.Equal(TheCommands.Waves, rounds.Count);
         Assert.Equal(TheCommands.Waves, run.Round);
@@ -435,7 +435,7 @@ public class ReplayGateTests
         Run against = TheCommands.Against(retuned);
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => stream.Replay(against, TheCommands.Defense()));
+            Assert.Throws<RetiredRecordException>(() => stream.Replay(against));
 
         Assert.Equal("ruleset hash", thrown.Gate);
         Assert.Contains(TheRuleset.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
@@ -474,8 +474,8 @@ public class ReplayGateTests
         Run committed = TheCommands.Fresh();
         Run against = TheCommands.Against(reformatted);
 
-        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(committed, TheCommands.Defense());
-        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(against, TheCommands.Defense());
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(committed);
+        CommandStream.FromBytes(TheCommands.Stream().ToBytes()).Replay(against);
 
         Assert.Equal(committed.Outcome.Rounds, against.Outcome.Rounds);
         Assert.Equal(committed.Outcome.HealthRemaining, against.Outcome.HealthRemaining);
@@ -500,7 +500,7 @@ public class ReplayGateTests
         Run against = TheCommands.Against(TheRuleset.Committed(), moved);
 
         RetiredRecordException thrown =
-            Assert.Throws<RetiredRecordException>(() => stream.Replay(against, TheCommands.Defense()));
+            Assert.Throws<RetiredRecordException>(() => stream.Replay(against));
 
         Assert.Equal("schedule hash", thrown.Gate);
         Assert.Contains(TheSchedule.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
@@ -533,7 +533,7 @@ public class ReplayGateTests
         Assert.Equal(TheCommands.Waves, older.Count);
 
         RetiredRecordException version = Assert.Throws<RetiredRecordException>(
-            () => older.Replay(TheCommands.Fresh(), TheCommands.Defense()));
+            () => older.Replay(TheCommands.Fresh()));
 
         Assert.Equal("simulation version", version.Gate);
 
@@ -545,12 +545,13 @@ public class ReplayGateTests
             retuned,
             TheSchedule.Committed(retuned),
             TheRun.Pool(retuned),
+            TheBuild.Standing(retuned),
             TheRun.Seed,
             TheCommands.Waves,
             fieldSize: 2);
 
         RetiredRecordException content = Assert.Throws<RetiredRecordException>(
-            () => CommandStream.FromBytes(TheCommands.Bytes()).Replay(against, TheCommands.Defense()));
+            () => CommandStream.FromBytes(TheCommands.Bytes()).Replay(against));
 
         Assert.Equal("content hash", content.Gate);
         Assert.Contains(retuned.ContentHash.ToString(), content.Live, StringComparison.Ordinal);
@@ -572,7 +573,7 @@ public class ReplayGateTests
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
 
         Exception thrown = Assert.ThrowsAny<Exception>(
-            () => stream.Replay(TheCommands.Against(TheRuleset.Retuned()), TheCommands.Defense()));
+            () => stream.Replay(TheCommands.Against(TheRuleset.Retuned())));
 
         Assert.IsType<RetiredRecordException>(thrown);
         Assert.IsNotType<RecordException>(thrown);
