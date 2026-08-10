@@ -10,8 +10,8 @@ namespace Sim
     /// <remarks>
     /// <para>
     /// <b>The rule, in one sentence.</b> Each round, with up to half the purse:
-    /// while any route hex is unshot at, buy the cheapest tower type that covers
-    /// at least one of them; once nothing more can be covered, upgrade the
+    /// while any route hex is unshot at, buy the tower type that covers the most
+    /// of them per gold; once nothing more can be covered, upgrade the
     /// lowest-ordinal placement that is not already the dearest type. Stop at the
     /// first action the half will not pay for, and bank the rest.
     /// </para>
@@ -36,13 +36,14 @@ namespace Sim
     /// simulation, so what covers what is asked here exactly as a match asks it.
     /// </para>
     /// <para>
-    /// <b>Cheapest-first rather than best-value, because of the corridor that
-    /// exists.</b> Three rangers cover all forty-seven route hexes of
-    /// <c>content/map.txt</c> for a hundred and twenty gold, against a purse that
-    /// opens at a hundred -- so any per-gold rule finishes building on wave two
-    /// and the board never moves again. Walking up the price list spreads four
-    /// hundred gold of placement across most of a ten-wave run, which is a board
-    /// that changes while the run is being played.
+    /// <b>Per gold rather than by price, because the report is the point.</b>
+    /// Three rangers cover all forty-seven route hexes of <c>content/map.txt</c>
+    /// for a hundred and twenty gold and fourteen soldiers cover them for four
+    /// hundred and twenty, so a rule that started at the bottom of the price list
+    /// would spend most of a run's gold on the worse of the two walls and send a
+    /// wave that could not reach the far side of either. What the board costs is
+    /// gold the wave does not get, and every balance column in the report is a
+    /// statement about the wave.
     /// </para>
     /// <para>
     /// <b>Nothing here can buy gold's worth of nothing.</b> A place is only ever
@@ -92,11 +93,11 @@ namespace Sim
             var actions = new List<BuildAction>();
             int left = BudgetOf(run.Purse);
 
-            // Cover: the cheapest type that reaches route nothing reaches, until
-            // nothing on any free cell reaches any more of it.
+            // Cover: the type that reaches the most route nothing reaches for
+            // what it costs, until nothing on any free cell reaches any more of it.
             while (true)
             {
-                (UnitType? type, int column, int row) = Cheapest(run.Map, board, byPrice, covered);
+                (UnitType? type, int column, int row) = BestValue(run.Map, board, byPrice, run.Costs, covered);
 
                 if (type is null)
                 {
@@ -106,8 +107,10 @@ namespace Sim
                 int price = run.Costs.PriceOf(Purchase.Unit(type.Id));
 
                 // The rule is one sequence of actions and it stops at the first
-                // one the half will not pay for, rather than looking past it for
-                // something cheaper that the sequence had not reached yet.
+                // one the half will not pay for. What the half cannot afford is
+                // banked rather than spent on a cheaper type that would still
+                // cover something, so a round can end holding gold a tower it
+                // did not ask about costs.
                 if (price > left)
                 {
                     return actions;
@@ -146,33 +149,54 @@ namespace Sim
         }
 
         /// <summary>
-        /// The cheapest type that reaches a route hex nothing reaches yet, and
-        /// the free cell it reaches the most of them from. A null type is the end
+        /// The type that reaches the most unreached route hexes for each gold it
+        /// costs, and the free cell it reaches them from. A null type is the end
         /// of the first phase: no type on any free cell covers anything new.
         /// </summary>
         /// <remarks>
-        /// The whole price list is walked rather than stopping at the cheapest
-        /// row, because ending at the soldier would be a soldier-only rule nobody
-        /// chose: a stretch of route no one-hex tower can reach is exactly what
-        /// the longer-ranged rows are for.
+        /// <para>
+        /// Two types are compared by cross-multiplying their counts and their
+        /// prices, which is the same order as the two fractions in integers that
+        /// never round. The score opens at nothing gained for one gold, so the
+        /// comparison admits the first type with anything to gain at all.
+        /// </para>
+        /// <para>
+        /// The whole price list is walked, and a type has to beat the score
+        /// standing to take it, so a tie goes to the row the list reaches first
+        /// -- cheaper, and the lower id where the price is the same. That is a
+        /// total order over the types with no sort and no comparator, matching
+        /// how <see cref="Best"/> settles a tie between cells.
+        /// </para>
         /// </remarks>
-        private static (UnitType? Type, int Column, int Row) Cheapest(
+        private static (UnitType? Type, int Column, int Row) BestValue(
             HexMap map,
             Board board,
             UnitType[] byPrice,
+            CostTable costs,
             bool[] covered)
         {
+            UnitType? bestType = null;
+            int bestColumn = 0;
+            int bestRow = 0;
+            int bestGained = 0;
+            int bestPrice = 1;
+
             for (int index = 0; index < byPrice.Length; index++)
             {
                 (int column, int row, int gained) = Best(map, board, byPrice[index], covered);
+                int price = costs.PriceOf(Purchase.Unit(byPrice[index].Id));
 
-                if (gained > 0)
+                if (gained * bestPrice > bestGained * price)
                 {
-                    return (byPrice[index], column, row);
+                    bestType = byPrice[index];
+                    bestColumn = column;
+                    bestRow = row;
+                    bestGained = gained;
+                    bestPrice = price;
                 }
             }
 
-            return (null, 0, 0);
+            return (bestType, bestColumn, bestRow);
         }
 
         /// <summary>

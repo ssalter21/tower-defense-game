@@ -111,9 +111,9 @@ internal static class SweepCsv
         Note(
             text,
             "defense_gold",
-            "the defense these rows were played against was built by a deliberately simple bot -- cheapest "
-            + "tower that covers unshot route then upgrade the oldest -- so a row describes a game and "
-            + "never skilled play; see #145");
+            "the defense these rows were played against was built by a deliberately simple bot -- the tower "
+            + "that covers the most unshot route per gold then upgrade the oldest -- so a row describes a "
+            + "game and never skilled play; see #163");
 
         Note(
             text,

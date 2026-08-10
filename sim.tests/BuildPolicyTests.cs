@@ -30,18 +30,25 @@ public class BuildPolicyTests
     /// <summary>The committed mage: ninety-two gold, and the dearest row on the roster.</summary>
     private const int Mage = 4;
 
-    /// <summary>The committed ranger: forty gold and four hexes, and the row this player never reaches.</summary>
+    /// <summary>The committed ranger: forty gold and four hexes, and the widest reach on the roster.</summary>
     private const int Ranger = 14;
 
     /// <summary>The creep the runs below are about.</summary>
     private const int Minion = 1;
 
     /// <summary>
-    /// How many waves the runs below last. Fourteen soldiers cover the whole
-    /// corridor and a round buys one or two of them, so a shorter run would
-    /// observe the first phase alone and say nothing about the second.
+    /// How many waves the runs below last. Three towers cover the whole corridor
+    /// and each upgrade behind them costs more than an early round's half, so a
+    /// shorter run would observe the first phase alone and say nothing about the
+    /// second.
     /// </summary>
     private const int Waves = 16;
+
+    /// <summary>
+    /// How many rounds <see cref="Banked"/> spends taking and sending nothing.
+    /// Four is what it takes for half a purse to hold more than one action.
+    /// </summary>
+    private const int Idle = 4;
 
     /// <summary>How many opponents a round of them is resolved against.</summary>
     private const int FieldSize = 2;
@@ -52,8 +59,8 @@ public class BuildPolicyTests
         // Half the purse, rounded down, and the wave gets the rest of the purse
         // rather than the rest of the half. An opening round is the clearest
         // place to read it: a hundred gold splits fifty and fifty, the board
-        // takes one thirty-gold soldier and cannot afford a second, and the
-        // twenty it did not spend banks instead of buying two more minions.
+        // takes one forty-gold ranger and cannot afford a second, and the ten it
+        // did not spend banks instead of buying another minion.
         //
         // That banking is what the interest rate and the unspent-gold column
         // have to be about -- a player that always emptied its purse would make
@@ -62,9 +69,8 @@ public class BuildPolicyTests
         // OBSERVED: hand the wave what the defense left rather than the half it
         // was never offered -- price the actions in EvenShareBot.Decide and take
         // that off the purse for the wave's share. This goes red, 100 spent
-        // where 80 was expected, with an identical board underneath it, and two
-        // more rows of this class go red behind it on a purse that empties a
-        // round earlier.
+        // where 90 was expected, and three more rows of this class go red behind
+        // it on runs that reach different boards with the extra gold.
         Run run = TheBuild.Fresh(fieldSize: FieldSize);
 
         Assert.Equal(100, run.Purse.Gold);
@@ -73,9 +79,9 @@ public class BuildPolicyTests
         BuildPhase phase = EvenShareBot.Decide(run, Minion);
         RoundReport report = run.Advance(phase);
 
-        Assert.Equal(Soldier, Assert.Single(phase.Actions).TypeId);
-        Assert.Equal(80, report.Build.Spent);
-        Assert.Equal(20, report.Build.Purse.Gold);
+        Assert.Equal(Ranger, Assert.Single(phase.Actions).TypeId);
+        Assert.Equal(90, report.Build.Spent);
+        Assert.Equal(10, report.Build.Purse.Gold);
 
         // And the half is rounded down, so an odd purse leaves the odd coin on
         // the wave's side rather than on the board's.
@@ -87,58 +93,55 @@ public class BuildPolicyTests
     {
         // Candidate cells are walked by row and then by column, and a cell has
         // to beat the count standing to take it -- so where several cells reach
-        // the same number of route hexes, the earliest of them keeps it. That is
-        // a total order over the cells with no sort and no comparator, which is
-        // how every other tie in the simulation is settled.
+        // the same number of route hexes the board does not, the earliest of
+        // them keeps it. That is a total order over the cells with no sort and
+        // no comparator, which is how every other tie in the simulation is
+        // settled.
         //
-        // The committed map makes the tie real: three ground cells put five
-        // route hexes inside a soldier's one hex of range and no cell puts six,
-        // so the rule is what picks between them rather than the arithmetic.
+        // Every placement of a whole run is checked against the cells that were
+        // available to it, and the run is required to have met a tie at least
+        // once -- otherwise the arithmetic picked every cell and this asserts
+        // nothing. On the committed map the tie falls on the third tower, which
+        // has four hexes of corridor left to reach and two cells that reach
+        // them.
         //
         // OBSERVED: take a cell on a tie as well -- compare with >= in
-        // CoverThenUpgradeBot.Best. This goes red, (12, 6) where (11, 2) was
-        // expected, which is the last maximiser instead of the first, and
-        // nothing else in this class notices.
+        // CoverThenUpgradeBot.Best. This goes red, (3, 4) where (1, 4) was
+        // expected, which is the last maximiser instead of the first.
         HexMap map = TheMatch.Map();
-        UnitType soldier = TheMatch.Types().ById(Soldier);
-        var maximisers = new List<(int Column, int Row)>();
-        int best = 0;
+        int ties = 0;
 
-        for (int row = 0; row < map.Height; row++)
+        foreach ((Board opening, IReadOnlyList<BuildAction> actions) in Played())
         {
-            for (int column = 0; column < map.Width; column++)
+            Board board = opening;
+
+            foreach (BuildAction action in actions)
             {
-                if (!Footing.Of(map, soldier, column, row).Possible)
+                UnitType type = TheMatch.Types().ById(action.TypeId);
+
+                if (action.Kind == ActionKind.Upgrade)
                 {
+                    board = board.Upgrade(type, action.Column, action.Row);
                     continue;
                 }
 
-                int reached = Reached(map, Board.Empty.Place(soldier, column, row));
+                List<(int Column, int Row)> maximisers = Maximisers(map, board, type);
 
-                if (reached > best)
+                Assert.Equal(maximisers[0], (action.Column, action.Row));
+
+                if (maximisers.Count > 1)
                 {
-                    best = reached;
-                    maximisers.Clear();
+                    ties++;
                 }
 
-                if (reached == best)
-                {
-                    maximisers.Add((column, row));
-                }
+                board = board.Place(type, action.Column, action.Row);
             }
         }
 
         Assert.True(
-            maximisers.Count > 1,
-            "One cell alone reaches "
-            + best
-            + " route hexes with a soldier on it, so this map settles the choice by arithmetic and the "
-            + "walk order is not what picks the cell.");
-
-        BuildAction opening = Assert.Single(
-            CoverThenUpgradeBot.Decide(TheBuild.Fresh(fieldSize: FieldSize)));
-
-        Assert.Equal(maximisers[0], (opening.Column, opening.Row));
+            ties > 0,
+            "No placement of this run had two cells to choose between, so the arithmetic settled every one of "
+            + "them and the walk order is not what picked a cell.");
     }
 
     [Fact]
@@ -197,23 +200,27 @@ public class BuildPolicyTests
     }
 
     [Fact]
-    public void The_bot_builds_no_ranger_because_the_archer_ties_it_on_price_with_the_lower_id()
+    public void The_bot_opens_on_the_ranger_and_never_builds_a_soldier_because_it_buys_route_per_gold()
     {
         // A consequence of the rule rather than a rule of its own, written down
-        // because it is the kind of thing somebody finds in the report and reads
-        // as a bug. The first phase walks up the price list and the second
-        // upgrades to the cheapest type dearer than the one standing; the archer
-        // and the ranger cost the same forty gold, and a tie goes to the lower
-        // type id, so the ranger is never the answer to either question. Its
-        // extra hex of range never gets to matter.
+        // because both halves of it are the kind of thing somebody finds in the
+        // report and reads as a bug: the dearest-reaching row is what the
+        // opening purse buys, and the cheapest row on the roster is never bought
+        // at all.
         //
-        // OBSERVED: break the tie the other way -- compare type ids with > in
-        // CoverThenUpgradeBot.Ahead. This goes red having found the ranger among
-        // the types built, and no other row of this class notices: the mage
-        // still arrives on schedule behind it and every action still buys
-        // something.
+        // The ranger and the archer cost the same forty gold and the ranger's
+        // best cell reaches more of the corridor, so it wins the first purchase
+        // outright rather than on a tie. The soldier is a third cheaper and
+        // reaches a fifth as much, which is what per-gold means and why thirty
+        // gold is not the bargain the price list makes it look.
+        //
+        // OBSERVED: score by price alone -- return the first type with anything
+        // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
+        // opening action, type 11 where 14 was expected, and two more rows of
+        // this class go red behind it on a round that now buys two soldiers.
         UnitTypeTable types = TheMatch.Types();
         CostTable costs = CostTable.From(TheRuleset.Committed(), types);
+        HexMap map = TheMatch.Map();
         var built = new List<int>();
 
         foreach ((Board _, IReadOnlyList<BuildAction> actions) in Played())
@@ -227,17 +234,25 @@ public class BuildPolicyTests
             }
         }
 
-        Assert.DoesNotContain(Ranger, built);
+        Assert.Equal(Ranger, built[0]);
+        Assert.DoesNotContain(Soldier, built);
 
-        // And the other three rows of the roster all do get built, so the
-        // ranger's absence is this rule and not a player that never builds.
-        Assert.Contains(Soldier, built);
+        // And the other two rows of the roster do get built, so the soldier's
+        // absence is this rule and not a player that only ever buys one thing.
         Assert.Contains(Archer, built);
         Assert.Contains(Mage, built);
 
-        // And the reason: same price, higher id.
+        // And the reason, in the two comparisons the rule makes: same price and
+        // more corridor than the archer, and more corridor per gold than the
+        // soldier even though the soldier is cheaper.
+        int ranger = Widest(map, types.ById(Ranger));
+        int soldier = Widest(map, types.ById(Soldier));
+
         Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
-        Assert.True(Archer < Ranger);
+        Assert.True(ranger > Widest(map, types.ById(Archer)));
+        Assert.True(
+            ranger * costs.PriceOf(Purchase.Unit(Soldier)) > soldier * costs.PriceOf(Purchase.Unit(Ranger)),
+            "The soldier reaches " + soldier + " route hexes against the ranger's " + ranger + ".");
     }
 
     [Fact]
@@ -246,13 +261,12 @@ public class BuildPolicyTests
         // A round is one decision over one wallet, so the two halves arrive as
         // one build phase and are paid for out of one purse in one walk. The
         // even share is the composition and not a second decision: what to build
-        // is asked of the defensive player and copied in unchanged, in the order
-        // it was decided, because the placement ordinals fall out of that order.
+        // is asked of the defensive player and copied in unchanged.
         //
-        // OBSERVED: append the actions in reverse in EvenShareBot.Decide. This
-        // goes red on the round that builds two towers, place at column 12 row 6
-        // where column 3 row 4 was expected -- two placements swapping ordinals,
-        // which is a different run rather than a different spelling of one.
+        // OBSERVED: compose the phase out of the slots alone -- drop the loop
+        // that copies the actions in at the end of EvenShareBot.Decide. This
+        // goes red, no actions where one place was expected, and every other row
+        // of this class goes red behind it on a run that never builds anything.
         Run run = TheBuild.Fresh(fieldSize: FieldSize);
 
         run.Advance(EvenShareBot.Decide(run, Minion));
@@ -260,8 +274,8 @@ public class BuildPolicyTests
         IReadOnlyList<BuildAction> defensive = CoverThenUpgradeBot.Decide(run);
         BuildPhase phase = EvenShareBot.Decide(run, Minion);
 
-        Assert.Equal(2, defensive.Count);
         Assert.Equal(defensive, phase.Actions);
+        Assert.Equal(ActionKind.Place, Assert.Single(phase.Actions).Kind);
 
         // And the slots were filled out of what the defensive half was not
         // offered, so the one purse pays for both.
@@ -274,6 +288,94 @@ public class BuildPolicyTests
         }
 
         Assert.InRange(sent, wave - run.Costs.PriceOf(Purchase.Unit(Minion)) + 1, wave);
+    }
+
+    [Fact]
+    public void The_actions_of_a_round_arrive_in_the_order_they_were_decided()
+    {
+        // The placement ordinals fall out of the order the actions are walked
+        // in, so a round that builds several things is a different run when they
+        // arrive in a different order rather than a different spelling of one.
+        //
+        // A round of the ordinary run buys at most one thing -- the cheapest
+        // purchase worth making is a forty-gold ranger against a half that opens
+        // at fifty -- so the order needs a purse fat enough to act on twice, and
+        // four rounds of taking an option and sending nothing is what makes one.
+        //
+        // OBSERVED: append the actions in reverse in EvenShareBot.Decide. This
+        // goes red on the first of the five, upgrade type 4 at column 11 row 4
+        // where place type 14 at column 6 row 4 was expected -- a board that
+        // upgrades a cell nothing stands on.
+        Run run = Banked();
+        IReadOnlyList<BuildAction> defensive = CoverThenUpgradeBot.Decide(run);
+        BuildPhase phase = EvenShareBot.Decide(run, Minion);
+
+        Assert.True(defensive.Count > 1, "This round decided " + defensive.Count + " actions.");
+        Assert.Equal(defensive, phase.Actions);
+    }
+
+    /// <summary>
+    /// A run four rounds into taking an option and sending nothing, so that the
+    /// defense's half of the purse holds more than one action.
+    /// </summary>
+    private static Run Banked()
+    {
+        Run run = TheBuild.Fresh(waves: Waves, fieldSize: FieldSize, deathEndsTheRun: false);
+
+        for (int round = 0; round < Idle; round++)
+        {
+            Option first = run.Offering.Options[0];
+
+            run.Advance(BuildPhase.Of(first.Kind, first.Id));
+        }
+
+        return run;
+    }
+
+    /// <summary>
+    /// The free cells this type would reach the most unreached route hexes
+    /// from, in the order the bot walks them. Empty where it would reach none:
+    /// a cell that adds nothing is not a cell the bot chooses between.
+    /// </summary>
+    private static List<(int Column, int Row)> Maximisers(HexMap map, Board board, UnitType type)
+    {
+        var maximisers = new List<(int Column, int Row)>();
+        int before = Reached(map, board);
+        int best = 0;
+
+        for (int row = 0; row < map.Height; row++)
+        {
+            for (int column = 0; column < map.Width; column++)
+            {
+                if (!board.IsFree(column, row) || !Footing.Of(map, type, column, row).Possible)
+                {
+                    continue;
+                }
+
+                int gained = Reached(map, board.Place(type, column, row)) - before;
+
+                if (gained > best)
+                {
+                    best = gained;
+                    maximisers.Clear();
+                }
+
+                if (gained == best && gained > 0)
+                {
+                    maximisers.Add((column, row));
+                }
+            }
+        }
+
+        return maximisers;
+    }
+
+    /// <summary>How much of the route one of these reaches from the best cell on an empty board.</summary>
+    private static int Widest(HexMap map, UnitType type)
+    {
+        (int column, int row) = Maximisers(map, Board.Empty, type)[0];
+
+        return Reached(map, Board.Empty.Place(type, column, row));
     }
 
     /// <summary>
