@@ -6,7 +6,8 @@ namespace Sim
 {
     /// <summary>
     /// One build phase as the record carries it: the wave it was decided in, and
-    /// the decision -- the take, and how the wave's slots were filled.
+    /// the decision -- the take, what it did to the board, and how the wave's
+    /// slots were filled.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -21,17 +22,34 @@ namespace Sim
     /// writer emitting bytes its own reader refuses, so the order is asserted
     /// where a command is made and asserted again where one is read.
     /// </para>
+    /// <para>
+    /// <b>The actions do not, and that is not an oversight.</b> Their order is
+    /// the phase's own: a phase may upgrade what it just placed, and the
+    /// placement ordinals depend on the sequence, so two orderings of the same
+    /// two actions are two different runs. Nothing here sorts them and nothing
+    /// asserts an order over them.
+    /// </para>
     /// </remarks>
     public sealed class RecordCommand : IEquatable<RecordCommand>
     {
+        private static readonly BuildAction[] NoActions = new BuildAction[0];
+
         private readonly WaveSlot[] _slots;
 
-        private RecordCommand(int wave, OptionKind take, int takeId, WaveSlot[] slots)
+        private readonly BuildAction[] _actions;
+
+        private RecordCommand(
+            int wave,
+            OptionKind take,
+            int takeId,
+            WaveSlot[] slots,
+            BuildAction[] actions)
         {
             Wave = wave;
             Take = take;
             TakeId = takeId;
             _slots = slots;
+            _actions = actions;
         }
 
         /// <summary>Which wave of the run this decision was made in. Counted from one.</summary>
@@ -45,6 +63,16 @@ namespace Sim
 
         /// <summary>The slots, in the order they were filled. Empty ones included.</summary>
         public IReadOnlyList<WaveSlot> Slots => _slots;
+
+        /// <summary>What this phase did to the board, in the order it was written.</summary>
+        /// <remarks>
+        /// <b>Command stream format version 0 has no field for these.</b> A
+        /// command carrying actions writes the same bytes as one without them
+        /// and reads back with none, so an authored script is the only thing
+        /// that carries an action today. The format bump that stores them is
+        /// where <see cref="ToPhase"/> starts handing them on as well.
+        /// </remarks>
+        public IReadOnlyList<BuildAction> Actions => _actions;
 
         /// <summary>A build phase's decision, stamped with the wave it was made in.</summary>
         public static RecordCommand Of(int wave, BuildPhase decision)
@@ -94,7 +122,7 @@ namespace Sim
                 slots[index] = slot;
             }
 
-            return new RecordCommand(wave, decision.Take, decision.TakeId, slots);
+            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, NoActions);
         }
 
         /// <summary>
@@ -104,6 +132,29 @@ namespace Sim
         /// </summary>
         public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots) =>
             Of(wave, BuildPhase.Of(take, takeId, slots));
+
+        /// <summary>
+        /// This command with one more action after the ones it already carries.
+        /// </summary>
+        /// <remarks>
+        /// A new command rather than a moved one, for the reason
+        /// <see cref="Board"/> is a value: a phase is composed a row at a time,
+        /// and appending is the only thing anything does to the list -- there is
+        /// no order for an insertion to find a place in.
+        /// </remarks>
+        public RecordCommand With(BuildAction action)
+        {
+            var grown = new BuildAction[_actions.Length + 1];
+
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                grown[index] = _actions[index];
+            }
+
+            grown[_actions.Length] = action;
+
+            return new RecordCommand(Wave, Take, TakeId, _slots, grown);
+        }
 
         public static bool operator ==(RecordCommand? a, RecordCommand? b) =>
             a is null ? b is null : a.Equals(b);
@@ -123,7 +174,8 @@ namespace Sim
                 || Wave != other.Wave
                 || Take != other.Take
                 || TakeId != other.TakeId
-                || _slots.Length != other._slots.Length)
+                || _slots.Length != other._slots.Length
+                || _actions.Length != other._actions.Length)
             {
                 return false;
             }
@@ -136,12 +188,21 @@ namespace Sim
                 }
             }
 
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                if (_actions[index] != other._actions[index])
+                {
+                    return false;
+                }
+            }
+
             return true;
         }
 
         public override bool Equals(object? obj) => Equals(obj as RecordCommand);
 
-        public override int GetHashCode() => ((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length;
+        public override int GetHashCode() =>
+            (((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length) * 31 ^ _actions.Length;
 
         public override string ToString() =>
             "wave "
@@ -151,6 +212,9 @@ namespace Sim
             + " "
             + TakeId.ToString(CultureInfo.InvariantCulture)
             + ", "
+            + (_actions.Length == 0
+                ? string.Empty
+                : string.Join(", ", Array.ConvertAll(_actions, action => action.ToString())) + ", ")
             + string.Join(" | ", Array.ConvertAll(_slots, slot => slot.ToString()));
     }
 
