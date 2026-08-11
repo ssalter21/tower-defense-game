@@ -95,6 +95,14 @@
     the end of a session and into that committed file, and a line printed twice
     has to have one spelling.
 
+    simcli/PlayedScript.cs writes the decisions a session collected back out as
+    a command script, and it is pure on the same terms the drawings are: phases
+    in, text out, with nothing opened and nothing written down.
+    PlayedScriptTests hands it the committed script's own decisions and parses
+    what comes back, which needs the writer and not a session. Reaching it
+    through the program would mean playing a run at a prompt to produce text
+    whose whole content is the grammar.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -110,6 +118,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BuildPrompt.cs" Link="BuildPrompt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunPrompt.cs" Link="RunPrompt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunSummary.cs" Link="RunSummary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlayedScript.cs" Link="PlayedScript.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>

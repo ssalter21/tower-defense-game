@@ -57,7 +57,17 @@ namespace Sim
     /// </remarks>
     public static class CommandScript
     {
-        private const string Keyword = "build";
+        /// <summary>
+        /// The word a row that decides a whole build phase opens with, as
+        /// against the two that act on the board.
+        /// </summary>
+        /// <remarks>
+        /// Public for the reason <see cref="WordFor(OptionKind)"/> and
+        /// <see cref="WordFor(ActionKind)"/> are: whatever writes a script
+        /// writes the word this parser reads, and two spellings of one grammar
+        /// means the one nothing parses goes stale.
+        /// </remarks>
+        public const string DecisionWord = "build";
 
         private const string PlaceWord = "place";
 
@@ -99,7 +109,7 @@ namespace Sim
         private static readonly string[] ActionWords = { PlaceWord, UpgradeWord };
 
         /// <summary>The words a row here may open with: the build phase, and the two actions.</summary>
-        private static readonly string[] RowWords = { Keyword, PlaceWord, UpgradeWord };
+        private static readonly string[] RowWords = { DecisionWord, PlaceWord, UpgradeWord };
 
         /// <summary>
         /// The word a row spells this half of a round's menu with.
@@ -170,7 +180,7 @@ namespace Sim
 
                 DataText.RequireRow(source, row, RowWords);
 
-                bool decides = string.Equals(row.Keyword, Keyword, StringComparison.Ordinal);
+                bool decides = string.Equals(row.Keyword, DecisionWord, StringComparison.Ordinal);
 
                 RequireFields(source, row, decides);
 
@@ -221,7 +231,7 @@ namespace Sim
                     "has "
                     + count.ToString(CultureInfo.InvariantCulture)
                     + " fields. A '"
-                    + Keyword
+                    + DecisionWord
                     + "' row carries the wave, the take kind and the take id, and then a type id and a "
                     + "count for each of the round's slots -- "
                     + FixedFields.ToString(CultureInfo.InvariantCulture)
