@@ -213,7 +213,7 @@ Stated as observations, not decisions — the match-format and roster seams own 
 3. **If a creep upgrade tree is wanted, Tower Wars is the reference implementation and "Battle Point accrual" is
    the row to steal** (§4) — an income upgrade sitting on the attacking line, which is exactly the shape
    [the attacking half](attack-composition-and-sending.md) §1.1 found missing under
-   [one purse](../vision.md#one-purse--restored-6-august-2026).
+   [one purse](../vision.md#one-purse).
 4. **Sanctum 2's Feats are a shipped replacement for a difficulty selector** (§3b) — five toggles, +20% reward each,
    with the game auto-enabling one every four waves in endless. If this project ever wants an endless mode, that is
    the pattern, and it costs one multiplier.

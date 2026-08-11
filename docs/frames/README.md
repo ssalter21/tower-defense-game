@@ -20,10 +20,8 @@ the scene would be a picture of something this project does not ship.
 **And it is the real match**, read out of `content/match.replay` — the same
 bytes the command line replays and the player plays, seed included. The tick in
 each filename is only worth anything because of that: it is a tick of the run
-`content/landmarks.txt` was made from, so a frame named 366 and the checklist row
-that says "drag to tick 366" are about the same moment. These frames were
-captured against a seed of the capture tool's own until #48, which happened to
-agree on the overtake and disagreed by eleven ticks on the last creep to die.
+`content/landmarks.txt` was made from, so a frame named 1096 and the checklist
+row that says "drag to tick 1096" are about the same moment.
 
 ## Regenerating
 
@@ -43,17 +41,11 @@ Two frames, kept as a record of what the match looks like:
 - `match-tick-2700.png` — the wave spread along the corridor, both kinds of
   tower engaged.
 
-**The first tick has moved twice on 8 August 2026** and the pair was re-captured
-both times. It was 0366 when
-[#45](https://github.com/ssalter21/tower-defense-game/issues/45) landed; the
-roster signature slowed the clock by three and moved the first overtake to 347;
-finishing that dilation in `Match.SpawnIntervalTicks` moved it again, to 1096.
-Each time a frame captioned with the old number would have been a picture of a
-moment the match no longer has. **A tick number in a filename is a claim about
-the committed match**, which is the whole reason these two are named after ticks
-rather than after what is in them — and it is why the caption is worth keeping
-attached to the landmark rather than to the number: 347 is still a tick of this
-match, so a stale frame would have gone on looking perfectly reasonable.
+**A tick number in a filename is a claim about the committed match**, and the
+overtake has moved twice already — re-capture the pair whenever it does. The
+caption is worth keeping attached to the *landmark* rather than to the number,
+because a superseded tick is usually still a tick of the match, so a stale frame
+goes on looking perfectly reasonable.
 
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture

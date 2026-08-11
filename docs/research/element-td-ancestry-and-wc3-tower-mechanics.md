@@ -37,7 +37,7 @@ name is based on the 'Element TD' map created for Warcraft III"* [[3]](#s3). See
 idea about randomness.** In the WC3 map, **Interest was itself a pick** competing with elements in the same random
 offering — capped at two per game, at 1/7 odds per offer [[4]](#s4). That is an economy upgrade priced against a
 tech upgrade *on one dial*, which is structurally the "one purse" problem this project has already chosen to have
-([The Vision §3](../vision.md#one-purse--restored-6-august-2026)), solved by a game that shipped it. The other three: **support towers**
+([The Vision §3](../vision.md#one-purse)), solved by a game that shipped it. The other three: **support towers**
 (Well → attack speed, Blacksmith → damage per shot) [[5]](#s5), a **creep special-ability layer** independent of
 armor (Fast / Healing / Mechanical / Undead) [[5]](#s5), and the fact that the whole element ring was **built out
 of Warcraft 3's hardcoded armor and attack types**, remapped, with only 200% / 100% / 50% available as multipliers
@@ -152,7 +152,7 @@ Implemented by **remapping Warcraft 3's hardcoded armor and attack types** onto 
 icons imported to display the relationships [[4]](#s4) — which is also *why* the multipliers are exactly
 200/100/50: those were the numbers the engine would give them.
 
-⚠️ Note for [the open damage-matrix question](../vision.md#the-open-questions): this is a **4:1 spread** (200% vs 50%), the
+⚠️ Note for [the open damage-matrix question](../open-questions.md): this is a **4:1 spread** (200% vs 50%), the
 same figure [Part V §4.1](../archive/variance-levers-and-unit-schema.md#41-the-scalar-layer--three-shapes-pick-exactly-one)
 records for Element TD 2 — so the spread has survived unchanged from 2006 to today across four engines. That is a
 much stronger datum for "4:1 works" than a single game's current patch.
@@ -226,7 +226,7 @@ mythium**, where spending mythium *permanently and immediately* raises your gold
 
 **The one line worth keeping.** Element TD's tension is *internal* — eleven picks, eighteen picks' worth of
 ambition. Legion TD's tension is *external* — every coin is a bet about a person. This project's vision
-([both boards, one purse](../vision.md#one-purse--restored-6-august-2026)) is asking for **both at once**, which is why the
+([both boards, one purse](../vision.md#one-purse)) is asking for **both at once**, which is why the
 [attacking-half note](attack-composition-and-sending.md) §1.1 found the income loop missing: Legion TD's tension is
 purchased with a second currency, and Element TD never needed one because it never had an opponent.
 
@@ -237,7 +237,7 @@ purchased with a second currency, and Element TD never needed one because it nev
 Three things, all small, none of them a decision:
 
 1. **The 4:1 damage spread has a fifteen-year track record**, not a one-patch one (§2.4). That strengthens one side
-   of [the open damage-matrix question](../vision.md#the-open-questions).
+   of [the open damage-matrix question](../open-questions.md).
 2. **Interest-as-a-pick is a shipped answer to the one-purse problem** (§2.2) — an economy upgrade and a tech
    upgrade competing for the same metered offering, with a hard cap so it cannot run away. It is worth
    [the attacking half](attack-composition-and-sending.md) §5 knowing that this existed and was capped at two.
