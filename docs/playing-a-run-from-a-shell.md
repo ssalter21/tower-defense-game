@@ -6,9 +6,9 @@
 > reads. It is written to be lifted into a wayfinder map, so §7 is a ticket list and §8 is the set of
 > questions a map would grill before any of them are cut.
 >
-> Not a standing document and not indexed in [the docs README](README.md), on the same footing as
-> [the state of the project](state-of-the-project.md): it describes work that does not exist yet, and it is
-> superseded by the map that carries it.
+> Not a standing document and not indexed in [the docs README](README.md): it describes work that does not
+> exist yet, so what is decided in it belongs in [the vision](vision.md), what is sequenced in it belongs in
+> [the build order](build-order.md), and it is superseded by the map that carries it.
 
 ---
 
