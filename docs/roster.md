@@ -407,9 +407,11 @@ its upgrades out of the same wallet its wave comes out of — see
 something spends them.
 
 What is missing now is a measurement rather than a mechanism. The opening purse, the income curve and the
-health pool were every one of them tuned against a six-tower defense the run was handed for free, and none of
-the three has been measured against an empty opening board. `content/ruleset.txt`'s health block says what that
-leaves open.
+health pool were every one of them tuned against a six-tower defense the run was handed for free, and **the
+income is the one of the three that has since been measured against an empty opening board** — 168 gold a wave
+rather than a hundred, because a run pays for its wall and its wave out of that one row. The purse and the
+pool are still where the free defense left them; `content/ruleset.txt`'s health block says what that leaves
+open.
 
 ## Open questions
 
