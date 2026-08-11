@@ -126,6 +126,31 @@ namespace Sim
             return TakeKinds[index];
         }
 
+        /// <summary>
+        /// The word a row spells this defensive action with.
+        /// </summary>
+        /// <remarks>
+        /// Here for the reason <see cref="WordFor(OptionKind)"/> is: whatever
+        /// asks somebody for an action offers them the word a row already
+        /// carries, so a prompt and a file cannot come to hold two
+        /// vocabularies.
+        /// </remarks>
+        public static string WordFor(ActionKind kind)
+        {
+            int index = (int)kind;
+
+            if (index < 0 || index >= ActionWords.Length)
+            {
+                throw new SimulationException(
+                    "Action kind "
+                    + index.ToString(CultureInfo.InvariantCulture)
+                    + " has no word a command script can spell it with. A kind is declared, applied to a "
+                    + "board and authorable, and all three or none.");
+            }
+
+            return ActionWords[index];
+        }
+
         /// <summary>Parses a run's build phases from text.</summary>
         public static IReadOnlyList<RecordCommand> Parse(string text) => Parse("command script", text);
 

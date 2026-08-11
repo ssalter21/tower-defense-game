@@ -71,6 +71,13 @@
     formats every number under the one culture everything this runner writes
     uses.
 
+    simcli/TypedLine.cs reads a line somebody typed at that prompt into the
+    word it is, and it is pure on the same terms: a string and a roster in, a
+    value or a refusal out, with no run, board or purse anywhere near it. Its
+    vocabulary and its refusal sentences are the whole of what it does, so
+    TypedLineTests reads them directly rather than through a session that would
+    have to be played to reach one.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -82,6 +89,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RoundFrame.cs" Link="RoundFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/TypedLine.cs" Link="TypedLine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>

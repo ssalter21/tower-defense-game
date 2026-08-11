@@ -113,7 +113,7 @@ Three claims about that frame:
 
 ## 3. What you type
 
-Nine words. The four that are decisions carry the keywords `CommandScript` uses and the operands a script row
+Ten words. The four that are decisions carry the keywords `CommandScript` uses and the operands a script row
 carries, **minus the wave** — at a prompt the round you are in is not something you should have to type.
 
 | Word | What it does |
@@ -211,7 +211,7 @@ Eight tiny commits and an integrate, in dependency order, on `effort/played-from
 |---|---|---|
 | 1 | **A map draws itself in text** — `simcli/BoardMap.cs`, the grid, the legend, odd-row indentation | A pure string function with a test, and the only piece with a layout to argue about |
 | 2 | **A round draws itself** — the header, the menu panel, the sendable panel | Same, and it composes with 1 |
-| 3 | **A typed line becomes a build action** — the nine words, parsed, refusing what it does not know | Parser and vocabulary, no run in sight |
+| 3 | **A typed line becomes a build action** — the ten words, parsed, refusing what it does not know | Parser and vocabulary, no run in sight |
 | 4 | **A phase is composed and priced without being played** — the compose-and-`Resolve` loop over one round | The heart of it. One round, no lifecycle |
 | 5 | **A run is played round by round** — the verb loop, commit, the round line, the end | Adds the lifecycle to 4 |
 | 6 | **The decisions come back as a script** — the writer, in the `commands.txt` grammar | Text out, no verb wiring |
