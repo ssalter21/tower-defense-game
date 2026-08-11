@@ -86,6 +86,14 @@
     is under test is the composing, not a process that would have to be started
     and fed on standard input to reach it.
 
+    simcli/RunPrompt.cs is the lifecycle around that: it commits each composed
+    round, prints the round line and stops where the run stops, so
+    RunPromptTests plays the committed run's decisions as typed words and holds
+    the ten rounds against content/run-outcome.txt. simcli/RunSummary.cs comes
+    with it, because the line that says what a run came to is printed both at
+    the end of a session and into that committed file, and a line printed twice
+    has to have one spelling.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -99,6 +107,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RoundFrame.cs" Link="RoundFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TypedLine.cs" Link="TypedLine.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BuildPrompt.cs" Link="BuildPrompt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunPrompt.cs" Link="RunPrompt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunSummary.cs" Link="RunSummary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>
