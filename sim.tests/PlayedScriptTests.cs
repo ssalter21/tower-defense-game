@@ -136,7 +136,7 @@ public class PlayedScriptTests
     }
 
     [Fact]
-    public void A_run_cut_short_writes_a_script_of_the_rounds_it_played_and_record_run_compiles_it()
+    public void A_run_cut_short_writes_a_script_record_run_compiles_and_play_run_plays_as_it_was_played()
     {
         // A session abandoned part-way is the artefact
         // docs/playing-a-run-from-a-shell.md §8 most wants written down, so what
@@ -174,6 +174,26 @@ public class PlayedScriptTests
 
         Assert.Equal(CutShortAt, recorded.Commands.Count);
         Assert.Equal(TheCommittedScript().Take(CutShortAt), recorded.Commands);
+
+        // And then it plays, which is the other half of what
+        // docs/playing-a-run-from-a-shell.md §5 claims of a session that quit:
+        // record-run compiles the short script AND play-run plays it. The six
+        // rounds that come back are the first six of content/run-outcome.txt
+        // character for character -- the rounds the session was shown -- so the
+        // chain from a decision typed at a prompt to a committed round line is
+        // closed rather than asserted a link at a time.
+        //
+        // OBSERVED: stop at the compile above, which is where this test stopped
+        // until now. Every assertion stays green against a record that reads
+        // back and would refuse to play: the compile proves the grammar and the
+        // bytes, and says nothing about whether the six rounds are the six.
+        string played = TheCommandLine.Invoke(
+            new[] { "play-run", "--commands", written }.Concat(TheCommandLine.RunContent))
+            .Succeeded()
+            .Output;
+
+        Assert.Contains(
+            TheRoundsTheCommittedRunReported(CutShortAt), played, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -281,6 +301,37 @@ public class PlayedScriptTests
         }
 
         return rows.ToString();
+    }
+
+    /// <summary>
+    /// The opening rounds of <c>content/run-outcome.txt</c> as that file spells
+    /// them: the decision, the arrow, and the round the committed run reported.
+    /// </summary>
+    /// <remarks>
+    /// A prefix of a run is the run: the first six rounds of a six-round record
+    /// and of the ten-round one it was cut from are resolved against the same
+    /// seed, the same offerings and the same purse, so the committed file is an
+    /// oracle for the short one and nothing here has to re-derive a round to
+    /// have something to compare against.
+    /// </remarks>
+    private static string TheRoundsTheCommittedRunReported(int rounds)
+    {
+        var lines = new List<string>();
+
+        foreach (string line in File.ReadAllText(RepoLayout.RunOutcomeFile).Split('\n'))
+        {
+            if (line.Contains("   ->   ", StringComparison.Ordinal))
+            {
+                lines.Add(line.TrimEnd());
+            }
+        }
+
+        // The file holds a whole run, so a prefix of it is a prefix of
+        // something -- a file that had lost rows would otherwise be compared
+        // against happily.
+        Assert.Equal(Run.DefaultWaves, lines.Count);
+
+        return string.Join('\n', lines.Take(rounds));
     }
 
     /// <summary>
