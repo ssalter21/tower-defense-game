@@ -181,10 +181,10 @@ internal static class RoundFrame
     private static string Header(Run run, Offering offering, Build? composed) =>
         string.Join(
             new string(' ', HeaderGap),
-            "wave " + Number(offering.Wave) + " of " + Number(run.Waves),
-            "health " + Number(run.Health) + " of " + Number(run.Rules.HealthPoolGold),
-            "gold " + Number((composed?.Purse ?? run.Purse).Gold),
-            Number(offering.WaveSlots) + (offering.WaveSlots == 1 ? " slot" : " slots"));
+            "wave " + PlainText.Number(offering.Wave) + " of " + PlainText.Number(run.Waves),
+            "health " + PlainText.Number(run.Health) + " of " + PlainText.Number(run.Rules.HealthPoolGold),
+            "gold " + PlainText.Number((composed?.Purse ?? run.Purse).Gold),
+            PlainText.Number(offering.WaveSlots) + (offering.WaveSlots == 1 ? " slot" : " slots"));
 
     /// <summary>
     /// Every tower the roster can stand on a cell, cheapest first, with what one
@@ -218,10 +218,10 @@ internal static class RoundFrame
             UnitType tower = towers[index];
 
             lines[index + 1] = new StringBuilder()
-                .Append(Number(tower.Id).PadLeft(IdWidth))
+                .Append(PlainText.Number(tower.Id).PadLeft(IdWidth))
                 .Append(ColumnGap)
                 .Append(tower.Label.PadRight(NameWidth))
-                .Append(Number(PriceOf(run.Costs, tower.Id)).PadLeft(TowerPriceWidth))
+                .Append(PlainText.Number(PriceOf(run.Costs, tower.Id)).PadLeft(TowerPriceWidth))
                 .ToString();
         }
 
@@ -270,12 +270,12 @@ internal static class RoundFrame
             lines[index + 1] = new StringBuilder()
                 .Append(RowIndent)
                 .Append(CommandScript.WordFor(option.Kind).PadRight(WordWidth))
-                .Append(Number(option.Id).PadLeft(IdWidth))
+                .Append(PlainText.Number(option.Id).PadLeft(IdWidth))
                 .Append(ColumnGap)
                 .Append(option.Label.PadRight(labelWidth))
                 .Append(ColumnGap)
                 .Append("type ")
-                .Append(Number(option.TypeId))
+                .Append(PlainText.Number(option.TypeId))
                 .ToString();
         }
 
@@ -308,11 +308,11 @@ internal static class RoundFrame
             listed.Add(creep.Id);
 
             lines.Add(new StringBuilder()
-                .Append(Number(creep.Id).PadLeft(IdWidth))
+                .Append(PlainText.Number(creep.Id).PadLeft(IdWidth))
                 .Append(ColumnGap)
                 .Append(creep.Label.PadRight(labelWidth))
                 .Append(ColumnGap)
-                .Append(Number(PriceOf(run.Costs, creep.Id)).PadLeft(CreepPriceWidth))
+                .Append(PlainText.Number(PriceOf(run.Costs, creep.Id)).PadLeft(CreepPriceWidth))
                 .Append(" each")
                 .ToString());
         }
@@ -342,13 +342,13 @@ internal static class RoundFrame
                 : "took "
                     + CommandScript.WordFor(composed.Taken.Kind)
                     + " "
-                    + Number(composed.Taken.Id)
+                    + PlainText.Number(composed.Taken.Id)
                     + " "
                     + composed.Taken.Label,
-            actions == 0 ? "nothing built" : Number(actions) + " built",
+            actions == 0 ? "nothing built" : PlainText.Number(actions) + " built",
             filled == 0
                 ? "no slot filled"
-                : Number(filled) + (filled == 1 ? " slot filled" : " slots filled"))
+                : PlainText.Number(filled) + (filled == 1 ? " slot filled" : " slots filled"))
             + ".";
     }
 
@@ -390,6 +390,4 @@ internal static class RoundFrame
 
     /// <summary>What one of a unit costs, out of the table a purchase is priced by.</summary>
     private static int PriceOf(CostTable costs, int typeId) => costs.PriceOf(Purchase.Unit(typeId));
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 }

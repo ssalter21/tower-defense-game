@@ -32,6 +32,15 @@ internal static class PlainText
     /// <summary>UTF-8 without the byte-order mark nothing here wants.</summary>
     public static readonly Encoding Utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
+    /// <summary>One integer, spelled in that culture and in no other.</summary>
+    /// <remarks>
+    /// Here because <see cref="Culture"/> is here, and because the six files
+    /// that draw the screens and write the scripts each carried their own copy
+    /// of this line. A formatting rule with six homes is a rule that can be
+    /// changed in five of them.
+    /// </remarks>
+    public static string Number(int value) => value.ToString(Culture);
+
     /// <summary>
     /// One block onto a screen: whatever it is, then the line feed that ends it.
     /// </summary>

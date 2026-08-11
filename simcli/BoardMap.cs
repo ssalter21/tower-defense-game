@@ -170,7 +170,7 @@ internal static class BoardMap
 
         for (int column = 0; column < map.Width; column++)
         {
-            text.Append(Number(column).PadLeft(CellWidth));
+            text.Append(PlainText.Number(column).PadLeft(CellWidth));
         }
 
         lines[0] = text.ToString();
@@ -178,7 +178,7 @@ internal static class BoardMap
         for (int row = 0; row < map.Height; row++)
         {
             text.Clear();
-            text.Append(Number(row).PadLeft(RowLabelWidth)).Append(' ', LabelGap);
+            text.Append(PlainText.Number(row).PadLeft(RowLabelWidth)).Append(' ', LabelGap);
 
             if (row % 2 == 1)
             {
@@ -217,14 +217,14 @@ internal static class BoardMap
             Placement placement = board.Placements[index];
 
             lines[index + 1] = new StringBuilder()
-                .Append(Number(placement.Id).PadLeft(idWidth))
+                .Append(PlainText.Number(placement.Id).PadLeft(idWidth))
                 .Append("  ")
                 .Append(LetterFor(placement.Type, ladder))
                 .Append("  ")
                 .Append(placement.Type.Label.PadRight(NameWidth))
-                .Append(Number(placement.Column))
+                .Append(PlainText.Number(placement.Column))
                 .Append(',')
-                .Append(Number(placement.Row))
+                .Append(PlainText.Number(placement.Row))
                 .ToString();
         }
 
@@ -238,7 +238,7 @@ internal static class BoardMap
 
         for (int index = 0; index < board.Count; index++)
         {
-            width = Math.Max(width, Number(board.Placements[index].Id).Length);
+            width = Math.Max(width, PlainText.Number(board.Placements[index].Id).Length);
         }
 
         return width;
@@ -286,6 +286,4 @@ internal static class BoardMap
         MapCell.Exit => ExitCharacter,
         _ => GroundCharacter,
     };
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 }

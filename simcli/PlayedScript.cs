@@ -109,7 +109,7 @@ internal static class PlayedScript
     {
         StringBuilder row = Opens(CommandScript.DecisionWord, command.Wave)
             .Append(Column(CommandScript.WordFor(command.Take), KindWidth))
-            .Append(Number(command.TakeId).PadLeft(TakeIdWidth))
+            .Append(PlainText.Number(command.TakeId).PadLeft(TakeIdWidth))
             .Append(BeforeSlots);
 
         for (int index = 0; index < command.Slots.Count; index++)
@@ -119,7 +119,7 @@ internal static class PlayedScript
             // An empty slot is 0 0, which is the pair it already holds -- so a
             // slot left alone and a slot filled are one line of writing here,
             // exactly as they are one pair of fields on a row.
-            row.Append(Column(Number(slot.TypeId) + " " + Number(slot.Count), SlotWidth));
+            row.Append(Column(PlainText.Number(slot.TypeId) + " " + PlainText.Number(slot.Count), SlotWidth));
         }
 
         return row;
@@ -128,15 +128,15 @@ internal static class PlayedScript
     /// <summary>One thing a round did to the board, under the round that did it.</summary>
     private static StringBuilder Action(int wave, BuildAction action) =>
         Opens(CommandScript.WordFor(action.Kind), wave)
-            .Append(Column(Number(action.TypeId), TypeIdWidth))
-            .Append(Column(Number(action.Column), ColumnWidth))
-            .Append(Number(action.Row));
+            .Append(Column(PlainText.Number(action.TypeId), TypeIdWidth))
+            .Append(Column(PlainText.Number(action.Column), ColumnWidth))
+            .Append(PlainText.Number(action.Row));
 
     /// <summary>The keyword and the wave every row of either kind opens with.</summary>
     private static StringBuilder Opens(string word, int wave) =>
         new StringBuilder()
             .Append(Column(word, WordWidth))
-            .Append(Number(wave).PadLeft(WaveWidth))
+            .Append(PlainText.Number(wave).PadLeft(WaveWidth))
             .Append(Gap);
 
     /// <summary>
@@ -153,6 +153,4 @@ internal static class PlayedScript
     /// </summary>
     private static void Row(StringBuilder text, StringBuilder row) =>
         text.Append(row.ToString().TrimEnd()).Append('\n');
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 }

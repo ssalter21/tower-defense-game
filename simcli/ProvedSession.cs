@@ -181,7 +181,7 @@ internal sealed class ProvedSession
             "wrote      "
             + path
             + " ("
-            + Number(_rounds)
+            + PlainText.Number(_rounds)
             + " rounds, played into a fresh run and matched round for round before writing)");
 
         return true;
@@ -211,13 +211,13 @@ internal sealed class ProvedSession
 
             if (was != again)
             {
-                return Says("wave " + Number(index + 1), was, again);
+                return Says("wave " + PlainText.Number(index + 1), was, again);
             }
         }
 
         if (shown.Count != replayed.Count)
         {
-            return Says("how many rounds", Number(shown.Count), Number(replayed.Count));
+            return Says("how many rounds", PlainText.Number(shown.Count), PlainText.Number(replayed.Count));
         }
 
         string ended = RunSummary.Outcome(played);
@@ -229,6 +229,4 @@ internal sealed class ProvedSession
     /// <summary>One thing the session and the fresh run do not say the same way, with both sides of it.</summary>
     private static string Says(string what, string shown, string replayed) =>
         Disagrees + "\n\n  " + what + ":\n" + Shown + shown + "\n" + Replayed + replayed + "\n\n" + Bug;
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 }

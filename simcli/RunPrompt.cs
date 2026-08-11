@@ -222,9 +222,9 @@ internal static class RunPrompt
         if (ending != Ended.Over)
         {
             text.Append(ending == Ended.Quit ? QuitAt : RanOutAt)
-                .Append(Number(run.Round + 1))
+                .Append(PlainText.Number(run.Round + 1))
                 .Append(" of ")
-                .Append(Number(run.Waves))
+                .Append(PlainText.Number(run.Waves))
                 .Append(NotPlayed)
                 .Append("\n\n");
         }
@@ -234,6 +234,4 @@ internal static class RunPrompt
             .Append(run.Board.ToReportText())
             .ToString();
     }
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 }

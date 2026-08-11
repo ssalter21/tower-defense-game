@@ -422,11 +422,11 @@ internal readonly struct TypedLine
         return "'"
             + read
             + "' carries "
-            + Number(typed)
+            + PlainText.Number(typed)
             + (typed == 1 ? " word after '" : " words after '")
             + words[0]
             + "', which takes "
-            + (operands.Length == 0 ? "none" : Number(operands.Length) + ": " + Listed(operands))
+            + (operands.Length == 0 ? "none" : PlainText.Number(operands.Length) + ": " + Listed(operands))
             + ".";
     }
 
@@ -473,7 +473,7 @@ internal readonly struct TypedLine
                 + ", which is neither a number nor the label of anything on the roster."
             : Naming(read, TypeOperand, field)
                 + ", which "
-                + Number(found)
+                + PlainText.Number(found)
                 + " rows of the roster answer to. A label picks one row by name, so a label two rows "
                 + "carry can only be meant by naming the id.";
     }
@@ -536,8 +536,6 @@ internal readonly struct TypedLine
         words.Length == 1
             ? words[0]
             : string.Join(", ", words, 0, words.Length - 1) + " and " + words[words.Length - 1];
-
-    private static string Number(int value) => value.ToString(PlainText.Culture);
 
     /// <summary>A word carrying nothing but itself.</summary>
     private static TypedLine Of(Typed word) => new TypedLine(word, default, 0, default, default, null);
