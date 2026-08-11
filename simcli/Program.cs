@@ -663,7 +663,7 @@ public static class Program
     {
         string path = arguments.Required("out");
 
-        MakeRoomFor(path);
+        PlainText.RoomFor(path);
         File.WriteAllBytes(path, bytes);
         Console.Out.Write(
             "wrote      "
@@ -705,20 +705,8 @@ public static class Program
     /// <summary>A generated text file, in the directory it asked for.</summary>
     private static void Write(string path, string text)
     {
-        MakeRoomFor(path);
-        File.WriteAllText(path, text, PlainText.Utf8);
+        PlainText.Written(path, text);
         Console.Out.Write("wrote      " + path + "\n");
-    }
-
-    /// <summary>The directory a file is about to be written into.</summary>
-    private static void MakeRoomFor(string path)
-    {
-        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
-
-        if (directory is not null)
-        {
-            Directory.CreateDirectory(directory);
-        }
     }
 
     private static int Refuse(string message, bool withUsage)

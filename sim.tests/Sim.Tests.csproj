@@ -103,6 +103,15 @@
     through the program would mean playing a run at a prompt to produce text
     whose whole content is the grammar.
 
+    simcli/ProvedSession.cs is what stands between a session and the file it
+    writes: it plays the script a session compiled to into a second run on the
+    same seed and shape, holds every round and the outcome against what the
+    player was shown, and writes only where the two agreed. ProvedSessionTests
+    plays canned transcripts through the prompt and hands what came back to it,
+    which is the only way to force the disagreement it exists to refuse.
+    Through the program both paths are the same run by construction, so the
+    refusal could never be watched working.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -119,6 +128,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunPrompt.cs" Link="RunPrompt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunSummary.cs" Link="RunSummary.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlayedScript.cs" Link="PlayedScript.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/ProvedSession.cs" Link="ProvedSession.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>

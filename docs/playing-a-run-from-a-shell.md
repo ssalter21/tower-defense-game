@@ -148,8 +148,8 @@ the reprint after each `send` is what stops that arriving as a surprise at commi
 
 At the end — the tenth wave, death, or `quit` — the verb does four things in this order:
 
-1. Prints the run's outcome and the ending board, using `PlayedRun`'s existing `Summary` and
-   `Board.ToReportText`.
+1. Prints the run's outcome and the ending board, using `RunSummary.Outcome` — the fold the committed
+   outcome file's own summary line is written by — and `Board.ToReportText`.
 2. Compiles the decisions it collected into a command script, in the `content/commands.txt` grammar.
 3. **Plays that script into a fresh run on the same seed and shape**, via `CommandStream.Recorded`, and
    compares every round report and the final outcome against what the player was shown.

@@ -49,6 +49,31 @@ internal static class PlainText
     }
 
     /// <summary>
+    /// One generated file onto a disk, in the encoding above and under whatever
+    /// directory its path names.
+    /// </summary>
+    /// <remarks>
+    /// <c>System.IO.File</c> is spelled out because <see cref="File"/> in this
+    /// class is the header composer below.
+    /// </remarks>
+    public static void Written(string path, string text)
+    {
+        RoomFor(path);
+        System.IO.File.WriteAllText(path, text, Utf8);
+    }
+
+    /// <summary>The directory a file is about to be written into.</summary>
+    public static void RoomFor(string path)
+    {
+        string? directory = Path.GetDirectoryName(Path.GetFullPath(path));
+
+        if (directory is not null)
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    /// <summary>
     /// A generated file: a prose header as comment lines, a blank line, the
     /// body, and the trailing newline every line-oriented tool expects.
     /// </summary>
