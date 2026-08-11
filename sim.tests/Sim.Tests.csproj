@@ -59,14 +59,17 @@
     refusal lives in the same file, and calling it is the only way to watch it
     work, for the reason SweepColumnsTests gives.
 
-    simcli/BoardMap.cs draws the playfield as text. It is a pure function from a
-    map, a board and a ladder to a string, with no console, no state and no run
-    in it. Its layout is the thing about it that can be wrong, so the check is
-    the text itself, asserted character for character in BoardMapTests. Reaching
-    it through the program would mean playing a run to get a board and reading
-    the grid back out of a frame, which tests the loop around it and not the
-    drawing. simcli/PlainText.cs comes with it: the drawing formats its numbers
-    under the one culture everything this runner writes uses.
+    simcli/BoardMap.cs draws the playfield as text and simcli/RoundFrame.cs
+    draws the whole frame a round stands above its prompt: both are pure
+    functions to a string, with no console, no state and nothing written down.
+    Their layout is the thing about them that can be wrong, so the check is the
+    text itself, asserted character for character in BoardMapTests and
+    RoundFrameTests. Reaching them through the program would mean playing a run
+    and reading the panels back out of its output, which tests the loop around
+    the drawing and not the drawing. simcli/TextPanel.cs and simcli/PlainText.cs
+    come with them: the one lays a panel beside a block already drawn, the other
+    formats every number under the one culture everything this runner writes
+    uses.
 
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
@@ -78,6 +81,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RoundFrame.cs" Link="RoundFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>
 

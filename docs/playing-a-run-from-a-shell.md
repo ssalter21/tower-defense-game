@@ -66,10 +66,10 @@ can repeat, which is the one thing this repository does not do. It costs a path.
 
 One frame per round, printed before the prompt. Every number on it is read off the run — the frame below is
 wave 4 of the committed run, `content/run.commands` on seed 20260807, drawn from the real map and the real
-offering.
+offering. It is `RoundFrame.ToText`'s output character for character, pinned by `RoundFrameTests`.
 
 ```
-wave 4 of 10        health 1245 of 1500        gold 319        3 slots
+wave 4 of 10        health 1245 of 1500        gold 545        3 slots
 
       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
  0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
@@ -80,7 +80,7 @@ wave 4 of 10        health 1245 of 1500        gold 319        3 slots
  5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .
  6    .  .  .  .  .  .  .  a  .  .  .  .  .  #  .        you may build
  7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .       11  soldier   30
- 8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .         3  archer    40
+ 8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .          3  archer    40
                                                           14  ranger    40
                                                            4  mage      92
 
@@ -98,7 +98,9 @@ Three claims about that frame:
 - **The map is the whole map, in the coordinates a command uses.** Column across the top, row down the side,
   odd rows indented half a cell exactly as `content/map.txt` writes them, so counting characters gives the pair
   a `place` names. A built tower is a letter — lower case for a root of the ladder, upper case for anything
-  upgraded — and the legend beside it carries the placement id, the price and the name.
+  upgraded — and the legend beside it carries the placement id, that letter, the name and the cell. **The
+  prices are the `you may build` panel's and not the legend's**: what a tower costs is a fact about the roster
+  and belongs beside the roster, and repeating it against every placement would price four archers four times.
 - **The menu is spelled in the words a command script uses.** `ordinary 12` at the prompt, `ordinary 12` in the
   file. Same for `changer`. This is `Offerings.ToText`'s existing rule and the reason it can stay one
   vocabulary.

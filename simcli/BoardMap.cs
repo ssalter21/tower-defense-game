@@ -34,6 +34,13 @@ namespace Sim.Cli;
 /// beside them.
 /// </para>
 /// <para>
+/// <b>The column beside the grid is this drawing's, and a caller may put one
+/// more panel in it.</b> Where that column begins depends on how wide the grid
+/// is and how wide an id column is, both of which are worked out here, so a
+/// caller that placed a panel of its own would be a second copy of this
+/// drawing's geometry.
+/// </para>
+/// <para>
 /// <b>Pure: a map, a board and a ladder in, a string out.</b> Nothing here
 /// reads a console, holds state or knows a run has rounds, which is what lets a
 /// test assert on the text and what lets the loop reprint the panel after every
@@ -97,52 +104,58 @@ internal static class BoardMap
     /// <summary>What a board with nothing on it says in place of the legend.</summary>
     private const string NothingStanding = "nothing standing";
 
+    /// <summary>How many blank lines separate the legend from a panel under it.</summary>
+    private const int PanelGap = 1;
+
+    private static readonly string[] NoPanel = new string[0];
+
     /// <summary>
     /// The grid and its legend, as one block of lines with no trailing newline
     /// and no trailing spaces on any line.
     /// </summary>
-    public static string ToText(HexMap map, Board board, UpgradeLadder ladder)
+    public static string ToText(HexMap map, Board board, UpgradeLadder ladder) =>
+        ToText(map, board, ladder, NoPanel, MinimumIdWidth);
+
+    /// <summary>
+    /// The same drawing with one more panel in the legend's column, a blank
+    /// line under it.
+    /// </summary>
+    /// <param name="under">
+    /// The panel: a line heading it, then rows each opening with an id
+    /// right-aligned in its own column.
+    /// </param>
+    /// <param name="panelIdWidth">
+    /// How wide that id column is. The last digit of an id lands a fixed
+    /// distance right of the grid whatever the width, so the panel's ids and the
+    /// legend's share a column even where the two are not the same width.
+    /// </param>
+    public static string ToText(
+        HexMap map,
+        Board board,
+        UpgradeLadder ladder,
+        IReadOnlyList<string> under,
+        int panelIdWidth)
     {
         int idWidth = IdWidth(board);
         string[] grid = Grid(map, board, ladder);
         string[] legend = Legend(board, ladder, idWidth);
+        int widest = TextPanel.Widest(grid);
+        var lines = new List<string>(grid);
 
-        int widest = 0;
+        TextPanel.Beside(lines, legend, LegendTop, Column(widest, idWidth));
+        TextPanel.Beside(
+            lines, under, LegendTop + legend.Length + PanelGap, Column(widest, panelIdWidth));
 
-        for (int index = 0; index < grid.Length; index++)
-        {
-            widest = Math.Max(widest, grid[index].Length);
-        }
-
-        // Every legend line begins at the same column, and the last digit of
-        // every id lands a fixed distance right of the widest row of the grid:
-        // the id column is one width for the whole block, and the word heading
-        // it carries whatever that width leaves over as leading space.
-        int legendStart = widest + LegendGap + 1 - idWidth;
-        int lines = Math.Max(grid.Length, LegendTop + legend.Length);
-        var text = new StringBuilder();
-
-        for (int index = 0; index < lines; index++)
-        {
-            if (index > 0)
-            {
-                text.Append('\n');
-            }
-
-            string row = index < grid.Length ? grid[index] : string.Empty;
-            int entry = index - LegendTop;
-
-            if (entry < 0 || entry >= legend.Length)
-            {
-                text.Append(row);
-                continue;
-            }
-
-            text.Append(row.PadRight(legendStart)).Append(legend[entry]);
-        }
-
-        return text.ToString();
+        return string.Join('\n', lines);
     }
+
+    /// <summary>
+    /// Where a panel beside the grid begins: far enough right that the last
+    /// digit of every id on it lands a fixed distance from the widest row of the
+    /// grid, so the word heading the panel carries whatever the id column's
+    /// width leaves over as leading space.
+    /// </summary>
+    private static int Column(int widest, int idWidth) => widest + LegendGap + 1 - idWidth;
 
     /// <summary>
     /// The column numbers, then one line per row: the row number, the odd row's
