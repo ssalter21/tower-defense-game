@@ -33,7 +33,11 @@ namespace Sim.Tests;
 /// </remarks>
 public class RunPromptTests
 {
-    /// <summary>What stands between a decision and its round on a line of the outcome file.</summary>
+    /// <summary>
+    /// What stands between a decision and its round on a line of the outcome
+    /// file. Restated here rather than read off <see cref="PlayedRun"/>, so that
+    /// this reads the committed bytes the way anything else parsing them would.
+    /// </summary>
     private const string Arrow = "   ->   ";
 
     /// <summary>
@@ -228,7 +232,7 @@ public class RunPromptTests
         // so Advance is handed a null phase and the session dies on an
         // ArgumentNullException -- the one word a player is likeliest to try
         // first ends the run in a stack trace.
-        Session played = Play(Fresh(TheMatch.Types()), "done", "quit");
+        Session played = Play(AgainstTheCannedField(TheMatch.Types()), "done", "quit");
 
         Assert.Contains(
             "There is no phase to be done with until one is named.",
@@ -250,15 +254,31 @@ public class RunPromptTests
         // after every word: the take and the archer are still composed, so
         // `done` commits the round that was legal instead of losing it.
         //
+        // The misspelling in front of them is the other half of
+        // docs/playing-a-run-from-a-shell.md §5's second row: a word nobody
+        // could read refuses too, and the run goes on to the next line rather
+        // than ending on either refusal.
+        //
         // OBSERVED: have composing keep a candidate that did not resolve rather
         // than the phase already composed -- which is what pricing the round
         // once at `done` amounts to. The 68-gold wave lands, and the next thing
         // that touches the decision throws the refusal out of the loop, so a
         // send a player could simply have undone ends the run instead.
-        Run run = Fresh(TheMatch.Types(), fieldSize: 1);
+        Run run = AgainstTheCannedField(TheMatch.Types(), fieldSize: 1);
 
         Session played = Play(
-            run, "take ordinary 12", "place archer 6 2", "send skeleton 4", "done", "quit");
+            run,
+            "take ordinary 12",
+            "plaec archer 6 2",
+            "place archer 6 2",
+            "send skeleton 4",
+            "done",
+            "quit");
+
+        Assert.Contains(
+            "'plaec archer 6 2' opens with 'plaec', which is not a word here.",
+            played.Text,
+            StringComparison.Ordinal);
 
         Assert.Contains(
             "buys 68 gold of creeps out of a purse holding 60",
@@ -275,6 +295,57 @@ public class RunPromptTests
     }
 
     [Fact]
+    public void A_commit_the_run_refuses_is_reprinted_and_the_round_keeps_what_it_composed()
+    {
+        // The refusal composing cannot see. Run.Advance is wider than the
+        // Resolve composing prices a word with: past the decision it plays the
+        // round's matches, measures the field and folds the outcome, and a leak
+        // priced beyond what a purse can hold is refused in there. So `done` can
+        // be turned down after all -- and when it is, the sentence is printed
+        // like any other and the round comes back holding the decision it had,
+        // rather than the session ending on a stack trace with a round's typing
+        // in it.
+        //
+        // OBSERVED: call run.Advance bare, on the argument that a composed phase
+        // always advances. That argument is true of Resolve and not of Advance:
+        // the session dies on "One match let 4000000000 gold past, which does
+        // not fit in the 32-bit integer health and gold are both counted in",
+        // and everything the player had typed goes with the process.
+        UnitTypeTable types = TheRun.RuinouslyPricedTypes();
+
+        var run = new Run(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheSchedule.Committed(types),
+            FieldPool.Of(new[] { TheRun.Orders(types) }),
+            TheRun.Seed,
+            waves: 1,
+            fieldSize: 1);
+
+        Option first = run.OfferingAt(1).Options[0];
+        string take = "take " + CommandScript.WordFor(first.Kind) + " " + first.Id;
+
+        Session played = Play(run, take, "done", "quit");
+
+        Assert.Contains(
+            "does not fit in the 32-bit integer health and gold are both counted in",
+            played.Text,
+            StringComparison.Ordinal);
+
+        // Nothing moved, and the round the refusal interrupted was still holding
+        // its take when the session came back to it: the frame reprinted after
+        // the refusal says so, and it is that frame the `quit` was typed at.
+        Assert.Equal(0, run.Round);
+        Assert.Empty(played.Result.Rounds);
+        Assert.Equal(Ended.Quit, played.Result.Ending);
+        Assert.Contains(
+            "took " + CommandScript.WordFor(first.Kind) + " " + first.Id,
+            played.Text.Substring(played.Text.IndexOf("32-bit integer", StringComparison.Ordinal)),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Quit_and_a_transcript_that_runs_out_both_leave_the_round_they_stopped_in_unplayed()
     {
         // Two ways to stop short, told apart because one was chosen, and neither
@@ -287,7 +358,11 @@ public class RunPromptTests
         // session plays the round the player was in the middle of deciding not
         // to play -- one round where this expects none -- and the transcript
         // that ran out hands Advance a null phase.
-        Session quit = Play(Fresh(TheMatch.Types()), "take ordinary 12", "place archer 6 2", "quit");
+        Session quit = Play(
+            AgainstTheCannedField(TheMatch.Types()),
+            "take ordinary 12",
+            "place archer 6 2",
+            "quit");
 
         Assert.Equal(Ended.Quit, quit.Result.Ending);
         Assert.Equal(0, quit.Run.Round);
@@ -297,7 +372,7 @@ public class RunPromptTests
             quit.Text,
             StringComparison.Ordinal);
 
-        Session ran = Play(Fresh(TheMatch.Types()), "take ordinary 12");
+        Session ran = Play(AgainstTheCannedField(TheMatch.Types()), "take ordinary 12");
 
         Assert.Equal(Ended.OutOfLines, ran.Result.Ending);
         Assert.Equal(0, ran.Run.Round);
@@ -367,7 +442,7 @@ public class RunPromptTests
 
     /// <summary>The committed run's words, played into a run built as the command line builds one.</summary>
     private static Session PlayTheCommittedRun() =>
-        Play(Fresh(TheMatch.Types()), TheCommittedRun.Split('\n'));
+        Play(AgainstTheCannedField(TheMatch.Types()), TheCommittedRun.Split('\n'));
 
     /// <summary>Plays these lines into this run, and collects the screen.</summary>
     private static Session Play(Run run, params string[] typed)
@@ -412,7 +487,7 @@ public class RunPromptTests
     /// A fresh run on the committed content and the committed seed, against the
     /// canned field of one the command line builds.
     /// </summary>
-    private static Run Fresh(UnitTypeTable types, int fieldSize = Run.DefaultFieldSize) =>
+    private static Run AgainstTheCannedField(UnitTypeTable types, int fieldSize = Run.DefaultFieldSize) =>
         new Run(
             TheMatch.Map(),
             TheRuleset.Committed(),

@@ -87,7 +87,12 @@ internal sealed class PlayedRun
     }
 
     /// <summary>The shape the run was played at: N, K, and whether death ends it.</summary>
-    public string ShapeLine() => RunSummary.Shape(Run);
+    public string ShapeLine() =>
+        "shape      "
+        + Run.Waves.ToString(PlainText.Culture)
+        + " waves, a field of "
+        + Run.FieldSize.ToString(PlainText.Culture)
+        + (Run.DeathEndsTheRun ? ", death ends the run" : ", death does not end the run");
 
     /// <summary>What a person reads: the folds, and how the run stopped.</summary>
     public string Summary() => RunSummary.Outcome(Run);

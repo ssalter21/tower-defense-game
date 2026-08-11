@@ -69,7 +69,8 @@
     the drawing and not the drawing. simcli/TextPanel.cs and simcli/PlainText.cs
     come with them: the one lays a panel beside a block already drawn, the other
     formats every number under the one culture everything this runner writes
-    uses.
+    uses and ends every block it writes with the line feed a committed file and
+    a canned session both have to agree on.
 
     simcli/TypedLine.cs reads a line somebody typed at that prompt into the
     word it is, and it is pure on the same terms: a string and a roster in, a

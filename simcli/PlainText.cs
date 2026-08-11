@@ -33,6 +33,22 @@ internal static class PlainText
     public static readonly Encoding Utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
     /// <summary>
+    /// One block onto a screen: whatever it is, then the line feed that ends it.
+    /// </summary>
+    /// <remarks>
+    /// Here rather than beside either prompt that calls it, because the line
+    /// feed is the same decision the rest of this file is about: a terminal
+    /// written through <see cref="TextWriter.WriteLine(string)"/> would end its
+    /// lines with whatever the platform calls one, and a canned session's output
+    /// would then be two different sets of bytes on two machines.
+    /// </remarks>
+    public static void Say(TextWriter writer, string block)
+    {
+        writer.Write(block);
+        writer.Write('\n');
+    }
+
+    /// <summary>
     /// A generated file: a prose header as comment lines, a blank line, the
     /// body, and the trailing newline every line-oriented tool expects.
     /// </summary>

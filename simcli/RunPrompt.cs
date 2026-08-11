@@ -81,14 +81,25 @@ internal sealed class Played
 /// <c>quit</c> and a reader with no lines left.
 /// </para>
 /// <para>
-/// <b>A composed phase always advances.</b> Composing prices the whole decision
-/// after every word and keeps only what resolved, against exactly the offering,
-/// unlocks, purse, costs, roster, map and board <see cref="Run.Advance"/> will
-/// resolve it against -- so <c>done</c> cannot arrive at a phase the run then
-/// refuses. That is what the reprint after every <c>send</c> buys: an
-/// unaffordable wave is refused at the word that made it unaffordable, where
-/// the composed phase is still there to be undone or finished, rather than
-/// arriving as a surprise at commit with a whole round's typing behind it.
+/// <b>A wave nobody can afford is refused at the word that made it
+/// unaffordable.</b> Composing prices the whole decision after every word and
+/// keeps only what resolved, against exactly the offering, unlocks, purse,
+/// costs, roster, map and board <see cref="BuildPhase.Resolve"/> is given here
+/// -- so the reprint after every <c>send</c> is what stops a phase whose towers
+/// ate its wave arriving as a surprise at commit with a round's typing behind
+/// it.
+/// </para>
+/// <para>
+/// <b>A commit that is refused anyway is caught, printed and carried on
+/// from.</b> <see cref="Run.Advance"/> is a wider surface than the resolving
+/// composing did: past the decision it plays the round's matches, measures the
+/// field on first use and folds the outcome, and each of those refuses in its
+/// own right -- a leak priced beyond what a purse can hold is refused there and
+/// nowhere composing can see it. So the refusal is printed like any other and
+/// the round is composed again <i>from the phase it already had</i>, which is
+/// the only way <c>docs/playing-a-run-from-a-shell.md</c> §3's "a refusal is
+/// caught and reprinted, never thrown out of the loop" can hold at the one
+/// point a round is committed.
 /// </para>
 /// <para>
 /// <b>The end prints the run's own outcome and the run's own board.</b> Both
@@ -131,31 +142,67 @@ internal static class RunPrompt
         var rounds = new List<RoundReport>();
         Ended ending = Ended.Over;
 
+        // What the round about to be composed is already holding: nothing, or
+        // the decision a refused commit handed back.
+        BuildPhase? holding = null;
+
         while (!run.IsOver)
         {
-            Composed composed = BuildPrompt.Compose(run, ladder, reader, writer);
+            Composed composed = BuildPrompt.Compose(run, ladder, reader, writer, holding);
 
             if (composed.Stopped != Stopped.Done)
             {
-                ending = composed.Stopped == Stopped.Quit ? Ended.Quit : Ended.OutOfLines;
+                ending = Left(composed.Stopped);
                 break;
             }
 
             // Composing refuses `done` before a take, so a round that came back
             // done came back with the phase that take is composed around.
             BuildPhase phase = composed.Phase!;
-            RoundReport round = run.Advance(phase);
+            RoundReport round;
 
+            try
+            {
+                round = run.Advance(phase);
+            }
+            catch (SimulationException refused)
+            {
+                PlainText.Say(writer, refused.Message);
+                holding = phase;
+                continue;
+            }
+
+            holding = null;
             decisions.Add(phase);
             rounds.Add(round);
 
-            Say(writer, round.ToString());
+            PlainText.Say(writer, round.ToString());
         }
 
-        Say(writer, Closing(run, ending));
+        PlainText.Say(writer, Closing(run, ending));
 
         return new Played(decisions, rounds, ending);
     }
+
+    /// <summary>How a round that did not finish with <c>done</c> ended the run.</summary>
+    /// <remarks>
+    /// A switch rather than a test against <c>quit</c>, on the arrangement
+    /// <see cref="BuildPrompt.Compose"/> uses for the same reason: a word added
+    /// to <see cref="Stopped"/> without a case here would otherwise be read as
+    /// a transcript that ran out, which is an ending nobody chose said in a
+    /// sentence that is not true.
+    /// </remarks>
+    private static Ended Left(Stopped stopped) => stopped switch
+    {
+        Stopped.Quit => Ended.Quit,
+        Stopped.OutOfLines => Ended.OutOfLines,
+        _ => throw new InvalidOperationException(
+            "A round came back stopped by "
+            + stopped
+            + ", which this loop has no ending for. Every member of Stopped other than Done ends a "
+            + "session, so one added to that list without a case here is a run that would stop for a "
+            + "reason its own report does not carry."),
+    };
 
     /// <summary>
     /// What a run says when it stops: why it stopped where it did if it stopped
@@ -186,16 +233,6 @@ internal static class RunPrompt
             .Append("\n\n")
             .Append(run.Board.ToReportText())
             .ToString();
-    }
-
-    /// <summary>
-    /// One block onto the screen, ended by a line feed rather than by whatever
-    /// the platform calls one -- the rule everything this program writes follows.
-    /// </summary>
-    private static void Say(TextWriter writer, string block)
-    {
-        writer.Write(block);
-        writer.Write('\n');
     }
 
     private static string Number(int value) => value.ToString(PlainText.Culture);

@@ -124,11 +124,19 @@ internal static class BuildPrompt
     /// <param name="ladder">Which unit follows which, which is how the map cases its letters.</param>
     /// <param name="reader">Where the words come from.</param>
     /// <param name="writer">Where the frames and the refusals go.</param>
+    /// <param name="opening">
+    /// A decision this round is already holding, or nothing for a round being
+    /// composed from the start. It is what a caller whose <c>done</c> was
+    /// refused hands back, so that the round is carried on rather than typed
+    /// again -- and it goes in above the round's opening nothing, so
+    /// <c>undo</c> steps out of it the way it steps out of any other state.
+    /// </param>
     public static Composed Compose(
         Run run,
         UpgradeLadder ladder,
         TextReader reader,
-        TextWriter writer)
+        TextWriter writer,
+        BuildPhase? opening = null)
     {
         ArgumentNullException.ThrowIfNull(run);
         ArgumentNullException.ThrowIfNull(ladder);
@@ -139,7 +147,12 @@ internal static class BuildPrompt
         // first. The last of them is what is composed and what `undo` drops.
         var accepted = new List<BuildPhase?> { null };
 
-        Say(writer, RoundFrame.ToText(run, ladder, null));
+        if (opening is not null)
+        {
+            accepted.Add(opening);
+        }
+
+        PlainText.Say(writer, RoundFrame.ToText(run, ladder, opening));
 
         while (true)
         {
@@ -162,7 +175,7 @@ internal static class BuildPrompt
                     break;
 
                 case Typed.Refused:
-                    Say(writer, typed.Refusal!);
+                    PlainText.Say(writer, typed.Refusal!);
                     break;
 
                 case Typed.Take:
@@ -172,7 +185,7 @@ internal static class BuildPrompt
                 case Typed.Act:
                     if (phase is null)
                     {
-                        Say(writer, TakeFirst);
+                        PlainText.Say(writer, TakeFirst);
                         break;
                     }
 
@@ -187,7 +200,7 @@ internal static class BuildPrompt
                 case Typed.Send:
                     if (phase is null)
                     {
-                        Say(writer, TakeFirst);
+                        PlainText.Say(writer, TakeFirst);
                         break;
                     }
 
@@ -199,30 +212,30 @@ internal static class BuildPrompt
                 case Typed.Undo:
                     if (accepted.Count == 1)
                     {
-                        Say(writer, NothingToUndo);
+                        PlainText.Say(writer, NothingToUndo);
                         break;
                     }
 
                     accepted.RemoveAt(accepted.Count - 1);
-                    Say(writer, RoundFrame.ToText(run, ladder, accepted[accepted.Count - 1]));
+                    PlainText.Say(writer, RoundFrame.ToText(run, ladder, accepted[accepted.Count - 1]));
                     break;
 
                 case Typed.Map:
-                    Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Map));
+                    PlainText.Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Map));
                     break;
 
                 case Typed.Menu:
-                    Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Menu));
+                    PlainText.Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Menu));
                     break;
 
                 case Typed.Costs:
-                    Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Costs));
+                    PlainText.Say(writer, RoundFrame.ToText(run, ladder, phase, Panel.Costs));
                     break;
 
                 case Typed.Done:
                     if (phase is null)
                     {
-                        Say(writer, TakeBeforeDone);
+                        PlainText.Say(writer, TakeBeforeDone);
                         break;
                     }
 
@@ -279,12 +292,12 @@ internal static class BuildPrompt
         }
         catch (SimulationException refused)
         {
-            Say(writer, refused.Message);
+            PlainText.Say(writer, refused.Message);
             return;
         }
 
         accepted.Add(composed);
-        Say(writer, RoundFrame.ToText(run, ladder, composed));
+        PlainText.Say(writer, RoundFrame.ToText(run, ladder, composed));
     }
 
     /// <summary>
@@ -369,15 +382,5 @@ internal static class BuildPrompt
         }
 
         return copied;
-    }
-
-    /// <summary>
-    /// One block onto the screen, ended by a line feed rather than by whatever
-    /// the platform calls one -- the rule everything this program writes follows.
-    /// </summary>
-    private static void Say(TextWriter writer, string block)
-    {
-        writer.Write(block);
-        writer.Write('\n');
     }
 }
