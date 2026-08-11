@@ -260,6 +260,41 @@ public class RoundFrameTests
             RoundFrame.ToText(Fresh(types, TheMatch.Wave(types)), ladder, null));
     }
 
+    [Fact]
+    public void A_part_of_the_frame_is_the_block_the_whole_frame_already_carries()
+    {
+        // The three words that reprint -- map, menu, costs -- draw parts of this
+        // frame and not three smaller drawings beside it. Two of them are
+        // carried by the whole frame character for character; the third is the
+        // two priced panels, which the frame puts in two different columns and
+        // this puts side by side.
+        //
+        // OBSERVED: draw Panel.Map from BoardMap.ToText's three-argument
+        // overload, which is the same grid and the same legend without the
+        // panel of prices. Every block above still passes and `map` at the
+        // prompt quietly stops saying what a tower costs.
+        UnitTypeTable types = TheMatch.Types();
+        UpgradeLadder ladder = TheMatch.Ladder(types);
+        Run run = Fresh(types, TheRun.FieldWave(types));
+        string whole = RoundFrame.ToText(run, ladder, null);
+
+        Assert.Contains(
+            RoundFrame.ToText(run, ladder, null, Panel.Map), whole, StringComparison.Ordinal);
+
+        Assert.Contains(
+            RoundFrame.ToText(run, ladder, null, Panel.Menu), whole, StringComparison.Ordinal);
+
+        Assert.Equal(
+            """
+            you may build      what you may send
+             11  soldier   30
+              3  archer    40
+             14  ranger    40
+              4  mage      92
+            """,
+            RoundFrame.ToText(run, ladder, null, Panel.Costs));
+    }
+
     /// <summary>
     /// The frames of the committed run: the one standing in front of each round
     /// with nothing composed, and the one that round's own decision composes.

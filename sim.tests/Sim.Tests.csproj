@@ -78,6 +78,14 @@
     TypedLineTests reads them directly rather than through a session that would
     have to be played to reach one.
 
+    simcli/BuildPrompt.cs is the loop those three feed: it composes one round's
+    build phase from a reader and prints the frame to a writer. Both are handed
+    in, which is the whole of how an interactive verb is exercised from a cold
+    shell: BuildPromptTests plays canned transcripts through it with no
+    terminal anywhere. It is linked for the same reason the drawings are: what
+    is under test is the composing, not a process that would have to be started
+    and fed on standard input to reach it.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -90,6 +98,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/RoundFrame.cs" Link="RoundFrame.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TypedLine.cs" Link="TypedLine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/BuildPrompt.cs" Link="BuildPrompt.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>

@@ -118,10 +118,10 @@ carries, **minus the wave** — at a prompt the round you are in is not somethin
 
 | Word | What it does |
 |---|---|
-| `take ordinary <id>` / `take changer <id>` | The round's one take. Typing a second replaces the first — nothing has moved yet |
+| `take ordinary <id>` / `take changer <id>` | The round's one take. Typing a second replaces the first — nothing has moved yet. One case refuses: a wave already fielding a creep only the first take unlocked, where the replacement leaves a decision that does not resolve. Emptying the slot on the player's behalf would be a silent drop, so the sentence names the slot and `undo` is the way past it |
 | `place <type-id> <column> <row>` | Adds a placement to the phase being composed |
 | `upgrade <type-id> <column> <row>` | Adds an upgrade, naming its target by the hex |
-| `send <type-id> <count>` | Fills the next wave slot. `send` with no room is a refusal, not a silent drop |
+| `send <type-id> <count>` | Fills the next wave slot, in the order the sends were typed. Filled slots ascend strictly by type id, so a creep at or below the last one sent is refused rather than quietly reordered — sorting would rewrite the decision on its author's behalf. `send` with no room is a refusal, not a silent drop |
 | `undo` | Drops the last thing added. Free, because a phase is composed in a local and the run has not seen it |
 | `map` / `menu` / `costs` | Reprints a panel, and changes nothing |
 | — | A label may be typed where an id is expected — `place archer 4 4` — because the roster carries labels already. **The written script always carries the id and the wave**, so what is typed is a convenience and what is stored is the record's own spelling |

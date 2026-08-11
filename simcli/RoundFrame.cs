@@ -3,6 +3,28 @@ using Sim;
 
 namespace Sim.Cli;
 
+/// <summary>Which of the frame a drawing is: the whole of it, or one part.</summary>
+/// <remarks>
+/// The three words at the prompt that reprint -- <c>map</c>, <c>menu</c> and
+/// <c>costs</c> -- name one of these rather than reaching for a drawing function
+/// each, so what a part is made of is settled beside the whole frame and cannot
+/// come out one way inside it and another on its own.
+/// </remarks>
+internal enum Panel
+{
+    /// <summary>Header, playfield, menus and the status line under them.</summary>
+    Whole = 0,
+
+    /// <summary>The playfield, its legend, and what may be built.</summary>
+    Map,
+
+    /// <summary>This wave's offering, and what a slot may be filled with.</summary>
+    Menu,
+
+    /// <summary>What a tower costs and what a creep costs, side by side.</summary>
+    Costs,
+}
+
 /// <summary>
 /// One round drawn as the frame that stands above the prompt: what the run is
 /// at, the playfield, this wave's menu, what a slot may be filled with, and
@@ -96,25 +118,62 @@ internal static class RoundFrame
     /// The decision as far as it has been composed, or nothing where the round
     /// has not been given its take yet.
     /// </param>
-    public static string ToText(Run run, UpgradeLadder ladder, BuildPhase? composing)
+    public static string ToText(Run run, UpgradeLadder ladder, BuildPhase? composing) =>
+        ToText(run, ladder, composing, Panel.Whole);
+
+    /// <summary>
+    /// One part of that frame, or the whole of it, drawn off the same resolved
+    /// decision.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// A part is drawn from the frame's own panels and not from a second set
+    /// beside them. Two of them are blocks the whole frame carries character for
+    /// character: <see cref="Panel.Map"/> is the playfield down to the prices in
+    /// its right-hand column, and <see cref="Panel.Menu"/> is the offering and
+    /// the sendable panel as they sit under it. <see cref="Panel.Costs"/> is the
+    /// one arrangement of its own -- the two priced panels together, which the
+    /// frame spreads across two columns because each belongs beside a different
+    /// thing.
+    /// </para>
+    /// <para>
+    /// One <see cref="BuildPhase.Resolve"/> serves whichever is asked for, so a
+    /// part cannot be drawn against a different pricing of the decision than the
+    /// whole frame was.
+    /// </para>
+    /// </remarks>
+    public static string ToText(Run run, UpgradeLadder ladder, BuildPhase? composing, Panel panel)
     {
         ArgumentNullException.ThrowIfNull(run);
 
         Offering offering = run.Offering;
         Build? composed = composing?.Resolve(
             offering, run.Unlocks, run.Purse, run.Costs, run.Types, run.Map, run.Board);
+        Unlocks unlocks = composed?.Unlocks ?? run.Unlocks;
 
-        return new StringBuilder()
-            .Append(Header(run, offering, composed))
-            .Append("\n\n")
-            .Append(BoardMap.ToText(
-                run.Map, composed?.Board ?? run.Board, ladder, Buildable(run), IdWidth))
-            .Append("\n\n")
-            .Append(Menus(run, offering, composed?.Unlocks ?? run.Unlocks))
-            .Append("\n\n")
-            .Append(Status(composing, composed))
-            .ToString();
+        return panel switch
+        {
+            Panel.Map => Playfield(run, ladder, composed),
+            Panel.Menu => SideBySide(Menu(offering), Sendable(run, unlocks)),
+            Panel.Costs => SideBySide(Buildable(run), Sendable(run, unlocks)),
+            _ => new StringBuilder()
+                .Append(Header(run, offering, composed))
+                .Append("\n\n")
+                .Append(Playfield(run, ladder, composed))
+                .Append("\n\n")
+                .Append(SideBySide(Menu(offering), Sendable(run, unlocks)))
+                .Append("\n\n")
+                .Append(Status(composing, composed))
+                .ToString(),
+        };
     }
+
+    /// <summary>
+    /// The grid, the legend of what is standing, and the panel of what may be
+    /// built in the column beside them.
+    /// </summary>
+    private static string Playfield(Run run, UpgradeLadder ladder, Build? composed) =>
+        BoardMap.ToText(run.Map, composed?.Board ?? run.Board, ladder, Buildable(run), IdWidth);
 
     /// <summary>
     /// The four readings a decision is made against: which round of how many,
@@ -182,13 +241,12 @@ internal static class RoundFrame
         return cheaper != 0 ? cheaper : left.Id.CompareTo(right.Id);
     };
 
-    /// <summary>This wave's offering, and what a slot may be filled with, side by side.</summary>
-    private static string Menus(Run run, Offering offering, Unlocks unlocks)
+    /// <summary>Two panels level with one another, the second in the first's right-hand margin.</summary>
+    private static string SideBySide(string[] left, string[] right)
     {
-        string[] menu = Menu(offering);
-        var lines = new List<string>(menu);
+        var lines = new List<string>(left);
 
-        TextPanel.Beside(lines, Sendable(run, unlocks), 0, TextPanel.Widest(menu) + MenuGap);
+        TextPanel.Beside(lines, right, 0, TextPanel.Widest(left) + MenuGap);
 
         return string.Join('\n', lines);
     }
