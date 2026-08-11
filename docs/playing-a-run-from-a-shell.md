@@ -85,8 +85,8 @@ wave 4 of 10        health 1245 of 1500        gold 545        3 slots
                                                            4  mage      92
 
 this wave's menu                           what you may send
-  ordinary   1  minion            type 1     1  minion          10 each
-  ordinary  13  skeleton-warrior  type 13    2  skeleton-scout   9 each
+  ordinary   1  minion            type 1     1  minion            10 each
+  ordinary  13  skeleton-warrior  type 13    2  skeleton-scout     9 each
   ordinary  12  skeleton          type 12
 
 nothing taken, nothing built, no slot filled.

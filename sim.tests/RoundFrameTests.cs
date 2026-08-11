@@ -38,6 +38,12 @@ public class RoundFrameTests
     private const int Rounds = 4;
 
     /// <summary>
+    /// The option wave one's menu carries the skeleton-warrior at, whose label
+    /// is the longest on the committed roster.
+    /// </summary>
+    private const int WarriorOption = 13;
+
+    /// <summary>
     /// The frames of the committed run, played once for the whole class. A
     /// round resolves twenty matches and measuring the field costs a hundred
     /// more, and every test here reads a frame off the same play.
@@ -81,6 +87,51 @@ public class RoundFrameTests
     }
 
     [Fact]
+    public void The_longest_name_on_the_roster_keeps_the_gap_before_its_price()
+    {
+        // The sendable panel holding one row, and that row the widest label
+        // content/units.txt carries. It is the case the panel's own column width
+        // is settled by, and no round of the committed script reaches it: wave
+        // one offers the skeleton-warrior and the script takes something else,
+        // so the take is composed here instead.
+        //
+        // OBSERVED: pad the label to a constant sixteen with the price straight
+        // after it, which is what the panel did until #177. Every other block in
+        // this file reads the same, and this one goes red on
+        // "skeleton-warrior31 each" -- a name run into its price on the one row
+        // wide enough for the padding to add nothing.
+        UnitTypeTable types = TheMatch.Types();
+        UpgradeLadder ladder = TheMatch.Ladder(types);
+
+        Assert.Equal(
+            """
+            wave 1 of 10        health 1500 of 1500        gold 100        2 slots
+
+                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        nothing standing
+             2    .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .      you may build
+             4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
+             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
+             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         14  ranger    40
+             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        4  mage      92
+             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+
+            this wave's menu                           what you may send
+              ordinary  12  skeleton          type 12   13  skeleton-warrior  31 each
+              ordinary   1  minion            type 1
+              ordinary  13  skeleton-warrior  type 13
+
+            took ordinary 13 skeleton-warrior, nothing built, no slot filled.
+            """,
+            RoundFrame.ToText(
+                Fresh(types, TheRun.FieldWave(types)),
+                ladder,
+                BuildPhase.Of(OptionKind.Ordinary, WarriorOption)));
+    }
+
+    [Fact]
     public void An_anchors_menu_merges_the_game_changers_into_the_ordinary_options()
     {
         // Six rows on one menu, in the two halves an anchor merges, and one
@@ -110,8 +161,8 @@ public class RoundFrameTests
                                                                        4  mage      92
 
             this wave's menu                          what you may send
-              ordinary   1  minion            type 1    1  minion          10 each
-              ordinary   7  necromancer       type 7    2  skeleton-scout   9 each
+              ordinary   1  minion            type 1    1  minion            10 each
+              ordinary   7  necromancer       type 7    2  skeleton-scout     9 each
               ordinary   2  skeleton-scout    type 2
               changer    1  swift-column      type 2
               changer    3  split-push        type 2
@@ -178,8 +229,8 @@ public class RoundFrameTests
                                                                        4  mage      92
 
             this wave's menu                           what you may send
-              ordinary   1  minion            type 1     1  minion          10 each
-              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout   9 each
+              ordinary   1  minion            type 1     1  minion            10 each
+              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout     9 each
               ordinary  12  skeleton          type 12
 
             nothing taken, nothing built, no slot filled.
@@ -226,9 +277,9 @@ public class RoundFrameTests
                                                                        4  mage      92
 
             this wave's menu                           what you may send
-              ordinary   1  minion            type 1     1  minion          10 each
-              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout   9 each
-              ordinary  12  skeleton          type 12   12  skeleton        17 each
+              ordinary   1  minion            type 1     1  minion            10 each
+              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout     9 each
+              ordinary  12  skeleton          type 12   12  skeleton          17 each
 
             took ordinary 12 skeleton, 1 built, 1 slot filled.
             """,

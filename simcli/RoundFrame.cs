@@ -83,9 +83,6 @@ internal static class RoundFrame
     /// <summary>How wide the menu's take-kind column is: the longest of the words a script spells one with.</summary>
     private const int WordWidth = 9;
 
-    /// <summary>How wide the creep-name column is, on the menu and on the sendable panel alike.</summary>
-    private const int LabelWidth = 16;
-
     /// <summary>How wide the buildable panel's tower-name column is.</summary>
     private const int NameWidth = 9;
 
@@ -150,18 +147,19 @@ internal static class RoundFrame
         Build? composed = composing?.Resolve(
             offering, run.Unlocks, run.Purse, run.Costs, run.Types, run.Map, run.Board);
         Unlocks unlocks = composed?.Unlocks ?? run.Unlocks;
+        int labelWidth = LabelWidth(run.Types);
 
         return panel switch
         {
             Panel.Map => Playfield(run, ladder, composed),
-            Panel.Menu => SideBySide(Menu(offering), Sendable(run, unlocks)),
-            Panel.Costs => SideBySide(Buildable(run), Sendable(run, unlocks)),
+            Panel.Menu => SideBySide(Menu(offering, labelWidth), Sendable(run, unlocks, labelWidth)),
+            Panel.Costs => SideBySide(Buildable(run), Sendable(run, unlocks, labelWidth)),
             _ => new StringBuilder()
                 .Append(Header(run, offering, composed))
                 .Append("\n\n")
                 .Append(Playfield(run, ladder, composed))
                 .Append("\n\n")
-                .Append(SideBySide(Menu(offering), Sendable(run, unlocks)))
+                .Append(SideBySide(Menu(offering, labelWidth), Sendable(run, unlocks, labelWidth)))
                 .Append("\n\n")
                 .Append(Status(composing, composed))
                 .ToString(),
@@ -260,7 +258,7 @@ internal static class RoundFrame
     /// a take is spelled by the option's id and a send by the creep's, and on an
     /// anchor's menu those are two different numbers over one body.
     /// </remarks>
-    private static string[] Menu(Offering offering)
+    private static string[] Menu(Offering offering, int labelWidth)
     {
         var lines = new string[offering.Count + 1];
         lines[0] = MenuHeading;
@@ -274,7 +272,7 @@ internal static class RoundFrame
                 .Append(CommandScript.WordFor(option.Kind).PadRight(WordWidth))
                 .Append(Number(option.Id).PadLeft(IdWidth))
                 .Append(ColumnGap)
-                .Append(option.Label.PadRight(LabelWidth))
+                .Append(option.Label.PadRight(labelWidth))
                 .Append(ColumnGap)
                 .Append("type ")
                 .Append(Number(option.TypeId))
@@ -293,7 +291,7 @@ internal static class RoundFrame
     /// can field one creep, and a run that took an ordinary option and then a
     /// changer over the same body may send that creep by one type id either way.
     /// </remarks>
-    private static string[] Sendable(Run run, Unlocks unlocks)
+    private static string[] Sendable(Run run, Unlocks unlocks, int labelWidth)
     {
         var lines = new List<string> { SendableHeading };
         var listed = new List<int>();
@@ -312,7 +310,8 @@ internal static class RoundFrame
             lines.Add(new StringBuilder()
                 .Append(Number(creep.Id).PadLeft(IdWidth))
                 .Append(ColumnGap)
-                .Append(creep.Label.PadRight(LabelWidth))
+                .Append(creep.Label.PadRight(labelWidth))
+                .Append(ColumnGap)
                 .Append(Number(PriceOf(run.Costs, creep.Id)).PadLeft(CreepPriceWidth))
                 .Append(" each")
                 .ToString());
@@ -351,6 +350,42 @@ internal static class RoundFrame
                 ? "no slot filled"
                 : Number(filled) + (filled == 1 ? " slot filled" : " slots filled"))
             + ".";
+    }
+
+    /// <summary>
+    /// How wide the creep-name column is, on the menu and on the sendable panel
+    /// alike: the longest label a walking unit on this roster carries, so that
+    /// the column gap after it is a gap on every row including the widest.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Measured over the roster rather than over the rows a round happens to
+    /// print, because what is unlocked grows as a run is played: a width taken
+    /// off the panel's own rows would step sideways the round a longer name
+    /// joins them, and the prices under it would move with it.
+    /// </para>
+    /// <para>
+    /// A game changer's name goes in the same column and is not a walking unit,
+    /// so one longer than every creep's carries its own row's tail right. The
+    /// menu prints a gap after the name whatever its length, which is what the
+    /// sendable panel gets from the width.
+    /// </para>
+    /// </remarks>
+    private static int LabelWidth(UnitTypeTable types)
+    {
+        int widest = 0;
+
+        for (int index = 0; index < types.Count; index++)
+        {
+            UnitType type = types.Types[index];
+
+            if (type.Role == UnitRole.Moving)
+            {
+                widest = Math.Max(widest, type.Label.Length);
+            }
+        }
+
+        return widest;
     }
 
     /// <summary>What one of a unit costs, out of the table a purchase is priced by.</summary>
