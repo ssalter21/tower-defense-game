@@ -145,6 +145,20 @@ public static class Program
         "         looking one up. It is not what pins the geometry -- the map hash",
         "         is -- so leaving it out records a defense that does not say.",
         string.Empty,
+        "  play       --seed <number> --out <file>",
+        "             " + RunContentUsage,
+        "             " + RunShapeUsage,
+        "             [--transcript <file>]",
+        string.Empty,
+        "         Plays a run one round at a time, taking each build phase from the",
+        "         terminal, and writes the decisions to --out as a command script.",
+        "         The script it writes is the one record-run compiles, so a run",
+        "         somebody played can be replayed, committed and diffed.",
+        string.Empty,
+        "         --transcript reads the decisions from a file instead of the",
+        "         terminal, which is what a test does and what re-playing a session",
+        "         needs. The same words either way.",
+        string.Empty,
         "  play-run   --commands <file> [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
@@ -274,7 +288,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of eight things.");
+            throw new UsageException("No verb. This program does one of nine things.");
         }
 
         switch (args[0])
@@ -299,6 +313,9 @@ public static class Program
                     args,
                     1,
                     new[] { "map", "units", "upgrades", "rules", "defense", "wave", "seed", "out", "map-handle" }));
+
+            case "play":
+                return PlayAtThePrompt(RunVerb("play", args, "seed", "out", "transcript"));
 
             case "play-run":
                 return PlayRun(RunVerb("play-run", args, "commands", "out"));
@@ -407,6 +424,55 @@ public static class Program
         WriteRecord(arguments, bytes);
 
         return 0;
+    }
+
+    /// <summary>
+    /// Plays a run one round at a time at a prompt, and writes the decisions
+    /// down as a command script.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>A verb of its own rather than a mode of <see cref="PlayRun"/>.</b>
+    /// That verb is the one a build gate calls, and a mode flag on it is a
+    /// branch a gate can take by accident -- a run sitting at a prompt waiting
+    /// for a line nobody is there to type. What the two share they share by
+    /// calling the same readers, so an argument spelled on both cannot come to
+    /// mean two things.
+    /// </para>
+    /// <para>
+    /// <b>Both arguments are read before the first frame is drawn.</b> An
+    /// absent <c>--out</c> and a <c>--transcript</c> naming a file that is not
+    /// there each refuse in front of the person, rather than after the run they
+    /// have just spent five minutes playing. What is not checked that early is
+    /// whether the <c>--out</c> path can be written to; that is one stat call
+    /// against a whole second copy of where a file is opened, and the write is
+    /// the proving step's to do.
+    /// </para>
+    /// <para>
+    /// <b>The exit code is the proving step's.</b> The session's script is
+    /// played into a fresh run on the same seed and shape and held against what
+    /// the player was shown; a disagreement writes nothing and exits non-zero.
+    /// See <see cref="ProvedSession"/>.
+    /// </para>
+    /// </remarks>
+    private static int PlayAtThePrompt(Arguments arguments)
+    {
+        RunContent content = ContentOf(arguments);
+        RunShape shape = ShapeOf(arguments);
+        ulong seed = arguments.RequiredUnsigned("seed");
+        string script = arguments.Required("out");
+        string? transcript = arguments.Optional("transcript");
+
+        TextReader reader = transcript is null
+            ? Console.In
+            : new StringReader(File.ReadAllText(transcript));
+
+        Sim.Run run = content.Fresh(seed, shape);
+        Played session = RunPrompt.Play(run, content.Ladder, reader, Console.Out);
+
+        return ProvedSession.Of(session, run, () => content.Fresh(seed, shape)).Written(script, Console.Out)
+            ? 0
+            : 1;
     }
 
     /// <summary>

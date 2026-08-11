@@ -37,7 +37,7 @@ public class ProvedSessionTests
 
     /// <summary>Where the committed run's own decisions, played at a prompt, come to rest.</summary>
     private static readonly Lazy<Session> Committed = new(() =>
-        Play(AgainstTheCannedField(TheMatch.Types()), TheCommittedRunTyped()));
+        Play(AgainstTheCannedField(TheMatch.Types()), TheCommands.TypedAtAPrompt()));
 
     [Fact]
     public void A_session_that_replays_as_it_played_writes_one_file_and_it_is_the_script_it_proved()
@@ -287,50 +287,6 @@ public class ProvedSessionTests
                 TheMatch.Ladder(run.Types),
                 new StringReader(string.Join('\n', typed)),
                 new StringWriter()));
-
-    /// <summary>
-    /// The committed run's decisions spelled as somebody would type them: the
-    /// take, what the round builds, what it sends, and <c>done</c>.
-    /// </summary>
-    /// <remarks>
-    /// Compiled out of <c>content/commands.txt</c> rather than written out,
-    /// because what is claimed here is about a session and the script it writes
-    /// rather than about that file -- <c>RunPromptTests</c> is where the typed
-    /// words and the committed file are held against each other, and a second
-    /// copy of them here would be a second thing to keep current. The empty
-    /// slots are dropped: <c>0 0</c> is how a stored row says a slot was left
-    /// alone, and at a prompt it is a <c>send</c> nobody typed.
-    /// </remarks>
-    private static string[] TheCommittedRunTyped()
-    {
-        var typed = new List<string>();
-
-        foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
-        {
-            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + Number(command.TakeId));
-
-            foreach (BuildAction action in command.Actions)
-            {
-                typed.Add(
-                    CommandScript.WordFor(action.Kind)
-                    + " " + Number(action.TypeId)
-                    + " " + Number(action.Column)
-                    + " " + Number(action.Row));
-            }
-
-            foreach (WaveSlot slot in command.Slots)
-            {
-                if (slot.Count > 0)
-                {
-                    typed.Add("send " + Number(slot.TypeId) + " " + Number(slot.Count));
-                }
-            }
-
-            typed.Add("done");
-        }
-
-        return typed.ToArray();
-    }
 
     /// <summary>
     /// A transcript that takes the first thing on every round's menu and does

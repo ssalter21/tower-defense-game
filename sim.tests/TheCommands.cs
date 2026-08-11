@@ -1,8 +1,11 @@
+using System.Globalization;
+
 namespace Sim.Tests;
 
 /// <summary>
 /// The committed content arranged as a command stream: a run to play, the
-/// decisions to play into it, and the bytes they become.
+/// decisions to play into it, the bytes they become, and the committed script's
+/// own decisions as somebody would type them at a prompt.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -45,6 +48,57 @@ public static class TheCommands
 
     /// <summary>How many creeps a filled slot sends. Two of anything on this roster opens affordable.</summary>
     private const int Sent = 2;
+
+    /// <summary>
+    /// The committed run's decisions spelled as somebody would type them at a
+    /// prompt: the take, what the round builds, what it sends, and
+    /// <c>done</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Compiled out of <c>content/commands.txt</c> rather than written out, so
+    /// that the committed run is an <i>input</i> to whatever plays these words
+    /// -- which is what <c>docs/playing-a-run-from-a-shell.md</c> §5 asks of the
+    /// interactive verb. <c>RunPromptTests</c> is where the typed words and that
+    /// file are held against each other, hand-spelled on both sides; a second
+    /// copy of them here would be a second thing to keep current.
+    /// </para>
+    /// <para>
+    /// The empty slots are dropped: <c>0 0</c> is how a stored row says a slot
+    /// was left alone, and at a prompt a slot nobody filled is a <c>send</c>
+    /// nobody typed.
+    /// </para>
+    /// </remarks>
+    public static string[] TypedAtAPrompt()
+    {
+        var typed = new List<string>();
+
+        foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
+        {
+            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + Number(command.TakeId));
+
+            foreach (BuildAction action in command.Actions)
+            {
+                typed.Add(
+                    CommandScript.WordFor(action.Kind)
+                    + " " + Number(action.TypeId)
+                    + " " + Number(action.Column)
+                    + " " + Number(action.Row));
+            }
+
+            foreach (WaveSlot slot in command.Slots)
+            {
+                if (slot.Count > 0)
+                {
+                    typed.Add("send " + Number(slot.TypeId) + " " + Number(slot.Count));
+                }
+            }
+
+            typed.Add("done");
+        }
+
+        return typed.ToArray();
+    }
 
     /// <summary>A run on the committed content, with nothing played into it yet.</summary>
     public static Run Fresh(int waves = Waves, ulong seed = TheRun.Seed)
@@ -125,6 +179,8 @@ public static class TheCommands
 
     /// <summary>Those bytes, which is what every negative case starts from.</summary>
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
+
+    private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
     public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)

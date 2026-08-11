@@ -182,8 +182,10 @@ without a terminal, and `--transcript` is how: the loop reads lines from a `Text
 The first of those is the valuable one: it makes `content/commands.txt` playable as a transcript, so the
 committed run becomes an input to this verb and not just to `play-run`.
 
-**A `tools/play-run-interactive.ps1`** — one more static entry point, per rule 3 — supplies `--content content`
-and a seed, so playing is one command from a cold clone.
+**A `tools/play-run-interactive.ps1`** — one more static entry point, per rule 3 — supplies `--content content`,
+a seed and an `--out`, so playing is one command from a cold clone. §1 makes the path required, so the script
+has to default one; it is scratch space and not `content/`, because a session is an experiment and `content/`
+holds the run this project committed.
 
 ---
 
