@@ -147,7 +147,7 @@ internal static class RoundFrame
         Build? composed = composing?.Resolve(
             offering, run.Unlocks, run.Purse, run.Costs, run.Types, run.Map, run.Board);
         Unlocks unlocks = composed?.Unlocks ?? run.Unlocks;
-        int labelWidth = LabelWidth(run.Types);
+        int labelWidth = LabelWidth(run.Types, run.Schedule);
 
         return panel switch
         {
@@ -354,24 +354,34 @@ internal static class RoundFrame
 
     /// <summary>
     /// How wide the creep-name column is, on the menu and on the sendable panel
-    /// alike: the longest label a walking unit on this roster carries, so that
-    /// the column gap after it is a gap on every row including the widest.
+    /// alike: the longest label that column can ever print, so that the column
+    /// gap after it is a gap on every row including the widest.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Measured over the roster rather than over the rows a round happens to
-    /// print, because what is unlocked grows as a run is played: a width taken
-    /// off the panel's own rows would step sideways the round a longer name
-    /// joins them, and the prices under it would move with it.
+    /// Measured over the authored content rather than over the rows a round
+    /// happens to print, because what a round prints there grows as a run is
+    /// played: a width taken off the panel's own rows would step sideways the
+    /// round a longer name joins them, and the prices under it would move with
+    /// it.
     /// </para>
     /// <para>
-    /// A game changer's name goes in the same column and is not a walking unit,
-    /// so one longer than every creep's carries its own row's tail right. The
-    /// menu prints a gap after the name whatever its length, which is what the
-    /// sendable panel gets from the width.
+    /// <b>Both halves of the column are measured, because two files fill it.</b>
+    /// The sendable panel names walking units off the roster and the menu names
+    /// those with the round's game changers merged in beside them -- and a
+    /// changer is a row of the anchor schedule rather than of the roster, so a
+    /// pool holding a longer name than any creep would otherwise carry its own
+    /// row's tail right.
+    /// </para>
+    /// <para>
+    /// <b>Every changer the shape holds, and not the three this run's filling
+    /// drew.</b> A filling is revealed at run start and an anchor's menu is
+    /// reached at its own wave, so measuring what was drawn would leave the
+    /// column free to step sideways at wave 3 -- which is the thing the
+    /// paragraph above rules out for the roster.
     /// </para>
     /// </remarks>
-    private static int LabelWidth(UnitTypeTable types)
+    private static int LabelWidth(UnitTypeTable types, AnchorSchedule schedule)
     {
         int widest = 0;
 
@@ -383,6 +393,11 @@ internal static class RoundFrame
             {
                 widest = Math.Max(widest, type.Label.Length);
             }
+        }
+
+        for (int index = 0; index < schedule.GameChangers.Count; index++)
+        {
+            widest = Math.Max(widest, schedule.GameChangers[index].Label.Length);
         }
 
         return widest;

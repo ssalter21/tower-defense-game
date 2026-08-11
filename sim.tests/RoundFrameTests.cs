@@ -44,6 +44,13 @@ public class RoundFrameTests
     private const int WarriorOption = 13;
 
     /// <summary>
+    /// A game changer's label, planted long enough to be the widest thing the
+    /// name column can print: twenty characters against the sixteen of
+    /// <c>skeleton-warrior</c>, so the four the column gains are countable.
+    /// </summary>
+    private const string LongChanger = "thermal-riser-mk-two";
+
+    /// <summary>
     /// The frames of the committed run, played once for the whole class. A
     /// round resolves twenty matches and measuring the field costs a hundred
     /// more, and every test here reads a frame off the same play.
@@ -129,6 +136,56 @@ public class RoundFrameTests
                 Fresh(types, TheRun.FieldWave(types)),
                 ladder,
                 BuildPhase.Of(OptionKind.Ordinary, WarriorOption)));
+    }
+
+    [Fact]
+    public void A_game_changer_named_longer_than_any_creep_widens_the_column_they_share()
+    {
+        // A changer's name goes in the column the sendable panel spells a
+        // creep's, and a changer is a row of content/schedule.txt rather than
+        // of content/units.txt -- so the width is measured over both files. No
+        // pool today holds a name longer than skeleton-warrior's sixteen, which
+        // is why this plants one of twenty and why the committed blocks in this
+        // file do not move: the fix is a rule rather than a redraw.
+        //
+        // The width is read off wave one, which is not an anchor and prints no
+        // changer at all. That is the claim: it comes off the content and never
+        // off the rows on screen, so the column cannot step sideways at wave
+        // three when the first pool arrives.
+        //
+        // OBSERVED: measure UnitRole.Moving alone, which is what the width did
+        // until now. Every menu row here comes back four columns narrower and
+        // "type 12" moves left with it -- and against the committed schedule
+        // nothing anywhere says so, because thermal-riser is thirteen.
+        UnitTypeTable types = TheMatch.Types();
+        UpgradeLadder ladder = TheMatch.Ladder(types);
+
+        Assert.Equal(
+            """
+            wave 1 of 10        health 1500 of 1500        gold 100        2 slots
+
+                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
+             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        nothing standing
+             2    .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .      you may build
+             4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
+             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
+             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         14  ranger    40
+             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        4  mage      92
+             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+
+            this wave's menu                               what you may send
+              ordinary  12  skeleton              type 12
+              ordinary   1  minion                type 1
+              ordinary  13  skeleton-warrior      type 13
+
+            nothing taken, nothing built, no slot filled.
+            """,
+            RoundFrame.ToText(
+                Fresh(types, TheRun.FieldWave(types), WithALongChangerName(types)),
+                ladder,
+                null));
     }
 
     [Fact]
@@ -400,15 +457,32 @@ public class RoundFrameTests
     }
 
     /// <summary>
-    /// A fresh run on the committed content and the committed seed, against a
-    /// canned pool sending the wave named here.
+    /// The committed shape with one tier-3 changer renamed to the longest label
+    /// this roster's name column could be asked to print, and nothing else
+    /// touched.
     /// </summary>
-    private static Run Fresh(UnitTypeTable types, WaveScript field) =>
+    /// <remarks>
+    /// A label is the one field of that file nothing branches on and nothing
+    /// folds into the content hash, so this is the same shape drawing the same
+    /// fillings for the same seed -- which is what makes the block above a claim
+    /// about the width alone.
+    /// </remarks>
+    private static AnchorSchedule WithALongChangerName(UnitTypeTable types) =>
+        AnchorSchedule.Parse(
+            PlantedText.Replace(TheSchedule.CommittedText(), "thermal-riser", LongChanger),
+            types);
+
+    /// <summary>
+    /// A fresh run on the committed content and the committed seed, against a
+    /// canned pool sending the wave named here, and under the shape named here
+    /// where the committed one is not the subject.
+    /// </summary>
+    private static Run Fresh(UnitTypeTable types, WaveScript field, AnchorSchedule? schedule = null) =>
         new Run(
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            schedule ?? TheSchedule.Committed(types),
             FieldPool.Canned(TheMatch.Layout(types), field),
             TheRun.Seed,
             Run.DefaultWaves,
