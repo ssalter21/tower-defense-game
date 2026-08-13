@@ -143,19 +143,6 @@ namespace Sim
         /// </summary>
         private const string MeasureLabel = "run-measure/1";
 
-        /// <summary>
-        /// Names the derivation of this run's filling: which game changers sit
-        /// on each anchor's menu. Drawn once, at run start.
-        /// </summary>
-        private const string FillingLabel = "run-filling/1";
-
-        /// <summary>
-        /// Names the derivation of one round's public offering. Drawn fresh
-        /// every round, from the run's seed and the wave alone -- which is what
-        /// lets everybody in a match be handed the same one.
-        /// </summary>
-        private const string OfferingLabel = "run-offering/1";
-
         private readonly FieldPool _pool;
 
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
@@ -175,9 +162,10 @@ namespace Sim
         /// <param name="map">The board every match in the run is fought on.</param>
         /// <param name="rules">The health pool, the interest, the base and the bands.</param>
         /// <param name="types">The unit table every cost in the run is priced out of.</param>
-        /// <param name="schedule">
-        /// The shape: which waves are anchors, how wide each round's slots are,
-        /// and which tier pool each anchor's menu is filled from.
+        /// <param name="ladder">
+        /// The upgrade edges. A unit that is some edge's target cannot be
+        /// placed and has to be reached by upgrading the rung below it, which is
+        /// the one prerequisite a run enforces.
         /// </param>
         /// <param name="pool">
         /// The population a round's field of K is drawn from, and the one the
@@ -194,7 +182,7 @@ namespace Sim
             HexMap map,
             Ruleset rules,
             UnitTypeTable types,
-            AnchorSchedule schedule,
+            UpgradeLadder ladder,
             FieldPool pool,
             ulong seed,
             int waves = DefaultWaves,
@@ -206,7 +194,7 @@ namespace Sim
             Board = Board.Empty;
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Types = types ?? throw new ArgumentNullException(nameof(types));
-            Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+            Ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
 
             // Before a wave resolves rather than at the first overflow: a run
             // that has already produced numbers is a run whose numbers somebody
@@ -237,11 +225,6 @@ namespace Sim
             DeathEndsTheRun = deathEndsTheRun;
             Costs = CostTable.From(rules, types);
             Purse = Purse.Holding(rules.StartingPurseGold);
-            Unlocks = Unlocks.None;
-
-            // Revealed at run start: the shape was public all week and the
-            // filling is what this run drew onto it.
-            Filling = schedule.Fill(rules.GameChangersPerAnchor, Derived(FillingLabel, 0, 0, 0));
 
             _outcome = Folded(_rounds);
         }
@@ -315,16 +298,11 @@ namespace Sim
         public CostTable Costs { get; }
 
         /// <summary>
-        /// The shape this run is played against: where the anchors are, what
-        /// answers each, and how wide a round's slots are.
+        /// The upgrade edges this run's build phases are checked against. A unit
+        /// that is some edge's target is refused to <c>place</c> and reached by
+        /// <c>upgrade</c> instead.
         /// </summary>
-        public AnchorSchedule Schedule { get; }
-
-        /// <summary>
-        /// What this run drew onto each anchor's menu, at a position derived from
-        /// the seed and revealed here at run start.
-        /// </summary>
-        public AnchorFilling Filling { get; }
+        public UpgradeLadder Ladder { get; }
 
         /// <summary>
         /// The one wallet. Every wave pays it interest on what was banked, the
@@ -333,22 +311,8 @@ namespace Sim
         /// </summary>
         public Purse Purse { get; private set; }
 
-        /// <summary>
-        /// What this run may field. Every build phase takes one thing off the
-        /// offering and it is held for the rest of the run, free to unlock and
-        /// paid to buy.
-        /// </summary>
-        public Unlocks Unlocks { get; private set; }
-
         /// <summary>How many rounds have resolved.</summary>
         public int Round => _rounds.Count;
-
-        /// <summary>
-        /// The offering standing in front of the round about to be played.
-        /// Waves are counted from one, so it is the round after the ones that
-        /// have resolved.
-        /// </summary>
-        public Offering Offering => OfferingAt(Round + 1);
 
         /// <summary>
         /// What this run stood and sent, round by round. Stored unconditionally,
@@ -437,27 +401,16 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Offering, Unlocks, Purse, Costs, Types, Map, Board);
+            Build build = phase.Resolve(Round + 1, Ladder, Purse, Costs, Types, Map, Board);
             RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();
 
             (RoundOutcome outcome, WavePayment payment) = Play(
-                orders, build.Unlocks, build.Purse, build.Board);
+                orders, build.Purse, build.Board);
 
             return new RoundReport(outcome, build, payment);
         }
-
-        /// <summary>
-        /// The public offering that stood in front of a wave of this run.
-        /// </summary>
-        /// <remarks>
-        /// Derived rather than remembered, so any wave's offering can be drawn
-        /// at any time -- which is what a stored command stream needs to be
-        /// validated against without the run in front of it having been played.
-        /// </remarks>
-        public Offering OfferingAt(int wave) =>
-            Sim.Offering.Draw(Rules, Types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
 
         /// <summary>
         /// Works one round out in full, commits it, and hands back the pair it
@@ -483,12 +436,10 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
-        /// <param name="unlocks">What the run may field this round, this round's take included.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
         /// <param name="board">What stands after whatever the round built.</param>
         private (RoundOutcome Outcome, WavePayment Payment) Play(
             RoundOrders orders,
-            Unlocks unlocks,
             Purse purse,
             Board board)
         {
@@ -507,8 +458,8 @@ namespace Sim
             {
                 RoundOrders against = _pool.At(drawn[index]);
 
-                dealt += LeakCost(orders.Wave, against.Defense, unlocks, round, index, Side.Attacking);
-                taken += LeakCost(against.Wave, orders.Defense, unlocks, round, index, Side.Defending);
+                dealt += LeakCost(orders.Wave, against.Defense, round, index, Side.Attacking);
+                taken += LeakCost(against.Wave, orders.Defense, round, index, Side.Defending);
             }
 
             // The average rather than the sum, on both sides. Summed, one round
@@ -522,7 +473,7 @@ namespace Sim
             // worth, not against whichever opponent it was drawn against.
             WavePayment payment = purse.CloseWave(Rules, field, outcome.LeakCostDealt);
 
-            Commit(orders, outcome, unlocks, payment.Purse, board, FoldedWith(outcome));
+            Commit(orders, outcome, payment.Purse, board, FoldedWith(outcome));
 
             return (outcome, payment);
         }
@@ -540,14 +491,12 @@ namespace Sim
         private void Commit(
             RoundOrders orders,
             RoundOutcome outcome,
-            Unlocks unlocks,
             Purse purse,
             Board board,
             RunOutcome folded)
         {
             _rounds.Add(outcome);
             _sent.Add(orders);
-            Unlocks = unlocks;
             Purse = purse;
             Board = board;
             _outcome = folded;
@@ -631,7 +580,6 @@ namespace Sim
                     dealt += LeakCost(
                         member.Wave,
                         _pool.At(field[index]).Defense,
-                        Unlocks.None,
                         sample,
                         index,
                         Side.Measured);
@@ -651,20 +599,11 @@ namespace Sim
         private int LeakCost(
             WaveScript wave,
             TowerLayout defense,
-            Unlocks unlocks,
             int round,
             int opponent,
             Side side)
         {
-            // Only this run's own wave can carry a game changer anybody here
-            // knows about: what is fielded is a fact about the sender's
-            // unlocks, and the pool is stored orders rather than stored runs,
-            // so nothing coming the other way says which of its bodies was one.
-            ShotBonus bonuses = side == Side.Attacking
-                ? ShotBonus.Fielded(wave, defense, unlocks, Schedule)
-                : ShotBonus.None;
-
-            var match = new Match(Map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
+            var match = new Match(Map, Rules, defense, wave, MatchSeed(round, opponent, side));
             match.Resolve();
 
             IReadOnlyList<int> leaked = match.LeakedByOrder;

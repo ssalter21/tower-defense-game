@@ -73,8 +73,8 @@ namespace Sim
 
         /// <summary>
         /// The fixed part of one build phase in a command stream:
-        /// <c>u16 wave + u8 take_kind + u16 take_id + u16 action_count +
-        /// u16 slot_count</c>. The actions follow the action count,
+        /// <c>u16 wave + u16 action_count + u16 slot_count</c> from format
+        /// version 2, which is what this constant sizes. The actions follow the action count,
         /// <see cref="ActionBytes"/> each, and the slots follow the slot count,
         /// <see cref="SlotBytes"/> each.
         /// </summary>
@@ -84,7 +84,7 @@ namespace Sim
         /// pays for -- the list is bounded by a purse rather than by a round's
         /// width.
         /// </remarks>
-        public const int CommandBytes = 9;
+        public const int CommandBytes = 6;
 
         /// <summary>
         /// Bytes per defensive action in a command stream: <c>u8 kind +
@@ -209,7 +209,7 @@ namespace Sim
         /// never held against an outcome.
         /// </para>
         /// </remarks>
-        public const int CommandVersion = 1;
+        public const int CommandVersion = 2;
 
         /// <summary>The four bytes a record of this kind begins with.</summary>
         public static string MagicOf(RecordKind kind)
@@ -348,7 +348,14 @@ namespace Sim
                     // long as any version-0 bytes exist. It reads a stream
                     // whose build phases carry no actions, which is what those
                     // bytes say.
-                    return formatVersion == 0 || formatVersion == 1;
+                    //
+                    // Version 1 is here on the same terms, against
+                    // content/golden/command-1.commands. Both of them carry a
+                    // take off a menu that no longer exists; the bytes are read
+                    // past so the cursor stays aligned and the decision replays
+                    // as its slots and its actions. See
+                    // CommandStream.ReadVersion2.
+                    return formatVersion == 0 || formatVersion == 1 || formatVersion == 2;
 
                 default:
                     throw NoSuchKind(kind);

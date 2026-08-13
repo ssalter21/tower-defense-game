@@ -130,14 +130,6 @@ namespace Sim
             Rule.RowShaped("band", 3, ReadBandRow, FoldBands),
             Rule.Numbers("health", new Column(Field.HealthPoolGold, "the health pool", 1, int.MaxValue)),
             Rule.Numbers(
-                "slots",
-                new Column(Field.StartingWaveSlots, "the starting slot width", 1, 64),
-                new Column(Field.WaveSlotsPerAnchor, "the slots an anchor adds", 0, 64)),
-            Rule.Numbers(
-                "offering",
-                new Column(Field.OrdinaryOptionsPerRound, "the ordinary options", 1, MostOptions),
-                new Column(Field.GameChangersPerAnchor, "the game changers an anchor adds", 1, MostOptions)),
-            Rule.Numbers(
                 "snapshot",
                 new Column(Field.FreeSnapshotsPerRun, "the free snapshot count", 0, int.MaxValue),
                 new Column(Field.SnapshotPriceGold, "the snapshot price", 0, int.MaxValue)),
@@ -192,10 +184,6 @@ namespace Sim
             IncomeBasePerWave,
             StartingPurseGold,
             HealthPoolGold,
-            StartingWaveSlots,
-            WaveSlotsPerAnchor,
-            OrdinaryOptionsPerRound,
-            GameChangersPerAnchor,
             FreeSnapshotsPerRun,
             SnapshotPriceGold,
 
@@ -261,22 +249,6 @@ namespace Sim
         /// <summary>The health pool a run starts with, denominated in gold.</summary>
         public int HealthPoolGold => _values[(int)Field.HealthPoolGold];
 
-        /// <summary>How many wave slots the first round has.</summary>
-        public int StartingWaveSlots => _values[(int)Field.StartingWaveSlots];
-
-        /// <summary>
-        /// How many slots an anchor adds. Slot width is derived rather than
-        /// authored: a round's width is this many per anchor at or before it,
-        /// on top of <see cref="StartingWaveSlots"/>.
-        /// </summary>
-        public int WaveSlotsPerAnchor => _values[(int)Field.WaveSlotsPerAnchor];
-
-        /// <summary>How many ordinary options the offering carries each round.</summary>
-        public int OrdinaryOptionsPerRound => _values[(int)Field.OrdinaryOptionsPerRound];
-
-        /// <summary>How many game changers join the offering on an anchor round.</summary>
-        public int GameChangersPerAnchor => _values[(int)Field.GameChangersPerAnchor];
-
         /// <summary>How many scouting snapshots a run gets before it starts paying.</summary>
         public int FreeSnapshotsPerRun => _values[(int)Field.FreeSnapshotsPerRun];
 
@@ -320,23 +292,20 @@ namespace Sim
         }
 
         /// <summary>
-        /// These rules with the offering ratio and the scouting line retuned:
-        /// how many ordinary options a round carries, how many game changers an
-        /// anchor merges in, how many snapshots a run gets free and what one
-        /// costs after that.
+        /// These rules with the scouting line retuned: how many snapshots a run
+        /// gets free and what one costs after that.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>These four are the sweep's economy dials, and this is the seam
-        /// they turn on.</b> They decide whether a merged anchor menu is a real
-        /// trade and what scouting is worth, and both are numbers the harness is
-        /// meant to move rather than arguments somebody settled -- so a sweep
-        /// retunes them here instead of every caller reaching for a second
-        /// ruleset file.
+        /// <b>These two are the sweep's economy dials, and this is the seam they
+        /// turn on.</b> They decide what scouting is worth, which is a number
+        /// the harness is meant to move rather than an argument somebody settled
+        /// -- so a sweep retunes them here instead of every caller reaching for
+        /// a second ruleset file.
         /// </para>
         /// <para>
         /// <b>The content hash moves with them.</b> It is a fold over the parsed
-        /// integers in field order and these are four of those integers, so a
+        /// integers in field order and these are two of those integers, so a
         /// retuned ruleset is loudly a different ruleset and a record stamped
         /// against the authored one will not replay against it.
         /// </para>
@@ -348,39 +317,15 @@ namespace Sim
         /// </para>
         /// </remarks>
         public Ruleset With(
-            int ordinaryOptionsPerRound,
-            int gameChangersPerAnchor,
             int freeSnapshotsPerRun,
             int snapshotPriceGold)
         {
             var values = (int[])_values.Clone();
 
-            Retune(values, Field.OrdinaryOptionsPerRound, ordinaryOptionsPerRound);
-            Retune(values, Field.GameChangersPerAnchor, gameChangersPerAnchor);
             Retune(values, Field.FreeSnapshotsPerRun, freeSnapshotsPerRun);
             Retune(values, Field.SnapshotPriceGold, snapshotPriceGold);
 
             return new Ruleset(this, values);
-        }
-
-        /// <summary>
-        /// How many wave slots a round offers, given how many anchors fall at or
-        /// before it. Derived from the starting width and the widening step
-        /// rather than authored as a second series, so moving an anchor cannot
-        /// leave the two out of step.
-        /// </summary>
-        public int WaveSlotsAt(int anchorsSoFar)
-        {
-            if (anchorsSoFar < 0)
-            {
-                throw new SimulationException(
-                    "A round cannot have passed "
-                    + anchorsSoFar.ToString(CultureInfo.InvariantCulture)
-                    + " anchors. Slot width is the starting width plus the widening step once per anchor, "
-                    + "and a negative count would narrow it below where a run starts.");
-            }
-
-            return StartingWaveSlots + (WaveSlotsPerAnchor * anchorsSoFar);
         }
 
         /// <summary>

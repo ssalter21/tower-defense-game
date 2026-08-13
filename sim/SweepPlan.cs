@@ -11,7 +11,7 @@ namespace Sim
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The map, the ruleset and the schedule are parameters, and so is
+    /// <b>The map, the ruleset and the ladder are parameters, and so is
     /// everything else.</b> Pointing this at another map to score it, at another
     /// matrix, at a wider field or at a different offering ratio is an argument
     /// here -- which is the one thing that stops a sweep being a retrofit across
@@ -70,7 +70,7 @@ namespace Sim
         /// <param name="map">The board every match of every run is fought on.</param>
         /// <param name="rules">The matrix, the purse, the bands and the dials below.</param>
         /// <param name="types">The roster the rows are scored over and every cost is read out of.</param>
-        /// <param name="schedule">The shape: the anchors, their tiers and the derived slot widths.</param>
+        /// <param name="ladder">The upgrade edges a placement is refused against.</param>
         /// <param name="field">
         /// The population a round's field of K is drawn from -- canned, until
         /// runs are stored and a real pool of them exists. See the remarks on
@@ -97,7 +97,7 @@ namespace Sim
             HexMap map,
             Ruleset rules,
             UnitTypeTable types,
-            AnchorSchedule schedule,
+            UpgradeLadder ladder,
             FieldPool field,
             ulong firstSeed,
             int runsPerCreep = DefaultRunsPerCreep,
@@ -113,7 +113,7 @@ namespace Sim
         {
             Map = map ?? throw new ArgumentNullException(nameof(map));
             Types = types ?? throw new ArgumentNullException(nameof(types));
-            Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+            Ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
             Field = field ?? throw new ArgumentNullException(nameof(field));
 
             if (rules is null)
@@ -122,8 +122,6 @@ namespace Sim
             }
 
             Rules = rules.With(
-                Or(ordinaryOptionsPerRound, rules.OrdinaryOptionsPerRound),
-                Or(gameChangersPerAnchor, rules.GameChangersPerAnchor),
                 Or(freeSnapshotsPerRun, rules.FreeSnapshotsPerRun),
                 Or(snapshotPriceGold, rules.SnapshotPriceGold));
 
@@ -161,8 +159,8 @@ namespace Sim
         /// <summary>The roster.</summary>
         public UnitTypeTable Types { get; }
 
-        /// <summary>The shape.</summary>
-        public AnchorSchedule Schedule { get; }
+        /// <summary>The upgrade edges.</summary>
+        public UpgradeLadder Ladder { get; }
 
         /// <summary>The population a round's field is drawn from.</summary>
         public FieldPool Field { get; }

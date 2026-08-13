@@ -136,9 +136,6 @@ namespace Sim
         /// <summary>The matrix, the armour expression and the floor every hit goes through.</summary>
         private readonly Ruleset _rules;
 
-        /// <summary>What a prepared shooter adds against a fielded game changer.</summary>
-        private readonly ShotBonus _bonuses;
-
         private readonly TowerCoverage _coverage;
 
         private readonly Pcg32 _dice;
@@ -227,17 +224,12 @@ namespace Sim
         /// <param name="layout">The towers that stand.</param>
         /// <param name="wave">The orders that walk.</param>
         /// <param name="seed">What the one dice stream is started from.</param>
-        /// <param name="bonuses">
-        /// What a prepared shooter adds against a game changer this wave fields.
-        /// Nothing countered unless the caller says otherwise.
-        /// </param>
         public Match(
             HexMap map,
             Ruleset rules,
             TowerLayout layout,
             WaveScript wave,
-            ulong seed,
-            ShotBonus? bonuses = null)
+            ulong seed)
         {
             if (map is null)
             {
@@ -245,7 +237,6 @@ namespace Sim
             }
 
             _rules = rules ?? throw new ArgumentNullException(nameof(rules));
-            _bonuses = bonuses ?? ShotBonus.None;
             _layout = layout ?? throw new ArgumentNullException(nameof(layout));
             _wave = wave ?? throw new ArgumentNullException(nameof(wave));
 
@@ -973,10 +964,14 @@ namespace Sim
                     + "never checked against each other.");
             }
 
+            // Nothing counters anything: the anchor schedule that named a
+            // shooter as some threat's answer is gone, and the roster has no
+            // other route to a counter yet. The term stays in the damage model
+            // because the model is what it belongs to -- see DamageModel.Dealt.
             return DamageModel.Dealt(
                 _rules,
                 roll,
-                _bonuses.Against(shooter.Id, target.OrderIndex),
+                0,
                 shooter.AttackType,
                 armour,
                 target.Type.Armour);

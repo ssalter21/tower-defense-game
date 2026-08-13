@@ -63,16 +63,15 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Public for the reason <see cref="WordFor(OptionKind)"/> and
-        /// <see cref="WordFor(ActionKind)"/> are: whatever writes a script
-        /// writes the word this parser reads, and two spellings of one grammar
-        /// means the one nothing parses goes stale.
+        /// Public for the reason <see cref="WordFor(ActionKind)"/> is:
+        /// whatever writes a script writes the word this parser reads, and two
+        /// spellings of one grammar means the one nothing parses goes stale.
         /// </para>
         /// <para>
         /// <b>Which is not surface the interactive verb added.</b> That verb's
         /// bottom line is that the simulation gains nothing for it, and what is
         /// exposed here is the grammar's own vocabulary, already public at
-        /// <see cref="WordFor(OptionKind)"/> before a prompt existed. The
+        /// <see cref="WordFor(ActionKind)"/> before a prompt existed. The
         /// distinction the rule turns on is behaviour: composing a phase is the
         /// shell's problem and stays there -- see <c>BuildPrompt</c>'s
         /// <c>Rebuilt</c>, which is in the shell for exactly that reason --
@@ -86,8 +85,8 @@ namespace Sim
 
         private const string UpgradeWord = "upgrade";
 
-        /// <summary>Fields before the slots: the keyword, the wave, the take kind and the take id.</summary>
-        private const int FixedFields = 4;
+        /// <summary>Fields before the slots: the keyword and the wave.</summary>
+        private const int FixedFields = 2;
 
         /// <summary>Fields per slot: a type id and a count.</summary>
         private const int FieldsPerSlot = 2;
@@ -100,24 +99,17 @@ namespace Sim
         private const int ActionFields = 5;
 
         /// <summary>
-        /// The largest any number on a row may be. The wave, the take id, a
-        /// type id and a count are all <c>u16</c> in the record, so a row that
+        /// The largest any number on a row may be. The wave, a type id and a
+        /// count are all <c>u16</c> in the record, so a row that
         /// could be authored and not stored would be a file its own writer
         /// refuses.
         /// </summary>
         private const int Largest = 65535;
 
         /// <summary>
-        /// What each half of a round's menu is called on a row. The position in
-        /// this list is the <see cref="OptionKind"/>, so a kind added to the
-        /// enum without a word here is a kind no file can name.
-        /// </summary>
-        private static readonly string[] TakeKinds = { "ordinary", "changer" };
-
-        /// <summary>
         /// What each defensive action is called on a row. The position in this
-        /// list is the <see cref="ActionKind"/>, on the same terms
-        /// <see cref="TakeKinds"/> is.
+        /// list is the <see cref="ActionKind"/>, so a kind added to the enum
+        /// without a word here is a kind no file can name.
         /// </summary>
         private static readonly string[] ActionWords = { PlaceWord, UpgradeWord };
 
@@ -125,37 +117,12 @@ namespace Sim
         private static readonly string[] RowWords = { DecisionWord, PlaceWord, UpgradeWord };
 
         /// <summary>
-        /// The word a row spells this half of a round's menu with.
-        /// </summary>
-        /// <remarks>
-        /// Here rather than wherever a menu is printed, so that whatever shows
-        /// somebody an offering shows them the word they then have to type. Two
-        /// lists would be two vocabularies, and the one that goes stale is the
-        /// one nothing parses.
-        /// </remarks>
-        public static string WordFor(OptionKind kind)
-        {
-            int index = (int)kind;
-
-            if (index < 0 || index >= TakeKinds.Length)
-            {
-                throw new SimulationException(
-                    "Option kind "
-                    + index.ToString(CultureInfo.InvariantCulture)
-                    + " has no word a command script can spell it with. A kind is declared, drawn onto an "
-                    + "offering and authorable, and all three or none.");
-            }
-
-            return TakeKinds[index];
-        }
-
-        /// <summary>
         /// The word a row spells this defensive action with.
         /// </summary>
         /// <remarks>
-        /// Here for the reason <see cref="WordFor(OptionKind)"/> is: whatever
+        /// Here rather than wherever an action is printed, so that whatever
         /// asks somebody for an action offers them the word a row already
-        /// carries, so a prompt and a file cannot come to hold two
+        /// carries, and a prompt and a file cannot come to hold two
         /// vocabularies.
         /// </remarks>
         public static string WordFor(ActionKind kind)
@@ -273,12 +240,11 @@ namespace Sim
         /// <summary>One build row's decision, with a refusal from the record given the line it came from.</summary>
         private static RecordCommand Decision(string source, int line, int wave, string[] fields)
         {
-            int take = DataText.Keyword(source, line, "the take kind", fields[2], TakeKinds);
-            int takeId = DataText.IntegerInRange(source, line, "the take id", fields[3], 1, Largest);
+
 
             try
             {
-                return RecordCommand.Of(wave, (OptionKind)take, takeId, Slots(source, line, fields));
+                return RecordCommand.Of(wave, Slots(source, line, fields));
             }
             catch (SimulationException refused)
             {

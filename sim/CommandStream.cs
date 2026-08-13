@@ -38,26 +38,16 @@ namespace Sim
 
         private RecordCommand(
             int wave,
-            OptionKind take,
-            int takeId,
             WaveSlot[] slots,
             BuildAction[] actions)
         {
             Wave = wave;
-            Take = take;
-            TakeId = takeId;
             _slots = slots;
             _actions = actions;
         }
 
         /// <summary>Which wave of the run this decision was made in. Counted from one.</summary>
         public int Wave { get; }
-
-        /// <summary>Which half of that round's menu the take came off.</summary>
-        public OptionKind Take { get; }
-
-        /// <summary>Which option of that kind was taken.</summary>
-        public int TakeId { get; }
 
         /// <summary>The slots, in the order they were filled. Empty ones included.</summary>
         public IReadOnlyList<WaveSlot> Slots => _slots;
@@ -131,16 +121,15 @@ namespace Sim
                 actions[index] = decision.Actions[index];
             }
 
-            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, actions);
+            return new RecordCommand(wave, slots, actions);
         }
 
         /// <summary>
         /// The same, spelled out, for whoever is composing a decision rather
-        /// than recording one that was made. The take is checked by
-        /// <see cref="BuildPhase.Of"/>, which is where that rule lives.
+        /// than recording one that was made.
         /// </summary>
-        public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots) =>
-            Of(wave, BuildPhase.Of(take, takeId, slots));
+        public static RecordCommand Of(int wave, params WaveSlot[] slots) =>
+            Of(wave, BuildPhase.Of(slots));
 
         /// <summary>
         /// This command with one more action after the ones it already carries.
@@ -162,7 +151,7 @@ namespace Sim
 
             grown[_actions.Length] = action;
 
-            return new RecordCommand(Wave, Take, TakeId, _slots, grown);
+            return new RecordCommand(Wave, _slots, grown);
         }
 
         public static bool operator ==(RecordCommand? a, RecordCommand? b) =>
@@ -172,11 +161,11 @@ namespace Sim
 
         /// <summary>
         /// The decision as the build phase surface wants it, with nothing
-        /// reshaped: the four things stored are the four things a phase is.
+        /// reshaped: the three things stored are the three things a phase is.
         /// </summary>
         public BuildPhase ToPhase()
         {
-            BuildPhase phase = BuildPhase.Of(Take, TakeId, _slots);
+            BuildPhase phase = BuildPhase.Of(_slots);
 
             for (int index = 0; index < _actions.Length; index++)
             {
@@ -190,8 +179,6 @@ namespace Sim
         {
             if (other is null
                 || Wave != other.Wave
-                || Take != other.Take
-                || TakeId != other.TakeId
                 || _slots.Length != other._slots.Length
                 || _actions.Length != other._actions.Length)
             {
@@ -220,16 +207,12 @@ namespace Sim
         public override bool Equals(object? obj) => Equals(obj as RecordCommand);
 
         public override int GetHashCode() =>
-            (((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length) * 31 ^ _actions.Length;
+            (Wave * 31 ^ _slots.Length) * 31 ^ _actions.Length;
 
         public override string ToString() =>
             "wave "
             + Wave.ToString(CultureInfo.InvariantCulture)
-            + ": take "
-            + Option.NameOf(Take)
-            + " "
-            + TakeId.ToString(CultureInfo.InvariantCulture)
-            + ", "
+            + ": "
             + (_actions.Length == 0
                 ? string.Empty
                 : string.Join(", ", Array.ConvertAll(_actions, action => action.ToString())) + ", ")
@@ -280,13 +263,13 @@ namespace Sim
         private CommandStream(
             RecordHeader header,
             Hash64 rulesetHash,
-            Hash64 scheduleHash,
+            Hash64 ladderHash,
             ulong seed,
             RecordCommand[] commands)
         {
             Header = header;
             RulesetHash = rulesetHash;
-            ScheduleHash = scheduleHash;
+            LadderHash = ladderHash;
             Seed = seed;
             _commands = commands;
         }
@@ -297,8 +280,8 @@ namespace Sim
         /// <summary>The hash of the parsed ruleset these decisions were made under.</summary>
         public Hash64 RulesetHash { get; }
 
-        /// <summary>The hash of the parsed anchor schedule they were made against.</summary>
-        public Hash64 ScheduleHash { get; }
+        /// <summary>The hash of the parsed upgrade ladder they were made against.</summary>
+        public Hash64 LadderHash { get; }
 
         /// <summary>The seed every draw in the run is derived from.</summary>
         public ulong Seed { get; }
@@ -366,7 +349,7 @@ namespace Sim
             return new CommandStream(
                 RecordHeader.Current(RecordKind.Command, run.Types.ContentHash),
                 run.Rules.ContentHash,
-                run.Schedule.ContentHash,
+                run.Ladder.ContentHash,
                 run.Seed,
                 copied);
         }
@@ -436,6 +419,10 @@ namespace Sim
                     read = ReadVersion1(cursor, header);
                     break;
 
+                case 2:
+                    read = ReadVersion2(cursor, header);
+                    break;
+
                 default:
                     throw cursor.Fault(
                         "is command stream format version "
@@ -465,7 +452,7 @@ namespace Sim
 
             Header.Write(writer);
             writer.U64(RulesetHash.Value);
-            writer.U64(ScheduleHash.Value);
+            writer.U64(LadderHash.Value);
             writer.U64(Seed);
             writer.U16("command count", _commands.Length);
 
@@ -474,8 +461,6 @@ namespace Sim
                 RecordCommand command = _commands[index];
 
                 writer.U16("command wave", command.Wave);
-                writer.U8("command take kind", (int)command.Take);
-                writer.U16("command take id", command.TakeId);
                 writer.U16("command action count", command.Actions.Count);
 
                 for (int action = 0; action < command.Actions.Count; action++)
@@ -555,9 +540,9 @@ namespace Sim
         /// <para>
         /// <b>With the board folded, that ceiling is the last thing a decision
         /// can be refused for after a round has resolved.</b> Everything else a
-        /// stored decision can be wrong about -- the take, the unlocks, the
-        /// slot width, the cell, the wave index -- is settled here, over values
-        /// that do not depend on how a round played.
+        /// stored decision can be wrong about -- the ladder, the cell, the wave
+        /// index -- is settled here, over values that do not depend on how a
+        /// round played.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -571,7 +556,6 @@ namespace Sim
             RequireRoundsLeftFor(run);
 
             var builds = new List<Build>();
-            Unlocks unlocks = run.Unlocks;
             Purse purse = run.Purse;
             Board board = run.Board;
             int round = run.Round;
@@ -590,14 +574,13 @@ namespace Sim
                         + command.Wave.ToString(CultureInfo.InvariantCulture)
                         + " where the run is about to play round "
                         + round.ToString(CultureInfo.InvariantCulture)
-                        + ". The wave index says which round a decision was made in, and playing it at "
-                        + "another round would resolve it against an offering nobody was shown.");
+                        + ". The wave index says which round a decision was made in, and a decision "
+                        + "played at another round is a round nobody decided.");
                 }
 
                 Build build = command.ToPhase().Resolve(
-                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, board);
+                    round, run.Ladder, purse, run.Costs, run.Types, run.Map, board);
 
-                unlocks = build.Unlocks;
                 purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
                 board = build.Board;
                 builds.Add(build);
@@ -661,7 +644,7 @@ namespace Sim
                 Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
                 Stamp.Of("content", Header.ContentHash, run.Types.ContentHash),
                 Stamp.Of("ruleset", RulesetHash, run.Rules.ContentHash),
-                Stamp.Of("schedule", ScheduleHash, run.Schedule.ContentHash));
+                Stamp.Of("ladder", LadderHash, run.Ladder.ContentHash));
 
             Check(run);
 
@@ -680,7 +663,7 @@ namespace Sim
             if (other is null
                 || Header != other.Header
                 || RulesetHash != other.RulesetHash
-                || ScheduleHash != other.ScheduleHash
+                || LadderHash != other.LadderHash
                 || Seed != other.Seed
                 || _commands.Length != other._commands.Length)
             {
@@ -706,8 +689,8 @@ namespace Sim
             Header.ToString()
             + ", ruleset "
             + RulesetHash.ToString()
-            + ", schedule "
-            + ScheduleHash.ToString()
+            + ", ladder "
+            + LadderHash.ToString()
             + ", seed "
             + Seed.ToString(CultureInfo.InvariantCulture)
             + ", "
@@ -720,6 +703,7 @@ namespace Sim
         /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>
         /// followed by that many <c>(u16 type_id, u16 count)</c> slots. No
         /// action run, so every build phase reads back having built nothing.
+        /// The take is read past and dropped -- see <see cref="ReadVersion2"/>.
         /// </summary>
         /// <remarks>
         /// <b>This branch never goes away.</b> Version 1 sits beside it and this
@@ -729,7 +713,7 @@ namespace Sim
         /// rather than a quiet loss.
         /// </remarks>
         private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header) =>
-            ReadCommands(cursor, header, storesActions: false);
+            ReadCommands(cursor, header, storesActions: false, storesTake: true);
 
         /// <summary>
         /// Version 1: the same, with <c>u16 action_count</c> and that many
@@ -737,7 +721,31 @@ namespace Sim
         /// command, between the take and the slot count.
         /// </summary>
         private static CommandStream ReadVersion1(ByteCursor cursor, RecordHeader header) =>
-            ReadCommands(cursor, header, storesActions: true);
+            ReadCommands(cursor, header, storesActions: true, storesTake: true);
+
+        /// <summary>
+        /// Version 2: the same as version 1 with <c>u8 take_kind</c> and
+        /// <c>u16 take_id</c> gone from every command, and the third stamp
+        /// naming the upgrade ladder rather than the anchor schedule.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The take went because the gate did.</b> Nothing is unlocked, so a
+        /// round has nothing to take and a field for it would be two bytes
+        /// every writer had to invent a value for.
+        /// </para>
+        /// <para>
+        /// <b>The third stamp changed meaning rather than moving.</b> It stood
+        /// for <c>content/schedule.txt</c>, which no longer exists; it now
+        /// stands for <c>content/upgrades.txt</c>, which the simulation began
+        /// reading in the same change. Same offset, same width, different
+        /// content -- which is exactly what a format version is for, and why a
+        /// version-1 stream cannot be replayed against a version-2 run by
+        /// accident.
+        /// </para>
+        /// </remarks>
+        private static CommandStream ReadVersion2(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true, storesTake: false);
 
         /// <summary>
         /// The body both versions share, told whether the bytes in front of it
@@ -749,10 +757,14 @@ namespace Sim
         /// checks drift between them, and the version that lost one would go on
         /// loading streams the other refuses.
         /// </remarks>
-        private static CommandStream ReadCommands(ByteCursor cursor, RecordHeader header, bool storesActions)
+        private static CommandStream ReadCommands(
+            ByteCursor cursor,
+            RecordHeader header,
+            bool storesActions,
+            bool storesTake)
         {
             ulong rulesetHash = cursor.U64("the ruleset hash");
-            ulong scheduleHash = cursor.U64("the schedule hash");
+            ulong ladderHash = cursor.U64("the ladder hash");
             ulong seed = cursor.U64("the run seed");
             int count = cursor.U16("the command count");
 
@@ -775,8 +787,6 @@ namespace Sim
                     + count.ToString(CultureInfo.InvariantCulture);
 
                 int wave = cursor.U16("the wave of " + what);
-                int take = cursor.U8("the take kind of " + what);
-                int takeId = cursor.U16("the take id of " + what);
 
                 if (wave == 0)
                 {
@@ -797,25 +807,18 @@ namespace Sim
                         + "identical runs cannot have two different sets of bytes.");
                 }
 
-                if (take != (int)OptionKind.Ordinary && take != (int)OptionKind.GameChanger)
+                // Read past and dropped rather than kept. A version-0 or
+                // version-1 stream carries a take, and the gate it was taken
+                // off no longer exists to check it against -- so the bytes are
+                // consumed so the cursor stays aligned, and the decision they
+                // described replays as the one thing it still is: the slots and
+                // the actions beside them. The two checks that used to stand
+                // here asked whether the take named a menu, and there is no
+                // menu to name.
+                if (storesTake)
                 {
-                    throw cursor.Fault(
-                        what
-                        + " takes option kind "
-                        + take.ToString(CultureInfo.InvariantCulture)
-                        + ", and the kinds an offering has halves for are "
-                        + ((int)OptionKind.Ordinary).ToString(CultureInfo.InvariantCulture)
-                        + " and "
-                        + ((int)OptionKind.GameChanger).ToString(CultureInfo.InvariantCulture)
-                        + ". A kind nothing declares scopes the take's id to a menu that does not exist.");
-                }
-
-                if (takeId == 0)
-                {
-                    throw cursor.Fault(
-                        what
-                        + " has take id 0. Every option on an offering carries an identity counted from "
-                        + "one, so zero is a take nothing on any menu can answer.");
+                    cursor.U8("the take kind of " + what);
+                    cursor.U16("the take id of " + what);
                 }
 
                 previousWave = wave;
@@ -825,7 +828,7 @@ namespace Sim
                 int slotCount = cursor.U16("the slot count of " + what);
 
                 RecordCommand command = RecordCommand.Of(
-                    wave, (OptionKind)take, takeId, ReadSlots(cursor, what, slotCount));
+                    wave, ReadSlots(cursor, what, slotCount));
 
                 for (int action = 0; action < actions.Length; action++)
                 {
@@ -838,7 +841,7 @@ namespace Sim
             return new CommandStream(
                 header,
                 Hash64.FromValue(rulesetHash),
-                Hash64.FromValue(scheduleHash),
+                Hash64.FromValue(ladderHash),
                 seed,
                 commands);
         }
