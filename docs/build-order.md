@@ -8,9 +8,11 @@ The design this builds is [the vision](vision.md). Reversals are in [the decisio
 
 ## The sequence
 
-Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–4 are built. Step 3 is
-being revisited before step 5**, because [the first played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person)
-found the roster too shallow for the build phase to be a decision worth making — see
+Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–4 are built and step 5
+is next.** [The first played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) found the
+roster too shallow for the build phase to be a decision worth making, and for a day that put step 3 back in
+front of step 5; [the same evening reversed it](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster).
+The finding stands and the sequence does not follow from it — see
 [step 3 is not finished](#step-3-is-not-finished-and-a-played-run-is-how-that-was-found) below.
 
 | # | Step | What it delivers | Size |
@@ -43,10 +45,18 @@ yet: **composing a wave is not interesting enough, and the build phase has not g
 What it wants is plenty of money to spend and options worth spending it on, and neither is judgeable against
 six walkers and four towers — three of which are equivalent on a one-hex corridor.
 
-So [seam 3](#3--the-roster) comes back before step 5, and it now carries the question step 5 was going to
-answer. Two things that were going to help do not, and have been deferred with it: **the take gate and the
-anchor schedule are out of the played game until the roster is deep enough for a gate to be gating something
-worth having.** Gating a shallow roster holds back early testing and buys nothing.
+**It does not follow that seam 3 is built next, and for one day it was recorded as though it did.** Step 5
+carries it instead: a client that can be clicked and played is what the look and feel is judged from, and
+that judgement is wanted before the roster is deepened rather than after. Seam 3 is parked with its shape
+changed — depth comes from **upgrading the creeps that exist**, in stats and speed, rather than from
+authoring new unit types.
+
+What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
+the special rounds and the per-wave type limit all come out of the played game, and go back when the roster
+is deep enough for a gate to be gating something worth having. Gating a shallow roster holds back early
+testing and buys nothing, and a mechanic carried switched-off through a client build is a tax on every step
+of it. What stays is the **upgrade prerequisite**: a unit that is some edge's target cannot be placed
+directly, so an Archer must stand before a Ranger can.
 
 ## Three obligations the sequence carries
 
@@ -92,7 +102,7 @@ Each is the subject of its own wayfinder map — its own destination, decision t
 |---|---|---|---|
 | 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments |
 | 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | After step 6, half-paid by step 2 |
-| 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat, revisited at step 7 |
+| 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat; deepened after step 5, revisited at step 7 |
 | 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | Step 4 |
 | 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6 |
 | 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5 |

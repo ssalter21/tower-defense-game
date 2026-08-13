@@ -316,3 +316,91 @@ with no `anchor` rows, and refuses a changer pool no anchor draws from, so delet
 game changers makes the file unloadable rather than empty. The deferral is a code change with a content
 change behind it, which is why it is
 [#179](https://github.com/ssalter21/tower-defense-game/issues/179) and not a commit.
+
+## 13 August 2026, later — the gates come out, and the client comes before the roster
+
+A grilling the same evening, against [#183](https://github.com/ssalter21/tower-defense-game/issues/183) and
+[#180](https://github.com/ssalter21/tower-defense-game/issues/180). **It reverses the entry above, which is a
+day old**, and the reversal is about sequence rather than about design: nothing here says the roster is deep
+enough, only that it is not the next thing built.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The build order](build-order.md#the-sequence)** | Step 3 is being revisited before step 5 | **Step 5 is next.** The roster work is parked behind a playable client | *I'm really focused on wanting to get the game to be playable and viewable in Unity so I can start getting a real look and feel. That's the priority.* The roster finding stands; what it is worth waiting for does not |
+| **The entry above**, on deferral | The take gate and the anchor schedule are deferred | **They are deleted, not switched off**, and the per-wave type limit goes with them | A mechanic carried through the client build switched off is a tax on every step of the thing actually wanted. It is on the record in git and in the ADRs, so bringing it back is reading a diff rather than redesigning |
+| **[`content/upgrades.txt`](../content/upgrades.txt)**, and [ADR-0045](adr/0045-the-ladder-is-a-graph-not-a-list.md) / [ADR-0046](adr/0046-an-absent-ladder-folds-nothing.md) with it | The simulation never reads the ladder; an edge is an annotation nothing in a tick loop can observe | **The build phase reads it.** A unit that is some edge's target cannot be placed directly — it must be upgraded into | The ladder was always meant to be a prerequisite chain. *The idea is you have to buy the Archer as a precursor to the Ranger* |
+| **[`ruleset.txt`](../content/ruleset.txt)**, the health pool | 1500, flagged as an open decision wanting something nearer 450–500 | **800** | Halfway. The pool has to bite for a concession to be a decision, but not so hard that a run being tested reads as *I died* when the question asked was *was that wave interesting* |
+
+### Four things were being called one thing, and only one of them survives
+
+The word *gate* was doing four jobs. Separating them is most of what this conversation was:
+
+| | What it was | Verdict |
+|---|---|---|
+| **The forced pick** | One thing must be unlocked from the menu every round | **Deleted** |
+| **The menu** | Three of the roster offered each round, drawn at random | **Deleted** |
+| **The special rounds** | Waves 3, 6 and 9, a wider menu, twelve placeholder major options | **Deleted** |
+| **Types per wave** | A wave may carry at most two creep types, widening only because the special rounds widen it | **Deleted** |
+| **The upgrade prerequisite** | An Archer must stand before a Ranger can | **Kept, and newly enforced** |
+
+The fourth is the one nobody had noticed was load-bearing. Slot width is derived — the starting width plus a
+step for every anchor at or before the round — so deleting the anchors would have frozen every wave of every
+run at two types, and no amount of roster depth reaches that. It is deleted outright instead: a wave may carry
+whatever it can afford.
+
+`ruleset.txt` loses its `slots` and `offering` rows, `content/schedule.txt` goes, and `sim/AnchorSchedule.cs`
+goes with them. The take comes off every build row, which is a **command stream format 2** — reader branches
+kept for 0 and 1, a new golden frozen, exactly as format 1 was done.
+
+### The Ranger was not mispriced, it was unreachable-by-design and reachable-in-fact
+
+[#180](https://github.com/ssalter21/tower-defense-game/issues/180) reported the one upgrade edge as dominated:
+Archer and Ranger both cost 40, and upgrading pays the target's full price, so taking the edge cost 40 gold and
+an Archer where placing cost 40 gold alone.
+
+Measured while grilling it, the defect is worse than reported and the fix is smaller. The two rows are
+identical in damage, cooldown, windup, backswing, delivery and cost, and the Ranger has 1,000 more range — so
+the Ranger does not merely dominate the *edge*, it dominates the *Archer*, and the tier-1 row is dead content
+from the moment the tier-2 is placeable.
+
+**Neither price moves.** A tier that is strictly better than the rung below is what a tier is; what was missing
+is that the rung below is supposed to be a prerequisite. A Ranger costs 40 for the Archer plus 40 for the
+upgrade, and `roster.md`'s standing note that the equal price *is the rule rather than a mistake* survives
+intact — as does the cost rule's deliberate silence about range.
+
+### What the roster work becomes, and what it does not
+
+[#183](https://github.com/ssalter21/tower-defense-game/issues/183) is parked rather than answered, and its
+shape changed while it was being parked:
+
+- **Depth comes from upgrading creeps** — stat and speed upgrades applied to the rows that exist — rather than
+  from authoring new unit types.
+- **Design vocabulary is the levers and never a category.** Speed, health, armour. *Fast and cheap* and
+  *expensive and tough* are the two ends of one axis and do not need names; the words **swarm** and **wall**
+  are rejected in the same way [§12's *ordinary* and *game changer*](vision.md) were.
+- **An arcane shield is expected**, and it is both things at once: a pool a creep can carry in its own right,
+  *and* something the Necromancer grants to creeps that enter its range which would not otherwise have one.
+  The second half is the aura `roster.md` calls the largest engine ask on its page.
+- **No new tower rows.** Five of the six proposed towers are blocked on levers the schema lacks, and none of
+  them is what the playtest complained about.
+
+### A column is cheaper than the files say, and this is the cheapest it will ever be
+
+`units.txt` warns that a new column costs *a format version, a hash-layout bump and a retired ghost pool*.
+Two thirds of that is currently free, which is worth knowing before the arcane shield is priced as expensive.
+`UnitTypeTable` carries a reader branch per layout and both 1 and 2 still load, each folding under its own
+hash label, so stored records keep replaying. And the retired ghost pool is real but **empty** — there is no
+stored pool yet, only one canned field. What a column actually costs today is a reader branch and re-recording
+the committed content.
+
+### The Skeletons pack has six models and the roster document says four
+
+[`docs/roster.md`](roster.md) states that KayKit's four skeleton models are exactly spent. The repo's own
+[character roster note](research/kaykit-character-roster.md) lists **six**, and the two unnamed there are a
+dedicated **Necromancer** and a **Skeleton Golem**. The count is corrected; no assignment moves. The Minion
+and the Skeleton sharing a base model was never the shortage it looked like — the Skeleton is that model with
+shield and sword, which is a kit variation the pack ships weapons for, and `roster.md` said so all along.
+
+Neither pack is on this machine. `client/Assets/Art/Characters/` holds two FBX files, so every skin assignment
+on that page is a plan rather than something anyone has looked at, and they are assigned for real once the
+packs are downloaded.
