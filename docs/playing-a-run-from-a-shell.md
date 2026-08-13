@@ -6,9 +6,15 @@
 > reads. It is written to be lifted into a wayfinder map, so §7 is a ticket list and §8 is the set of
 > questions a map would grill before any of them are cut.
 >
-> Not a standing document and not indexed in [the docs README](README.md): it describes work that does not
-> exist yet, so what is decided in it belongs in [the vision](vision.md), what is sequenced in it belongs in
-> [the build order](build-order.md), and it is superseded by the map that carries it.
+> **The work described here was built**, so this is no longer a plan. What was *decided* along the way is
+> [ADR-0050](adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) and what the first
+> played run reversed is [the decision log](decision-log.md); neither is restated here.
+>
+> What is still load-bearing is the worked detail the tests pin: §2's frame is asserted character for
+> character by `RoundFrameTests`, §3's words are the list `TypedLineTests` walks, and §5's rows name the four
+> tests that hold the verb up. Source comments cite those sections because a test does. **Amending one of
+> them means moving a test**, which is the only thing that keeps a specification from going quietly out of
+> date after the thing it specified exists.
 
 ---
 
@@ -123,7 +129,7 @@ carries, **minus the wave** — at a prompt the round you are in is not somethin
 | `upgrade <type-id> <column> <row>` | Adds an upgrade, naming its target by the hex |
 | `send <type-id> <count>` | Fills the next wave slot, in the order the sends were typed. Filled slots ascend strictly by type id, so a creep at or below the last one sent is refused rather than quietly reordered — sorting would rewrite the decision on its author's behalf. `send` with no room is a refusal, not a silent drop |
 | `undo` | Drops the last thing added. Free, because a phase is composed in a local and the run has not seen it |
-| `map` / `menu` / `costs` | Reprints a panel, and changes nothing |
+| `map` / `menu` / `costs` | Reprints a panel, and changes nothing. `map` and `menu` are the frame's own two panels; `costs` is the only one arranged for a word rather than for the frame, putting what a tower costs beside what a creep costs so the two can be compared without scrolling |
 | — | A label may be typed where an id is expected — `place archer 4 4` — because the roster carries labels already. **The written script always carries the id and the wave**, so what is typed is a convenience and what is stored is the record's own spelling |
 | `done` | Commits the phase: `run.Advance(phase)`, print the round line, next wave |
 | `quit` | Ends the run early, writes what was played, and says so |
@@ -146,7 +152,8 @@ the reprint after each `send` is what stops that arriving as a surprise at commi
 
 ## 4. What it writes, and the claim it makes
 
-At the end — the tenth wave, death, or `quit` — the verb does four things in this order:
+At the end — the tenth wave, death, `quit`, or a reader with no lines left — the verb does four things in
+this order:
 
 1. Prints the run's outcome and the ending board, using `RunSummary.Outcome` — the fold the committed
    outcome file's own summary line is written by — and `Board.ToReportText`.
@@ -154,6 +161,12 @@ At the end — the tenth wave, death, or `quit` — the verb does four things in
 3. **Plays that script into a fresh run on the same seed and shape**, via `CommandStream.Recorded`, and
    compares every round report and the final outcome against what the player was shown.
 4. Writes the script to `--out` only if step 3 agreed.
+
+The fourth ending is the one this section did not originally have. A reader can run out of lines without
+anybody typing `quit` — a canned transcript that ends, or a shell that handed the verb a stdin with nothing
+on it — and a run that stops there has still played the rounds it played. It ends the same way `quit` does,
+saying which wave it got to, because the alternative is a session that read EOF and hung waiting for a line
+nobody is there to type.
 
 Step 3 is why this verb is worth building to this repository's standard rather than as a throwaway. It makes
 **every play session a determinism test**: the interactive path and the recorded path have to produce the same

@@ -1,4 +1,4 @@
-using System.Globalization;
+using Sim.Cli;
 
 namespace Sim.Tests;
 
@@ -75,22 +75,22 @@ public static class TheCommands
 
         foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
         {
-            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + Number(command.TakeId));
+            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + PlainText.Number(command.TakeId));
 
             foreach (BuildAction action in command.Actions)
             {
                 typed.Add(
                     CommandScript.WordFor(action.Kind)
-                    + " " + Number(action.TypeId)
-                    + " " + Number(action.Column)
-                    + " " + Number(action.Row));
+                    + " " + PlainText.Number(action.TypeId)
+                    + " " + PlainText.Number(action.Column)
+                    + " " + PlainText.Number(action.Row));
             }
 
             foreach (WaveSlot slot in command.Slots)
             {
                 if (slot.Count > 0)
                 {
-                    typed.Add("send " + Number(slot.TypeId) + " " + Number(slot.Count));
+                    typed.Add("send " + PlainText.Number(slot.TypeId) + " " + PlainText.Number(slot.Count));
                 }
             }
 
@@ -179,8 +179,6 @@ public static class TheCommands
 
     /// <summary>Those bytes, which is what every negative case starts from.</summary>
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
-
-    private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
     public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)

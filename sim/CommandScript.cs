@@ -62,10 +62,23 @@ namespace Sim
         /// against the two that act on the board.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Public for the reason <see cref="WordFor(OptionKind)"/> and
         /// <see cref="WordFor(ActionKind)"/> are: whatever writes a script
         /// writes the word this parser reads, and two spellings of one grammar
         /// means the one nothing parses goes stale.
+        /// </para>
+        /// <para>
+        /// <b>Which is not surface the interactive verb added.</b> That verb's
+        /// bottom line is that the simulation gains nothing for it, and what is
+        /// exposed here is the grammar's own vocabulary, already public at
+        /// <see cref="WordFor(OptionKind)"/> before a prompt existed. The
+        /// distinction the rule turns on is behaviour: composing a phase is the
+        /// shell's problem and stays there -- see <c>BuildPrompt</c>'s
+        /// <c>Rebuilt</c>, which is in the shell for exactly that reason --
+        /// while reading a word off an enum this file already owns is the
+        /// alternative to spelling the same grammar twice.
+        /// </para>
         /// </remarks>
         public const string DecisionWord = "build";
 
