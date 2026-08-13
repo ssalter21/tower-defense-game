@@ -454,7 +454,9 @@ public static class Program
         Sim.Run run = content.Fresh(seed, shape);
         Played session = RunPrompt.Play(run, content.Ladder, reader, Console.Out);
 
-        return ProvedSession.Of(session, run, () => content.Fresh(seed, shape)).Written(script, Console.Out)
+        return ProvedSession
+            .Of(session.Decisions, session.Rounds, run, () => content.Fresh(seed, shape))
+            .Written(script, Console.Out)
             ? 0
             : 1;
     }

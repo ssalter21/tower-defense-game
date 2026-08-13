@@ -13,11 +13,11 @@ namespace Sim.Tests;
 /// reach.</b> Played through the program, the session and the fresh run are the
 /// same run by construction, so the refusal could never be watched working --
 /// which is the one thing <c>docs/playing-a-run-from-a-shell.md</c> §4 asks for
-/// by name. The seam is that what the player was shown arrives as data:
-/// <see cref="Played"/> carries the rounds, so a test can hand over a session
-/// that says something the fresh run does not and see what happens. Nothing
-/// about the verb is loosened to allow it -- the verb hands over the rounds it
-/// was shown, and there is no other way in.
+/// by name. The seam is that what the player was shown arrives as data: the
+/// prover is handed the decisions and the rounds, so a test can hand over a
+/// session that says something the fresh run does not and see what happens.
+/// Nothing about the verb is loosened to allow it -- the verb hands over the
+/// rounds it was shown, and there is no other way in.
 /// </para>
 /// <para>
 /// <b>Each assertion was watched failing under a deliberately wrong prover</b>,
@@ -55,7 +55,8 @@ public class ProvedSessionTests
         // equals itself.
         Session played = Committed.Value;
 
-        ProvedSession proved = ProvedSession.Of(played.Result, played.Run, Fresh);
+        ProvedSession proved = ProvedSession.Of(
+            played.Result.Decisions, played.Result.Rounds, played.Run, Fresh);
 
         Assert.True(proved.Agreed, proved.Disagreement);
         Assert.Null(proved.Disagreement);
@@ -93,10 +94,7 @@ public class ProvedSessionTests
         RoundReport[] lying = played.Result.Rounds.ToArray();
         (lying[3], lying[4]) = (lying[4], lying[3]);
 
-        ProvedSession proved = ProvedSession.Of(
-            new Played(played.Result.Decisions, lying, played.Result.Ending),
-            played.Run,
-            Fresh);
+        ProvedSession proved = ProvedSession.Of(played.Result.Decisions, lying, played.Run, Fresh);
 
         Assert.False(proved.Agreed);
 
@@ -145,10 +143,8 @@ public class ProvedSessionTests
         Session played = Committed.Value;
 
         ProvedSession proved = ProvedSession.Of(
-            new Played(
-                played.Result.Decisions,
-                played.Result.Rounds.Take(Run.DefaultWaves - 1).ToArray(),
-                played.Result.Ending),
+            played.Result.Decisions,
+            played.Result.Rounds.Take(Run.DefaultWaves - 1).ToArray(),
             played.Run,
             Fresh);
 
@@ -175,7 +171,8 @@ public class ProvedSessionTests
         Session played = Play(dying, DoingNothing(dying));
 
         ProvedSession proved = ProvedSession.Of(
-            played.Result,
+            played.Result.Decisions,
+            played.Result.Rounds,
             played.Run,
             () => TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
@@ -212,12 +209,10 @@ public class ProvedSessionTests
         // the fault were theirs.
         Run run = AgainstTheCannedField(TheMatch.Types());
 
-        var unstorable = new Played(
-            new[] { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(5, 1)) },
-            Array.Empty<RoundReport>(),
-            Ended.Quit);
+        BuildPhase[] unstorable = { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(5, 1)) };
 
-        ProvedSession proved = ProvedSession.Of(unstorable, run, Fresh);
+        ProvedSession proved = ProvedSession.Of(
+            unstorable, Array.Empty<RoundReport>(), run, Fresh);
 
         Assert.False(proved.Agreed);
         Assert.Contains(
@@ -248,7 +243,8 @@ public class ProvedSessionTests
         bool builtOne = false;
 
         ProvedSession proved = ProvedSession.Of(
-            new Played(Array.Empty<BuildPhase>(), Array.Empty<RoundReport>(), Ended.Quit),
+            Array.Empty<BuildPhase>(),
+            Array.Empty<RoundReport>(),
             run,
             () =>
             {
@@ -268,6 +264,48 @@ public class ProvedSessionTests
         Assert.True(proved.Written(path, writer));
         Assert.Empty(Directory.GetFiles(scratch, "*", SearchOption.AllDirectories));
         Assert.Contains("No round was played", writer.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_run_advanced_directly_is_proved_with_no_prompt_and_no_path_anywhere()
+    {
+        // The half of this the client is waiting on. A run is advanced a round
+        // at a time, the rounds it reported are kept, and the claim is held
+        // over both -- with no reader, no writer, no path and no shell type in
+        // reach. The prover has no route to a disk at all now: System.IO is a
+        // banned namespace in the assembly it lives in, and IlScanTests reads
+        // the shipped image to say so, so "wrote nothing" is a property of the
+        // code rather than of this scenario.
+        //
+        // OBSERVED: hand the prover the fresh run's own rounds rather than the
+        // ones this loop collected. Green, and green under any prover at all,
+        // which is the shape a self-comparison takes.
+        Run played = TheRun.Fresh(deathEndsTheRun: false);
+        var decisions = new List<BuildPhase>();
+        var shown = new List<RoundReport>();
+
+        while (!played.IsOver && played.Round < played.Waves)
+        {
+            BuildPhase decision = TheBuild.Fortifying(played);
+
+            decisions.Add(decision);
+            shown.Add(played.Advance(decision));
+        }
+
+        ProvedSession proved = ProvedSession.Of(
+            decisions,
+            shown,
+            played,
+            () => TheRun.Fresh(deathEndsTheRun: false));
+
+        Assert.True(proved.Agreed, proved.Disagreement);
+        Assert.Equal(Run.DefaultWaves, proved.Rounds);
+
+        // And what it comes back holding is those decisions rather than text
+        // that merely parses.
+        Assert.Equal(
+            decisions.Select((decision, index) => RecordCommand.Of(index + 1, decision)),
+            CommandScript.Parse("the proved script", proved.Script));
     }
 
     /// <summary>What one canned session came to: the run it moved and the decisions.</summary>

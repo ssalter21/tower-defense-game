@@ -43,10 +43,21 @@ second one beside it: [ADR-0039](0039-the-command-stream-is-the-only-route-into-
 reaches the simulation through a stored command and by no other route, and a prompt that emitted rounds
 nothing could store would be that door reopened with the word *interactive* on it.
 
-**The decision to write is the prover's, not the verb's.** A script nobody played back is a record of nothing
-in particular, and a caller free to write anyway is a caller free to skip the only claim this verb makes. So
-`ProvedSession.Written` is the one thing that touches a disk, a disagreement writes nothing and exits non-zero,
-and the sentence it prints says the fault is this program's — nothing a player can type can reach one.
+**The prover is in `sim`, and the writing is the caller's.** The claim is the client's obligation as much as
+the shell's — [`docs/build-order.md`](../build-order.md) step 2, [ADR-0039](0039-the-command-stream-is-the-only-route-into-a-run.md)
+and [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) all rest on it — so
+`PlayedScript` and `ProvedSession` sit in the simulation, where anything that can play a run can reach them.
+What does not follow them down is the file: `System.IO` is a banned namespace there and the IL scan rejects
+any reference to it, so the prover physically cannot open a path, and `RunSummary` moved with them because the
+outcome line is what the two runs are compared by and a second spelling of it would be the thing to keep
+current. The shell adds `Written` as an extension over the proved session; a client's half is Unity's storage
+and not a path at all.
+
+**The decision to write is still the prover's, not the verb's.** A script nobody played back is a record of
+nothing in particular, and a caller free to write anyway is a caller free to skip the only claim this verb
+makes. So the one route from a session to a disk runs through `ProvedSession.Agreed`, a disagreement writes
+nothing and exits non-zero, and the sentence it prints says the fault is the program's — nothing a player can
+type can reach one.
 
 ## What it costs
 
@@ -86,5 +97,5 @@ sentence saying so has scrolled off the top of a terminal.
 
 **Proving by comparing the fresh run against itself** — replaying the script and holding the replay against
 the replay. It is green forever, and the interactive path drops out of the comparison entirely. The seam that
-makes the real comparison possible is that `Played` hands the rounds back as data, so a test can supply a
-session that says something the fresh run does not and watch the refusal work.
+makes the real comparison possible is that the prover is handed the decisions and the rounds as data, so a
+test can supply a session that says something the fresh run does not and watch the refusal work.
