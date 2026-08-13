@@ -168,10 +168,16 @@ number is authored at the ×10 scale.
 **The anchor half of that is deferred, and the bill is not owed yet.** The
 [13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) took the take gate
 and the anchor schedule out of the played game until this seam has produced a roster deep enough for a gate to
-be gating something worth having — so the nine game changers are not this seam's next piece of work, and
-`content/schedule.txt`'s twelve placeholder names are standing in for content nobody should be designing yet.
+be gating something worth having, and
+[#179](https://github.com/ssalter21/tower-defense-game/issues/179) then deleted them outright — so
+`content/schedule.txt` and its twelve placeholder names are gone rather than standing in for content nobody
+should be designing yet. Re-authoring them is this seam's work if the depth ever calls for it.
 **The depth comes first, and the gate is fitted to it afterwards.** The damage-model constraints are
 untouched by that.
+
+What is left in their place is the upgrade ladder, which is now the one prerequisite the game has: a unit some
+edge of `content/upgrades.txt` points at is refused to `place` and reached by upgrading into. See
+[the 13 August entry](decision-log.md#13-august-2026-later-still--the-gates-are-actually-out-and-the-ladder-becomes-the-rule-it-was-an-annotation-to).
 
 ### 4 · The balance harness
 

@@ -494,3 +494,56 @@ once they have been looked at, which is the point of storing them somewhere free
 
 There is no plinth and no rule about which units are people and which are buildings. Size is the whole
 differentiator.
+
+---
+
+## 13 August 2026, later still — the gates are actually out, and the ladder becomes the rule it was an annotation to
+
+Implementing [#179](https://github.com/ssalter21/tower-defense-game/issues/179). The schedule above says the
+gates come out; this is what came out with them, and the two standing claims that turned out to be false once
+they had.
+
+### One prerequisite replaced four, and it was already in the repository
+
+`AnchorSchedule`, `AnchorFilling`, `Offering` and `Unlocks` are deleted, and `ShotBonus` and `Draws` with them
+— nothing counters anything once there are no anchors, and nothing draws once there is no offering.
+`content/schedule.txt` is gone, taking twelve placeholder names with it.
+
+What is left is `content/upgrades.txt`, which was written as an annotation nobody read. It is now the rule:
+**a unit some edge points at may not be placed**, and is reached by standing the rung below it and upgrading
+into it. Refused rather than priced, because a tier that can be bought without the tier under it is not a
+tier, it is a second row at a higher price.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `content/upgrades.txt` header | *"THE SIMULATION NEVER READS THIS FILE."* Held as a property rather than a promise: the parsed ladder lived on the command line and was never handed to a run | **Overturned.** A run is handed a ladder and `BuildPhase.Resolve` asks it what may be placed. An edit to the file now retires stored records, which is why a command stream stamps a ladder hash |
+| [ADR-0046](adr/0046-an-absent-ladder-folds-nothing.md) title | *"…the content hash covers content the simulation never reads"* | **Second clause overturned; the decision stands and matters more.** Folding the ladder into `types.ContentHash` is what retires a record made under a different ladder. An empty ladder still folds nothing, so `content/golden/defense-0.replay` is still legal forever |
+
+[ADR-0036](adr/0036-the-anchor-schedule-is-a-shape-and-a-filling.md) and
+[ADR-0037](adr/0037-the-offering-is-public-because-it-is-derived.md) describe machinery that no longer exists
+and carry superseding notes. What survives from them is worth keeping: a content file's constraints belong in
+its loader, and a derived thing needs no stamp because its inputs are already stamped. Both still hold, for
+the ladder.
+
+### Types-per-wave was load-bearing and nobody had said so
+
+Wave slot widths were derived from how many anchors a run had passed — `2 2 3 3 3 4 4 4 5 5`. Deleting the
+anchors alone would have frozen every wave at two types forever, so the width came out too. **What bounds a
+wave now is the purse and nothing else**, which is the only thing a player is spending against.
+
+### Three consequences that are not corrections
+
+**The sweep's `ingredients` axis is gone.** It binned a creep's runs by how many distinct creeps the run ended
+able to field, which varied *only* because the take rationed sending. Every run can send the whole roster from
+wave one, so the axis is one value wide and separates nothing.
+
+**Health 800 makes the death flag live.** The reference player in `TheRun.TheCommittedRun` — build a wall, then
+shop — now runs out of health in its fourth round where 1500 let it survive ten. That is a better test than the
+old one rather than a worse one: the four rounds it shares with the no-death vector are identical gold for
+gold, so the flag demonstrably stops the loop without touching anything inside it.
+
+**The sweep's defense never builds a ranger.** `CoverThenUpgradeBot` cannot place one, and its upgrade half
+climbs to a strictly *dearer* row while the ranger costs exactly what the archer costs — so nothing it does
+reaches the roster's one upgrade edge, and a balance question about the ranger cannot be answered from
+`content/sweep.csv`. That is the bot's rule rather than the ladder's, and it is written down here because it is
+the kind of hole that reads as a bug in the report six weeks later.

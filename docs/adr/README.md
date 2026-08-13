@@ -17,8 +17,8 @@ These were extracted from the source comments when the project moved to a commen
 | [0033](0033-one-fused-damage-expression-and-a-named-pipeline.md) | One fused damage expression, evaluated once, behind a named pipeline |
 | [0034](0034-run-level-draws-are-derived-positions.md) | Run-level draws come from derived positions; the match keeps its one stream |
 | [0035](0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | A run's outcome is a vector, and health is a clock denominated in gold |
-| [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints |
-| [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once |
+| [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints — **superseded by #179** |
+| [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once — **superseded by #179** |
 | [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |
 | [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling |
 
@@ -51,7 +51,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
 | [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
-| [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing, and the content hash covers content the simulation never reads |
+| [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing — **the second clause is overturned by #179; the simulation reads the ladder** |
 | [0047](0047-a-bundle-stamps-its-ruleset.md) | A replay bundle stamps its ruleset, and a bundle that names none is retired |
 | [0048](0048-a-board-is-not-a-layout.md) | A board is not a layout, and deriving one is a computation |
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |

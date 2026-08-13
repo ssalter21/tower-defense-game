@@ -1,5 +1,16 @@
 # 0037 — The offering is public because it is derived, and a build phase is validated once
 
+> **Superseded by [#179](https://github.com/ssalter21/tower-defense-game/issues/179), 13 August 2026.**
+> `Offering`, `Unlocks` and the take are deleted. Nothing rations what a run may send: every creep on the
+> roster is sendable from wave one, a build phase carries slots and actions and no take, and the command
+> stream's build row lost the two fields that stored one — which is what format version 2 is the bump for.
+>
+> What survives is the argument that a *derived* thing needs no stamp of its own because its inputs are
+> already stamped, and the rule that a build phase is validated once where the decision is read. Both hold
+> unchanged for the upgrade ladder, which is the one prerequisite left. Read the rest as a record of a gate
+> the game no longer has.
+
+
 A build phase is three things and one seam:
 
 - **The offering** — `OrdinaryOptionsPerRound` creeps drawn out of the roster, plus the anchor's menu merged in

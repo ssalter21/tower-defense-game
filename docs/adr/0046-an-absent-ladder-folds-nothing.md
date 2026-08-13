@@ -1,5 +1,17 @@
 # 0046 — An absent ladder folds nothing, and the content hash covers content the simulation never reads
 
+> **Partly overturned by [#179](https://github.com/ssalter21/tower-defense-game/issues/179), 13 August 2026.**
+> The title's second clause is no longer true: the content hash no longer covers content the simulation never
+> reads, because the simulation reads this content. `BuildPhase.Resolve` is handed the ladder and refuses to
+> place any unit an edge points at.
+>
+> The decision itself stands and matters more than it did. Folding the ladder into `types.ContentHash` is what
+> retires a record made under one ladder when the file moves — and the command stream now stamps the ladder's
+> own hash beside it as well, at the offset the anchor schedule's used to occupy. An empty ladder still folds
+> nothing, and `content/golden/defense-0.replay` is still legal forever, which is the half of this ADR that
+> was load-bearing.
+
+
 `content/upgrades.txt` folds into the unit table's content hash — the one value every record header already
 carries. A ladder with no edges folds nothing, so a golden with no ladder file beside it keeps the hash it was
 recorded with, forever.

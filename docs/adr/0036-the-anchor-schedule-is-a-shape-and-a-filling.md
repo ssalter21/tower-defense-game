@@ -1,5 +1,14 @@
 # 0036 — The anchor schedule is a shape and a filling, and the loader is where its constraints live
 
+> **Superseded by [#179](https://github.com/ssalter21/tower-defense-game/issues/179), 13 August 2026.**
+> `content/schedule.txt`, `AnchorSchedule` and `AnchorFilling` are deleted. There are no anchors, no tiers and
+> no game changers, and no wave slot widths derived from them. What survives is the reasoning about *where a
+> content file's constraints belong* — the loader, not the caller — which [0045](0045-the-ladder-is-a-graph-not-a-list.md)
+> and [0046](0046-an-absent-ladder-folds-nothing.md) inherited and `content/upgrades.txt` still follows. Read
+> the rest as a record of a rotation the game no longer has. The 13 August playtest is in
+> [the decision log](../decision-log.md).
+
+
 The anchor schedule is one committed text file read into one type, in two layers:
 
 - The **shape** — which waves are anchors, which tier each draws from, which one opens the steep counter, and

@@ -47,17 +47,18 @@ against a fresh play, which is what the build gate does; `-Regenerate` rewrites
 them after a deliberate content change.
 
 A run is authored as text. `content/commands.txt` is one `build` row per round —
-the wave, what was taken off that round's public offering, and how the wave's
-slots were filled — and `-Regenerate` compiles it into the record, having read
-the bytes back and played them to the end first. The menus a take names come
-from the run's seed, so there is a tool that prints them:
+the wave and how the wave's slots were filled — and `-Regenerate` compiles it
+into the record, having read the bytes back and played them to the end first.
+
+Every creep on the roster is sendable from wave one, so a build row is written
+against `content/units.txt` and the purse alone. The one prerequisite the game
+has is the upgrade ladder: a unit some edge of `content/upgrades.txt` points at
+may not be placed, and is reached by upgrading the rung below it. There is a
+tool that prints the edges:
 
 ```
-./tools/show-offerings.ps1
+./tools/show-ladder.ps1
 ```
-
-It prints every wave's menu for the seed the committed command stream carries;
-`-Seed` reads another run's, and every content file is an argument.
 
 The second thing is the balance harness:
 
