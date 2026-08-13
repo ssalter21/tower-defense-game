@@ -19,7 +19,7 @@ namespace View
     /// <para>
     /// <b>Nothing here is a simulation input.</b> This class reads the map
     /// through the simulation's parser and hands it to the floor; the camera it
-    /// builds never travels the other way. See <see cref="IsometricCameraRig"/>.
+    /// builds never travels the other way. See <see cref="OrbitCameraRig"/>.
     /// </para>
     /// <para>
     /// The two materials are serialized so a player build carries the shaders
@@ -51,7 +51,7 @@ namespace View
         public HexFloor Floor { get; private set; }
 
         /// <summary>The camera rig, once it has been built.</summary>
-        public IsometricCameraRig CameraRig { get; private set; }
+        public OrbitCameraRig CameraRig { get; private set; }
 
         /// <summary>The one directional light.</summary>
         public Light Sun { get; private set; }
@@ -280,7 +280,7 @@ namespace View
                 grassMaterial != null ? grassMaterial : ViewMaterials.Create("Grass", SceneFraming.GrassColor));
 
             Sun = BuildSun(transform);
-            CameraRig = IsometricCameraRig.Build(transform, Floor.WorldBounds);
+            CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
         }
 
         private static Light BuildSun(Transform parent)

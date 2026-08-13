@@ -117,7 +117,7 @@ namespace Tests.EditMode
             Assert.That(
                 root.GetComponentsInChildren<Camera>(includeInactive: true),
                 Is.Empty,
-                "The camera is built at runtime by IsometricCameraRig, from SceneFraming.");
+                "The camera is built at runtime by OrbitCameraRig, from SceneFraming.");
 
             Assert.That(
                 root.GetComponentsInChildren<Light>(includeInactive: true),

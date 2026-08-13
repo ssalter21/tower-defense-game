@@ -25,8 +25,9 @@ namespace View.Editor
     /// </para>
     /// <para>
     /// It draws through the real thing: the real <see cref="MatchRoot"/>, the
-    /// real floor, the real <see cref="IsometricCameraRig"/> at its real snaps,
-    /// and the real <see cref="MatchView"/> stepping the real simulation. A
+    /// real floor, the real <see cref="OrbitCameraRig"/> pointed where the
+    /// arguments say, and the real <see cref="MatchView"/> stepping the real
+    /// simulation. A
     /// capture path that built its own approximation of the scene would be a
     /// picture of something this project does not ship.
     /// </para>
@@ -43,8 +44,14 @@ namespace View.Editor
         /// <summary>Which ticks to grab, comma separated.</summary>
         public const string TicksArgument = "-matchFrameTicks";
 
-        /// <summary>Which camera snap to grab from.</summary>
-        public const string SnapArgument = "-matchFrameSnap";
+        /// <summary>Which heading to grab from, in degrees of yaw.</summary>
+        public const string YawArgument = "-matchFrameYaw";
+
+        /// <summary>
+        /// How far the camera sits from the middle of the floor, in metres.
+        /// Zero, the default, means the distance the whole floor fits at.
+        /// </summary>
+        public const string DistanceArgument = "-matchFrameDistance";
 
         /// <summary>How big each frame is, in pixels.</summary>
         public const string SizeArgument = "-matchFrameSize";
@@ -70,7 +77,8 @@ namespace View.Editor
                 ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "docs", "frames"));
 
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
-            int snap = ParseInt(BatchArguments.Value(SnapArgument), 0);
+            float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
+            float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
             int size = ParseInt(BatchArguments.Value(SizeArgument), 720);
 
             Directory.CreateDirectory(outDir);
@@ -100,7 +108,21 @@ namespace View.Editor
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
-                root.CameraRig.SnapTo(snap);
+
+                // The frames are square, and a camera built against whatever
+                // aspect a headless editor reports would frame for a window
+                // that is never rendered. Fixing the aspect first and framing
+                // against it is what puts both ends of the corridor in the
+                // picture.
+                camera.aspect = 1f;
+
+                root.CameraRig.PointAt(
+                    yaw,
+                    SceneFraming.CameraDefaultPitchDegrees,
+                    distance > 0f
+                        ? distance
+                        : OrbitCameraRig.FitDistance(
+                            root.Floor.WorldBounds, camera.aspect, camera.fieldOfView));
 
                 // A warm-up render, thrown away. The first render in a fresh
                 // batchmode editor happens before shaders and textures have
@@ -248,6 +270,11 @@ namespace View.Editor
             string.IsNullOrWhiteSpace(value)
                 ? fallback
                 : int.Parse(value, CultureInfo.InvariantCulture);
+
+        private static float ParseFloat(string value, float fallback) =>
+            string.IsNullOrWhiteSpace(value)
+                ? fallback
+                : float.Parse(value, CultureInfo.InvariantCulture);
 
     }
 }

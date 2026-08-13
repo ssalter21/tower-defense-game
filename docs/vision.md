@@ -484,8 +484,8 @@ Two limits, both stated plainly:
 
 ## 6. What it looks like
 
-**Stylized low-poly 3D, fixed isometric orthographic orbit with 60° yaw snapping, and no billboards, no flat
-cards, no painted-on shadows.**
+**Stylized low-poly 3D, a free perspective orbit that goes in close enough to read one model, and no
+billboards, no flat cards, no painted-on shadows.**
 
 ### Legible to a stranger
 

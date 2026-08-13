@@ -6,6 +6,6 @@ Interpolation takes the two snapshots and an alpha, and nothing else. It is not 
 
 ## Consequences
 
-Effects age in simulation ticks, so nothing in the view runs on a clock of its own. Playback speed multiplies the one clock and nothing else.
+Effects age in simulation ticks, so nothing that draws the match runs on a clock of its own. Playback speed multiplies the one clock and nothing else.
 
-There is no clock in this client that the simulation does not drive, which is what makes a frame capture reproducible and a test able to assert on an exact tick.
+The one wall clock in this client is the camera's reset ease, which draws nothing and is handed its elapsed seconds rather than reading them — so the frame capture and the tests place the camera by hand, exactly. Nothing the simulation drives runs on a clock the simulation does not, which is what makes a frame capture reproducible and a test able to assert on an exact tick.

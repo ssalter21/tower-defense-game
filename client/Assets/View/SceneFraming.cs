@@ -17,7 +17,7 @@ namespace View
     /// <para>
     /// Nothing in here is a simulation input. Changing every constant in this
     /// file changes what the match looks like and nothing about what happens in
-    /// it, which is the point of <see cref="IsometricCameraRig"/> being
+    /// it, which is the point of <see cref="OrbitCameraRig"/> being
     /// view-only.
     /// </para>
     /// </remarks>
@@ -33,50 +33,75 @@ namespace View
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// The camera's downward tilt, in degrees. <c>atan(1 / sqrt(2))</c> —
-        /// the true isometric angle, at which the three world axes project to
-        /// equal screen lengths. Chosen as a number with a derivation rather
-        /// than a number that looked right, so that "why 35 and not 30" has an
-        /// answer.
+        /// How wide the lens is, in degrees of vertical field of view. Narrow
+        /// enough that the board is not bowed at the edges, wide enough that
+        /// dollying in on one creep still shows the ground it stands on.
         /// </summary>
-        public const float CameraPitchDegrees = 35.264390f;
+        public const float CameraFieldOfViewDegrees = 40f;
 
         /// <summary>
-        /// Where the orbit starts, in degrees of yaw. Zero looks down the
-        /// world's <c>+Z</c> axis, which is the direction the map's first row is
-        /// drawn towards.
+        /// The downward tilt the camera starts at and resets to, in degrees.
+        /// <c>atan(1 / sqrt(2))</c> — the true isometric angle, at which the
+        /// three world axes project to equal screen lengths. Chosen as a number
+        /// with a derivation rather than a number that looked right, so that
+        /// "why 35 and not 30" has an answer. Under perspective it is only
+        /// where the camera starts: the projection converges, so the board is
+        /// isometric-looking rather than isometric.
         /// </summary>
-        public const float CameraBaseYawDegrees = 0f;
+        public const float CameraDefaultPitchDegrees = 35.264390f;
 
         /// <summary>
-        /// How many snapped positions the orbit has. Six, because the floor is
-        /// hexagonal and six is the number of ways a hex grid looks the same.
+        /// The heading the camera starts at and resets to, in degrees of yaw.
+        /// Zero looks down the world's <c>+Z</c> axis, which is the direction
+        /// the map's first row is drawn towards.
         /// </summary>
-        public const int CameraSnapCount = 6;
-
-        /// <summary>
-        /// Degrees between snaps. Derived rather than typed, so it cannot
-        /// disagree with <see cref="CameraSnapCount"/>.
-        /// </summary>
-        public const float CameraSnapDegrees = 360f / CameraSnapCount;
-
-        /// <summary>
-        /// How far back along its own axis the camera sits from the pivot. An
-        /// orthographic camera does not change size with distance, so this only
-        /// has to be far enough that nothing crosses the near plane.
-        /// </summary>
-        public const float CameraDistance = 60f;
+        public const float CameraDefaultYawDegrees = 0f;
 
         public const float CameraNearClip = 0.3f;
 
-        public const float CameraFarClip = 240f;
+        /// <summary>
+        /// The far plane. Has to clear the far edge of the floor from the
+        /// dolly's outermost stop, which is <see cref="CameraMaxDistanceFactor"/>
+        /// times the framed distance plus the floor's own radius.
+        /// </summary>
+        public const float CameraFarClip = 600f;
 
         /// <summary>
         /// How much bigger than the floor the view is. 1.0 would put the
-        /// corner tiles exactly on the screen edge at every snap; the margin is
-        /// the breathing room.
+        /// corner tiles exactly on the screen edge; the margin is the breathing
+        /// room.
         /// </summary>
         public const float CameraFramingMargin = 1.12f;
+
+        /// <summary>
+        /// The closest the camera may get to the pivot, in metres. Under two
+        /// metres of frame height at this lens, so one humanoid overflows it —
+        /// which is what "close enough to read a model" means.
+        /// </summary>
+        public const float CameraMinDistance = 2f;
+
+        /// <summary>
+        /// How far out the dolly goes, as a multiple of the distance the whole
+        /// floor fits at.
+        /// </summary>
+        public const float CameraMaxDistanceFactor = 2f;
+
+        /// <summary>Degrees the rig turns per pixel the mouse is dragged.</summary>
+        public const float CameraOrbitDegreesPerPixel = 0.2f;
+
+        /// <summary>
+        /// Exponential dolly steps per unit of scroll. Platforms disagree
+        /// wildly about what one wheel notch reports — 120 on Windows, single
+        /// digits elsewhere — so this is a feel number rather than a derived
+        /// one, and it is here to be changed in one line.
+        /// </summary>
+        public const float CameraDollyPerScrollUnit = 0.002f;
+
+        /// <summary>
+        /// How long the reset key takes to ease the camera back to the default
+        /// angle and the framed distance, in seconds.
+        /// </summary>
+        public const float CameraResetSeconds = 0.25f;
 
         // ---------------------------------------------------------------
         // The light
@@ -84,9 +109,9 @@ namespace View
 
         /// <summary>
         /// The sun's tilt and heading, in degrees. Fixed in world space, not
-        /// parented to the camera: a light that orbits with the viewer makes
-        /// every snap look identical, which would turn the six-snap check into
-        /// a formality.
+        /// parented to the camera: a light that orbited with the viewer would
+        /// make every angle look identically lit, and orbiting to see how a
+        /// thing is shaped would show nothing.
         /// </summary>
         public const float SunPitchDegrees = 50f;
 
@@ -123,18 +148,11 @@ namespace View
         public static Quaternion SunRotation => Quaternion.Euler(SunPitchDegrees, SunYawDegrees, 0f);
 
         /// <summary>
-        /// The camera's rotation at a given snap. Snaps wrap, so any integer is
-        /// a legal snap and stepping past five is stepping back to zero.
+        /// The rotation a pivot carries at a heading and a tilt. Fixes the
+        /// Euler convention in one place: tilt about <c>X</c>, heading about
+        /// <c>Y</c>, and never any roll.
         /// </summary>
-        public static Quaternion CameraRotation(int snap) =>
-            Quaternion.Euler(CameraPitchDegrees, CameraBaseYawDegrees + (Wrap(snap) * CameraSnapDegrees), 0f);
-
-        /// <summary>Reduces any integer to the snap it means, including negatives.</summary>
-        public static int Wrap(int snap)
-        {
-            int wrapped = snap % CameraSnapCount;
-
-            return wrapped < 0 ? wrapped + CameraSnapCount : wrapped;
-        }
+        public static Quaternion CameraRotation(float yawDegrees, float pitchDegrees) =>
+            Quaternion.Euler(pitchDegrees, yawDegrees, 0f);
     }
 }
