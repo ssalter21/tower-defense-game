@@ -8,8 +8,10 @@ The design this builds is [the vision](vision.md). Reversals are in [the decisio
 
 ## The sequence
 
-Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–4 are built. Step 5 is
-next.**
+Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–4 are built. Step 3 is
+being revisited before step 5**, because [the first played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person)
+found the roster too shallow for the build phase to be a decision worth making — see
+[step 3 is not finished](#step-3-is-not-finished-and-a-played-run-is-how-that-was-found) below.
 
 | # | Step | What it delivers | Size |
 |---|---|---|---|
@@ -22,9 +24,29 @@ next.**
 | 7 | **Then** the generative depth, the two-board interface, and the service | | |
 
 **Step 5 is fifth deliberately.** Is the economy tense, is composing a wave interesting, does send order matter,
-is the roster varied — every one is answerable from a command line and a spreadsheet at a fraction of the
-wall-clock cost of asking through an engine. The engine answers whether it *reads* and whether it *feels*,
-which are worth nothing if the cheap answers were no.
+is the roster varied — these are the questions worth asking before an engine effort, at a fraction of the
+wall-clock cost of asking through one. The engine answers whether it *reads* and whether it *feels*, which are
+worth nothing if the cheap answers were no.
+
+**Two of the four turned out not to be answerable from a shell, and that is a reversal.** The sentence here
+used to claim all four were. A run played at a prompt on 13 August 2026 answered *is the economy tense* and
+*is the roster varied*, and could not answer *is composing a wave interesting* or *does send order matter* —
+because those are judged off range indicators and replays, which a terminal will never carry and which are not
+worth building there. **The test that survives is: is it a picture, or a number?** Numbers the simulation
+already computes are answerable at a prompt; pictures wait for the client. The full reasoning is in
+[the decision log](decision-log.md#13-august-2026--the-first-run-played-by-a-person).
+
+### Step 3 is not finished, and a played run is how that was found
+
+Step 3 delivered *enough vocabulary for a decision to be interesting*, and playing one showed it is not there
+yet: **composing a wave is not interesting enough, and the build phase has not got the depth to make it so.**
+What it wants is plenty of money to spend and options worth spending it on, and neither is judgeable against
+six walkers and four towers — three of which are equivalent on a one-hex corridor.
+
+So [seam 3](#3--the-roster) comes back before step 5, and it now carries the question step 5 was going to
+answer. Two things that were going to help do not, and have been deferred with it: **the take gate and the
+anchor schedule are out of the played game until the roster is deep enough for a gate to be gating something
+worth having.** Gating a shallow roster holds back early testing and buys nothing.
 
 ## Three obligations the sequence carries
 
@@ -132,6 +154,14 @@ game changer creeps per shape**, tiered across three anchors, one opening a genu
 [the damage model](vision.md#how-a-shot-resolves): every unit carries an attack or armour type from the fixed
 three-way cycle, a counter is a `bonusVsTag` integer rather than an immunity, and every damage and health
 number is authored at the ×10 scale.
+
+**The anchor half of that is deferred, and the bill is not owed yet.** The
+[13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) took the take gate
+and the anchor schedule out of the played game until this seam has produced a roster deep enough for a gate to
+be gating something worth having — so the nine game changers are not this seam's next piece of work, and
+`content/schedule.txt`'s twelve placeholder names are standing in for content nobody should be designing yet.
+**The depth comes first, and the gate is fitted to it afterwards.** The damage-model constraints are
+untouched by that.
 
 ### 4 · The balance harness
 
