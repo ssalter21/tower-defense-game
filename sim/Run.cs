@@ -413,6 +413,83 @@ namespace Sim
         }
 
         /// <summary>
+        /// The match one pairing of a resolved round came to, built again rather
+        /// than kept, and advanced by nobody.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the route by which a round is watched.</b>
+        /// <see cref="Advance"/> resolves the wave against every member of the
+        /// field in locals and lets them go, which is right: a run that kept its
+        /// matches would hold N times K of them by the end, and a sweep that
+        /// plays a hundred thousand runs overnight would carry a match for every
+        /// pairing in every one of them and draw not one. A client needs exactly
+        /// one, so it asks for the one it means to show. See
+        /// <c>docs/adr/0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>Asking twice is cheaper than remembering because the answer cannot
+        /// differ.</b> A pairing's match is this map, this ruleset, the defense
+        /// that stood, the wave that walked and a seed derived from the run's
+        /// seed and the pairing -- every one of them settled before the round was
+        /// played, and none of them moved by playing it. What comes back is
+        /// therefore the match that was resolved, tick for tick and hash for
+        /// hash, rather than a re-enactment of it. It is built by the same
+        /// assembly the round's own matches were built by -- see
+        /// <see cref="MatchFor"/> -- and not by a second one somebody would have
+        /// to keep in step.
+        /// </para>
+        /// <para>
+        /// <b>Nothing here moves the run.</b> The match comes back on tick zero,
+        /// unresolved, for the caller to advance at whatever rate it draws at;
+        /// advancing it is advancing a local of the caller's and reaches nothing
+        /// in here. <see cref="Advance"/> remains the only member that moves
+        /// anything.
+        /// </para>
+        /// <para>
+        /// <b>The offense direction, and for now only that</b> -- this round's
+        /// wave against that opponent's defense, which is the direction that
+        /// scores and the one the player composed. The defending direction is a
+        /// second match at a seed of its own, and this surface is expected to
+        /// change as the game grows: it is the smallest thing that puts a round
+        /// on screen.
+        /// </para>
+        /// </remarks>
+        /// <param name="round">
+        /// Which round, indexed as <see cref="Sent"/> is -- zero is the first
+        /// round the run resolved. A round that has not been played has no match
+        /// to hand back.
+        /// </param>
+        /// <param name="opponent">Which of the round's K pairings, counted from zero.</param>
+        public Match MatchAt(int round, int opponent)
+        {
+            if (round < 0 || round >= _sent.Count)
+            {
+                throw new SimulationException(
+                    "This run was asked for the match of round "
+                    + round.ToString(CultureInfo.InvariantCulture)
+                    + ", and "
+                    + _sent.Count.ToString(CultureInfo.InvariantCulture)
+                    + " rounds have resolved. A match is what a round came to, so there is one to rebuild "
+                    + "only for a round that has already been played -- rounds are indexed as Sent is, from "
+                    + "zero.");
+            }
+
+            if (opponent < 0 || opponent >= FieldSize)
+            {
+                throw new SimulationException(
+                    "This run was asked for the match against opponent "
+                    + opponent.ToString(CultureInfo.InvariantCulture)
+                    + " of a field of "
+                    + FieldSize.ToString(CultureInfo.InvariantCulture)
+                    + ". A round is resolved against K opponents and against nobody else, so this is a "
+                    + "pairing the round never fought.");
+            }
+
+            return MatchFor(_sent[round], _pool.At(FieldFor(round)[opponent]), round, opponent, Side.Attacking);
+        }
+
+        /// <summary>
         /// Works one round out in full, commits it, and hands back the pair it
         /// resolved to beside what its wave paid.
         /// </summary>
@@ -458,8 +535,8 @@ namespace Sim
             {
                 RoundOrders against = _pool.At(drawn[index]);
 
-                dealt += LeakCost(orders.Wave, against.Defense, round, index, Side.Attacking);
-                taken += LeakCost(against.Wave, orders.Defense, round, index, Side.Defending);
+                dealt += LeakCost(orders, against, round, index, Side.Attacking);
+                taken += LeakCost(orders, against, round, index, Side.Defending);
             }
 
             // The average rather than the sum, on both sides. Summed, one round
@@ -577,12 +654,7 @@ namespace Sim
 
                 for (int index = 0; index < field.Length; index++)
                 {
-                    dealt += LeakCost(
-                        member.Wave,
-                        _pool.At(field[index]).Defense,
-                        sample,
-                        index,
-                        Side.Measured);
+                    dealt += LeakCost(member, _pool.At(field[index]), sample, index, Side.Measured);
                 }
 
                 worth[sample] = (int)(dealt / field.Length);
@@ -596,16 +668,12 @@ namespace Sim
         /// to send, one for one, so what got past is the wave's own orders read
         /// off the cost table.
         /// </summary>
-        private int LeakCost(
-            WaveScript wave,
-            TowerLayout defense,
-            int round,
-            int opponent,
-            Side side)
+        private int LeakCost(RoundOrders sent, RoundOrders against, int round, int opponent, Side side)
         {
-            var match = new Match(Map, Rules, defense, wave, MatchSeed(round, opponent, side));
+            Match match = MatchFor(sent, against, round, opponent, side);
             match.Resolve();
 
+            WaveScript wave = Walking(sent, against, side);
             IReadOnlyList<int> leaked = match.LeakedByOrder;
             long cost = 0;
 
@@ -656,6 +724,39 @@ namespace Sim
         /// </summary>
         private ulong MatchSeed(int round, int opponent, Side side) =>
             Derived(MatchLabel, round, opponent, (int)side);
+
+        /// <summary>
+        /// The one place a pairing becomes a match.
+        /// </summary>
+        /// <remarks>
+        /// Both routes to a match come through here -- the round resolving its
+        /// field, and <see cref="MatchAt"/> handing one back to be watched -- so
+        /// there is one statement of what a pairing's match is made of rather
+        /// than two that have to agree. Nothing is resolved: what comes back is
+        /// on tick zero, and what the caller does with it is the difference
+        /// between scoring a round and drawing one.
+        /// </remarks>
+        private Match MatchFor(RoundOrders sent, RoundOrders against, int round, int opponent, Side side) =>
+            new Match(
+                Map,
+                Rules,
+                Standing(sent, against, side),
+                Walking(sent, against, side),
+                MatchSeed(round, opponent, side));
+
+        /// <summary>
+        /// Whose wave walks in one side of a pairing. <paramref name="sent"/> is
+        /// always what this run's round composed -- or, while the field is being
+        /// measured, what the pool member being measured sent -- and
+        /// <paramref name="against"/> is always the opponent's, so which of the
+        /// two walks is the side and nothing else.
+        /// </summary>
+        private static WaveScript Walking(RoundOrders sent, RoundOrders against, Side side) =>
+            side == Side.Defending ? against.Wave : sent.Wave;
+
+        /// <summary>Whose defense stands in one side of a pairing: the other one's.</summary>
+        private static TowerLayout Standing(RoundOrders sent, RoundOrders against, Side side) =>
+            side == Side.Defending ? sent.Defense : against.Defense;
 
         /// <summary>
         /// A stream position derived from the run's seed and from where in the

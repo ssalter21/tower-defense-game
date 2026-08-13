@@ -264,6 +264,15 @@ public class CommandStreamTests
         // the only thing Advance takes is the decision a command carries. What
         // the list still catches is a second route being added beside it.
         //
+        // MatchAt is on the list and is not one. #192 gave it to the client so
+        // a round that has already resolved can be drawn, and its whole
+        // signature is two integers naming a pairing the run has already
+        // fought: there is nothing in it for a view to compose, and what comes
+        // back is a copy of a fight rather than a handle on the run --
+        // RunTests.Watching_a_round_moves_nothing is the behavioural half of
+        // that. It is here because the list is what makes admitting a member
+        // deliberate.
+        //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
         // choose)` to Run, which is exactly the shape a view would reach for.
         // The member list goes red naming it -- "Advance(Func`2)" at position 1
@@ -305,8 +314,37 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase)" },
+            new[] { "Advance(BuildPhase)", "MatchAt(Int32, Int32)" },
             moves);
+
+        // And Advance is still the only one of them that takes anything a view
+        // could have composed. A member that took a wave, a layout or a board
+        // would be a second route in whatever it claimed to be for; two integers
+        // naming a pairing are a question about a round that already happened.
+        //
+        // It fires only once the list above has been updated, because any
+        // signature at all trips the list first. That is what it is for: the
+        // list makes admitting a member deliberate, and this decides what may
+        // be admitted.
+        //
+        // OBSERVED: add `public Match Watch(TowerLayout defense)` to Run -- the
+        // shape a view would reach for, putting a defense nobody paid for in
+        // front of a tick loop -- and admit it to the list above, as somebody
+        // adding it would. This goes red: "Run.Watch takes a TowerLayout, so
+        // something a view composed reaches a run by a route that is not
+        // Advance."
+        foreach (MethodInfo reader in typeof(Run)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(method => !method.IsSpecialName && method.Name != nameof(Run.Advance)))
+        {
+            foreach (ParameterInfo parameter in reader.GetParameters())
+            {
+                Assert.True(
+                    parameter.ParameterType.IsPrimitive,
+                    "Run." + reader.Name + " takes a " + parameter.ParameterType.Name
+                    + ", so something a view composed reaches a run by a route that is not Advance.");
+            }
+        }
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
         {

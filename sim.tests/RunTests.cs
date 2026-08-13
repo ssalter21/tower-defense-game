@@ -349,20 +349,24 @@ public class RunTests
         // Gold cannot repair health, so the pool is a clock and nobody is sold
         // a way to stay in a run they are losing. The claim is structural: a
         // Repair(int) added later would look perfectly reasonable at the call
-        // site that used it, so what is asserted is that Advance is the only
-        // member that moves anything at all.
+        // site that used it, so what is asserted is the whole list of methods
+        // this type has, written out, and that only one of them moves anything.
         //
         // OBSERVED: add an empty `public void Repair(int gold)` to Run. The
-        // first assertion goes red, ["Advance"] against ["Advance", "Repair"],
-        // which is the whole of what this test is here to notice -- and it
-        // notices a member that does not even do anything yet.
+        // first assertion goes red, listing it beside the two below, which is
+        // the whole of what this test is here to notice -- and it notices a
+        // member that does not even do anything yet.
         //
-        // One name is on the list. Advance takes a build phase and nothing
-        // else, so what a round spends is read off the decision it was handed.
-        // OfferingAt was the second name and went with the offering in #179;
-        // nothing took its place, which is the surface getting smaller rather
-        // than moving.
-        string[] movers = typeof(Run)
+        // Two names are on the list, and only the first is a mover. Advance
+        // takes a build phase and nothing else, so what a round spends is read
+        // off the decision it was handed. MatchAt is a reader: #192 gave it to
+        // the client so a resolved round can be drawn, and it rebuilds a match
+        // that was already played rather than playing one -- which is a claim
+        // about behaviour rather than about signatures, so
+        // Watching_a_round_moves_nothing is the test of it and this only pins
+        // that nothing else was added beside it. OfferingAt was here too and
+        // went with the offering in #179.
+        string[] members = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(method => !method.IsSpecialName)
             .Select(method => method.Name)
@@ -370,7 +374,7 @@ public class RunTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(new[] { "Advance" }, movers);
+        Assert.Equal(new[] { "Advance", "MatchAt" }, members);
         Assert.Null(typeof(Run).GetProperty("Health")!.SetMethod);
         Assert.Null(typeof(RunOutcome).GetProperty("HealthRemaining")!.SetMethod);
 
@@ -1119,6 +1123,222 @@ public class RunTests
 
         Assert.True(priced > 0);
         Assert.NotEqual(result.Leaked * costs.PriceOf(Purchase.Unit(1)), priced);
+    }
+
+    [Fact]
+    public void A_resolved_round_hands_its_match_back_tick_for_tick()
+    {
+        // What a client has to be able to do: advance the run, then draw the
+        // fight the run just had -- and have it be the fight that produced the
+        // number, rather than one built out of the same parts by a second
+        // route that agrees today.
+        //
+        // The field is one opponent drawn from a pool of one, which is what
+        // makes both halves checkable from outside. The pairing is known --
+        // that member's defense against the wave this round sent -- so the
+        // trace can be held against a match assembled here; and the round's
+        // offense score is one match's leaks rather than an average of ten, so
+        // it can be held against what this match let past, gold for gold.
+        //
+        // OBSERVED: build MatchAt's match at Side.Defending -- one enum member
+        // away from the direction the round's offense was resolved at, and the
+        // pairing's other half rather than a stranger. The traces part at
+        // position zero, before a tick has been advanced: tick zero's hash
+        // folds how many towers stand and how many bodies walk, and the
+        // defending direction has the other one's of each.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opponent = TheRun.Orders(types, towers: 6, orders: 4);
+        Run run = OneOnOne(types, opponent);
+
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+        Match watched = run.MatchAt(0, 0);
+
+        // Handed back unresolved, because a match nobody has advanced is the
+        // only kind that can be watched from the beginning.
+        Assert.Equal(0, watched.Tick);
+
+        var assembled = new Match(run.Map, run.Rules, opponent.Defense, run.Sent[0].Wave, watched.Seed);
+
+        Assert.Equal(TraceOf(assembled), TraceOf(watched));
+
+        // ...and it is the round's own match rather than a fight with the same
+        // pieces in it: what it let past is what the round was scored on. This
+        // is the assertion that pins the seed, because the trace above cannot:
+        // the seed it holds the two matches to is the one the rebuilt match
+        // reported, so it can say the pieces are right and nothing about where
+        // the dice were started.
+        //
+        // OBSERVED: seed MatchAt's match at Side.Measured -- the same pieces
+        // fighting at a stream position nobody's round was resolved at. The
+        // trace assertion above stays green, exactly as described, and this
+        // goes red, 1860 gold against 1850. Which is also why the opponent
+        // above is the six-tower defense rather than the two-tower one: against
+        // two towers the wave leaks whatever the dice say, and this assertion
+        // sails through a seed that is simply wrong.
+        Assert.True(
+            report.Outcome.LeakCostDealt > 0,
+            "This round got nothing past its opponent, so the equality below is zero against zero.");
+        Assert.Equal(report.Outcome.LeakCostDealt, Priced(run, run.Sent[0].Wave, watched));
+    }
+
+    [Fact]
+    public void Every_pairing_of_a_round_is_reachable_and_together_they_are_what_it_dealt()
+    {
+        // One pairing agreeing is not the field agreeing. A round's offense
+        // score is the average over its K matches, so pricing what all ten of
+        // them let past and averaging it the way the run does arrives at the
+        // same number only if each of the ten is the match that pairing was
+        // resolved at. That pins the opponent the seed was derived from and
+        // the draw the defense came out of, neither of which the single
+        // pairing above can see.
+        //
+        // OBSERVED: hand back opponent zero's pairing whatever was asked for,
+        // which is what an off-by-one in the field index looks like. The
+        // single-pairing test above stays green -- opponent zero is the one it
+        // asks for -- and this goes red, 1939 gold averaged against the 1943
+        // the round folded.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+        long dealt = 0;
+
+        for (int opponent = 0; opponent < run.FieldSize; opponent++)
+        {
+            Match watched = run.MatchAt(0, opponent);
+            watched.Resolve();
+            dealt += Priced(run, run.Sent[0].Wave, watched);
+        }
+
+        Assert.True(
+            report.Outcome.LeakCostDealt > 0,
+            "This round got nothing past any of its ten, so the equality below is zero against zero.");
+        Assert.Equal(report.Outcome.LeakCostDealt, (int)(dealt / run.FieldSize));
+    }
+
+    [Fact]
+    public void Watching_a_round_moves_nothing()
+    {
+        // Advance is the only member that moves anything, and asking for a
+        // match to draw is asking rather than playing. Every match of the
+        // round is resolved here -- to completion, as a client that watched
+        // the whole round would -- against a run that is then read for every
+        // field a round does move.
+        //
+        // OBSERVED: have MatchAt commit the round it rebuilt, the way Play
+        // commits the round it played. It never reaches an assertion at all:
+        // the eleventh call throws "A run of 10 waves has 11 rounds on it",
+        // which is a run that watching its own first round played out.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        run.Advance(TheBuild.Shopping(run));
+
+        int round = run.Round;
+        int gold = run.Purse.Gold;
+        int health = run.Health;
+        int towers = run.Board.Count;
+        RunOutcome folded = run.Outcome;
+
+        for (int opponent = 0; opponent < run.FieldSize; opponent++)
+        {
+            run.MatchAt(0, opponent).Resolve();
+        }
+
+        Assert.Equal(round, run.Round);
+        Assert.Equal(gold, run.Purse.Gold);
+        Assert.Equal(health, run.Health);
+        Assert.Equal(towers, run.Board.Count);
+        Assert.Same(folded, run.Outcome);
+    }
+
+    /// <summary>Every way of naming a pairing this run never fought.</summary>
+    public static TheoryData<int, int> PairingsNobodyPlayed => new()
+    {
+        { -1, 0 },
+        { 1, 0 },
+        { 0, -1 },
+        { 0, Run.DefaultFieldSize },
+    };
+
+    [Theory]
+    [MemberData(nameof(PairingsNobodyPlayed))]
+    public void A_pairing_no_round_of_this_run_fought_is_refused(int round, int opponent)
+    {
+        // A match is what a round came to, so a round that has not been played
+        // has none to hand back and a pairing outside the field was never in
+        // one. Both would otherwise be answered: the round index would walk off
+        // the end of Sent, and the opponent index would derive a seed nobody
+        // ever fought at and hand back a plausible fight that never happened.
+        //
+        // OBSERVED: drop the opponent guard. Both out-of-field rows go red with
+        // an IndexOutOfRangeException off the end of the round's draw -- which
+        // is the point of the guard rather than an argument against it: the
+        // array bound is an accident of how the field is stored, and it says
+        // nothing about K to whoever asked.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        run.Advance(TheBuild.Shopping(run));
+
+        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent));
+    }
+
+    /// <summary>
+    /// A one-round run against a single opponent, out of a purse deep enough
+    /// that the wave it buys reaches that opponent rather than dying on the way
+    /// in -- see <see cref="TheRun.AttackingPurse"/>.
+    /// </summary>
+    /// <remarks>
+    /// A pool of one and a field of one, so the pairing a round fights is known
+    /// from outside the run: whatever the draw says, the only member it can
+    /// draw is this one, and the round's score is that single match rather than
+    /// an average.
+    /// </remarks>
+    private static Run OneOnOne(UnitTypeTable types, RoundOrders opponent)
+    {
+        Ruleset rules = Ruleset.Parse(PlantedText.Replace(
+            TheRuleset.CommittedText(),
+            "purse         100",
+            "purse       " + TheRun.AttackingPurse.ToString(CultureInfo.InvariantCulture)));
+
+        return new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheLadder.Committed(types),
+            FieldPool.Of(new[] { opponent }),
+            TheRun.Seed,
+            waves: 1,
+            fieldSize: 1);
+    }
+
+    /// <summary>
+    /// A match's rolling state hash at every tick it has, tick zero included.
+    /// </summary>
+    /// <remarks>
+    /// Per tick rather than at the end, for the reason
+    /// <see cref="GoldenTraceTests"/> collects one: an end-of-match comparison
+    /// says two matches differed, and this says which tick they parted on.
+    /// </remarks>
+    private static ulong[] TraceOf(Match match)
+    {
+        var hashes = new List<ulong> { match.StateHash.Value };
+
+        while (!match.IsFinished)
+        {
+            match.Advance(1);
+            hashes.Add(match.StateHash.Value);
+        }
+
+        return hashes.ToArray();
+    }
+
+    /// <summary>What one match let past, priced the way a run prices a leak.</summary>
+    private static int Priced(Run run, WaveScript wave, Match match)
+    {
+        int cost = 0;
+
+        for (int index = 0; index < match.LeakedByOrder.Count; index++)
+        {
+            cost += run.Costs.PriceOf(Purchase.Unit(wave.Orders[index].TypeId), match.LeakedByOrder[index]);
+        }
+
+        return cost;
     }
 
     /// <summary>A one-round run on the committed content against a population written out here.</summary>
