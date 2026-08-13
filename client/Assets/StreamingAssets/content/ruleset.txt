@@ -81,17 +81,48 @@ interest       10         0
 #
 # The flat base a wave pays. It is paid whether or not there is a field to be
 # measured against, which is why a run resolves before there are ghosts.
+#
+# IT BUYS BOTH HALVES OF THE BOARD, WHICH IS WHY IT IS NOT A HUNDRED. A member
+# of the canned field stands the six towers of content/defense.txt for nothing
+# and sends content/field.txt's hundred gold from behind them; a run opens on an
+# empty board and pays for its wall and its wave out of this one row. At a
+# hundred, all twenty-two rows of content/sweep.csv read win_rate_bp 0 and
+# cost_efficiency_dealt_per_100_gold 0 to 5 -- a run's offense landed under two
+# percent of what the field's own waves landed on it, which is a report that
+# separates nothing and a build phase nobody has a reason to think about.
+#
+# 168 IS WHERE THAT WAS MEASURED BACK. Swept at the committed shape, the roster
+# wins three, three, four, five and seven of every eight runs and its cost
+# efficiency spreads 18 to 39, which is the separating column content/field.txt
+# was calibrated to produce; at thirty-two runs a creep the same five come in
+# between 44 and 94 percent and three of them sit inside the 41-to-66 band that
+# file's header records. The window is narrow and it was walked: at 160 the
+# scout still wins one run in eight, and at 200 four of the five win every run
+# they play. Three other first seeds put the five in the same order.
+#
+# THE FIELD WAS THE OTHER LEVER AND IT CANNOT REACH THIS. What a run gets past
+# an opponent is decided by that opponent's wall, and content/field.txt is the
+# opponent's wave -- thinning it to a single grunt leaves leak cost dealt at
+# exactly the 86, 112, 243, 56 and 39 gold it was already at, and cost
+# efficiency at 0 to 5. It moves what a run concedes and nothing about whether
+# sending is worth it.
 
-income        100
+income        168
 
 #         purse  gold
 #
 # What a run's purse opens holding. Nothing has been earned when the first build
 # phase stands, so a run that opened on nothing would have an opening round
 # whose only affordable wave is the empty one -- ten waves with nine build
-# phases in them. One wave's base is the smallest number that makes the first
-# round a round, and like every number here it is a sweep target rather than a
-# decision.
+# phases in them. A hundred is enough to make the first round a round -- one
+# tower and a wave behind it -- and like every number here it is a sweep target
+# rather than a decision.
+#
+# IT IS DELIBERATELY SHORT OF A WAVE'S BASE. A run opens on an empty board, and
+# opening it on a full base lets it buy most of its wall before anything walks:
+# swept with this row moved up to the base, the roster wins between five and
+# eight of every eight runs and the win column saturates again. Opening short of
+# the wall is what the first round is about.
 
 purse         100
 
@@ -123,9 +154,9 @@ band           90       20
 # equal to its cost, one for one, so the exchange rate is legible without a
 # table. Gold cannot repair it -- the pool is a clock.
 #
-# WHAT 1500 BUYS, MEASURED. A wave is bought out of a purse the income row above
-# pays 100 a round into, so conceding one of them whole costs around a hundred
-# and the pool is some fifteen of those.
+# WHAT 1500 BUYS, MEASURED. A wave conceded whole costs what its sender paid for
+# it, and the canned field sends a hundred gold a round, so the pool is some
+# fifteen of those.
 #
 # THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND IT REOPENED WHEN THE CLOCK
 # CHANGE WAS FINISHED. The committed ten-round run in content/run-outcome.txt
@@ -156,8 +187,8 @@ band           90       20
 # it can finally be chosen against -- and nobody has chosen one. At 450 that run
 # would have died in its tenth round, having spent the first three conceding 255
 # while it built. This number, the opening purse and the income curve are one
-# decision rather than three now, and none of the three has been measured
-# against an empty opening board.
+# decision rather than three, and the base above is the one of the three that
+# has now been measured against an empty opening board.
 
 health       1500
 

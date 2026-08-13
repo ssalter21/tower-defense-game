@@ -11,17 +11,18 @@
 # IT IS NOT wave.txt, AND THE DIFFERENCE IS THE WHOLE POINT. That file is the
 # skeleton's authored match -- forty creeps, three hundred and eighty gold of
 # them, released over fourteen hundred ticks -- and no build phase in this
-# economy can compose it. A run's purse opens on one wave's base and is paid
-# one wave's base a wave, so what it sends is a little over a hundred gold a
-# round. A field member that outspends every opponent it faces by three and a
-# half times is not a strong opponent, it is a different game, and a sweep
-# against one reports a total loss on every row and names nothing.
+# economy can compose it. A run's purse opens on a hundred and is paid a wave's
+# base a round, and that same purse pays for the wall, so what it sends is a
+# little over a hundred gold a round. A field member that outspends every
+# opponent it faces by three and a half times is not a strong opponent, it is a
+# different game, and a sweep against one reports a total loss on every row and
+# names nothing.
 #
 # SO THIS IS A BUILD PHASE'S OUTPUT: everything on tick zero, because a build
 # phase composes what is sent rather than when, and a hundred gold of it,
-# because that is what a purse holds when a round comes round. It is the wave
-# an opening round composes -- one unlock, so one slot, so the whole purse in
-# one column.
+# because that is about what a round's wave comes to once the purse has bought
+# a wall as well. It is the wave an opening round composes -- one unlock, so one
+# slot, so the whole purse in one column.
 #
 # ONE COLUMN, AND THAT IS MEASURED RATHER THAN CHOSEN. A count is released one
 # unit every forty-five ticks -- fifteen when the numbers below were taken, and
@@ -45,11 +46,12 @@
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
 # calibration argument carries. A round of this opponent is worth about
 # seventeen gold, which sits under what a run's own wave gets past it, so
-# roughly half a run's rounds clear the top band and the bonus comes out near
-# nine percent of the flat base. Against wave.txt, whose rounds are worth about
-# a hundred and twenty-five, no run clears the bottom band and the bonus is
-# zero on every row -- a field that outspends every opponent it faces turns the
-# offense half of the economy off as well as the win-rate column.
+# roughly half a run's rounds clear the top band and the bonus comes out
+# between eight and thirteen percent of the flat base, creep by creep. Against
+# wave.txt, whose rounds are worth about a hundred and twenty-five, no run
+# clears the bottom band and the bonus is zero on every row -- a field that
+# outspends every opponent it faces turns the offense half of the economy off
+# as well as the win-rate column.
 #
 # ONE MEMBER IS A DISTRIBUTION WITH ALMOST NO SPREAD, AND THAT IS THIS FILE'S
 # REAL LIMIT. Ten samples of one opponent land between fourteen and nineteen

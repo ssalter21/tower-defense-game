@@ -523,18 +523,18 @@ public class RunTests
         //
         // The run spends a third of its purse a round, so all three lines are
         // real numbers rather than one line and two zeroes: it buys every round,
-        // it banks the rest at compound interest, and seven of its ten rounds
-        // are placed above the bottom band.
+        // it banks the rest at compound interest, and every one of its ten
+        // rounds is placed above the bottom band.
         //
         // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
-        // outcome.LeakCostDealt in Run.Play. The purse assertion goes red, the
-        // run's 479 against the fold's 679: the run starts being paid for what
-        // got past it rather than for what it got past the field, and the fold
-        // and the payment stop being the same arithmetic.
+        // outcome.LeakCostDealt in Run.Play. The purse assertion goes red: the
+        // run starts being paid for what got past it rather than for what it
+        // got past the field, and the fold and the payment stop being the same
+        // arithmetic.
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 511 against 6996: the 3285 gold of
+        // over bought nothing. It goes red at 824 against 8399: the 4006 gold of
         // creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
@@ -567,10 +567,10 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(3285, spent);
-        Assert.Equal(110, bonus);
-        Assert.Equal(7, rounds.Count(round => round.Payment.Bonus > 0));
-        Assert.Equal(1000, rules.IncomeBasePerWave * run.Round);
+        Assert.Equal(4006, spent);
+        Assert.Equal(330, bonus);
+        Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
+        Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
 
     [Fact]

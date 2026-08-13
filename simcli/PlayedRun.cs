@@ -95,8 +95,7 @@ internal sealed class PlayedRun
         + (Run.DeathEndsTheRun ? ", death ends the run" : ", death does not end the run");
 
     /// <summary>What a person reads: the folds, and how the run stopped.</summary>
-    public string Summary() =>
-        "outcome    " + Run.Outcome.ToString() + ", ended " + Run.Outcome.Ending.ToString();
+    public string Summary() => RunSummary.Outcome(Run);
 
     /// <summary>
     /// One line per round: the decision that was stored, what it came to, what

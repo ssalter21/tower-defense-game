@@ -57,7 +57,30 @@ namespace Sim
     /// </remarks>
     public static class CommandScript
     {
-        private const string Keyword = "build";
+        /// <summary>
+        /// The word a row that decides a whole build phase opens with, as
+        /// against the two that act on the board.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Public for the reason <see cref="WordFor(OptionKind)"/> and
+        /// <see cref="WordFor(ActionKind)"/> are: whatever writes a script
+        /// writes the word this parser reads, and two spellings of one grammar
+        /// means the one nothing parses goes stale.
+        /// </para>
+        /// <para>
+        /// <b>Which is not surface the interactive verb added.</b> That verb's
+        /// bottom line is that the simulation gains nothing for it, and what is
+        /// exposed here is the grammar's own vocabulary, already public at
+        /// <see cref="WordFor(OptionKind)"/> before a prompt existed. The
+        /// distinction the rule turns on is behaviour: composing a phase is the
+        /// shell's problem and stays there -- see <c>BuildPrompt</c>'s
+        /// <c>Rebuilt</c>, which is in the shell for exactly that reason --
+        /// while reading a word off an enum this file already owns is the
+        /// alternative to spelling the same grammar twice.
+        /// </para>
+        /// </remarks>
+        public const string DecisionWord = "build";
 
         private const string PlaceWord = "place";
 
@@ -99,7 +122,7 @@ namespace Sim
         private static readonly string[] ActionWords = { PlaceWord, UpgradeWord };
 
         /// <summary>The words a row here may open with: the build phase, and the two actions.</summary>
-        private static readonly string[] RowWords = { Keyword, PlaceWord, UpgradeWord };
+        private static readonly string[] RowWords = { DecisionWord, PlaceWord, UpgradeWord };
 
         /// <summary>
         /// The word a row spells this half of a round's menu with.
@@ -126,6 +149,31 @@ namespace Sim
             return TakeKinds[index];
         }
 
+        /// <summary>
+        /// The word a row spells this defensive action with.
+        /// </summary>
+        /// <remarks>
+        /// Here for the reason <see cref="WordFor(OptionKind)"/> is: whatever
+        /// asks somebody for an action offers them the word a row already
+        /// carries, so a prompt and a file cannot come to hold two
+        /// vocabularies.
+        /// </remarks>
+        public static string WordFor(ActionKind kind)
+        {
+            int index = (int)kind;
+
+            if (index < 0 || index >= ActionWords.Length)
+            {
+                throw new SimulationException(
+                    "Action kind "
+                    + index.ToString(CultureInfo.InvariantCulture)
+                    + " has no word a command script can spell it with. A kind is declared, applied to a "
+                    + "board and authorable, and all three or none.");
+            }
+
+            return ActionWords[index];
+        }
+
         /// <summary>Parses a run's build phases from text.</summary>
         public static IReadOnlyList<RecordCommand> Parse(string text) => Parse("command script", text);
 
@@ -145,7 +193,7 @@ namespace Sim
 
                 DataText.RequireRow(source, row, RowWords);
 
-                bool decides = string.Equals(row.Keyword, Keyword, StringComparison.Ordinal);
+                bool decides = string.Equals(row.Keyword, DecisionWord, StringComparison.Ordinal);
 
                 RequireFields(source, row, decides);
 
@@ -196,7 +244,7 @@ namespace Sim
                     "has "
                     + count.ToString(CultureInfo.InvariantCulture)
                     + " fields. A '"
-                    + Keyword
+                    + DecisionWord
                     + "' row carries the wave, the take kind and the take id, and then a type id and a "
                     + "count for each of the round's slots -- "
                     + FixedFields.ToString(CultureInfo.InvariantCulture)

@@ -15,6 +15,17 @@
 # Sim content: byte-stable on every machine
 content/**  text eol=lf
 
+# The test sources, because a pinned drawing is content that happens to live in
+# a C# file. A drawing is asserted character for character against a raw string
+# literal, and every renderer here ends a line with a bare 0x0A -- so under the
+# `*.cs` rule above a Windows checkout gives the literal CRLF, the renderer
+# still emits LF, and the pin fails on the invisible half of its own bytes. That
+# is a fresh clone going red on files nobody has touched, which is the trap the
+# StreamingAssets rule below is written about, in the one other place the
+# repository compares text it generated against text it stored.
+sim.tests/*.cs     text eol=lf diff=csharp
+sim.tests/**/*.cs  text eol=lf diff=csharp
+
 # The generated copy of that content inside the player. It has to be
 # BYTE-IDENTICAL to the authored original -- an edit-mode test compares the two
 # and the map hash is over what the parser read -- so it needs the same line

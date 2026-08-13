@@ -43,8 +43,8 @@ public class GoldenRunTests
         // would go green through exactly that.
         //
         // OBSERVED: move the interest rate in content/ruleset.txt from 10 to 11.
-        // The ruleset assertion goes red, EECBA54CEEFAF7A9 against the record's
-        // B8D395FFBCA5BCCC, and the replay below goes red too -- refused at the
+        // The ruleset assertion goes red, 13A7F80C5AB79BDD against the record's
+        // AE57B5051EF890D0, and the replay below goes red too -- refused at the
         // gate by name rather than played into a confidently wrong answer.
         //
         // OBSERVED, on the unit table's half of it: move grunt's max hp in

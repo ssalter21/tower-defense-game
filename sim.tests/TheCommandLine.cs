@@ -72,12 +72,25 @@ public static class TheCommandLine
     public static CommandLineResult Invoke(params string[] args) => Invoke((IEnumerable<string>)args);
 
     /// <summary>Runs the command line and hands back what it did.</summary>
-    public static CommandLineResult Invoke(IEnumerable<string> args)
+    public static CommandLineResult Invoke(IEnumerable<string> args) => Invoked(args, null);
+
+    /// <summary>Runs the command line with these words waiting on its standard input.</summary>
+    /// <remarks>
+    /// What a verb reading <see cref="Console.In"/> needs to be exercised from a
+    /// suite with no terminal in it. The words go down the same pipe a person's
+    /// typing would, so what is under test is the console path itself rather
+    /// than the argument that stands in for it -- which is the only way "the
+    /// same words either way" can be asserted rather than assumed.
+    /// </remarks>
+    public static CommandLineResult Typing(string typed, IEnumerable<string> args) => Invoked(args, typed);
+
+    private static CommandLineResult Invoked(IEnumerable<string> args, string? typed)
     {
         var startInfo = new ProcessStartInfo("dotnet")
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            RedirectStandardInput = typed is not null,
             UseShellExecute = false,
             WorkingDirectory = RepoLayout.Root,
         };
@@ -106,6 +119,15 @@ public static class TheCommandLine
 
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
+
+        // Written after the two readers are running, and closed rather than
+        // left open: an interactive verb reads until the words run out, so a
+        // pipe nobody closes is a session that never ends.
+        if (typed is not null)
+        {
+            process.StandardInput.Write(typed);
+            process.StandardInput.Close();
+        }
 
         process.WaitForExit();
 
