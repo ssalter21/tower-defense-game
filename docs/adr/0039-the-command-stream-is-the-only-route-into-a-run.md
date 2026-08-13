@@ -76,6 +76,12 @@ the stream's stamps against the tables the run is actually playing rather than a
 alongside, which is the whole difference between a gate and a courtesy. The cost is three more public
 properties on a type that was previously opaque about its inputs.
 
+> **Amended 13 August 2026.** The strict-ascending half of the ordering rule is gone: a slot's position is now
+> its release order, so an arrangement is a decision rather than a spelling to canonicalise. The three places
+> below still refuse a *repeated* creep; none of them refuses one out of ascending order.
+> [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) says why, and
+> [the decision log](../decision-log.md) records what it cost. Everything else on this page stands.
+
 **The ordering rule is written three times.** `BuildPhase.Resolve` refuses a repeated creep when a decision is
 resolved, `RecordCommand.Of` refuses one when a command is composed, and `ReadSlots` refuses one when bytes are
 read. The middle one is what stops a writer emitting bytes its own reader would refuse, and the outer two fail

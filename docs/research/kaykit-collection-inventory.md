@@ -12,8 +12,7 @@ hex-tile kit whose road pieces are already a tower-defense path vocabulary.
 > dimension below was extracted from `The Complete KayKit Collection v6.1.zip` itself — the file listing from
 > the zip central directory, the animation and mesh data from the glTF JSON chunks. Where it disagrees with
 > [The character roster](kaykit-character-roster.md) — compiled from itch.io listings before the bundle was
-> downloaded, and still sitting on the unmerged branch `worktree-kaykit-character-roster`, so that link only
-> resolves once it lands — **this note is the one that is true.** The disagreements are listed in
+> downloaded — **this note is the one that is true.** The disagreements are listed in
 > [§9](#9-what-this-corrects).
 
 The full model-name listing is the companion file: **[The KayKit model index](kaykit-model-index.md)**.
@@ -341,8 +340,8 @@ Whole-pack triangle spread: Hexagon 16–5,659 (avg 1,006, pulled up by building
 
 ## 9. What this corrects
 
-[The character roster](kaykit-character-roster.md) — on branch `worktree-kaykit-character-roster`, not yet on
-`main` — was written against itch.io listings before the bundle existed on disk, and said so. Six of its
+[The character roster](kaykit-character-roster.md) was written against itch.io listings before the bundle
+existed on disk, and said so. Six of its
 claims do not survive contact with the files:
 
 1. **"All 57 share one rig."** There are two rigs, and `Rig_Large` has no ranged or tool clips at all. This is

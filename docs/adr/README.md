@@ -56,6 +56,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0048](0048-a-board-is-not-a-layout.md) | A board is not a layout, and deriving one is a computation |
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
 | [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written |
+| [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command |
 
 ## Drawing the match
 

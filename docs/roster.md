@@ -173,7 +173,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 14 · Ranger · tier 2 · status live
 
 - **Does** — +1 hex of range.
-- **Looks** —
+- **Looks** — the Archer's model at **1.5 scale**. The rows are identical in everything but range, so size is
+  what separates the rungs on sight.
 - **Numbers** — range 4200, and every other number the Archer's: cooldown 18, damage 90–150, windup 9,
   backswing 6, hitscan, pierce, **cost 40**.
 - **Needs** — nothing. It is the only tier on this page that is purely a number.
@@ -389,14 +390,35 @@ sharing is a **kit variation and not a shortage** — the Skeleton is that model
 pack ships the weapons for it.
 
 > **This page said "the four skeleton models are exactly spent" until 13 August 2026, and it was an
-> undercount.** The [character roster note](research/kaykit-character-roster.md) lists six: the two not named
-> above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the publisher sells as a
-> boss. So the two shapes most obviously wanted next already have sources in a pack that is already chosen,
-> and the Necromancer is currently wearing the mage's model while its own goes unused.
+> undercount.** The [collection inventory](research/kaykit-collection-inventory.md) counts six skeletons: the
+> two not named above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the
+> publisher sells as a boss.
 
-**No assignment moves on that correction**, and nothing here is settled by it: neither pack is on this machine
-— `client/Assets/Art/Characters/` holds two FBX files — so every line above is a plan rather than something
-anybody has looked at. They are assigned for real once the packs are downloaded, and **not by an agent**.
+**No assignment moves on that correction.** The Necromancer keeps **`Skeleton_Mage`**; the dedicated
+Necromancer model is left unused, which is a choice and not an oversight.
+
+### The assignments are signed
+
+**This page said "neither pack is on this machine" until 13 August 2026, and it had been false since the 8th.**
+The complete collection — 22 packs, CC0, 61 rigged characters, 159 clips — has been on disk since then and is
+catalogued from the archive itself in [the collection inventory](research/kaykit-collection-inventory.md). The
+assignments above are **adopted as written** rather than left as a plan, and they were adopted by a person.
+
+**Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it imports:
+
+| What | Scale | Why |
+|---|---|---|
+| Towers | **1.0** | the baseline everything else is read against |
+| Every creep | **0.5** | a creep is unmistakably smaller than the thing shooting it, at any camera angle |
+| Ranger (14) | **1.5** | the Archer's upgrade shares its model, so nothing but size separates the rungs |
+
+**Scale lives in `MatchArt` and never in `content/units.txt`.** Visual size is a view fact under
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and a column in the content tables would make every
+art tweak cost a format version and a re-record. These numbers are expected to move once somebody has looked
+at them, which is the whole reason they are stored somewhere free to change.
+
+**There is no plinth, and no rule about which units are people and which are buildings.** That distinction was
+considered and dropped: it is not a thing this page needs to have an opinion about.
 
 ## What this roster needs that the schema does not have
 

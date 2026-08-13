@@ -404,3 +404,93 @@ shield and sword, which is a kit variation the pack ships weapons for, and `rost
 Neither pack is on this machine. `client/Assets/Art/Characters/` holds two FBX files, so every skin assignment
 on that page is a plan rather than something anyone has looked at, and they are assigned for real once the
 packs are downloaded.
+
+---
+
+## 13 August 2026, later still — the client is grilled, and the wave turns out to have been a bag
+
+Grilling [#190](https://github.com/ssalter21/tower-defense-game/issues/190) against the standing documents
+turned up one defect, reversed two recommendations that had been made against a smaller version of the ask,
+and deferred most of a page.
+
+### A wave was always a sequence, and the build phase quietly made it a set
+
+The vision says it outright, under *You choose the order they come out in*: **a wave is a sequence, not a
+bag**, and `content/wave.txt` has always been an ordered list of `(tick, type, count)`. `BuildPhase.Resolve`
+did not honour it. Every slot was given the same release tick, so a wave's columns all began together and a
+slot's position meant nothing — and the rule that filled slots must **ascend strictly by type id** existed
+precisely because the arrangement was not a decision, canonicalising it so two identical waves could not have
+two spellings.
+
+**Nothing in the vision moves.** This is the implementation catching up to it: a slot's position becomes its
+release offset, the ascending rule comes out, and the player arranges the wave by dragging. The vision's two
+stated preconditions are already met — the corridor is single file, and *a count is a column, not a pile*.
+
+What it costs is not small and is named here so nobody discovers it in the middle of the client work: the
+ordering rule is deleted from the three places [ADR-0039](adr/0039-the-command-stream-is-the-only-route-into-a-run.md)
+deliberately wrote it, the command stream goes to **format 3**, and every committed golden re-freezes —
+`run.commands`, `run-outcome.txt`, `golden-trace.txt`, `match.replay`, `sweep.csv`, and `BudgetTests`'
+calibration tick with them. Balance moves too, because waves arriving in sequence are a different defensive
+problem from waves arriving together, so the roster is priced against a game that no longer exists and the
+sweep harness is pointed at it afterwards rather than before.
+
+### The interactive verb is not what the shell is for
+
+`simcli play` was built so the build phase could be judged a fortnight before a client existed, and it did
+that. But the shell's standing purpose is **mass headless simulation** — pricing the roster by computing it —
+and `play` is the only one of nine verbs that takes human input. The balance work needs none of it.
+
+So **`play` is deleted**, and deliberately last: the proving machinery moves into `sim` first, the client is
+made to write command scripts, `play-run` is confirmed to replay one headlessly, and only then does the verb
+go. Done in that order nothing is lost, because reproducing a run without opening Unity survives in `play-run`.
+[The shell specification](playing-a-run-from-a-shell.md) is archived in the same commit; its sections were
+load-bearing only while the tests that pinned them existed.
+
+Two things about the sweep harness that were assumed missing and are not: a **complete automated player
+already exists** — `EvenShareBot` and `CoverThenUpgradeBot` behind the `BuildPolicy` seam, playing full
+ten-wave runs with no human in them — and the throughput was settled on 6 August, at 2.75 ms a match. Half a
+million runs is under four hours on one core, inside the existing `--runs` ceiling, with no code change. What
+is actually missing is per-run output, parallelism, CLI access to the policy, and checkpointing; that is
+[its own ticket](https://github.com/ssalter21/tower-defense-game/issues/190) and not this effort's.
+
+### Two recommendations reversed by what the ask turned out to be
+
+Both were made when the client's interface was going to be small, and both would have been thrown away.
+
+- **Orthographic to perspective.** Zooming an orthographic camera crops; it does not take you into the scene.
+  The ask is to orbit freely, go in close and look at a fight, which orthographic cannot do. The board stops
+  being isometric-exact — under perspective the far end of the corridor converges — and `SceneFraming`,
+  `CameraRigTests` and the frame-capture entry point all move with it. The six yaw snaps are deleted; one key
+  eases back to a default angle.
+- **uGUI to UI Toolkit.** A header, a palette, a thumbnail-carrying wave bar and drag-to-rearrange is a real
+  interface, and a code-built uGUI version of it is a thing that gets rewritten. `PlaybackControls` ports
+  across in the same effort rather than leaving two UI systems in one scene.
+
+### What the first playable run does not have
+
+Health is the only number the header carries beyond wave, gold and slots. **Leaks, kills and per-tower damage
+are all out** — the first two exist inside a `Match` and are discarded by `Run`, and the third does not exist
+at all: `Damage()` is not passed the tower id, and for projectile towers the shooter is not recoverable from
+the snapshot or the events. Building that is the after-action effort, which is data-heavy, driven by the
+vision, and deliberately not smuggled into a skeleton.
+
+Also out, and additive later: the maze, roster depth, save-and-resume, and any framing of the field beyond a
+number. **No forecast, in any mode** — prevention on screen covers what the rules refuse and stops there,
+because a placement greyed out for being unwise is a computed outcome wearing the clothes of a rule.
+
+### The art packs have been on the machine since 8 August
+
+`roster.md` still said *"neither pack is on this machine"* and called every skin assignment a plan. The
+complete collection has been in `Downloads` since the 8th, catalogued from the zip itself in
+[the collection inventory](research/kaykit-collection-inventory.md) — 22 packs, CC0, 61 rigged characters,
+159 clips. The assignments are adopted as written, with the Necromancer keeping **`Skeleton_Mage`**; the
+dedicated Necromancer model the inventory found is not taken up.
+
+Two rules are added that the page did not have. **Scale is the tier signal**: towers at 1.0, all creeps at
+0.5, the Ranger at 1.5 so it does not read as its own tier-1. And **scale lives in `MatchArt` and never in
+`units.txt`** — visual size is a view fact under [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and
+putting it in the content tables would make every art tweak a format version. The numbers are expected to move
+once they have been looked at, which is the point of storing them somewhere free to change.
+
+There is no plinth and no rule about which units are people and which are buildings. Size is the whole
+differentiator.

@@ -8,6 +8,13 @@ tower and creep rosters can be drafted against real assets rather than against a
 of them can play, **and 45 catalogued Quaternius monsters** that fill the gaps KayKit leaves. This note lists
 all 102.
 
+> **⚠️ Superseded on the numbers, 13 August 2026.** This note was compiled from itch.io listings *before* the
+> bundle was downloaded. [The collection inventory](kaykit-collection-inventory.md) was read from the archive
+> itself and corrects six claims here — most importantly that there are **61** rigged characters and not 57,
+> **159** clips and not 133, and **two rigs** rather than one, with `Rig_Large` shipping no ranged, magic or
+> tool clips at all. Read that note for any count; read this one for the per-model prose and the source URLs,
+> which stand.
+
 > **There is an illustrated version.** Every entry below with its render, kit list and role tag, filterable by
 > source, pack and tower/creep: **[the roster report](https://claude.ai/code/artifact/4b8c7b02-5397-4f73-b9fd-afaef967857c)**.
 > The renders are the publishers' promotional images and are not committed to this repo.
