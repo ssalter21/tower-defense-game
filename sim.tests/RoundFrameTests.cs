@@ -70,7 +70,7 @@ public class RoundFrameTests
         // reading as a panel whose title is the name of a unit.
         Assert.Equal(
             """
-            wave 1 of 10        health 1500 of 1500        gold 100        2 slots
+            wave 1 of 10        health 800 of 800        gold 100
 
                   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
              0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
@@ -79,16 +79,18 @@ public class RoundFrameTests
              3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .      you may build
              4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
              5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
-             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         14  ranger    40
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        4  mage      92
+             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .          4  mage      92
+             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .
              8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
 
-            this wave's menu                           what you may send
-              ordinary  12  skeleton          type 12
-              ordinary   1  minion            type 1
-              ordinary  13  skeleton-warrior  type 13
+            you may build      what you may send
+             11  soldier   30    1  minion            10 each
+              3  archer    40    2  skeleton-scout     9 each
+              4  mage      92    7  necromancer       19 each
+                                12  skeleton          17 each
+                                13  skeleton-warrior  31 each
 
-            nothing taken, nothing built, no slot filled.
+            nothing built, no slot filled.
             """,
             Played.Value.Opening[0]);
     }
@@ -96,11 +98,15 @@ public class RoundFrameTests
     [Fact]
     public void The_longest_name_on_the_roster_keeps_the_gap_before_its_price()
     {
-        // The sendable panel holding one row, and that row the widest label
-        // content/units.txt carries. It is the case the panel's own column width
-        // is settled by, and no round of the committed script reaches it: wave
-        // one offers the skeleton-warrior and the script takes something else,
-        // so the take is composed here instead.
+        // The sendable panel alone, which is what the word `menu` reprints.
+        // Its widest row is the widest label content/units.txt carries, and the
+        // column width the whole panel is laid out on is settled by that row.
+        //
+        // It used to take a composed take to reach this row, because the panel
+        // listed what a run had unlocked and the skeleton-warrior was rationed.
+        // #179 deleted the ration: every creep is sendable from wave one, so
+        // the widest row is on every frame this file draws and the panel is the
+        // whole roster.
         //
         // OBSERVED: pad the label to a constant sixteen with the price straight
         // after it, which is what the panel did until #177. Every other block in
@@ -112,30 +118,18 @@ public class RoundFrameTests
 
         Assert.Equal(
             """
-            wave 1 of 10        health 1500 of 1500        gold 100        2 slots
-
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        nothing standing
-             2    .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .      you may build
-             4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
-             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         14  ranger    40
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        4  mage      92
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-
-            this wave's menu                           what you may send
-              ordinary  12  skeleton          type 12   13  skeleton-warrior  31 each
-              ordinary   1  minion            type 1
-              ordinary  13  skeleton-warrior  type 13
-
-            took ordinary 13 skeleton-warrior, nothing built, no slot filled.
+            what you may send
+              1  minion            10 each
+              2  skeleton-scout     9 each
+              7  necromancer       19 each
+             12  skeleton          17 each
+             13  skeleton-warrior  31 each
             """,
             RoundFrame.ToText(
                 Fresh(types, TheRun.FieldWave(types)),
                 ladder,
-                BuildPhase.Of()));
+                BuildPhase.Of(),
+                Panel.Menu));
     }
 
     [Fact]
@@ -154,7 +148,7 @@ public class RoundFrameTests
         // which is the one comparison the panel exists to let somebody make.
         Assert.Equal(
             """
-            wave 4 of 10        health 1245 of 1500        gold 545        3 slots
+            wave 4 of 10        health 545 of 800        gold 545
 
                   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
              0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
@@ -166,15 +160,16 @@ public class RoundFrameTests
              6    .  .  .  .  .  .  .  a  .  .  .  .  .  #  .        you may build
              7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .       11  soldier   30
              8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .          3  archer    40
-                                                                      14  ranger    40
                                                                        4  mage      92
 
-            this wave's menu                           what you may send
-              ordinary   1  minion            type 1     1  minion            10 each
-              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout     9 each
-              ordinary  12  skeleton          type 12
+            you may build      what you may send
+             11  soldier   30    1  minion            10 each
+              3  archer    40    2  skeleton-scout     9 each
+              4  mage      92    7  necromancer       19 each
+                                12  skeleton          17 each
+                                13  skeleton-warrior  31 each
 
-            nothing taken, nothing built, no slot filled.
+            nothing built, no slot filled.
             """,
             Played.Value.Opening[3]);
     }
@@ -201,7 +196,7 @@ public class RoundFrameTests
         // panel beside the prompt is for.
         Assert.Equal(
             """
-            wave 4 of 10        health 1245 of 1500        gold 325        3 slots
+            wave 4 of 10        health 545 of 800        gold 325
 
                   0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
              0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
@@ -214,15 +209,16 @@ public class RoundFrameTests
              7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .      you may build
              8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
                                                                        3  archer    40
-                                                                      14  ranger    40
                                                                        4  mage      92
 
-            this wave's menu                           what you may send
-              ordinary   1  minion            type 1     1  minion            10 each
-              ordinary  13  skeleton-warrior  type 13    2  skeleton-scout     9 each
-              ordinary  12  skeleton          type 12   12  skeleton          17 each
+            you may build      what you may send
+             11  soldier   30    1  minion            10 each
+              3  archer    40    2  skeleton-scout     9 each
+              4  mage      92    7  necromancer       19 each
+                                12  skeleton          17 each
+                                13  skeleton-warrior  31 each
 
-            took ordinary 12 skeleton, 1 built, 1 slot filled.
+            1 built, 1 slot filled.
             """,
             Played.Value.Composed[3]);
     }
@@ -258,8 +254,14 @@ public class RoundFrameTests
         // The three words that reprint -- map, menu, costs -- draw parts of this
         // frame and not three smaller drawings beside it. Two of them are
         // carried by the whole frame character for character; the third is the
-        // two priced panels, which the frame puts in two different columns and
-        // this puts side by side.
+        // sendable panel alone, which the frame draws in the right-hand column
+        // of a pair and so carries indented rather than verbatim.
+        //
+        // Which two changed with #179. The frame used to put the offering and
+        // the sendable list side by side, so `menu` was carried whole and
+        // `costs` was the odd one out; deleting the offering left the sendable
+        // panel sharing its row with the prices, which is exactly what `costs`
+        // now prints.
         //
         // OBSERVED: draw Panel.Map from BoardMap.ToText's three-argument
         // overload, which is the same grid and the same legend without the
@@ -274,15 +276,29 @@ public class RoundFrameTests
             RoundFrame.ToText(run, ladder, null, Panel.Map), whole, StringComparison.Ordinal);
 
         Assert.Contains(
+            RoundFrame.ToText(run, ladder, null, Panel.Costs), whole, StringComparison.Ordinal);
+
+        // And the odd one out is a column of that pair rather than a block of
+        // its own: every row of it appears, and the block does not.
+        //
+        // OBSERVED: have Panel.Menu print the pair instead of the column. This
+        // goes red on the DoesNotContain, the two spellings having become one,
+        // and `menu` and `costs` stop being different words.
+        Assert.DoesNotContain(
             RoundFrame.ToText(run, ladder, null, Panel.Menu), whole, StringComparison.Ordinal);
+
+        Assert.All(
+            RoundFrame.ToText(run, ladder, null, Panel.Menu).Split('\n'),
+            line => Assert.Contains(line.Trim(), whole, StringComparison.Ordinal));
 
         Assert.Equal(
             """
             you may build      what you may send
-             11  soldier   30
-              3  archer    40
-             14  ranger    40
-              4  mage      92
+             11  soldier   30    1  minion            10 each
+              3  archer    40    2  skeleton-scout     9 each
+              4  mage      92    7  necromancer       19 each
+                                12  skeleton          17 each
+                                13  skeleton-warrior  31 each
             """,
             RoundFrame.ToText(run, ladder, null, Panel.Costs));
     }

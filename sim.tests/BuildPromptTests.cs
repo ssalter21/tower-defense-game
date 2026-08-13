@@ -151,7 +151,7 @@ public class BuildPromptTests
             "place mage 4 4",
             "done");
 
-        Assert.Equal(new[] { 100, 100, 60, 26 }, Gold(session.Text));
+        Assert.Equal(new[] { 100, 60, 26 }, Gold(session.Text));
 
         // The tower is standing on the frames the session printed, in the
         // legend and on the grid, out of a board the run itself never grew.

@@ -59,15 +59,16 @@ public class RunTests
         // round. The wall it puts up is the same wall every round, so the four
         // scenarios still differ in nothing but their arguments.
         //
-        // The run survives its last wave by 96 gold of health, which is what
-        // makes the death flag inert here: the no-death row produces the same
-        // vector as the rest rather than a longer one, so the flag is an
-        // argument and not a different lifecycle.
+        // This player runs out of health in its fourth round, so the death flag
+        // is live: the no-death row plays ten rounds and the rest play four.
+        // What makes the flag an argument rather than a different lifecycle is
+        // that the four they share are identical, gold for gold -- the flag
+        // stops the loop and touches nothing inside it.
         //
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
-        // anything. The no-death row goes red on the health it finished with,
-        // 96 against 1500, which is what a second code path hiding behind an
+        // anything. The no-death row goes red on its very first round, (0, 0)
+        // against (23, 239), which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -102,15 +103,35 @@ public class RunTests
             run = again;
         }
 
-        IReadOnlyList<RoundOutcome> expected = TheRun.TheCommittedRun;
+        IReadOnlyList<RoundOutcome> expected = deathEndsTheRun
+            ? TheRun.TheCommittedRun
+            : TheRun.TheCommittedRunWithoutDeath;
+
         RunOutcome actual = run.Outcome;
 
-        Assert.Equal(RunEnding.OutOfWaves, actual.Ending);
-        Assert.Equal(Run.DefaultWaves, actual.Rounds.Count);
+        Assert.Equal(
+            deathEndsTheRun ? RunEnding.OutOfHealth : RunEnding.OutOfWaves,
+            actual.Ending);
+
         Assert.Equal(expected.Count, actual.Rounds.Count);
         Assert.Equal(TheRun.HealthLeftInTheCommittedRun, actual.HealthRemaining);
-        Assert.Equal(Run.DefaultWaves, actual.WavesSurvived);
-        Assert.Equal(10, run.Sent.Count);
+        Assert.Equal(expected.Count, run.Sent.Count);
+
+        // A wave survived is a wave the pool outlasted, and the pool empties in
+        // the fourth round of both shapes. So both say three, however many
+        // rounds the flag let them go on to resolve -- which is the same claim
+        // as the shared vector above, read off a single number.
+        Assert.Equal(TheRun.TheCommittedRun.Count - 1, actual.WavesSurvived);
+
+        // The rounds the two shapes share are the same rounds. This is the
+        // whole of "an argument and not a lifecycle": the flag decides where
+        // the vector stops and nothing about what is in it.
+        for (int round = 0; round < TheRun.TheCommittedRun.Count; round++)
+        {
+            Assert.Equal(
+                TheRun.TheCommittedRun[round],
+                TheRun.TheCommittedRunWithoutDeath[round]);
+        }
 
         for (int round = 0; round < expected.Count; round++)
         {
@@ -170,9 +191,9 @@ public class RunTests
         Assert.Equal((23 * 10) + (17 * 9), incoming);
         Assert.Equal(383, incoming);
 
-        // The pool is worth about three waves of average creep value: the third
-        // concession is affordable and the fourth is the end of the run.
-        Assert.Equal(1500, TheRuleset.Committed().HealthPoolGold);
+        // The pool is worth about two waves of average creep value: the second
+        // concession is affordable and the third is the end of the run.
+        Assert.Equal(800, TheRuleset.Committed().HealthPoolGold);
 
         var health = new List<int>();
 
@@ -183,10 +204,10 @@ public class RunTests
             health.Add(run.Health);
         }
 
-        Assert.Equal(new[] { 1117, 734, 351, 0 }, health);
+        Assert.Equal(new[] { 417, 34, 0 }, health);
         Assert.Equal(RunEnding.OutOfHealth, run.Ending);
-        Assert.Equal(3, run.Outcome.WavesSurvived);
-        Assert.Equal(4, run.Round);
+        Assert.Equal(2, run.Outcome.WavesSurvived);
+        Assert.Equal(3, run.Round);
     }
 
     [Fact]
@@ -282,19 +303,19 @@ public class RunTests
     [Fact]
     public void Death_is_a_flag_so_a_sweep_row_always_yields_N_rounds_of_data()
     {
-        // The same run that dies in its fourth round above, with the flag off:
-        // ten rounds of data, health on the floor from the fourth onwards, and
-        // waves survived still saying three. A sweep needs the full row.
+        // The same run that dies in its third round above, with the flag off:
+        // ten rounds of data, health on the floor from the third onwards, and
+        // waves survived still saying two. A sweep needs the full row.
         //
         // OBSERVED: have Run.IsOver report true at zero health whatever the
-        // flag says. The round-count assertion goes red, 10 against 4, and a
+        // flag says. The round-count assertion goes red, 10 against 3, and a
         // sweep's rows become as long as each row's luck.
         Run run = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.Equal(RunEnding.OutOfWaves, run.Ending);
         Assert.Equal(0, run.Health);
-        Assert.Equal(3, run.Outcome.WavesSurvived);
+        Assert.Equal(2, run.Outcome.WavesSurvived);
         Assert.All(run.Outcome.Rounds, round => Assert.Equal(383, round.LeakCostTaken));
     }
 
@@ -306,14 +327,14 @@ public class RunTests
         //
         // OBSERVED: let health end only a run whose round cap was lifted --
         // add `&& waves == Purse.RoundCapLifted` to the first branch of
-        // RunOutcome's ending. The round-count assertion goes red, 4 against
-        // 10, and the run plays out its remaining six waves on a pool of
+        // RunOutcome's ending. The round-count assertion goes red, 3 against
+        // 10, and the run plays out its remaining seven waves on a pool of
         // nothing.
         Run run = Played(TheRun.Unstoppable(fieldSize: 1));
 
         Assert.Equal(0, run.Health);
         Assert.True(run.IsOver);
-        Assert.Equal(4, run.Round);
+        Assert.Equal(3, run.Round);
         Assert.True(run.Waves > run.Round, "The run ran out of waves rather than out of health.");
 
         SimulationException thrown = Assert.Throws<SimulationException>(
@@ -401,13 +422,13 @@ public class RunTests
         // longer level, because one of them sent a better wave.
         int pool = TheRuleset.Committed().HealthPoolGold;
 
-        RunOutcome healthier = Outcome(pool, (0, 400), (0, 400), (0, 400));
-        RunOutcome thinner = Outcome(pool, (0, 500), (0, 500), (0, 400));
-        RunOutcome shorter = Outcome(pool, (0, 1500));
-        RunOutcome loud = Outcome(pool, (9000, 400), (9000, 400), (9000, 400));
+        RunOutcome healthier = Outcome(pool, (0, 200), (0, 200), (0, 200));
+        RunOutcome thinner = Outcome(pool, (0, 250), (0, 250), (0, 200));
+        RunOutcome shorter = Outcome(pool, (0, 800));
+        RunOutcome loud = Outcome(pool, (9000, 200), (9000, 200), (9000, 200));
 
         Assert.Equal(3, healthier.WavesSurvived);
-        Assert.Equal(300, healthier.HealthRemaining);
+        Assert.Equal(200, healthier.HealthRemaining);
         Assert.Equal(3, thinner.WavesSurvived);
         Assert.Equal(100, thinner.HealthRemaining);
         Assert.Equal(0, shorter.WavesSurvived);
@@ -520,7 +541,7 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 824 against 8399: the 4006 gold of
+        // over bought nothing. It goes red at 824 against 8399: the 4000 gold of
         // creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
@@ -553,8 +574,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(4006, spent);
-        Assert.Equal(330, bonus);
+        Assert.Equal(4000, spent);
+        Assert.Equal(313, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }

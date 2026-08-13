@@ -296,14 +296,17 @@ public class CommandLineTests
         // OBSERVED: take the FromBytes(bytes).Replay(...) line out of
         // CommandStream.Recorded, which is the whole of what "proved" means.
         // The verb exits 0, writes a perfectly readable command stream for a
-        // take nobody was offered, and this is the only test in the file that
-        // goes red -- a stored run that refuses the first time anybody plays it.
+        // wave nobody could have paid for, and this is the only test in the
+        // file that goes red -- a stored run that refuses the first time
+        // anybody plays it.
         string scratch = TheCommandLine.Scratch("record-run-refused");
         string script = Path.Combine(scratch, "commands.txt");
         string written = Path.Combine(scratch, "run.commands");
 
-        // Wave one's menu on this seed carries ordinary options 5, 8 and 6.
-        File.WriteAllText(script, "build 1 ordinary 3\n");
+        // A hundred minions out of an opening purse of a hundred gold, which is
+        // ten times what the round holds. The script parses perfectly; what
+        // refuses it is the playing.
+        File.WriteAllText(script, "build 1 1 100\n");
 
         CommandLineResult refused = TheCommandLine.Invoke(
             new[]
@@ -316,43 +319,11 @@ public class CommandLineTests
 
         Assert.Equal(1, refused.ExitCode);
         Assert.Contains(
-            "which that round's offering does not carry",
+            "There is no credit in this economy",
             refused.Error,
             StringComparison.Ordinal);
 
         Assert.False(File.Exists(written), written + " was written for a run that cannot be played.");
-    }
-
-    [Fact]
-    public void The_offerings_verb_prints_the_menu_a_script_is_written_from()
-    {
-        // What makes a command file authorable: a take names a kind and an id
-        // off a menu drawn from the run's seed, and nobody can write one for a
-        // seed they have not been shown.
-        //
-        // The game changer is named beside its word rather than the word being
-        // looked for on its own: every listing has both halves of a vocabulary
-        // in it, so "the string 'changer' appears somewhere" is true however the
-        // two are wired together.
-        //
-        // OBSERVED: reverse CommandScript's TakeKinds. WordFor starts answering
-        // with the other half's word, and this goes red -- the anchor's swift
-        // column is listed as an ordinary option, and a row copied off the
-        // listing takes the wrong half of the menu or nothing at all.
-        //
-        // OBSERVED, on the two wave assertions: walk Run.DefaultWaves in
-        // Offerings.ToText instead of run.Waves. The last assertion goes red at
-        // position 629, having found "wave   4" -- a listing that ignores the
-        // length of the run it was asked about, and quietly shows menus for
-        // rounds nobody will play.
-        CommandLineResult listed = TheCommandLine.Invoke(
-            new[] { "offerings", "--seed", "20260807", "--waves", "3" }.Concat(TheCommandLine.RunContent))
-            .Succeeded();
-
-        Assert.Contains("wave   1, 2 slots\n", listed.Output, StringComparison.Ordinal);
-        Assert.Contains("wave   3, 3 slots, an anchor\n", listed.Output, StringComparison.Ordinal);
-        Assert.Contains("changer     1  swift-column", listed.Output, StringComparison.Ordinal);
-        Assert.DoesNotContain("wave   4", listed.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -468,14 +439,11 @@ public class CommandLineTests
             rows,
             StringComparer.Ordinal);
 
-        // Two creeps scored, so two whole-population rows and at least one bin
-        // under each of them.
-        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)
-            && row.Split(',')[2] == "0"));
-
-        Assert.True(
-            rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)) > 2,
-            "The report carries no ingredient bins at all:\n" + string.Join("\n", rows));
+        // Two creeps scored, so exactly two creep rows. It was two whole-
+        // population rows plus a bin or more under each until #179 deleted the
+        // ingredients axis; a creep's runs are one row again, so a third creep
+        // row would now be a creep nobody asked to score.
+        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -505,7 +473,7 @@ public class CommandLineTests
             .Succeeded();
 
         Assert.StartsWith("kind,subject,", swept.Output, StringComparison.Ordinal);
-        Assert.Contains("\ncreep,minion,0,2,", swept.Output, StringComparison.Ordinal);
+        Assert.Contains("\ncreep,minion,2,", swept.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -562,9 +530,9 @@ public class CommandLineTests
     [Fact]
     public void A_file_named_outright_stands_in_for_the_one_the_content_directory_holds()
     {
-        // --content is a directory and the seven files inside it are found by
+        // --content is a directory and the six files inside it are found by
         // the names the runner declares; naming one outright replaces that file
-        // and leaves the other six where they were.
+        // and leaves the other five where they were.
         //
         // What proves the override reached the reader rather than being ignored
         // is the refusal: the file named here is the authored match, whose
@@ -575,9 +543,8 @@ public class CommandLineTests
         // an argument that named a file nobody opened, which is the failure the
         // whole of Arguments exists to prevent.
         CommandLineResult refused = TheCommandLine.Invoke(
-            "offerings",
-            "--seed", "20260807",
-            "--waves", "2",
+            "play-run",
+            "--commands", RepoLayout.CommandFile,
             "--content", RepoLayout.ContentDirectory,
             "--field", RepoLayout.WaveFile);
 
@@ -617,13 +584,13 @@ public class CommandLineTests
             File.Delete(path);
 
             CommandLineResult refused = TheCommandLine.Invoke(
-                "offerings", "--seed", "20260807", "--waves", "1", "--content", scratch);
+                "play-run", "--commands", RepoLayout.CommandFile, "--content", scratch);
 
             File.WriteAllText(path, held);
 
             Assert.True(
                 refused.ExitCode != 0,
-                "The offerings verb played a run with no " + withheld.FileName + " in front of it.");
+                "A run verb played a run with no " + withheld.FileName + " in front of it.");
 
             Assert.Contains(withheld.FileName, refused.Error, StringComparison.Ordinal);
         }
@@ -641,10 +608,11 @@ public class CommandLineTests
         // of throwing. The exit code goes to 0 wherever the program happens to
         // have been started from, and to 1 with a file-not-found somewhere else
         // -- a verb whose behaviour is the shell's working directory.
-        CommandLineResult refused = TheCommandLine.Invoke("offerings", "--seed", "20260807");
+        CommandLineResult refused = TheCommandLine.Invoke(
+            "play-run", "--commands", RepoLayout.CommandFile);
 
         Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("'offerings' needs --map", refused.Error, StringComparison.Ordinal);
+        Assert.Contains("'play-run' needs --map", refused.Error, StringComparison.Ordinal);
         Assert.Contains("holding map.txt with --content", refused.Error, StringComparison.Ordinal);
     }
 

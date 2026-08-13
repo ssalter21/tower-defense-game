@@ -233,10 +233,8 @@ public class DerivationTests
         // run pinned to the old ladder, which is exactly right: the run that
         // could not place a Ranger is not the run that can.
         Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    4  14"));
-        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    3  15"));
+        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    3   4"));
 
-        // The layout, which is the arity every row is read against.
-        Assert.NotEqual(hash, Relinked(original, "layout 1", "layout 2"));
 
         // Nothing that is not a number moved. Each of these changes the file
         // and none of them changes the ladder.

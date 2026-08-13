@@ -30,7 +30,6 @@ internal static class SweepColumns
     {
         "kind",
         "subject",
-        "ingredients",
         "runs",
         "rounds",
         "wins",

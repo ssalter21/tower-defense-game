@@ -218,32 +218,6 @@ public class RunPromptTests
     }
 
     [Fact]
-    public void Done_before_a_take_refuses_and_the_run_does_not_move()
-    {
-        // The refusal is composing's -- one take, no skip, settled at
-        // docs/playing-a-run-from-a-shell.md §8 -- and what belongs to the
-        // lifecycle is what follows from it: a round that was never composed is
-        // a round the run was never advanced through. The session goes on to
-        // quit, and the run has resolved nothing.
-        //
-        // OBSERVED: commit whatever the loop was holding when a round came back,
-        // whatever ended it. A round that opened on `done` has nothing composed,
-        // so Advance is handed a null phase and the session dies on an
-        // ArgumentNullException -- the one word a player is likeliest to try
-        // first ends the run in a stack trace.
-        Session played = Play(AgainstTheCannedField(TheMatch.Types()), "done", "quit");
-
-        Assert.Contains(
-            "There is no phase to be done with until one is named.",
-            played.Text,
-            StringComparison.Ordinal);
-
-        Assert.Equal(0, played.Run.Round);
-        Assert.Empty(played.Result.Decisions);
-        Assert.Empty(played.Result.Rounds);
-    }
-
-    [Fact]
     public void A_wave_the_phase_cannot_afford_is_refused_before_done_and_the_round_still_commits()
     {
         // Four skeletons cost 68 out of the 60 an archer left, and the whole
@@ -408,7 +382,7 @@ public class RunPromptTests
 
         Assert.Equal(Ended.Over, dies.Result.Ending);
         Assert.Equal(RunEnding.OutOfHealth, dies.Run.Ending);
-        Assert.Equal(4, dies.Result.Rounds.Count);
+        Assert.Equal(3, dies.Result.Rounds.Count);
 
         Assert.Equal(Ended.Over, lives.Result.Ending);
         Assert.Equal(RunEnding.OutOfWaves, lives.Run.Ending);

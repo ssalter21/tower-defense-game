@@ -194,7 +194,7 @@ public class CommandStreamTests
         string line = acting.ToString();
 
         Assert.Contains(
-            ", place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
+            "place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
             line,
             StringComparison.Ordinal);
 
@@ -293,7 +293,7 @@ public class CommandStreamTests
         // a stored command. So a decision handed straight to Advance is a
         // decision a command could have carried, and the direct overload is the
         // record's own shape rather than a way around it.
-        Assert.Equal(new[] { "Actions", "Slots", "Take", "TakeId" }, carried);
+        Assert.Equal(new[] { "Actions", "Slots" }, carried);
 
         string[] moves = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -305,7 +305,7 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase)", "OfferingAt(Int32)" },
+            new[] { "Advance(BuildPhase)" },
             moves);
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
@@ -510,9 +510,10 @@ public class CommandStreamTests
         stream.Replay(played);
 
         Assert.Equal(TheCommands.Waves, walked.Count);
-        Assert.True(
-            walked[walked.Count - 1].Purse.Gold > played.Purse.Gold,
-            "The walk's ceiling is not above the purse the run actually closed on.");
+
+        // The walk moved the run nowhere: it is the played run beside it that
+        // has a purse and rounds.
+        Assert.Equal(TheCommands.Waves, played.Round);
 
         UnitType fourth = TheBuild.FirstCreep(run.Types);
         var overspent = new List<RecordCommand>(decisions)

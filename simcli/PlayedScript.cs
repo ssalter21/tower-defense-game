@@ -56,16 +56,11 @@ internal static class PlayedScript
     /// <summary>
     /// The columns every row is laid out on: the keyword, then the wave
     /// right-aligned under two digits, then two spaces. A build row continues
-    /// with the take kind, the take id right-aligned, five spaces and a column
-    /// per slot; an action row with the type id and the cell.
+    /// with a column per slot; an action row with the type id and the cell.
     /// </summary>
     private const int WordWidth = 8;
 
     private const int WaveWidth = 2;
-
-    private const int KindWidth = 10;
-
-    private const int TakeIdWidth = 2;
 
     private const int SlotWidth = 6;
 
@@ -76,8 +71,17 @@ internal static class PlayedScript
     /// <summary>What stands between the wave and the rest of a row.</summary>
     private const string Gap = "  ";
 
-    /// <summary>What stands between the take id and the first slot.</summary>
-    private const string BeforeSlots = "     ";
+    /// <summary>
+    /// What stands between the wave and the first slot.
+    /// </summary>
+    /// <remarks>
+    /// One space, which with <see cref="Gap"/> puts the first slot three
+    /// columns after the wave. It was five while a take stood here; the take
+    /// went with the offering in #179 and the gap closed with it, because a
+    /// column kept for a field nothing writes is a script that reads as though
+    /// something were missing.
+    /// </remarks>
+    private const string BeforeSlots = " ";
 
     /// <summary>These decisions as a script, a round at a time, in wave order.</summary>
     public static string Of(IReadOnlyList<BuildPhase> decisions)

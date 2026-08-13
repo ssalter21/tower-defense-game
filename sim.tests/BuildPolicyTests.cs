@@ -59,7 +59,7 @@ public class BuildPolicyTests
         // Half the purse, rounded down, and the wave gets the rest of the purse
         // rather than the rest of the half. An opening round is the clearest
         // place to read it: a hundred gold splits fifty and fifty, the board
-        // takes one forty-gold ranger and cannot afford a second, and the ten it
+        // takes one forty-gold archer and cannot afford a second, and the ten it
         // did not spend banks instead of buying another minion.
         //
         // That banking is what the interest rate and the unspent-gold column
@@ -79,7 +79,7 @@ public class BuildPolicyTests
         BuildPhase phase = EvenShareBot.Decide(run, Minion);
         RoundReport report = run.Advance(phase);
 
-        Assert.Equal(Ranger, Assert.Single(phase.Actions).TypeId);
+        Assert.Equal(Archer, Assert.Single(phase.Actions).TypeId);
         Assert.Equal(90, report.Build.Spent);
         Assert.Equal(10, report.Build.Purse.Gold);
 
@@ -200,24 +200,32 @@ public class BuildPolicyTests
     }
 
     [Fact]
-    public void The_bot_opens_on_the_ranger_and_never_builds_a_soldier_because_it_buys_route_per_gold()
+    public void The_bot_opens_on_the_archer_and_never_reaches_the_ranger_at_all()
     {
-        // A consequence of the rule rather than a rule of its own, written down
-        // because both halves of it are the kind of thing somebody finds in the
-        // report and reads as a bug: the dearest-reaching row is what the
-        // opening purse buys, and the cheapest row on the roster is never bought
-        // at all.
+        // Two consequences of the rules rather than rules of their own, written
+        // down because both are the kind of thing somebody finds in the report
+        // and reads as a bug.
         //
-        // The ranger and the archer cost the same forty gold and the ranger's
-        // best cell reaches more of the corridor, so it wins the first purchase
-        // outright rather than on a tie. The soldier is a third cheaper and
-        // reaches a fifth as much, which is what per-gold means and why thirty
-        // gold is not the bargain the price list makes it look.
+        // THE OPENING PURSE BUYS AN ARCHER. The ranger reaches further for the
+        // same forty gold and used to win this purchase outright. #179 made it
+        // the target of the ladder's one edge, so it may not be placed: the
+        // dearest-reaching row the ladder lets the bot stand is the archer.
+        //
+        // THE RANGER IS THEN NEVER BUILT AT ALL. The upgrade half climbs to a
+        // strictly dearer row, and the ranger costs exactly what the archer
+        // costs -- so nothing this bot does ever reaches it. That is worth
+        // knowing rather than fixing here: it means the sweep's defense never
+        // exercises the one upgrade edge the roster has, so a balance question
+        // about the ranger cannot be answered from content/sweep.csv. It is a
+        // property of this bot's rule and not of the ladder.
         //
         // OBSERVED: score by price alone -- return the first type with anything
         // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
-        // opening action, type 11 where 14 was expected, and two more rows of
-        // this class go red behind it on a round that now buys two soldiers.
+        // opening action, type 11 where 3 was expected.
+        //
+        // OBSERVED: drop the Placeable filter from CoverThenUpgradeBot.Decide.
+        // This goes red the other way, type 14 where 3 was expected, and every
+        // sweep in the project dies on the placement the ladder refuses.
         UnitTypeTable types = TheMatch.Types();
         CostTable costs = CostTable.From(TheRuleset.Committed(), types);
         HexMap map = TheMatch.Map();
@@ -234,25 +242,33 @@ public class BuildPolicyTests
             }
         }
 
-        Assert.Equal(Ranger, built[0]);
-        Assert.DoesNotContain(Soldier, built);
+        Assert.Equal(Archer, built[0]);
+        Assert.DoesNotContain(Ranger, built);
 
-        // And the other two rows of the roster do get built, so the soldier's
-        // absence is this rule and not a player that only ever buys one thing.
-        Assert.Contains(Archer, built);
+        // The soldier and the mage do get built, so the ranger's absence is the
+        // two rules above and not a player that only ever buys one thing: the
+        // soldier once the archer's cells stop paying, the mage as the climb
+        // the upgrade half does make.
+        Assert.Contains(Soldier, built);
         Assert.Contains(Mage, built);
 
-        // And the reason, in the two comparisons the rule makes: same price and
-        // more corridor than the archer, and more corridor per gold than the
-        // soldier even though the soldier is cheaper.
+        // And the reason, in the two comparisons the rule makes: the archer
+        // reaches more corridor per gold than the soldier even though the
+        // soldier is cheaper, and the ranger would have beaten the archer on
+        // reach at the same price if the ladder let it be placed at all.
         int ranger = Widest(map, types.ById(Ranger));
+        int archer = Widest(map, types.ById(Archer));
         int soldier = Widest(map, types.ById(Soldier));
 
         Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
-        Assert.True(ranger > Widest(map, types.ById(Archer)));
+        Assert.True(ranger > archer);
         Assert.True(
-            ranger * costs.PriceOf(Purchase.Unit(Soldier)) > soldier * costs.PriceOf(Purchase.Unit(Ranger)),
-            "The soldier reaches " + soldier + " route hexes against the ranger's " + ranger + ".");
+            archer * costs.PriceOf(Purchase.Unit(Soldier)) > soldier * costs.PriceOf(Purchase.Unit(Archer)),
+            "The soldier reaches " + soldier + " route hexes against the archer's " + archer + ".");
+
+        // And the price the ranger is never reached over: equal to the archer's,
+        // so a climb that wants a strictly dearer row steps straight past it.
+        Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
     }
 
     [Fact]

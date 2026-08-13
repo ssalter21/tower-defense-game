@@ -378,7 +378,7 @@ public class RecordNegativeTests
         // Format versions are counted per kind, so the command stream's gate is
         // its own. A defense, a wave and a bundle beside it read perfectly well.
         //
-        // OBSERVED: make IsKnown accept version 2 of the command stream. The
+        // OBSERVED: make IsKnown accept version 3 of the command stream. The
         // "cannot know what it is missing" assertion goes red: the read gate
         // waves the record through and the reader's own switch refuses it
         // instead, with a message that says the fault is in this build rather
@@ -391,7 +391,7 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
 
-        Assert.Contains("command stream format version 2", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("command stream format version 3", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("cannot know what it is missing", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(6, GhostRecord.FromBytes(TheMatch.Ghost(types).ToBytes()).Count);
         Assert.Equal(6, WaveRecord.FromBytes(TheMatch.WaveOf(types).ToBytes()).Count);

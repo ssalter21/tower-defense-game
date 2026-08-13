@@ -196,14 +196,23 @@ internal static class RoundFrame
             "gold " + PlainText.Number((composed?.Purse ?? run.Purse).Gold));
 
     /// <summary>
-    /// Every tower the roster can stand on a cell, cheapest first, with what one
-    /// costs.
+    /// Every tower the roster can stand on a cell outright, cheapest first,
+    /// with what one costs.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Cheapest first because what the panel is read for is what this round can
     /// afford, and the price is asked of the cost table rather than read off the
     /// unit row -- the table is what a purchase is actually priced by, and the
     /// things it prices are not all units.
+    /// </para>
+    /// <para>
+    /// A row some edge of the ladder points at is left off. It is refused to
+    /// <c>place</c> and reached by upgrading the rung below it, so listing it
+    /// under a heading that says what may be built would be offering an action
+    /// the rules turn down -- and the panel beside a prompt is exactly where
+    /// that is worst.
+    /// </para>
     /// </remarks>
     private static string[] Buildable(Run run)
     {
@@ -211,7 +220,8 @@ internal static class RoundFrame
 
         for (int index = 0; index < run.Types.Count; index++)
         {
-            if (run.Types.Types[index].Role == UnitRole.Placed)
+            if (run.Types.Types[index].Role == UnitRole.Placed
+                && !run.Ladder.IsTargetOfAnEdge(run.Types.Types[index].Id))
             {
                 towers.Add(run.Types.Types[index]);
             }

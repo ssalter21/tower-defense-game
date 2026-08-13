@@ -1,18 +1,18 @@
-kind,subject,ingredients,runs,rounds,wins,win_rate_bp,dealt_gold,taken_gold,spent_gold,defense_gold,unspent_gold,cost_efficiency_dealt_per_100_gold,income_base_gold,bonus_gold,value,of,bounded
-note,defense_gold,,,,,,,,,,,,,,the defense these rows were played against was built by a deliberately simple bot -- the tower that covers the most unshot route per gold then upgrade the oldest -- so a row describes a game and never skilled play; see #163,,
-note,cost_efficiency_dealt_per_100_gold,,,,,,,,,,,,,,a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one so the price cancels out; see docs/adr/0041,,
-parameter,waves,,,,,,,,,,,,,,10,,
-parameter,field_size,,,,,,,,,,,,,,10,,
-parameter,death_ends_the_run,,,,,,,,,,,,,,no,,
-parameter,free_snapshots,,,,,,,,,,,,,,10,,
-parameter,snapshot_price,,,,,,,,,,,,,,25,,
-parameter,first_seed,,,,,,,,,,,,,,20260807,,
-parameter,runs_per_creep,,,,,,,,,,,,,,8,,
-parameter,ruleset_hash,,,,,,,,,,,,,,7E1DA52C5F85D545,,
-coverage,creeps,,,,,,,,,,,,,,5,5,no
-coverage,seeds,,,,,,,,,,,,,,8,,yes
-creep,minion,,8,80,0,0,184,1644,8160,5520,1970,2,13440,1072,,,
-creep,skeleton-scout,,8,80,0,0,0,1634,7416,5520,1600,0,13440,0,,,
-creep,necromancer,,8,80,8,10000,4256,1634,8664,5520,2944,49,13440,2376,,,
-creep,skeleton,,8,80,8,10000,3472,1634,8704,5520,2864,39,13440,2376,,,
-creep,skeleton-warrior,,8,80,0,0,640,1634,7471,5520,2752,8,13440,1056,,,
+kind,subject,runs,rounds,wins,win_rate_bp,dealt_gold,taken_gold,spent_gold,defense_gold,unspent_gold,cost_efficiency_dealt_per_100_gold,income_base_gold,bonus_gold,value,of,bounded
+note,defense_gold,,,,,,,,,,,,,the defense these rows were played against was built by a deliberately simple bot -- the tower that covers the most unshot route per gold then upgrade the oldest -- so a row describes a game and never skilled play; see #163,,
+note,cost_efficiency_dealt_per_100_gold,,,,,,,,,,,,,a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one so the price cancels out; see docs/adr/0041,,
+parameter,waves,,,,,,,,,,,,,10,,
+parameter,field_size,,,,,,,,,,,,,10,,
+parameter,death_ends_the_run,,,,,,,,,,,,,no,,
+parameter,free_snapshots,,,,,,,,,,,,,10,,
+parameter,snapshot_price,,,,,,,,,,,,,25,,
+parameter,first_seed,,,,,,,,,,,,,20260807,,
+parameter,runs_per_creep,,,,,,,,,,,,,8,,
+parameter,ruleset_hash,,,,,,,,,,,,,7E1DA52C5F85D545,,
+coverage,creeps,,,,,,,,,,,,,5,5,no
+coverage,seeds,,,,,,,,,,,,,8,,yes
+creep,minion,8,80,0,0,184,1644,8160,5520,1970,2,13440,1072,,,
+creep,skeleton-scout,8,80,0,0,0,1634,7416,5520,1600,0,13440,0,,,
+creep,necromancer,8,80,8,10000,4256,1634,8664,5520,2944,49,13440,2376,,,
+creep,skeleton,8,80,8,10000,3472,1634,8704,5520,2864,39,13440,2376,,,
+creep,skeleton-warrior,8,80,0,0,640,1634,7471,5520,2752,8,13440,1056,,,

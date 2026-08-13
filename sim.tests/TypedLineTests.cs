@@ -114,7 +114,7 @@ public class TypedLineTests
         Assert.Equal(BuildAction.Of(ActionKind.Place, 3, 6, 2), spaced.Action);
 
         Assert.Equal(Typed.Done, Word("  DoNe  "));
-        Assert.Equal(Typed.Send, TypedLine.Read("SeNd ChAnGeR 3", Roster).Word);
+        Assert.Equal(Typed.Send, TypedLine.Read("  SeNd   MiNiOn  3 ", Roster).Word);
     }
 
     [Fact]
@@ -218,8 +218,8 @@ public class TypedLineTests
             Refusal("send 12 lots"));
 
         Assert.Equal(
-            "'take ordinary one' names the id 'one', which is not a number written in digits.",
-            Refusal("take ordinary one"));
+            "'place archer 6 down' names the row 'down', which is not a number written in digits.",
+            Refusal("place archer 6 down"));
     }
 
     [Fact]
@@ -313,7 +313,7 @@ public class TypedLineTests
         // with each other about a spelling that no command script carries.
         IReadOnlyList<RecordCommand> script = CommandScript.Parse(
             """
-            build    1  ordinary  1  0 0
+            build    1  0 0
             place    1  3  6 2
             upgrade  1  4  6 2
             """);

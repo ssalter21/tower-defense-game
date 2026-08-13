@@ -84,6 +84,13 @@ public class SweepTests
         // runs resolved between them -- which is what makes the bonus beside it
         // readable as a share.
         //
+        // The plan is the committed shape rather than this suite's small one. A
+        // bonus is paid for beating the field, and #179 narrowed the sweep's bot
+        // to its row's own creep: over four waves against a field of two, every
+        // member sends the same thing and nobody beats anybody, so the bonus
+        // column is a legitimate zero. Ten waves against ten is where the spread
+        // opens up, which is what the committed report is swept at.
+        //
         // OBSERVED: pass PerformanceField.Absent in place of run.Field to
         // Purse.BonusOver in Sweep.Play. This goes red saying "Every creep in
         // the report earned nothing at all for what it sent, over 8064 gold of
@@ -91,7 +98,7 @@ public class SweepTests
         // was -- which is what an economy paying the base alone looks like from
         // every other column.
         Ruleset rules = TheRuleset.Committed();
-        SweepReport report = Sweep.Of(TheSweep.Plan(rules: rules));
+        SweepReport report = Sweep.Of(TheSweep.Plan(rules: rules, waves: 10, fieldSize: 10));
         long bonus = 0;
         long incomeBase = 0;
 
@@ -127,11 +134,14 @@ public class SweepTests
         // seed have to disagree, or the seed is not reaching the runs and the
         // sample size is a lie.
         //
-        // What separates them is what they bought. Gold spent moves with the
-        // whole run -- which offering was drawn, which creep was taken, what it
-        // cost to send -- where what got past the field moves only with the
-        // half of the purse that walked, and a plan this short can spend two
-        // populations' worth of wave on the same two creeps.
+        // What separates them is what they met. Gold spent used to be the
+        // discriminator, because the seed drew the offering and the offering
+        // decided which creep a run took; #179 deleted the offering, so the bot
+        // sends its row's creep whatever the seed is and two populations spend
+        // identically. What the seed still reaches is the field each round is
+        // scored against -- so what a run took off that field is the number that
+        // has to disagree, and a sweep whose seed reached nothing would show it
+        // here.
         //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
@@ -141,7 +151,7 @@ public class SweepTests
         SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
         SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "minion");
 
-        Assert.NotEqual(one.GoldSpent, other.GoldSpent);
+        Assert.NotEqual(one.LeakCostTaken, other.LeakCostTaken);
     }
 
     [Fact]
