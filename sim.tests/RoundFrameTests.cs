@@ -139,123 +139,6 @@ public class RoundFrameTests
     }
 
     [Fact]
-    public void A_game_changer_named_longer_than_any_creep_widens_the_column_they_share()
-    {
-        // A changer's name goes in the column the sendable panel spells a
-        // creep's, and a changer is a row of content/schedule.txt rather than
-        // of content/units.txt -- so the width is measured over both files. No
-        // pool today holds a name longer than skeleton-warrior's sixteen, which
-        // is why this plants one of twenty and why the committed blocks in this
-        // file do not move: the fix is a rule rather than a redraw.
-        //
-        // The width is read off wave one, which is not an anchor and prints no
-        // changer at all. That is the claim: it comes off the content and never
-        // off the rows on screen, so the column cannot step sideways at wave
-        // three when the first pool arrives.
-        //
-        // OBSERVED: measure UnitRole.Moving alone, which is what the width did
-        // until now. Every menu row here comes back four columns narrower and
-        // "type 12" moves left with it -- and against the committed schedule
-        // nothing anywhere says so, because thermal-riser is thirteen.
-        UnitTypeTable types = TheMatch.Types();
-        UpgradeLadder ladder = TheMatch.Ladder(types);
-
-        Assert.Equal(
-            """
-            wave 1 of 10        health 1500 of 1500        gold 100        2 slots
-
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        nothing standing
-             2    .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .      you may build
-             4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .         11  soldier   30
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
-             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         14  ranger    40
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        4  mage      92
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-
-            this wave's menu                               what you may send
-              ordinary  12  skeleton              type 12
-              ordinary   1  minion                type 1
-              ordinary  13  skeleton-warrior      type 13
-
-            nothing taken, nothing built, no slot filled.
-            """,
-            RoundFrame.ToText(
-                Fresh(types, TheRun.FieldWave(types), WithALongChangerName(types)),
-                ladder,
-                null));
-    }
-
-    [Fact]
-    public void An_anchors_menu_merges_the_game_changers_into_the_ordinary_options()
-    {
-        // Six rows on one menu, in the two halves an anchor merges, and one
-        // thing is taken from the whole list. The three changers field two
-        // bodies between them, which is why a row carries the type id beside
-        // the option id: 'changer 1' and 'changer 3' are two takes over the
-        // scout, and what a slot is filled with is the 2 on the right.
-        //
-        // OBSERVED: drop the type id from RoundFrame.Menu's row. Every block
-        // here still reads perfectly, and there is no longer anything on the
-        // frame that says what "changer 4" would let you send -- the one number
-        // a `send` needs is the one the menu stopped printing.
-        Assert.Equal(
-            """
-            wave 3 of 10        health 1310 of 1500        gold 382        3 slots
-
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        standing
-             2    .  .  .  .  .  .  a  .  .  .  .  .  #  .  .          1  a  archer   6,2
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .        2  a  archer   7,4
-             4    .  .  #  .  .  .  .  a  .  .  .  .  .  .  .
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .      you may build
-             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .         11  soldier   30
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .        3  archer    40
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .         14  ranger    40
-                                                                       4  mage      92
-
-            this wave's menu                          what you may send
-              ordinary   1  minion            type 1    1  minion            10 each
-              ordinary   7  necromancer       type 7    2  skeleton-scout     9 each
-              ordinary   2  skeleton-scout    type 2
-              changer    1  swift-column      type 2
-              changer    3  split-push        type 2
-              changer    4  long-column       type 1
-
-            nothing taken, nothing built, no slot filled.
-            """,
-            Played.Value.Opening[2]);
-    }
-
-    [Fact]
-    public void A_menu_row_is_spelled_with_the_word_a_command_script_takes_it_with()
-    {
-        // The expectation is built out of CommandScript's own list rather than
-        // written here, which is the whole of what one vocabulary means: rename
-        // the word a script takes a game changer with and this moves with it,
-        // where a literal "changer" in here would go red and be corrected back
-        // into a word no file parses.
-        //
-        // OBSERVED: spell the menu's take kind as option.Kind.ToString(). This
-        // goes red on "changer  " against "GameChanger", which is a word that
-        // reads perfectly on a screen and that no command file can carry -- the
-        // exact failure a menu drawn from a second list produces, and the one
-        // the blocks above cannot tell from a layout change.
-        Assert.Contains(
-            "  " + CommandScript.WordFor(OptionKind.GameChanger).PadRight(9) + "  4  long-column",
-            Played.Value.Opening[2],
-            StringComparison.Ordinal);
-
-        Assert.Contains(
-            "  " + CommandScript.WordFor(OptionKind.Ordinary).PadRight(9) + "  1  minion",
-            Played.Value.Opening[2],
-            StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void The_frame_in_front_of_wave_four_is_the_one_the_specification_works_through()
     {
         // docs/playing-a-run-from-a-shell.md §2's worked frame, drawn from the
@@ -457,33 +340,18 @@ public class RoundFrameTests
         return new Frames(opening, composed);
     }
 
-    /// <summary>
-    /// The committed shape with one tier-3 changer renamed to the longest label
-    /// this roster's name column could be asked to print, and nothing else
-    /// touched.
-    /// </summary>
-    /// <remarks>
-    /// A label is the one field of that file nothing branches on and nothing
-    /// folds into the content hash, so this is the same shape drawing the same
-    /// fillings for the same seed -- which is what makes the block above a claim
-    /// about the width alone.
-    /// </remarks>
-    private static AnchorSchedule WithALongChangerName(UnitTypeTable types) =>
-        AnchorSchedule.Parse(
-            PlantedText.Replace(TheSchedule.CommittedText(), "thermal-riser", LongChanger),
-            types);
 
     /// <summary>
     /// A fresh run on the committed content and the committed seed, against a
     /// canned pool sending the wave named here, and under the shape named here
     /// where the committed one is not the subject.
     /// </summary>
-    private static Run Fresh(UnitTypeTable types, WaveScript field, AnchorSchedule? schedule = null) =>
+    private static Run Fresh(UnitTypeTable types, WaveScript field, UpgradeLadder? ladder = null) =>
         new Run(
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            schedule ?? TheSchedule.Committed(types),
+            ladder ?? TheLadder.Committed(types),
             FieldPool.Canned(TheMatch.Layout(types), field),
             TheRun.Seed,
             Run.DefaultWaves,

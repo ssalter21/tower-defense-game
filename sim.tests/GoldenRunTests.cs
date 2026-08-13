@@ -61,7 +61,7 @@ public class GoldenRunTests
         Assert.Equal(Seed, stream.Seed);
         Assert.Equal(types.ContentHash, stream.Header.ContentHash);
         Assert.Equal(TheRuleset.Committed().ContentHash, stream.RulesetHash);
-        Assert.Equal(TheSchedule.Committed(types).ContentHash, stream.ScheduleHash);
+        Assert.Equal(TheLadder.Committed(types).ContentHash, stream.ScheduleHash);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class GoldenRunTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Canned(defense, TheRun.FieldWave(types)),
             Seed,
             Run.DefaultWaves,

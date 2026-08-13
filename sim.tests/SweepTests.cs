@@ -213,7 +213,7 @@ public class SweepTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             TheMatch.Types(),
-            TheSchedule.Committed(),
+            TheLadder.Committed(),
             TheSweep.Field(TheMatch.Types()),
             TheSweep.Seed,
             TheSweep.Runs).DeathEndsTheRun);

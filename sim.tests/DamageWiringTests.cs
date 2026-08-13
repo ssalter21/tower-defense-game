@@ -194,93 +194,15 @@ public class DamageWiringTests
         Assert.Contains("never checked against each other", thrown.Message, StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void A_prepared_shooter_adds_its_bonus_in_the_tick_loop_and_nothing_else_does()
-    {
-        // The counter reaching the expression, which is the seam the whole
-        // bonusVsTag layer exists for. What a wave order fields is a run-level
-        // fact -- the unlocks carry the take, and the schedule says which
-        // shooter answered that anchor -- so the pairing is worked out there and
-        // handed to the match as numbers.
-        //
-        // OBSERVED: pass a literal 0 into DamageModel.Dealt from Match.Dealt
-        // instead of the bonus. The prepared range assertion goes red on all
-        // eight landings, 293 against a range of 1035 to 1165, which is what a
-        // seam that is present and not connected looks like.
-        UnitTypeTable types = TheMatch.Types();
-        Ruleset rules = TheRuleset.Committed();
-        AnchorSchedule schedule = TheSchedule.Committed();
-        Run run = TheBuild.Fresh();
-
-        // Wave nine is the steep anchor, and its menu is the only place a bonus
-        // above zero can be taken. Reading the offering is enough: an offering
-        // is a function of the seed and the wave, so nothing has to be played.
-        Option changer = run.OfferingAt(9).Options.First(option => option.Kind == OptionKind.GameChanger);
-        Unlocks fielded = Unlocks.None.With(changer);
-        UnitType body = changer.Type;
-        UnitType mortar = types.ById(4);
-
-        TowerLayout defense = TowerLayout.Parse(OneMortar, types);
-        WaveScript wave = WaveScript.Parse("order 0 " + body.Id + " 6 0", types);
-        ShotBonus bonuses = ShotBonus.Fielded(wave, defense, fielded, schedule);
-
-        // A mortar and a bolt standing side by side against the same creep: one
-        // of them answered wave nine's anchor and the other did not.
-        //
-        // OBSERVED: read the bonus off the game changer rather than off the
-        // schedule -- `changer.BonusVsTag` instead of
-        // `schedule.BonusVsTag(shooter, changer)` in ShotBonus.Fielded. The
-        // unprepared-shooter assertion goes red, 0 against 825, which is a
-        // counter paid to whoever happened to be standing there rather than to
-        // the unit type the anchor named.
-        ShotBonus beside = ShotBonus.Fielded(
-            wave, TowerLayout.Parse(MortarAndBolt, types), fielded, schedule);
-
-        Assert.Equal(schedule.Anchors[2].CounterTypeId, mortar.Id);
-        Assert.Equal(825, beside.Against(mortar.Id, 0));
-        Assert.Equal(0, beside.Against(types.ById(3).Id, 0));
-
-        // And the same shooter against an order that fields nothing.
-        Assert.Equal(0, ShotBonus.None.Against(mortar.Id, 0));
-
-        int[] prepared = Landings(rules, defense, wave, bonuses);
-        int[] unprepared = Landings(rules, defense, wave, ShotBonus.None);
-
-        Assert.All(
-            prepared,
-            amount => Assert.InRange(
-                amount,
-                Dealt(rules, mortar.DamageMin, 825, mortar, body),
-                Dealt(rules, mortar.DamageMax, 825, mortar, body)));
-
-        Assert.All(
-            unprepared,
-            amount => Assert.InRange(
-                amount,
-                Dealt(rules, mortar.DamageMin, 0, mortar, body),
-                Dealt(rules, mortar.DamageMax, 0, mortar, body)));
-
-        // And it is steep rather than binary: the two ranges do not overlap at
-        // all, so preparing is a read of the board and not a rounding error.
-        Assert.True(prepared.Length > 3 && unprepared.Length > 3, "Too few landings to compare.");
-        Assert.True(
-            prepared.Min() > unprepared.Max(),
-            "A prepared shot landed no harder than an unprepared one: "
-            + prepared.Min()
-            + " against "
-            + unprepared.Max()
-            + ".");
-    }
-
     private static int Dealt(Ruleset rules, int roll, int bonus, UnitType shooter, UnitType target) =>
         DamageModel.Dealt(rules, roll, bonus, shooter.AttackType, target.ArmourType, target.Armour);
 
     /// <summary>Every amount a match reported landing, in the order it landed.</summary>
-    private static int[] Landings(Ruleset rules, TowerLayout defense, WaveScript wave, ShotBonus bonuses)
+    private static int[] Landings(Ruleset rules, TowerLayout defense, WaveScript wave)
     {
         var events = new TheMatch.EventLog();
 
-        new Match(TheMatch.Map(), rules, defense, wave, TheMatch.Seed, bonuses).Resolve(events);
+        new Match(TheMatch.Map(), rules, defense, wave, TheMatch.Seed).Resolve(events);
 
         return events.Kinds
             .Select((kind, index) => (Kind: kind, Amount: events.Amounts[index]))

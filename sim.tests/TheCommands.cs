@@ -109,7 +109,7 @@ public static class TheCommands
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             TheRun.Pool(types),
             seed,
             waves,
@@ -181,7 +181,7 @@ public static class TheCommands
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
 
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
-    public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)
+    public static Run Against(Ruleset rules, UpgradeLadder? ladder = null, int waves = Waves)
     {
         UnitTypeTable types = TheMatch.Types();
 
@@ -189,7 +189,7 @@ public static class TheCommands
             TheMatch.Map(),
             rules,
             types,
-            schedule ?? TheSchedule.Committed(types),
+            ladder ?? TheLadder.Committed(types),
             TheRun.Pool(types),
             TheRun.Seed,
             waves,

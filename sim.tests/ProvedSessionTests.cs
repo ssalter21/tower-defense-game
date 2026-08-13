@@ -319,7 +319,7 @@ public class ProvedSessionTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Canned(TheMatch.Layout(types), TheRun.FieldWave(types)),
             TheRun.Seed,
             Run.DefaultWaves,

@@ -45,7 +45,7 @@ public static class TheBuild
             TheMatch.Map(),
             rules,
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             TheRun.Pool(types),
             seed,
             waves,
@@ -104,36 +104,26 @@ public static class TheBuild
             : Shopping(run, run.Purse.Gold - tower).With(next);
     }
 
-    /// <summary>Every option on a round's menu, as the pair a decision names.</summary>
-    public static (OptionKind Kind, int Id)[] Named(Offering offering) =>
-        offering.Options.Select(option => (option.Kind, option.Id)).ToArray();
-
-    /// <summary>
-    /// The first thing on a round's menu, which is always an ordinary option,
-    /// filling the slots named here.
-    /// </summary>
+    /// <summary>A round filling the slots named here and building nothing.</summary>
     /// <remarks>
     /// A decision that names no slot at all is spelled
     /// <see cref="BuyingNothing"/>, so that the two spellings of a wave nobody
     /// paid for are one.
     /// </remarks>
-    public static BuildPhase TakeFirst(Offering offering, params WaveSlot[] slots) =>
-        BuildPhase.Of(offering.Options[0].Kind, offering.Options[0].Id, slots);
+    public static BuildPhase Filling(params WaveSlot[] slots) => BuildPhase.Of(slots);
 
     /// <summary>
-    /// A round that takes the first thing on its menu and buys nothing at all.
+    /// A round that buys nothing at all.
     /// </summary>
     /// <remarks>
     /// No slot named, so the purse carries into the wave exactly as it came out
     /// of the last one. It is named for that because a round that spends
     /// nothing is one build phase among many and not a way into a run that
-    /// never charges: the take is still read off the round's own offering, and
-    /// what it unlocks is still what the run may field.
+    /// never charges.
     /// </remarks>
-    public static BuildPhase BuyingNothing(Offering offering) =>
-        BuildPhase.Of(offering.Options[0].Kind, offering.Options[0].Id);
+    public static BuildPhase BuyingNothing() => BuildPhase.Of();
 
-    /// <summary>A round that takes the first thing on its menu and spends the purse on the creep it unlocks.</summary>
+    /// <summary>A round that spends the purse on the cheapest creep the roster has.</summary>
     public static BuildPhase Shopping(Run run) => Shopping(run, run.Purse.Gold);
 
     /// <summary>
@@ -141,9 +131,9 @@ public static class TheBuild
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The take comes first because unlocking happens before buying, so the
-    /// creep a round takes is the creep its wave sends -- which is what makes
-    /// this the shortest decision that shops at all.
+    /// The creep is the first walking row of the roster, which nothing gates:
+    /// every creep is sendable from wave one, so the shortest decision that
+    /// shops at all is one slot on whichever row comes first.
     /// </para>
     /// <para>
     /// A budget short of one body fills no slot rather than borrowing against
@@ -155,11 +145,26 @@ public static class TheBuild
     /// <param name="budget">What the round is willing to spend, in gold.</param>
     public static BuildPhase Shopping(Run run, int budget)
     {
-        Option first = run.Offering.Options[0];
-        int count = budget / run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+        UnitType first = FirstCreep(run.Types);
+        int count = budget / run.Costs.PriceOf(Purchase.Unit(first.Id));
 
         return count == 0
-            ? BuildPhase.Of(first.Kind, first.Id)
-            : BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, count));
+            ? BuildPhase.Of()
+            : BuildPhase.Of(WaveSlot.Of(first.Id, count));
+    }
+
+    /// <summary>The first walking row of a roster, which is what a fixture sends.</summary>
+    public static UnitType FirstCreep(UnitTypeTable types)
+    {
+        for (int index = 0; index < types.Count; index++)
+        {
+            if (types.Types[index].Role == UnitRole.Moving)
+            {
+                return types.Types[index];
+            }
+        }
+
+        throw new SimulationException(
+            "A fixture asked a roster with no walking row in it for a creep to send.");
     }
 }

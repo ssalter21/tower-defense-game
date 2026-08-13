@@ -226,7 +226,7 @@ public class DerivationTests
         // 6546745EC46DCEE5 -- at which point renaming a game changer retires
         // every run recorded against the shape.
         UnitTypeTable types = TheMatch.Types();
-        string original = TheSchedule.CommittedText();
+        string original = TheLadder.CommittedText();
         Hash64 hash = AnchorSchedule.Parse(original, types).ContentHash;
 
         // A number moved, once per column the shape is made of. Each retires

@@ -53,180 +53,6 @@ public class BuildPhaseTests
     private const int Bodies = 3;
 
     [Fact]
-    public void Every_player_in_a_match_sees_the_same_offering_for_a_given_round()
-    {
-        // The Mechabellum move: one public list, so a send is a read rather
-        // than a guess. What makes it public is that it is drawn from the run's
-        // seed and the wave and from nothing private -- not the purse, not what
-        // has been unlocked, not what was sent. Two players of one match are
-        // two runs on one seed that played differently, and they have to be
-        // handed the same menu.
-        //
-        // OBSERVED: mix the purse into the offering's position -- pass
-        // Purse.Gold as the opponent coordinate in Run.OfferingAt. The wave-2
-        // assertion goes red, [(Ordinary, 5), (Ordinary, 2), (Ordinary, 8)]
-        // against [(Ordinary, 8), (Ordinary, 7), (Ordinary, 2)], which is what
-        // a shop that reads what somebody can afford looks like from the other
-        // player's chair.
-        //
-        // OBSERVED: mix what has been unlocked in instead -- pass Unlocks.Count
-        // there. The two runs still agree, because both of them took exactly
-        // one thing; the assertion that goes red is the fresh run's, on the
-        // second option of wave three's menu, 8 against 6. That is why reading
-        // a round's offering early is asserted here as well as reading it
-        // late: two players of one match hold the same private quantities
-        // often enough that comparing them only to each other would miss it.
-        Run mine = TheBuild.Fresh(waves: 4);
-        Run theirs = TheBuild.Fresh(waves: 4);
-
-        Assert.Equal(TheBuild.Named(mine.Offering), TheBuild.Named(theirs.Offering));
-
-        // Two different opening rounds: different takes, and one of them sends
-        // a wave while the other banks the round.
-        mine.Advance(BuildPhase.Of(OptionKind.Ordinary, mine.Offering.Options[0].Id));
-        theirs.Advance(
-            BuildPhase.Of(
-                OptionKind.Ordinary,
-                theirs.Offering.Options[1].Id,
-                WaveSlot.Of(theirs.Offering.Options[1].TypeId, 2)));
-
-        Assert.NotEqual(mine.Unlocks.Taken[0].Id, theirs.Unlocks.Taken[0].Id);
-        Assert.NotEqual(mine.Purse.Gold, theirs.Purse.Gold);
-
-        // And the round after it, and the one after that, are the same list.
-        Assert.Equal(TheBuild.Named(mine.Offering), TheBuild.Named(theirs.Offering));
-        Assert.Equal(TheBuild.Named(mine.OfferingAt(3)), TheBuild.Named(theirs.OfferingAt(3)));
-
-        // Read from a run that has played nothing at all, wave three's menu is
-        // still the same menu. The offering is a function of the seed and the
-        // wave, so where in the run it is read from cannot enter it.
-        Assert.Equal(
-            TheBuild.Named(TheBuild.Fresh(waves: 4).OfferingAt(3)),
-            TheBuild.Named(mine.OfferingAt(3)));
-    }
-
-    [Fact]
-    public void The_offering_is_drawn_fresh_each_round_from_a_derived_position()
-    {
-        // Most of a week's variety comes from the churn rather than from the
-        // anchors -- ten draws a run against the anchors' three -- so the ten
-        // menus of a run must not be one menu ten times.
-        //
-        // And the position is derived rather than continued, which is the
-        // property that makes a run reproducible from its record: wave seven's
-        // offering cannot depend on what waves one to six did.
-        //
-        // OBSERVED: draw every round from the same position -- pass 0 instead
-        // of the wave in Run.OfferingAt's Derived call. The first assertion
-        // goes red saying ten waves of a run drew 7,5,6 every time, which is an
-        // offering that is fresh per run rather than per round.
-        string[] menus = Menus(TheBuild.Fresh());
-
-        Assert.True(
-            menus.Distinct().Count() > 1,
-            "Ten waves of a run drew the same ordinary options every time: " + menus[0] + ".");
-
-        // Same seed, same menus. A different seed, different menus.
-        Assert.Equal(menus, Menus(TheBuild.Fresh()));
-        Assert.NotEqual(menus, Menus(TheBuild.Fresh(seed: TheRun.Seed + 1)));
-    }
-
-    [Fact]
-    public void On_an_anchor_round_three_game_changers_merge_into_that_rounds_ordinary_offering()
-    {
-        // The menu is merged rather than additional: one thing is taken from
-        // the whole list, so a game changer competes head to head with an
-        // ordinary unlock. A free extra pick would end every run with everybody
-        // holding all three, which leaves only when they field it unknown.
-        //
-        // OBSERVED: merge the first anchor's menu into every round -- look up
-        // filling.Menus[0].Anchor.Wave instead of wave in Offering.Draw. The
-        // ordinary-round assertion goes red on IsAnchor, and every wave of the
-        // run becomes an anchor with six things on it.
-        Run run = TheBuild.Fresh();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
-
-        Assert.Equal(3, rules.OrdinaryOptionsPerRound);
-        Assert.Equal(3, rules.GameChangersPerAnchor);
-
-        foreach (int wave in new[] { 1, 2, 4, 5, 7, 8, 10 })
-        {
-            Offering ordinary = run.OfferingAt(wave);
-
-            Assert.False(ordinary.IsAnchor);
-            Assert.Equal(rules.OrdinaryOptionsPerRound, ordinary.Count);
-            Assert.All(ordinary.Options, option => Assert.Equal(OptionKind.Ordinary, option.Kind));
-        }
-
-        foreach (int wave in new[] { 3, 6, 9 })
-        {
-            Offering anchored = run.OfferingAt(wave);
-
-            Assert.True(anchored.IsAnchor);
-            Assert.Equal(rules.OrdinaryOptionsPerRound + rules.GameChangersPerAnchor, anchored.Count);
-            Assert.Equal(rules.OrdinaryOptionsPerRound, anchored.OrdinaryCount);
-
-            // The three the run's filling drew onto that anchor, and no others.
-            Assert.Equal(
-                run.Filling.At(wave).GameChangers.Select(changer => changer.Id),
-                anchored.Options
-                    .Where(option => option.Kind == OptionKind.GameChanger)
-                    .Select(option => option.Id));
-        }
-
-        // And a game changer is takeable off the merged list, which is the
-        // whole of what "competes head to head" means.
-
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-
-        Option changerOption = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
-        run.Advance(BuildPhase.Of(OptionKind.GameChanger, changerOption.Id, WaveSlot.Empty));
-
-        Assert.Equal(OptionKind.GameChanger, run.Unlocks.Taken[2].Kind);
-        Assert.Equal(3, run.Unlocks.Count);
-    }
-
-    [Fact]
-    public void Taking_an_option_unlocks_a_creep_for_the_rest_of_the_run_and_unlocking_is_free()
-    {
-        // Free to unlock and paid to buy, so what may be fielded is bounded by
-        // what was chosen rather than by which wallet somebody remembered to
-        // save into. The take costs nothing: a round that took and sent nothing
-        // has exactly the purse it opened with plus what the wave paid.
-        //
-        // OBSERVED: charge the take -- spend costs.PriceOf(Purchase.Unit(
-        // taken.TypeId), 1) out of the purse in BuildPhase.Resolve before the
-        // slots are priced. The free-unlock assertion goes red, 210 against
-        // 188, and unlocking becomes a second price nobody authored -- charged
-        // on top of the wave, out of the same wallet, at the cost of a creep
-        // nobody sent.
-        Run run = TheBuild.Fresh(waves: 4);
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
-
-        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
-        Assert.Equal(0, run.Unlocks.Count);
-
-        Option first = run.Offering.Options[0];
-        run.Advance(BuildPhase.Of(first.Kind, first.Id));
-
-        // Nothing was bought, so the purse is what it opened with plus the wave.
-        Assert.Equal(rules.StartingPurseGold + 10 + rules.IncomeBasePerWave, run.Purse.Gold);
-        Assert.Equal(1, run.Unlocks.Count);
-        Assert.True(run.Unlocks.Has(first.TypeId));
-
-        // And it is permanent: three rounds later, with three other takes in
-        // between, the first one is still fieldable.
-        while (!run.IsOver)
-        {
-            run.Advance(TheBuild.BuyingNothing(run.Offering));
-        }
-
-        Assert.Equal(4, run.Unlocks.Count);
-        Assert.True(run.Unlocks.Has(first.TypeId));
-    }
-
-    [Fact]
     public void A_wave_has_the_slots_the_schedule_derives_and_each_one_is_a_creep_type_and_a_count()
     {
         // Slots start at two and widen only at anchors, on the width the
@@ -242,7 +68,7 @@ public class BuildPhaseTests
         // wallet stops widening at an anchor at all.
         Run run = TheBuild.Fresh();
         Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
-        AnchorSchedule schedule = TheSchedule.Committed();
+        UpgradeLadder ladder = TheLadder.Committed();
 
         int[] widths = Enumerable.Range(1, 10).Select(wave => run.OfferingAt(wave).WaveSlots).ToArray();
 
@@ -299,120 +125,6 @@ public class BuildPhaseTests
         Assert.True(default(WaveSlot).IsEmpty);
         Assert.Equal(WaveSlot.Empty, default(WaveSlot));
         Assert.Equal(0, WaveSlot.Empty.TypeId);
-    }
-
-    [Fact]
-    public void A_take_naming_an_option_the_offering_did_not_carry_is_refused()
-    {
-        // The offering is what everybody in the match was reading, so a take
-        // against a different one is a decision made in a different game. A
-        // refusal and never a skip: a run that partially validates produces a
-        // confidently wrong result that still looks like a result.
-        //
-        // OBSERVED: return the first option instead of throwing in
-        // Offering.Take when TryFind finds nothing. This goes red having caught
-        // nothing -- no exception was thrown -- and every command naming an
-        // option that was never offered silently unlocks whatever happened to
-        // be drawn first.
-        Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        int absent = offering.Options.Max(option => option.Id) + 1;
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(run, BuildPhase.Of(OptionKind.Ordinary, absent), Unlocks.None, 1000));
-
-        Assert.Contains("which that round's offering does not carry", thrown.Message, StringComparison.Ordinal);
-
-        // The kind is part of the identity, so an ordinary option's id taken as
-        // a game changer is just as absent -- wave 1 has no game changers at all.
-        Assert.Throws<SimulationException>(
-            () => Resolved(
-                run, BuildPhase.Of(OptionKind.GameChanger, offering.Options[0].Id), Unlocks.None, 1000));
-    }
-
-    [Fact]
-    public void Buying_a_creep_that_was_never_unlocked_is_refused()
-    {
-        // The unlock gate, which is what makes what a player may field bounded
-        // by what they chose. A gate that let one purchase through is a gate
-        // nobody has.
-        //
-        // OBSERVED: drop the after.Has check in BuildPhase.Resolve. This goes
-        // red on the message rather than on the throw: what fires instead is
-        // "Type id 1 is unlocked and has no unit row behind it, which cannot
-        // happen", one layer later and from a guard whose own comment says the
-        // case is impossible. That is why the refusal is asserted by name --
-        // the gate being gone reads as an internal contradiction rather than as
-        // a creep the run never took.
-        Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        Option taken = offering.Options[0];
-        int never = TheMatch.Types().Types
-            .First(type => type.Role == UnitRole.Moving && type.Id != taken.TypeId)
-            .Id;
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(
-                run, BuildPhase.Of(taken.Kind, taken.Id, WaveSlot.Of(never, 1)), Unlocks.None, 1000));
-
-        Assert.Contains("which this run never unlocked", thrown.Message, StringComparison.Ordinal);
-
-        // What this round took is fieldable this round: the take and the buy
-        // are one decision over one purse.
-        Build built = Resolved(
-            run,
-            BuildPhase.Of(taken.Kind, taken.Id, WaveSlot.Of(taken.TypeId, 1)),
-            Unlocks.None,
-            1000);
-
-        Assert.Equal(1, built.Wave.TotalUnits);
-    }
-
-    [Fact]
-    public void Filling_a_slot_beyond_the_rounds_width_is_refused()
-    {
-        // The scarcity that stands in for a second wallet. Dropping the extra
-        // slot rather than refusing it would send a wave nobody composed, which
-        // is the failure mode this whole surface exists to make impossible.
-        //
-        // OBSERVED: drop the width check in BuildPhase.Resolve. This goes red
-        // having caught nothing -- no exception was thrown -- and a wave-1
-        // build phase fills three slots in a round the schedule gave two.
-        Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        Unlocks everything = Everything(offering);
-
-        Assert.Equal(2, offering.WaveSlots);
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(
-                run,
-                BuildPhase.Of(
-                    offering.Options[0].Kind,
-                    offering.Options[0].Id,
-                    WaveSlot.Empty,
-                    WaveSlot.Empty,
-                    WaveSlot.Empty),
-                everything,
-                1000));
-
-        Assert.Contains("slots where that round has 2", thrown.Message, StringComparison.Ordinal);
-
-        // Exactly the width is fine, and so is fewer than it.
-        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
-
-        Assert.Equal(
-            2,
-            Resolved(
-                run,
-                BuildPhase.Of(
-                    offering.Options[0].Kind,
-                    offering.Options[0].Id,
-                    WaveSlot.Of(creeps[0], 1),
-                    WaveSlot.Of(creeps[1], 1)),
-                everything,
-                1000)
-                .Wave.Count);
     }
 
     [Fact]
@@ -481,18 +193,18 @@ public class BuildPhaseTests
             WaveSlot.Of(creeps[0], 4),
             WaveSlot.Of(creeps[1], 4));
 
-        int bill = Resolved(run, phase, everything, int.MaxValue).Spent;
+        int bill = Resolved(run, phase, int.MaxValue).Spent;
 
         Assert.True(bill > 1, "The two slots priced at nothing, so there is no affordability to test.");
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(run, phase, everything, bill - 1));
+            () => Resolved(run, phase, bill - 1));
 
         Assert.Contains("There is no credit in this economy", thrown.Message, StringComparison.Ordinal);
 
         // One gold more and the same wave is fine, and the purse is what is
         // left rather than what was there.
-        Build built = Resolved(run, phase, everything, bill);
+        Build built = Resolved(run, phase, bill);
 
         Assert.Equal(bill, built.Spent);
         Assert.Equal(0, built.Purse.Gold);
@@ -570,78 +282,6 @@ public class BuildPhaseTests
     }
 
     [Fact]
-    public void A_roster_thinner_than_the_offerings_ratio_is_refused()
-    {
-        // An option unlocks a creep and appears on a menu once, so an offering
-        // cannot be drawn out of fewer creeps than it carries options. Refused
-        // rather than answered with the same creep twice, which would be one
-        // option wearing two positions.
-        //
-        // OBSERVED: drop the roster check in Offering.Draw. This goes red on
-        // the exception type, ArgumentOutOfRangeException against
-        // SimulationException: the partial Fisher-Yates below it asks the dice
-        // for a number below zero, and what a designer is handed says nothing
-        // about the ratio, the roster or the file either was authored in.
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Offering.Draw(
-                TheBuild.RulesOffering(7),
-                TheMatch.Types(),
-                TheSchedule.Committed(),
-                TheRun.Fresh(waves: 1).Filling,
-                1,
-                TheRun.Seed));
-
-        Assert.Contains("out of a roster of 5 creeps", thrown.Message, StringComparison.Ordinal);
-
-        // Five options out of five walkers is exactly enough, and it is the
-        // whole roster on one menu -- which is the bound rather than the
-        // tuning. The signed roster sits right up against it: the committed
-        // ratio of three options is three fifths of the roster, so a menu is
-        // most of what there is and the draw is a thin one. That is a known
-        // cost of five creeps and it is written down in docs/roster.md.
-        Assert.Equal(5, TheBuild.Fresh(waves: 1, ordinary: 5).Offering.Count);
-        Assert.Equal(TheBuild.Ordinary, TheRuleset.Committed().OrdinaryOptionsPerRound);
-    }
-
-    [Fact]
-    public void The_offering_ratio_and_the_slot_widths_come_from_the_ruleset_and_the_schedule()
-    {
-        // Neither number is a code constant, and both are swept by editing a
-        // text file rather than by a compile.
-        //
-        // OBSERVED: draw a hard-coded three ordinary options in Offering.Draw
-        // instead of rules.OrdinaryOptionsPerRound. The ratio assertion goes
-        // red, 4 against 3, and the number that decides whether the merged menu
-        // is a real trade stops being a sweep target.
-        Assert.Equal(3, TheBuild.Fresh(waves: 1, ordinary: 3).Offering.Count);
-        Assert.Equal(4, TheBuild.Fresh(waves: 1, ordinary: 4).Offering.Count);
-        Assert.Equal(5, TheBuild.Fresh(waves: 1, ordinary: 5).Offering.Count);
-
-        // And the widths move with the schedule's anchors rather than with a
-        // series authored beside them.
-        UnitTypeTable types = TheMatch.Types();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
-
-        AnchorSchedule moved = AnchorSchedule.Parse(
-            PlantedText.Replace(TheSchedule.CommittedText(), "anchor        6     2", "anchor        5     2"),
-            types);
-
-        var run = new Run(
-            TheMatch.Map(),
-            rules,
-            types,
-            moved,
-            TheRun.Pool(types),
-            TheRun.Seed,
-            waves: 10,
-            fieldSize: 4);
-
-        Assert.Equal(
-            new[] { 2, 2, 3, 3, 4, 4, 4, 4, 5, 5 },
-            Enumerable.Range(1, 10).Select(wave => run.OfferingAt(wave).WaveSlots));
-    }
-
-    [Fact]
     public void A_run_opens_on_the_purse_the_ruleset_authored_so_the_first_round_is_a_round()
     {
         // Nothing has been earned when the first build phase stands. A run that
@@ -661,46 +301,6 @@ public class BuildPhaseTests
         run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
 
         Assert.Equal(1, run.Sent[0].Wave.TotalUnits);
-    }
-
-    [Fact]
-    public void What_a_prepared_counter_gets_against_a_fielded_game_changer_is_reachable_from_the_unlocks()
-    {
-        // The bonus is the anchor's and it is paid only to the unit type that
-        // anchor named, so reading it needs the game changer rather than the
-        // body it fields -- which a type id cannot say, because two game
-        // changers can field one placeholder creep. The unlocks carry the take
-        // itself for that reason.
-        //
-        // OBSERVED: have TryChangerFor always answer false, which is what
-        // reducing Unlocks to the type ids it holds would leave. The first
-        // assertion goes red, and what a run took becomes indistinguishable
-        // from the list of creeps it may send -- at which point nothing can say
-        // which of two game changers over one body is on the map.
-        Run run = TheBuild.Fresh();
-        AnchorSchedule schedule = TheSchedule.Committed();
-
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-
-        Option steepless = run.Offering.Options.First(option => option.Kind == OptionKind.GameChanger);
-        run.Advance(BuildPhase.Of(OptionKind.GameChanger, steepless.Id, WaveSlot.Empty));
-
-        Assert.True(run.Unlocks.TryChangerFor(steepless.TypeId, out GameChanger? fielded));
-        Assert.Equal(steepless.Id, fielded!.Id);
-
-        // Wave three's anchor is plain, so its counter gets nothing extra; wave
-        // nine's is the steep one and its counter gets the whole bonus.
-        Anchor plain = schedule.Anchors[0];
-        Anchor steep = schedule.Anchors[2];
-
-        Assert.Equal(0, schedule.BonusVsTag(plain.CounterTypeId, fielded));
-        Assert.Equal(0, fielded.BonusVsTag);
-
-        GameChanger late = schedule.GameChangers.First(changer => changer.Tier == steep.Tier);
-
-        Assert.Equal(825, schedule.BonusVsTag(steep.CounterTypeId, late));
-        Assert.Equal(0, schedule.BonusVsTag(plain.CounterTypeId, late));
     }
 
     [Fact]
@@ -837,7 +437,7 @@ public class BuildPhaseTests
             .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(run, phase, Unlocks.None, carried));
+            () => Resolved(run, phase, carried));
 
         Assert.Contains(
             "buys "
@@ -849,7 +449,7 @@ public class BuildPhaseTests
 
         // The two together, out of a purse that holds them both: one bill, one
         // wallet, and the board the phase left behind carries the tower.
-        Build built = Resolved(run, phase, Unlocks.None, tower + wave);
+        Build built = Resolved(run, phase, tower + wave);
 
         Assert.Equal(tower + wave, built.Spent);
         Assert.Equal(0, built.Purse.Gold);
@@ -1052,7 +652,7 @@ public class BuildPhaseTests
             .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Resolved(run, phase, Unlocks.None, tower - 1));
+            () => Resolved(run, phase, tower - 1));
 
         Assert.Contains(
             "A build phase at wave 1 places at column 0, row 0 for "
@@ -1070,10 +670,10 @@ public class BuildPhaseTests
             "places at column 1, row 0 for "
             + tower.ToString(CultureInfo.InvariantCulture)
             + " gold out of a purse holding 0",
-            Assert.Throws<SimulationException>(() => Resolved(run, twice, Unlocks.None, tower)).Message,
+            Assert.Throws<SimulationException>(() => Resolved(run, twice, tower)).Message,
             StringComparison.Ordinal);
 
-        Assert.Equal(run.Board.Count + 2, Resolved(run, twice, Unlocks.None, tower * 2).Board.Count);
+        Assert.Equal(run.Board.Count + 2, Resolved(run, twice, tower * 2).Board.Count);
     }
 
     [Fact]
@@ -1205,7 +805,7 @@ public class BuildPhaseTests
 
     /// <summary>
     /// A decision resolved against the round in front of a run, and against
-    /// that run's own costs, roster, map and board.
+    /// that run's own ladder, costs, roster, map and board.
     /// </summary>
     /// <remarks>
     /// The purse is an argument because most of these assertions are about what
@@ -1213,30 +813,13 @@ public class BuildPhaseTests
     /// nothing; everything else comes off the run, because none of them are
     /// about where a roster or a map came from.
     /// </remarks>
-    private static Build Resolved(Run run, BuildPhase phase, Unlocks unlocks, int gold, Board? board = null) =>
+    private static Build Resolved(Run run, BuildPhase phase, int gold, Board? board = null) =>
         phase.Resolve(
-            run.Offering, unlocks, Purse.Holding(gold), run.Costs, run.Types, run.Map, board ?? run.Board);
-
-    /// <summary>Every creep on a round's menu, unlocked, so a slot assertion is about the slot.</summary>
-    private static Unlocks Everything(Offering offering)
-    {
-        Unlocks unlocks = Unlocks.None;
-
-        for (int index = 0; index < offering.Count; index++)
-        {
-            unlocks = unlocks.With(offering.Options[index]);
-        }
-
-        return unlocks;
-    }
-
-    /// <summary>The ordinary half of every wave's menu, as text a comparison can read.</summary>
-    private static string[] Menus(Run run) =>
-        Enumerable.Range(1, 10)
-            .Select(wave => string.Join(
-                ",",
-                run.OfferingAt(wave).Options
-                    .Where(option => option.Kind == OptionKind.Ordinary)
-                    .Select(option => option.Id.ToString(CultureInfo.InvariantCulture))))
-            .ToArray();
+            run.Round + 1,
+            run.Ladder,
+            Purse.Holding(gold),
+            run.Costs,
+            run.Types,
+            run.Map,
+            board ?? run.Board);
 }

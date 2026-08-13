@@ -444,7 +444,7 @@ public class ReplayGateTests
         // The other three gates are untouched, so this one is firing alone.
         Assert.Equal(SimulationVersion.Current, stream.Header.SimVersion);
         Assert.Equal(TheMatch.Types().ContentHash, stream.Header.ContentHash);
-        Assert.Equal(TheSchedule.Committed().ContentHash, stream.ScheduleHash);
+        Assert.Equal(TheLadder.Committed().ContentHash, stream.ScheduleHash);
 
         // Still readable, still a run somebody could be shown.
         Assert.Equal(TheCommands.Waves, stream.Count);
@@ -503,7 +503,7 @@ public class ReplayGateTests
             Assert.Throws<RetiredRecordException>(() => stream.Replay(against));
 
         Assert.Equal("schedule hash", thrown.Gate);
-        Assert.Contains(TheSchedule.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
+        Assert.Contains(TheLadder.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
         Assert.Contains(moved.ContentHash.ToString(), thrown.Live, StringComparison.Ordinal);
     }
 
