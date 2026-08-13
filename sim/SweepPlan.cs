@@ -81,8 +81,6 @@ namespace Sim
         /// <param name="waves">N: how many waves a run lasts.</param>
         /// <param name="fieldSize">K: how many opponents a round is resolved against.</param>
         /// <param name="deathEndsTheRun">Whether health reaching zero stops a run.</param>
-        /// <param name="ordinaryOptionsPerRound">The offering ratio's first half, or <see cref="AsAuthored"/>.</param>
-        /// <param name="gameChangersPerAnchor">The offering ratio's second half, or <see cref="AsAuthored"/>.</param>
         /// <param name="freeSnapshotsPerRun">How many snapshots a run gets free, or <see cref="AsAuthored"/>.</param>
         /// <param name="snapshotPriceGold">What one costs after that, or <see cref="AsAuthored"/>.</param>
         /// <param name="mostCreeps">
@@ -104,8 +102,6 @@ namespace Sim
             int waves = Run.DefaultWaves,
             int fieldSize = Run.DefaultFieldSize,
             bool deathEndsTheRun = true,
-            int ordinaryOptionsPerRound = AsAuthored,
-            int gameChangersPerAnchor = AsAuthored,
             int freeSnapshotsPerRun = AsAuthored,
             int snapshotPriceGold = AsAuthored,
             int mostCreeps = WholeRoster,

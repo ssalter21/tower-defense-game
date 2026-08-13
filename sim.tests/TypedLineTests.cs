@@ -31,30 +31,6 @@ public class TypedLineTests
     private static readonly UnitTypeTable Roster = TheMatch.Types();
 
     [Fact]
-    public void A_take_names_one_half_of_the_menu_and_an_option_of_it()
-    {
-        // Both halves, in the words a command script takes them with. The id is
-        // the option's and not a type's, which is why no label is resolved for
-        // it -- two game changers over one body are two ids over one type.
-        //
-        // OBSERVED: read the half out of words[2] and the id out of words[1].
-        // 'take ordinary 12' refuses on "ordinary" not being a number, which
-        // reads as a parser complaining about the one word it was given right.
-        TypedLine ordinary = TypedLine.Read("take ordinary 12", Roster);
-
-        Assert.True(ordinary.Understood);
-        Assert.Equal(Typed.Take, ordinary.Word);
-        Assert.Equal(OptionKind.Ordinary, ordinary.Take);
-        Assert.Equal(12, ordinary.TakeId);
-
-        TypedLine changer = TypedLine.Read("take changer 3", Roster);
-
-        Assert.True(changer.Understood);
-        Assert.Equal(OptionKind.GameChanger, changer.Take);
-        Assert.Equal(3, changer.TakeId);
-    }
-
-    [Fact]
     public void A_place_and_an_upgrade_become_the_action_they_name()
     {
         // The cell is written column then row, which is the order a script row
@@ -94,7 +70,8 @@ public class TypedLineTests
     public void The_six_words_that_carry_nothing_are_words_on_their_own()
     {
         // Six words, one line each. They are the whole of what the loop does
-        // that is not a decision: three reprints, an undo, a commit and an exit.
+        // that is not a decision: three reprints, an undo, a commit and an
+        // exit.
         //
         // OBSERVED: fall through from the 'menu' case to the 'costs' one.
         // Typing 'menu' reprints the price list, which is a panel that reads
@@ -137,7 +114,7 @@ public class TypedLineTests
         Assert.Equal(BuildAction.Of(ActionKind.Place, 3, 6, 2), spaced.Action);
 
         Assert.Equal(Typed.Done, Word("  DoNe  "));
-        Assert.Equal(OptionKind.GameChanger, TypedLine.Read("TAKE ChAnGeR 3", Roster).Take);
+        Assert.Equal(Typed.Send, TypedLine.Read("SeNd ChAnGeR 3", Roster).Word);
     }
 
     [Fact]
@@ -192,7 +169,7 @@ public class TypedLineTests
         // prints nothing -- which is the one outcome a person cannot tell from
         // a frame that came back unchanged on purpose.
         Assert.Equal(
-            "'plce archer 6 2' opens with 'plce', which is not a word here. The words are take, place, "
+            "'plce archer 6 2' opens with 'plce', which is not a word here. The words are place, "
             + "upgrade, send, undo, map, menu, costs, done and quit.",
             Refusal("plce archer 6 2"));
 
@@ -276,18 +253,6 @@ public class TypedLineTests
             "'place archer 6 2' names the type 'archer', which 2 rows of the roster answer to. A label "
             + "picks one row by name, so a label two rows carry can only be meant by naming the id.",
             TypedLine.Read("place archer 6 2", planted).Refusal);
-    }
-
-    [Fact]
-    public void A_take_off_neither_half_of_the_menu_is_refused_with_both_halves()
-    {
-        // OBSERVED: accept any word as the ordinary half. 'take upgrade 3'
-        // reads as an ordinary take, which is a decision nobody made written
-        // into a script somebody else replays.
-        Assert.Equal(
-            "'take both 3' takes 'both', where a take names one half of the round's menu: ordinary or "
-            + "changer.",
-            Refusal("take both 3"));
     }
 
     [Fact]

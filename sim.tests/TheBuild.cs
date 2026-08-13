@@ -20,17 +20,21 @@ namespace Sim.Tests;
 /// </remarks>
 public static class TheBuild
 {
-    /// <summary>How many ordinary options the committed ruleset offers.</summary>
+    /// <summary>
+    /// The committed ruleset, which is what a run of this suite plays.
+    /// </summary>
+    /// <remarks>
+    /// It planted an offering ratio into the text before #179 deleted the
+    /// offering. The name is kept and the argument ignored so that the call
+    /// sites reading a purse or a health pool off "the rules this suite plays"
+    /// keep saying that; there is nothing left for them to have planted.
+    /// </remarks>
+    public static Ruleset RulesOffering(int ordinary) => TheRuleset.Committed();
+
+    /// <summary>How many ordinary options the committed ruleset offered, before it offered none.</summary>
     public const int Ordinary = 3;
 
-    /// <summary>The committed ruleset with the offering's ordinary count moved.</summary>
-    public static Ruleset RulesOffering(int ordinary) =>
-        Ruleset.Parse(PlantedText.Replace(
-            TheRuleset.CommittedText(),
-            "offering        3         3",
-            "offering        " + ordinary.ToString(System.Globalization.CultureInfo.InvariantCulture) + "         3"));
-
-    /// <summary>A run over the committed roster, at whatever ordinary count is wanted.</summary>
+    /// <summary>A run over the committed roster and the committed rules.</summary>
     public static Run Fresh(
         int waves = Run.DefaultWaves,
         int fieldSize = 4,

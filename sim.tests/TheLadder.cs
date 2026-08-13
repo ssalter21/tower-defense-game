@@ -41,4 +41,20 @@ public static class TheLadder
     /// <summary>A ladder out of text the caller composed, against a roster.</summary>
     public static UpgradeLadder Of(string text, UnitTypeTable? types = null) =>
         UpgradeLadder.Parse(text, types ?? TheMatch.Types());
+
+    /// <summary>
+    /// The committed ladder with its one edge pointed somewhere else: a
+    /// different ladder, of the same shape, that a stored record was not
+    /// recorded against.
+    /// </summary>
+    /// <remarks>
+    /// The mage rather than the ranger. Both are placed rows, so the ladder is
+    /// still well-formed, and the run it makes refuses a different placement
+    /// from the one the committed ladder refuses -- which is what a stamp on
+    /// this file has to catch.
+    /// </remarks>
+    public static UpgradeLadder Reshaped(UnitTypeTable? types = null) =>
+        Of(
+            CommittedText().Replace("upgrade    3  14", "upgrade    3   4", StringComparison.Ordinal),
+            types);
 }

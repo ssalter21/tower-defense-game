@@ -75,8 +75,6 @@ public static class TheCommands
 
         foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
         {
-            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + PlainText.Number(command.TakeId));
-
             foreach (BuildAction action in command.Actions)
             {
                 typed.Add(
@@ -117,26 +115,22 @@ public static class TheCommands
     }
 
     /// <summary>
-    /// One decision per wave: take the first thing on that round's menu, and
-    /// send two of the creep it unlocks.
+    /// One decision per wave: send two of the roster's first creep.
     /// </summary>
     /// <remarks>
-    /// Read off <see cref="Run.OfferingAt"/> rather than off a run being
-    /// played, because an offering is a function of the seed and the wave --
-    /// which is the property that lets a whole stream be composed, and checked,
-    /// before a round resolves.
+    /// Composed off the roster rather than off a run being played, because
+    /// nothing rations what a wave may send any more -- every creep is sendable
+    /// from wave one, which is the property that lets a whole stream be
+    /// composed, and checked, before a round resolves.
     /// </remarks>
     public static IReadOnlyList<RecordCommand> Decisions(Run run, int waves = Waves)
     {
         var commands = new List<RecordCommand>();
+        UnitType first = TheBuild.FirstCreep(run.Types);
 
         for (int wave = 1; wave <= waves; wave++)
         {
-            Option first = run.OfferingAt(wave).Options[0];
-
-            commands.Add(RecordCommand.Of(
-                wave,
-                BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, Sent))));
+            commands.Add(RecordCommand.Of(wave, WaveSlot.Of(first.Id, Sent)));
         }
 
         return commands;

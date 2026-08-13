@@ -28,9 +28,7 @@ public static class TheRuleset
         purse 100
         band 0 0
         band 50 5
-        health 1500
-        slots 2 1
-        offering 3 3
+        health 800
         snapshot 10 25
         """;
 

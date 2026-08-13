@@ -61,7 +61,7 @@ public class GoldenRunTests
         Assert.Equal(Seed, stream.Seed);
         Assert.Equal(types.ContentHash, stream.Header.ContentHash);
         Assert.Equal(TheRuleset.Committed().ContentHash, stream.RulesetHash);
-        Assert.Equal(TheLadder.Committed(types).ContentHash, stream.ScheduleHash);
+        Assert.Equal(TheLadder.Committed(types).ContentHash, stream.LadderHash);
     }
 
     [Fact]

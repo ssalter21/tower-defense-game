@@ -151,10 +151,9 @@ public class RunPromptTests
         Assert.Equal(Run.DefaultWaves, played.Result.Decisions.Count);
 
         // The decisions came back in wave order and each is the one that round
-        // was played from: the take the transcript named, and the board actions
-        // under it. Wave five is the one that upgrades rather than places.
-        Assert.Equal(OptionKind.GameChanger, played.Result.Decisions[2].Take);
-        Assert.Equal(4, played.Result.Decisions[2].TakeId);
+        // was played from: the board actions the transcript named, and the
+        // slots under them. Wave five is the one that upgrades rather than
+        // places.
         Assert.Equal(
             new[] { BuildAction.Of(ActionKind.Upgrade, Ranger, 6, 2) },
             played.Result.Decisions[4].Actions);
@@ -323,24 +322,21 @@ public class RunPromptTests
             waves: 1,
             fieldSize: 1);
 
-        Option first = run.OfferingAt(1).Options[0];
-        string take = "take " + CommandScript.WordFor(first.Kind) + " " + first.Id;
-
-        Session played = Play(run, take, "done", "quit");
+        Session played = Play(run, "done", "quit");
 
         Assert.Contains(
             "does not fit in the 32-bit integer health and gold are both counted in",
             played.Text,
             StringComparison.Ordinal);
 
-        // Nothing moved, and the round the refusal interrupted was still holding
-        // its take when the session came back to it: the frame reprinted after
-        // the refusal says so, and it is that frame the `quit` was typed at.
+        // Nothing moved, and the session came back to the round the refusal
+        // interrupted: the frame reprinted after the refusal says so, and it is
+        // that frame the `quit` was typed at.
         Assert.Equal(0, run.Round);
         Assert.Empty(played.Result.Rounds);
         Assert.Equal(Ended.Quit, played.Result.Ending);
         Assert.Contains(
-            "took " + CommandScript.WordFor(first.Kind) + " " + first.Id,
+            "nothing built, no slot filled",
             played.Text.Substring(played.Text.IndexOf("32-bit integer", StringComparison.Ordinal)),
             StringComparison.Ordinal);
     }
@@ -407,8 +403,8 @@ public class RunPromptTests
         Run dying = TheRun.Unstoppable(fieldSize: 1);
         Run living = TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1);
 
-        Session dies = Play(dying, TakingTheFirstOption(dying));
-        Session lives = Play(living, TakingTheFirstOption(living));
+        Session dies = Play(dying, DoingNothing(dying));
+        Session lives = Play(living, DoingNothing(living));
 
         Assert.Equal(Ended.Over, dies.Result.Ending);
         Assert.Equal(RunEnding.OutOfHealth, dies.Run.Ending);
@@ -463,20 +459,18 @@ public class RunPromptTests
     /// nothing else, for as many rounds as a run can have.
     /// </summary>
     /// <remarks>
-    /// The takes are read off the offerings rather than written out, because
-    /// what these sessions are about is where a run stops -- and an offering is
-    /// drawn from the seed and the wave, so a transcript with the ids in it
-    /// would be a second statement of what the menus hold.
+    /// Nothing is typed but the word that finishes the round. These sessions
+    /// are about where a run stops rather than about what it decided, and #179
+    /// left a round with nothing it must do -- so the shortest legal round is
+    /// one word and a transcript of them is the clearest statement of "played
+    /// to the end, deciding nothing".
     /// </remarks>
-    private static string[] TakingTheFirstOption(Run run)
+    private static string[] DoingNothing(Run run)
     {
         var typed = new List<string>();
 
         for (int wave = 1; wave <= run.Waves; wave++)
         {
-            Option first = run.OfferingAt(wave).Options[0];
-
-            typed.Add("take " + CommandScript.WordFor(first.Kind) + " " + first.Id);
             typed.Add("done");
         }
 

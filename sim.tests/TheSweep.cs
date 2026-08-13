@@ -67,8 +67,6 @@ public static class TheSweep
         int waves = Waves,
         int fieldSize = FieldSize,
         bool deathEndsTheRun = false,
-        int ordinaryOptionsPerRound = SweepPlan.AsAuthored,
-        int gameChangersPerAnchor = SweepPlan.AsAuthored,
         int freeSnapshotsPerRun = SweepPlan.AsAuthored,
         int snapshotPriceGold = SweepPlan.AsAuthored,
         int mostCreeps = Creeps,
@@ -87,8 +85,6 @@ public static class TheSweep
             waves,
             fieldSize,
             deathEndsTheRun,
-            ordinaryOptionsPerRound,
-            gameChangersPerAnchor,
             freeSnapshotsPerRun,
             snapshotPriceGold,
             mostCreeps,
@@ -96,28 +92,22 @@ public static class TheSweep
     }
 
     /// <summary>
-    /// A second scripted player: it takes its option and fills no slot at all,
-    /// so every purse it is handed is banked.
+    /// A second scripted player: it fills no slot at all, so every purse it is
+    /// handed is banked.
     /// </summary>
     /// <remarks>
     /// It is the whole of what a policy decides said as briefly as it can be
-    /// said -- one take and a wave of nothing -- which is what makes a report
-    /// played under it unmistakable from a column away. It takes the first thing
-    /// on the menu and ignores <paramref name="preferred"/> entirely: what the
-    /// row is about is a preference the policy is free to have, and having none
-    /// is part of what makes this a second player rather than a tuning of the
-    /// first.
+    /// said -- a wave of nothing -- which is what makes a report played under it
+    /// unmistakable from a column away. It ignores <paramref name="preferred"/>
+    /// entirely: what the row is about is a preference the policy is free to
+    /// have, and having none is part of what makes this a second player rather
+    /// than a tuning of the first.
     /// </remarks>
-    public static BuildPhase Banks(Run run, int preferred)
-    {
-        Option first = run.Offering.Options[0];
-
-        return BuildPhase.Of(first.Kind, first.Id);
-    }
+    public static BuildPhase Banks(Run run, int preferred) => BuildPhase.Of();
 
     /// <summary>
-    /// A third scripted player: it takes its option, builds whatever the
-    /// defensive bot decides, and fills no slot at all.
+    /// A third scripted player: it builds whatever the defensive bot decides,
+    /// and fills no slot at all.
     /// </summary>
     /// <remarks>
     /// The even-share bot with its wave taken off, so every gold a run of it
@@ -128,9 +118,8 @@ public static class TheSweep
     /// </remarks>
     public static BuildPhase Builds(Run run, int preferred)
     {
-        Option first = run.Offering.Options[0];
         IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
-        BuildPhase phase = BuildPhase.Of(first.Kind, first.Id);
+        BuildPhase phase = BuildPhase.Of();
 
         for (int index = 0; index < built.Count; index++)
         {
@@ -216,16 +205,21 @@ public static class TheSweep
         return UnitTypeTable.Parse(string.Join("\n", lines));
     }
 
-    /// <summary>The whole-population row for a creep, or a failure naming what the report did carry.</summary>
-    public static SweepRow Whole(SweepReport report, string label) =>
-        Row(report, label, SweepRow.AllIngredients);
-
-    /// <summary>One row of the report, or a failure naming what the report did carry.</summary>
-    public static SweepRow Row(SweepReport report, string label, int ingredients)
+    /// <summary>
+    /// The row for a creep, or a failure naming what the report did carry.
+    /// </summary>
+    /// <remarks>
+    /// One row per creep now, so this is the whole population of that creep's
+    /// runs. It kept its name through the deletion of the ingredients axis,
+    /// which used to split a creep's runs into several rows: there is nothing
+    /// left for a whole-population row to be distinguished from, and renaming
+    /// every call site would have said only that.
+    /// </remarks>
+    public static SweepRow Whole(SweepReport report, string label)
     {
         for (int index = 0; index < report.Rows.Count; index++)
         {
-            if (report.Rows[index].Label == label && report.Rows[index].Ingredients == ingredients)
+            if (report.Rows[index].Label == label)
             {
                 return report.Rows[index];
             }
@@ -234,9 +228,7 @@ public static class TheSweep
         throw new Xunit.Sdk.XunitException(
             "The report carries no row for "
             + label
-            + " at "
-            + ingredients.ToString(System.Globalization.CultureInfo.InvariantCulture)
-            + " ingredients. It carries: "
+            + ". It carries: "
             + string.Join(", ", report.Rows));
     }
 

@@ -636,7 +636,7 @@ namespace Sim
                     + Seed.ToString(CultureInfo.InvariantCulture)
                     + " and it was handed the run seeded "
                     + run.Seed.ToString(CultureInfo.InvariantCulture)
-                    + ". Every offering, filling and field in a run is derived from its seed, so these are "
+                    + ". A run's field is derived from its seed, so these are "
                     + "two different runs and the decisions of one were read off the other's menus.");
             }
 

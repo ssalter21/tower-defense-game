@@ -81,17 +81,10 @@ public static class RepoLayout
 
     /// <summary>
     /// Every number the rules are made of: the damage matrix, the armour
-    /// expression, the floor, the purse, the offering and the scouting price.
+    /// expression, the floor, the purse, the health pool and the scouting price.
     /// Read and handed over as text, exactly like the unit table.
     /// </summary>
     public static string RulesetFile => InContent(RunContentFiles.Rules);
-
-    /// <summary>
-    /// The shape: which waves are anchors, which tier each draws from, which one
-    /// opens the steep counter, and the tier pools a run's filling is drawn
-    /// from. Read and handed over as text, exactly like the unit table.
-    /// </summary>
-    public static string ScheduleFile => InContent(RunContentFiles.Schedule);
 
     /// <summary>
     /// The rolling state hash of the committed match, one line per tick, as a

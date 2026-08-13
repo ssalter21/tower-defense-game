@@ -398,48 +398,6 @@ public class RecordNegativeTests
     }
 
     [Fact]
-    public void A_take_kind_no_offering_has_a_half_for_refuses()
-    {
-        // One byte, and it is the byte that scopes the take's id. A kind nothing
-        // declares names a menu that does not exist, so there is no offering the
-        // id could be looked up on.
-        //
-        // OBSERVED: drop the kind check from ReadVersion0. This goes red having
-        // caught nothing -- no exception was thrown -- because (OptionKind)2 is
-        // a perfectly constructible enum value, and it reaches Offering.TryFind
-        // as a kind that simply matches nothing.
-        byte[] bytes = RecordBytes.With(
-            TheCommands.Bytes(),
-            RecordBytes.CommandAt(1) + RecordBytes.CommandTakeKindOffset,
-            2);
-
-        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
-
-        Assert.Contains("takes option kind 2", thrown.Message, StringComparison.Ordinal);
-        Assert.Contains("build phase 2 of 4", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_take_id_of_zero_refuses()
-    {
-        // Options are counted from one, so zero is not an option nobody offered
-        // -- it is a hole where the take should be.
-        //
-        // OBSERVED: drop the take id check from ReadVersion0. This goes red on
-        // the exception type, SimulationException against RecordException:
-        // RecordCommand.Of catches it one layer later, so damaged bytes are
-        // reported as a fault in this program rather than in the record.
-        byte[] bytes = RecordBytes.WithU16(
-            TheCommands.Bytes(),
-            RecordBytes.CommandAt(0) + RecordBytes.CommandTakeIdOffset,
-            0);
-
-        RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
-
-        Assert.Contains("has take id 0", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void A_build_phase_stored_for_wave_zero_refuses()
     {
         // Waves are counted from one, so zero is a round no run ever plays
@@ -580,16 +538,15 @@ public class RecordNegativeTests
         // the message is RecordCommand.Of's -- the writer-side half of the same
         // rule, catching bytes the reader waved through.
         Run run = TheCommands.Fresh();
-        Option first = run.Offering.Options[0];
-        int[] creeps = run.Offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+        int[] creeps = run.Types.Types
+            .Where(type => type.Role == UnitRole.Moving)
+            .Select(type => type.Id)
+            .OrderBy(id => id)
+            .ToArray();
 
         byte[] good = CommandStream.Of(
             run,
-            new[]
-            {
-                RecordCommand.Of(
-                    1, first.Kind, first.Id, WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[1], 1)),
-            })
+            new[] { RecordCommand.Of(1, WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[1], 1)) })
             .ToBytes();
 
         // The second slot dragged down onto the first slot's creep. One u16,

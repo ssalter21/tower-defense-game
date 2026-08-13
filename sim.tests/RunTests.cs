@@ -317,7 +317,7 @@ public class RunTests
         Assert.True(run.Waves > run.Round, "The run ran out of waves rather than out of health.");
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains("This run is over", thrown.Message, StringComparison.Ordinal);
     }
@@ -332,16 +332,15 @@ public class RunTests
         // member that moves anything at all.
         //
         // OBSERVED: add an empty `public void Repair(int gold)` to Run. The
-        // first assertion goes red, ["Advance", "OfferingAt"] against
-        // ["Advance", "OfferingAt", "Repair"], which is the whole of what this
-        // test is here to notice -- and it notices a member that does not even
-        // do anything yet.
+        // first assertion goes red, ["Advance"] against ["Advance", "Repair"],
+        // which is the whole of what this test is here to notice -- and it
+        // notices a member that does not even do anything yet.
         //
-        // Two names are on the list and only one of them moves anything.
-        // Advance takes a build phase and nothing else, so what it spends and
-        // what it unlocks are read off a round's own offering.
-        // OfferingAt is a draw over the run's seed and is asserted below to
-        // leave the run exactly where it found it.
+        // One name is on the list. Advance takes a build phase and nothing
+        // else, so what a round spends is read off the decision it was handed.
+        // OfferingAt was the second name and went with the offering in #179;
+        // nothing took its place, which is the surface getting smaller rather
+        // than moving.
         string[] movers = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(method => !method.IsSpecialName)
@@ -350,24 +349,11 @@ public class RunTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(new[] { "Advance", "OfferingAt" }, movers);
+        Assert.Equal(new[] { "Advance" }, movers);
         Assert.Null(typeof(Run).GetProperty("Health")!.SetMethod);
         Assert.Null(typeof(RunOutcome).GetProperty("HealthRemaining")!.SetMethod);
 
-        // Reading the offering is a read: it costs nothing, moves nothing and
-        // answers the same thing twice.
-        //
-        // OBSERVED: pay the run a coin for reading -- open Run.OfferingAt with
-        // Purse = Purse.Holding(Purse.Gold + 1). The purse assertion goes red,
-        // 104 against 108, which is a member on the movers list moving
-        // something while the list itself stays exactly as long.
-        Run untouched = TheRun.Fresh(waves: 4, fieldSize: 3);
-
-        Assert.Equal(untouched.Health, Drawn(untouched).Health);
-        Assert.Equal(untouched.Purse.Gold, Drawn(untouched).Purse.Gold);
-        Assert.Equal(0, Drawn(untouched).Unlocks.Count);
-
-        // And across a run it only ever goes one way, whatever the purse beside
+        // And across a run health only ever goes one way, whatever the purse beside
         // it did. The purse is checked against the round's own ledger -- what it
         // opened on, less what the build cost, plus what the wave paid -- so a
         // round that shops has its money accounted for both ways while the
@@ -605,11 +591,11 @@ public class RunTests
         Run one = TheRun.Fresh(waves: 3, fieldSize: 4);
         Run two = TheRun.Fresh(waves: 3, fieldSize: 4);
 
-        one.Advance(TheBuild.BuyingNothing(one.Offering));
-        two.Advance(TheBuild.BuyingNothing(two.Offering).With(mortar));
+        one.Advance(TheBuild.BuyingNothing());
+        two.Advance(TheBuild.BuyingNothing().With(mortar));
 
-        one.Advance(TheBuild.BuyingNothing(one.Offering));
-        two.Advance(TheBuild.BuyingNothing(two.Offering));
+        one.Advance(TheBuild.BuyingNothing());
+        two.Advance(TheBuild.BuyingNothing());
 
         int budget = Math.Min(one.Purse.Gold, two.Purse.Gold);
 
@@ -848,7 +834,7 @@ public class RunTests
             fieldSize: 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
     }
@@ -872,8 +858,8 @@ public class RunTests
         //
         // OBSERVED: assign build.Unlocks and build.Purse to the run in
         // Run.Advance before the round is played. The unlock count goes red, 1
-        // against 0, and the run carries a take and a spent purse for a wave
-        // nobody was in the run to send.
+        // against 0, and the run carries a spent purse for a wave nobody was in
+        // the run to send.
         Ruleset rules = Ruleset.Parse(
             PlantedText.Replace(TheRuleset.CommittedText(), "purse         100", "purse  2147483000"));
 
@@ -889,10 +875,9 @@ public class RunTests
             waves: 2,
             fieldSize: 2);
 
-        // A take and a slot of the creep it unlocks, so the round has both a
-        // purse to leave alone and an unlock to leave untaken.
-        BuildPhase phase = TheBuild.TakeFirst(
-            run.Offering, WaveSlot.Of(run.Offering.Options[0].TypeId, 1));
+        // A slot of the roster's first creep, so the round has a purse to leave
+        // alone.
+        BuildPhase phase = TheBuild.Filling(WaveSlot.Of(TheBuild.FirstCreep(types).Id, 1));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
             () => run.Advance(phase));
@@ -905,7 +890,6 @@ public class RunTests
         Assert.Equal(0, run.Round);
         Assert.Empty(run.Sent);
         Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(0, run.Unlocks.Count);
         Assert.Equal(rules.HealthPoolGold, run.Health);
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.False(run.IsOver);
@@ -946,7 +930,7 @@ public class RunTests
             fieldSize: 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains(
             "does not fit in the 32-bit integer health and gold",
@@ -956,7 +940,6 @@ public class RunTests
         Assert.Equal(0, run.Round);
         Assert.Empty(run.Sent);
         Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(0, run.Unlocks.Count);
         Assert.Equal(rules.HealthPoolGold, run.Health);
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
     }
@@ -992,14 +975,14 @@ public class RunTests
             fieldSize: 1,
             deathEndsTheRun: false);
 
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
+        run.Advance(TheBuild.BuyingNothing());
+        run.Advance(TheBuild.BuyingNothing());
 
         int purse = run.Purse.Gold;
         RunOutcome outcome = run.Outcome;
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains(
             "in leak cost taken, which does not fit in the 32-bit integer gold is counted in",
@@ -1008,7 +991,6 @@ public class RunTests
 
         Assert.Equal(2, run.Round);
         Assert.Equal(2, run.Sent.Count);
-        Assert.Equal(2, run.Unlocks.Count);
         Assert.Equal(purse, run.Purse.Gold);
         Assert.Same(outcome, run.Outcome);
     }
@@ -1029,11 +1011,11 @@ public class RunTests
         // that says what it could have earned instead.
         Run run = TheBuild.Fresh(waves: 2);
 
-        Option first = run.Offering.Options[0];
+        UnitType first = TheBuild.FirstCreep(run.Types);
         int opening = run.Purse.Gold;
-        int price = run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+        int price = run.Costs.PriceOf(Purchase.Unit(first.Id));
 
-        RoundReport round = run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
+        RoundReport round = run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 1)));
 
         // The pair is the one on the run's own vector.
         Assert.Equal(run.Outcome.Rounds[0].LeakCostDealt, round.Outcome.LeakCostDealt);
@@ -1041,8 +1023,7 @@ public class RunTests
 
         // The build is the decision as it resolved, priced out of the run's own
         // table and leaving the purse it charged.
-        Assert.True(price > 0, "The creep on this round's menu is free, so nothing here costs anything.");
-        Assert.Equal(first.Id, round.Build.Taken.Id);
+        Assert.True(price > 0, "The roster's first creep is free, so nothing here costs anything.");
         Assert.Equal(price, round.Build.Spent);
         Assert.Equal(opening - price, round.Build.Purse.Gold);
 
@@ -1060,9 +1041,9 @@ public class RunTests
     public void A_rounds_line_counts_what_stands_after_its_own_building()
     {
         // The count is read off the board the phase left rather than off the
-        // one it was handed, because the purse walks the take, then the
-        // actions, then the slots: the board this round's incoming waves meet
-        // is the built one, so the line beside those waves has to say so.
+        // one it was handed, because the purse walks the actions, then the
+        // slots: the board this round's incoming waves meet is the built one,
+        // so the line beside those waves has to say so.
         //
         // OBSERVED: hand the board the phase was given to the Build it returns
         // -- `board` rather than `built` at the bottom of BuildPhase.Resolve.
@@ -1072,7 +1053,7 @@ public class RunTests
         int opening = run.Board.Count;
 
         RoundReport round = run.Advance(
-            TheBuild.BuyingNothing(run.Offering).With(TheCommands.PlacedOnFreeCell));
+            TheBuild.BuyingNothing().With(TheCommands.PlacedOnFreeCell));
 
         Assert.Contains(
             ", "
@@ -1130,17 +1111,6 @@ public class RunTests
             TheRun.Seed,
             waves: 1,
             fieldSize: 4);
-
-    /// <summary>The same run, after every offering of it has been read.</summary>
-    private static Run Drawn(Run run)
-    {
-        for (int wave = 1; wave <= run.Waves; wave++)
-        {
-            Assert.Equal(wave, run.OfferingAt(wave).Wave);
-        }
-
-        return run;
-    }
 
     /// <summary>A run driven to its end, every round shopping behind its own board.</summary>
     private static Run Played(Run run) => Played(run, TheBuild.Shopping);

@@ -548,7 +548,6 @@ public class CommandLineTests
                 "--units", RepoLayout.UnitsFile,
                 "--upgrades", RepoLayout.UpgradesFile,
                 "--rules", RepoLayout.RulesetFile,
-                "--schedule", RepoLayout.ScheduleFile,
                 "--defense", RepoLayout.DefenseFile,
                 "--field", RepoLayout.WaveFile,
             });
@@ -709,16 +708,16 @@ public class CommandLineTests
         // play a run against a shape nobody named and print a confident answer
         // about a different game.
         //
-        // OBSERVED: add "schedul" to the run verbs' allowed list. The exit code
+        // OBSERVED: add "upgrade" to the run verbs' allowed list. The exit code
         // stays 1 and the message assertion goes red, because what comes back is
         // "'play-run' needs --map, and it was not given" -- a typo presenting as
         // a different argument being the problem, which is the whole distance
         // between being told what to fix and being sent looking.
         CommandLineResult refused = TheCommandLine.Invoke(
-            "play-run", "--commands", RepoLayout.CommandFile, "--schedul", RepoLayout.ScheduleFile);
+            "play-run", "--commands", RepoLayout.CommandFile, "--upgrade", RepoLayout.UpgradesFile);
 
         Assert.Equal(1, refused.ExitCode);
-        Assert.Contains("'--schedul' is not an option of 'play-run'", refused.Error, StringComparison.Ordinal);
+        Assert.Contains("'--upgrade' is not an option of 'play-run'", refused.Error, StringComparison.Ordinal);
     }
 
     /// <summary>

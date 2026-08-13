@@ -212,8 +212,6 @@ internal sealed class RunContent
         RunShape shape,
         ulong firstSeed,
         int runsPerCreep,
-        int ordinaryOptionsPerRound,
-        int gameChangersPerAnchor,
         int freeSnapshotsPerRun,
         int snapshotPriceGold,
         int mostCreeps) =>
@@ -228,8 +226,6 @@ internal sealed class RunContent
             shape.Waves,
             shape.FieldSize,
             shape.DeathEndsTheRun,
-            ordinaryOptionsPerRound,
-            gameChangersPerAnchor,
             freeSnapshotsPerRun,
             snapshotPriceGold,
             mostCreeps);

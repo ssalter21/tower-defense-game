@@ -497,14 +497,65 @@ public class GoldenRecordTests
         Assert.Equal(
             RecordCommand.Of(
                 10,
-                OptionKind.Ordinary,
-                1,
                 WaveSlot.Of(1, 5),
                 WaveSlot.Of(2, 9),
                 WaveSlot.Of(7, 1),
                 WaveSlot.Of(12, 1),
                 WaveSlot.Of(13, 1)),
             stream.Commands[stream.Count - 1]);
+    }
+
+    [Fact]
+    public void The_frozen_command_stream_at_version_1_still_reads_back_its_commands()
+    {
+        // The same claim one version up, and on the same terms: evidence about a
+        // read branch and about nothing else. These bytes are taken through the
+        // reading gate and never through the replaying one.
+        //
+        // The file is a copy of content/run.commands taken while 1 was the
+        // version the writer emitted -- the last such stream, recorded by a real
+        // run before #179 deleted the gates. Nothing can produce another.
+        //
+        // A version-1 stream carries a take off a menu that no longer exists,
+        // and the third stamp in its header is an anchor schedule hash where a
+        // reader now expects the ladder's. Neither stops it being read: the take
+        // is consumed so the cursor stays aligned and dropped, and the stamp is
+        // a replay-gate matter rather than a decoding one. That is precisely the
+        // distinction this test exists to hold.
+        string path = RepoLayout.GoldenCommandFile(1);
+
+        Assert.True(
+            File.Exists(path),
+            "There is no command stream frozen at format version 1 at "
+            + path
+            + ". It is committed forever: there is one writer and it emits the current version, so a "
+            + "stream at an older one cannot be made again and a deleted one leaves that reader branch "
+            + "with nothing exercising it.");
+
+        CommandStream stream = CommandStream.FromBytes(Path.GetFileName(path), File.ReadAllBytes(path));
+
+        Assert.Equal(1, stream.Header.FormatVersion);
+        Assert.Equal(10, stream.Count);
+
+        // Unlike version 0, this format carries what a phase built -- which is
+        // the whole of what version 1 was the bump for -- so the actions come
+        // back rather than being absent.
+        //
+        // OBSERVED: pass storesActions: false where ReadVersion1 calls the
+        // shared reader. Every action disappears, the slot counts read as the
+        // action counts that preceded them, and the file is refused on a slot
+        // naming type id 0 -- which is what a version branch reading another
+        // version's bytes looks like.
+        Assert.Contains(stream.Commands, command => command.Actions.Count > 0);
+
+        // The take the bytes carry is read past rather than kept, so nothing
+        // that comes back out of this stream mentions a menu.
+        //
+        // OBSERVED: drop the two take reads from the shared reader where
+        // storesTake is true. Every offset behind them moves by three bytes and
+        // the file is refused outright, which is the alignment this branch
+        // exists to preserve.
+        Assert.All(stream.Commands, command => Assert.True(command.Wave >= 1 && command.Wave <= 10));
     }
 
     [Theory]

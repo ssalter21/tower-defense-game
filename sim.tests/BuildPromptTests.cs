@@ -76,10 +76,9 @@ public class BuildPromptTests
     [Fact]
     public void The_frame_opens_the_round_and_comes_back_after_every_word_that_changes_it()
     {
-        // Three frames for two words: the one the round opens on, the one the
-        // take leaves, and the one the placement leaves. Each is the drawing's
-        // own answer for the decision as far as it had been composed, and the
-        // prompt stands between them.
+        // Two frames for one word: the one the round opens on, and the one the
+        // placement leaves. Each is the drawing's own answer for the decision
+        // as far as it had been composed, and the prompt stands between them.
         //
         // OBSERVED: print the frame once, when the round opens. Every other
         // assertion in this file still passes -- the phase composes, the
@@ -87,14 +86,12 @@ public class BuildPromptTests
         // exists for, a number that moves as you type, is gone.
         Run run = TheRun.Fresh();
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
-        BuildPhase taken = BuildPhase.Of(OptionKind.Ordinary, SkeletonOption);
-        BuildPhase built = taken.With(BuildAction.Of(ActionKind.Place, Archer, 6, 2));
+        BuildPhase built = BuildPhase.Of().With(BuildAction.Of(ActionKind.Place, Archer, 6, 2));
 
-        Session session = Play(run, ladder, "take ordinary 12", "place archer 6 2", "done");
+        Session session = Play(run, ladder, "place archer 6 2", "done");
 
         Assert.Equal(
             RoundFrame.ToText(run, ladder, null) + "\n"
-            + Prompt + RoundFrame.ToText(run, ladder, taken) + "\n"
             + Prompt + RoundFrame.ToText(run, ladder, built) + "\n"
             + Prompt,
             session.Text);
@@ -103,10 +100,9 @@ public class BuildPromptTests
     [Fact]
     public void Nothing_is_committed_and_the_run_is_where_the_session_found_it()
     {
-        // A whole round composed -- a take, a tower and a wave -- and the run
-        // has not moved: same round, same purse, same empty board, same
-        // unlocks. Resolve was called after every word and every Build it
-        // returned was dropped.
+        // A whole round composed -- a tower and a wave -- and the run has not
+        // moved: same round, same purse, same empty board. Resolve was called
+        // after every word and every Build it returned was dropped.
         //
         // OBSERVED: have the loop call run.Advance(phase) on `done`. The
         // composed phase that comes back is identical and this is the only
@@ -115,21 +111,16 @@ public class BuildPromptTests
         Run run = TheRun.Fresh();
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
         int gold = run.Purse.Gold;
-        int unlocked = run.Unlocks.Count;
 
-        Session session = Play(
-            run, ladder, "take ordinary 12", "place archer 6 2", "send skeleton 2", "done");
+        Session session = Play(run, ladder, "place archer 6 2", "send skeleton 2", "done");
 
         Assert.Equal(0, run.Round);
         Assert.Equal(gold, run.Purse.Gold);
         Assert.Equal(0, run.Board.Count);
-        Assert.Equal(unlocked, run.Unlocks.Count);
 
         BuildPhase phase = Composed(session);
 
         Assert.Equal(Stopped.Done, session.Composed.Stopped);
-        Assert.Equal(OptionKind.Ordinary, phase.Take);
-        Assert.Equal(SkeletonOption, phase.TakeId);
         Assert.Equal(new[] { BuildAction.Of(ActionKind.Place, Archer, 6, 2) }, phase.Actions);
         Assert.Equal(new[] { WaveSlot.Of(Skeleton, 2) }, phase.Slots);
     }
@@ -221,33 +212,6 @@ public class BuildPromptTests
     }
 
     [Fact]
-    public void A_second_take_replaces_the_first_rather_than_being_refused()
-    {
-        // Nothing has moved, so a take is a change of mind and not a rule
-        // broken. The tower placed between the two takes survives the second
-        // one, because replacing the take rebuilds the decision around it
-        // rather than starting the round again.
-        //
-        // OBSERVED: refuse a take where one has already been made. The session
-        // is stuck with its first guess for the whole round, and the only way
-        // out of a mistyped take is to quit the run.
-        Run run = TheRun.Fresh();
-        UpgradeLadder ladder = TheMatch.Ladder(run.Types);
-
-        Session session = Play(
-            run, ladder, "take ordinary 12", "place archer 6 2", "take ordinary 1", "done");
-
-        BuildPhase phase = Composed(session);
-
-        Assert.Equal(1, phase.TakeId);
-        Assert.Equal(
-            new[] { BuildAction.Of(ActionKind.Place, Archer, 6, 2) },
-            phase.Actions);
-
-        Assert.Contains("took ordinary 1 minion, 1 built", session.Text, StringComparison.Ordinal);
-    }
-
-    [Fact]
     public void Undo_drops_the_last_accepted_thing_even_where_the_word_before_it_was_refused()
     {
         // The mage is refused for 92 gold out of the 60 the archer left, and so
@@ -262,13 +226,12 @@ public class BuildPromptTests
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
 
         Session session = Play(
-            run, ladder, "take ordinary 12", "place archer 6 2", "place mage 4 4", "undo", "done");
+            run, ladder, "place archer 6 2", "place mage 4 4", "undo", "done");
 
         BuildPhase phase = Composed(session);
 
         Assert.Empty(phase.Actions);
-        Assert.Equal(SkeletonOption, phase.TakeId);
-        Assert.Equal(new[] { 100, 100, 60, 100 }, Gold(session.Text));
+        Assert.Equal(new[] { 100, 60, 100 }, Gold(session.Text));
     }
 
     [Fact]
@@ -285,25 +248,21 @@ public class BuildPromptTests
         Run run = WaveFive.Value;
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
 
-        Session session = Play(
-            run,
-            ladder,
-            "take ordinary 13",
-            "send minion 2",
-            "send skeleton 1",
-            "undo",
-            "done");
+        Session session = Play(run, ladder, "send minion 2", "send skeleton 1", "undo", "done");
 
         Assert.Equal(new[] { WaveSlot.Of(Minion, 2) }, Composed(session).Slots);
     }
 
     [Fact]
-    public void A_send_out_of_order_and_a_send_with_no_room_are_both_refused_at_the_prompt()
+    public void A_send_out_of_order_is_refused_at_the_prompt()
     {
-        // Two refusals a send can raise, printed in the record's own sentences
-        // and neither of them ending the session: a creep at or below the one a
-        // slot above it already sent, and a fourth slot in a round that has
-        // three. The three legal sends stand.
+        // The refusal a send can still raise, printed in the record's own
+        // sentence and not ending the session: a creep at or below the one a
+        // slot above it already sent. The legal sends stand.
+        //
+        // The other half of this test was a fourth slot in a round that had
+        // three. #179 deleted the widths with the anchors that derived them, so
+        // what bounds a wave is the purse; there is no width left to exceed.
         //
         // OBSERVED: sort the slots into the ascending order Resolve asks for.
         // The out-of-order send lands, the wave sends what nobody composed, and
@@ -314,12 +273,10 @@ public class BuildPromptTests
         Session session = Play(
             run,
             ladder,
-            "take ordinary 13",
             "send minion 1",
             "send skeleton-scout 1",
             "send minion 1",
             "send skeleton 1",
-            "send skeleton-warrior 1",
             "done");
 
         Assert.Contains(
@@ -327,42 +284,9 @@ public class BuildPromptTests
             session.Text,
             StringComparison.Ordinal);
 
-        Assert.Contains(
-            "fills 4 slots where that round has 3",
-            session.Text,
-            StringComparison.Ordinal);
-
         Assert.Equal(
             new[] { WaveSlot.Of(Minion, 1), WaveSlot.Of(Scout, 1), WaveSlot.Of(Skeleton, 1) },
             Composed(session).Slots);
-    }
-
-    [Fact]
-    public void A_take_that_would_strand_a_filled_slot_is_refused_and_the_first_take_stands()
-    {
-        // The one case where a second take does not replace the first: the wave
-        // already fields a creep only the first take unlocked, so the decision
-        // the replacement would leave does not resolve. It is refused in the
-        // sentence naming the slot, and `undo` is the way past it -- emptying
-        // the slot on the player's behalf would be the silent drop this
-        // simulation refuses everywhere else.
-        //
-        // OBSERVED: rebuild the retaken phase with no slots at all. The take
-        // lands, the two skeletons the session bought disappear, and the only
-        // record that they were ever composed is a gold figure that went back up.
-        Run run = TheRun.Fresh();
-        UpgradeLadder ladder = TheMatch.Ladder(run.Types);
-
-        Session session = Play(
-            run, ladder, "take ordinary 12", "send skeleton 2", "take ordinary 1", "done");
-
-        BuildPhase phase = Composed(session);
-
-        Assert.Equal(SkeletonOption, phase.TakeId);
-        Assert.Equal(new[] { WaveSlot.Of(Skeleton, 2) }, phase.Slots);
-
-        Assert.Contains(
-            "which this run never unlocked", session.Text, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -378,73 +302,40 @@ public class BuildPromptTests
         Run run = TheRun.Fresh();
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
 
-        Session session = Play(run, ladder, "undo", "take ordinary 12", "done");
+        Session session = Play(run, ladder, "undo", "place archer 6 2", "done");
 
         Assert.Contains("There is nothing to undo.", session.Text, StringComparison.Ordinal);
-        Assert.Equal(SkeletonOption, Composed(session).TakeId);
+        Assert.Single(Composed(session).Actions);
     }
 
     [Fact]
     public void Map_menu_and_costs_reprint_a_part_of_the_frame_and_change_nothing()
     {
         // Three words, three blocks, and a decision that is what it was before
-        // them. Each block is the frame's own part for the phase as composed,
-        // which is why the take's unlock shows up on the panel `menu` prints.
+        // them. Each block is the frame's own part for the phase as composed.
         //
         // OBSERVED: print the whole frame for all three. Every one of them
         // reads perfectly and the three words become one word spelled three
         // ways, which is a vocabulary that has to be learned to no purpose.
         Run run = TheRun.Fresh();
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
-        BuildPhase taken = BuildPhase.Of(OptionKind.Ordinary, SkeletonOption);
+        BuildPhase built = BuildPhase.Of().With(BuildAction.Of(ActionKind.Place, Archer, 6, 2));
 
-        Session session = Play(run, ladder, "take ordinary 12", "map", "menu", "costs", "done");
+        Session session = Play(run, ladder, "place archer 6 2", "map", "menu", "costs", "done");
 
         Assert.Equal(
             RoundFrame.ToText(run, ladder, null) + "\n"
-            + Prompt + RoundFrame.ToText(run, ladder, taken) + "\n"
-            + Prompt + RoundFrame.ToText(run, ladder, taken, Panel.Map) + "\n"
-            + Prompt + RoundFrame.ToText(run, ladder, taken, Panel.Menu) + "\n"
-            + Prompt + RoundFrame.ToText(run, ladder, taken, Panel.Costs) + "\n"
+            + Prompt + RoundFrame.ToText(run, ladder, built) + "\n"
+            + Prompt + RoundFrame.ToText(run, ladder, built, Panel.Map) + "\n"
+            + Prompt + RoundFrame.ToText(run, ladder, built, Panel.Menu) + "\n"
+            + Prompt + RoundFrame.ToText(run, ladder, built, Panel.Costs) + "\n"
             + Prompt,
             session.Text);
 
         BuildPhase phase = Composed(session);
 
-        Assert.Equal(SkeletonOption, phase.TakeId);
-        Assert.Empty(phase.Actions);
+        Assert.Single(phase.Actions);
         Assert.Empty(phase.Slots);
-    }
-
-    [Fact]
-    public void A_round_takes_something_before_it_builds_and_before_it_is_done()
-    {
-        // The one thing the loop refuses on its own account, in the three
-        // places it can be reached: a phase is composed around its take, so
-        // there is nothing for a place, a send or a `done` to be about until
-        // one is named. Settled at docs/playing-a-run-from-a-shell.md §8, where
-        // declining is rewarded by nothing and so is not offered.
-        //
-        // OBSERVED: return Stopped.Done with a null phase where `done` comes
-        // first. Nothing here notices except the assertion below, and the round
-        // hands its caller a decision that cannot be advanced.
-        Run run = TheRun.Fresh();
-        UpgradeLadder ladder = TheMatch.Ladder(run.Types);
-
-        Session session = Play(
-            run, ladder, "place archer 6 2", "send skeleton 2", "done", "take ordinary 12", "done");
-
-        Assert.Equal(
-            2,
-            Occurrences(session.Text, "This round has taken nothing yet. A phase is composed around"));
-
-        Assert.Contains(
-            "There is no phase to be done with until one is named.",
-            session.Text,
-            StringComparison.Ordinal);
-
-        Assert.Equal(Stopped.Done, session.Composed.Stopped);
-        Assert.Equal(SkeletonOption, Composed(session).TakeId);
     }
 
     [Fact]
@@ -460,20 +351,25 @@ public class BuildPromptTests
         Run run = TheRun.Fresh();
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
 
-        Session quit = Play(run, ladder, "take ordinary 12", "place archer 6 2", "quit");
+        Session quit = Play(run, ladder, "place archer 6 2", "quit");
 
         Assert.Equal(Stopped.Quit, quit.Composed.Stopped);
         Assert.Single(Composed(quit).Actions);
 
-        Session ran = Play(run, ladder, "take ordinary 12");
+        Session ran = Play(run, ladder, "send skeleton 2");
 
         Assert.Equal(Stopped.OutOfLines, ran.Composed.Stopped);
-        Assert.Equal(SkeletonOption, Composed(ran).TakeId);
+        Assert.Equal(new[] { WaveSlot.Of(Skeleton, 2) }, Composed(ran).Slots);
 
+        // A session that typed nothing at all still hands back the empty phase
+        // the round opened holding: there is nothing a round must do, so doing
+        // nothing is a decision rather than an absence.
         Session silent = Play(run, ladder);
 
         Assert.Equal(Stopped.OutOfLines, silent.Composed.Stopped);
-        Assert.Null(silent.Composed.Phase);
+        Assert.NotNull(silent.Composed.Phase);
+        Assert.Empty(silent.Composed.Phase!.Actions);
+        Assert.Empty(silent.Composed.Phase!.Slots);
     }
 
     [Fact]

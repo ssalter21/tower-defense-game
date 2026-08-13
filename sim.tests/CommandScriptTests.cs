@@ -26,47 +26,43 @@ namespace Sim.Tests;
 /// </remarks>
 public class CommandScriptTests
 {
-    /// <summary>Two rounds, both halves of a menu, a filled slot and an empty one.</summary>
+    /// <summary>Two rounds, a filled slot and an empty one.</summary>
     private const string Two = """
-        build   1  ordinary   5   0 0   5 2
-        build   2  changer    4   1 3   5 1
+        build   1   0 0   5 2
+        build   2   1 3   5 1
         """;
 
     [Fact]
     public void A_row_becomes_the_decision_it_spells()
     {
-        // The wave, the half of the menu, the id, and the slots in the order
-        // they were written -- read back off the value rather than off a
-        // re-parse, so nothing here can agree with itself.
+        // The wave and the slots in the order they were written -- read back
+        // off the value rather than off a re-parse, so nothing here can agree
+        // with itself.
         //
-        // OBSERVED: read the take id out of fields[1] instead of fields[3]. The
-        // first row parses as wave 1 taking ordinary option 1, the TakeId
-        // assertion goes red, 5 against 1, and every slot still lands where it
-        // should -- a script silently playing a different menu.
+        // OBSERVED: read the wave out of fields[1] instead of fields[0]. Both
+        // rows parse as the wave their first slot's type id names, the wave
+        // assertions go red, 0 against 1, and every slot still lands where it
+        // should -- a script silently played against the wrong rounds.
         //
-        // OBSERVED: reverse CommandScript's TakeKinds. The kind assertion goes
-        // red, Ordinary against GameChanger, which is what pins the words to the
-        // halves -- the list's position IS the OptionKind, and a listing printed
-        // off the same list would agree with a parser that had them backwards.
+        // OBSERVED: swap the pair order in CommandScript's slot loop, so a pair
+        // reads as `count type-id`. The slot assertions go red, (5, 2) against
+        // (2, 5), and a script would send two of whatever id 5 names rather than
+        // five of it.
         IReadOnlyList<RecordCommand> commands = CommandScript.Parse(Two);
 
         Assert.Equal(2, commands.Count);
 
         Assert.Equal(1, commands[0].Wave);
-        Assert.Equal(OptionKind.Ordinary, commands[0].Take);
-        Assert.Equal(5, commands[0].TakeId);
         Assert.Equal(new[] { WaveSlot.Empty, WaveSlot.Of(5, 2) }, commands[0].Slots);
 
         Assert.Equal(2, commands[1].Wave);
-        Assert.Equal(OptionKind.GameChanger, commands[1].Take);
-        Assert.Equal(4, commands[1].TakeId);
         Assert.Equal(new[] { WaveSlot.Of(1, 3), WaveSlot.Of(5, 1) }, commands[1].Slots);
     }
 
     [Fact]
     public void Comments_blank_lines_and_spacing_are_not_decisions()
     {
-        // The same freedom units.txt, ruleset.txt and schedule.txt have. A file
+        // The same freedom units.txt, ruleset.txt and upgrades.txt have. A file
         // somebody cannot annotate is a file whose reasons live somewhere that
         // does not travel with it.
         //
@@ -77,10 +73,10 @@ public class CommandScriptTests
         IReadOnlyList<RecordCommand> annotated = CommandScript.Parse(
             "# what this run is doing\n"
             + "\n"
-            + "build      1     ordinary      5      0 0      5 2\n"
+            + "build      1      0 0      5 2\n"
             + "\n"
-            + "\t# and the anchor\n"
-            + "build 2 changer 4 1 3 5 1\n");
+            + "\t# and the second round\n"
+            + "build 2 1 3 5 1\n");
 
         IReadOnlyList<RecordCommand> plain = CommandScript.Parse(Two);
 
@@ -103,7 +99,7 @@ public class CommandScriptTests
         // 'order' row is skipped, the script parses to one command, and this
         // goes red having caught nothing -- a file half of which was ignored.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 ordinary 5 5 2\norder 0 1 4 0\n"));
+            () => CommandScript.Parse("build 1 5 2\norder 0 1 4 0\n"));
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("starts with 'order'", thrown.Message, StringComparison.Ordinal);
@@ -131,8 +127,8 @@ public class CommandScriptTests
     }
 
     [Theory]
-    [InlineData("build 1 ordinary 5 0 2", "type id 0")]
-    [InlineData("build 1 ordinary 5 5 0", "0 of type id 5")]
+    [InlineData("build 1 0 2", "type id 0")]
+    [InlineData("build 1 5 0", "0 of type id 5")]
     public void A_slot_that_is_neither_filled_nor_empty_is_refused(string row, string named)
     {
         // An empty slot is spelled 0 0 and nothing else. A count against no
@@ -163,7 +159,7 @@ public class CommandScriptTests
         // and says nothing about line 2. It takes both rows of the
         // slot-spelling theory above with it, for the same reason.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 ordinary 5 5 2\nbuild 2 ordinary 5 5 2 1 1\n"));
+            () => CommandScript.Parse("build 1 5 2\nbuild 2 5 2 1 1\n"));
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("Filled slots ascend strictly by type id", thrown.Message, StringComparison.Ordinal);
@@ -185,7 +181,7 @@ public class CommandScriptTests
         // red both ways round, Upgrade against Place, which is what pins the
         // words to the kinds -- the list's position IS the ActionKind.
         IReadOnlyList<RecordCommand> commands = CommandScript.Parse(
-            "build 1 ordinary 5 5 2\nplace 1 3 9 0\nupgrade 1 4 9 0\n");
+            "build 1 5 2\nplace 1 3 9 0\nupgrade 1 4 9 0\n");
 
         RecordCommand command = Assert.Single(commands);
 
@@ -208,10 +204,10 @@ public class CommandScriptTests
         // scripts parse to the same command, the inequality goes red, and the
         // second placement silently becomes the first.
         IReadOnlyList<RecordCommand> written = CommandScript.Parse(
-            "build 1 ordinary 5 5 2\nplace 1 3 9 0\nplace 1 4 3 2\n");
+            "build 1 5 2\nplace 1 3 9 0\nplace 1 4 3 2\n");
 
         IReadOnlyList<RecordCommand> reversed = CommandScript.Parse(
-            "build 1 ordinary 5 5 2\nplace 1 4 3 2\nplace 1 3 9 0\n");
+            "build 1 5 2\nplace 1 4 3 2\nplace 1 3 9 0\n");
 
         Assert.NotEqual(written[0], reversed[0]);
 
@@ -237,7 +233,7 @@ public class CommandScriptTests
         // as "four plus a pair", its trailing two fields are read by nothing,
         // and no exception is thrown at all.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 ordinary 5 5 2\n" + action + "\n"));
+            () => CommandScript.Parse("build 1 5 2\n" + action + "\n"));
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("5 fields, always", thrown.Message, StringComparison.Ordinal);
@@ -262,7 +258,7 @@ public class CommandScriptTests
         // red having caught a SimulationException -- the right refusal with the
         // line a person editing the file needed stripped off it.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 ordinary 5 5 2\n" + action + "\n"));
+            () => CommandScript.Parse("build 1 5 2\n" + action + "\n"));
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains(named + " is", thrown.Message, StringComparison.Ordinal);
@@ -282,15 +278,15 @@ public class CommandScriptTests
         // goes red on an exception, and a script naming a creep type or a cell
         // off the map is refused twice with two sentences instead of once.
         RecordCommand command = Assert.Single(
-            CommandScript.Parse("build 1 ordinary 5 5 2\nplace 1 65535 -1 -1\n"));
+            CommandScript.Parse("build 1 5 2\nplace 1 65535 -1 -1\n"));
 
         Assert.Equal(BuildAction.Of(ActionKind.Place, 65535, -1, -1), Assert.Single(command.Actions));
     }
 
     [Theory]
-    [InlineData("build 2 ordinary 5 5 2\nbuild 1 ordinary 5 5 2\n", 2, "decides wave 1")]
-    [InlineData("build 1 ordinary 5 5 2\nbuild 1 ordinary 5 5 2\n", 2, "decides wave 1")]
-    [InlineData("build 1 ordinary 5 5 2\nbuild 2 ordinary 5 5 2\nplace 1 3 9 0\n", 3, "acts on wave 1")]
+    [InlineData("build 2 5 2\nbuild 1 5 2\n", 2, "decides wave 1")]
+    [InlineData("build 1 5 2\nbuild 1 5 2\n", 2, "decides wave 1")]
+    [InlineData("build 1 5 2\nbuild 2 5 2\nplace 1 3 9 0\n", 3, "acts on wave 1")]
     public void Rows_ascend_by_wave_across_the_whole_file(string script, int line, string named)
     {
         // The first of the three rules about the file's own shape. A run plays
@@ -326,7 +322,7 @@ public class CommandScriptTests
         // The row parses onto wave 1's phase, this goes red having caught
         // nothing, and wave 2's placement is made and paid for a round early.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 ordinary 5 5 2\nplace 2 3 9 0\nbuild 2 ordinary 5 5 2\n"));
+            () => CommandScript.Parse("build 1 5 2\nplace 2 3 9 0\nbuild 2 5 2\n"));
 
         Assert.Equal(2, thrown.Line);
         Assert.Contains("acts on wave 2 where the build row above it decided wave 1",
@@ -345,7 +341,7 @@ public class CommandScriptTests
         // the end of an empty list with an ArgumentOutOfRangeException, which
         // says nothing about a file and nothing about a line.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("place 1 3 9 0\nbuild 1 ordinary 5 5 2\n"));
+            () => CommandScript.Parse("place 1 3 9 0\nbuild 1 5 2\n"));
 
         Assert.Equal(1, thrown.Line);
         Assert.Contains("no build row stands above it", thrown.Message, StringComparison.Ordinal);

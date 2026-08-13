@@ -188,7 +188,6 @@ public static class Program
         "  sweep      --seed <number> [--runs <number>] [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
-        "             [--ordinary-options <number>] [--game-changers <number>]",
         "             [--free-snapshots <number>] [--snapshot-price <number>]",
         "             [--most-creeps <number>]",
         string.Empty,
@@ -329,8 +328,6 @@ public static class Program
                     "seed",
                     "runs",
                     "out",
-                    "ordinary-options",
-                    "game-changers",
                     "free-snapshots",
                     "snapshot-price",
                     "most-creeps"));
@@ -548,8 +545,6 @@ public static class Program
             ShapeOf(arguments),
             arguments.RequiredUnsigned("seed"),
             arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
-            Dial(arguments, "ordinary-options"),
-            Dial(arguments, "game-changers"),
             Dial(arguments, "free-snapshots"),
             Dial(arguments, "snapshot-price"),
             arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps));

@@ -135,7 +135,7 @@ public class RoundFrameTests
             RoundFrame.ToText(
                 Fresh(types, TheRun.FieldWave(types)),
                 ladder,
-                BuildPhase.Of(OptionKind.Ordinary, WarriorOption)));
+                BuildPhase.Of()));
     }
 
     [Fact]

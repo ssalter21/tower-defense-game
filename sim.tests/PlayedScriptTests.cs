@@ -111,20 +111,10 @@ public class PlayedScriptTests
 
             Assert.Equal(wave.ToString(CultureInfo.InvariantCulture), fields[1]);
 
-            // The take kind is the one word on a decision row that is not a
-            // number, and it is one of the two the grammar declares.
-            if (decides)
-            {
-                Assert.Contains(
-                    fields[2],
-                    new[]
-                    {
-                        CommandScript.WordFor(OptionKind.Ordinary),
-                        CommandScript.WordFor(OptionKind.GameChanger),
-                    });
-            }
-
-            for (int index = decides ? 3 : 2; index < fields.Length; index++)
+            // Every field after the wave is a number. The take used to put one
+            // word among them and went with the offering it named, so a build
+            // row is now the wave and pairs of integers all the way across.
+            for (int index = 2; index < fields.Length; index++)
             {
                 Assert.True(
                     int.TryParse(fields[index], NumberStyles.Integer, CultureInfo.InvariantCulture, out _),
@@ -214,8 +204,8 @@ public class PlayedScriptTests
         // OBSERVED: leave the padding on the end of a row that stops early. The
         // commands still compare equal, because trailing blanks tokenise away;
         // the field count below is what notices.
-        BuildPhase nothing = BuildPhase.Of(OptionKind.Ordinary, 1);
-        BuildPhase sending = BuildPhase.Of(OptionKind.Ordinary, 2, WaveSlot.Of(1, 2))
+        BuildPhase nothing = BuildPhase.Of();
+        BuildPhase sending = BuildPhase.Of(WaveSlot.Of(1, 2))
             .With(BuildAction.Of(ActionKind.Place, 3, 6, 2));
 
         string written = PlayedScript.Of(new[] { nothing, sending });
@@ -227,9 +217,7 @@ public class PlayedScriptTests
         string[] rows = written.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(3, rows.Length);
-        Assert.Equal(
-            CommandScript.DecisionWord + "    1  " + CommandScript.WordFor(OptionKind.Ordinary) + "   1",
-            rows[0]);
+        Assert.Equal(CommandScript.DecisionWord + "    1", rows[0]);
     }
 
     [Fact]
@@ -246,10 +234,9 @@ public class PlayedScriptTests
         // makes look correct. The wave row comes out as "12 10013 5", the
         // parser refuses seven fields on a build row, and the round trip dies on
         // a script this writer wrote.
-        BuildPhase wide = BuildPhase.Of(
-            OptionKind.Ordinary, 1, WaveSlot.Of(12, 100), WaveSlot.Of(13, 5));
+        BuildPhase wide = BuildPhase.Of(WaveSlot.Of(12, 100), WaveSlot.Of(13, 5));
 
-        BuildPhase acting = BuildPhase.Of(OptionKind.Ordinary, 2)
+        BuildPhase acting = BuildPhase.Of()
             .With(BuildAction.Of(ActionKind.Place, 65535, 100, 2));
 
         string written = PlayedScript.Of(new[] { wide, acting });

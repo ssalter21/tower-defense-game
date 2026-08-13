@@ -37,6 +37,12 @@ public class BuildPhaseTests
     /// <summary>The committed minion: a creep, so a row no cell may hold.</summary>
     private const int Minion = 1;
 
+    /// <summary>
+    /// The committed ranger: the target of the one edge <c>content/upgrades.txt</c>
+    /// carries, so the one row on the roster that may not be placed outright.
+    /// </summary>
+    private const int Ranger = 14;
+
     /// <summary>A ground cell of the committed map that these assertions leave empty.</summary>
     private const int FreeColumn = 0;
 
@@ -53,43 +59,44 @@ public class BuildPhaseTests
     private const int Bodies = 3;
 
     [Fact]
-    public void A_wave_has_the_slots_the_schedule_derives_and_each_one_is_a_creep_type_and_a_count()
+    public void A_wave_is_any_number_of_slots_and_each_one_is_a_creep_type_and_a_count()
     {
-        // Slots start at two and widen only at anchors, on the width the
-        // schedule derives -- 2 2 3 3 3 4 4 4 5 5 -- so moving an anchor moves
-        // the widths with it and the two cannot fall out of step. The offering
-        // carries the number rather than recomputing it, so that a build phase
-        // is checked against one width and not against a second opinion.
+        // Nothing rations how wide a wave may be. The slot count used to be
+        // derived from how many anchors a run had passed, and a phase wider
+        // than that was refused; #179 deleted the anchors and the width with
+        // them, so what bounds a wave now is the purse and nothing else.
         //
-        // OBSERVED: carry rules.StartingWaveSlots as the offering's width
-        // instead of schedule.WaveSlotsAt in Offering.Draw. The series
-        // assertion goes red, [2, 2, 3, 3, 3, ...] against
-        // [2, 2, 2, 2, 2, ...], and the scarcity that stands in for a second
-        // wallet stops widening at an anchor at all.
+        // OBSERVED: reinstate a width bound -- refuse a phase in
+        // BuildPhase.Resolve whose filled slots outnumber two. The five-slot
+        // half goes red on the refusal, and the purse stops being the only
+        // thing a player is spending against.
         Run run = TheBuild.Fresh();
-        Ruleset rules = TheBuild.RulesOffering(TheBuild.Ordinary);
-        UpgradeLadder ladder = TheLadder.Committed();
-
-        int[] widths = Enumerable.Range(1, 10).Select(wave => run.OfferingAt(wave).WaveSlots).ToArray();
-
-        Assert.Equal(new[] { 2, 2, 3, 3, 3, 4, 4, 4, 5, 5 }, widths);
-        Assert.Equal(Enumerable.Range(1, 10).Select(wave => schedule.WaveSlotsAt(rules, wave)), widths);
+        int[] creeps = Creeps(run);
 
         // A slot is one creep type plus a count, and the wave is what the
         // filled ones compose.
-        Offering opening = run.Offering;
-        Build built = Resolved(
-            run,
-            BuildPhase.Of(
-                opening.Options[0].Kind,
-                opening.Options[0].Id,
-                WaveSlot.Of(opening.Options[0].TypeId, 4)),
-            Unlocks.None,
-            1000);
+        Build built = Resolved(run, BuildPhase.Of(WaveSlot.Of(creeps[0], 4)), 1000);
 
         Assert.Equal(1, built.Wave.Count);
         Assert.Equal(4, built.Wave.TotalUnits);
-        Assert.Equal(opening.Options[0].TypeId, built.Wave.Orders[0].TypeId);
+        Assert.Equal(creeps[0], built.Wave.Orders[0].TypeId);
+
+        // And five of them in one round, on a run one wave old, which no width
+        // in the old rules would have allowed until wave nine.
+        Assert.True(creeps.Length >= 5, "The roster is too thin for this to have proved anything.");
+
+        Build wide = Resolved(
+            run,
+            BuildPhase.Of(
+                WaveSlot.Of(creeps[0], 1),
+                WaveSlot.Of(creeps[1], 1),
+                WaveSlot.Of(creeps[2], 1),
+                WaveSlot.Of(creeps[3], 1),
+                WaveSlot.Of(creeps[4], 1)),
+            1000);
+
+        Assert.Equal(5, wide.Wave.Count);
+        Assert.Equal(5, wide.Wave.TotalUnits);
     }
 
     [Fact]
@@ -105,16 +112,16 @@ public class BuildPhaseTests
         // sent: leaving a slot empty stops being a position and becomes a
         // command nobody may write down.
         Run run = TheBuild.Fresh(waves: 3);
-        Option first = run.Offering.Options[0];
+        UnitType first = TheBuild.FirstCreep(run.Types);
 
         // One filled, one empty.
-        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 2), WaveSlot.Empty));
+        run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 2), WaveSlot.Empty));
 
         Assert.Equal(2, run.Sent[0].Wave.TotalUnits);
         Assert.Equal(1, run.Sent[0].Wave.Count);
 
         // Every slot empty, which is the whole round banked.
-        run.Advance(TheBuild.TakeFirst(run.Offering, WaveSlot.Empty, WaveSlot.Empty));
+        run.Advance(TheBuild.Filling(WaveSlot.Empty, WaveSlot.Empty));
 
         Assert.Equal(0, run.Sent[1].Wave.TotalUnits);
         Assert.Equal(0, run.Sent[1].Wave.Count);
@@ -146,17 +153,11 @@ public class BuildPhaseTests
         // green, still refusing content/wave.txt for a reason that has stopped
         // being true.
         Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+        int[] creeps = Creeps(run);
 
         WaveScript wave = Resolved(
             run,
-            BuildPhase.Of(
-                offering.Options[0].Kind,
-                offering.Options[0].Id,
-                WaveSlot.Of(creeps[0], 1),
-                WaveSlot.Of(creeps[1], 1)),
-            Everything(offering),
+            BuildPhase.Of(WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[1], 1)),
             1000)
             .Wave;
 
@@ -183,13 +184,9 @@ public class BuildPhaseTests
         // that was never legal -- and its own text says that reaching there
         // means an unaffordable command was let through.
         Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        Unlocks everything = Everything(offering);
-        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+        int[] creeps = Creeps(run);
 
         BuildPhase phase = BuildPhase.Of(
-            offering.Options[0].Kind,
-            offering.Options[0].Id,
             WaveSlot.Of(creeps[0], 4),
             WaveSlot.Of(creeps[1], 4));
 
@@ -226,19 +223,12 @@ public class BuildPhaseTests
         // (tick 0, type) key, which is a wave no loader in this repository
         // would accept back.
         Run run = TheBuild.Fresh();
-        Offering offering = run.Offering;
-        Unlocks everything = Everything(offering);
-        int[] creeps = offering.Options.Select(option => option.TypeId).OrderBy(id => id).ToArray();
+        int[] creeps = Creeps(run);
 
         SimulationException repeated = Assert.Throws<SimulationException>(
             () => Resolved(
                 run,
-                BuildPhase.Of(
-                    offering.Options[0].Kind,
-                    offering.Options[0].Id,
-                    WaveSlot.Of(creeps[0], 1),
-                    WaveSlot.Of(creeps[0], 1)),
-                everything,
+                BuildPhase.Of(WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[0], 1)),
                 1000));
 
         Assert.Contains("at or below the", repeated.Message, StringComparison.Ordinal);
@@ -246,12 +236,7 @@ public class BuildPhaseTests
         SimulationException descending = Assert.Throws<SimulationException>(
             () => Resolved(
                 run,
-                BuildPhase.Of(
-                    offering.Options[0].Kind,
-                    offering.Options[0].Id,
-                    WaveSlot.Of(creeps[1], 1),
-                    WaveSlot.Of(creeps[0], 1)),
-                everything,
+                BuildPhase.Of(WaveSlot.Of(creeps[1], 1), WaveSlot.Of(creeps[0], 1)),
                 1000));
 
         Assert.Contains("Filled slots ascend strictly by type id", descending.Message, StringComparison.Ordinal);
@@ -297,14 +282,14 @@ public class BuildPhaseTests
         Assert.Equal(100, rules.StartingPurseGold);
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
 
-        Option first = run.Offering.Options[0];
-        run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
+        UnitType first = TheBuild.FirstCreep(run.Types);
+        run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 1)));
 
         Assert.Equal(1, run.Sent[0].Wave.TotalUnits);
     }
 
     [Fact]
-    public void A_whole_run_played_through_its_build_phases_takes_one_thing_a_round_and_pays_for_what_it_sends()
+    public void A_whole_run_played_through_its_build_phases_pays_for_what_it_sends()
     {
         // The loop, end to end: ten rounds, ten takes, a wave bought out of the
         // purse each time, and an outcome that is still a vector of per-round
@@ -312,12 +297,11 @@ public class BuildPhaseTests
         // so a run played from decisions and a run played from orders are the
         // same call rather than two lifecycles.
         //
-        // OBSERVED: leave the purse and the unlocks on the build rather than
-        // taking them back -- hand Run.Play the run's own Unlocks and Purse
-        // instead of the build's, in Run.Advance(BuildPhase). The
-        // unlock-count assertion goes red, 10 against 0, and every round of the
-        // run decides against a run that has never taken anything and never
-        // spent a coin.
+        // OBSERVED: leave the purse on the build rather than taking it back --
+        // hand Run.Play the run's own Purse instead of the build's, in
+        // Run.Advance(BuildPhase). The spend assertion goes red, every round
+        // deciding against a run that has never spent a coin, so the ten
+        // rounds bill the opening purse ten times over.
         //
         // Death is off, because this player spends every coin on creeps and
         // never builds: an empty board against this pool runs out of health in
@@ -326,16 +310,14 @@ public class BuildPhaseTests
         Run run = TheBuild.Fresh(deathEndsTheRun: false);
         var spent = new List<int>();
 
+        UnitType cheapest = Walkers(run.Types).OrderBy(type => type.Cost).First();
+
         while (!run.IsOver)
         {
-            Offering offering = run.Offering;
-            Option cheapest = offering.Options.OrderBy(option => option.Type.Cost).First();
-            int affordable = run.Purse.Gold / (cheapest.Type.Cost < 1 ? 1 : cheapest.Type.Cost);
+            int affordable = run.Purse.Gold / (cheapest.Cost < 1 ? 1 : cheapest.Cost);
 
             BuildPhase phase = BuildPhase.Of(
-                cheapest.Kind,
-                cheapest.Id,
-                affordable > 0 ? WaveSlot.Of(cheapest.TypeId, affordable) : WaveSlot.Empty);
+                affordable > 0 ? WaveSlot.Of(cheapest.Id, affordable) : WaveSlot.Empty);
 
             // What the wave cost comes off the round the phase was played into.
             // The build phase resolves once, where the round is played, and says
@@ -344,7 +326,6 @@ public class BuildPhaseTests
         }
 
         Assert.Equal(10, run.Round);
-        Assert.Equal(10, run.Unlocks.Count);
         Assert.Equal(10, run.Sent.Count);
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.True(spent.Sum() > 0, "Ten build phases bought nothing at all.");
@@ -355,16 +336,15 @@ public class BuildPhaseTests
     public void A_round_that_refuses_leaves_the_run_exactly_where_it_was()
     {
         // Everything that can refuse a round refuses before a coin moves. A
-        // purse spent and an unlock taken on a round that then threw would be
-        // paid for a wave nobody was in the run to send -- and nothing
-        // downstream could tell that from a round somebody played.
+        // purse spent on a round that then threw would be paid for a wave
+        // nobody was in the run to send -- and nothing downstream could tell
+        // that from a round somebody played.
         //
-        // OBSERVED: take the purse and the unlocks back where the decision is
-        // made rather than where the round is committed -- add
-        // `Unlocks = build.Unlocks; Purse = build.Purse;` above the
-        // RequireUnfinished call in Run.Advance(BuildPhase). The
-        // first half goes red, 210 against 193: a finished run pays for a wave
-        // it refused to send.
+        // OBSERVED: take the purse back where the decision is made rather than
+        // where the round is committed -- add `Purse = build.Purse;` above the
+        // RequireUnfinished call in Run.Advance(BuildPhase). The first half
+        // goes red, 210 against 193: a finished run pays for a wave it refused
+        // to send.
         //
         // OBSERVED: drop the null check at the top of Run.Advance. The second
         // half goes red on a NullReferenceException where an
@@ -372,46 +352,34 @@ public class BuildPhaseTests
         // at all stops being refused by name.
         Run over = TheBuild.Fresh(waves: 1);
 
-        over.Advance(TheBuild.BuyingNothing(over.Offering));
+        over.Advance(TheBuild.BuyingNothing());
         Assert.True(over.IsOver);
 
         int purse = over.Purse.Gold;
-        int unlocks = over.Unlocks.Count;
 
         // A phase that would have been perfectly legal on a run with a round
-        // left in it: a take off wave two's menu, and a slot of the creep wave
-        // one unlocked.
-        Option next = over.Offering.Options[0];
-        BuildPhase past = BuildPhase.Of(
-            next.Kind, next.Id, WaveSlot.Of(over.Unlocks.Taken[0].TypeId, 1));
+        // left in it: one slot of the roster's first creep.
+        BuildPhase past = BuildPhase.Of(WaveSlot.Of(TheBuild.FirstCreep(over.Types).Id, 1));
 
         Assert.Throws<SimulationException>(() => over.Advance(past));
 
         Assert.Equal(purse, over.Purse.Gold);
-        Assert.Equal(unlocks, over.Unlocks.Count);
 
         // And a round handed no decision at all is refused the same way.
         Run alive = TheBuild.Fresh(waves: 2);
 
         Assert.Throws<ArgumentNullException>(() => alive.Advance(null!));
 
-        Assert.Equal(0, alive.Unlocks.Count);
         Assert.Equal(TheBuild.RulesOffering(TheBuild.Ordinary).StartingPurseGold, alive.Purse.Gold);
     }
 
     [Fact]
-    public void The_purse_walks_the_take_then_the_actions_then_the_slots()
+    public void The_purse_walks_the_actions_then_the_slots()
     {
         // One decision over one wallet, spent in the order it was written: the
-        // take, then the actions, then the wave's slots. That order is the
-        // bytes' order and it is play order, and pricing the slots first would
-        // quietly reorder what the author wrote.
-        //
-        // The take spends nothing, so its leg of the walk is not a purse event
-        // and is not what this proves: that it comes first is what makes the
-        // creep it unlocked fieldable in the same round, which
-        // Buying_a_creep_that_was_never_unlocked_is_refused asserts. What is
-        // proved here is the two legs that move gold.
+        // actions, then the wave's slots. That order is the bytes' order and it
+        // is play order, and pricing the slots first would quietly reorder what
+        // the author wrote.
         //
         // The phase below can afford its tower, and can afford its wave, and
         // cannot afford both, so it is refused whichever way round it is priced
@@ -425,15 +393,15 @@ public class BuildPhaseTests
         // towers have not come out of. This goes red having caught nothing: the
         // phase resolves, and a run spends 67 gold out of a purse holding 41.
         Run run = TheBuild.Fresh();
-        Option first = run.Offering.Options[0];
+        UnitType first = TheBuild.FirstCreep(run.Types);
         int tower = run.Costs.PriceOf(Purchase.Unit(Archer));
-        int wave = run.Costs.PriceOf(Purchase.Unit(first.TypeId), Bodies);
+        int wave = run.Costs.PriceOf(Purchase.Unit(first.Id), Bodies);
         int carried = (tower > wave ? tower : wave) + 1;
 
         Assert.True(tower + wave > carried, "The tower and the wave fit in one purse together.");
 
         BuildPhase phase = BuildPhase
-            .Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, Bodies))
+            .Of(WaveSlot.Of(first.Id, Bodies))
             .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
@@ -460,20 +428,20 @@ public class BuildPhaseTests
     [Fact]
     public void A_phase_that_cannot_afford_its_wave_after_building_is_refused_whole()
     {
-        // Not silently emptied, and not sent short. A run where the towers ate
+        // Not silently emptied, and not sent short.         // A run where the towers ate
         // the wave is a decision, and the author's script has to add up -- so
-        // the round refuses and the run is exactly where it was, purse, board
-        // and unlocks alike.
+        // the round refuses and the run is exactly where it was, purse and
+        // board alike.
         //
         // OBSERVED: drop the slot that overspends instead of throwing -- skip a
         // slot in BuildPhase.Resolve where the running cost would pass what is
         // left. This goes red having caught nothing, and the run resolves a
         // round whose wave is smaller than the one written down.
         Run run = TheBuild.Fresh();
-        Option first = run.Offering.Options[0];
+        UnitType first = TheBuild.FirstCreep(run.Types);
         int purse = run.Purse.Gold;
         int tower = run.Costs.PriceOf(Purchase.Unit(Archer));
-        int creep = run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+        int creep = run.Costs.PriceOf(Purchase.Unit(first.Id));
 
         // Every body the purse could buy on its own, which is at least one more
         // than it can buy once the tower is paid for.
@@ -483,7 +451,7 @@ public class BuildPhaseTests
         Assert.True(affordable >= 1 && affordable < count, "The tower left room for the whole wave.");
 
         BuildPhase phase = BuildPhase
-            .Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, count))
+            .Of(WaveSlot.Of(first.Id, count))
             .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
 
         SimulationException thrown = Assert.Throws<SimulationException>(() => run.Advance(phase));
@@ -491,7 +459,6 @@ public class BuildPhaseTests
         Assert.Contains("refused whole rather than sent short", thrown.Message, StringComparison.Ordinal);
 
         Assert.Equal(purse, run.Purse.Gold);
-        Assert.Equal(0, run.Unlocks.Count);
         Assert.Equal(0, run.Round);
         Assert.Equal(0, run.Board.Count);
 
@@ -501,7 +468,7 @@ public class BuildPhaseTests
             1,
             run.Advance(
                 BuildPhase
-                    .Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, affordable))
+                    .Of(WaveSlot.Of(first.Id, affordable))
                     .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow)))
                 .Build.Board.Count);
 
@@ -644,11 +611,10 @@ public class BuildPhaseTests
         // guard whose own text says reaching it means an unaffordable command
         // was let through.
         Run run = TheBuild.Fresh();
-        Option first = run.Offering.Options[0];
         int tower = run.Costs.PriceOf(Purchase.Unit(Archer));
 
         BuildPhase phase = BuildPhase
-            .Of(first.Kind, first.Id)
+            .Of()
             .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
@@ -677,29 +643,88 @@ public class BuildPhaseTests
     }
 
     [Fact]
+    public void A_type_that_is_some_edges_target_is_refused_to_place_and_reached_by_upgrading()
+    {
+        // The one prerequisite this game has, and #179's whole acceptance
+        // criterion. An edge in content/upgrades.txt says the ranger follows the
+        // archer, and a rung is only worth being one if the rung below has to be
+        // stood first -- so the ranger is refused to `place` rather than priced
+        // out of reach, and the only way onto a cell it stands on is an archer
+        // that was upgraded.
+        //
+        // This is the ladder deciding what a simulation does, which is the
+        // sentence content/upgrades.txt used to deny. It is refused rather than
+        // priced because a tier that can be bought without the tier under it is
+        // not a tier, it is a second row at a higher price.
+        //
+        // OBSERVED: return false unconditionally from
+        // UpgradeLadder.IsTargetOfAnEdge. The refusal half goes red having
+        // caught nothing, the ranger is placed outright for its own 40 gold,
+        // and the ladder becomes an annotation again.
+        Run run = TheBuild.Fresh();
+        int archer = run.Costs.PriceOf(Purchase.Unit(Archer));
+        int ranger = run.Costs.PriceOf(Purchase.Unit(Ranger));
+
+        Assert.True(run.Ladder.IsTargetOfAnEdge(Ranger), "The committed ladder points no edge at the ranger.");
+        Assert.False(run.Ladder.IsTargetOfAnEdge(Archer), "The committed ladder points an edge at the archer.");
+
+        SimulationException refused = Assert.Throws<SimulationException>(
+            () => Acting(run, ActionKind.Place, Ranger, FreeColumn, FreeRow));
+
+        Assert.Contains("is the target of an upgrade edge", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("reached by upgrading the rung below it", refused.Message, StringComparison.Ordinal);
+
+        // And the archer under it is placed for its own price, because nothing
+        // points at the archer.
+        Build stood = Resolved(
+            run,
+            BuildPhase.Of().With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow)),
+            archer);
+
+        Assert.Equal(archer, stood.Spent);
+
+        // A ranger costs the archer plus the ranger, in that order, and one
+        // gold short of the pair does not reach it.
+        BuildPhase climbing = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow));
+
+        Assert.Equal(40, archer);
+        Assert.Equal(40, ranger);
+        Assert.Throws<SimulationException>(() => Resolved(run, climbing, archer + ranger - 1));
+
+        Build climbed = Resolved(run, climbing, archer + ranger);
+
+        Assert.Equal(archer + ranger, climbed.Spent);
+        Assert.Equal(run.Board.Count + 1, climbed.Board.Count);
+        Assert.Equal(
+            Ranger,
+            climbed.Board.Placements.First(
+                placement => placement.Column == FreeColumn && placement.Row == FreeRow).Type.Id);
+    }
+
+    [Fact]
     public void An_upgrade_pays_the_targets_full_price_and_mints_no_new_placement_id()
     {
-        // The full price of the row it names, and no ladder is read to get
-        // there -- content/upgrades.txt's standing claim that the simulation
-        // never walks one is not broken by a build phase that climbs a tower.
-        // The placement keeps its identity, because that is what an upgrade
-        // does to one.
+        // The full price of the row it names, read off the roster and not off
+        // the ladder. The ladder decides what may be placed outright; it prices
+        // nothing, which is why an edge carries no cost column. The placement
+        // keeps its identity, because that is what an upgrade does to one.
         //
         // OBSERVED: price an upgrade at the difference between the two rows --
         // subtract the standing type's cost in BuildPhase.Applied. This goes
         // red on the spend, 52 against 92, and an upgrade becomes cheaper than
         // the tower it replaces by a rule nobody authored.
         Run run = TheBuild.Fresh();
-        Option first = run.Offering.Options[0];
         int mage = run.Costs.PriceOf(Purchase.Unit(Mage));
         Board standing = Standing(run);
 
         Build built = Resolved(
             run,
             BuildPhase
-                .Of(first.Kind, first.Id)
+                .Of()
                 .With(BuildAction.Of(ActionKind.Upgrade, Mage, StandingColumn, StandingRow)),
-            Unlocks.None,
             mage,
             standing);
 
@@ -739,11 +764,9 @@ public class BuildPhaseTests
         Assert.True(footing.Possible);
         Assert.False(footing.ReachesRoute);
 
-        Option first = run.Offering.Options[0];
-
         run.Advance(
             BuildPhase
-                .Of(first.Kind, first.Id)
+                .Of()
                 .With(BuildAction.Of(ActionKind.Place, Soldier, FreeColumn, FreeRow)));
 
         Assert.Equal(1, run.Round);
@@ -754,20 +777,19 @@ public class BuildPhaseTests
     [Fact]
     public void What_a_phase_built_is_standing_when_that_rounds_waves_arrive()
     {
-        // The purse walks the take, then the actions, then the slots, and the
-        // board a round's incoming waves meet is the one that walk left behind.
-        // A tower bought this round defends this round.
+        // The purse walks the actions, then the slots, and the board a round's
+        // incoming waves meet is the one that walk left behind. A tower bought
+        // this round defends this round.
         //
         // OBSERVED: hand RoundOrders.Of the run's board rather than the build's
         // in Run.Advance. This goes red on the tower count of what was sent, 0
         // against 1, and every tower a run buys sits out the round it was
         // bought in.
         Run run = TheBuild.Fresh();
-        Option first = run.Offering.Options[0];
 
         run.Advance(
             BuildPhase
-                .Of(first.Kind, first.Id)
+                .Of()
                 .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow)));
 
         Assert.Equal(1, run.Sent[0].Defense.Count);
@@ -783,9 +805,8 @@ public class BuildPhaseTests
         run.Board.Place(run.Types.ById(Archer), StandingColumn, StandingRow);
 
     /// <summary>
-    /// A phase that takes the round's first option, does one thing to the
-    /// board and sends nothing, out of a purse none of these assertions is
-    /// about.
+    /// A phase that does one thing to the board and sends nothing, out of a
+    /// purse none of these assertions is about.
     /// </summary>
     private static Build Acting(
         Run run,
@@ -796,12 +817,25 @@ public class BuildPhaseTests
         Board? board = null) =>
         Resolved(
             run,
-            BuildPhase
-                .Of(run.Offering.Options[0].Kind, run.Offering.Options[0].Id)
-                .With(BuildAction.Of(kind, typeId, column, row)),
-            Unlocks.None,
+            BuildPhase.Of().With(BuildAction.Of(kind, typeId, column, row)),
             1000,
             board);
+
+    /// <summary>Every walking row of a roster, in the order the file names them.</summary>
+    private static UnitType[] Walkers(UnitTypeTable types) =>
+        types.Types.Where(type => type.Role == UnitRole.Moving).ToArray();
+
+    /// <summary>
+    /// The creep type ids a run may send, ascending.
+    /// </summary>
+    /// <remarks>
+    /// Every one of them, from wave one. This used to be read off the round's
+    /// offering, which rationed the roster three creeps at a time; #179 deleted
+    /// the ration, so what a run may send is the roster and the ascending order
+    /// is the roster's own.
+    /// </remarks>
+    private static int[] Creeps(Run run) =>
+        Walkers(run.Types).Select(type => type.Id).OrderBy(id => id).ToArray();
 
     /// <summary>
     /// A decision resolved against the round in front of a run, and against

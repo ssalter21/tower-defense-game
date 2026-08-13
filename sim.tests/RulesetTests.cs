@@ -43,15 +43,7 @@ public class RulesetTests
         // content/ruleset.txt. This goes red, 100 against 150, which is what a
         // retuned opening balance nobody re-read here looks like.
         Assert.Equal(100, rules.StartingPurseGold);
-        Assert.Equal(1500, rules.HealthPoolGold);
-        Assert.Equal(2, rules.StartingWaveSlots);
-        Assert.Equal(1, rules.WaveSlotsPerAnchor);
-
-        // Three ordinary options against a roster of six walkers. An option
-        // unlocks a creep and appears on a menu once, so this number is bounded
-        // by how many creeps there are to draw from, and it rises with them.
-        Assert.Equal(3, rules.OrdinaryOptionsPerRound);
-        Assert.Equal(3, rules.GameChangersPerAnchor);
+        Assert.Equal(800, rules.HealthPoolGold);
         Assert.Equal(10, rules.FreeSnapshotsPerRun);
         Assert.Equal(25, rules.SnapshotPriceGold);
 
@@ -60,29 +52,6 @@ public class RulesetTests
         Assert.Equal(0, rules.Bands[0].BonusPercentOfBase);
         Assert.Equal(90, rules.Bands[3].PercentileThreshold);
         Assert.Equal(20, rules.Bands[3].BonusPercentOfBase);
-    }
-
-    [Fact]
-    public void The_slot_widths_are_derived_from_the_anchors_and_not_authored_beside_them()
-    {
-        // The series the design names -- 2 2 3 3 3 4 4 4 5 5 across ten waves
-        // with anchors at 3, 6 and 9 -- computed from the two numbers in the
-        // file rather than read out of a second list that could drift from it.
-        //
-        // OBSERVED: change "slots 2 1" to "slots 2 2" in content/ruleset.txt.
-        // The series becomes 2 2 4 4 4 6 6 6 8 8 and this goes red on wave 3,
-        // which is what a widening step that had been retuned without anybody
-        // re-reading this looks like.
-        Ruleset rules = TheRuleset.Committed();
-        int[] anchors = { 3, 6, 9 };
-        var widths = new List<int>();
-
-        for (int wave = 1; wave <= 10; wave++)
-        {
-            widths.Add(rules.WaveSlotsAt(anchors.Count(anchor => anchor <= wave)));
-        }
-
-        Assert.Equal(new[] { 2, 2, 3, 3, 3, 4, 4, 4, 5, 5 }, widths);
     }
 
     [Fact]
@@ -467,9 +436,9 @@ public class RulesetTests
     }
 
     [Fact]
-    public void Retuning_the_offering_and_the_scouting_line_moves_the_hash_and_nothing_else()
+    public void Retuning_the_scouting_line_moves_the_hash_and_nothing_else()
     {
-        // The sweep's four dials, turned through the one seam that turns them.
+        // The sweep's two dials, turned through the one seam that turns them.
         // Everything the retune did not name is carried across untouched --
         // asserted rather than assumed, because a copy constructor over sixteen
         // fields is exactly where a field goes missing quietly.
@@ -479,10 +448,8 @@ public class RulesetTests
         // where 100 was expected, and nothing else in the suite notices -- which
         // is what a field crossed in a sixteen-line copy looks like.
         Ruleset authored = TheRuleset.Committed();
-        Ruleset retuned = authored.With(2, 4, 6, 8);
+        Ruleset retuned = authored.With(6, 8);
 
-        Assert.Equal(2, retuned.OrdinaryOptionsPerRound);
-        Assert.Equal(4, retuned.GameChangersPerAnchor);
         Assert.Equal(6, retuned.FreeSnapshotsPerRun);
         Assert.Equal(8, retuned.SnapshotPriceGold);
         Assert.NotEqual(authored.ContentHash, retuned.ContentHash);
@@ -496,8 +463,6 @@ public class RulesetTests
         Assert.Equal(authored.IncomeBasePerWave, retuned.IncomeBasePerWave);
         Assert.Equal(authored.StartingPurseGold, retuned.StartingPurseGold);
         Assert.Equal(authored.HealthPoolGold, retuned.HealthPoolGold);
-        Assert.Equal(authored.StartingWaveSlots, retuned.StartingWaveSlots);
-        Assert.Equal(authored.WaveSlotsPerAnchor, retuned.WaveSlotsPerAnchor);
         Assert.Equal(authored.Bands.Count, retuned.Bands.Count);
     }
 
@@ -518,22 +483,14 @@ public class RulesetTests
         Assert.Equal(
             authored.ContentHash,
             authored.With(
-                authored.OrdinaryOptionsPerRound,
-                authored.GameChangersPerAnchor,
                 authored.FreeSnapshotsPerRun,
                 authored.SnapshotPriceGold).ContentHash);
     }
 
     [Theory]
-    [InlineData(0, 3, 10, 25, "the ordinary options")]
-    [InlineData(65, 3, 10, 25, "the ordinary options")]
-    [InlineData(3, 0, 10, 25, "the game changers an anchor adds")]
-    [InlineData(3, 65, 10, 25, "the game changers an anchor adds")]
-    [InlineData(3, 3, -1, 25, "the free snapshot count")]
-    [InlineData(3, 3, 10, -1, "the snapshot price")]
+    [InlineData(-1, 25, "the free snapshot count")]
+    [InlineData(10, -1, "the snapshot price")]
     public void A_retuned_number_outside_the_authored_column_is_refused(
-        int ordinary,
-        int changers,
         int free,
         int price,
         string named)
@@ -544,12 +501,11 @@ public class RulesetTests
         // able to build a ruleset no text file could express -- and every
         // finding it produced would be about a game nobody can author.
         //
-        // OBSERVED: drop the RequireInRange calls from Ruleset.With. Every one
-        // of the six rows goes red having thrown nothing at all -- an offering
-        // of zero options and a snapshot at minus one gold both build a
-        // perfectly ordinary ruleset with a perfectly ordinary hash.
+        // OBSERVED: drop the RequireInRange calls from Ruleset.With. Both rows
+        // go red having thrown nothing at all -- a snapshot at minus one gold
+        // builds a perfectly ordinary ruleset with a perfectly ordinary hash.
         SimulationException refused = Assert.Throws<SimulationException>(
-            () => TheRuleset.Committed().With(ordinary, changers, free, price));
+            () => TheRuleset.Committed().With(free, price));
 
         Assert.Contains(named, refused.Message, StringComparison.Ordinal);
     }

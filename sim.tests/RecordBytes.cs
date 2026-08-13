@@ -57,11 +57,19 @@ public static class RecordBytes
     /// <summary>Where a command stream's ruleset hash sits.</summary>
     public const int CommandRulesetHashOffset = RecordFormat.HeaderBytes;
 
-    /// <summary>Where a command stream's anchor schedule hash sits.</summary>
-    public const int CommandScheduleHashOffset = CommandRulesetHashOffset + 8;
+    /// <summary>
+    /// Where a command stream's upgrade ladder hash sits.
+    /// </summary>
+    /// <remarks>
+    /// The same offset and the same width the anchor schedule's hash had. #179
+    /// deleted the schedule and gave the simulation the ladder to read, so the
+    /// third stamp went on the content that took its place -- which is what
+    /// format version 2 is the bump for.
+    /// </remarks>
+    public const int CommandLadderHashOffset = CommandRulesetHashOffset + 8;
 
     /// <summary>Where a command stream's run seed sits.</summary>
-    public const int CommandSeedOffset = CommandScheduleHashOffset + 8;
+    public const int CommandSeedOffset = CommandLadderHashOffset + 8;
 
     /// <summary>Where a command stream's build phase count sits.</summary>
     public const int CommandCountOffset = CommandSeedOffset + 8;
@@ -72,14 +80,8 @@ public static class RecordBytes
     /// <summary>Where the wave sits inside one build phase.</summary>
     public const int CommandWaveOffset = 0;
 
-    /// <summary>Where the take's kind sits inside one build phase.</summary>
-    public const int CommandTakeKindOffset = 2;
-
-    /// <summary>Where the take's id sits inside one build phase.</summary>
-    public const int CommandTakeIdOffset = 3;
-
     /// <summary>Where the action count sits inside one build phase.</summary>
-    public const int CommandActionCountOffset = 5;
+    public const int CommandActionCountOffset = 2;
 
     /// <summary>Where a build phase's actions start inside it.</summary>
     public const int CommandActionsOffset = CommandActionCountOffset + 2;

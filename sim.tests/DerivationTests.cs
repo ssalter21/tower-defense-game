@@ -211,55 +211,41 @@ public class DerivationTests
     }
 
     [Fact]
-    public void Editing_the_schedule_moves_its_content_hash_and_reformatting_it_does_not()
+    public void Editing_the_ladder_moves_its_content_hash_and_reformatting_it_does_not()
     {
-        // The same pair again, for the file that holds the shape. The second
-        // half is what separates a hash over the parsed integers from a hash
-        // over the file, and it matters more here than anywhere: the shape is
-        // the thing a rotation publishes, so "somebody touched schedule.txt" is
-        // a signal every player would learn to ignore.
+        // The same pair again, for the file that holds the one prerequisite the
+        // game has. It matters here for a reason it did not before #179: the
+        // simulation reads this file now. An edge decides what `place` refuses,
+        // so a ladder that was edited under a stored record is a stored record
+        // whose refusals no longer hold -- which is what the stamp exists to
+        // catch, and the stamp is only as good as this fold.
         //
-        // OBSERVED: fold the characters of the text in AnchorSchedule.Parse
-        // instead of the parsed fields. Every retune assertion still passes,
+        // OBSERVED: fold the characters of the text in UpgradeLadder.Parse
+        // instead of the parsed fields. Every edit assertion still passes,
         // because a changed number is also changed bytes. Every formatting
-        // assertion goes red -- the first of them E29E570DEDD45072 against
-        // 6546745EC46DCEE5 -- at which point renaming a game changer retires
-        // every run recorded against the shape.
+        // assertion goes red, at which point re-wrapping a comment retires every
+        // run recorded against the ladder.
         UnitTypeTable types = TheMatch.Types();
         string original = TheLadder.CommittedText();
-        Hash64 hash = AnchorSchedule.Parse(original, types).ContentHash;
+        Hash64 hash = UpgradeLadder.Parse(original, types).ContentHash;
 
-        // A number moved, once per column the shape is made of. Each retires
-        // every run pinned to the old shape, which is exactly right.
-        Assert.NotEqual(hash, Reshaped(original, "anchor        3     1", "anchor        2     1"));
-        Assert.NotEqual(hash, Reshaped(original, "plain        3     1\nanchor        6", "plain        4     1\nanchor        6"));
-        Assert.NotEqual(hash, Reshaped(original, "steep        4     8", "steep        4     7"));
-        Assert.NotEqual(hash, Reshaped(original, "changer   12  thermal-riser", "changer   13  thermal-riser"));
-        Assert.NotEqual(hash, Reshaped(original, "swift-column     1     2", "swift-column     1     1"));
+        // A number moved, once per column an edge is made of. Each retires every
+        // run pinned to the old ladder, which is exactly right: the run that
+        // could not place a Ranger is not the run that can.
+        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    4  14"));
+        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    3  15"));
 
-        // The bonus, which is parsed and could be parsed and dropped.
-        // OBSERVED: delete .Add(BonusVsTag) from GameChanger.Fold. This line
-        // goes red with the 825 and the 830 shapes both hashing
-        // 9738D9F811E8A4B1, and a run pinned to one would replay against the
-        // other with the steep counter retuned underneath it.
-        Assert.NotEqual(hash, Reshaped(original, "thermal-riser    3     1    825", "thermal-riser    3     1    830"));
+        // The layout, which is the arity every row is read against.
+        Assert.NotEqual(hash, Relinked(original, "layout 1", "layout 2"));
 
         // Nothing that is not a number moved. Each of these changes the file
-        // and none of them changes the shape.
-        Assert.Equal(hash, AnchorSchedule.Parse(WithCommentsRewritten(original), types).ContentHash);
-        Assert.Equal(hash, AnchorSchedule.Parse(WithColumnsRespaced(original), types).ContentHash);
+        // and none of them changes the ladder.
+        Assert.Equal(hash, UpgradeLadder.Parse(WithCommentsRewritten(original), types).ContentHash);
+        Assert.Equal(hash, UpgradeLadder.Parse(WithColumnsRespaced(original), types).ContentHash);
         Assert.Equal(
             hash,
-            AnchorSchedule.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal), types).ContentHash);
-        Assert.Equal(hash, AnchorSchedule.Parse(original + "\n\n\n", types).ContentHash);
-
-        // And a label, which is for people. The simulation branches on nothing
-        // in it, so renaming a game changer is not a shape change either.
-        Assert.Equal(
-            hash,
-            AnchorSchedule.Parse(
-                original.Replace("thermal-riser", "updraft", StringComparison.Ordinal),
-                types).ContentHash);
+            UpgradeLadder.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal), types).ContentHash);
+        Assert.Equal(hash, UpgradeLadder.Parse(original + "\n\n\n", types).ContentHash);
     }
 
     [Fact]
@@ -525,16 +511,16 @@ public class DerivationTests
     }
 
     /// <summary>
-    /// The committed schedule with one number moved, and the hash of what that
+    /// The committed ladder with one number moved, and the hash of what that
     /// parses to. The substitution is asserted to have happened, because a
     /// replacement that matched nothing would compare the file against itself
     /// and agree.
     /// </summary>
-    private static Hash64 Reshaped(string original, string authored, string planted)
+    private static Hash64 Relinked(string original, string authored, string planted)
     {
         Assert.Contains(authored, original, StringComparison.Ordinal);
 
-        return AnchorSchedule.Parse(
+        return UpgradeLadder.Parse(
             original.Replace(authored, planted, StringComparison.Ordinal),
             TheMatch.Types()).ContentHash;
     }

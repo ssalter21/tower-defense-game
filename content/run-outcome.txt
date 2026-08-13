@@ -31,25 +31,25 @@
 #
 # The run this came from:
 #
-#   command stream format 1, simulation version 2, content 51BC7297223A70E8, ruleset AE57B5051EF890D0, schedule 7AD74D47D835622D, seed 20260807, 10 build phases
+#   command stream format 2, simulation version 2, content 51BC7297223A70E8, ruleset 7E1DA52C5F85D545, ladder 1DBB1082588262F2, seed 20260807, 10 build phases
 #   shape      10 waves, a field of 10, death ends the run
-#   outcome    10 waves survived, 1022 of 1500 health left, 334 dealt over 10 rounds, ended OutOfWaves
+#   outcome    10 waves survived, 322 of 800 health left, 334 dealt over 10 rounds, ended OutOfWaves
 #
 # Any of those moving moves every line below it. That is the point: the outcome is retired
 # loudly rather than quietly comparing a run against a different one.
 #
 #   decision                                                    round, cost and payment
 
-wave 1: take ordinary option 1, place type 3 at column 6, row 2, empty | empty   ->   dealt 0, took 100, 1 towers standing, spent 40, paid 60 + 6 interest + 168 base + 0 bonus = 234 gold
-wave 2: take ordinary option 2, place type 3 at column 7, row 4, empty | empty   ->   dealt 0, took 90, 2 towers standing, spent 40, paid 194 + 20 interest + 168 base + 0 bonus = 382 gold
-wave 3: take game changer 4, place type 3 at column 7, row 6, empty | empty | empty   ->   dealt 0, took 65, 3 towers standing, spent 40, paid 342 + 35 interest + 168 base + 0 bonus = 545 gold
-wave 4: take ordinary option 12, place type 3 at column 4, row 4, empty | empty | 20 of type 2   ->   dealt 36, took 30, 4 towers standing, spent 220, paid 325 + 33 interest + 168 base + 33 bonus = 559 gold
-wave 5: take ordinary option 13, upgrade type 14 at column 6, row 2, empty | empty | empty   ->   dealt 0, took 33, 4 towers standing, spent 40, paid 519 + 52 interest + 168 base + 0 bonus = 739 gold
-wave 6: take game changer 7, 10 of type 1 | 20 of type 2 | empty | empty   ->   dealt 189, took 32, 4 towers standing, spent 280, paid 459 + 46 interest + 168 base + 33 bonus = 706 gold
-wave 7: take ordinary option 7, 2 of type 1 | 8 of type 2 | 2 of type 12 | empty   ->   dealt 44, took 32, 4 towers standing, spent 126, paid 580 + 58 interest + 168 base + 33 bonus = 839 gold
-wave 8: take ordinary option 13, 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 32, 4 towers standing, spent 145, paid 694 + 70 interest + 168 base + 33 bonus = 965 gold
-wave 9: take game changer 9, 5 of type 1 | 4 of type 2 | empty | empty | empty   ->   dealt 0, took 31, 4 towers standing, spent 86, paid 879 + 88 interest + 168 base + 0 bonus = 1135 gold
-wave 10: take ordinary option 1, 6 of type 1 | 9 of type 2 | empty | empty | empty   ->   dealt 14, took 33, 4 towers standing, spent 141, paid 994 + 100 interest + 168 base + 33 bonus = 1295 gold
+wave 1: place type 3 at column 6, row 2, empty   ->   dealt 0, took 100, 1 towers standing, spent 40, paid 60 + 6 interest + 168 base + 0 bonus = 234 gold
+wave 2: place type 3 at column 7, row 4, empty   ->   dealt 0, took 90, 2 towers standing, spent 40, paid 194 + 20 interest + 168 base + 0 bonus = 382 gold
+wave 3: place type 3 at column 7, row 6, empty   ->   dealt 0, took 65, 3 towers standing, spent 40, paid 342 + 35 interest + 168 base + 0 bonus = 545 gold
+wave 4: place type 3 at column 4, row 4, 20 of type 2   ->   dealt 36, took 30, 4 towers standing, spent 220, paid 325 + 33 interest + 168 base + 33 bonus = 559 gold
+wave 5: upgrade type 14 at column 6, row 2, empty   ->   dealt 0, took 33, 4 towers standing, spent 40, paid 519 + 52 interest + 168 base + 0 bonus = 739 gold
+wave 6: 10 of type 1 | 20 of type 2   ->   dealt 189, took 32, 4 towers standing, spent 280, paid 459 + 46 interest + 168 base + 33 bonus = 706 gold
+wave 7: 2 of type 1 | 8 of type 2 | 2 of type 12   ->   dealt 44, took 32, 4 towers standing, spent 126, paid 580 + 58 interest + 168 base + 33 bonus = 839 gold
+wave 8: 2 of type 1 | 8 of type 2 | 1 of type 7 | 2 of type 12   ->   dealt 51, took 32, 4 towers standing, spent 145, paid 694 + 70 interest + 168 base + 33 bonus = 965 gold
+wave 9: 5 of type 1 | 4 of type 2   ->   dealt 0, took 31, 4 towers standing, spent 86, paid 879 + 88 interest + 168 base + 0 bonus = 1135 gold
+wave 10: 6 of type 1 | 9 of type 2   ->   dealt 14, took 33, 4 towers standing, spent 141, paid 994 + 100 interest + 168 base + 33 bonus = 1295 gold
 
   the board at the end     id   type   col   row
                             1     14     6     2

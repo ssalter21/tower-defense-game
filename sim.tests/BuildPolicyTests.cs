@@ -317,7 +317,7 @@ public class BuildPolicyTests
     }
 
     /// <summary>
-    /// A run four rounds into taking an option and sending nothing, so that the
+    /// A run four rounds into sending nothing, so that the
     /// defense's half of the purse holds more than one action.
     /// </summary>
     private static Run Banked()
@@ -326,9 +326,7 @@ public class BuildPolicyTests
 
         for (int round = 0; round < Idle; round++)
         {
-            Option first = run.Offering.Options[0];
-
-            run.Advance(BuildPhase.Of(first.Kind, first.Id));
+            run.Advance(BuildPhase.Of());
         }
 
         return run;

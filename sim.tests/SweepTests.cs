@@ -56,7 +56,6 @@ public class SweepTests
             SweepRow right = second.Rows[index];
 
             Assert.Equal(left.TypeId, right.TypeId);
-            Assert.Equal(left.Ingredients, right.Ingredients);
             Assert.Equal(left.Runs, right.Runs);
             Assert.Equal(left.Rounds, right.Rounds);
             Assert.Equal(left.Wins, right.Wins);
@@ -106,11 +105,6 @@ public class SweepTests
                 + " earned "
                 + row.BonusGold.ToString(CultureInfo.InvariantCulture)
                 + " gold in bonuses, which is a penalty.");
-
-            if (row.Ingredients != SweepRow.AllIngredients)
-            {
-                continue;
-            }
 
             Assert.Equal(rules.IncomeBasePerWave * (long)row.Rounds, row.IncomeBaseGold);
 
@@ -220,53 +214,6 @@ public class SweepTests
     }
 
     [Fact]
-    public void The_ingredient_bins_partition_the_creeps_whole_population()
-    {
-        // The U-shaped meta failure mode is read down this axis, so the axis has
-        // to be a partition: every run is in exactly one bin and the bins add up
-        // to the row above them. A binning that dropped or double-counted a run
-        // would produce a shape in the win rate that nothing in the game caused.
-        //
-        // The bins are also required to be more than one, because a column whose
-        // every run lands in the same bin is a column that cannot show a shape
-        // and would pass a partition test perfectly.
-        //
-        // OBSERVED: bin on Unlocks.Count rather than on distinct type ids in
-        // Sweep.Ingredients. The partition still holds -- it is still a
-        // function of the run -- and the bins collapse to one, N, because there
-        // is exactly one take a round: the bin-count assertion goes red having
-        // found a single bin, and the whole column stops saying anything.
-        SweepReport report = Sweep.Of(TheSweep.Plan());
-        SweepRow whole = TheSweep.Whole(report, "minion");
-        int runs = 0;
-        int wins = 0;
-        int rounds = 0;
-        int bins = 0;
-
-        for (int index = 0; index < report.Rows.Count; index++)
-        {
-            SweepRow row = report.Rows[index];
-
-            if (row.Label != "minion" || row.Ingredients == SweepRow.AllIngredients)
-            {
-                continue;
-            }
-
-            Assert.InRange(row.Ingredients, 1, TheSweep.Waves);
-
-            runs += row.Runs;
-            wins += row.Wins;
-            rounds += row.Rounds;
-            bins++;
-        }
-
-        Assert.Equal(whole.Runs, runs);
-        Assert.Equal(whole.Wins, wins);
-        Assert.Equal(whole.Rounds, rounds);
-        Assert.True(bins > 1, "Every run of the minion landed in one ingredient bin, so the column is flat.");
-    }
-
-    [Fact]
     public void A_sweep_that_names_no_policy_is_played_by_the_even_share_bot()
     {
         // The scripted player is a value on the plan and its default is
@@ -288,9 +235,8 @@ public class SweepTests
         // The property the whole seam exists for: scoring a roster under a
         // different scripted player costs one argument to the plan and nothing
         // at all in the fold that scores it. The second policy takes its option
-        // and fills no slot, so every run of it banks -- and the bins it
-        // produces are still a partition of the population above them, which is
-        // the fold doing its job without knowing what decided the waves.
+        // and fills no slot, so every run of it banks -- which is the fold
+        // doing its job without knowing what decided the waves.
         //
         // OBSERVED: call EvenShareBot.Decide in Sweep.Play in place of the
         // plan's policy. This goes red on the first spend assertion, 2502 gold
@@ -298,7 +244,6 @@ public class SweepTests
         // being a field nothing reads.
         SweepReport banked = Sweep.Of(TheSweep.Plan(policy: TheSweep.Banks));
         SweepRow whole = TheSweep.Whole(banked, "minion");
-        int binnedRuns = 0;
 
         for (int index = 0; index < banked.Rows.Count; index++)
         {
@@ -306,15 +251,9 @@ public class SweepTests
 
             Assert.Equal(0, row.GoldSpent);
             Assert.Equal(0, row.LeakCostDealt);
-
-            if (row.Label == "minion" && row.Ingredients != SweepRow.AllIngredients)
-            {
-                Assert.True(row.Ingredients >= 1, row.ToString());
-                binnedRuns += row.Runs;
-            }
         }
 
-        Assert.Equal(whole.Runs, binnedRuns);
+        Assert.True(whole.Runs > 0, "The banking policy produced no runs of the minion at all.");
 
         // And the default player does spend, so the assertions above are about
         // the policy that was supplied rather than about a sweep that never
@@ -492,36 +431,6 @@ public class SweepTests
     }
 
     [Fact]
-    public void The_offering_ratio_is_a_sweep_parameter_and_it_reaches_the_runs()
-    {
-        // The ratio deciding whether a merged anchor menu is a real trade, moved
-        // from the harness rather than from a second ruleset file. Two things
-        // have to be true: the rules the sweep plays carry the number, and the
-        // runs come out different -- a dial that reached the ruleset and not the
-        // offering would pass the first half alone.
-        //
-        // What the runs come out different in is gold spent rather than leak
-        // cost dealt, for the reason the seed test above gives: a wave bought
-        // out of half a purse gets nothing past the canned field, so every row
-        // of this plan deals zero.
-        //
-        // OBSERVED: drop the argument on the floor in SweepPlan -- pass
-        // rules.OrdinaryOptionsPerRound to Ruleset.With in place of the Or that
-        // reads it. The parameter assertion goes red, 3 where 1 was expected,
-        // and the report is the committed ratio's report twice over.
-        SweepPlan narrow = TheSweep.Plan(ordinaryOptionsPerRound: 1);
-        SweepPlan authored = TheSweep.Plan();
-
-        Assert.Equal(1, narrow.Rules.OrdinaryOptionsPerRound);
-        Assert.Equal(TheRuleset.Committed().OrdinaryOptionsPerRound, authored.Rules.OrdinaryOptionsPerRound);
-        Assert.NotEqual(authored.Rules.ContentHash, narrow.Rules.ContentHash);
-
-        Assert.NotEqual(
-            TheSweep.Whole(Sweep.Of(authored), "minion").GoldSpent,
-            TheSweep.Whole(Sweep.Of(narrow), "minion").GoldSpent);
-    }
-
-    [Fact]
     public void The_free_snapshot_count_and_the_snapshot_price_are_sweep_parameters()
     {
         // Ten free a run is a starting point the harness can move rather than a
@@ -629,19 +538,14 @@ public class SweepTests
         Assert.Contains("waves", refused.Message, StringComparison.Ordinal);
     }
 
-    /// <summary>How many creeps the report actually carries a whole-population row for.</summary>
-    private static int Scored(SweepReport report)
-    {
-        int scored = 0;
-
-        for (int index = 0; index < report.Rows.Count; index++)
-        {
-            if (report.Rows[index].Ingredients == SweepRow.AllIngredients)
-            {
-                scored++;
-            }
-        }
-
-        return scored;
-    }
+    /// <summary>
+    /// How many creeps the report carries a row for.
+    /// </summary>
+    /// <remarks>
+    /// One row per creep, so this is the row count. It was a filter over the
+    /// ingredient bins before #179 deleted that axis, and it is kept as a name
+    /// because what the assertions want to say is "how many creeps were
+    /// scored" rather than "how long is the list".
+    /// </remarks>
+    private static int Scored(SweepReport report) => report.Rows.Count;
 }

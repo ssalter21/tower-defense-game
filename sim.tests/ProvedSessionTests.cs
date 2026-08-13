@@ -172,7 +172,7 @@ public class ProvedSessionTests
         // health and leave the other unfinished, and the comparison waves it
         // through.
         Run dying = TheRun.Unstoppable(fieldSize: 1);
-        Session played = Play(dying, TakingTheFirstOption(dying));
+        Session played = Play(dying, DoingNothing(dying));
 
         ProvedSession proved = ProvedSession.Of(
             played.Result,
@@ -208,7 +208,7 @@ public class ProvedSessionTests
         Run run = AgainstTheCannedField(TheMatch.Types());
 
         var unstorable = new Played(
-            new[] { BuildPhase.Of(OptionKind.Ordinary, 1, WaveSlot.Of(5, 1), WaveSlot.Of(2, 1)) },
+            new[] { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(2, 1)) },
             Array.Empty<RoundReport>(),
             Ended.Quit);
 
@@ -289,18 +289,19 @@ public class ProvedSessionTests
                 new StringWriter()));
 
     /// <summary>
-    /// A transcript that takes the first thing on every round's menu and does
-    /// nothing else, for as many rounds as a run can have.
+    /// A transcript that finishes every round having done nothing at all, for
+    /// as many rounds as a run can have.
     /// </summary>
-    private static string[] TakingTheFirstOption(Run run)
+    /// <remarks>
+    /// It took the first thing on each round menu before #179; there is no menu
+    /// and nothing a round must do, so the shortest legal round is one word.
+    /// </remarks>
+    private static string[] DoingNothing(Run run)
     {
         var typed = new List<string>();
 
         for (int wave = 1; wave <= run.Waves; wave++)
         {
-            Option first = run.OfferingAt(wave).Options[0];
-
-            typed.Add("take " + CommandScript.WordFor(first.Kind) + " " + Number(first.Id));
             typed.Add("done");
         }
 
