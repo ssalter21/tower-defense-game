@@ -109,14 +109,19 @@ public class ProvedSessionTests
         // And it is this verb's fault, said in those words, because nothing a
         // player can type reaches here.
         Assert.Contains(
-            "a bug in playing a run at a prompt rather than a decision anybody made badly",
+            "a bug in playing a run a round at a time rather than a decision anybody made badly",
             disagreement,
             StringComparison.Ordinal);
 
-        // OBSERVED: write the script and report the disagreement beside it, on
-        // the argument that a session is worth keeping either way. The file
-        // lands, the next thing to read it replays a run nobody played, and the
-        // one sentence saying so has scrolled off.
+        // And there is no script to hand anybody, which is what keeps that
+        // refusal the prover's now that the file is somebody else's.
+        //
+        // OBSERVED: hand the script back beside the disagreement, on the
+        // argument that a session is worth keeping either way. A caller that
+        // reads Script without reading Agreed writes down a run nobody played,
+        // and the one sentence saying so has scrolled off.
+        Assert.Equal(string.Empty, proved.Script);
+
         string scratch = TheCommandLine.Scratch("proved-session-round");
         string path = Path.Combine(scratch, "run.commands.txt");
         var writer = new StringWriter();
@@ -219,7 +224,10 @@ public class ProvedSessionTests
             "A creep fills at most one slot of a wave",
             proved.Disagreement,
             StringComparison.Ordinal);
-        Assert.Contains("a bug in playing a run at a prompt", proved.Disagreement, StringComparison.Ordinal);
+        Assert.Contains(
+            "a bug in playing a run a round at a time",
+            proved.Disagreement,
+            StringComparison.Ordinal);
 
         string scratch = TheCommandLine.Scratch("proved-session-unstorable");
         var writer = new StringWriter();
@@ -270,12 +278,12 @@ public class ProvedSessionTests
     public void A_run_advanced_directly_is_proved_with_no_prompt_and_no_path_anywhere()
     {
         // The half of this the client is waiting on. A run is advanced a round
-        // at a time, the rounds it reported are kept, and the claim is held
-        // over both -- with no reader, no writer, no path and no shell type in
-        // reach. The prover has no route to a disk at all now: System.IO is a
-        // banned namespace in the assembly it lives in, and IlScanTests reads
-        // the shipped image to say so, so "wrote nothing" is a property of the
-        // code rather than of this scenario.
+        // at a time, the rounds it reported are kept, and the claim is held over
+        // both -- with no prompt, no transcript, no scratch directory and no
+        // path. This file links the shell's sources for the cases above and this
+        // case names none of them, which is as far as a test in this assembly
+        // can go; that the prover could not open a file even if it wanted to is
+        // asserted where it can be, over the shipped image, by IlScanTests.
         //
         // OBSERVED: hand the prover the fresh run's own rounds rather than the
         // ones this loop collected. Green, and green under any prover at all,
@@ -299,7 +307,7 @@ public class ProvedSessionTests
             () => TheRun.Fresh(deathEndsTheRun: false));
 
         Assert.True(proved.Agreed, proved.Disagreement);
-        Assert.Equal(Run.DefaultWaves, proved.Rounds);
+        Assert.Equal(Run.DefaultWaves, proved.RoundsProved);
 
         // And what it comes back holding is those decisions rather than text
         // that merely parses.

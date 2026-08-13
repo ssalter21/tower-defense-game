@@ -18,12 +18,19 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The proving is here and the writing is the caller's.</b> A session that
-    /// agreed comes back holding its script and nothing else; what a shell does
-    /// with it is open a file, and what a client does with it is whatever the
-    /// engine's own storage is. <c>System.IO</c> is a banned namespace in this
-    /// assembly, so the split is enforced by the IL scan rather than remembered --
-    /// and the half that matters, the claim itself, is reachable from anywhere a
-    /// run is played rather than from a shell alone.
+    /// agreed comes back holding its script; what a shell does with it is open a
+    /// file, and what a client does with it is whatever the engine's own storage
+    /// is. <c>System.IO</c> is a banned namespace in this assembly, so the split
+    /// is enforced by the IL scan rather than remembered -- and the half that
+    /// matters, the claim itself, is reachable from anywhere a run is played
+    /// rather than from a shell alone.
+    /// </para>
+    /// <para>
+    /// <b>A session that did not agree hands back no script.</b> Not the script
+    /// beside the sentence saying not to keep it -- nothing at all, so a caller
+    /// that ignores <see cref="Agreed"/> has nothing to write down. The decision
+    /// to keep a session stays this type's rather than becoming a convention in
+    /// whichever caller happens to hold one.
     /// </para>
     /// <para>
     /// <b>The rounds arrive as data, and the second run arrives as a way to build
@@ -57,9 +64,9 @@ namespace Sim
 
         /// <summary>What either of them closes with.</summary>
         private const string Bug =
-            "This is a bug in playing a run at a prompt rather than a decision anybody made badly: the run "
-            + "somebody played and the script it compiles to have to be the same run, and proving that "
-            + "before anything reaches a disk is the whole of what this step is for.";
+            "This is a bug in playing a run a round at a time rather than a decision anybody made badly: the "
+            + "run somebody played and the script it compiles to have to be the same run, and proving that "
+            + "before anything is kept is the whole of what this step is for.";
 
         /// <summary>What stands in front of each side of a disagreement, one to a line.</summary>
         private const string Shown = "    played    ";
@@ -69,18 +76,23 @@ namespace Sim
         private ProvedSession(string script, int rounds, string? disagreement)
         {
             Script = script;
-            Rounds = rounds;
+            RoundsProved = rounds;
             Disagreement = disagreement;
         }
 
         /// <summary>
-        /// The session's decisions as a command script, or nothing where it decided
-        /// nothing or where the record would not carry what it decided.
+        /// The session's decisions as a command script, and nothing at all where
+        /// it decided nothing, where the record would not carry what it decided,
+        /// or where the fresh run did not play it back as the session played it.
         /// </summary>
         public string Script { get; }
 
-        /// <summary>How many rounds that script carries, for whatever says it was kept.</summary>
-        public int Rounds { get; }
+        /// <summary>
+        /// How many rounds that script carries, for whatever says it was kept.
+        /// Named apart from the round reports a session hands in, which are a
+        /// list under the same word everywhere else.
+        /// </summary>
+        public int RoundsProved { get; }
 
         /// <summary>
         /// What the fresh run said that the session did not, spelled for a person,
@@ -146,7 +158,16 @@ namespace Sim
                     .Recorded(fresh, CommandScript.Parse(Source, script))
                     .Rounds;
 
-                return new ProvedSession(script, decisions.Count, Disagreed(shown, replayed, played, fresh));
+                string? disagreement = Disagreed(shown, replayed, played, fresh);
+
+                // A script only leaves here where the fresh run played it back
+                // as the session played it. That was the write's guarantee while
+                // the write was this type's only exit; with the file gone to the
+                // caller it has to be the script's own, or a caller that ignored
+                // the sentence would have a legible script to keep.
+                return disagreement is null
+                    ? new ProvedSession(script, decisions.Count, null)
+                    : new ProvedSession(string.Empty, 0, disagreement);
             }
             catch (Exception thrown) when (thrown is ContentException || thrown is RecordException
                 || thrown is SimulationException)

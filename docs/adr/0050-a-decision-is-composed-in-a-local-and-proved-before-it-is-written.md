@@ -44,20 +44,24 @@ reaches the simulation through a stored command and by no other route, and a pro
 nothing could store would be that door reopened with the word *interactive* on it.
 
 **The prover is in `sim`, and the writing is the caller's.** The claim is the client's obligation as much as
-the shell's — [`docs/build-order.md`](../build-order.md) step 2, [ADR-0039](0039-the-command-stream-is-the-only-route-into-a-run.md)
-and [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) all rest on it — so
-`PlayedScript` and `ProvedSession` sit in the simulation, where anything that can play a run can reach them.
-What does not follow them down is the file: `System.IO` is a banned namespace there and the IL scan rejects
-any reference to it, so the prover physically cannot open a path, and `RunSummary` moved with them because the
+the shell's: [seam 2](../build-order.md#2--the-submission-barrier) asks that the record format transmit a turn
+as cleanly as it stores a ghost, and
+[ADR-0039](0039-the-command-stream-is-the-only-route-into-a-run.md) and
+[ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) both rest on the same
+property. So `PlayedScript` and `ProvedSession` sit in the simulation, where anything that can play a run can
+reach them. What does not follow them down is the file: `System.IO` is a banned namespace there and the IL
+scan rejects any reference to it, so the prover cannot open a path. `RunSummary` moved with them, because the
 outcome line is what the two runs are compared by and a second spelling of it would be the thing to keep
 current. The shell adds `Written` as an extension over the proved session; a client's half is Unity's storage
 and not a path at all.
 
-**The decision to write is still the prover's, not the verb's.** A script nobody played back is a record of
-nothing in particular, and a caller free to write anyway is a caller free to skip the only claim this verb
-makes. So the one route from a session to a disk runs through `ProvedSession.Agreed`, a disagreement writes
-nothing and exits non-zero, and the sentence it prints says the fault is the program's — nothing a player can
-type can reach one.
+**The decision to keep a session is still the prover's, not the caller's.** A script nobody played back is a
+record of nothing in particular, and a caller free to write anyway is a caller free to skip the only claim
+this step makes. So a session that disagreed hands back **no script** — not the script beside the sentence
+saying not to keep it, nothing at all — and a caller that never reads `Agreed` has nothing to write down. That
+was `ProvedSession.Written`'s guarantee while `Written` was the type's only exit; splitting the file out moved
+it onto the script itself rather than losing it. The shell still prints the disagreement and exits non-zero,
+and the sentence says the fault is the program's — nothing a player can type can reach one.
 
 ## What it costs
 

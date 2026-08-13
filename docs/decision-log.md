@@ -616,3 +616,25 @@ Found while amending it, and corrected there. `Run`'s public surface was describ
 **and `OfferingAt`**, which came off with the offering; a `BuildPhase`'s data surface was described as `Take`,
 `TakeId` and `Slots`, which is now `Slots` and `Actions`. The structural claim the paragraph exists to make is
 unchanged and still asserted by `CommandStreamTests` — the surface is exactly what a stored command carries.
+---
+
+## 14 August 2026 — the proving machinery moves under the client
+
+Implementing [#193](https://github.com/ssalter21/tower-defense-game/issues/193). Nothing the
+[ADR](adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) decided is repealed; one
+sentence of it stopped being true when the code moved, and it is amended there.
+
+### `ProvedSession.Written` was the one thing that touched a disk, and there is no longer such a thing
+
+It was true while the prover lived in `simcli/`. What that also meant is that the claim the ADR is about — the
+run somebody played and the record of it are one run — was reachable from a shell and from nowhere else, and
+the Unity client owes exactly the same claim: [seam 2](build-order.md#2--the-submission-barrier) asks the
+record format to transmit a turn as cleanly as it stores a ghost. So `PlayedScript`, `ProvedSession` and
+`RunSummary` are in `sim/` now, and the file did not follow them: `System.IO` is a banned namespace there and
+the IL scan reads the shipped image, so the prover cannot open a path. `simcli` adds `Written` back as an
+extension over the proved session, and a client's half is Unity's storage rather than a path at all.
+
+**The gate survived the split by moving onto the script.** A session that disagreed used to be stopped by
+`Written` refusing to write it; with the write gone to the caller, a proved session that disagreed hands back
+no script at all. A caller that never reads `Agreed` therefore has nothing to keep, which is what the refusal
+was for. It is still by construction and it is no longer in the shell.

@@ -64,7 +64,7 @@ internal static class WrittenSession
             "wrote      "
             + path
             + " ("
-            + PlainText.Number(proved.Rounds)
+            + PlainText.Number(proved.RoundsProved)
             + " rounds, played into a fresh run and matched round for round before writing)");
 
         return true;
