@@ -3,8 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using Sim;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 using View;
 
 namespace Tests.PlayMode
@@ -270,9 +269,10 @@ namespace Tests.PlayMode
         /// <remarks>
         /// Every one of these is a way to ship a build whose playback control
         /// is invisible or inert while every other test in this suite stays
-        /// green: a slider whose range was never set does not move, a label
-        /// with no font draws nothing, and a canvas with no event system in the
-        /// scene cannot be clicked at all.
+        /// green: a slider whose range was never set does not move, a panel
+        /// with no theme has no font and no slider track to drag, and elements
+        /// that never reached a panel are drawn by nothing and clicked by
+        /// nothing.
         /// </remarks>
         [Test]
         public void TheControlsCanBeDraggedPressedAndRead()
@@ -282,17 +282,18 @@ namespace Tests.PlayMode
             PlaybackController playback = new PlaybackController(TheMatchOnScreen.Begin(host));
             PlaybackControls controls = PlaybackControls.Build(host.transform, playback);
 
-            Assert.That(controls.Scrubber.minValue, Is.Zero, "the scrub bar does not start at tick zero");
-            Assert.That(controls.Scrubber.maxValue, Is.EqualTo(playback.FinalTick),
+            Assert.That(controls.Scrubber.lowValue, Is.Zero, "the scrub bar does not start at tick zero");
+            Assert.That(controls.Scrubber.highValue, Is.EqualTo(playback.FinalTick),
                 "the scrub bar's end is not the end of the match");
             Assert.That(playback.FinalTick, Is.GreaterThan(60 * Sim.Match.TicksPerSecond),
                 "the match resolved far too early to be the one this project is written about");
 
-            Assert.That(controls.Readout.font, Is.Not.Null, "a label with no font draws nothing");
-            Assert.That(EventSystem.current, Is.Not.Null,
-                "nothing in the scene can be clicked without an event system");
-            Assert.That(host.GetComponentInChildren<GraphicRaycaster>(), Is.Not.Null,
-                "a canvas with no raycaster is drawn and cannot be clicked");
+            Assert.That(controls.Document.panelSettings.themeStyleSheet, Is.Not.Null,
+                "a panel with no theme style sheet has no font and no slider track");
+            Assert.That(controls.Readout.panel, Is.Not.Null,
+                "the bar never reached a panel, so nothing draws it and nothing can click it");
+            Assert.That(host.GetComponentsInChildren<Canvas>(includeInactive: true), Is.Empty,
+                "the controls built a uGUI canvas, so the scene is running two UI systems again");
             Assert.That(controls.Buttons.Count, Is.GreaterThan(2),
                 "fast-forward and jump-to-the-end are buttons, and pause is the third");
 
@@ -305,7 +306,7 @@ namespace Tests.PlayMode
             Assert.That(playback.IsPaused, Is.True, "the drag left the match playing out from under it");
 
             // Pressing play, the bar follows the match instead of driving it.
-            controls.Buttons[0].onClick.Invoke();
+            Press(controls.Buttons[0]);
 
             Assert.That(playback.IsPaused, Is.False, "the first button does not start and stop the match");
 
@@ -313,8 +314,43 @@ namespace Tests.PlayMode
             controls.Follow();
 
             Assert.That(playback.Tick, Is.GreaterThan(BusyTick), "the match did not advance after play");
-            Assert.That(controls.Scrubber.value, Is.EqualTo(playback.Tick).Within(1f),
+            Assert.That(controls.Scrubber.value, Is.EqualTo(playback.Tick),
                 "the scrub bar did not follow the match");
+
+            // And the speed button walks the speeds and comes back round. The
+            // wrap is the half worth asserting: a button that only ever climbs
+            // leaves the only way back to normal speed a restart.
+            for (int press = 1; press < PlaybackControls.Speeds.Length; press++)
+            {
+                Press(controls.Buttons[1]);
+
+                Assert.That(playback.Speed, Is.EqualTo(PlaybackControls.Speeds[press]),
+                    $"press {press} of the speed button did not reach {PlaybackControls.Speeds[press]}x");
+            }
+
+            Press(controls.Buttons[1]);
+
+            Assert.That(playback.Speed, Is.EqualTo(PlaybackControls.Speeds[0]),
+                "the speed button climbed off the end instead of coming back round to normal");
+        }
+
+        /// <summary>
+        /// Presses a button the way a keyboard or a gamepad does.
+        /// </summary>
+        /// <remarks>
+        /// A submit rather than a synthesised pointer press, because a pointer
+        /// press is answered from the element's laid-out rectangle and nothing
+        /// here has been through a layout pass — a test that clicked at
+        /// coordinates would be asserting on the panel's geometry by accident.
+        /// Both routes end in the same <c>Clickable</c>.
+        /// </remarks>
+        private static void Press(Button button)
+        {
+            using (NavigationSubmitEvent submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = button;
+                button.SendEvent(submit);
+            }
         }
     }
 }
