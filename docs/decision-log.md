@@ -272,3 +272,47 @@ The purse, the income and the health pool were priced against a board a run no l
 and all three went on reading as settled, because each of them was individually defensible and nothing made
 the three of them one question.
 
+---
+
+## 13 August 2026 — the first run played by a person
+
+The `play` verb ([#176](https://github.com/ssalter21/tower-defense-game/pull/176)) put a build phase in front
+of a person for the first time. Most of what it found is about **ordering** rather than about design, and one
+of the reversals is of this file's own companion.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The build order](build-order.md#the-sequence)**, on why step 5 is fifth | *Is the economy tense, is composing a wave interesting, does send order matter, is the roster varied* — "every one is answerable from a command line and a spreadsheet" | **Half of them are.** The economy and the roster answered from a shell. **Composing a wave and send order did not**, and the reason is structural rather than a gap in the verb | The CLI will never carry the visual elements — video replays, range indicators — and building them there is not worth it. What a person would learn from them there, the simulation can compute and summarise instead |
+| **[§3 — three anchors, a shape and a filling](vision.md#three-anchors-a-shape-and-a-filling)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
+| **§3 — one purse** | The economy is the sharp decision the game is built around | **Not tense yet, and that is accepted rather than fixed** | Attack performance is rewarded, so spending on attack is the long-term investment and nothing argues against it. The expected correction is already in the design: health falls, and the run eventually has to pivot its spending. Not worth tuning before the roster can be judged |
+| **[Open questions](open-questions.md)** — is placement worth having on this geometry | Thin until the maze lands, per [#142](https://github.com/ssalter21/tower-defense-game/issues/142), and possibly not worth the tickets | **Placement earns its place**, and is expected to get more interesting as elevation lands | Played rather than argued. This does **not** settle the separate question of whether the defending side has to be *towers* — squads on a rampart are still live |
+
+### The build phase is not yet a decision worth making, and the roster is why
+
+The question the specification was written around got a *not yet*, with a reason that is not about the build
+phase: **composing a wave is not interesting enough, and there is not enough depth to make it so.** What it
+wants is plenty of money to spend and options worth spending it on, and **neither can be judged against the
+current roster** — six walkers and four towers, four of which are equivalent on a one-hex corridor.
+
+That makes [seam 3](build-order.md#3--the-roster) the blocker on answering the question at all, ahead of the
+interface work everybody expects to be next.
+
+### What the CLI is for, stated as a test
+
+The finding above is easy to over-read into *stop investing in `simcli`*, and that is not what it says. The
+divergence is **visual and spatial**: replays and range overlays are read off a picture, a terminal cannot
+carry one, and a person judging *feel* from a terminal is judging something the player will never see.
+
+So the test is: **is it a picture, or a number?** Pictures belong in the client at step 5. Numbers the
+simulation already computes are fair game at a prompt, which is why *what the wave is walking into*
+([#181](https://github.com/ssalter21/tower-defense-game/issues/181)) and *how the last round went*
+([#182](https://github.com/ssalter21/tower-defense-game/issues/182)) are not ruled out by this. Two CLI use
+cases are unaffected either way: the simulation running itself, and debugging.
+
+### The gate cannot be switched off in content, and that is worth knowing before anybody tries
+
+Deferring the anchors is not an edit to `content/schedule.txt`. `sim/AnchorSchedule.cs` refuses a schedule
+with no `anchor` rows, and refuses a changer pool no anchor draws from, so deleting the twelve placeholder
+game changers makes the file unloadable rather than empty. The deferral is a code change with a content
+change behind it, which is why it is
+[#179](https://github.com/ssalter21/tower-defense-game/issues/179) and not a commit.
