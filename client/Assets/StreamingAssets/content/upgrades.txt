@@ -33,10 +33,24 @@
 # replayable forever. Reasoning in
 # docs/adr/0046-an-absent-ladder-folds-nothing.md.
 #
-# THE SIMULATION NEVER READS THIS FILE. An edge is an annotation on the roster;
-# nothing in a tick loop can observe one. The parsed ladder is held by the
-# command line and is never handed to a run, which turns that sentence from a
-# promise into a property.
+# THE SIMULATION READS THIS FILE. It did not until #179, and the sentence that
+# used to stand here said so; the anchor schedule was the only prerequisite the
+# game had and this file was an annotation beside it. Deleting the schedule left
+# the ladder as the one prerequisite there is, so a run is handed one and
+# BuildPhase.Resolve asks it a question: A UNIT SOME EDGE POINTS AT MAY NOT BE
+# PLACED. It is reached by standing the rung below it and upgrading into it.
+#
+# WHAT THAT COSTS. A stored record is now retired by an edit to this file, the
+# same way it is by an edit to content/ruleset.txt: a command stream carries a
+# ladder hash in its header and the replay gate refuses a stream whose ladder
+# has moved underneath it. That stamp is the third one a command stream has, and
+# it replaced the anchor schedule's at the same offset -- which is what command
+# stream format version 2 is the bump for.
+#
+# Nothing in a TICK LOOP can still observe an edge. What reads this file is the
+# build phase, which is where a decision is priced and refused, and no further
+# in. Reasoning in docs/adr/0045 and docs/adr/0046, both of which carry a note
+# saying which of their sentences this overturned.
 #
 # WHICH CHECKS ARE FAULTS AND WHICH ARE NOTES. A whole-file pass walks the
 # ladder against the roster and returns both. Neither refuses to load -- a
