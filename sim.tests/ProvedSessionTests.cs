@@ -201,21 +201,29 @@ public class ProvedSessionTests
         // something the record cannot carry. The record's own words are carried
         // through, because they say which decision and which slot.
         //
+        // The decision used to be a descending pair, which #191 made legal: a
+        // slot's position is its release order, so an arrangement is a decision
+        // rather than a spelling. What the record still cannot carry is one
+        // creep in two slots of one wave.
+        //
         // OBSERVED: let it throw. The verb dies on "fills slot 2 with type id
-        // 2, at or below the 5 a slot above it already sent" -- which is true,
-        // which is unactionable, and which reads to whoever typed the session
-        // as though they had sent the creeps in the wrong order.
+        // 5, which a slot above it already sent" -- which is true, which is
+        // unactionable, and which reads to whoever typed the session as though
+        // the fault were theirs.
         Run run = AgainstTheCannedField(TheMatch.Types());
 
         var unstorable = new Played(
-            new[] { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(2, 1)) },
+            new[] { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(5, 1)) },
             Array.Empty<RoundReport>(),
             Ended.Quit);
 
         ProvedSession proved = ProvedSession.Of(unstorable, run, Fresh);
 
         Assert.False(proved.Agreed);
-        Assert.Contains("Filled slots ascend strictly by type id", proved.Disagreement, StringComparison.Ordinal);
+        Assert.Contains(
+            "A creep fills at most one slot of a wave",
+            proved.Disagreement,
+            StringComparison.Ordinal);
         Assert.Contains("a bug in playing a run at a prompt", proved.Disagreement, StringComparison.Ordinal);
 
         string scratch = TheCommandLine.Scratch("proved-session-unstorable");

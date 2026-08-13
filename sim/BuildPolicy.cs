@@ -61,6 +61,16 @@ namespace Sim
     public static class EvenShareBot
     {
         /// <summary>One build phase, decided from the round in front of it and from nothing else.</summary>
+        /// <remarks>
+        /// <b>One slot, which is why #191 did not touch this bot.</b> A slot's
+        /// position became its release order, and a sweep row is about one
+        /// creep -- so every wave this composes is one column and the order it
+        /// is in is the only order there is. That is not a gap in the bot: it
+        /// is what makes a row attributable to the creep it names. It <i>is</i>
+        /// a gap in the report, because nothing in <c>content/sweep.csv</c>
+        /// varies with how a wave is arranged, and the CSV carries a note
+        /// saying so rather than leaving somebody to find it.
+        /// </remarks>
         public static BuildPhase Decide(Run run, int preferred)
         {
             if (run is null)

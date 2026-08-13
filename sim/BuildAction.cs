@@ -36,8 +36,10 @@ namespace Sim
     /// is meaning: a phase may upgrade what it has just placed, the placement
     /// ordinals fall out of the sequence, and the same two actions written the
     /// other way round are a different run rather than a different spelling of
-    /// one. This is exactly the opposite of the wave slots beside them, which
-    /// ascend strictly by type id.
+    /// one. The wave slots beside them used to be exactly the opposite and
+    /// ascended strictly by type id; since #191 a slot's position is its release
+    /// order, so both halves of a build phase are read the same way and for the
+    /// same reason.
     /// </para>
     /// <para>
     /// <b>A type id and not a type.</b> Nothing here holds a

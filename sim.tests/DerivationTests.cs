@@ -73,7 +73,27 @@ public class DerivationTests
         // change that content could not reach. Nothing in any content file moved
         // to earn this row, which is the case this table exists to tell apart
         // from a retune.
+        //
+        // Both rows above were taken under the fold labelled
+        // rule-fingerprint/1, which folded a match and nothing else. They are
+        // history and cannot be recomputed by this build: see the label's
+        // remarks on RuleFingerprint.
         (2u, 0x42346EF613910009UL),
+
+        // Version 3 is #191 -- a wave slot's position became its release order,
+        // so a round's slots leave one behind the other instead of all at once.
+        // It is a release rule exactly as version 2's was, and every stored
+        // record replays to a different outcome under it.
+        //
+        // IT IS ALSO THE ROW THAT CAUGHT A HOLE IN THIS FILE. Under
+        // rule-fingerprint/1 this build's fingerprint came out
+        // 42346EF613910009 -- byte for byte version 2's -- because the scenario
+        // hands the match a wave written out above and a build phase never
+        // composes one. The rule that moved lives in BuildPhase.Resolve, which
+        // the fold could not see. A row whose evidence equals its predecessor's
+        // is not evidence, so the fold gained a second half and the label went
+        // to rule-fingerprint/2.
+        (3u, 0x97AE0A007D5A9AB9UL),
     };
 
     /// <summary>
@@ -95,6 +115,33 @@ public class DerivationTests
     private const string FingerprintDefense = "tower  3  2  1";
 
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The roster the composition half of the fingerprint composes out of: three
+    /// moving rows, so that a wave can be arranged more than one way, and one
+    /// placed row because a cost table prices both halves of a roster.
+    /// </summary>
+    private const string FingerprintComposedUnits = """
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4
+        unit  2  runner  moving  60   40  0     0  0  0  0  0  none     0  4
+        unit  3  turret  placed  0    0   2000  5  2  1  4  9  hitscan  0  0
+        unit  4  brute   moving  240  18  0     0  0  0  0  0  none     0  4
+        """;
+
+    /// <summary>
+    /// A ladder with no edges in it, which is legal and is the point: what is
+    /// being folded is the release schedule, and an edge would only add a
+    /// refusal the composition half has no business asserting.
+    /// </summary>
+    private const string FingerprintComposedLadder = "layout 1";
+
+    /// <summary>
+    /// A purse the composed wave comfortably fits inside. It is deliberately not
+    /// tight: what is being folded is the schedule the slots resolve to, and a
+    /// purse that only just covered them would turn a price retune into a
+    /// simulation-version bump.
+    /// </summary>
+    private const int FingerprintComposedGold = 100000;
 
     private const ulong FingerprintSeed = 20260802UL;
 
@@ -408,13 +455,35 @@ public class DerivationTests
 
     /// <summary>
     /// One number for what this build's rules do: a fold over the state hash of
-    /// every tick of a fixed scenario.
+    /// every tick of a fixed scenario, and then over the wave a fixed build
+    /// phase composes.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The scenario is deliberately small and deliberately local. Every rule
     /// worth calling one reaches it -- the tick order, the release cadence, the
     /// targeting tiebreak, the dice, and the rounding under both the movement
     /// step and the lateral offsets -- and nothing in <c>content/</c> does.
+    /// </para>
+    /// <para>
+    /// <b>The second half is here because the first half missed one.</b> A match
+    /// is handed a wave, so folding a match says nothing about how a wave is
+    /// composed -- and #191 changed exactly that, giving a slot's position its
+    /// release order. Under the fold as it stood, a change that alters what
+    /// every stored record replays to produced a fingerprint identical to the
+    /// version before it. So a build phase's resolved wave is folded too: the
+    /// tick, the type and the count of every order it composes, which is the
+    /// whole of what a slot arrangement decides.
+    /// </para>
+    /// <para>
+    /// <b>The label carries the shape of the fold, and bumping it retires the
+    /// rows taken under the old one.</b> <c>rule-fingerprint/1</c> folded a
+    /// match alone; <c>rule-fingerprint/2</c> folds a match and a composition.
+    /// Versions 1 and 2 are recorded under the first and cannot be recomputed
+    /// here, which is a loss stated out loud rather than a table that quietly
+    /// compares fewer things -- the same rule <see cref="Match"/> applies to its
+    /// own state-hash label.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -424,7 +493,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/1").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/2").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -434,10 +503,66 @@ public class DerivationTests
 
         MatchResult result = match.Result();
 
-        return fingerprint
+        fingerprint = fingerprint
             .Add(result.Leaked, result.Total)
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
+
+        return ComposedIntoFingerprint(fingerprint);
+    }
+
+    /// <summary>
+    /// The second half of the fold: the wave a fixed build phase composes, order
+    /// by order.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Three filled slots and an empty one between two of them, because the
+    /// empty slot is the case with a rule in it -- it takes no place in the
+    /// column, so banking a slot closes the gap rather than leaving a hole. Two
+    /// slots of unequal count, because equal counts would fold the same under a
+    /// schedule that spaced slots by position instead of by the creeps ahead of
+    /// them.
+    /// </para>
+    /// <para>
+    /// OBSERVED: give every order the same release tick, which is what
+    /// BuildPhase did before #191. The fingerprint goes 97AE0A007D5A9AB9 to
+    /// D5B62912DBA14BFA and the version-3 row goes red naming both numbers,
+    /// which is what it could not do before the fold had this half in it: the
+    /// same edit under rule-fingerprint/1 was invisible.
+    /// </para>
+    /// </remarks>
+    private static Hash64 ComposedIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint composed units", FingerprintComposedUnits);
+        UpgradeLadder ladder = UpgradeLadder.Parse("fingerprint ladder", FingerprintComposedLadder, types);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+        Ruleset rules = TheRuleset.Committed();
+
+        Build composed = BuildPhase
+            .Of(
+                WaveSlot.Of(2, 3),
+                WaveSlot.Empty,
+                WaveSlot.Of(1, 1),
+                WaveSlot.Of(4, 2))
+            .Resolve(
+                1,
+                ladder,
+                Purse.Holding(FingerprintComposedGold),
+                CostTable.From(rules, types),
+                types,
+                map,
+                Board.Empty);
+
+        fingerprint = fingerprint.Add(composed.Wave.Count, composed.Wave.TotalUnits);
+
+        for (int index = 0; index < composed.Wave.Count; index++)
+        {
+            UnitOrder order = composed.Wave.Orders[index];
+            fingerprint = fingerprint.Add(order.TickOffset, order.TypeId).Add(order.Count);
+        }
+
+        return fingerprint;
     }
 
     private static (uint Version, ulong Fingerprint) Row(uint version)

@@ -177,10 +177,11 @@ namespace Sim
         public const int ReplayVersion = 1;
 
         /// <summary>
-        /// The command stream layout, version 1: the version-0 fields with a
-        /// <c>u16 action_count</c> and that many actions in every build phase,
-        /// between the take and the slots. Counted on its own, so a stored
-        /// defense, wave or bundle carries no version this kind moved.
+        /// The command stream layout, version 3: a build phase is
+        /// <c>u16 wave + u16 action_count + Action[] + u16 slot_count +
+        /// Slot[]</c>, and a slot's position in that run is the order its creeps
+        /// walk out in. Counted on its own, so a stored defense, wave or bundle
+        /// carries no version this kind moved.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -198,6 +199,22 @@ namespace Sim
         /// the order buys is a hexdump that explains itself.
         /// </para>
         /// <para>
+        /// <b>Version 2 is the bump that deleted the take</b>, when the gates it
+        /// was taken off went, and turned the third header stamp from an anchor
+        /// schedule hash into an upgrade ladder hash -- same offset, same width,
+        /// different content.
+        /// </para>
+        /// <para>
+        /// <b>Version 3 is the bump with no field in it.</b> A version-3 command
+        /// is byte for byte a version-2 command; what changed is that a slot's
+        /// position became its release order, so the same bytes describe a
+        /// different fight. A reader cannot tell the two apart by looking, which
+        /// is the whole reason the version had to move: the alternative is a
+        /// version-2 stream replaying into a confidently wrong result while
+        /// passing every gate. See <see cref="CommandStream"/>'s version-3
+        /// branch.
+        /// </para>
+        /// <para>
         /// <b>A version-0 stream reads back with no actions, and that is what
         /// those bytes say rather than a value invented for them.</b> The
         /// distinction <see cref="GhostVersion"/> draws is between a field a
@@ -209,7 +226,7 @@ namespace Sim
         /// never held against an outcome.
         /// </para>
         /// </remarks>
-        public const int CommandVersion = 2;
+        public const int CommandVersion = 3;
 
         /// <summary>The four bytes a record of this kind begins with.</summary>
         public static string MagicOf(RecordKind kind)
@@ -355,7 +372,17 @@ namespace Sim
                     // past so the cursor stays aligned and the decision replays
                     // as its slots and its actions. See
                     // CommandStream.ReadVersion2.
-                    return formatVersion == 0 || formatVersion == 1 || formatVersion == 2;
+                    //
+                    // Version 2 is here against content/golden/command-2.commands,
+                    // and it is the one branch whose bytes a later version also
+                    // accepts: a version-3 command has the same layout and a
+                    // different meaning for its slot order. Reading it is not
+                    // the same as replaying it, which is the point of keeping
+                    // the branch rather than folding it into version 3.
+                    return formatVersion == 0
+                        || formatVersion == 1
+                        || formatVersion == 2
+                        || formatVersion == 3;
 
                 default:
                     throw NoSuchKind(kind);

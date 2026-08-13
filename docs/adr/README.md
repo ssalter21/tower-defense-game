@@ -46,7 +46,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0015](0015-replay-bundles-are-self-contained.md) | A replay bundle is self-contained, and the seed lives in it |
 | [0017](0017-canonical-order-is-asserted-not-restored.md) | Canonical order is asserted at load, never restored |
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
-| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against |
+| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against — **amended by #191: the slots no longer ascend by type id; position is the release order** |
 | [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
 | [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |

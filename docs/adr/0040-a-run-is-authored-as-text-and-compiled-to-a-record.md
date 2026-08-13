@@ -18,9 +18,11 @@ to become a record — the position `WaveScript` has held since the skeleton, ap
 **The parser adds no rule.** `CommandScript` reads rows and hands them to `RecordCommand.Of`, which is where
 the ordering, the empty-slot spelling and the wave numbering already live and where the byte reader enforces
 them too. Where the record refuses, the refusal is rewrapped with the line it happened on and nothing else:
-one implementation of each rule, and a person editing a file still gets told where. A second copy of "filled
-slots ascend strictly by type id" living in a parser is a copy that stops agreeing the first time the rule
-moves.
+one implementation of each rule, and a person editing a file still gets told where. A second copy of "a creep
+fills at most one slot of a wave" living in a parser is a copy that stops agreeing the first time the rule
+moves — which it has: the example this paragraph used to give was "filled slots ascend strictly by type id",
+and [#191](https://github.com/ssalter21/tower-defense-game/issues/191) deleted that rule when a slot's position
+became its release order. A parser holding a copy would still be enforcing it.
 
 **A take cannot be authored blind, so the menus are printable.** An offering is a pure function of the run's
 seed and the wave (ADR-0037), which is exactly why nobody can write a legal decision for a seed they have not

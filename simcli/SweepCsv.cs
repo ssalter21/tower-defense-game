@@ -120,6 +120,13 @@ internal static class SweepCsv
             "cost_efficiency_dealt_per_100_gold",
             "a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one "
             + "so the price cancels out; see docs/adr/0041");
+
+        Note(
+            text,
+            "dealt_gold",
+            "a slot's position is the order its creeps walk out in since #191 -- and a row here fills one "
+            + "slot a round because a row is about one creep -- so nothing in this report varies with the "
+            + "arrangement of a wave and no ordering question can be answered from it");
     }
 
     private static void Note(StringBuilder text, string column, string what) =>

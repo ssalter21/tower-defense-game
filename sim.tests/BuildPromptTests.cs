@@ -254,38 +254,43 @@ public class BuildPromptTests
     }
 
     [Fact]
-    public void A_send_out_of_order_is_refused_at_the_prompt()
+    public void Sending_a_creep_the_round_already_sent_is_refused_and_the_order_it_is_sent_in_is_not()
     {
         // The refusal a send can still raise, printed in the record's own
-        // sentence and not ending the session: a creep at or below the one a
-        // slot above it already sent. The legal sends stand.
+        // sentence and not ending the session: a creep some slot above it
+        // already sent. The legal sends stand.
         //
-        // The other half of this test was a fourth slot in a round that had
-        // three. #179 deleted the widths with the anchors that derived them, so
-        // what bounds a wave is the purse; there is no width left to exceed.
+        // Two halves of this test have come out under two tickets. #179 deleted
+        // the wave widths with the anchors that derived them, so there is no
+        // width left to exceed. #191 deleted the ascending order, so sending a
+        // lower type id after a higher one is a decision rather than a refusal
+        // -- it is the player putting that creep at the front of the column.
         //
-        // OBSERVED: sort the slots into the ascending order Resolve asks for.
-        // The out-of-order send lands, the wave sends what nobody composed, and
-        // the round quietly reorders a decision on its author's behalf.
+        // OBSERVED: sort the slots into the ascending order Resolve used to ask
+        // for. The descending pair below silently swaps, and the round reorders
+        // a wave on its author's behalf -- which since #191 is reordering the
+        // fight, not the bytes.
         Run run = WaveFive.Value;
         UpgradeLadder ladder = TheMatch.Ladder(run.Types);
 
         Session session = Play(
             run,
             ladder,
-            "send minion 1",
             "send skeleton-scout 1",
+            "send minion 1",
             "send minion 1",
             "send skeleton 1",
             "done");
 
         Assert.Contains(
-            "fills slot 3 with type id 1, at or below the 2 a slot above it already sent",
+            "fills slot 3 with type id 1, which a slot above it already sent",
             session.Text,
             StringComparison.Ordinal);
 
+        // The scout is ahead of the minion because that is the order they were
+        // sent in, and nothing put them back in id order.
         Assert.Equal(
-            new[] { WaveSlot.Of(Minion, 1), WaveSlot.Of(Scout, 1), WaveSlot.Of(Skeleton, 1) },
+            new[] { WaveSlot.Of(Scout, 1), WaveSlot.Of(Minion, 1), WaveSlot.Of(Skeleton, 1) },
             Composed(session).Slots);
     }
 

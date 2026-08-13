@@ -119,12 +119,31 @@ namespace Sim
     /// creep in the roster is sendable from wave one, priced and nothing else.
     /// </para>
     /// <para>
-    /// <b>The filled slots ascend strictly by type id.</b> A slot becomes one
-    /// line of a wave, and a wave's lines ascend and are unique on
-    /// <c>(tick, type)</c> -- asserted rather than sorted, for the reason
-    /// <see cref="WaveScript"/> gives: sorting would leave two identical waves
-    /// with two different sets of bytes. It is also what makes two slots on one
-    /// creep a refusal rather than a slot silently spent twice.
+    /// <b>A slot's position is its release order.</b> Slot one's creeps walk
+    /// out first, slot two's behind them, and the wave is one column in the
+    /// order the slots were filled. That is the vision's <i>you choose the
+    /// order they come out in</i>, and until #191 this class did not honour it:
+    /// every slot was given the same release tick, so the columns all began
+    /// together and a slot's position meant nothing at all.
+    /// </para>
+    /// <para>
+    /// <b>The filled slots used to ascend strictly by type id, and that rule is
+    /// gone.</b> It existed to canonicalise an arrangement that was not a
+    /// decision -- two spellings of one wave would have been two sets of bytes
+    /// for one run. Once position is the release order the arrangement <i>is</i>
+    /// the decision, and asserting an order over it would delete the lever the
+    /// vision asked for. What survives is the half that was never about
+    /// canonicalisation: <b>a creep may fill only one slot of a wave</b>, so a
+    /// repeat is still a slot spent twice on one thing.
+    /// </para>
+    /// <para>
+    /// Canonical bytes are not lost with it. The release offsets ascend
+    /// strictly across filled slots, because every filled slot sends at least
+    /// one creep and each creep takes the column for
+    /// <see cref="Match.SpawnIntervalTicks"/> -- so the wave's orders are still
+    /// unique and ascending on <c>(tick, type)</c>, which is what
+    /// <see cref="WaveScript"/> and <see cref="WaveRecord"/> assert. The
+    /// ordering became a consequence of the rule instead of a rule of its own.
     /// </para>
     /// <para>
     /// <b>The actions do not ascend by anything, and that is not an
@@ -137,12 +156,13 @@ namespace Sim
     public sealed class BuildPhase
     {
         /// <summary>
-        /// The tick every slot of a build phase's wave releases on. A build
-        /// phase composes what is sent rather than when, so the whole wave
-        /// leaves at once and the ordering a wave record asserts falls to the
-        /// type ids alone.
+        /// The tick the first creep of a build phase's wave releases on. Every
+        /// creep behind it follows one spawn interval later, whether it is the
+        /// next of its own slot or the first of the next slot -- so a wave is
+        /// one column at one cadence, and a slot's position is where in that
+        /// column its creeps stand.
         /// </summary>
-        private const int ReleaseTick = 0;
+        private const int FirstReleaseTick = 0;
 
         /// <summary>Which lane. The skeleton has one, and it is zero.</summary>
         private const int Corridor = 0;
@@ -304,7 +324,13 @@ namespace Sim
             int defense = purse.Gold - left.Gold;
             var orders = new List<UnitOrder>();
             long spent = 0;
-            int previousTypeId = 0;
+            var already = new List<int>();
+
+            // Where in the column this slot's first creep stands: behind every
+            // creep the slots above it send. An empty slot contributes nothing
+            // and costs nothing, so banking a slot closes the gap rather than
+            // leaving a hole in the wave.
+            int ahead = 0;
 
             for (int index = 0; index < _slots.Length; index++)
             {
@@ -315,7 +341,7 @@ namespace Sim
                     continue;
                 }
 
-                if (slot.TypeId <= previousTypeId)
+                if (already.Contains(slot.TypeId))
                 {
                     throw new SimulationException(
                         "A build phase at wave "
@@ -324,20 +350,22 @@ namespace Sim
                         + (index + 1).ToString(CultureInfo.InvariantCulture)
                         + " with type id "
                         + slot.TypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", at or below the "
-                        + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                        + " a slot above it already sent. Filled slots ascend strictly by type id, which "
-                        + "makes a repeated creep a slot spent twice on one thing and keeps two identical "
-                        + "waves from having two different sets of bytes.");
+                        + ", which a slot above it already sent. A creep fills at most one slot of a wave: "
+                        + "two slots on one creep is a slot spent twice on one thing, and the same wave is "
+                        + "spelled by putting the whole count in one of them. The slots may name their "
+                        + "creeps in any order -- the order is the decision -- so this is all that is left "
+                        + "of the rule that they ascend.");
                 }
 
-                previousTypeId = slot.TypeId;
+                already.Add(slot.TypeId);
                 spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
                 orders.Add(new UnitOrder(
-                    ReleaseTick,
+                    FirstReleaseTick + (ahead * Match.SpawnIntervalTicks),
                     types.Require(slot.TypeId, UnitRole.Moving, Filling(index, wave)),
                     slot.Count,
                     Corridor));
+
+                ahead += slot.Count;
             }
 
             if (spent > left.Gold)

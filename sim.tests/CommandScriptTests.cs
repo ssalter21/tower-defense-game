@@ -148,10 +148,15 @@ public class CommandScriptTests
     [Fact]
     public void A_refusal_from_the_record_carries_the_line_it_happened_on()
     {
-        // The rule is the record's -- filled slots ascend strictly by type id --
-        // and it is not restated here. What is added is where: a person editing
-        // a file needs the line, and a SimulationException escaping a parser
-        // would name the slot and leave them searching for it.
+        // The rule is the record's -- a creep fills at most one slot of a wave
+        // -- and it is not restated here. What is added is where: a person
+        // editing a file needs the line, and a SimulationException escaping a
+        // parser would name the slot and leave them searching for it.
+        //
+        // The rule this was written against was that filled slots ascend
+        // strictly by type id, and the script below was a descending pair. #191
+        // made that a legal wave -- position is the release order -- so the
+        // refusal it borrows is the half of the old rule that stayed.
         //
         // OBSERVED: let the SimulationException through -- delete the catch.
         // Assert.Throws<ContentException> goes red having caught a
@@ -159,10 +164,19 @@ public class CommandScriptTests
         // and says nothing about line 2. It takes both rows of the
         // slot-spelling theory above with it, for the same reason.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => CommandScript.Parse("build 1 5 2\nbuild 2 5 2 1 1\n"));
+            () => CommandScript.Parse("build 1 5 2\nbuild 2 5 2 5 1\n"));
 
         Assert.Equal(2, thrown.Line);
-        Assert.Contains("Filled slots ascend strictly by type id", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("A creep fills at most one slot of a wave", thrown.Message, StringComparison.Ordinal);
+
+        // And the arrangement that used to be refused here parses, which is the
+        // lever the old rule was standing on: a script may put the higher type
+        // id at the front of the column.
+        IReadOnlyList<RecordCommand> descending = CommandScript.Parse("build 1 5 2 1 1\n");
+
+        Assert.Equal(
+            new[] { WaveSlot.Of(5, 2), WaveSlot.Of(1, 1) },
+            Assert.Single(descending).Slots);
     }
 
     [Fact]

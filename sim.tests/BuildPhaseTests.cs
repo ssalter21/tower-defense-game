@@ -135,38 +135,115 @@ public class BuildPhaseTests
     }
 
     [Fact]
-    public void Every_slot_a_build_phase_fills_releases_on_tick_zero()
+    public void A_slots_position_is_its_release_order_and_an_empty_slot_takes_no_place_in_the_column()
     {
-        // A build phase composes what is sent rather than when, so the whole
-        // wave leaves at once and the ordering a wave record asserts falls to
-        // the type ids alone.
+        // The vision, under "You choose the order they come out in": a wave is
+        // a sequence and not a bag. A build phase composed one wave and gave
+        // every slot the same release tick until #191, so the columns all began
+        // together and a slot's position meant nothing.
         //
-        // This is pinned because something outside the simulation now depends on
-        // it: the command line refuses a --field file whose orders arrive over
-        // time, on the ground that a field member stands in for a stored round
-        // and a stored round is one of these. If the release tick ever moves,
-        // that refusal starts rejecting real rounds -- so the rule goes red here
-        // rather than out there.
+        // The whole wave is one column at one cadence. Slot one's creeps walk
+        // out first, one every Match.SpawnIntervalTicks, and slot two's first
+        // creep stands behind the last of slot one rather than beside its
+        // first -- so an order's offset is the count of every creep ahead of
+        // it, and nothing ever arrives two abreast.
         //
-        // OBSERVED: move BuildPhase.ReleaseTick from 0 to 1. This goes red on
-        // the first order, and CommandLineTests's wrong-field refusal stays
-        // green, still refusing content/wave.txt for a reason that has stopped
-        // being true.
+        // OBSERVED: space the slots by their position instead of by the creeps
+        // ahead of them -- index * SpawnIntervalTicks. This goes red on the
+        // second order, 45 where 135 was expected, and every count above one
+        // starts overlapping the slot behind it.
         Run run = TheBuild.Fresh();
         int[] creeps = Creeps(run);
 
         WaveScript wave = Resolved(
             run,
-            BuildPhase.Of(WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[1], 1)),
+            BuildPhase.Of(
+                WaveSlot.Of(creeps[0], Bodies),
+                WaveSlot.Empty,
+                WaveSlot.Of(creeps[1], 1),
+                WaveSlot.Of(creeps[2], 2)),
             1000)
             .Wave;
 
-        Assert.Equal(2, wave.Count);
+        Assert.Equal(3, wave.Count);
 
-        for (int index = 0; index < wave.Count; index++)
+        Assert.Equal(0, wave.Orders[0].TickOffset);
+        Assert.Equal(Bodies * Match.SpawnIntervalTicks, wave.Orders[1].TickOffset);
+        Assert.Equal((Bodies + 1) * Match.SpawnIntervalTicks, wave.Orders[2].TickOffset);
+
+        // The empty slot in the middle took no place in the column. It is a
+        // player banking rather than sending, and banking closes the gap
+        // instead of leaving a hole the defense gets for free.
+        //
+        // OBSERVED: advance the offset past an empty slot as though it sent
+        // one. The third order moves to 225 and a banked slot silently buys the
+        // defense forty-five ticks of quiet.
+        Assert.Equal(creeps[1], wave.Orders[1].TypeId);
+
+        // And the offsets ascend strictly, which is what keeps the record
+        // canonical now that nothing asserts an order over the type ids: every
+        // filled slot sends at least one creep, so no two orders can share a
+        // tick.
+        for (int index = 1; index < wave.Count; index++)
         {
-            Assert.Equal(0, wave.Orders[index].TickOffset);
+            Assert.True(
+                wave.Orders[index].TickOffset > wave.Orders[index - 1].TickOffset,
+                "Order "
+                    + (index + 1).ToString(CultureInfo.InvariantCulture)
+                    + " releases on tick "
+                    + wave.Orders[index].TickOffset.ToString(CultureInfo.InvariantCulture)
+                    + ", at or below the one above it. A wave record asserts that its orders ascend by "
+                    + "(tick, type), and since #191 nothing else makes them.");
         }
+    }
+
+    [Fact]
+    public void The_same_two_creeps_in_the_other_order_are_a_different_wave_and_a_different_fight()
+    {
+        // #191's acceptance criterion, and the reason the ascending-by-type-id
+        // rule had to go rather than being kept as a tidiness. The arrangement
+        // is the decision: send the fast creep first and the fight is not the
+        // fight you get sending it second, so canonicalising the arrangement
+        // was deleting a lever rather than spelling one.
+        //
+        // Both halves are asserted, because either alone proves less than it
+        // looks. That the composed waves differ is a statement about
+        // BuildPhase; that the matches differ is the statement the player
+        // cares about, and a rule that changed the bytes without changing the
+        // fight would pass the first and fail the point.
+        //
+        // OBSERVED: give every order the same release tick, which is what this
+        // did before #191. Both waves come out identical, both matches leak
+        // identically, and this goes red on the first comparison of the two.
+        Run run = TheBuild.Fresh();
+        int[] creeps = Creeps(run);
+
+        WaveSlot first = WaveSlot.Of(creeps[0], Bodies);
+        WaveSlot second = WaveSlot.Of(creeps[1], Bodies);
+
+        WaveScript forward = Resolved(run, BuildPhase.Of(first, second), 1000).Wave;
+        WaveScript backward = Resolved(run, BuildPhase.Of(second, first), 1000).Wave;
+
+        // The same two creeps and the same two counts, so nothing separates
+        // these but the order they were written in.
+        Assert.Equal(forward.TotalUnits, backward.TotalUnits);
+        Assert.Equal(forward.Count, backward.Count);
+
+        Assert.Equal(creeps[0], forward.Orders[0].TypeId);
+        Assert.Equal(creeps[1], backward.Orders[0].TypeId);
+        Assert.Equal(0, forward.Orders[0].TickOffset);
+        Assert.Equal(0, backward.Orders[0].TickOffset);
+
+        // Which creep is at the front of the column is the whole difference,
+        // and it is a difference the record carries.
+        Assert.NotEqual(
+            forward.Orders[0].TypeId,
+            backward.Orders[0].TypeId);
+
+        // And the fight. The same defense, the same seed, the same map, the
+        // same bodies -- and two different traces, because what the towers
+        // shoot at first is not the same creep.
+        Assert.NotEqual(Fought(forward), Fought(backward));
     }
 
     [Fact]
@@ -210,18 +287,21 @@ public class BuildPhaseTests
     [Fact]
     public void Two_slots_naming_one_creep_are_refused_rather_than_merged()
     {
-        // Filled slots ascend strictly by type id, which is the rule the wave
-        // they compose already lives by: orders ascend and are unique on
-        // (tick, type), asserted rather than sorted, because sorting would
-        // leave two identical waves with two different sets of bytes. It also
-        // makes a slot spent twice on one creep a refusal rather than a slot
-        // silently thrown away.
+        // A creep fills at most one slot of a wave. The same wave is spelled
+        // by putting the whole count in one slot, so a second slot on the same
+        // creep is a slot spent twice on one thing rather than a second
+        // spelling somebody might have meant.
         //
-        // OBSERVED: drop the previousTypeId check in BuildPhase.Resolve. This
-        // goes red having caught nothing -- no exception was thrown -- and the
-        // repeated-creep phase builds a wave with two orders on the same
-        // (tick 0, type) key, which is a wave no loader in this repository
-        // would accept back.
+        // This is all that is left of the rule that filled slots ascend
+        // strictly by type id. The ascending half went in #191, when a slot's
+        // position became its release order and the arrangement stopped being
+        // something to canonicalise; this half was never about canonical bytes
+        // in the first place.
+        //
+        // OBSERVED: drop the repeat check in BuildPhase.Resolve. This goes red
+        // having caught nothing -- no exception was thrown -- and the phase
+        // builds a wave that sends the same creep twice at two different ticks,
+        // which is a purse spent twice on one decision.
         Run run = TheBuild.Fresh();
         int[] creeps = Creeps(run);
 
@@ -231,15 +311,23 @@ public class BuildPhaseTests
                 BuildPhase.Of(WaveSlot.Of(creeps[0], 1), WaveSlot.Of(creeps[0], 1)),
                 1000));
 
-        Assert.Contains("at or below the", repeated.Message, StringComparison.Ordinal);
+        Assert.Contains("which a slot above it already sent", repeated.Message, StringComparison.Ordinal);
+        Assert.Contains("A creep fills at most one slot of a wave", repeated.Message, StringComparison.Ordinal);
 
-        SimulationException descending = Assert.Throws<SimulationException>(
-            () => Resolved(
-                run,
-                BuildPhase.Of(WaveSlot.Of(creeps[1], 1), WaveSlot.Of(creeps[0], 1)),
-                1000));
+        // And a descending pair is accepted, which is the half that changed:
+        // the slots name their creeps in whatever order the player arranged
+        // them, and the arrangement is the decision.
+        //
+        // OBSERVED: reinstate the ascending assertion. This goes red on the
+        // descending pair, and a player loses the ability to send the dearer
+        // creep first.
+        Build descending = Resolved(
+            run,
+            BuildPhase.Of(WaveSlot.Of(creeps[1], 1), WaveSlot.Of(creeps[0], 1)),
+            1000);
 
-        Assert.Contains("Filled slots ascend strictly by type id", descending.Message, StringComparison.Ordinal);
+        Assert.Equal(creeps[1], descending.Wave.Orders[0].TypeId);
+        Assert.Equal(creeps[0], descending.Wave.Orders[1].TypeId);
     }
 
     [Fact]
@@ -847,6 +935,28 @@ public class BuildPhaseTests
     /// nothing; everything else comes off the run, because none of them are
     /// about where a roster or a map came from.
     /// </remarks>
+    /// <summary>
+    /// What a composed wave actually does: the rolling state hash of the match
+    /// it fights against the committed defense.
+    /// </summary>
+    /// <remarks>
+    /// The whole match rather than its leak count, because two arrangements can
+    /// leak the same number of creeps down two entirely different fights, and
+    /// what is being asserted is that the fight moved.
+    /// </remarks>
+    private static Hash64 Fought(WaveScript wave)
+    {
+        UnitTypeTable types = TheMatch.Types();
+        var match = new Match(TheMatch.Map(), TheRuleset.Committed(), TheMatch.Layout(types), wave, 20260813UL);
+
+        while (!match.IsFinished)
+        {
+            match.Advance(1);
+        }
+
+        return match.Result().RollingStateHash;
+    }
+
     private static Build Resolved(Run run, BuildPhase phase, int gold, Board? board = null) =>
         phase.Resolve(
             run.Round + 1,

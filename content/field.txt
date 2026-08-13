@@ -18,11 +18,16 @@
 # different game, and a sweep against one reports a total loss on every row and
 # names nothing.
 #
-# SO THIS IS A BUILD PHASE'S OUTPUT: everything on tick zero, because a build
-# phase composes what is sent rather than when, and a hundred gold of it,
-# because that is about what a round's wave comes to once the purse has bought
-# a wall as well. It is the wave an opening round composes -- one unlock, so one
-# slot, so the whole purse in one column.
+# SO THIS IS A BUILD PHASE'S OUTPUT: one column opening on tick zero, and a
+# hundred gold of it, because that is about what a round's wave comes to once
+# the purse has bought a wall as well. It is the wave an opening round composes
+# -- the whole purse in one slot, so the whole purse in one column.
+#
+# ONE SLOT IS WHY THE TICKS DID NOT MOVE IN #191. A slot's position is its
+# release order now, so a round of several slots opens on tick zero and spaces
+# the rest behind it; a round of one slot is the case where that says exactly
+# what "everything on tick zero" used to. The check on this file is tighter
+# than it was rather than looser -- see RunContent.Field.
 #
 # ONE COLUMN, AND THAT IS MEASURED RATHER THAN CHOSEN. A count is released one
 # unit every forty-five ticks -- fifteen when the numbers below were taken, and

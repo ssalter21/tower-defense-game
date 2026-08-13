@@ -78,11 +78,12 @@ internal readonly struct RunShape
 internal sealed class RunContent
 {
     /// <summary>
-    /// The tick every order of a build phase's wave releases on. A field member
-    /// stands in for a stored round, a stored round is a build phase's output,
-    /// and a build phase composes what is sent rather than when.
+    /// The tick a build phase's wave opens on. Everything behind the first
+    /// creep follows from the counts: a slot's position is its release order,
+    /// so each order stands one spawn interval per creep behind the one above
+    /// it.
     /// </summary>
-    private const int ReleaseTick = 0;
+    private const int FirstReleaseTick = 0;
 
     private readonly HexMap _map;
 
@@ -151,35 +152,51 @@ internal sealed class RunContent
     /// An authored match wave parses here perfectly -- same keyword, same
     /// fields, same table -- and a report swept against one reads exactly like a
     /// real one while separating no creep from any other. What tells the two
-    /// apart is the release tick: <see cref="BuildPhase"/> composes what is sent
-    /// rather than when, so every order of a stored round leaves on tick zero.
+    /// apart is the release schedule. A stored round is one column at one
+    /// cadence: it opens on tick zero, and each order after it stands one
+    /// <see cref="Match.SpawnIntervalTicks"/> per creep behind the order above
+    /// it, because a slot's position is its release order. Any other spacing is
+    /// a wave nothing in this economy composes.
+    /// </remarks>
+    /// <remarks>
+    /// The check was "every order on tick zero" until #191, which is what a
+    /// stored round looked like while a build phase composed what was sent and
+    /// not when. It is tighter now rather than looser: tick zero admitted any
+    /// number of simultaneous columns, and this admits exactly one arrangement
+    /// per set of counts.
     /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
     /// </remarks>
     private static WaveScript Field(string fieldText, UnitTypeTable types)
     {
         WaveScript field = WaveScript.Parse(RunContentFiles.Field.Option, fieldText, types);
 
+        int due = FirstReleaseTick;
+
         for (int index = 0; index < field.Count; index++)
         {
             int tick = field.Orders[index].TickOffset;
 
-            if (tick == ReleaseTick)
+            if (tick != due)
             {
-                continue;
+                throw new UsageException(
+                    "--"
+                    + RunContentFiles.Field.Option
+                    + " names a wave whose order "
+                    + (index + 1).ToString(PlainText.Culture)
+                    + " releases on tick "
+                    + tick.ToString(PlainText.Culture)
+                    + " where a build phase would have released it on "
+                    + due.ToString(PlainText.Culture)
+                    + ". The canned field stands in for a population of stored rounds, and a stored "
+                    + "round is one column at one cadence: it opens on tick 0, and every order after it "
+                    + "stands one release behind the whole of the order above it, because a slot's "
+                    + "position is the order its creeps walk out in. A wave spaced any other way is a "
+                    + "whole authored match, which is what --wave means on the 'record' verb -- and "
+                    + "swept against, it outspends every opponent it faces and reports a total loss on "
+                    + "every row.");
             }
 
-            throw new UsageException(
-                "--"
-                + RunContentFiles.Field.Option
-                + " names a wave whose order "
-                + (index + 1).ToString(PlainText.Culture)
-                + " releases on tick "
-                + tick.ToString(PlainText.Culture)
-                + ". The canned field stands in for a population of stored rounds, and a stored round "
-                + "is a build phase's output: it composes what is sent rather than when, so every order "
-                + "of one leaves on tick 0. A wave released over time is a whole authored match, which "
-                + "is what --wave means on the 'record' verb -- and swept against, it outspends every "
-                + "opponent it faces and reports a total loss on every row.");
+            due += field.Orders[index].Count * Match.SpawnIntervalTicks;
         }
 
         return field;

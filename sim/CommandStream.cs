@@ -17,10 +17,19 @@ namespace Sim
     /// be a second copy of a derivation, free to disagree with the first.
     /// </para>
     /// <para>
-    /// <b>The filled slots ascend strictly by type id here as well as at
-    /// load.</b> A command that could be built and not read back would be a
-    /// writer emitting bytes its own reader refuses, so the order is asserted
-    /// where a command is made and asserted again where one is read.
+    /// <b>The slots are in the order they were filled, and that order is the
+    /// decision.</b> A slot's position is when its creeps walk out, so the same
+    /// two slots the other way round are a different wave rather than a second
+    /// spelling of one -- which is why nothing here sorts them and nothing
+    /// asserts an ascending order over them. Until format 3 they had to ascend
+    /// strictly by type id, because until then position meant nothing and the
+    /// arrangement needed canonicalising.
+    /// </para>
+    /// <para>
+    /// <b>What is asserted is that a creep fills at most one slot</b>, here as
+    /// well as at load. A command that could be built and not read back would be
+    /// a writer emitting bytes its own reader refuses, so the rule is checked
+    /// where a command is made and checked again where one is read.
     /// </para>
     /// <para>
     /// <b>The actions do not, and that is not an oversight.</b> Their order is
@@ -80,7 +89,7 @@ namespace Sim
             }
 
             var slots = new WaveSlot[decision.Slots.Count];
-            int previousTypeId = 0;
+            var already = new List<int>();
 
             for (int index = 0; index < slots.Length; index++)
             {
@@ -88,7 +97,7 @@ namespace Sim
 
                 if (!slot.IsEmpty)
                 {
-                    if (slot.TypeId <= previousTypeId)
+                    if (already.Contains(slot.TypeId))
                     {
                         throw new SimulationException(
                             "A command for wave "
@@ -97,14 +106,12 @@ namespace Sim
                             + (index + 1).ToString(CultureInfo.InvariantCulture)
                             + " with type id "
                             + slot.TypeId.ToString(CultureInfo.InvariantCulture)
-                            + ", at or below the "
-                            + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                            + " a slot above it already sent. Filled slots ascend strictly by type id, and a "
-                            + "command that could be written and not read back is a writer emitting bytes its "
-                            + "own reader refuses.");
+                            + ", which a slot above it already sent. A creep fills at most one slot of a "
+                            + "wave, and a command that could be written and not read back is a writer "
+                            + "emitting bytes its own reader refuses.");
                     }
 
-                    previousTypeId = slot.TypeId;
+                    already.Add(slot.TypeId);
                 }
 
                 slots[index] = slot;
@@ -421,6 +428,10 @@ namespace Sim
 
                 case 2:
                     read = ReadVersion2(cursor, header);
+                    break;
+
+                case 3:
+                    read = ReadVersion3(cursor, header);
                     break;
 
                 default:
@@ -748,6 +759,36 @@ namespace Sim
             ReadCommands(cursor, header, storesActions: true, storesTake: false);
 
         /// <summary>
+        /// Version 3: the same bytes as version 2, and a different meaning for
+        /// the order they are in. A slot's position is its release order, so
+        /// slot one's creeps walk out first and the wave is a sequence rather
+        /// than a set.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A version bump with no field in it, which is the point.</b>
+        /// Nothing moved and nothing was added: the layout of a version-2
+        /// command and a version-3 command is byte for byte the same. What
+        /// changed is what the slot order means, and a reader cannot tell the
+        /// two apart by looking -- an ascending version-2 wave and an ascending
+        /// version-3 wave are the same bytes describing two different fights.
+        /// That is exactly the case a format version exists for, and the
+        /// alternative was a stream that replays into a confidently wrong
+        /// result while validating.
+        /// </para>
+        /// <para>
+        /// <b>The simulation version moved with it</b>, from 2 to 3, because
+        /// the release schedule a wave resolves to is behaviour rather than
+        /// layout -- the same bump the spawn cadence took when it went from 15
+        /// ticks to 45. Streams at 0, 1 and 2 stay readable forever and stop
+        /// being replayable here, which is the split
+        /// <c>docs/adr/0009-three-identity-fields.md</c> draws.
+        /// </para>
+        /// </remarks>
+        private static CommandStream ReadVersion3(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true, storesTake: false);
+
+        /// <summary>
         /// The body both versions share, told whether the bytes in front of it
         /// carry an action run.
         /// </summary>
@@ -901,14 +942,23 @@ namespace Sim
         }
 
         /// <summary>
-        /// One command's slots. <c>(0, 0)</c> is the empty slot; a type id
-        /// without a count and a count without a type id are both refused,
-        /// because leaving a slot empty already has exactly one spelling.
+        /// One command's slots, in the order they were filled -- which from
+        /// format 3 is the order the creeps walk out in. <c>(0, 0)</c> is the
+        /// empty slot; a type id without a count and a count without a type id
+        /// are both refused, because leaving a slot empty already has exactly
+        /// one spelling.
         /// </summary>
+        /// <remarks>
+        /// <b>No ascending order is asserted, and one was until format 3.</b>
+        /// Position is the decision now, so sorting or refusing an arrangement
+        /// would delete the lever rather than canonicalise it. Every stream at
+        /// format 0, 1 or 2 was written under the old rule and so ascends
+        /// anyway; nothing that could be read before is refused here.
+        /// </remarks>
         private static WaveSlot[] ReadSlots(ByteCursor cursor, string what, int count)
         {
             var slots = new WaveSlot[count];
-            int previousTypeId = 0;
+            var already = new List<int>();
 
             for (int index = 0; index < count; index++)
             {
@@ -947,20 +997,18 @@ namespace Sim
                         + "second spelling of one wave and two sets of bytes for one run.");
                 }
 
-                if (typeId <= previousTypeId)
+                if (already.Contains(typeId))
                 {
                     throw cursor.Fault(
                         which
                         + " sends type id "
                         + typeId.ToString(CultureInfo.InvariantCulture)
-                        + ", at or below the "
-                        + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                        + " a slot above it already sent. Filled slots are out of canonical order: they "
-                        + "ascend strictly by type id, asserted rather than sorted, because sorting would "
-                        + "leave two identical waves with two different sets of bytes.");
+                        + ", which a slot above it already sent. A creep fills at most one slot of a wave: "
+                        + "the same wave is spelled by putting the whole count in one slot, so two slots on "
+                        + "one creep would be two sets of bytes for one run.");
                 }
 
-                previousTypeId = typeId;
+                already.Add(typeId);
                 slots[index] = WaveSlot.Of(typeId, units);
             }
 

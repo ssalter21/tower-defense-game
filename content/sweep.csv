@@ -1,6 +1,7 @@
 kind,subject,runs,rounds,wins,win_rate_bp,dealt_gold,taken_gold,spent_gold,defense_gold,unspent_gold,cost_efficiency_dealt_per_100_gold,income_base_gold,bonus_gold,value,of,bounded
 note,defense_gold,,,,,,,,,,,,,the defense these rows were played against was built by a deliberately simple bot -- the tower that covers the most unshot route per gold then upgrade the oldest -- so a row describes a game and never skilled play; see #163,,
 note,cost_efficiency_dealt_per_100_gold,,,,,,,,,,,,,a cost-weighted leak rate and never a price -- a leak charges what the creep cost one for one so the price cancels out; see docs/adr/0041,,
+note,dealt_gold,,,,,,,,,,,,,a slot's position is the order its creeps walk out in since #191 -- and a row here fills one slot a round because a row is about one creep -- so nothing in this report varies with the arrangement of a wave and no ordering question can be answered from it,,
 parameter,waves,,,,,,,,,,,,,10,,
 parameter,field_size,,,,,,,,,,,,,10,,
 parameter,death_ends_the_run,,,,,,,,,,,,,no,,

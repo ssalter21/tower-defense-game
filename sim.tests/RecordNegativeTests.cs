@@ -378,11 +378,16 @@ public class RecordNegativeTests
         // Format versions are counted per kind, so the command stream's gate is
         // its own. A defense, a wave and a bundle beside it read perfectly well.
         //
-        // OBSERVED: make IsKnown accept version 3 of the command stream. The
+        // OBSERVED: make IsKnown accept one version above the current one. The
         // "cannot know what it is missing" assertion goes red: the read gate
         // waves the record through and the reader's own switch refuses it
         // instead, with a message that says the fault is in this build rather
         // than in the bytes.
+        //
+        // The version is named off RecordFormat.CommandVersion rather than
+        // written out, because what this asserts is that the gate sits one above
+        // whatever the current version is. It was written when that was 1 and
+        // has been true at 2 and at 3 without being edited for either.
         UnitTypeTable types = TheMatch.Types();
         byte[] bytes = RecordBytes.WithU16(
             TheCommands.Bytes(),
@@ -391,7 +396,11 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
 
-        Assert.Contains("command stream format version 3", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "command stream format version "
+            + (RecordFormat.CommandVersion + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            thrown.Message,
+            StringComparison.Ordinal);
         Assert.Contains("cannot know what it is missing", thrown.Message, StringComparison.Ordinal);
         Assert.Equal(6, GhostRecord.FromBytes(TheMatch.Ghost(types).ToBytes()).Count);
         Assert.Equal(6, WaveRecord.FromBytes(TheMatch.WaveOf(types).ToBytes()).Count);
@@ -530,12 +539,17 @@ public class RecordNegativeTests
     [Fact]
     public void Two_slots_of_one_build_phase_naming_one_creep_refuse()
     {
-        // The same rule one level down. A command's filled slots become the
-        // orders of a wave, and a wave's orders are unique on (tick, type).
+        // The same rule one level down: a creep fills at most one slot of a
+        // wave, checked over the bytes as well as where a command is made.
         //
-        // OBSERVED: drop the slot-order check from ReadSlots. This goes red on
-        // the exception type, SimulationException against RecordException, and
-        // the message is RecordCommand.Of's -- the writer-side half of the same
+        // The reader stopped asserting that the slots ascend in #191 -- a slot's
+        // position is its release order now, so an arrangement is a decision --
+        // and this is the half of the old rule that stayed. It has to: two slots
+        // on one creep would compose a wave that spends one decision twice.
+        //
+        // OBSERVED: drop the repeat check from ReadSlots. This goes red on the
+        // exception type, SimulationException against RecordException, and the
+        // message is RecordCommand.Of's -- the writer-side half of the same
         // rule, catching bytes the reader waved through.
         Run run = TheCommands.Fresh();
         int[] creeps = run.Types.Types
@@ -558,8 +572,8 @@ public class RecordNegativeTests
 
         RecordException thrown = Assert.Throws<RecordException>(() => CommandStream.FromBytes(bytes));
 
-        Assert.Contains("out of canonical order", thrown.Message, StringComparison.Ordinal);
-        Assert.Contains("asserted rather than sorted", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("which a slot above it already sent", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("A creep fills at most one slot of a wave", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]
