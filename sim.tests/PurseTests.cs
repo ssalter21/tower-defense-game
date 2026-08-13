@@ -153,14 +153,14 @@ public class PurseTests
     public void The_flat_base_lands_once_a_wave_and_comes_out_of_the_ruleset()
     {
         // OBSERVED: pay `rules.IncomeBasePerWave / 2` in Purse.CloseWave. The
-        // first assertion goes red, 100 against 50, and every run in the project
+        // first assertion goes red, 168 against 84, and every run in the project
         // is quietly poorer than the file it was authored in says.
         Ruleset rules = TheRuleset.Committed();
         WavePayment paid = Purse.Empty.CloseWave(rules, PerformanceField.Absent, 0);
 
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
-        Assert.Equal(100, paid.IncomeBase);
-        Assert.Equal(100, paid.Purse.Gold);
+        Assert.Equal(168, paid.IncomeBase);
+        Assert.Equal(168, paid.Purse.Gold);
 
         Assert.Equal(
             250,
@@ -185,7 +185,7 @@ public class PurseTests
         // "there was nobody to rank against" from "the payment is broken".
         //
         // OBSERVED: return the base as the bonus in Purse.BonusOn when the field
-        // is absent. The bonus assertion goes red, 0 against 100 -- which is a
+        // is absent. The bonus assertion goes red, 0 against 168 -- which is a
         // build paying a performance bonus for a performance nothing measured.
         Ruleset rules = TheRuleset.Committed();
         WavePayment paid = Purse.Holding(500).CloseWave(rules, PerformanceField.Absent, 4321);
@@ -195,8 +195,8 @@ public class PurseTests
         Assert.Equal(0, paid.Bonus);
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
         Assert.Equal(50, paid.Interest);
-        Assert.Equal(150, paid.Total);
-        Assert.Equal(650, paid.Purse.Gold);
+        Assert.Equal(218, paid.Total);
+        Assert.Equal(718, paid.Purse.Gold);
     }
 
     [Fact]
@@ -209,15 +209,15 @@ public class PurseTests
         //
         // OBSERVED: invert the comparison in Ruleset.BandFor -- return as soon
         // as a threshold is reached rather than carrying the last one reached
-        // forward. The first assertion goes red, 0 against 20: a wave that beat
+        // forward. The first assertion goes red, 0 against 33: a wave that beat
         // nothing in the field is paid the top band.
         Ruleset rules = TheRuleset.Committed();
         PerformanceField field = PerformanceField.Of(new[] { 10, 20, 30, 40 });
 
         Assert.Equal(0, Bonus(rules, field, 5));
         Assert.Equal(0, Bonus(rules, field, 15));
-        Assert.Equal(10, Bonus(rules, field, 35));
-        Assert.Equal(20, Bonus(rules, field, 45));
+        Assert.Equal(16, Bonus(rules, field, 35));
+        Assert.Equal(33, Bonus(rules, field, 45));
 
         Assert.Equal(0, field.PercentileOf(5));
         Assert.Equal(25, field.PercentileOf(15));
@@ -236,7 +236,7 @@ public class PurseTests
         // wave can reach.
         //
         // OBSERVED: return _bands[0] from Ruleset.BestBand. The ceiling
-        // assertion goes red at the 50th percentile, 155 against 150, and the
+        // assertion goes red at the 50th percentile, 226 against 218, and the
         // ceiling becomes a floor.
         Ruleset rules = TheRuleset.Committed();
         var spread = new int[100];
@@ -270,7 +270,7 @@ public class PurseTests
         // Reached rather than merely never exceeded: a wave nothing in the field
         // matched is paid exactly the ceiling.
         Assert.Equal(20, rules.BestBand.BonusPercentOfBase);
-        Assert.Equal(20, best.Bonus);
+        Assert.Equal(33, best.Bonus);
         Assert.Equal(best.Total, Purse.Holding(500).CloseWave(rules, field, spread.Length).Total);
     }
 
@@ -283,7 +283,7 @@ public class PurseTests
         // played, which is the point -- nothing below is simulated.
         //
         // OBSERVED: fold LeakCostTaken rather than LeakCostDealt in
-        // Purse.BonusOver. This goes red, 60 against 30: the bonus starts paying
+        // Purse.BonusOver. This goes red, 99 against 49: the bonus starts paying
         // for what got past the run rather than for what the run got past the
         // field.
         Ruleset rules = TheRuleset.Committed();
@@ -300,12 +300,12 @@ public class PurseTests
 
         RunOutcome outcome = RunOutcome.Of(1500, rounds, 3, deathEndsTheRun: true);
 
-        Assert.Equal(30, Purse.BonusOver(rules, field, outcome));
+        Assert.Equal(49, Purse.BonusOver(rules, field, outcome));
 
         // The same answer off a vector rebuilt from stored rounds, which is what
         // a stored population of runs is made of.
         Assert.Equal(
-            30,
+            49,
             Purse.BonusOver(rules, field, RunOutcome.Of(1500, outcome.Rounds, 3, deathEndsTheRun: true)));
 
         // And against a population of nobody there is no rank, so nothing to pay.
@@ -540,7 +540,7 @@ public class PurseTests
         // itemisation and the balance cannot drift apart.
         //
         // OBSERVED: leave the interest out of the closing balance in
-        // Purse.CloseWave. The last assertion goes red, 487 against 453: the
+        // Purse.CloseWave. The last assertion goes red, 568 against 534: the
         // three lines still add up and the purse no longer agrees with them.
         Ruleset rules = TheRuleset.Committed();
         PerformanceField field = PerformanceField.Of(new[] { 10, 20, 30, 40 });
@@ -548,9 +548,9 @@ public class PurseTests
 
         Assert.Equal(333, paid.Opening);
         Assert.Equal(34, paid.Interest);
-        Assert.Equal(100, paid.IncomeBase);
-        Assert.Equal(20, paid.Bonus);
-        Assert.Equal(154, paid.Total);
+        Assert.Equal(168, paid.IncomeBase);
+        Assert.Equal(33, paid.Bonus);
+        Assert.Equal(235, paid.Total);
         Assert.Equal(paid.Opening + paid.Total, paid.Purse.Gold);
     }
 

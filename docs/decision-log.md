@@ -236,6 +236,41 @@ Worth keeping for its own sake: **the corridor made the obvious bot rule useless
 that out was to compute the coverage table by hand before writing any of it.** The instinct — rank by value
 for money — is right in a game where coverage is scarce. It is worthless in one where 120 gold buys all of it.
 
+---
+
+## 11 August 2026 — the base is measured against the board it is actually spent on
+
+Decided in [#165](https://github.com/ssalter21/tower-defense-game/issues/165), the first ticket of the
+`played-from-a-shell` effort, because a build phase nobody has a reason to think about is not one worth sitting
+at a prompt for. One number moved.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[`roster.md`](roster.md)** — what is missing | The opening purse, the income curve and the health pool were all tuned against a free six-tower defense, and **none of the three** had been measured against an empty opening board | **The income has been.** `content/ruleset.txt`'s `income` row is **168** rather than 100, swept at the committed shape; the purse and the pool are still where the free defense left them | A member of the canned field stands `content/defense.txt` for nothing and sends from behind it, where a run pays for its wall *and* its wave out of the base. At a hundred, all twenty-two rows of `content/sweep.csv` read `win_rate_bp` 0 and cost efficiency 0 to 5 — a report that separates nothing, and a build phase nobody has a reason to think about |
+
+### The field was the other lever, and it was ruled out by measurement rather than by argument
+
+`content/field.txt` is the opponent's *wave*, and what a run gets past an opponent is decided by that
+opponent's *wall*. Thinning the field to five, two and one grunts leaves leak cost dealt at exactly the 86,
+112, 243, 56 and 39 gold it was already at. The field moves what a run concedes and nothing about whether
+sending is worth it, so the base was the only lever that could reach the column the sweep exists to produce.
+
+**The window is narrow and it was walked.** At 160 the scout still wins one run in eight; at 200 four of the
+five win every run they play. 168 is where the cost-efficiency column spreads 18 to 39 again, which is the
+separating column `content/field.txt` was calibrated to produce.
+
+### One honest imprecision, disclosed in the ruleset rather than smoothed
+
+At eight runs a creep the five land between 37.5 and 87.5 percent, mean 55, against the 41-to-66 band
+`content/field.txt`'s own header records. At thirty-two runs a creep three of the five sit inside that band,
+and three other first seeds put the same five in the same order. It is a wider spread than the band claims;
+`content/ruleset.txt`'s income block says so, in the file the number lives in.
+
+**Worth keeping for its own sake:** the number nobody had looked at was the one holding the whole effort up.
+The purse, the income and the health pool were priced against a board a run no longer opens on —
+[#142](https://github.com/ssalter21/tower-defense-game/issues/142) made the defense a decision and emptied it —
+and all three went on reading as settled, because each of them was individually defensible and nothing made
+the three of them one question.
 
 ---
 

@@ -49,7 +49,7 @@ public static class TheRuleset
     /// old ruleset is retired by it and nothing else about a run moves.
     /// </remarks>
     public static Ruleset Retuned() =>
-        Ruleset.Parse(PlantedText.Replace(CommittedText(), "income        100", "income        101"));
+        Ruleset.Parse(PlantedText.Replace(CommittedText(), "income        168", "income        169"));
 
     /// <summary>
     /// The committed ruleset with the armour denominator moved by one and

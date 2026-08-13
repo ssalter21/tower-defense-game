@@ -58,8 +58,9 @@ public static class TheRun
     /// on its menu, added a tower to the wall while there was one left to add,
     /// and spent what remained of the purse on the creep that unlocked. So the
     /// second column falls by more than half over the six rounds the wall is
-    /// going up, and the first only becomes real from the seventh, which is the
-    /// first round the wall is not eating the purse.
+    /// going up, the first dips while it does -- gold standing on the board is
+    /// gold the wave was not sent out of -- and the first jumps at the seventh,
+    /// which is the first round the wall is not eating the purse.
     /// </para>
     /// <para>
     /// The run finishes its last wave on <see cref="HealthLeftInTheCommittedRun"/>
@@ -71,15 +72,15 @@ public static class TheRun
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
         new RoundOutcome(22, 239),
-        new RoundOutcome(37, 220),
-        new RoundOutcome(33, 178),
-        new RoundOutcome(20, 177),
-        new RoundOutcome(0, 144),
-        new RoundOutcome(3, 91),
-        new RoundOutcome(83, 86),
-        new RoundOutcome(72, 97),
-        new RoundOutcome(70, 87),
-        new RoundOutcome(80, 85),
+        new RoundOutcome(105, 220),
+        new RoundOutcome(90, 178),
+        new RoundOutcome(59, 177),
+        new RoundOutcome(43, 144),
+        new RoundOutcome(29, 91),
+        new RoundOutcome(159, 86),
+        new RoundOutcome(135, 97),
+        new RoundOutcome(138, 87),
+        new RoundOutcome(142, 85),
     };
 
     /// <summary>What that run had left of the pool when its last wave resolved.</summary>

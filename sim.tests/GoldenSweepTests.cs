@@ -74,7 +74,7 @@ public class GoldenSweepTests
         //
         // OBSERVED: move the interest rate in content/ruleset.txt from 10 to 11
         // and do not regenerate. The hash row goes red, the file's
-        // B8D395FFBCA5BCCC against the EECBA54CEEFAF7A9 this build now parses,
+        // AE57B5051EF890D0 against the 13A7F80C5AB79BDD this build now parses,
         // and every number in the file stays perfectly self-consistent -- which
         // is exactly what a stale report looks like from every other angle.
         Ruleset rules = TheRuleset.Committed();

@@ -36,9 +36,9 @@ public class RulesetTests
         Assert.Equal(1, rules.DamageFloor);
         Assert.Equal(10, rules.InterestPercentPerWave);
         Assert.Equal(Ruleset.NoInterestCeiling, rules.InterestCapGold);
-        Assert.Equal(100, rules.IncomeBasePerWave);
+        Assert.Equal(168, rules.IncomeBasePerWave);
 
-        // What a run opens holding, which is one wave's base.
+        // What a run opens holding, which is deliberately short of one wave's base.
         // OBSERVED: change "purse         100" to "purse         150" in
         // content/ruleset.txt. This goes red, 100 against 150, which is what a
         // retuned opening balance nobody re-read here looks like.
@@ -510,9 +510,9 @@ public class RulesetTests
         // record stamped against them still replays.
         //
         // OBSERVED: fold an extra Add(1) into the retuning constructor to mark a
-        // ruleset as retuned. This goes red, E18AD8CF7F53986D against the
-        // committed B8D395FFBCA5BCCC -- a hash that moved for no number anybody
-        // authored, which retires every stored record on a sweep having run.
+        // ruleset as retuned. This goes red on a hash that moved for no number
+        // anybody authored, which retires every stored record on a sweep having
+        // run.
         Ruleset authored = TheRuleset.Committed();
 
         Assert.Equal(

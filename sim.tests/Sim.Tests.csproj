@@ -59,6 +59,59 @@
     refusal lives in the same file, and calling it is the only way to watch it
     work, for the reason SweepColumnsTests gives.
 
+    simcli/BoardMap.cs draws the playfield as text and simcli/RoundFrame.cs
+    draws the whole frame a round stands above its prompt: both are pure
+    functions to a string, with no console, no state and nothing written down.
+    Their layout is the thing about them that can be wrong, so the check is the
+    text itself, asserted character for character in BoardMapTests and
+    RoundFrameTests. Reaching them through the program would mean playing a run
+    and reading the panels back out of its output, which tests the loop around
+    the drawing and not the drawing. simcli/TextPanel.cs and simcli/PlainText.cs
+    come with them: the one lays a panel beside a block already drawn, the other
+    formats every number under the one culture everything this runner writes
+    uses and ends every block it writes with the line feed a committed file and
+    a canned session both have to agree on.
+
+    simcli/TypedLine.cs reads a line somebody typed at that prompt into the
+    word it is, and it is pure on the same terms: a string and a roster in, a
+    value or a refusal out, with no run, board or purse anywhere near it. Its
+    vocabulary and its refusal sentences are the whole of what it does, so
+    TypedLineTests reads them directly rather than through a session that would
+    have to be played to reach one.
+
+    simcli/BuildPrompt.cs is the loop those three feed: it composes one round's
+    build phase from a reader and prints the frame to a writer. Both are handed
+    in, which is the whole of how an interactive verb is exercised from a cold
+    shell: BuildPromptTests plays canned transcripts through it with no
+    terminal anywhere. It is linked for the same reason the drawings are: what
+    is under test is the composing, not a process that would have to be started
+    and fed on standard input to reach it.
+
+    simcli/RunPrompt.cs is the lifecycle around that: it commits each composed
+    round, prints the round line and stops where the run stops, so
+    RunPromptTests plays the committed run's decisions as typed words and holds
+    the ten rounds against content/run-outcome.txt. simcli/RunSummary.cs comes
+    with it, because the line that says what a run came to is printed both at
+    the end of a session and into that committed file, and a line printed twice
+    has to have one spelling.
+
+    simcli/PlayedScript.cs writes the decisions a session collected back out as
+    a command script, and it is pure on the same terms the drawings are: phases
+    in, text out, with nothing opened and nothing written down.
+    PlayedScriptTests hands it the committed script's own decisions and parses
+    what comes back, which needs the writer and not a session. Reaching it
+    through the program would mean playing a run at a prompt to produce text
+    whose whole content is the grammar.
+
+    simcli/ProvedSession.cs is what stands between a session and the file it
+    writes: it plays the script a session compiled to into a second run on the
+    same seed and shape, holds every round and the outcome against what the
+    player was shown, and writes only where the two agreed. ProvedSessionTests
+    plays canned transcripts through the prompt and hands what came back to it,
+    which is the only way to force the disagreement it exists to refuse.
+    Through the program both paths are the same run by construction, so the
+    refusal could never be watched working.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -68,6 +121,16 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RoundFrame.cs" Link="RoundFrame.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/TypedLine.cs" Link="TypedLine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/BuildPrompt.cs" Link="BuildPrompt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunPrompt.cs" Link="RunPrompt.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/RunSummary.cs" Link="RunSummary.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlayedScript.cs" Link="PlayedScript.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/ProvedSession.cs" Link="ProvedSession.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>
 
   <ItemGroup>

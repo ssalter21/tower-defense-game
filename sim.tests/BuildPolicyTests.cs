@@ -265,8 +265,9 @@ public class BuildPolicyTests
         //
         // OBSERVED: compose the phase out of the slots alone -- drop the loop
         // that copies the actions in at the end of EvenShareBot.Decide. This
-        // goes red, no actions where one place was expected, and every other row
-        // of this class goes red behind it on a run that never builds anything.
+        // goes red, no actions where the defensive half decided two places, and
+        // every other row of this class goes red behind it on a run that never
+        // builds anything.
         Run run = TheBuild.Fresh(fieldSize: FieldSize);
 
         run.Advance(EvenShareBot.Decide(run, Minion));
@@ -275,7 +276,8 @@ public class BuildPolicyTests
         BuildPhase phase = EvenShareBot.Decide(run, Minion);
 
         Assert.Equal(defensive, phase.Actions);
-        Assert.Equal(ActionKind.Place, Assert.Single(phase.Actions).Kind);
+        Assert.NotEmpty(phase.Actions);
+        Assert.All(phase.Actions, action => Assert.Equal(ActionKind.Place, action.Kind));
 
         // And the slots were filled out of what the defensive half was not
         // offered, so the one purse pays for both.
