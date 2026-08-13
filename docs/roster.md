@@ -353,9 +353,14 @@ wanted and are not being built yet, and each is blocked on art rather than on ar
 
 | shape | what it was for | what it needs |
 |---|---|---|
-| **A swarm** | The fine end of the granularity axis — many cheap bodies, so a purse is a decision about *shape* rather than a lookup | A model. KayKit's four skeletons are spent on the five signed creeps |
-| **A wall that walks** | The coarse end — a few very tough bodies, priced the same | A model |
-| **A swift heavy** | Fast *and* durable, the shape `lancer` occupied without a design behind it | A model |
+| **Fast and cheap, in numbers** | The fine end of the granularity axis — many light bodies, so a purse is a decision about *shape* rather than a lookup | A model. The Skeleton Golem and the pack's own Necromancer are the two unassigned |
+| **Slow, dear and very tough** | The coarse end — a few heavy bodies, priced the same | A model |
+| **Fast and durable at once** | The pairing `lancer` occupied without a design behind it | A model |
+
+> **These are named by their levers on purpose.** *Swarm* and *wall* were the words until 13 August 2026 and
+> they are rejected: speed, health and armour are the levers, and the two ends of the granularity axis are
+> just the ends of it. A category name invites a category the schema does not have. Same reasoning as
+> [§12's *ordinary* and *game changer*](vision.md).
 
 **Two consequences worth carrying.** With five creeps and `offering 3 3`, three fifths of the roster is on
 every menu, so the draw is barely a draw — accepted deliberately rather than overlooked. And the Hero's 360°
@@ -378,10 +383,20 @@ simulation constant rather than a content number — could not be fixed from con
 adventurer's deliberate twin, so **the two sides of the board are the two halves of one pack**, and a body reads
 against the tower it is the shadow of. Quaternius's Ultimate Monsters are rejected.
 
-**The four skeleton models are exactly spent**: the Minion and the Skeleton share the minion skin, the Warrior
-takes the warrior, the Scout the rogue and the Necromancer the mage. Anything beyond them —
-[the three absent shapes](#what-is-deliberately-absent) first — needs a source in KayKit's register, and still
-needs choosing.
+**The pack holds six models and four are assigned**: the Minion and the Skeleton share the minion skin, the
+Warrior takes the warrior, the Scout the rogue and the Necromancer the mage. The Minion and the Skeleton
+sharing is a **kit variation and not a shortage** — the Skeleton is that model with shield and sword, and the
+pack ships the weapons for it.
+
+> **This page said "the four skeleton models are exactly spent" until 13 August 2026, and it was an
+> undercount.** The [character roster note](research/kaykit-character-roster.md) lists six: the two not named
+> above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the publisher sells as a
+> boss. So the two shapes most obviously wanted next already have sources in a pack that is already chosen,
+> and the Necromancer is currently wearing the mage's model while its own goes unused.
+
+**No assignment moves on that correction**, and nothing here is settled by it: neither pack is on this machine
+— `client/Assets/Art/Characters/` holds two FBX files — so every line above is a plan rather than something
+anybody has looked at. They are assigned for real once the packs are downloaded, and **not by an agent**.
 
 ## What this roster needs that the schema does not have
 
@@ -418,11 +433,16 @@ open.
 1. **Five of the six proposed towers are blocked on a lever the schema lacks** — the five above. Only the
    Pyromancer is authorable today, and only if "extra damage" turns out to be a bigger damage roll. The ladder
    itself is built.
-2. **Towers get nine states and creeps get five flat rows.** The attacking side is the player's half and the
-   half the depth direction cares about. A roster that tiers the defense and not the offense is upside down
-   relative to that. See [creep upgrade
-   systems](research/creep-wave-variety-and-creep-upgrade-systems.md) — whether creeps tier too was researched
-   and never answered, and scoping to five creeps has made it sharper rather than softer.
+2. **Towers get nine states and creeps get five flat rows** — and the answer, from
+   [13 August](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster),
+   is that **creeps deepen by being upgraded rather than by being replaced**: stat and speed upgrades on the
+   rows that exist, not new unit types. An **arcane shield** is expected and is two things at once — a pool a
+   creep carries in its own right, and a pool the Necromancer grants to creeps entering its range that would
+   not otherwise have one. The second half is the aura in
+   [what this roster needs](#what-this-roster-needs-that-the-schema-does-not-have). See [creep upgrade
+   systems](research/creep-wave-variety-and-creep-upgrade-systems.md). **Creeps get no prerequisite chain** —
+   the gating came out precisely because it held back testing, and a chain on the sending side puts a version
+   of it straight back.
 3. **The Soldier is a corridor unit.** One hex of range is a shape the one-hex board makes sensible, and seam 9
    takes that board away.
 4. **The Mage's price rests on an unmeasured three.** Bodies-under-a-splash is the only number in the cost
