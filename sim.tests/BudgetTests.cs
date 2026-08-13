@@ -76,6 +76,37 @@ namespace Sim.Tests;
 /// regression.
 /// </para>
 /// <para>
+/// <b>The ratio is taken per tick of match, not per match</b>, and that is the
+/// second thing this gate had to learn the same way. On 8 Aug 2026
+/// (<c>8dc7943</c>) the release cadence was slowed and the committed run went
+/// from 1,840 ticks to 5,692 -- the same tick loop, run three times as many
+/// times. The whole-match ratio rose with it, and this test sat red on
+/// <c>main</c> reporting a regression nobody had written until
+/// <a href="https://github.com/ssalter21/tower-defense-game/issues/186">#186</a>
+/// bisected it. That is the identical failure the millisecond ceiling used to
+/// produce, arriving by a different route: a number calibrated against
+/// something that then moved underneath it. So the match time is scaled back
+/// to the length it had when the multiple was calibrated
+/// (<see cref="TicksAtCalibration"/>) before the ratio is taken. What is
+/// measured is the cost of a tick, which is the thing the multiple was
+/// actually a judgment about.
+/// </para>
+/// <para>
+/// <b>Whoever changes the cadence no longer has to remember this file.</b>
+/// That is the point of scaling rather than re-calibrating: a fresh number
+/// would have been correct on 8 Aug and stale again on 11 Aug, when the spawn
+/// dilation stretched the run a second time.
+/// </para>
+/// <para>
+/// The corollary is the cost, and it is deliberate: <b>a match that gets
+/// longer is now invisible here.</b> Seeking costs length times cost-per-tick
+/// and the person dragging the slider waits for the product, so a cadence
+/// dilated far enough makes seeking slow with every tick inside this budget.
+/// That is a real question and it wants its own number; this one exists to
+/// answer <i>did the tick loop get dearer</i>, and a gate that answers two
+/// questions tells you which one fired only by accident.
+/// </para>
+/// <para>
 /// The measurements are <b>interleaved</b> rather than run in two blocks: one
 /// match, then one reference, twelve times. A runner that gets busy halfway
 /// through would otherwise land entirely on one of the two and show up as a
@@ -106,6 +137,14 @@ public class BudgetTests
     /// had on the machine it was written on, carried over unchanged.
     /// </summary>
     private const double BudgetMultiple = 3.6;
+
+    /// <summary>
+    /// The tick the committed run ended on when <see cref="BudgetMultiple"/>
+    /// was calibrated -- <c>645b9e8</c>, 6 Aug 2026. Match times are scaled to
+    /// this length before the ratio is taken, so the multiple keeps meaning
+    /// what it was measured to mean after the cadence moves. See the remarks.
+    /// </summary>
+    private const int TicksAtCalibration = 1852;
 
     private const int Runs = 12;
 
@@ -152,24 +191,29 @@ public class BudgetTests
         double matchMedian = matchMilliseconds[Runs / 2];
         double referenceMedian = referenceMilliseconds[(Runs / 2) - 1];
 
-        double ratio = matchMedian / referenceMedian;
+        double scaledMatch = AtCalibrationLength(matchMedian, TheMatch.FinalTickOfTheCommittedRun);
+        double ratio = scaledMatch / referenceMedian;
         double budget = referenceMedian * BudgetMultiple;
 
         output.WriteLine(
-            $"match {matchMedian:0.00} ms, reference {referenceMedian:0.00} ms, ratio {ratio:0.00} "
-            + $"of a permitted {BudgetMultiple:0.0} (budget {budget:0.00} ms on this machine)");
+            $"match {matchMedian:0.00} ms over {TheMatch.FinalTickOfTheCommittedRun} ticks, "
+            + $"{scaledMatch:0.00} ms at the calibration length of {TicksAtCalibration}, "
+            + $"reference {referenceMedian:0.00} ms, ratio {ratio:0.00} of a permitted "
+            + $"{BudgetMultiple:0.0} (budget {budget:0.00} ms on this machine)");
 
         // The same predicate the theories above pin the behaviour of, so what
         // is proven is what runs.
         Assert.True(
-            IsInsideBudget(matchMedian, referenceMedian),
-            $"Re-simulating the match took {matchMedian:0.00} ms at the median of {Runs} runs, which is "
-            + $"{ratio:0.00} times the {referenceMedian:0.00} ms the reference workload took on this same "
-            + $"machine in this same run, and the budget is {BudgetMultiple:0.0} times. This is the "
-            + "signal that seeking has become expensive enough for somebody to want the snapshot "
-            + "cache back. Make the tick loop cheaper rather than raising this number -- and note "
-            + "that a slow runner cannot produce this failure, because a slow runner slows the "
-            + "reference too.");
+            IsInsideBudget(scaledMatch, referenceMedian),
+            $"Re-simulating the match took {matchMedian:0.00} ms at the median of {Runs} runs over "
+            + $"{TheMatch.FinalTickOfTheCommittedRun} ticks, which is {scaledMatch:0.00} ms at the "
+            + $"{TicksAtCalibration}-tick length this budget was calibrated against, and "
+            + $"{ratio:0.00} times the {referenceMedian:0.00} ms the reference workload took on this "
+            + $"same machine in this same run, against a budget of {BudgetMultiple:0.0} times. This is "
+            + "the signal that seeking has become expensive enough for somebody to want the snapshot "
+            + "cache back. Make the tick loop cheaper rather than raising this number -- and note that "
+            + "neither a slow runner nor a longer match can produce this failure, because a slow runner "
+            + "slows the reference too and a longer match is scaled out.");
     }
 
     [Fact]
@@ -292,6 +336,53 @@ public class BudgetTests
         Assert.False(IsInsideBudget(2.75 * 4 * slowdown, 2.77 * slowdown));
     }
 
+    [Theory]
+    // The two cadence changes that stretched the committed run, and its length
+    // today. The tick loop is the calibration machine's throughout: 2.75 ms
+    // bought 1852 ticks, so it buys proportionally more of a longer match.
+    [InlineData(1840)]
+    [InlineData(5692)]
+    [InlineData(TheMatch.FinalTickOfTheCommittedRun)]
+    public void A_longer_match_at_the_same_cost_per_tick_does_not_spend_the_budget(int finalTick)
+    {
+        double matchMilliseconds = 2.75 * finalTick / TicksAtCalibration;
+
+        Assert.True(IsInsideBudget(AtCalibrationLength(matchMilliseconds, finalTick), 2.77));
+    }
+
+    [Theory]
+    // And the property that scaling must not have cost: a tick loop four times
+    // dearer is still caught, at every length the run has ever had. Without
+    // both theories, scaling by length would look identical to deleting the
+    // gate.
+    [InlineData(1840)]
+    [InlineData(5692)]
+    [InlineData(TheMatch.FinalTickOfTheCommittedRun)]
+    public void A_slower_tick_loop_spends_the_budget_however_long_the_match_is(int finalTick)
+    {
+        double matchMilliseconds = 2.75 * 4 * finalTick / TicksAtCalibration;
+
+        Assert.False(IsInsideBudget(AtCalibrationLength(matchMilliseconds, finalTick), 2.77));
+    }
+
+    [Fact]
+    public void The_ratio_that_reddened_main_is_a_longer_match_and_not_a_dearer_tick()
+    {
+        // The measurement #186 bisected to: 5.10 at 8dc7943, where the run went
+        // 1840 -> 5692 ticks and sim/ was otherwise untouched. Whole-match it is
+        // over budget and was red on main for five days. Scaled to the
+        // calibration length it is 1.66 -- the same simulation it always was.
+        //
+        // Stated as a pair on purpose. The first line is what this gate used to
+        // say and the second is what it says now, so a future change that
+        // quietly reverts the scaling fails here with the history attached.
+        double reference = 2.77;
+        double matchMilliseconds = 5.10 * reference;
+
+        Assert.False(IsInsideBudget(matchMilliseconds, reference));
+        Assert.True(IsInsideBudget(AtCalibrationLength(matchMilliseconds, 5692), reference));
+    }
+
     [Fact]
     public void The_budget_is_spent_where_the_multiple_says()
     {
@@ -310,6 +401,14 @@ public class BudgetTests
 
     private static bool IsInsideBudget(double matchMilliseconds, double referenceMilliseconds) =>
         matchMilliseconds / referenceMilliseconds < BudgetMultiple;
+
+    /// <summary>
+    /// A match time scaled to the length the budget was calibrated against, so
+    /// what the ratio measures is the cost of a tick rather than the cost of a
+    /// match.
+    /// </summary>
+    private static double AtCalibrationLength(double matchMilliseconds, int finalTick) =>
+        matchMilliseconds * TicksAtCalibration / finalTick;
 
     [Fact]
     public void The_budget_is_measured_against_a_match_that_actually_happened()
