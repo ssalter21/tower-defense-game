@@ -433,11 +433,9 @@ public static class Program
     /// <remarks>
     /// <para>
     /// <b>A verb of its own rather than a mode of <see cref="PlayRun"/>.</b>
-    /// That verb is the one a build gate calls, and a mode flag on it is a
-    /// branch a gate can take by accident -- a run sitting at a prompt waiting
-    /// for a line nobody is there to type. What the two share they share by
-    /// calling the same readers, so an argument spelled on both cannot come to
-    /// mean two things.
+    /// What the two share they share by calling the same readers, so an argument
+    /// spelled on both cannot come to mean two things. Why it is a second verb
+    /// rather than a flag on that one is ADR-0050.
     /// </para>
     /// <para>
     /// <b>Both arguments are read before the first frame is drawn.</b> An

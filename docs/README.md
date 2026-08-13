@@ -23,6 +23,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/README.md) | The five deep dives the vision was built on, and the row-by-row account of what it overturned in them |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
+| [Playing a run from a shell](playing-a-run-from-a-shell.md) | The `play` verb as it was specified and built. Indexed because tests pin §2, §3 and §5 |
 
 ## Research notes
 

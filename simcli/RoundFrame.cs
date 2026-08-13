@@ -154,7 +154,7 @@ internal static class RoundFrame
             Panel.Map => Playfield(run, ladder, composed),
             Panel.Menu => SideBySide(Menu(offering, labelWidth), Sendable(run, unlocks, labelWidth)),
             Panel.Costs => SideBySide(Buildable(run), Sendable(run, unlocks, labelWidth)),
-            _ => new StringBuilder()
+            Panel.Whole => new StringBuilder()
                 .Append(Header(run, offering, composed))
                 .Append("\n\n")
                 .Append(Playfield(run, ladder, composed))
@@ -163,6 +163,12 @@ internal static class RoundFrame
                 .Append("\n\n")
                 .Append(Status(composing, composed))
                 .ToString(),
+            _ => throw new InvalidOperationException(
+                "The frame was asked for the "
+                + panel
+                + " panel, which this drawing has no arm for. Every member of Panel is a part a word at "
+                + "the prompt reprints, so one added to that list without an arm here is a word that "
+                + "silently redraws the whole frame instead."),
         };
     }
 

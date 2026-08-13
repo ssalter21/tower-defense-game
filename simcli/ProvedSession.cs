@@ -9,12 +9,12 @@ namespace Sim.Cli;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Every play session is a determinism test.</b> The decisions are compiled
-/// into a command script, that script is played into a run built fresh on the
-/// same seed and the same shape, and every round it reports and the outcome it
-/// folds to are held against what the player was shown. Only a session that
-/// agreed writes anything at all. See
-/// <c>docs/playing-a-run-from-a-shell.md</c> §4.
+/// The decisions are compiled into a command script, that script is played into
+/// a run built fresh on the same seed and the same shape, and every round it
+/// reports and the outcome it folds to are held against what the player was
+/// shown. Only a session that agreed writes anything at all, and the write
+/// happens here rather than at the verb. Why the step exists and what it costs
+/// are ADR-0050.
 /// </para>
 /// <para>
 /// <b>The rounds arrive as data, and the second run arrives as a way to build
@@ -27,29 +27,12 @@ namespace Sim.Cli;
 /// spelled and a second spelling of it here would be the thing to keep current.
 /// </para>
 /// <para>
-/// <b>A disagreement is a bug in this program, and the sentence says so.</b>
-/// Nothing a player can type reaches one: every decision on the script resolved
-/// at the prompt against the offering, the purse and the board a fresh run
-/// derives from the same seed, so two answers mean one of the two paths is
-/// wrong. That is the failure this step exists to find, and it is better found
-/// by somebody playing than by nobody -- it is the same discipline the vision's
-/// step 5 needs of a view that emits commands into the record its match is
-/// consuming, paid for here where no editor is in the loop.
-/// </para>
-/// <para>
-/// <b>A script that will not compile or will not replay is the same
-/// refusal.</b> The record refuses a decision it cannot store, the grammar
-/// refuses a script it cannot read back, and replaying refuses a decision the
-/// run will not take; each of them arriving here says the prompt composed
-/// something the record cannot carry, which is this program's fault rather than
-/// the player's. So it is reported as the disagreement it is instead of being
-/// raised at somebody as though they had typed it wrong.
-/// </para>
-/// <para>
-/// <b>The decision to write is here rather than at the verb.</b> It is one
-/// decision with the proving: a script nobody played back is a record of
-/// nothing in particular, and a caller free to write anyway is a caller free to
-/// skip the only claim this verb makes.
+/// <b>A script that will not compile or will not replay is reported as a
+/// disagreement, not raised at the player.</b> The record refuses a decision it
+/// cannot store, the grammar refuses a script it cannot read back, and replaying
+/// refuses a decision the run will not take; each of them arriving here says the
+/// prompt composed something the record cannot carry, which is this program's
+/// fault. The sentence a disagreement prints says so.
 /// </para>
 /// </remarks>
 internal sealed class ProvedSession

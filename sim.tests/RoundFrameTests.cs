@@ -259,10 +259,11 @@ public class RoundFrameTests
     public void The_frame_in_front_of_wave_four_is_the_one_the_specification_works_through()
     {
         // docs/playing-a-run-from-a-shell.md §2's worked frame, drawn from the
-        // real map, the real offering and the real purse. Its gold reads 319
-        // there and 545 here: the wave income moved from 100 to 168 in #165,
-        // which is three rounds of a difference by the time this frame stands.
-        // The layout is character for character what that section draws.
+        // real map, the real offering and the real purse. It is character for
+        // character what that section draws, numbers included: the section was
+        // restaged to gold 545 when the wave income moved from 100 to 168 in
+        // #165, which is three rounds of a difference by the time this frame
+        // stands.
         //
         // OBSERVED: take the price column off the buildable panel. The frame
         // still names four towers and their cells, and there is no longer
