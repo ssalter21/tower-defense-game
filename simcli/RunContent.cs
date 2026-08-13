@@ -88,8 +88,6 @@ internal sealed class RunContent
 
     private readonly Ruleset _rules;
 
-    private readonly AnchorSchedule _schedule;
-
     private readonly FieldPool _pool;
 
     private RunContent(
@@ -97,13 +95,11 @@ internal sealed class RunContent
         UnitTypeTable types,
         UpgradeLadder ladder,
         Ruleset rules,
-        AnchorSchedule schedule,
         TowerLayout defense,
         WaveScript field)
     {
         _map = map;
         _rules = rules;
-        _schedule = schedule;
         _pool = FieldPool.Canned(defense, field);
         Types = types;
         Ladder = ladder;
@@ -131,7 +127,6 @@ internal sealed class RunContent
         string unitsText,
         string upgradesText,
         string rulesText,
-        string scheduleText,
         string defenseText,
         string fieldText)
     {
@@ -144,7 +139,6 @@ internal sealed class RunContent
             types,
             ladder,
             Ruleset.Parse(rulesText),
-            AnchorSchedule.Parse(scheduleText, types),
             TowerLayout.Parse(defenseText, types),
             Field(fieldText, types));
     }
@@ -197,7 +191,7 @@ internal sealed class RunContent
             _map,
             _rules,
             Types,
-            _schedule,
+            Ladder,
             _pool,
             seed,
             shape.Waves,
@@ -227,7 +221,7 @@ internal sealed class RunContent
             _map,
             _rules,
             Types,
-            _schedule,
+            Ladder,
             _pool,
             firstSeed,
             runsPerCreep,

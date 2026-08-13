@@ -104,12 +104,10 @@ internal static class PlayedScript
         return text.ToString();
     }
 
-    /// <summary>What one round took and how it filled its wave's slots.</summary>
+    /// <summary>How one round filled its wave's slots.</summary>
     private static StringBuilder Decision(RecordCommand command)
     {
         StringBuilder row = Opens(CommandScript.DecisionWord, command.Wave)
-            .Append(Column(CommandScript.WordFor(command.Take), KindWidth))
-            .Append(PlainText.Number(command.TakeId).PadLeft(TakeIdWidth))
             .Append(BeforeSlots);
 
         for (int index = 0; index < command.Slots.Count; index++)

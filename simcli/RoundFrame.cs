@@ -143,23 +143,22 @@ internal static class RoundFrame
     {
         ArgumentNullException.ThrowIfNull(run);
 
-        Offering offering = run.Offering;
+        int wave = run.Round + 1;
         Build? composed = composing?.Resolve(
-            offering, run.Unlocks, run.Purse, run.Costs, run.Types, run.Map, run.Board);
-        Unlocks unlocks = composed?.Unlocks ?? run.Unlocks;
-        int labelWidth = LabelWidth(run.Types, run.Schedule);
+            wave, run.Ladder, run.Purse, run.Costs, run.Types, run.Map, run.Board);
+        int labelWidth = LabelWidth(run.Types);
 
         return panel switch
         {
             Panel.Map => Playfield(run, ladder, composed),
-            Panel.Menu => SideBySide(Menu(offering, labelWidth), Sendable(run, unlocks, labelWidth)),
-            Panel.Costs => SideBySide(Buildable(run), Sendable(run, unlocks, labelWidth)),
+            Panel.Menu => string.Join('\n', Sendable(run, labelWidth)),
+            Panel.Costs => SideBySide(Buildable(run), Sendable(run, labelWidth)),
             Panel.Whole => new StringBuilder()
-                .Append(Header(run, offering, composed))
+                .Append(Header(run, wave, composed))
                 .Append("\n\n")
                 .Append(Playfield(run, ladder, composed))
                 .Append("\n\n")
-                .Append(SideBySide(Menu(offering, labelWidth), Sendable(run, unlocks, labelWidth)))
+                .Append(SideBySide(Buildable(run), Sendable(run, labelWidth)))
                 .Append("\n\n")
                 .Append(Status(composing, composed))
                 .ToString(),
@@ -180,17 +179,21 @@ internal static class RoundFrame
         BoardMap.ToText(run.Map, composed?.Board ?? run.Board, ladder, Buildable(run), IdWidth);
 
     /// <summary>
-    /// The four readings a decision is made against: which round of how many,
-    /// what is left of the pool, what there is to spend, and how many slots the
-    /// wave has.
+    /// The three readings a decision is made against: which round of how many,
+    /// what is left of the pool, and what there is to spend.
     /// </summary>
-    private static string Header(Run run, Offering offering, Build? composed) =>
+    /// <remarks>
+    /// There was a fourth and it went with the anchors: how many slots the wave
+    /// had. Slot width was derived from the anchor schedule, and with that gone
+    /// a wave carries whatever the purse reaches -- which the gold reading
+    /// already says.
+    /// </remarks>
+    private static string Header(Run run, int wave, Build? composed) =>
         string.Join(
             new string(' ', HeaderGap),
-            "wave " + PlainText.Number(offering.Wave) + " of " + PlainText.Number(run.Waves),
+            "wave " + PlainText.Number(wave) + " of " + PlainText.Number(run.Waves),
             "health " + PlainText.Number(run.Health) + " of " + PlainText.Number(run.Rules.HealthPoolGold),
-            "gold " + PlainText.Number((composed?.Purse ?? run.Purse).Gold),
-            PlainText.Number(offering.WaveSlots) + (offering.WaveSlots == 1 ? " slot" : " slots"));
+            "gold " + PlainText.Number((composed?.Purse ?? run.Purse).Gold));
 
     /// <summary>
     /// Every tower the roster can stand on a cell, cheapest first, with what one
@@ -256,62 +259,25 @@ internal static class RoundFrame
     }
 
     /// <summary>
-    /// One row per thing on this round's menu: the word a script takes it with,
-    /// its id, what it is called and the creep it unlocks.
+    /// One row per creep in the roster, with what one costs.
     /// </summary>
     /// <remarks>
-    /// The type id is on the row because it is the other half of the mechanism:
-    /// a take is spelled by the option's id and a send by the creep's, and on an
-    /// anchor's menu those are two different numbers over one body.
+    /// Every walking row, because nothing gates what a wave may carry any more:
+    /// this panel used to list what a run had unlocked, and there are no unlocks
+    /// to list. What bounds a wave is the purse, which the header reads.
     /// </remarks>
-    private static string[] Menu(Offering offering, int labelWidth)
-    {
-        var lines = new string[offering.Count + 1];
-        lines[0] = MenuHeading;
-
-        for (int index = 0; index < offering.Count; index++)
-        {
-            Option option = offering.Options[index];
-
-            lines[index + 1] = new StringBuilder()
-                .Append(RowIndent)
-                .Append(CommandScript.WordFor(option.Kind).PadRight(WordWidth))
-                .Append(PlainText.Number(option.Id).PadLeft(IdWidth))
-                .Append(ColumnGap)
-                .Append(option.Label.PadRight(labelWidth))
-                .Append(ColumnGap)
-                .Append("type ")
-                .Append(PlainText.Number(option.TypeId))
-                .ToString();
-        }
-
-        return lines;
-    }
-
-    /// <summary>
-    /// One row per creep this run may field, in the order it took them, with
-    /// what one costs.
-    /// </summary>
-    /// <remarks>
-    /// A body is listed once however many takes reached it: two game changers
-    /// can field one creep, and a run that took an ordinary option and then a
-    /// changer over the same body may send that creep by one type id either way.
-    /// </remarks>
-    private static string[] Sendable(Run run, Unlocks unlocks, int labelWidth)
+    private static string[] Sendable(Run run, int labelWidth)
     {
         var lines = new List<string> { SendableHeading };
-        var listed = new List<int>();
 
-        for (int index = 0; index < unlocks.Count; index++)
+        for (int index = 0; index < run.Types.Count; index++)
         {
-            UnitType creep = unlocks.Taken[index].Type;
+            UnitType creep = run.Types.Types[index];
 
-            if (listed.Contains(creep.Id))
+            if (creep.Role != UnitRole.Moving)
             {
                 continue;
             }
-
-            listed.Add(creep.Id);
 
             lines.Add(new StringBuilder()
                 .Append(PlainText.Number(creep.Id).PadLeft(IdWidth))
@@ -343,14 +309,6 @@ internal static class RoundFrame
 
         return string.Join(
             ", ",
-            composed is null
-                ? "nothing taken"
-                : "took "
-                    + CommandScript.WordFor(composed.Taken.Kind)
-                    + " "
-                    + PlainText.Number(composed.Taken.Id)
-                    + " "
-                    + composed.Taken.Label,
             actions == 0 ? "nothing built" : PlainText.Number(actions) + " built",
             filled == 0
                 ? "no slot filled"
@@ -372,22 +330,14 @@ internal static class RoundFrame
     /// it.
     /// </para>
     /// <para>
-    /// <b>Both halves of the column are measured, because two files fill it.</b>
-    /// The sendable panel names walking units off the roster and the menu names
-    /// those with the round's game changers merged in beside them -- and a
-    /// changer is a row of the anchor schedule rather than of the roster, so a
-    /// pool holding a longer name than any creep would otherwise carry its own
-    /// row's tail right.
-    /// </para>
-    /// <para>
-    /// <b>Every changer the shape holds, and not the three this run's filling
-    /// drew.</b> A filling is revealed at run start and an anchor's menu is
-    /// reached at its own wave, so measuring what was drawn would leave the
-    /// column free to step sideways at wave 3 -- which is the thing the
-    /// paragraph above rules out for the roster.
+    /// <b>One file fills it now, and there used to be two.</b> The column was
+    /// measured over the roster and over the anchor schedule's game changers
+    /// together, because a changer was a row of that file rather than of the
+    /// roster and a pool holding a longer name would have carried its own row's
+    /// tail right. The schedule is gone and the roster is all of it.
     /// </para>
     /// </remarks>
-    private static int LabelWidth(UnitTypeTable types, AnchorSchedule schedule)
+    private static int LabelWidth(UnitTypeTable types)
     {
         int widest = 0;
 
@@ -399,11 +349,6 @@ internal static class RoundFrame
             {
                 widest = Math.Max(widest, type.Label.Length);
             }
-        }
-
-        for (int index = 0; index < schedule.GameChangers.Count; index++)
-        {
-            widest = Math.Max(widest, schedule.GameChangers[index].Label.Length);
         }
 
         return widest;

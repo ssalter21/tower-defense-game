@@ -143,9 +143,12 @@ internal static class BuildPrompt
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(writer);
 
-        // Every state the decision has been in, the round's opening nothing
-        // first. The last of them is what is composed and what `undo` drops.
-        var accepted = new List<BuildPhase?> { null };
+        // Every state the decision has been in, the round's opening empty
+        // phase first. The last of them is what is composed and what `undo`
+        // drops. It opens empty rather than absent because there is no longer a
+        // take to wait for: a round with nothing typed into it is a legal
+        // decision that builds nothing and sends nothing.
+        var accepted = new List<BuildPhase> { BuildPhase.Of() };
 
         if (opening is not null)
         {
@@ -156,7 +159,7 @@ internal static class BuildPrompt
 
         while (true)
         {
-            BuildPhase? phase = accepted[accepted.Count - 1];
+            BuildPhase phase = accepted[accepted.Count - 1];
 
             writer.Write(Prompt);
 
@@ -178,32 +181,15 @@ internal static class BuildPrompt
                     PlainText.Say(writer, typed.Refusal!);
                     break;
 
-                case Typed.Take:
-                    Propose(run, ladder, writer, accepted, () => Retaken(phase, typed));
-                    break;
-
                 case Typed.Act:
-                    if (phase is null)
-                    {
-                        PlainText.Say(writer, TakeFirst);
-                        break;
-                    }
-
-                    // The same phase under a name the closure below can see as
-                    // non-null: what a captured local is known to hold is not
-                    // carried into a lambda.
+                    // The same phase under a name the closure below can see:
+                    // what a captured local holds is not carried into a lambda.
                     BuildPhase acting = phase;
 
                     Propose(run, ladder, writer, accepted, () => acting.With(typed.Action));
                     break;
 
                 case Typed.Send:
-                    if (phase is null)
-                    {
-                        PlainText.Say(writer, TakeFirst);
-                        break;
-                    }
-
                     BuildPhase sending = phase;
 
                     Propose(run, ladder, writer, accepted, () => Filling(sending, typed.Slot));
@@ -233,12 +219,6 @@ internal static class BuildPrompt
                     break;
 
                 case Typed.Done:
-                    if (phase is null)
-                    {
-                        PlainText.Say(writer, TakeBeforeDone);
-                        break;
-                    }
-
                     return new Composed(phase, Stopped.Done);
 
                 case Typed.Quit:
@@ -279,7 +259,7 @@ internal static class BuildPrompt
         Run run,
         UpgradeLadder ladder,
         TextWriter writer,
-        List<BuildPhase?> accepted,
+        List<BuildPhase> accepted,
         Func<BuildPhase> candidate)
     {
         BuildPhase composed;
@@ -288,7 +268,7 @@ internal static class BuildPrompt
         {
             composed = candidate();
             composed.Resolve(
-                run.Offering, run.Unlocks, run.Purse, run.Costs, run.Types, run.Map, run.Board);
+                run.Round + 1, run.Ladder, run.Purse, run.Costs, run.Types, run.Map, run.Board);
         }
         catch (SimulationException refused)
         {
@@ -299,22 +279,6 @@ internal static class BuildPrompt
         accepted.Add(composed);
         PlainText.Say(writer, RoundFrame.ToText(run, ladder, composed));
     }
-
-    /// <summary>
-    /// The decision with a different take over whatever it had already built and
-    /// filled. A second <c>take</c> replaces the first because nothing has moved:
-    /// the earlier one was never handed to the run.
-    /// </summary>
-    /// <remarks>
-    /// The slots come across with it, which is the one way a take can be refused:
-    /// a slot already filled with a creep the new take does not unlock leaves a
-    /// decision that does not resolve, and <see cref="Propose"/> turns that down
-    /// like any other word. Carrying the slots and emptying the illegal ones
-    /// would be a silent drop, which is what this simulation refuses everywhere
-    /// else -- the way past it is <c>undo</c>.
-    /// </remarks>
-    private static BuildPhase Retaken(BuildPhase? phase, TypedLine typed) =>
-        Rebuilt(typed.Take, typed.TakeId, Copied(phase?.Slots, 0), phase?.Actions);
 
     /// <summary>The decision with one more slot filled, after the ones it already fills.</summary>
     /// <remarks>
@@ -330,19 +294,19 @@ internal static class BuildPrompt
         WaveSlot[] slots = Copied(phase.Slots, 1);
         slots[slots.Length - 1] = slot;
 
-        return Rebuilt(phase.Take, phase.TakeId, slots, phase.Actions);
+        return Rebuilt(slots, phase.Actions);
     }
 
     /// <summary>
-    /// A phase out of its parts: the take, the slots, then the actions in the
-    /// order they were written.
+    /// A phase out of its parts: the slots, then the actions in the order they
+    /// were written.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A take and a slot are given to <see cref="BuildPhase.Of"/> and an action
-    /// only to <see cref="BuildPhase.With"/>, so changing either of the first two
-    /// means building the phase again rather than editing it. That is the shape
-    /// of an immutable decision, and a round is a handful of words.
+    /// A slot is given to <see cref="BuildPhase.Of"/> and an action only to
+    /// <see cref="BuildPhase.With"/>, so changing the slots means building the
+    /// phase again rather than editing it. That is the shape of an immutable
+    /// decision, and a round is a handful of words.
     /// </para>
     /// <para>
     /// It sits here rather than beside <see cref="BuildPhase.With"/> as the
@@ -353,12 +317,10 @@ internal static class BuildPrompt
     /// </para>
     /// </remarks>
     private static BuildPhase Rebuilt(
-        OptionKind take,
-        int takeId,
         WaveSlot[] slots,
         IReadOnlyList<BuildAction>? actions)
     {
-        BuildPhase phase = BuildPhase.Of(take, takeId, slots);
+        BuildPhase phase = BuildPhase.Of(slots);
 
         for (int index = 0; index < (actions?.Count ?? 0); index++)
         {

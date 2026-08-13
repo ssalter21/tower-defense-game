@@ -89,10 +89,6 @@ internal static class RunContentFiles
     /// <summary>Every number a shot and a purse resolve through.</summary>
     public static ContentFile Rules { get; } = new ContentFile("rules", "ruleset.txt", typeof(Ruleset));
 
-    /// <summary>The shape of a run: which waves are anchors, and what each draws from.</summary>
-    public static ContentFile Schedule { get; } =
-        new ContentFile("schedule", "schedule.txt", typeof(AnchorSchedule));
-
     /// <summary>
     /// What the canned opponent stands behind, and nothing this run stands: a
     /// run opens on an empty board and builds its own.
@@ -111,7 +107,7 @@ internal static class RunContentFiles
     /// </remarks>
     public static ContentFile Field { get; } = new ContentFile("field", "field.txt", typeof(WaveScript));
 
-    /// <summary>The seven, in the order the content is layered.</summary>
+    /// <summary>The six, in the order the content is layered.</summary>
     public static IReadOnlyList<ContentFile> All { get; } =
-        new[] { Map, Units, Upgrades, Rules, Schedule, Defense, Field };
+        new[] { Map, Units, Upgrades, Rules, Defense, Field };
 }

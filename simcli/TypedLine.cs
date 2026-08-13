@@ -25,9 +25,6 @@ internal enum Typed
     /// <summary>Nothing was typed. A blank line is not a mistake, so it is a word.</summary>
     Nothing = 0,
 
-    /// <summary>The round's one take, off one half of the menu.</summary>
-    Take,
-
     /// <summary>A place or an upgrade.</summary>
     Act,
 
@@ -111,8 +108,6 @@ internal enum Typed
 /// </remarks>
 internal readonly struct TypedLine
 {
-    private const string TakeWord = "take";
-
     private const string SendWord = "send";
 
     private const string UndoWord = "undo";
@@ -145,33 +140,25 @@ internal readonly struct TypedLine
 
     private static readonly string[] NoOperands = new string[0];
 
-    private static readonly string[] TakeOperands = { KindOperand, IdOperand };
-
     private static readonly string[] ActOperands = { TypeOperand, ColumnOperand, RowOperand };
 
     private static readonly string[] SendOperands = { TypeOperand, CountOperand };
 
     /// <summary>
-    /// The halves of a menu a take names one of, and the things a word can do
-    /// to the board. Both are read off the enum rather than listed, so a kind
-    /// that gains a member and a word in <see cref="CommandScript"/> is a kind
-    /// this prompt can spell without being told twice.
+    /// The things a word can do to the board. Read off the enum rather than
+    /// listed, so a kind that gains a member and a word in
+    /// <see cref="CommandScript"/> is a kind this prompt can spell without
+    /// being told twice.
     /// </summary>
-    private static readonly OptionKind[] Halves = Enum.GetValues<OptionKind>();
-
     private static readonly ActionKind[] Kinds = Enum.GetValues<ActionKind>();
 
     private TypedLine(
         Typed word,
-        OptionKind take,
-        int takeId,
         BuildAction action,
         WaveSlot slot,
         string? refusal)
     {
         Word = word;
-        Take = take;
-        TakeId = takeId;
         Action = action;
         Slot = slot;
         Refusal = refusal;
@@ -179,21 +166,6 @@ internal readonly struct TypedLine
 
     /// <summary>Which word was typed, or <see cref="Typed.Refused"/> where none was.</summary>
     public Typed Word { get; }
-
-    /// <summary>Which half of the menu a <see cref="Typed.Take"/> named.</summary>
-    public OptionKind Take { get; }
-
-    /// <summary>
-    /// Which option of that half, unbounded and unchecked against any menu.
-    /// </summary>
-    /// <remarks>
-    /// A take is a kind and an id rather than a value of the record's, so
-    /// unlike an action and a slot there is nothing here to build it through.
-    /// The floor under an id is <see cref="BuildPhase.Of"/>'s and the menu is
-    /// <see cref="Offering.Take"/>'s, and both are reached by the phase this
-    /// take goes into.
-    /// </remarks>
-    public int TakeId { get; }
 
     /// <summary>What a <see cref="Typed.Act"/> does to the board, place or upgrade.</summary>
     public BuildAction Action { get; }
@@ -235,9 +207,6 @@ internal readonly struct TypedLine
 
         switch (words[0].ToLowerInvariant())
         {
-            case TakeWord:
-                return Taking(read, words);
-
             case SendWord:
                 return Sending(read, words, types);
 
@@ -276,7 +245,7 @@ internal readonly struct TypedLine
     /// <summary>Every word a line may open with, in the order the prompt's own table lists them.</summary>
     private static string[] Vocabulary()
     {
-        var words = new List<string> { TakeWord };
+        var words = new List<string>();
 
         for (int index = 0; index < Kinds.Length; index++)
         {
@@ -292,35 +261,6 @@ internal readonly struct TypedLine
         words.Add(QuitWord);
 
         return words.ToArray();
-    }
-
-    /// <summary>The round's take: one half of the menu, and an option of it.</summary>
-    private static TypedLine Taking(string read, string[] words)
-    {
-        string? wrong = Miscounted(read, words, TakeOperands);
-
-        if (wrong is not null)
-        {
-            return Refused(wrong);
-        }
-
-        if (!TryKind(words[1], Halves, CommandScript.WordFor, out OptionKind half))
-        {
-            return Refused(
-                "'"
-                + read
-                + "' takes '"
-                + words[1]
-                + "', where a take names one half of the round's menu: "
-                + CommandScript.WordFor(OptionKind.Ordinary)
-                + " or "
-                + CommandScript.WordFor(OptionKind.GameChanger)
-                + ".");
-        }
-
-        string? refusal = NotANumber(read, IdOperand, words[2], out int id);
-
-        return refusal is null ? Taken(half, id) : Refused(refusal);
     }
 
     /// <summary>A place or an upgrade: a type, and the cell it names.</summary>
@@ -538,21 +478,17 @@ internal readonly struct TypedLine
             : string.Join(", ", words, 0, words.Length - 1) + " and " + words[words.Length - 1];
 
     /// <summary>A word carrying nothing but itself.</summary>
-    private static TypedLine Of(Typed word) => new TypedLine(word, default, 0, default, default, null);
-
-    /// <summary>A take: which half of the menu, and which of it.</summary>
-    private static TypedLine Taken(OptionKind half, int id) =>
-        new TypedLine(Typed.Take, half, id, default, default, null);
+    private static TypedLine Of(Typed word) => new TypedLine(word, default, default, null);
 
     /// <summary>A place or an upgrade, which the action itself says which of.</summary>
     private static TypedLine Acted(BuildAction action) =>
-        new TypedLine(Typed.Act, default, 0, action, default, null);
+        new TypedLine(Typed.Act, action, default, null);
 
     /// <summary>A slot filled.</summary>
     private static TypedLine Sent(WaveSlot slot) =>
-        new TypedLine(Typed.Send, default, 0, default, slot, null);
+        new TypedLine(Typed.Send, default, slot, null);
 
     /// <summary>A line that was read and became no word.</summary>
     private static TypedLine Refused(string sentence) =>
-        new TypedLine(Typed.Refused, default, 0, default, default, sentence);
+        new TypedLine(Typed.Refused, default, default, sentence);
 }

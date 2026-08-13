@@ -175,14 +175,6 @@ public static class Program
         "         first read the bytes back and played them to the end. Nothing is",
         "         written if it will not replay.",
         string.Empty,
-        "  offerings  --seed <number>",
-        "             " + RunContentUsage,
-        "             " + RunShapeUsage,
-        string.Empty,
-        "         Prints every wave's public menu for that seed. A take names a",
-        "         kind and an id off one of these, so this is what a command",
-        "         script is written from.",
-        string.Empty,
         "  ladder     --units <file> --upgrades <file>",
         string.Empty,
         "         Prints which unit follows which, with the price of each tier,",
@@ -229,7 +221,7 @@ public static class Program
         "  The two files that hold orders, and why they are two",
         string.Empty,
         "         --field is the canned opponent, and every verb that plays a run",
-        "         takes it: play-run, record-run, offerings and sweep. It is one",
+        "         takes it: play-run, record-run and sweep. It is one",
         "         round's worth of orders standing behind --defense, drawn with",
         "         replacement to make the field of K a round is resolved against.",
         "         A build phase composes what is sent rather than when, so every",
@@ -322,9 +314,6 @@ public static class Program
 
             case "record-run":
                 return RecordRun(RunVerb("record-run", args, "script", "seed", "out"));
-
-            case "offerings":
-                return ShowOfferings(RunVerb("offerings", args, "seed"));
 
             // Two files and not a RunVerb: a ladder is read against the roster
             // and against nothing else, so asking for a map, a schedule, a
@@ -525,19 +514,6 @@ public static class Program
     }
 
     /// <summary>
-    /// Prints every wave's public menu, which is what a command script's takes
-    /// are written off.
-    /// </summary>
-    private static int ShowOfferings(Arguments arguments)
-    {
-        Sim.Run run = ContentOf(arguments).Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
-
-        Console.Out.Write(Offerings.ToText(run));
-
-        return 0;
-    }
-
-    /// <summary>
     /// Prints the upgrade ladder, and exits zero whatever it found.
     /// </summary>
     /// <remarks>
@@ -633,7 +609,6 @@ public static class Program
             TextOf(arguments, RunContentFiles.Units),
             TextOf(arguments, RunContentFiles.Upgrades),
             TextOf(arguments, RunContentFiles.Rules),
-            TextOf(arguments, RunContentFiles.Schedule),
             TextOf(arguments, RunContentFiles.Defense),
             TextOf(arguments, RunContentFiles.Field));
 
