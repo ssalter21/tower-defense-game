@@ -118,40 +118,47 @@ namespace View
 
         /// <summary>
         /// How far back the camera has to sit for a floor of this size to fit
-        /// on screen at the default pitch, with the committed margin.
+        /// on screen at the default angle, with the committed margin.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The floor is framed by its circumscribed radius rather than its
-        /// width and depth, because the circumscribed radius is what does not
-        /// change when the camera orbits, and the margin is applied to that
-        /// radius so both axes get it.
+        /// <b>It frames the floor's footprint at the default heading, not its
+        /// circumscribed circle.</b> Fitting the circle would frame every
+        /// heading at once, and on a corridor four times longer than it is
+        /// deep that costs a third of the picture to hold room for a view
+        /// nobody has opened on. Orbiting a quarter turn from here does push
+        /// the near end of the corridor off the bottom of the frame — and the
+        /// answer to that is the dolly, which is the whole point of the camera
+        /// being free.
         /// </para>
         /// <para>
-        /// Under perspective the demand is set by the near edge of the floor,
-        /// not by its middle. A ground point <c>r</c> in front of the pivot
-        /// sits <c>r·cos(pitch)</c> nearer the camera along the view axis and
-        /// <c>r·sin(pitch)</c> below its centre line, so it clears the frustum
-        /// when <c>r·sin(pitch) / (d − r·cos(pitch)) ≤ tan(halfAngle)</c>. That
-        /// rearranges to the sum below: the <c>r·cos(pitch)</c> term buys back
+        /// <b>Under perspective the demand is set by the near edge of the
+        /// floor, not by its middle.</b> The floor's near edge, half its depth
+        /// <c>z</c> in front of the pivot, sits <c>z·cos(pitch)</c> nearer the
+        /// camera along the view axis and <c>z·sin(pitch)</c> below its centre
+        /// line, so it clears the frustum when
+        /// <c>z·sin(pitch) / (d − z·cos(pitch)) ≤ tan(halfAngle)</c>. That
+        /// rearranges to the sum below: the <c>z·cos(pitch)</c> term buys back
         /// the depth the near edge takes away, and the larger of the two
-        /// half-angle demands sets the rest. Horizontally the ground plane is
-        /// not foreshortened at all, so its demand uses the full radius.
+        /// half-angle demands sets the rest. The horizontal demand is measured
+        /// on that same near edge, because that is where the floor is widest on
+        /// screen, but it uses the full half-width — the ground plane is not
+        /// foreshortened sideways at all.
         /// </para>
         /// </remarks>
         public static float FitDistance(Bounds floor, float aspect, float fieldOfViewDegrees)
         {
-            float radius = SceneFraming.CameraFramingMargin
-                * 0.5f * new Vector2(floor.size.x, floor.size.z).magnitude;
+            float halfWidth = SceneFraming.CameraFramingMargin * 0.5f * floor.size.x;
+            float halfDepth = SceneFraming.CameraFramingMargin * 0.5f * floor.size.z;
 
             float pitch = SceneFraming.CameraDefaultPitchDegrees * Mathf.Deg2Rad;
             float halfVertical = 0.5f * fieldOfViewDegrees * Mathf.Deg2Rad;
             float halfHorizontal = Mathf.Atan(Mathf.Tan(halfVertical) * Mathf.Max(aspect, 0.01f));
 
-            float vertical = radius * Mathf.Sin(pitch) / Mathf.Tan(halfVertical);
-            float horizontal = radius / Mathf.Tan(halfHorizontal);
+            float vertical = halfDepth * Mathf.Sin(pitch) / Mathf.Tan(halfVertical);
+            float horizontal = halfWidth / Mathf.Tan(halfHorizontal);
 
-            return (radius * Mathf.Cos(pitch)) + Mathf.Max(vertical, horizontal);
+            return (halfDepth * Mathf.Cos(pitch)) + Mathf.Max(vertical, horizontal);
         }
 
         /// <summary>

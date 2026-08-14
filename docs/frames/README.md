@@ -28,7 +28,7 @@ row that says "drag to tick 1096" are about the same moment.
 ```powershell
 ./tools/capture-match-frames.ps1                       # the default ticks
 ./tools/capture-match-frames.ps1 -Ticks "366,900"      # named ticks
-./tools/capture-match-frames.ps1 -Yaw 120 -Size 1080    # another heading, bigger
+./tools/capture-match-frames.ps1 -Yaw 120 -Size 1920   # another heading, wider
 ./tools/capture-match-frames.ps1 -Distance 25          # down among the creeps
 ```
 

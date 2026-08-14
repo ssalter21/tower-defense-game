@@ -53,8 +53,16 @@ namespace View.Editor
         /// </summary>
         public const string DistanceArgument = "-matchFrameDistance";
 
-        /// <summary>How big each frame is, in pixels.</summary>
+        /// <summary>How wide each frame is, in pixels.</summary>
         public const string SizeArgument = "-matchFrameSize";
+
+        /// <summary>
+        /// The shape of a frame. Sixteen by nine, the same shape the playback
+        /// bar lays itself out for, because these are pictures of what a player
+        /// sees. A square frame fits the same 47-hex corridor across its width
+        /// and then leaves half its height empty.
+        /// </summary>
+        private const float FrameAspect = 16f / 9f;
 
         /// <summary>
         /// The ticks worth looking at, if none are named.
@@ -79,7 +87,8 @@ namespace View.Editor
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
-            int size = ParseInt(BatchArguments.Value(SizeArgument), 720);
+            int width = ParseInt(BatchArguments.Value(SizeArgument), 1280);
+            int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
 
             Directory.CreateDirectory(outDir);
 
@@ -109,12 +118,11 @@ namespace View.Editor
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
 
-                // The frames are square, and a camera built against whatever
-                // aspect a headless editor reports would frame for a window
-                // that is never rendered. Fixing the aspect first and framing
-                // against it is what puts both ends of the corridor in the
-                // picture.
-                camera.aspect = 1f;
+                // A camera built against whatever aspect a headless editor
+                // reports would be framed for a window that is never rendered.
+                // Fixing the aspect to the frame's own and framing against it
+                // is what puts both ends of the corridor in the picture.
+                camera.aspect = FrameAspect;
 
                 root.CameraRig.PointAt(
                     yaw,
@@ -131,7 +139,7 @@ namespace View.Editor
                 // here: the first captured frame was a rainbow checkerboard and
                 // every later one was correct. Rendering once and discarding it
                 // is the whole fix, and it costs one frame.
-                UnityEngine.Object.DestroyImmediate(Grab(camera, 32));
+                UnityEngine.Object.DestroyImmediate(Grab(camera, 32, 32));
 
                 int[] wanted = ticks.OrderBy(t => t).ToArray();
                 int next = 0;
@@ -151,7 +159,7 @@ namespace View.Editor
                         outDir,
                         "match-tick-" + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture) + ".png");
 
-                    File.WriteAllBytes(path, Grab(camera, size).EncodeToPNG());
+                    File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
                     written.Add(path);
 
                     Debug.Log(
@@ -231,17 +239,17 @@ namespace View.Editor
             throw new IOException("No clip called '" + name + "' in any of the three banks.");
         }
 
-        private static Texture2D Grab(Camera camera, int size)
+        private static Texture2D Grab(Camera camera, int width, int height)
         {
-            var target = new RenderTexture(size, size, 24);
+            var target = new RenderTexture(width, height, 24);
             camera.targetTexture = target;
             camera.Render();
 
             RenderTexture previous = RenderTexture.active;
             RenderTexture.active = target;
 
-            var frame = new Texture2D(size, size, TextureFormat.RGB24, false);
-            frame.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+            var frame = new Texture2D(width, height, TextureFormat.RGB24, false);
+            frame.ReadPixels(new Rect(0, 0, width, height), 0, 0);
             frame.Apply();
 
             RenderTexture.active = previous;

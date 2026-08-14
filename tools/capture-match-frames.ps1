@@ -23,7 +23,7 @@ param(
     [string]$Ticks,
     [float]$Yaw = 0,
     [float]$Distance = 0,
-    [int]$Size = 720,
+    [int]$Size = 1280,
     [string]$LogFile = "$PSScriptRoot\..\capture-match-frames.log"
 )
 
