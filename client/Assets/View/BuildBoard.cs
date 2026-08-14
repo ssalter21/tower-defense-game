@@ -28,6 +28,14 @@ namespace View
     /// makes an undo, a reload or a mode change need no handling at all.
     /// </para>
     /// <para>
+    /// <b>A placement is never taken off, so nothing here removes one.</b> A
+    /// build phase places and upgrades; it has no verb that clears a cell, and
+    /// this object is bound to one composed round for its whole life. So the
+    /// comparison above only ever finds cells to draw or bodies to swap, and a
+    /// sweep for placements that vanished would be machinery for a case the
+    /// rules cannot produce.
+    /// </para>
+    /// <para>
     /// <b>The lit hex is prevention made visible and never a forecast.</b> It
     /// lights where <see cref="ComposedRound.Allows"/> resolved and nowhere
     /// else, so what the player is shown is exactly what the rules accept — no
@@ -37,20 +45,9 @@ namespace View
     [DisallowMultipleComponent]
     public sealed class BuildBoard : MonoBehaviour
     {
-        /// <summary>
-        /// How far above the floor the lit hex is drawn, in metres. Enough to
-        /// clear the tile it covers without floating off it.
-        /// </summary>
-        private const float LightHeight = 0.02f;
-
-        /// <summary>The lit hex's colour. Chrome, and nothing on the playfield reads it.</summary>
-        private static readonly Color LightColor = new Color(0.55f, 0.82f, 1f, 1f);
-
         private readonly Dictionary<int, TowerView> _towers = new Dictionary<int, TowerView>();
 
         private readonly Dictionary<int, int> _drawnTypes = new Dictionary<int, int>();
-
-        private readonly List<int> _gone = new List<int>();
 
         private ComposedRound _round;
 
@@ -62,14 +59,14 @@ namespace View
 
         private Material _lightMaterial;
 
+        /// <summary>The hex that lights under the pointer. Always present, often hidden.</summary>
+        private GameObject _light;
+
         /// <summary>The towers this round has composed, by their placement ordinal.</summary>
         public IReadOnlyDictionary<int, TowerView> Towers => _towers;
 
-        /// <summary>The hex that lights under the pointer. Always present, often hidden.</summary>
-        public GameObject Light { get; private set; }
-
         /// <summary>Whether a hex is lit right now.</summary>
-        public bool IsLit => Light != null && Light.activeSelf;
+        public bool IsLit => _light != null && _light.activeSelf;
 
         /// <summary>The lit cell, meaningless while <see cref="IsLit"/> is false.</summary>
         public int LitColumn { get; private set; }
@@ -126,21 +123,6 @@ namespace View
                 Remove(placement.Id);
                 Draw(placement);
             }
-
-            _gone.Clear();
-
-            foreach (int id in _drawnTypes.Keys)
-            {
-                if (!Standing(board, id))
-                {
-                    _gone.Add(id);
-                }
-            }
-
-            foreach (int id in _gone)
-            {
-                Remove(id);
-            }
         }
 
         /// <summary>Lights one hex. What the pointer is over, where the rules allow it.</summary>
@@ -149,13 +131,13 @@ namespace View
             LitColumn = column;
             LitRow = row;
 
-            Light.transform.localPosition =
-                HexGeometry.ToWorld(column, row) + (Vector3.up * LightHeight);
-            Light.SetActive(true);
+            _light.transform.localPosition =
+                HexGeometry.ToWorld(column, row) + (Vector3.up * MatchTuning.BuildLightHeight);
+            _light.SetActive(true);
         }
 
         /// <summary>Takes the light off the board.</summary>
-        public void Unlit() => Light.SetActive(false);
+        public void Unlit() => _light.SetActive(false);
 
         /// <summary>
         /// The materials and the mesh are made here rather than loaded, so they
@@ -176,10 +158,10 @@ namespace View
             _towerParent = new GameObject("Towers").transform;
             _towerParent.SetParent(transform, worldPositionStays: false);
 
-            _lightMaterial = ViewMaterials.Create("HexLight", LightColor);
-            Light = MakeLight(tile, _lightMaterial);
-            Light.transform.SetParent(transform, worldPositionStays: false);
-            Light.SetActive(false);
+            _lightMaterial = ViewMaterials.Create("HexLight", MatchTuning.BuildLightColor);
+            _light = MakeLight(tile, _lightMaterial);
+            _light.transform.SetParent(transform, worldPositionStays: false);
+            _light.SetActive(false);
 
             Follow();
         }
@@ -208,19 +190,6 @@ namespace View
             renderer.sharedMaterial = material;
 
             return host;
-        }
-
-        private static bool Standing(Board board, int id)
-        {
-            for (int index = 0; index < board.Count; index++)
-            {
-                if (board.Placements[index].Id == id)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         /// <summary>

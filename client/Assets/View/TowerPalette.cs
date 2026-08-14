@@ -60,17 +60,6 @@ namespace View
         /// </summary>
         public const int ShortcutCount = 9;
 
-        /// <summary>The theme's path inside <c>Resources</c>, without extension.</summary>
-        /// <remarks>
-        /// The same sheet the playback bar loads, and load-bearing for the same
-        /// reason: a panel without a theme has no font, so every label on this
-        /// bar would lay out as invisible text.
-        /// </remarks>
-        private const string ThemeResourcePath = "RuntimeTheme";
-
-        /// <summary>The resolution the bar is laid out at, and scaled from.</summary>
-        private static readonly Vector2Int ReferenceResolution = new Vector2Int(1920, 1080);
-
         /// <summary>
         /// Drawn after the playback bar's panel, so the offer at a hex is over
         /// the scrub bar rather than behind it when a tower stands low on the
@@ -80,13 +69,9 @@ namespace View
 
         private const float BarHeight = 104f;
 
-        private const float Margin = 24f;
-
         private const float EntryWidth = 208f;
 
         private const float EntryHeight = 76f;
-
-        private const float EntryGap = 12f;
 
         private const float OfferWidth = 208f;
 
@@ -98,14 +83,10 @@ namespace View
 
         private const int PriceSize = 18;
 
-        private static readonly Color BarColor = new Color(0.06f, 0.07f, 0.09f, 0.86f);
-
-        private static readonly Color EntryColor = new Color(0.22f, 0.25f, 0.3f, 1f);
-
+        /// <summary>What the chosen entry is drawn in.</summary>
         private static readonly Color ChosenColor = new Color(0.45f, 0.68f, 0.85f, 1f);
 
-        private static readonly Color LabelColor = new Color(0.9f, 0.92f, 0.95f, 1f);
-
+        /// <summary>What a price the purse can cover reads in.</summary>
         private static readonly Color QuietColor = new Color(0.68f, 0.72f, 0.78f, 1f);
 
         /// <summary>What a price reads as when the purse cannot cover it.</summary>
@@ -116,6 +97,9 @@ namespace View
         private readonly List<Button> _buttons = new List<Button>();
 
         private readonly List<Button> _rungs = new List<Button>();
+
+        /// <summary>The rungs the open offer is showing, as unit types.</summary>
+        private readonly List<UnitType> _offered = new List<UnitType>();
 
         private ComposedRound _round;
 
@@ -237,15 +221,42 @@ namespace View
         /// way the ladder leaves this class.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The cell is the open offer's rather than the caller's, because an
         /// upgrade names its target by hex and the hex is what the offer is
         /// pinned to. Nothing is applied here — see <see cref="UpgradeChosen"/>.
+        /// </para>
+        /// <para>
+        /// A rung this offer is not showing is ignored rather than passed on.
+        /// The offer holds only what resolved, so that is the whole of what
+        /// prevention means at this hex; a public method that would hand any
+        /// type at all to the composed round would be a second door into it,
+        /// past the one thing that checked.
+        /// </para>
+        /// <para>
+        /// The rungs are matched by id and not by reference. A type id names one
+        /// row of <c>content/units.txt</c> for ever, and two readings of that
+        /// file produce two objects for one row — so comparing the objects would
+        /// make this method work or not depending on which parse the caller
+        /// happened to hold, which is the sort of failure that only shows up
+        /// once a second table exists somewhere.
+        /// </para>
         /// </remarks>
         public void Take(UnitType rung)
         {
-            if (_offering)
+            if (!_offering || rung is null)
             {
-                UpgradeChosen?.Invoke(_offerColumn, _offerRow, rung);
+                return;
+            }
+
+            foreach (UnitType offered in _offered)
+            {
+                if (offered.Id == rung.Id)
+                {
+                    UpgradeChosen?.Invoke(_offerColumn, _offerRow, offered);
+
+                    return;
+                }
             }
         }
 
@@ -254,6 +265,7 @@ namespace View
         {
             _offering = false;
             _rungs.Clear();
+            _offered.Clear();
             _offer.Clear();
             _offer.style.display = DisplayStyle.None;
         }
@@ -275,7 +287,7 @@ namespace View
             {
                 bool chosen = ReferenceEquals(entry.Type, Selected);
 
-                entry.Button.style.backgroundColor = chosen ? ChosenColor : EntryColor;
+                entry.Button.style.backgroundColor = chosen ? ChosenColor : RuntimePanel.ControlColor;
                 entry.Price.style.color = _round.CanAfford(entry.Type) ? QuietColor : UnaffordableColor;
             }
 
@@ -286,42 +298,10 @@ namespace View
         }
 
         /// <summary>
-        /// Whether the pointer is over this panel's chrome rather than over the
-        /// board behind it.
+        /// Whether the pointer is over this panel's chrome — the bar or an open
+        /// offer — rather than over the board behind it.
         /// </summary>
-        public bool Covers(Vector2 screenPoint) => Covers(Document, screenPoint);
-
-        /// <summary>
-        /// Whether a screen point lands on something a runtime panel picks.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Asked of the panel rather than compared against the bars' own
-        /// rectangles. A second copy of where the chrome is would be wrong the
-        /// first time a control moved, and the offer at a hex has no fixed
-        /// rectangle to compare against at all.
-        /// </para>
-        /// <para>
-        /// Both panels put <see cref="PickingMode.Ignore"/> on their root, so
-        /// this is false everywhere except on an actual control.
-        /// </para>
-        /// </remarks>
-        public static bool Covers(UIDocument document, Vector2 screenPoint)
-        {
-            if (document == null)
-            {
-                return false;
-            }
-
-            VisualElement root = document.rootVisualElement;
-
-            if (root?.panel == null)
-            {
-                return false;
-            }
-
-            return root.panel.Pick(RuntimePanelUtils.ScreenToPanel(root.panel, screenPoint)) != null;
-        }
+        public bool Covers(Vector2 screenPoint) => RuntimePanel.Covers(Document, screenPoint);
 
         private void Update() => Follow();
 
@@ -343,7 +323,7 @@ namespace View
         {
             _round = round;
             _camera = camera;
-            _panel = Panel();
+            _panel = RuntimePanel.Settings("Palette panel", PanelSortingOrder);
 
             Document = document;
             document.panelSettings = _panel;
@@ -366,39 +346,6 @@ namespace View
             Follow();
         }
 
-        private static PanelSettings Panel()
-        {
-            var settings = ScriptableObject.CreateInstance<PanelSettings>();
-            settings.name = "Palette panel";
-            settings.themeStyleSheet = Theme();
-            settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            settings.referenceResolution = ReferenceResolution;
-            settings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-            settings.sortingOrder = PanelSortingOrder;
-
-            // 1 is height, matching the playback bar: both are anchored to the
-            // bottom edge and stacked, so they have to scale together or they
-            // come apart as the window changes shape.
-            settings.match = 1f;
-
-            return settings;
-        }
-
-        private static ThemeStyleSheet Theme()
-        {
-            var theme = Resources.Load<ThemeStyleSheet>(ThemeResourcePath);
-
-            if (theme == null)
-            {
-                throw new InvalidOperationException(
-                    "No theme style sheet at Resources/" + ThemeResourcePath
-                    + ". It is committed, so a checkout without it is incomplete rather than "
-                    + "unconfigured.");
-            }
-
-            return theme;
-        }
-
         /// <summary>
         /// The bar itself: a row across the bottom of the screen, sitting on top
         /// of the playback bar and opaque, so a click on it stops at it rather
@@ -413,11 +360,11 @@ namespace View
             bar.style.right = 0f;
             bar.style.bottom = PlaybackControls.BarHeight;
             bar.style.height = BarHeight;
-            bar.style.paddingLeft = Margin;
-            bar.style.paddingRight = Margin;
+            bar.style.paddingLeft = RuntimePanel.Margin;
+            bar.style.paddingRight = RuntimePanel.Margin;
             bar.style.flexDirection = FlexDirection.Row;
             bar.style.alignItems = Align.Center;
-            bar.style.backgroundColor = BarColor;
+            bar.style.backgroundColor = RuntimePanel.BarColor;
 
             return bar;
         }
@@ -436,13 +383,13 @@ namespace View
             button.style.marginLeft = 0f;
             button.style.marginTop = 0f;
             button.style.marginBottom = 0f;
-            button.style.marginRight = EntryGap;
+            button.style.marginRight = RuntimePanel.ControlGap;
             button.style.flexDirection = FlexDirection.Column;
             button.style.justifyContent = Justify.Center;
-            button.style.backgroundColor = EntryColor;
+            button.style.backgroundColor = RuntimePanel.ControlColor;
 
             var name = new Label { name = "Name", text = RosterNames.Of(type), pickingMode = PickingMode.Ignore };
-            name.style.color = LabelColor;
+            name.style.color = RuntimePanel.LabelColor;
             name.style.fontSize = NameSize;
             name.style.unityTextAlign = TextAnchor.MiddleCenter;
 
@@ -490,7 +437,7 @@ namespace View
 
             offer.style.position = Position.Absolute;
             offer.style.width = OfferWidth;
-            offer.style.backgroundColor = BarColor;
+            offer.style.backgroundColor = RuntimePanel.BarColor;
             offer.style.display = DisplayStyle.None;
 
             return offer;
@@ -500,6 +447,7 @@ namespace View
         {
             _offer.Clear();
             _rungs.Clear();
+            _offered.Clear();
             _offer.style.display = DisplayStyle.Flex;
 
             foreach (UnitType rung in rungs)
@@ -515,8 +463,8 @@ namespace View
                 button.style.marginRight = 0f;
                 button.style.marginTop = 0f;
                 button.style.marginBottom = 0f;
-                button.style.backgroundColor = EntryColor;
-                button.style.color = LabelColor;
+                button.style.backgroundColor = RuntimePanel.ControlColor;
+                button.style.color = RuntimePanel.LabelColor;
                 button.style.fontSize = PriceSize;
 
                 UnitType chosen = rung;
@@ -524,6 +472,7 @@ namespace View
 
                 _offer.Add(button);
                 _rungs.Add(button);
+                _offered.Add(rung);
             }
         }
 

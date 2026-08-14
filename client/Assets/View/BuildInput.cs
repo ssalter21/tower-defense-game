@@ -46,6 +46,12 @@ namespace View
     [DisallowMultipleComponent]
     public sealed class BuildInput : MonoBehaviour
     {
+        /// <summary>
+        /// No cell: what <see cref="_lit"/> holds when the last thing the
+        /// pointer did was leave the board. A real cell is never negative.
+        /// </summary>
+        private static readonly Vector3Int None = new Vector3Int(-1, -1, -1);
+
         private ComposedRound _round;
 
         private TowerPalette _palette;
@@ -56,11 +62,11 @@ namespace View
 
         private UIDocument _otherChrome;
 
-        /// <summary>The decision being composed. The only thing this class writes to.</summary>
-        public ComposedRound Round => _round;
+        /// <summary>The cell and the selection the last answer was computed for.</summary>
+        private Vector3Int _lit = None;
 
-        /// <summary>The camera the board is picked through.</summary>
-        public Camera Camera => _camera;
+        /// <summary>What that answer was.</summary>
+        private bool _allowed;
 
         /// <summary>
         /// Builds the input under <paramref name="parent"/>.
@@ -118,8 +124,29 @@ namespace View
         {
             if (_palette.Selected == null
                 || IsOverChrome(screenPoint)
-                || !TryPick(screenPoint, out int column, out int row)
-                || !_round.Allows(Placing(_palette.Selected, column, row)))
+                || !TryPick(screenPoint, out int column, out int row))
+            {
+                _lit = None;
+                _board.Unlit();
+
+                return;
+            }
+
+            // Asked once per cell rather than once per frame. Resolving a phase
+            // is cheap and resolving it sixty times a second to reach the same
+            // answer is still waste, and it grows with the round: a phase twenty
+            // actions deep is twenty placements re-priced to light a hex that was
+            // already lit. What can change the answer is the cell, the selection
+            // or the phase, and all three go through here or through Redraw.
+            var cell = new Vector3Int(column, row, _palette.Selected.Id);
+
+            if (cell != _lit)
+            {
+                _lit = cell;
+                _allowed = _round.Allows(Placing(_palette.Selected, column, row));
+            }
+
+            if (!_allowed)
             {
                 _board.Unlit();
 
@@ -267,6 +294,10 @@ namespace View
 
         private void Redraw()
         {
+            // The phase moved, so the cached hover answer is about a board that
+            // no longer exists.
+            _lit = None;
+
             _board.Follow();
             _palette.Follow();
         }
@@ -277,6 +308,6 @@ namespace View
         /// kept level with a bar over there.
         /// </summary>
         private bool IsOverChrome(Vector2 screenPoint) =>
-            _palette.Covers(screenPoint) || TowerPalette.Covers(_otherChrome, screenPoint);
+            _palette.Covers(screenPoint) || RuntimePanel.Covers(_otherChrome, screenPoint);
     }
 }

@@ -61,35 +61,15 @@ namespace View
         public static readonly float[] Speeds = { 1f, 2f, 4f, 8f };
 
         /// <summary>
-        /// The theme's path inside <c>Resources</c>, without extension.
-        /// </summary>
-        /// <remarks>
-        /// A <c>Resources</c> asset because this is loaded by code that has no
-        /// scene to be handed it by — <see cref="Build"/> is called by a test
-        /// fixture as often as by <see cref="MatchRoot"/> — and because it has
-        /// to survive into a player build. Same reasoning, and the same
-        /// exception to the objection, as
-        /// <see cref="ResourcesMatchArtSource"/>.
-        /// </remarks>
-        private const string ThemeResourcePath = "RuntimeTheme";
-
-        /// <summary>The resolution the bar is laid out at, and scaled from.</summary>
-        private static readonly Vector2Int ReferenceResolution = new Vector2Int(1920, 1080);
-
-        /// <summary>
         /// How tall the bar is. Public because the tower palette sits directly
         /// on top of it — one number, in one file, rather than two that have to
         /// be kept level by hand.
         /// </summary>
         public const float BarHeight = 88f;
 
-        private const float Margin = 24f;
-
         private const float ButtonWidth = 132f;
 
         private const float ButtonHeight = 48f;
-
-        private const float ButtonGap = 12f;
 
         private const float ReadoutWidth = 320f;
 
@@ -97,17 +77,11 @@ namespace View
 
         private const int LabelSize = 22;
 
-        private static readonly Color BarColor = new Color(0.06f, 0.07f, 0.09f, 0.86f);
-
-        private static readonly Color ButtonColor = new Color(0.22f, 0.25f, 0.3f, 1f);
-
         private static readonly Color TrackColor = new Color(0.16f, 0.18f, 0.22f, 1f);
 
         private static readonly Color PlayedColor = new Color(0.45f, 0.68f, 0.85f, 1f);
 
         private static readonly Color HandleColor = new Color(0.92f, 0.94f, 0.97f, 1f);
-
-        private static readonly Color LabelColor = new Color(0.9f, 0.92f, 0.95f, 1f);
 
         private readonly List<Button> _buttons = new List<Button>();
 
@@ -202,7 +176,7 @@ namespace View
         private void Assemble(UIDocument document, PlaybackController playback)
         {
             _playback = playback;
-            _panel = Panel();
+            _panel = RuntimePanel.Settings("Playback panel");
 
             Document = document;
             document.panelSettings = _panel;
@@ -225,48 +199,6 @@ namespace View
         }
 
         /// <summary>
-        /// The one panel, scaled from <see cref="ReferenceResolution"/> the way
-        /// the uGUI bar before it was.
-        /// </summary>
-        /// <remarks>
-        /// A theme style sheet is not decoration: it is where the default
-        /// controls get their font and where the slider gets the absolute
-        /// positioning its track and handle are laid out with. A panel without
-        /// one draws a bar of invisible text and a slider with nothing to drag.
-        /// </remarks>
-        private static PanelSettings Panel()
-        {
-            var settings = ScriptableObject.CreateInstance<PanelSettings>();
-            settings.name = "Playback panel";
-            settings.themeStyleSheet = Theme();
-            settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
-            settings.referenceResolution = ReferenceResolution;
-            settings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
-
-            // 1 is height, matching the uGUI scaler this replaced: the bar is
-            // anchored to the bottom edge and its height is the measurement
-            // that has to stay put as the window changes shape.
-            settings.match = 1f;
-
-            return settings;
-        }
-
-        private static ThemeStyleSheet Theme()
-        {
-            var theme = Resources.Load<ThemeStyleSheet>(ThemeResourcePath);
-
-            if (theme == null)
-            {
-                throw new InvalidOperationException(
-                    "No theme style sheet at Resources/" + ThemeResourcePath
-                    + ". It is committed, so a checkout without it is incomplete rather than "
-                    + "unconfigured.");
-            }
-
-            return theme;
-        }
-
-        /// <summary>
         /// The bar itself: a row across the bottom of the screen, opaque, so a
         /// click on it stops at it rather than falling through onto the
         /// playfield behind.
@@ -280,11 +212,11 @@ namespace View
             bar.style.right = 0f;
             bar.style.bottom = 0f;
             bar.style.height = BarHeight;
-            bar.style.paddingLeft = Margin;
-            bar.style.paddingRight = Margin;
+            bar.style.paddingLeft = RuntimePanel.Margin;
+            bar.style.paddingRight = RuntimePanel.Margin;
             bar.style.flexDirection = FlexDirection.Row;
             bar.style.alignItems = Align.Center;
-            bar.style.backgroundColor = BarColor;
+            bar.style.backgroundColor = RuntimePanel.BarColor;
 
             return bar;
         }
@@ -296,7 +228,7 @@ namespace View
             button.style.width = ButtonWidth;
             button.style.height = ButtonHeight;
             button.style.flexShrink = 0f;
-            button.style.backgroundColor = ButtonColor;
+            button.style.backgroundColor = RuntimePanel.ControlColor;
             GapAfter(button);
             Lettering(button);
 
@@ -389,13 +321,13 @@ namespace View
             element.style.marginLeft = 0f;
             element.style.marginTop = 0f;
             element.style.marginBottom = 0f;
-            element.style.marginRight = ButtonGap;
+            element.style.marginRight = RuntimePanel.ControlGap;
         }
 
         /// <summary>The one text colour and size on the bar.</summary>
         private static void Lettering(VisualElement element)
         {
-            element.style.color = LabelColor;
+            element.style.color = RuntimePanel.LabelColor;
             element.style.fontSize = LabelSize;
         }
 
@@ -417,7 +349,8 @@ namespace View
             {
                 throw new InvalidOperationException(
                     "The scrub bar has no part classed " + ussClassName + ", so Resources/"
-                    + ThemeResourcePath + " is not the theme this bar is coloured against.");
+                    + RuntimePanel.ThemeResourcePath
+                    + " is not the theme this bar is coloured against.");
             }
 
             return part;

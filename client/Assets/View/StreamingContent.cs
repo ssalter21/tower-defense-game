@@ -59,11 +59,10 @@ namespace View
         /// draws and a match that never starts.
         /// </para>
         /// <para>
-        /// The second half of that used to be the whole of it, and this remark
-        /// said so: the file shipped because a hash covered it and nothing over
-        /// here ever looked inside. #179 made the ladder the one prerequisite the
-        /// game has and #196 put a build phase on the screen, so it is now
-        /// ordinary content that is read as well.
+        /// So a checkout missing it fails twice over, and only one of the two
+        /// looks like a missing file: the client cannot compose a round at all,
+        /// and the shipped record is refused at the gate — which presents as a
+        /// floor that draws and a match that never starts.
         /// </para>
         /// </remarks>
         public const string UpgradesFileName = "upgrades.txt";

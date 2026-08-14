@@ -78,7 +78,7 @@ namespace View
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The client holds the run, and the view still holds nothing</b> --
+        /// <b>The client holds the run, and the view still holds nothing</b> —
         /// ADR-0051. It lives out here on the root beside the mode the player is
         /// in, not inside <see cref="MatchView"/>, because what a build phase
         /// draws from is a decision being composed rather than game state being
@@ -87,8 +87,8 @@ namespace View
         /// </para>
         /// <para>
         /// <b>Nothing here advances it.</b> Committing a round is
-        /// <see cref="Run.Advance"/>, and the loop that presses it -- build,
-        /// commit, watch, ten waves -- is #198. What this file does is stand the
+        /// <see cref="Run.Advance"/>, and the loop that presses it — build,
+        /// commit, watch, ten waves — is #198. What this file does is stand the
         /// run up and point the palette and the pointer at it, which is what
         /// makes the board clickable.
         /// </para>
@@ -162,7 +162,7 @@ namespace View
         /// takes its seed from the same place for the same reason.
         /// </para>
         /// <para>
-        /// <b>The field is the canned pairing</b> -- the committed defense
+        /// <b>The field is the canned pairing</b> — the committed defense
         /// against the committed wave, which is the population
         /// <c>content/defense.txt</c> and <c>content/wave.txt</c> describe. It
         /// is what a round is scored against, and it is a number rather than

@@ -1,7 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Sim;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UIElements;
 using View;
 
@@ -366,6 +368,78 @@ namespace Tests.PlayMode
             Assert.That(run.Board.Count, Is.EqualTo(0), "The run's board has not moved.");
             Assert.That(run.Purse.Gold, Is.EqualTo(100), "Nor has its purse.");
             Assert.That(run.Round, Is.EqualTo(0), "Nor has its round.");
+        }
+
+        /// <summary>
+        /// A click on the chrome stops at the chrome. Which way up a screen
+        /// point is read is the one thing here a reasonable person could get
+        /// backwards, and getting it backwards is invisible: the palette would
+        /// still select and the tower would <i>also</i> land on whatever hex was
+        /// behind the bar.
+        /// </summary>
+        /// <remarks>
+        /// A frame has to pass first. A runtime panel lays out when it is
+        /// updated, and asking an unlaid-out panel what is under a point gets
+        /// nothing under anything — which would pass an assertion that the top
+        /// of the screen is clear while proving nothing about the bottom. So
+        /// both ends are asserted, and the pair is what pins the orientation.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator ChromeSwallowsTheClicksThatLandOnIt()
+        {
+            MatchRoot root = Building(Opening());
+
+            yield return null;
+            yield return null;
+
+            // The palette sits on top of the playback bar, and both are anchored
+            // to the bottom edge of a panel laid out at 1080 high and scaled to
+            // the window's height.
+            float scale = Screen.height / 1080f;
+            var onTheBar = new Vector2(
+                Screen.width * 0.5f, (PlaybackControls.BarHeight + 52f) * scale);
+            var overTheBoard = new Vector2(Screen.width * 0.5f, Screen.height * 0.8f);
+
+            Assert.That(root.Palette.Covers(onTheBar), Is.True, "A point on the palette bar.");
+            Assert.That(root.Palette.Covers(overTheBoard), Is.False, "A point well above it.");
+
+            Select(root, ArcherId);
+
+            Assert.That(root.Pointer.Click(onTheBar), Is.False);
+            Assert.That(
+                root.Composing.Phase.Actions.Count,
+                Is.EqualTo(0),
+                "A click on the bar must not also land on the board behind it.");
+
+            root.Pointer.Point(onTheBar);
+
+            Assert.That(root.Building.IsLit, Is.False);
+        }
+
+        /// <summary>
+        /// The offer at a hex hangs on the same premise the chrome guard does:
+        /// that a panel's <c>y</c> runs down from the top while a screen point's
+        /// runs up from the bottom. Pinned here, because the two use different
+        /// engine calls to cross that boundary and only one of them is exercised
+        /// by the guard.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator AHexProjectsIntoThePanelTheSameWayUp()
+        {
+            MatchRoot root = Building(Opening());
+
+            yield return null;
+
+            IPanel panel = root.Palette.Document.rootVisualElement.panel;
+            Camera camera = root.CameraRig.Camera;
+            Vector3 world = HexGeometry.ToWorld(FreeColumn, FreeRow);
+
+            Vector3 screen = camera.WorldToScreenPoint(world);
+            Vector2 expected = RuntimePanelUtils.ScreenToPanel(panel, RuntimePanel.Downwards(screen));
+            Vector2 projected = RuntimePanelUtils.CameraTransformWorldToPanel(panel, world, camera);
+
+            Assert.That(projected.x, Is.EqualTo(expected.x).Within(1f));
+            Assert.That(projected.y, Is.EqualTo(expected.y).Within(1f));
         }
 
         // ---------------------------------------------------------------
