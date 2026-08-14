@@ -24,10 +24,9 @@
 file — and which writes the command script it just played.**
 
 Everything under it already exists. `Run.Advance` takes a round's decision and gives back what the round came
-to. `BuildPhase.Resolve` checks a decision against the offering, the unlocks, the slot width, the map, the
-board and the purse, **and it is pure** — it returns a `Build` and moves nothing — so the same call that
-validates a stored command file can price a half-composed decision at a prompt and be thrown away. `Offering`
-draws the menu, `CostTable` prices everything including the things that are not units, `Board.ToReportText`
+to. `BuildPhase.Resolve` checks a decision against the upgrade ladder, the map, the board and the purse, **and
+it is pure** — it returns a `Build` and moves nothing — so the same call that validates a stored command file
+can price a half-composed decision at a prompt and be thrown away. `CostTable` prices everything including the things that are not units, `Board.ToReportText`
 prints the position and `RoundReport.ToString` prints the round line the committed outcome file already uses.
 
 **So the new code is a loop, a parser for what somebody types, and a way to draw a map in text.** No new
@@ -72,7 +71,7 @@ can repeat, which is the one thing this repository does not do. It costs a path.
 
 One frame per round, printed before the prompt. Every number on it is read off the run — the frame below is
 wave 4 of the committed run, `content/run.commands` on seed 20260807, drawn from the real map and the real
-offering. It is `RoundFrame.ToText`'s output character for character, pinned by `RoundFrameTests`.
+roster. It is `RoundFrame.ToText`'s output character for character, pinned by `RoundFrameTests`.
 
 ```
 wave 4 of 10        health 1245 of 1500        gold 545        3 slots

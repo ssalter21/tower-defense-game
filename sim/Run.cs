@@ -11,8 +11,8 @@ namespace Sim
     /// <remarks>
     /// <para>
     /// <b>Three answers, handed back together, because a round settles all
-    /// three at once.</b> The pair is what got past whom. The build is what was
-    /// taken off the offering and what the wave cost to buy. The payment is what
+    /// three at once.</b> The pair is what got past whom. The build is what the
+    /// round built and what the wave cost to buy. The payment is what
     /// the wave earned, itemised into the interest, the base and the band. Each
     /// is worked out once, while the round is being played, so nothing holding
     /// this has to resolve a decision a second time or price a wave again to
@@ -278,8 +278,8 @@ namespace Sim
         /// </para>
         /// <para>
         /// Measured on first use rather than in the constructor: measuring plays
-        /// matches, and a caller that only wants to read this run's offerings
-        /// should not pay for them. What it measures depends on the seed, the
+        /// matches, and a caller that never asks what this run's field can do
+        /// should not pay for the answer. What it measures depends on the seed, the
         /// pool and K alone, so when it happens cannot change what it says.
         /// </para>
         /// </remarks>
@@ -347,10 +347,9 @@ namespace Sim
         /// down.
         /// </para>
         /// <para>
-        /// The decision is checked against this round's offering, this run's
-        /// unlocks, this round's slot width, this run's board and map, and this
-        /// run's purse -- by
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
+        /// The decision is checked against this run's upgrade ladder, this run's
+        /// board and map, and this run's purse -- by
+        /// <see cref="BuildPhase.Resolve(int, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
@@ -373,15 +372,15 @@ namespace Sim
         /// </para>
         /// <para>
         /// <b>Everything that can refuse this round refuses before a coin
-        /// moves</b> -- the decision against the offering, the orders against
+        /// moves</b> -- the decision against the ladder, the orders against
         /// the defense, the run against being over, and then everything the
         /// round itself can refuse at. The whole round is worked out into
         /// locals -- see <see cref="Play"/> -- and reaches the run through
         /// <see cref="Commit"/>, which writes everything a round moves,
         /// together, and is the only place any of it is written. What the
-        /// decision unlocked and what it left in the purse travel into
+        /// decision built and what it left in the purse travel into
         /// <see cref="Play"/> as arguments rather than being written first, so
-        /// a purse spent and an unlock taken for a wave nobody was in the run
+        /// a purse spent and a tower standing for a wave nobody was in the run
         /// to send is a state that cannot be reached rather than an ordering to
         /// get right.
         /// </para>
@@ -495,12 +494,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The unlocks, the purse and the board arrive as arguments.</b> A
-        /// build phase's decision governs the round it was made in -- the creep
-        /// it just unlocked is fielded in this round's wave, the wave is bought
-        /// out of this round's purse, and what it built stands against this
-        /// round's opponents -- and passing them is what lets that happen
-        /// without any of the three having been written to the run first.
+        /// <b>The purse and the board arrive as arguments.</b> A build phase's
+        /// decision governs the round it was made in -- the wave is bought out
+        /// of this round's purse, and what it built stands against this round's
+        /// opponents -- and passing them is what lets that happen without
+        /// either having been written to the run first.
         /// </para>
         /// <para>
         /// <b>Nothing above the commit moves the run.</b> Measuring the field,

@@ -500,12 +500,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Every failure here is a refusal and never a skip.</b> A take
-        /// naming an option that round's offering did not carry, a slot naming a
-        /// creep the run never unlocked, a slot beyond the round's width, an
-        /// action on a cell no tower could stand on and a wave nobody can afford
-        /// are all
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// <b>Every failure here is a refusal and never a skip.</b> A place
+        /// naming a unit some edge of the ladder targets, an action on a cell no
+        /// tower could stand on, two slots of one wave on one creep and a wave
+        /// nobody can afford are all
+        /// <see cref="BuildPhase.Resolve(int, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// refusing -- the same surface a live build phase is checked by, so
         /// there is one implementation of the rules and not two.
         /// </para>
@@ -519,19 +518,18 @@ namespace Sim
         /// </para>
         /// <para>
         /// <b>The one check that surface cannot make is the wave index.</b>
-        /// <c>Resolve</c> is handed an offering and has no way to know which
-        /// round is about to be played, so a decision made at wave seven and
-        /// stored at wave three would resolve perfectly against wave three's
-        /// menu. It is checked here, where both numbers are in hand.
+        /// <c>Resolve</c> is handed the round about to be played and never the
+        /// one the decision was stored for, so it cannot see the two disagree: a
+        /// decision made at wave seven and stored at wave three would resolve
+        /// perfectly. It is checked here, where both numbers are in hand.
         /// </para>
         /// <para>
-        /// <b>Nothing is applied.</b> The three things a round moves -- the
-        /// unlocks, the purse and the board -- are folded forward through local
-        /// values exactly as a round moves them: a build phase's take, then
-        /// what it builds, then the wave's own purchases, then what the wave
-        /// pays. The run is untouched, so a stream can be checked and then
+        /// <b>Nothing is applied.</b> The two things a round moves -- the purse
+        /// and the board -- are folded forward through local values exactly as a
+        /// round moves them: what a build phase builds, then the wave's own
+        /// purchases, then what the wave pays. The run is untouched, so a stream can be checked and then
         /// refused without the run having moved. The board the walk carries is
-        /// a value like the other two -- <see cref="Board.Place"/> and
+        /// a value like the other one -- <see cref="Board.Place"/> and
         /// <see cref="Board.Upgrade"/> return new boards -- so folding one
         /// forward here cannot reach the run's.
         /// </para>
@@ -544,7 +542,7 @@ namespace Sim
         /// decision refused here is one no run could have afforded however well
         /// it played; a decision the ceiling admits is checked again, against the
         /// purse the round really holds, by the same
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// <see cref="BuildPhase.Resolve(int, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
         /// </para>
@@ -607,7 +605,7 @@ namespace Sim
         /// <para>
         /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
         /// version against this build, and the unit table, the ruleset and the
-        /// anchor schedule against the ones the run is playing. They are
+        /// upgrade ladder against the ones the run is playing. They are
         /// independent, so a stream can fail exactly one of them; a stream that
         /// fails several is named by the first declared.
         /// </para>

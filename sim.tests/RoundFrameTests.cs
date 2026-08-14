@@ -19,7 +19,7 @@ namespace Sim.Tests;
 /// <b>The run is the committed one, played round by round.</b> The frames below
 /// are the ones somebody playing <c>content/commands.txt</c> at a prompt would
 /// have been shown, so every number on them can be read against a line of
-/// <c>content/run-outcome.txt</c>: wave four's health is 1500 less the 100, 90
+/// <c>content/run-outcome.txt</c>: wave four's health is 800 less the 100, 90
 /// and 65 the first three rounds took, and its gold is what wave three's round
 /// line says the purse closed on.
 /// </para>
@@ -33,22 +33,9 @@ public class RoundFrameTests
     /// <summary>
     /// How many rounds of the committed script are played. Four, because wave
     /// four is the frame <c>docs/playing-a-run-from-a-shell.md</c> §2 works
-    /// through and wave three is the anchor before it.
+    /// through.
     /// </summary>
     private const int Rounds = 4;
-
-    /// <summary>
-    /// The option wave one's menu carries the skeleton-warrior at, whose label
-    /// is the longest on the committed roster.
-    /// </summary>
-    private const int WarriorOption = 13;
-
-    /// <summary>
-    /// A game changer's label, planted long enough to be the widest thing the
-    /// name column can print: twenty characters against the sixteen of
-    /// <c>skeleton-warrior</c>, so the four the column gains are countable.
-    /// </summary>
-    private const string LongChanger = "thermal-riser-mk-two";
 
     /// <summary>
     /// The frames of the committed run, played once for the whole class. A
@@ -136,7 +123,7 @@ public class RoundFrameTests
     public void The_frame_in_front_of_wave_four_is_the_one_the_specification_works_through()
     {
         // docs/playing-a-run-from-a-shell.md §2's worked frame, drawn from the
-        // real map, the real offering and the real purse. It is character for
+        // real map, the real roster and the real purse. It is character for
         // character what that section draws, numbers included: the section was
         // restaged to gold 545 when the wave income moved from 100 to 168 in
         // #165, which is three rounds of a difference by the time this frame
