@@ -261,6 +261,28 @@ namespace View
         public void ClearDecorations() => Decorations?.Clear();
 
         /// <summary>
+        /// The materials this made are destroyed here, because whoever made one
+        /// destroys it.
+        /// </summary>
+        /// <remarks>
+        /// A material is an asset instance, and destroying the object that draws
+        /// with it leaves it behind. It never showed while one match was the
+        /// whole play session and four orphans were a constant; a run begins a
+        /// match a round and ends it again, so what used to be a constant is now
+        /// four per wave. Same rule as <see cref="PlaybackControls"/>'s panel
+        /// settings and <see cref="BuildBoard"/>'s hex light.
+        /// </remarks>
+        private void OnDestroy()
+        {
+            if (_projectileMaterial != null)
+            {
+                Destroy(_projectileMaterial);
+            }
+
+            Decorations?.DestroyMaterials();
+        }
+
+        /// <summary>
         /// Puts the match on <paramref name="tick"/> by playing it again from
         /// tick zero, and draws it. The mechanism behind every seek.
         /// </summary>

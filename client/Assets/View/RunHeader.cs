@@ -235,7 +235,12 @@ namespace View
         /// </summary>
         private static VisualElement EndingPanel()
         {
-            var panel = new VisualElement { name = "Ending" };
+            // Picking nothing, at both levels. It fills the screen, so a panel
+            // that picked would answer "the chrome covers this" for every point
+            // on the board the moment the run ended — which is the guard
+            // BuildInput asks, saying yes to a question about a bar nobody can
+            // press.
+            var panel = new VisualElement { name = "Ending", pickingMode = PickingMode.Ignore };
 
             panel.style.position = Position.Absolute;
             panel.style.left = 0f;

@@ -84,8 +84,9 @@ namespace View
         /// </param>
         /// <param name="camera">The camera a screen point is cast through.</param>
         /// <param name="otherChrome">
-        /// Any other panel on screen — the playback bar — so that a click on it
-        /// does not also land on the board behind it.
+        /// Any other panel on screen — the run's header, whose one button is the
+        /// only control in build mode that is not this pointer's — so that a
+        /// click on it does not also land on the board behind it.
         /// </param>
         public static BuildInput Build(
             Transform parent,
@@ -254,7 +255,7 @@ namespace View
         /// <summary>
         /// Reads the mouse and the number row. The left button and the digits,
         /// and nothing else — every other binding on the screen belongs to the
-        /// camera or to the playback bar.
+        /// camera, or to a bar that reads its own pointer.
         /// </summary>
         private void Update()
         {

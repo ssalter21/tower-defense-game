@@ -252,6 +252,27 @@ namespace View
             SparksDrawn = 0;
         }
 
+        /// <summary>
+        /// Destroys the three materials this made. What the view calls when it
+        /// is destroyed.
+        /// </summary>
+        /// <remarks>
+        /// <b>Whoever made it destroys it.</b> A material is an asset instance
+        /// and destroying the object that draws with it does not destroy it, so
+        /// these outlive the match unless somebody says otherwise. It never
+        /// showed while one match was the whole session and three orphans were a
+        /// constant; a run begins a match a round, and thirty over ten waves is
+        /// a leak with a shape. Same rule and the same reasoning as
+        /// <see cref="PlaybackControls"/>'s panel settings and
+        /// <see cref="BuildBoard"/>'s hex light.
+        /// </remarks>
+        public void DestroyMaterials()
+        {
+            UnityEngine.Object.Destroy(_tracerMaterial);
+            UnityEngine.Object.Destroy(_muzzleMaterial);
+            UnityEngine.Object.Destroy(_sparkMaterial);
+        }
+
         private void Tracer(Vector3 from, Vector3 to)
         {
             Vector3 along = to - from;

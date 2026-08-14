@@ -638,3 +638,38 @@ extension over the proved session, and a client's half is Unity's storage rather
 `Written` refusing to write it; with the write gone to the caller, a proved session that disagreed hands back
 no script at all. A caller that never reads `Agreed` therefore has nothing to keep, which is what the refusal
 was for. It is still by construction and it is no longer in the shell.
+
+---
+
+## 14 August 2026, later — the client stops opening on the recorded match
+
+Implementing [#198](https://github.com/ssalter21/tower-defense-game/issues/198), which is
+[ADR-0051](adr/0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) built. Nothing that ADR
+decided moved; two things written down elsewhere did.
+
+### The player used to open on `content/match.replay`, and now it opens on a run
+
+That was right for the whole of the walking skeleton: the recorded match was the only thing there was to look
+at, and [the sit-down](sit-down.md) is written about it tick for tick. The client now holds a `Run` and opens on
+the first round's build phase, reaching a match only once a round has been committed — and while the build
+chrome had no modes to switch between, the recorded match went on playing underneath it, so a composed tower
+could be stood on a hex a recorded tower was already drawn on. One board drawn by two things is what the mode
+switch removes, and removing it means the recorded match is no longer what a build shows. It stays reachable
+for `tools/capture-match-frames.ps1` and for the fixtures.
+
+**What that costs is the sit-down's tick numbers.** Rows 1, 2, 3, 11 and 12 ask nothing about *which* match and
+read against any committed round. Rows 4 to 10 name a tick of a match the build no longer plays. Whether they
+are re-anchored to a round a run can reproduce, or retired onto the assertions that already carry the
+load-bearing half, is [an open question](open-questions.md); `content/landmarks.txt` and the four bindings
+`SitDownTests` holds the document to are untouched either way.
+
+### The client was scoring its rounds against `content/wave.txt`, and the file it wanted was `content/field.txt`
+
+Not a reversal — a defect, recorded because it survived two tickets unseen. `MatchRoot` built its `Run`'s field
+pool from the committed defense and `wave.txt`, which is the skeleton's whole authored match: forty creeps,
+three hundred and eighty gold of them, released over fourteen hundred ticks. The canned field is one build
+phase's output, which is `field.txt`, and the shell's run verbs refuse a wave released over time by name —
+`RunContent.Field` writes the sentence. The client had no such refusal, and nothing noticed while nobody
+advanced the run. The first run that actually did died of health in round three. `field.txt` now ships in the
+streaming copy; the refusal is still only the shell's, and what stands in for it on this side is that the right
+file ships.

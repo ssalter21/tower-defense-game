@@ -206,10 +206,14 @@ namespace View
             loop._afresh = afresh;
             loop._directory = directory;
             loop.Run = afresh();
-            loop.Mode = RunMode.Building;
             loop.Header = RunHeader.Build(root.transform, loop);
 
             loop.OpenBuildPhase();
+
+            // Last, as it is everywhere else here: the mode names what is on
+            // screen, so it is written once whatever it names is actually up.
+            loop.Mode = RunMode.Building;
+
             loop.Header.Follow();
 
             return loop;
@@ -252,6 +256,13 @@ namespace View
                 return;
             }
 
+            if (_root.Composing == null)
+            {
+                throw new InvalidOperationException(
+                    "The loop is in build mode with no round being composed, so there is nothing to "
+                    + "commit. Something took the build chrome down without changing the mode.");
+            }
+
             BuildPhase phase = _root.Composing.Phase;
             RoundReport report = Run.Advance(phase);
 
@@ -259,10 +270,12 @@ namespace View
             _rounds.Add(report);
 
             _root.EndBuilding();
+            _root.BeginWatching(Run.MatchAt(Run.Round - 1, WatchedOpponent), Run.Types, _art);
 
+            // Last, so that anything above throwing leaves the loop saying what
+            // is actually on screen rather than naming a mode nothing drew.
             Mode = RunMode.Watching;
 
-            _root.BeginMatch(Run.MatchAt(Run.Round - 1, WatchedOpponent), Run.Types, _art);
             Header.Follow();
         }
 
@@ -285,8 +298,9 @@ namespace View
             }
             else
             {
-                Mode = RunMode.Building;
                 OpenBuildPhase();
+
+                Mode = RunMode.Building;
             }
 
             Header.Follow();

@@ -38,6 +38,16 @@ entity drawn as N bodies, and hitscan for fast squad weapons — with delivery k
 legibility, and the attention budget of watching two boards — converge on squads being an archetype rather than
 the model for the whole defense.** [Seam 1](build-order.md#1--the-match-format)'s to take or leave.
 
+**What the seven tick-anchored sit-down rows point at now that a build opens on a run.**
+[The sit-down](sit-down.md)'s rows 4 to 10 name a tick of `content/match.replay`, which the player opened on
+until [#198](decision-log.md#14-august-2026-later--the-client-stops-opening-on-the-recorded-match) and no longer
+does. Two answers, and both are cheap: **re-anchor them** to a round a run reproduces — which needs a committed
+script, a seed and a landmark table for that round rather than for the recorded match, and buys a checklist that
+walks the same path a player does — or **retire them** onto `LocomotionTests`, which already carries the
+load-bearing half of rows 4 and 5 and is the reason those two stopped being judgements. The rows themselves are
+not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
+somebody sits down with the build.
+
 **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
 loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
 is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.

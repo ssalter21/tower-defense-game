@@ -214,26 +214,40 @@ namespace View
         /// </para>
         /// </remarks>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
-        public RunLoop BeginRun(ulong seed) => BeginRun(seed, Application.persistentDataPath);
+        public RunLoop BeginRun(ulong seed) =>
+            BeginRun(seed, Application.persistentDataPath, art);
 
         /// <summary>
-        /// The same, writing the session's script into a folder the caller
-        /// names. What a test calls, so a run played by a test does not write
-        /// over the one a person played.
+        /// The same, writing the session's script into a folder the caller names
+        /// and drawing it with art the caller supplies.
         /// </summary>
-        public RunLoop BeginRun(ulong seed, string directory) => BeginRun(seed, directory, art);
-
-        /// <summary>
-        /// The same, drawn with art the caller supplies rather than the art
-        /// serialized on this object — the same seam, for the same reason, as
-        /// <see cref="BeginBuilding(ComposedRound, MatchArt)"/>.
-        /// </summary>
+        /// <remarks>
+        /// What a test calls, for two reasons. The folder, so a run played by a
+        /// test does not write over the one a person played; and the art, which
+        /// is the same seam and the same reason as
+        /// <see cref="BeginBuilding(ComposedRound, MatchArt)"/> — a caller that
+        /// has the assets in hand and no generated scene to read them from would
+        /// otherwise get nothing on exactly the checkout where somebody is
+        /// trying to see whether the run works.
+        /// </remarks>
         public RunLoop BeginRun(ulong seed, string directory, MatchArt art)
         {
             if (Map == null)
             {
                 throw new System.InvalidOperationException(
                     "BeginRun was called before Build, so there is no playfield to run on.");
+            }
+
+            // One root plays one run, and a second call is loud rather than
+            // quietly wrong. A second header is parented to this object rather
+            // than to the loop, so it would outlive the call that failed and go
+            // on drawing another run's numbers over the real ones — which reads
+            // as a header that is simply wrong.
+            if (Loop != null)
+            {
+                throw new System.InvalidOperationException(
+                    "This root is already playing a run. A run does not survive quitting and there is no "
+                    + "resuming one, so a second is a fresh scene rather than a second call.");
             }
 
             Loop = RunLoop.Build(this, art, () => RunOn(seed), directory);
@@ -334,8 +348,10 @@ namespace View
         /// </remarks>
         public void EndBuilding()
         {
-            // The pointer first, so it unsubscribes from a palette and a wave
-            // bar that are still there to unsubscribe from.
+            // The order is the order they were built in, reversed, and it buys
+            // nothing beyond reading that way: Destroy is deferred, so not one
+            // of these OnDestroy methods runs before this call returns, and
+            // BuildInput's unsubscribes null-check the two objects it holds.
             Retire(Pointer);
             Retire(Wave);
             Retire(Palette);
@@ -369,7 +385,7 @@ namespace View
         /// project would notice.
         /// </para>
         /// </remarks>
-        public MatchView BeginMatch(Match match, UnitTypeTable types, MatchArt art)
+        public MatchView BeginWatching(Match match, UnitTypeTable types, MatchArt art)
         {
             if (match == null) throw new System.ArgumentNullException(nameof(match));
 
@@ -381,7 +397,17 @@ namespace View
                     + "corridor that is not the one under them.");
             }
 
-            return BeginMatch(types, match.Rules, match.Layout, match.Wave, match.Seed, art);
+            MatchView view = BeginMatch(types, match.Rules, match.Layout, match.Wave, match.Seed, art);
+
+            // Built here and not in BeginMatch, because watching is what wants
+            // them. The frame capture draws a match and photographs it, and a
+            // scrub bar it never asked for is chrome standing over a picture.
+            // They are wired to the view that exists when they are built, and
+            // there is a new view every round, so they come and go with it.
+            Playback = new PlaybackController(view);
+            Controls = PlaybackControls.Build(transform, Playback);
+
+            return view;
         }
 
         /// <summary>
@@ -474,13 +500,6 @@ namespace View
 
             MatchView = host.AddComponent<MatchView>();
             MatchView.Begin(Map, rules, types, layout, wave, seed, art);
-
-            // Built with the match rather than once for the scene, because they
-            // are wired to the view that exists when they are built and there is
-            // a new view every round. A scrub bar with no match under it would
-            // be a control that moves and changes nothing.
-            Playback = new PlaybackController(MatchView);
-            Controls = PlaybackControls.Build(transform, Playback);
 
             return MatchView;
         }

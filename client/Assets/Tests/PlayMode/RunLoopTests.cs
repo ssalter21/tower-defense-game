@@ -78,6 +78,21 @@ namespace Tests.PlayMode
             + "- 0 0 3\n"
             + "- 0 0 3\n";
 
+        /// <summary>
+        /// What <c>simcli play-run</c> prints for the script this transcript
+        /// writes, transcribed by hand from a real run of the shell.
+        /// </summary>
+        /// <remarks>
+        /// A second copy of a number, and pinned — say exactly to what. Every
+        /// other assertion in this file compares the client against itself,
+        /// which is a check that cannot catch the two programs drifting apart.
+        /// This one is the shell's own answer, taken out of the other process
+        /// and written down, so a change that moves the client's run without
+        /// moving the shell's turns this red on the push that moved it.
+        /// </remarks>
+        private const string TheShellPrinted =
+            "outcome    10 waves survived, 326 of 800 health left, 0 dealt over 10 rounds, ended OutOfWaves";
+
         /// <summary>What a transcript line says instead of a tower to build.</summary>
         private const string Nothing = "-";
 
@@ -146,6 +161,21 @@ namespace Tests.PlayMode
                 RunSummary.Outcome(played),
                 Is.EqualTo(RunSummary.Outcome(root.Run)),
                 "The command file this run wrote plays back to the run that wrote it.");
+
+            // And it is this line, transcribed. The script this fixture writes
+            // was put through the real verbs -- `simcli record-run --content
+            // content --script <it> --seed 1` and then `simcli play-run
+            // --commands <that>` -- and this is what the shell printed. Pinning
+            // it is what makes the claim above about `play-run` a measurement
+            // rather than a belief: everything up to here proves the client
+            // agrees with itself, and only a number taken out of the other
+            // program proves the two are one run.
+            Assert.That(
+                RunSummary.Outcome(root.Run),
+                Is.EqualTo(TheShellPrinted),
+                "The shell and the client no longer agree about this run. Regenerate the line by playing "
+                + "the script this test writes through simcli record-run and play-run; a content change "
+                + "that moved it moved both, and a change that moved only one is the bug this pins.");
         }
 
         /// <summary>
@@ -233,7 +263,7 @@ namespace Tests.PlayMode
 
             Assert.That(header.Wave.text, Is.EqualTo("Wave 1 of 10"));
             Assert.That(header.Health.text, Is.EqualTo("Health 800 of 800"));
-            Assert.That(header.Gold.text, Is.EqualTo(RosterNames.Gold(loop.Run.Purse.Gold)));
+            Assert.That(header.Gold.text, Is.EqualTo("100 gold"), "The purse a run opens on.");
             Assert.That(header.Action.text, Is.EqualTo(RunLoop.CommitLabel));
             Assert.That(header.Ending.text, Is.Empty, "No end frame while the run is going.");
 
@@ -242,13 +272,18 @@ namespace Tests.PlayMode
 
             Assert.That(
                 header.Gold.text,
-                Is.EqualTo(RosterNames.Gold(root.Composing.Gold)),
-                "The gold on the bar is what the composed round would leave.");
+                Is.EqualTo("61 gold"),
+                "A hundred, less a Soldier at 30 and the cheapest creep the box offered at 9. The gold on "
+                + "the bar is what the composed round would leave, which is what a wave is composed against.");
 
             loop.Press();
 
             Assert.That(header.Wave.text, Is.EqualTo("Wave 1 of 10"), "The wave being watched is the one composed.");
-            Assert.That(header.Gold.text, Is.EqualTo(RosterNames.Gold(loop.Run.Purse.Gold)));
+            Assert.That(loop.Run.Purse.Gold, Is.Not.EqualTo(100), "The round was paid for and paid out.");
+            Assert.That(
+                header.Gold.text,
+                Is.EqualTo(RosterNames.Gold(loop.Run.Purse.Gold)),
+                "Watching shows the run's own purse and not a composed one.");
             Assert.That(header.Action.text, Is.EqualTo(RunLoop.GoOnLabel));
 
             loop.Press();
@@ -271,9 +306,67 @@ namespace Tests.PlayMode
             loop.Header.Follow();
 
             Assert.That(loop.Header.Action.text, Is.Empty, "There is nothing left to press.");
-            Assert.That(loop.Header.Ending.text, Does.Contain(root.Run.Outcome.ToString()));
+            Assert.That(
+                loop.Header.Ending.text,
+                Does.Contain("10 waves survived, 326 of 800 health left, 0 dealt over 10 rounds"),
+                "The fold the shell prints for this run, written out rather than re-derived from the "
+                + "expression that produced it.");
             Assert.That(loop.Header.Ending.text, Does.Contain(loop.ScriptPath));
             Assert.That(loop.Header.Wave.text, Is.EqualTo("Wave 10 of 10"));
+
+            // None of the record's vocabulary on screen. RunSummary.Outcome is
+            // the terminal's line and names the ending by its enum member, which
+            // is why the end frame is the fold's own sentence and not that one.
+            Assert.That(loop.Header.Ending.text, Does.Not.Contain(RunEnding.OutOfWaves.ToString()));
+            Assert.That(loop.Header.Ending.text, Does.Not.Contain("outcome    "));
+        }
+
+        /// <summary>
+        /// <b>The committed round actually runs, and scrubs.</b> Every other
+        /// test here drives the loop synchronously, so no tick ever happens —
+        /// which proves the modes and proves nothing about the thing the player
+        /// is watching. This one lets frames pass.
+        /// </summary>
+        /// <remarks>
+        /// The seek back is ADR-0026 inside the loop: a watched round is
+        /// re-simulated from tick zero on every seek, so scrubbing one is a
+        /// fresh determinism check rather than a cache being read.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator TheWatchedRoundRunsAndScrubs()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            Compose(root, "archer 6 2 2");
+            loop.Press();
+
+            Assert.That(root.Playback, Is.Not.Null, "Watching comes with the controls that drive it.");
+            Assert.That(root.Playback.Tick, Is.EqualTo(0), "A committed round arrives on tick zero.");
+            Assert.That(root.Playback.FinalTick, Is.GreaterThan(0), "And knows its length before the first frame.");
+
+            // Until the clock has crossed a tick, bounded so a slow frame is a
+            // longer test rather than a failing one.
+            for (int frame = 0; frame < 600 && root.Playback.Tick == 0; frame++)
+            {
+                yield return null;
+            }
+
+            Assert.That(root.Playback.Tick, Is.GreaterThan(0), "Frames passing is what advances a watched round.");
+
+            root.Playback.SeekToEnd();
+
+            Assert.That(root.Playback.Tick, Is.EqualTo(root.Playback.FinalTick));
+            Assert.That(root.MatchView.IsFinished, Is.True, "To the end resolves it.");
+
+            root.Playback.SeekTo(0);
+
+            Assert.That(root.Playback.Tick, Is.EqualTo(0), "And it scrubs back, by re-simulating.");
+            Assert.That(root.MatchView.IsFinished, Is.False);
+
+            loop.Press();
+
+            Assert.That(loop.Mode, Is.EqualTo(RunMode.Building), "A round that was watched is left, not waited on.");
         }
 
         /// <summary>

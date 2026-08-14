@@ -141,15 +141,19 @@ namespace View
         /// playfield in a build that worked perfectly in the editor.
         /// </para>
         /// <para>
-        /// The six text files ship alongside the record even though the record
+        /// The seven text files ship alongside the record even though the record
         /// inlines three of them. <see cref="UnitsFileName"/>,
         /// <see cref="UpgradesFileName"/> and <see cref="RulesetFileName"/> have
         /// to: the type table and the ladder folded into it are what the replay
         /// gate checks the record's content hash against, and the ruleset is what
         /// every landing is resolved through. None of the three is in the bundle.
-        /// The other three are the authored originals the bundle was recorded
-        /// from, and they are what the fixtures read; the record's own gate is
-        /// what stops the match on screen being drawn from anything else.
+        /// <see cref="MapFileName"/>, <see cref="DefenseFileName"/> and
+        /// <see cref="WaveFileName"/> are the authored originals the bundle was
+        /// recorded from, and they are what the fixtures read; the record's own
+        /// gate is what stops the match on screen being drawn from anything
+        /// else. <see cref="FieldFileName"/> is in no record and never was: it
+        /// is what a run's rounds are scored against, and it ships because a run
+        /// is what the client plays.
         /// </para>
         /// </remarks>
         public static readonly string[] MatchFileNames =
