@@ -570,9 +570,15 @@ namespace Tests.PlayMode
 
         /// <summary>
         /// The control is up only while a round is being watched, it says the
-        /// two views in words, and neither word is a type id or the record's
-        /// vocabulary.
+        /// two views in words, and the one on screen is the one that is lit.
+        /// Neither word is a type id or the record's vocabulary.
         /// </summary>
+        /// <remarks>
+        /// Pinned at both ends in every mode the loop has, because an assertion
+        /// at one end alone passes just as well when the row was never laid out
+        /// or the display was never written -- the same reason
+        /// <see cref="RuntimePanel.Covers"/> is tested at both ends.
+        /// </remarks>
         [Test]
         public void TheResultsSwitchIsUpOnlyWhileARoundIsWatched()
         {
@@ -582,17 +588,29 @@ namespace Tests.PlayMode
 
             Assert.That(control.Defence.text, Is.EqualTo("Defence"));
             Assert.That(control.Offence.text, Is.EqualTo("Offence"));
-            Assert.That(
-                control.Covers(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)),
-                Is.False,
-                "Nothing of it is over the board while a round is being composed.");
+            Assert.That(control.IsUp, Is.False, "There is nothing to switch between while a round is composed.");
 
             Compose(root, "soldier 7 0 1");
             loop.Press();
-            control.Follow();
 
+            Assert.That(control.IsUp, Is.True, "A watched round has two views and this is how you say which.");
             Assert.That(control.Defence.text, Is.EqualTo("Defence"), "The labels do not move with the view.");
             Assert.That(control.Offence.text, Is.EqualTo("Offence"));
+
+            Color lit = control.Defence.style.backgroundColor.value;
+            Color dim = control.Offence.style.backgroundColor.value;
+
+            Assert.That(lit, Is.Not.EqualTo(dim), "The view on screen is the one that is lit.");
+
+            Press(control.Offence);
+
+            Assert.That(control.Offence.style.backgroundColor.value, Is.EqualTo(lit), "And it swaps with the view.");
+            Assert.That(control.Defence.style.backgroundColor.value, Is.EqualTo(dim));
+
+            loop.Press();
+
+            Assert.That(loop.Mode, Is.EqualTo(RunMode.Building));
+            Assert.That(control.IsUp, Is.False, "And it goes down again with the match.");
         }
 
         /// <summary>

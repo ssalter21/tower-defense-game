@@ -100,7 +100,8 @@ namespace View
         public const string GoOnLabel = "Next wave";
 
         /// <summary>
-        /// Which direction a committed round opens on: the defence, always.
+        /// The value of <see cref="WatchingAttack"/> that means this round's own
+        /// towers are the ones on screen. What a committed round opens on.
         /// </summary>
         /// <remarks>
         /// The core viewing loop, and the direction the header's health is spent
@@ -108,7 +109,7 @@ namespace View
         /// match. #206: it was the other one, and a player watched their own
         /// wave walk into a stranger's towers with none of theirs on the board.
         /// </remarks>
-        public const bool OpensAttacking = false;
+        private const bool TheDefence = false;
 
         private readonly List<BuildPhase> _decisions = new List<BuildPhase>();
 
@@ -312,16 +313,7 @@ namespace View
             _rounds.Add(report);
 
             _root.EndBuilding();
-
-            // Written before the match goes up, because it is what says which of
-            // the round's two matches that is. A round always opens on the
-            // defence.
-            WatchingAttack = OpensAttacking;
-
-            _root.BeginWatching(
-                Run.MatchAt(Run.Round - 1, WatchedOpponent, WatchingAttack),
-                Run.Types,
-                _art);
+            Show(TheDefence);
 
             // Last, so that anything above throwing leaves the loop saying what
             // is actually on screen rather than naming a mode nothing drew.
@@ -364,15 +356,29 @@ namespace View
                 return;
             }
 
-            WatchingAttack = attacking;
-
             _root.EndMatch();
+            Show(attacking);
+
+            Switch.Follow();
+        }
+
+        /// <summary>
+        /// Puts one direction of the round just resolved on screen. The one
+        /// place a watched match is asked for, so the two ways into watch mode
+        /// -- committing a round and switching the view of one -- cannot become
+        /// two statements of what a watched match is.
+        /// </summary>
+        private void Show(bool attacking)
+        {
             _root.BeginWatching(
                 Run.MatchAt(Run.Round - 1, WatchedOpponent, attacking),
                 Run.Types,
                 _art);
 
-            Switch.Follow();
+            // Last, for the reason the mode is written last: a refusal above
+            // this has to leave the loop naming the direction that is actually
+            // drawn rather than one nothing put up.
+            WatchingAttack = attacking;
         }
 
         /// <summary>
@@ -391,7 +397,7 @@ namespace View
             // The next round opens on its defence whatever this one was left
             // showing, so switching is a decision about one round rather than a
             // setting that follows the run.
-            WatchingAttack = OpensAttacking;
+            WatchingAttack = TheDefence;
 
             if (Run.IsOver)
             {

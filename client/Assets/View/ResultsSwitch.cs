@@ -66,7 +66,16 @@ namespace View
         /// <summary>What the button that shows your wave says.</summary>
         public const string OffenceLabel = "Offence";
 
-        /// <summary>Under the header, over the playback bar and the board.</summary>
+        /// <summary>
+        /// Under the header, over the playback bar and the board.
+        /// </summary>
+        /// <remarks>
+        /// The same order the wave bar carries, which is allowed and is the rule
+        /// <see cref="RuntimePanel.Settings"/> states: bars that do not overlap
+        /// can share one. These two never do -- the wave bar is build chrome and
+        /// this is watch chrome, and the mode switch takes one down before the
+        /// other goes up.
+        /// </remarks>
         private const int PanelSortingOrder = 2;
 
         /// <summary>How tall the row is.</summary>
@@ -96,6 +105,17 @@ namespace View
 
         /// <summary>The panel the row is drawn on.</summary>
         public UIDocument Document { get; private set; }
+
+        /// <summary>
+        /// Whether the row is on screen, which is exactly while a round is being
+        /// watched.
+        /// </summary>
+        /// <remarks>
+        /// A reader of the style rather than a second copy of it: a bool kept
+        /// beside the display value could disagree with what is drawn, and the
+        /// thing worth asserting is what is drawn.
+        /// </remarks>
+        public bool IsUp => _row.style.display == DisplayStyle.Flex;
 
         /// <summary>
         /// Builds the row under <paramref name="parent"/>, following
@@ -131,9 +151,6 @@ namespace View
             Offence.style.backgroundColor =
                 _loop.WatchingAttack ? ShowingColor : RuntimePanel.ControlColor;
         }
-
-        /// <summary>Whether a screen point lands on this row rather than on the board behind it.</summary>
-        public bool Covers(Vector2 screenPoint) => RuntimePanel.Covers(Document, screenPoint);
 
         private void Update() => Follow();
 
