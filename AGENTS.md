@@ -30,8 +30,9 @@ nobody ever sees the total, so nobody ever fixes it.
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
 `run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `capture-match-frames.ps1`,
-`capture-art-previews.ps1`, `check-file-sizes.ps1`, `check-project-settings.ps1`.
+`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`,
+`capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
+`check-project-settings.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
 editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on

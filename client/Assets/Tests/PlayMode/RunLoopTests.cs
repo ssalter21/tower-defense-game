@@ -733,15 +733,6 @@ namespace Tests.PlayMode
         private MatchRoot Playfield() =>
             Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
 
-        /// <summary>
-        /// Where a played session's script lands in a test. Not
-        /// <c>Application.persistentDataPath</c>, which is where a person's run
-        /// writes: a suite that wrote over it would delete the thing somebody
-        /// was about to paste into <c>content/commands.txt</c>.
-        /// </summary>
-        private static string Scratch() =>
-            Path.Combine(Application.temporaryCachePath, "run-loop-tests");
-
         /// <summary>Drives the whole transcript, one round to a line.</summary>
         private static void Play(MatchRoot root, RunLoop loop)
         {

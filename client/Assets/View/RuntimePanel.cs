@@ -25,7 +25,9 @@ namespace View
     /// project's chrome into serialized YAML whose diffs cannot be read. The
     /// numbers here are chrome rather than playfield, which is why they are not
     /// in <see cref="SceneFraming"/> or <see cref="MatchTuning"/> — change every
-    /// one and neither the match nor the playfield looks any different.
+    /// one and neither the match nor the playfield looks any different. The one
+    /// asset in the way of that is <see cref="Base"/>, which decides nothing
+    /// about a layout and exists for the reason given there.
     /// </para>
     /// <para>
     /// <b>UI Toolkit, and the scene runs no other UI system.</b> A runtime panel
@@ -47,6 +49,12 @@ namespace View
         /// </remarks>
         public const string ThemeResourcePath = "RuntimeTheme";
 
+        /// <summary>
+        /// The base settings asset's path inside <c>Resources</c>, without
+        /// extension. Written by <c>tools/build-panel-settings.ps1</c>.
+        /// </summary>
+        public const string SettingsResourcePath = "RuntimePanelSettings";
+
         /// <summary>The resolution every bar is laid out at, and scaled from.</summary>
         public static readonly Vector2Int ReferenceResolution = new Vector2Int(1920, 1080);
 
@@ -66,8 +74,10 @@ namespace View
         public static Color LabelColor => new Color(0.9f, 0.92f, 0.95f, 1f);
 
         /// <summary>
-        /// One panel's settings, made rather than loaded — so whoever made it
-        /// destroys it, and an orphaned one cannot outlive the play session.
+        /// One panel's settings: a clone of <see cref="Base"/>, so whoever made
+        /// it destroys it and an orphaned one cannot outlive the play session.
+        /// The six values below decide how a bar is scaled and stacked;
+        /// everything else on the clone comes from the asset.
         /// </summary>
         /// <param name="name">What it is called in a profiler and a leak report.</param>
         /// <param name="sortingOrder">
@@ -76,7 +86,7 @@ namespace View
         /// </param>
         public static PanelSettings Settings(string name, int sortingOrder = 0)
         {
-            var settings = ScriptableObject.CreateInstance<PanelSettings>();
+            PanelSettings settings = UnityEngine.Object.Instantiate(Base());
             settings.name = name;
             settings.themeStyleSheet = Theme();
             settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
@@ -89,6 +99,51 @@ namespace View
             // below it, so height is the measurement that has to stay put as the
             // window changes shape.
             settings.match = 1f;
+
+            return settings;
+        }
+
+        /// <summary>
+        /// The committed settings asset every panel is cloned from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It is an ICU carrier.</b> The editor attaches the text engine's
+        /// ICU data to a <see cref="PanelSettings"/> asset when that asset is
+        /// written, and to nothing created at runtime; a build containing no
+        /// such asset carries no ICU data, so every string in it measures as
+        /// nothing, every label resolves to zero by zero and each bar collapses.
+        /// See
+        /// <c>docs/research/a-player-build-measures-no-text-without-a-panelsettings-asset.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>Everything else on it is a fresh <see cref="PanelSettings"/>'s
+        /// default, and that is asserted rather than assumed.</b>
+        /// <see cref="Settings"/> assigns the six values that decide how a bar
+        /// is scaled and stacked, and <see cref="UnityEngine.Object.Instantiate"/>
+        /// copies the rest of the asset — the clear colour, the render mode, the
+        /// DPI pair — onto every panel in the game. So a value edited into this
+        /// asset's YAML would reach the whole HUD without appearing in any code.
+        /// <c>Tests.EditMode.GeneratedProjectFilesTests</c> holds the asset to
+        /// its defaults for exactly that reason.
+        /// </para>
+        /// <para>
+        /// Written by <c>tools/build-panel-settings.ps1</c> rather than by hand,
+        /// because what it carries is a reference into the engine's built-in
+        /// resources that no hand-authored YAML could name.
+        /// </para>
+        /// </remarks>
+        public static PanelSettings Base()
+        {
+            var settings = Resources.Load<PanelSettings>(SettingsResourcePath);
+
+            if (settings == null)
+            {
+                throw new InvalidOperationException(
+                    "No panel settings at Resources/" + SettingsResourcePath
+                    + ". It is committed, so a checkout without it is incomplete rather than "
+                    + "unconfigured; tools/build-panel-settings.ps1 writes it.");
+            }
 
             return settings;
         }

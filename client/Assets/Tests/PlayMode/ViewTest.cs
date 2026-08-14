@@ -51,6 +51,18 @@ namespace Tests.PlayMode
         protected MatchView Begin() => TheMatchOnScreen.Begin(Spawn(GetType().Name));
 
         /// <summary>
+        /// Where a played session's script lands in a test — one directory per
+        /// fixture, so two of them cannot read each other's.
+        /// </summary>
+        /// <remarks>
+        /// Not <c>Application.persistentDataPath</c>, which is where a person's
+        /// run writes: a suite that wrote over it would delete the thing
+        /// somebody was about to paste into <c>content/commands.txt</c>.
+        /// </remarks>
+        protected string Scratch() =>
+            System.IO.Path.Combine(Application.temporaryCachePath, GetType().Name);
+
+        /// <summary>
         /// Steps the match, drawing every tick, until <paramref name="stop"/>
         /// says so or the match ends.
         /// </summary>

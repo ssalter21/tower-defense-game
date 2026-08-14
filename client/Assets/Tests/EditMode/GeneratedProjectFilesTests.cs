@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using View;
 using View.Editor;
 
@@ -193,6 +195,109 @@ namespace Tests.EditMode
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
             Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
         }
+
+        /// <summary>
+        /// The committed panel settings hold the text engine's ICU data, and
+        /// every other value on them is what a fresh <see cref="PanelSettings"/>
+        /// has.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="RuntimePanel.Settings"/> clones the asset, and
+        /// <see cref="Object.Instantiate"/> copies every serialized field —
+        /// including the ones that method does not go on to assign. So a value
+        /// edited into this asset's YAML reaches every bar in the game without
+        /// appearing in any code, which is the drift the whole file is against.
+        /// The clear colour, the render mode and the DPI pair are the ones that
+        /// would show.
+        /// </para>
+        /// <para>
+        /// The theme is set on the comparison as well as on the asset, because
+        /// the generator writes it: it is the one value the asset is expected to
+        /// differ from a bare instance by, and asserting it here is what keeps
+        /// the list of expected differences down to it and the ICU reference.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheCommittedPanelSettingsCarryICUDataAndNothingElse()
+        {
+            var committed = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsAsset.AssetPath);
+
+            Assert.That(committed, Is.Not.Null,
+                "No panel settings at " + PanelSettingsAsset.AssetPath
+                + ". Run tools/build-panel-settings.ps1.");
+
+            var fresh = ScriptableObject.CreateInstance<PanelSettings>();
+            fresh.themeStyleSheet = RuntimePanel.Theme();
+
+            try
+            {
+                var written = new SerializedObject(committed);
+                var bare = new SerializedObject(fresh);
+
+                Assert.That(
+                    written.FindProperty(ICUDataField)?.objectReferenceValue,
+                    Is.Not.Null,
+                    PanelSettingsAsset.AssetPath + " carries no ICU data, which is the one thing it is "
+                    + "for. Run tools/build-panel-settings.ps1 and commit what it writes.");
+
+                var drifted = new List<string>();
+                SerializedProperty walk = written.GetIterator();
+
+                // Entered once and never again: DataEquals compares a struct
+                // like m_DynamicAtlasSettings whole, and descending would walk
+                // a string's char array and report m_Name twenty-one times.
+                bool enter = true;
+
+                while (walk.Next(enter))
+                {
+                    enter = false;
+
+                    if (Bookkeeping(walk.propertyPath))
+                    {
+                        continue;
+                    }
+
+                    SerializedProperty same = bare.FindProperty(walk.propertyPath);
+
+                    if (same == null || !SerializedProperty.DataEquals(walk, same))
+                    {
+                        drifted.Add(walk.propertyPath);
+                    }
+                }
+
+                Assert.That(drifted, Is.Empty,
+                    PanelSettingsAsset.AssetPath + " differs from a fresh PanelSettings in more than its "
+                    + "ICU data: " + string.Join(", ", drifted) + ". Those values are cloned onto every "
+                    + "panel in the game. Either they belong in RuntimePanel.Settings, or run "
+                    + "tools/build-panel-settings.ps1 and commit what it writes.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(fresh);
+            }
+        }
+
+        /// <summary>
+        /// Whether a serialized property is Unity's own record-keeping rather
+        /// than a value anybody chose — the asset's name, the script it points
+        /// at, and the ICU reference this asset exists to carry.
+        /// </summary>
+        private static bool Bookkeeping(string path) =>
+            path == "m_Name"
+            || path == "m_Script"
+            || path == "m_EditorClassIdentifier"
+            || path == "m_ObjectHideFlags"
+            || path == "m_EditorHideFlags"
+            || path == "m_CorrespondingSourceObject"
+            || path == "m_PrefabInstance"
+            || path == "m_PrefabAsset"
+            || path == "m_GameObject"
+            || path == "m_Enabled"
+            || path == ICUDataField;
+
+        /// <summary>The field the editor puts the text engine's ICU data in.</summary>
+        private const string ICUDataField = "m_ICUDataAsset";
 
         /// <summary>
         /// Walks up from the project looking for the simulation's project file,
