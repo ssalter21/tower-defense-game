@@ -91,6 +91,14 @@ namespace Tests.PlayMode
         /// Every bound here is taken off the match this run actually played, so
         /// a content change that moves where the busiest moment falls does not
         /// redden a claim about pooling.
+        ///
+        /// <b>The busiest moment is counted per unit type, because that is what
+        /// the pool holds.</b> A creep view is built around its type's model, so
+        /// an idle Skeleton cannot be lent to a Minion and the two settle at
+        /// their own steady states independently. Counting the wave as one
+        /// population would assert a bound the pool never promised, and it
+        /// would be a bound that tightens every time a wave sends one more kind
+        /// of body.
         /// </remarks>
         [Test]
         public void ObjectsArePooledAcrossTheWholeMatch()
@@ -99,10 +107,26 @@ namespace Tests.PlayMode
             int mostAtOnce = 0;
             int created = 0;
             int lastBuiltOnTick = 0;
+            var mostAtOnceOfType = new Dictionary<int, int>();
+            var onThisTick = new Dictionary<int, int>();
 
             RunUntil(view, () =>
             {
                 mostAtOnce = Mathf.Max(mostAtOnce, view.Creeps.LiveCount);
+
+                onThisTick.Clear();
+
+                foreach (CreepSnapshot creep in view.Current.Creeps)
+                {
+                    onThisTick.TryGetValue(creep.TypeId, out int alive);
+                    onThisTick[creep.TypeId] = alive + 1;
+                }
+
+                foreach (KeyValuePair<int, int> alive in onThisTick)
+                {
+                    mostAtOnceOfType.TryGetValue(alive.Key, out int most);
+                    mostAtOnceOfType[alive.Key] = Mathf.Max(most, alive.Value);
+                }
 
                 // WHEN the pool last grew, rather than what it had grown to by
                 // some named tick. The named tick was 1000, which stopped being
@@ -125,7 +149,11 @@ namespace Tests.PlayMode
 
             Assert.That(mostAtOnce, Is.GreaterThan(1), "the match never had two creeps on it at once");
 
-            Assert.That(view.Creeps.EverCreated, Is.LessThanOrEqualTo(mostAtOnce + 1),
+            // One steady state per unit type, each of them the type's own
+            // busiest moment plus the one object a claim-before-release costs.
+            int ceiling = mostAtOnceOfType.Values.Sum() + mostAtOnceOfType.Count;
+
+            Assert.That(view.Creeps.EverCreated, Is.LessThanOrEqualTo(ceiling),
                 "more objects were built than were ever alive at once, so something is not being reused");
 
             Assert.That(view.Creeps.EverCreated, Is.LessThan(total),
@@ -359,17 +387,14 @@ namespace Tests.PlayMode
 
             foreach (TowerView tower in view.Towers.Values)
             {
-                AssertAuthoredRotation(tower.Model, AuthoredModelOf(art, tower));
+                AssertAuthoredRotation(tower.Model, art.ModelFor(tower.Type.Id));
             }
 
-            CreepView creep = view.Creeps.Live.Values.First();
-            AssertAuthoredRotation(creep.Model, art.CreepModel);
+            foreach (CreepSnapshot creep in view.Current.Creeps)
+            {
+                AssertAuthoredRotation(view.Creeps.Live[creep.Id].Model, art.ModelFor(creep.TypeId));
+            }
         }
-
-        private static GameObject AuthoredModelOf(MatchArt art, TowerView tower) =>
-            tower.Type.Delivery == Delivery.Projectile
-                ? art.ProjectileTowerModel
-                : art.HitscanTowerModel;
 
         /// <summary>
         /// The instantiated model carries the same local rotation the imported
@@ -407,11 +432,13 @@ namespace Tests.PlayMode
                 }
                 else
                 {
-                    Assert.That(tower.IsAnimated, Is.False, "the hitscan tower is a static building");
+                    Assert.That(tower.IsAnimated, Is.False,
+                        "a hitscan tower's shot puts nothing in the snapshot, so it has nothing to pose to");
+                    Assert.That(tower.Weapon, Is.Null, "it draws no bow, so it holds none");
                     Assert.That(
-                        tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                        Is.Empty,
-                        "the building arrived skinned, so both halves of the pipeline are the same half");
+                        tower.Model.GetComponentInChildren<SimDrivenAnimator>(true),
+                        Is.Null,
+                        "a hitscan tower was bound to a graph, so both halves of the seam are the same half");
                 }
             }
         }

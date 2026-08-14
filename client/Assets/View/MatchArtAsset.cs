@@ -7,7 +7,8 @@ namespace View
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Nine serialized references and nothing else. It exists because a
+    /// A model and a scale per unit type, plus the shared clips, and nothing
+    /// else. It exists because a
     /// <see cref="MatchArt"/> on its own is a plain serializable class — it
     /// lives inside whatever holds it, and in the game that is the generated
     /// scene's root object. A test build has no such object, so this is the

@@ -1,4 +1,6 @@
+using System.Linq;
 using NUnit.Framework;
+using Sim;
 using UnityEngine;
 using View;
 
@@ -12,37 +14,52 @@ namespace Tests.PlayMode
     /// imports that have to agree about a bone name, a local transform and an
     /// atlas — and the wrong answer to any of the three still instantiates,
     /// still renders and still passes every other test in this project. So the
-    /// bow is put on the Ranger's hand here and then the rig is posed, because
-    /// "it is parented to something" and "it is in the hand through the whole
-    /// draw" are different claims and only the second one is the pipeline.
+    /// bow is put on the hand of the tower that fires one, and then the rig is
+    /// posed, because "it is parented to something" and "it is in the hand
+    /// through the whole draw" are different claims and only the second one is
+    /// the pipeline.
     /// </summary>
     public class WeaponSocketTests
     {
-        private GameObject _ranger;
+        private GameObject _holder;
 
         [TearDown]
         public void TearDown()
         {
-            if (_ranger != null) Object.DestroyImmediate(_ranger);
+            if (_holder != null) Object.DestroyImmediate(_holder);
         }
 
-        private GameObject BuildArmedRanger(out GameObject bow, out Transform hand)
+        private GameObject BuildArmedTower(out GameObject bow, out Transform hand)
         {
             MatchArt art = TheMatchOnScreen.Art();
 
-            _ranger = Object.Instantiate(art.ProjectileTowerModel);
-            bow = WeaponSocket.Attach(_ranger, art.BowModel, WeaponSocket.BowHand);
-            hand = WeaponSocket.FindBone(_ranger, WeaponSocket.BowHand);
+            _holder = Object.Instantiate(BowHolderModel());
+            bow = WeaponSocket.Attach(_holder, art.BowModel, WeaponSocket.BowHand);
+            hand = WeaponSocket.FindBone(_holder, WeaponSocket.BowHand);
 
-            return _ranger;
+            return _holder;
+        }
+
+        /// <summary>
+        /// The model of the one tower that actually holds a bow: the projectile
+        /// one. Found through the unit table rather than named, because models
+        /// are per unit type and the row that draws a bow is a content fact.
+        /// </summary>
+        private static GameObject BowHolderModel()
+        {
+            UnitType holder = StreamingContent.ReadUnitTypes()
+                .Types
+                .First(t => t.Delivery == Delivery.Projectile);
+
+            return TheMatchOnScreen.Art().ModelFor(holder.Id);
         }
 
         [Test]
         public void TheBowParentsToTheLeftHandBone()
         {
-            BuildArmedRanger(out GameObject bow, out Transform hand);
+            BuildArmedTower(out GameObject bow, out Transform hand);
 
-            Assert.IsNotNull(hand, $"no '{WeaponSocket.BowHand}' bone on the Ranger");
+            Assert.IsNotNull(hand, $"no '{WeaponSocket.BowHand}' bone on {_holder.name}");
             Assert.AreSame(hand, bow.transform.parent,
                 $"the bow's parent is '{bow.transform.parent?.name}', not '{WeaponSocket.BowHand}'");
 
@@ -57,28 +74,28 @@ namespace Tests.PlayMode
         [Test]
         public void TheBowIsOnTheLeftHandSlot_NotTheRightOne()
         {
-            BuildArmedRanger(out GameObject bow, out Transform _);
+            BuildArmedTower(out GameObject bow, out Transform _);
 
             // The measurement that settled this is on #44: on handslot.r the bow's
-            // bounding box lands wholly inside the Ranger's own — an archer
+            // bounding box lands wholly inside the character's own — an archer
             // holding nothing. Asserted as a string so a later "tidy-up" that
             // mirrors it back to the right hand fails here rather than in a
             // screenshot nobody takes.
             Assert.AreEqual("handslot.l", WeaponSocket.BowHand);
             Assert.AreEqual("handslot.l", bow.transform.parent.name);
-            Assert.IsNotNull(WeaponSocket.FindBone(_ranger, "handslot.r"),
+            Assert.IsNotNull(WeaponSocket.FindBone(_holder, "handslot.r"),
                 "the rig has no handslot.r either — the bone naming is not what this assertion assumes");
         }
 
         [Test]
         public void TheBowRidesTheHandThroughTheWholeDraw()
         {
-            BuildArmedRanger(out GameObject bow, out Transform hand);
+            BuildArmedTower(out GameObject bow, out Transform hand);
 
             // The wind-up clip: the hand travels furthest during this one.
             AnimationClip draw = TheMatchOnScreen.Art().TowerWindupClip;
 
-            SimDrivenAnimator poser = SimDrivenAnimator.Bind(_ranger, draw);
+            SimDrivenAnimator poser = SimDrivenAnimator.Bind(_holder, draw);
 
             var handWorld = new Vector3[3];
             var bowWorld = new Vector3[3];
@@ -109,10 +126,10 @@ namespace Tests.PlayMode
         public void AttachingToABoneThatIsNotThereThrowsRatherThanHangingItOffTheRoot()
         {
             MatchArt art = TheMatchOnScreen.Art();
-            _ranger = Object.Instantiate(art.ProjectileTowerModel);
+            _holder = Object.Instantiate(BowHolderModel());
 
             Assert.Throws<System.InvalidOperationException>(
-                () => WeaponSocket.Attach(_ranger, art.BowModel, "handslot.left"));
+                () => WeaponSocket.Attach(_holder, art.BowModel, "handslot.left"));
         }
     }
 }

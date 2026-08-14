@@ -404,7 +404,14 @@ The complete collection — 22 packs, CC0, 61 rigged characters, 159 clips — h
 catalogued from the archive itself in [the collection inventory](research/kaykit-collection-inventory.md). The
 assignments above are **adopted as written** rather than left as a plan, and they were adopted by a person.
 
-**Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it imports:
+**The collection is extracted, and the assignments are on screen.** It sits at
+`~/repos/kaykit-collection/`, beside the checkout rather than inside it, and the seven character models the
+nine units need are imported into `client/Assets/Art/Characters/` — see
+[§1](research/kaykit-collection-inventory.md#1-where-it-is-and-what-it-costs-to-keep) and
+[§10](research/kaykit-collection-inventory.md#10-already-imported). Nothing in the project reads that folder;
+imports are copied out of it by hand.
+
+**Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it is drawn:
 
 | What | Scale | Why |
 |---|---|---|
@@ -416,6 +423,12 @@ assignments above are **adopted as written** rather than left as a plan, and the
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and a column in the content tables would make every
 art tweak cost a format version and a re-record. These numbers are expected to move once somebody has looked
 at them, which is the whole reason they are stored somewhere free to change.
+
+**Measured, rather than assumed.** With those multipliers the tallest body on the board is 1.40 m and the
+shortest tower 2.45 m, so a creep is a little over half the height of the thing shooting it. An edit-mode
+test measures both off the geometry and fails if the gap closes to within a fifth, because comparing the two
+multipliers would prove nothing — a half applied to a taller model is not smaller than a one applied to a
+shorter one, and the creeps and the towers come from two different packs.
 
 **There is no plinth, and no rule about which units are people and which are buildings.** That distinction was
 considered and dropped: it is not a thing this page needs to have an opinion about.

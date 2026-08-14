@@ -32,10 +32,19 @@ namespace View
     /// no code anywhere had to know a seek happened.
     /// </para>
     /// <para>
+    /// <b>Views come in variants, because they are not all interchangeable.</b>
+    /// A creep view is built around one unit type's model and one scale, so an
+    /// idle Skeleton Warrior cannot stand in for a Minion — handing it over
+    /// would draw the wrong body at the wrong size and nothing would throw. So
+    /// idle views are kept in one stack per variant and a claim names the
+    /// variant it needs. A pool whose views are all alike names none, and gets
+    /// the single-stack behaviour it always had.
+    /// </para>
+    /// <para>
     /// <b>Usage is three calls, in order.</b>
     /// <code>
     /// pool.BeginSync();
-    /// foreach (var creep in snapshot.Creeps) Pose(pool.Claim(creep.Id), creep);
+    /// foreach (var creep in snapshot.Creeps) Pose(pool.Claim(creep.Id, creep.TypeId), creep);
     /// pool.EndSync();
     /// </code>
     /// Claiming an id twice in one sync is a caller bug and throws, because the
@@ -48,32 +57,42 @@ namespace View
     {
         private readonly Dictionary<int, T> _live = new Dictionary<int, T>();
 
-        private readonly Stack<T> _idle = new Stack<T>();
+        private readonly Dictionary<int, int> _variantOf = new Dictionary<int, int>();
+
+        private readonly Dictionary<int, Stack<T>> _idle = new Dictionary<int, Stack<T>>();
 
         private readonly HashSet<int> _claimed = new HashSet<int>();
 
         private readonly List<int> _departed = new List<int>();
 
-        private readonly Func<T> _create;
+        private readonly Func<int, T> _create;
 
         private readonly Action<T, bool> _setActive;
 
         private bool _syncing;
 
         /// <summary>
-        /// A pool that makes new views with <paramref name="create"/>.
+        /// A pool whose views are all alike, made by <paramref name="create"/>.
+        /// </summary>
+        public EntityViewPool(Func<T> create, Action<T, bool> setActive = null)
+            : this(Uniform(create), setActive)
+        {
+        }
+
+        /// <summary>
+        /// A pool whose views come in variants.
         /// </summary>
         /// <param name="create">
-        /// Makes one view. Called only when the idle stack is empty, so this
-        /// runs once per concurrently-live entity over the whole match and not
-        /// once per entity.
+        /// Makes one view of the variant it is given. Called only when that
+        /// variant's idle stack is empty, so this runs once per concurrently-live
+        /// entity of a variant over the whole match and not once per entity.
         /// </param>
         /// <param name="setActive">
         /// Shows or hides one view. Defaults to toggling the game object.
         /// Injectable because a test wants to watch this happen without
         /// depending on how it is done.
         /// </param>
-        public EntityViewPool(Func<T> create, Action<T, bool> setActive = null)
+        public EntityViewPool(Func<int, T> create, Action<T, bool> setActive = null)
         {
             _create = create ?? throw new ArgumentNullException(nameof(create));
             _setActive = setActive ?? DefaultSetActive;
@@ -86,11 +105,11 @@ namespace View
         public int LiveCount => _live.Count;
 
         /// <summary>
-        /// How many views are built and waiting. The number that stops growing
-        /// once the match reaches its busiest moment, which is the whole point
-        /// of pooling.
+        /// How many views are built and waiting, across every variant. The
+        /// number that stops growing once the match reaches its busiest moment,
+        /// which is the whole point of pooling.
         /// </summary>
-        public int IdleCount => _idle.Count;
+        public int IdleCount { get; private set; }
 
         /// <summary>
         /// How many views this pool has ever built. A test watches this stop
@@ -115,10 +134,11 @@ namespace View
 
         /// <summary>
         /// The view standing for <paramref name="id"/> — the one from last
-        /// frame if there is one, a reused idle one if not, and a newly built
-        /// one only if the pool is empty.
+        /// frame if there is one, a reused idle one of the same
+        /// <paramref name="variant"/> if not, and a newly built one only if
+        /// that variant has none waiting.
         /// </summary>
-        public T Claim(int id)
+        public T Claim(int id, int variant = 0)
         {
             if (!_syncing)
             {
@@ -136,23 +156,33 @@ namespace View
 
             if (_live.TryGetValue(id, out T existing))
             {
+                if (_variantOf[id] != variant)
+                {
+                    throw new InvalidOperationException(
+                        "Entity id " + id + " was drawn as variant " + _variantOf[id] + " and is now being "
+                        + "claimed as variant " + variant + ". An entity does not change what it is "
+                        + "mid-match, so one of the two frames is drawing the wrong thing.");
+                }
+
                 return existing;
             }
 
             T view;
 
-            if (_idle.Count > 0)
+            if (_idle.TryGetValue(variant, out Stack<T> waiting) && waiting.Count > 0)
             {
-                view = _idle.Pop();
+                view = waiting.Pop();
+                IdleCount--;
             }
             else
             {
-                view = _create();
+                view = _create(variant);
                 EverCreated++;
             }
 
             _setActive(view, true);
             _live.Add(id, view);
+            _variantOf[id] = variant;
 
             return view;
         }
@@ -181,10 +211,7 @@ namespace View
 
             foreach (int id in _departed)
             {
-                T view = _live[id];
-                _live.Remove(id);
-                _setActive(view, false);
-                _idle.Push(view);
+                Retire(id);
             }
         }
 
@@ -201,13 +228,50 @@ namespace View
                 _claimed.Clear();
             }
 
+            _departed.Clear();
+
             foreach (KeyValuePair<int, T> entry in _live)
             {
-                _setActive(entry.Value, false);
-                _idle.Push(entry.Value);
+                _departed.Add(entry.Key);
             }
 
-            _live.Clear();
+            foreach (int id in _departed)
+            {
+                Retire(id);
+            }
+        }
+
+        /// <summary>Hides one view and puts it back on its variant's stack.</summary>
+        private void Retire(int id)
+        {
+            T view = _live[id];
+            int variant = _variantOf[id];
+
+            _live.Remove(id);
+            _variantOf.Remove(id);
+            _setActive(view, false);
+
+            if (!_idle.TryGetValue(variant, out Stack<T> waiting))
+            {
+                waiting = new Stack<T>();
+                _idle.Add(variant, waiting);
+            }
+
+            waiting.Push(view);
+            IdleCount++;
+        }
+
+        /// <summary>
+        /// One maker for every variant, for a pool whose views are all alike.
+        /// Null-checked here rather than inside the lambda, so a caller that
+        /// passes nothing hears about it at construction and not at the first
+        /// claim.
+        /// </summary>
+        private static Func<int, T> Uniform(Func<T> create)
+        {
+            if (create == null) throw new ArgumentNullException(nameof(create));
+
+            return _ => create();
         }
 
         private static void DefaultSetActive(T view, bool active)

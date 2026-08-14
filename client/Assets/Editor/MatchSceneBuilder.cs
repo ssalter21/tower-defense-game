@@ -36,37 +36,75 @@ namespace View.Editor
         /// <summary>Everything else's material.</summary>
         public const string GrassMaterialPath = "Assets/Materials/Grass.mat";
 
+        private const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
+
+        private const string WalkClipName = "Walking_A";
+
+        private const string DeathClipName = "Death_A";
+
+        private const string TowerIdleClipName = "Ranged_Bow_Idle";
+
+        private const string TowerWindupClipName = "Ranged_Bow_Draw";
+
+        private const string TowerBackswingClipName = "Ranged_Bow_Release";
+
         /// <summary>
-        /// The models and clips the match is drawn with, as
-        /// <c>MatchArt</c> field name to asset.
+        /// What each unit type is drawn as, and how big — one entry per row in
+        /// <c>content/units.txt</c>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Every one of these was chosen by the developer, on issue #44, and
-        /// none of them is chosen here.</b> This table is a transcription of
-        /// answers already given — the walk and the death picked from a live
-        /// scrubber rather than from filenames, the three bow clips picked to
-        /// stand one per simulation state. A builder that reached for "the
-        /// obvious clip" would be making an art decision unattended, which is a
+        /// <b>Every one of these was chosen by the developer and none of them
+        /// is chosen here.</b> The assignments are signed in
+        /// <c>docs/roster.md</c> — the Minion and the Skeleton share the minion
+        /// skin, the Warrior takes the warrior, the Scout the rogue, the
+        /// Necromancer the mage, and the four towers take the Knight, the
+        /// Ranger twice and the Mage. A builder that reached for "the obvious
+        /// model" would be making an art decision unattended, which is a
         /// standing prohibition on this project and not a style preference.
         /// </para>
         /// <para>
-        /// Written down here rather than looked up by convention because a
-        /// convention would silently pick a different clip the day a pack adds
-        /// one. A missing entry throws by name.
+        /// <b>The scale is the tier signal and it is the only one.</b> Towers
+        /// draw at 1, every creep at a half, and the Ranger — which shares the
+        /// Archer's model and differs from it in one stat — at one and a half.
+        /// The numbers are <see cref="MatchArt"/>'s, so the two tables that
+        /// carry these rows cannot disagree about what a half is.
         /// </para>
         /// </remarks>
-        private static readonly (string field, string asset, string clip)[] ArtBindings =
+        private static readonly (int unitId, string model, float scale)[] UnitBindings =
         {
-            ("creepModel", "Assets/Art/Characters/Skeleton_Warrior.fbx", null),
-            ("creepWalkClip", null, "Walking_A"),
-            ("creepDeathClip", null, "Death_A"),
-            ("projectileTowerModel", "Assets/Art/Characters/Ranger.fbx", null),
-            ("bowModel", "Assets/Art/Weapons/bow_withString.fbx", null),
-            ("towerIdleClip", null, "Ranged_Bow_Idle"),
-            ("towerWindupClip", null, "Ranged_Bow_Draw"),
-            ("towerBackswingClip", null, "Ranged_Bow_Release"),
-            ("hitscanTowerModel", "Assets/Art/Buildings/building_tower_A_blue.fbx", null),
+            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale),
+            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale),
+            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale),
+            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale),
+            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale),
+            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale),
+            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale),
+            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale),
+            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale),
+        };
+
+        /// <summary>
+        /// Everything on <c>MatchArt</c> that is not per unit type, as field
+        /// name to asset.
+        /// </summary>
+        /// <remarks>
+        /// The clips are shared because all nine models are on
+        /// <c>Rig_Medium</c>. Each was chosen by the developer on issue #44 —
+        /// the walk and the death picked from a live scrubber rather than from
+        /// filenames, the three bow clips picked to stand one per simulation
+        /// state. Written down rather than looked up by convention, because a
+        /// convention would silently pick a different clip the day a pack adds
+        /// one. A missing entry throws by name.
+        /// </remarks>
+        private static readonly (string field, string asset, string clip)[] SharedBindings =
+        {
+            ("creepWalkClip", null, WalkClipName),
+            ("creepDeathClip", null, DeathClipName),
+            ("bowModel", BowPath, null),
+            ("towerIdleClip", null, TowerIdleClipName),
+            ("towerWindupClip", null, TowerWindupClipName),
+            ("towerBackswingClip", null, TowerBackswingClipName),
         };
 
         /// <summary>
@@ -130,23 +168,78 @@ namespace View.Editor
         /// </remarks>
         private static void WireArt(SerializedObject serialized)
         {
-            foreach ((string field, string asset, string clip) in ArtBindings)
+            SerializedProperty units = Field(serialized, "units");
+            units.arraySize = UnitBindings.Length;
+
+            for (var i = 0; i < UnitBindings.Length; i++)
             {
-                SerializedProperty property = serialized.FindProperty("art." + field);
+                (int unitId, string model, float scale) = UnitBindings[i];
+                SerializedProperty entry = units.GetArrayElementAtIndex(i);
 
-                if (property == null)
-                {
-                    throw new IOException(
-                        "MatchArt has no serialized field called '" + field + "'. The binding table in "
-                        + "MatchSceneBuilder and the fields on MatchArt have drifted apart.");
-                }
+                entry.FindPropertyRelative("unitId").intValue = unitId;
+                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
+                entry.FindPropertyRelative("scale").floatValue = scale;
+            }
 
-                property.objectReferenceValue = clip == null ? LoadModel(asset) : LoadClip(clip);
+            foreach ((string field, string asset, string clip) in SharedBindings)
+            {
+                Field(serialized, field).objectReferenceValue =
+                    clip == null ? LoadModel(asset) : LoadClip(clip);
             }
         }
 
+        /// <summary>
+        /// One serialized field on the root's <c>MatchArt</c>, or a throw
+        /// saying the tables here and the fields over there have drifted apart.
+        /// </summary>
+        private static SerializedProperty Field(SerializedObject serialized, string field)
+        {
+            SerializedProperty property = serialized.FindProperty("art." + field);
+
+            if (property == null)
+            {
+                throw new IOException(
+                    "MatchArt has no serialized field called '" + field + "'. The binding tables in "
+                    + "MatchSceneBuilder and the fields on MatchArt have drifted apart.");
+            }
+
+            return property;
+        }
+
+        /// <summary>
+        /// The same art the scene is wired with, as a bundle in memory.
+        /// </summary>
+        /// <remarks>
+        /// For an editor tool that draws a match without reading the generated
+        /// scene — the frame capture, which has to work on a checkout whose
+        /// scene has not been rebuilt yet, and which would otherwise be a third
+        /// transcription of these paths. The <i>tests</i> deliberately keep
+        /// their own list, in <c>Tests.Fixtures.ChosenArt</c>: a fixture that
+        /// took its art from this class could not catch this class choosing the
+        /// wrong model, because it would be asserting that the choice matched
+        /// itself.
+        /// </remarks>
+        public static MatchArt Art()
+        {
+            var units = new List<UnitArt>(UnitBindings.Length);
+
+            foreach ((int unitId, string model, float scale) in UnitBindings)
+            {
+                units.Add(UnitArt.Of(unitId, LoadModel(model), scale));
+            }
+
+            return MatchArt.Of(
+                units,
+                LoadClip(WalkClipName),
+                LoadClip(DeathClipName),
+                LoadModel(BowPath),
+                LoadClip(TowerIdleClipName),
+                LoadClip(TowerWindupClipName),
+                LoadClip(TowerBackswingClipName));
+        }
+
         /// <summary>The imported model at a path, or a throw naming it.</summary>
-        private static Object LoadModel(string path)
+        private static GameObject LoadModel(string path)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
@@ -169,7 +262,7 @@ namespace View.Editor
         /// into a scene would work in the editor and resolve to nothing in a
         /// build, which is the worst of both.
         /// </remarks>
-        private static Object LoadClip(string name)
+        private static AnimationClip LoadClip(string name)
         {
             var found = new List<string>();
 

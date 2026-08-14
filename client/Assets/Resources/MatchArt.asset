@@ -13,12 +13,37 @@ MonoBehaviour:
   m_Name: MatchArt
   m_EditorClassIdentifier: View::View.MatchArtAsset
   art:
-    creepModel: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
+    units:
+    - unitId: 1
+      model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
+      scale: 0.5
+    - unitId: 2
+      model: {fileID: 919132149155446097, guid: 09960b6ddb684d8794ac0d6cd80f54d1, type: 3}
+      scale: 0.5
+    - unitId: 3
+      model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
+      scale: 1
+    - unitId: 4
+      model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
+      scale: 1
+    - unitId: 7
+      model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
+      scale: 0.5
+    - unitId: 11
+      model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
+      scale: 1
+    - unitId: 12
+      model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
+      scale: 0.5
+    - unitId: 13
+      model: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
+      scale: 0.5
+    - unitId: 14
+      model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
+      scale: 1.5
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
-    projectileTowerModel: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
     bowModel: {fileID: 919132149155446097, guid: 4005f62aa0fde624488afe406fdf3100, type: 3}
     towerIdleClip: {fileID: 1916961860785133836, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
     towerWindupClip: {fileID: -4457504429419621214, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
     towerBackswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
-    hitscanTowerModel: {fileID: 919132149155446097, guid: d1d305c16cc11504cb1b85e7f0e42b85, type: 3}

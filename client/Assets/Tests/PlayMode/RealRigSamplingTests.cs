@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Sim;
 using View;
 using UnityEngine;
 
@@ -44,13 +45,21 @@ namespace Tests.PlayMode
         {
             MatchArt art = MatchArtSource.Load();
 
-            _instance = Object.Instantiate(art.CreepModel);
+            // A walking body's rig, taken off the unit table rather than named
+            // here: the models are per unit type now, and which row happens to
+            // be first is not this file's business. Every one of them is on
+            // Rig_Medium, so any would do.
+            _instance = Object.Instantiate(art.ModelFor(FirstCreep().Id));
 
             SimDrivenAnimator view = SimDrivenAnimator.Bind(_instance, art.CreepWalkClip);
             var bones = _instance.GetComponentsInChildren<Transform>(true).ToList();
 
             return (view, bones);
         }
+
+        /// <summary>The first walking row in the shipped unit table.</summary>
+        private static UnitType FirstCreep() =>
+            StreamingContent.ReadUnitTypes().Types.First(t => t.Role == UnitRole.Moving);
 
         [Test]
         public void TheClipActuallyDrivesTheImportedRig()

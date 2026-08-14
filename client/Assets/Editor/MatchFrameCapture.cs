@@ -184,57 +184,11 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The art, from the same paths the scene builder wires. Loaded rather
-        /// than read off a scene so the capture works on a project whose scene
-        /// has not been regenerated yet.
+        /// The art, from the scene builder's own tables rather than off the
+        /// generated scene, so the capture works on a checkout whose scene has
+        /// not been rebuilt yet.
         /// </summary>
-        private static MatchArt LoadArt() =>
-            MatchArt.Of(
-                LoadModel("Assets/Art/Characters/Skeleton_Warrior.fbx"),
-                LoadClip("Walking_A"),
-                LoadClip("Death_A"),
-                LoadModel("Assets/Art/Characters/Ranger.fbx"),
-                LoadModel("Assets/Art/Weapons/bow_withString.fbx"),
-                LoadClip("Ranged_Bow_Idle"),
-                LoadClip("Ranged_Bow_Draw"),
-                LoadClip("Ranged_Bow_Release"),
-                LoadModel("Assets/Art/Buildings/building_tower_A_blue.fbx"));
-
-        private static GameObject LoadModel(string path)
-        {
-            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-
-            if (model == null)
-            {
-                throw new IOException("Nothing imported at " + path + ".");
-            }
-
-            return model;
-        }
-
-        private static AnimationClip LoadClip(string name)
-        {
-            string[] banks =
-            {
-                "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
-                "Assets/Art/Animations/Rig_Medium_General.fbx",
-                "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
-            };
-
-            foreach (string bank in banks)
-            {
-                AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(bank)
-                    .OfType<AnimationClip>()
-                    .FirstOrDefault(c => c.name == name && !c.name.StartsWith("__preview__"));
-
-                if (clip != null)
-                {
-                    return clip;
-                }
-            }
-
-            throw new IOException("No clip called '" + name + "' in any of the three banks.");
-        }
+        private static MatchArt LoadArt() => MatchSceneBuilder.Art();
 
         private static Texture2D Grab(Camera camera, int width, int height)
         {

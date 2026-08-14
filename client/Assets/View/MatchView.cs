@@ -344,7 +344,7 @@ namespace View
 
             foreach (CreepSnapshot creep in Current.Creeps)
             {
-                CreepView view = _creepPool.Claim(creep.Id);
+                CreepView view = _creepPool.Claim(creep.Id, creep.TypeId);
 
                 bool paired = _previousCreeps.TryGetValue(creep.Id, out CreepSnapshot before);
 
@@ -502,12 +502,18 @@ namespace View
                 var view = host.AddComponent<TowerView>();
                 Quaternion resting = RestingRotationFor(host.transform.localPosition);
 
+                // The model and the size are the unit type's, and the delivery
+                // decides only whether there are clips to pose it with.
+                GameObject model = _art.ModelFor(placed.Type.Id);
+                float scale = _art.ScaleFor(placed.Type.Id);
+
                 if (placed.Type.Delivery == Delivery.Projectile)
                 {
                     view.BuildAnimated(
                         id,
                         placed.Type,
-                        _art.ProjectileTowerModel,
+                        model,
+                        scale,
                         _art.BowModel,
                         _art.TowerIdleClip,
                         _art.TowerWindupClip,
@@ -516,7 +522,7 @@ namespace View
                 }
                 else
                 {
-                    view.BuildStatic(id, placed.Type, _art.HitscanTowerModel, resting);
+                    view.BuildStatic(id, placed.Type, model, scale, resting);
                 }
 
                 _towers.Add(id, view);
@@ -558,13 +564,22 @@ namespace View
                 : Quaternion.LookRotation(toward.normalized, Vector3.up);
         }
 
-        private CreepView MakeCreepView()
+        /// <summary>
+        /// One creep view, built for one unit type. The pool asks for a type
+        /// rather than for "a creep", because a view carries its type's model
+        /// and cannot be lent to a body of another.
+        /// </summary>
+        private CreepView MakeCreepView(int unitId)
         {
-            var host = new GameObject("Creep");
+            var host = new GameObject("Creep " + _types.ById(unitId).Label);
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(_art.CreepModel, _art.CreepWalkClip, _art.CreepDeathClip);
+            view.Build(
+                _art.ModelFor(unitId),
+                _art.ScaleFor(unitId),
+                _art.CreepWalkClip,
+                _art.CreepDeathClip);
 
             return view;
         }

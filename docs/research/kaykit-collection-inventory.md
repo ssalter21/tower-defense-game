@@ -24,8 +24,20 @@ entries, 28,221 of them files. **It is not in this repository and should not go 
 `tools/check-file-sizes.ps1` caps a tracked file at 5 MB, and the reason it exists — no large-file storage,
 ever — applies with more force to 606 MB of art whose four redundant export formats are 90% of the weight.
 
+**It is extracted, and it is extracted outside this repository**, at the same level as the checkout rather
+than inside it:
+
+```
+~/repos/kaykit-collection/The Complete KayKit Collection v6.1/
+```
+
+That folder is where every later import is pulled from, and nothing else reads it — no tool, no test and no
+path in the project points at it, because a repository that needed a folder beside it would not be a
+repository a fresh clone could build. It is a working copy of the zip for a person to look through and copy
+out of, and deleting it costs one re-extraction.
+
 The import pattern already in `client/Assets/Art/` is the right one: pull the individual files a scene needs,
-commit those, leave the rest in the zip.
+commit those, leave the rest outside.
 
 ## 2. Licence
 
@@ -367,15 +379,33 @@ The creep source remains unchosen. Nothing in this note decides it.
 
 ## 10. Already imported
 
-`client/Assets/Art/` currently holds, from this bundle:
+`client/Assets/Art/` currently holds, from this bundle — **eighteen files, one per thing the nine units and
+their clips actually need**:
 
-- `Characters/Ranger.fbx`, `Characters/Skeleton_Warrior.fbx` with `ranger_texture.png`, `skeleton_texture.png`
+- **Characters, from Adventurers 2.0** — `Knight.fbx`, `Mage.fbx`, `Ranger.fbx`, each with its own atlas
+  (`knight_texture.png`, `mage_texture.png`, `ranger_texture.png`)
+- **Characters, from Skeletons** — `Skeleton_Minion.fbx`, `Skeleton_Rogue.fbx`, `Skeleton_Mage.fbx` on
+  `skeleton_texture_A.png`, and `Skeleton_Warrior.fbx` on `skeleton_texture.png`
 - `Weapons/bow_withString.fbx`
 - `Buildings/building_tower_A_blue.fbx` with `hexagons_medieval.png`
 - `Animations/Rig_Medium_General.fbx`, `Rig_Medium_MovementBasic.fbx`, `Rig_Medium_CombatRanged.fbx`
 
-All four `Rig_Medium` files present are the right rig for both imported characters. Nothing on `Rig_Large` has
-been brought in.
+Every character came out of the pack's `Characters/fbx/` folder, which is the only FBX export a rigged model
+ships — the `fbx(unity)` variant exists for props and not for characters. The bow is the one exception and
+came from `Assets/fbx/`.
+
+**Two skeleton atlases, and that is two pack versions rather than a duplicate.** `Skeleton_Warrior.fbx` was
+imported before this bundle existed on disk, from Skeletons 1.0, and its material names `skeleton_texture`.
+The three brought in since are from Skeletons 1.1 and name `skeleton_texture_A`. Both files are therefore in
+the project and `ImportedArtTests` asserts each model against the one it was authored against — a model bound
+to the wrong atlas of the two does not throw, it draws in the wrong skin.
+
+All four `Rig_Medium` files present are the right rig for all seven imported characters, and `handslot.l` is
+on every one of them. Nothing on `Rig_Large` has been brought in.
+
+**The building is imported and unassigned.** No unit is drawn with `building_tower_A_blue` any more — every
+row in `content/units.txt` is a character — but it stays, because it is the only non-skinned model in the
+project and the static import path is a half of the pipeline nothing else exercises.
 
 ## Sources
 

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Tests.Fixtures;
 using UnityEditor;
@@ -126,15 +127,28 @@ namespace Tests.EditMode
                     GeneratedTestAssets.ManifestPath + " names a different " + field
                     + " than ChosenArt does. Run tools/build-test-assets.ps1 and commit what it writes.");
 
-            Same(generated.CreepModel, chosen.CreepModel, nameof(chosen.CreepModel));
+            Assert.That(
+                generated.Units.Select(u => u.UnitId),
+                Is.EqualTo(chosen.Units.Select(u => u.UnitId)),
+                GeneratedTestAssets.ManifestPath + " covers different units than ChosenArt does. "
+                + "Run tools/build-test-assets.ps1 and commit what it writes.");
+
+            foreach (UnitArt unit in chosen.Units)
+            {
+                Same(generated.ModelFor(unit.UnitId), unit.Model, "model for unit " + unit.UnitId);
+
+                Assert.That(generated.ScaleFor(unit.UnitId), Is.EqualTo(unit.Scale),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+            }
+
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
             Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
-            Same(generated.ProjectileTowerModel, chosen.ProjectileTowerModel, nameof(chosen.ProjectileTowerModel));
             Same(generated.BowModel, chosen.BowModel, nameof(chosen.BowModel));
             Same(generated.TowerIdleClip, chosen.TowerIdleClip, nameof(chosen.TowerIdleClip));
             Same(generated.TowerWindupClip, chosen.TowerWindupClip, nameof(chosen.TowerWindupClip));
             Same(generated.TowerBackswingClip, chosen.TowerBackswingClip, nameof(chosen.TowerBackswingClip));
-            Same(generated.HitscanTowerModel, chosen.HitscanTowerModel, nameof(chosen.HitscanTowerModel));
         }
 
         /// <summary>

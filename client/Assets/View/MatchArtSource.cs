@@ -22,13 +22,13 @@ namespace View
     /// <b>Not how the game gets its art.</b> The match scene carries serialized
     /// references filled in by <c>MatchSceneBuilder</c>, and that stays exactly
     /// as it was — see <see cref="MatchArt"/> on why a runtime lookup would be
-    /// the wrong thing there. This is the fixture's route to the same nine
+    /// the wrong thing there. This is the fixture's route to the same
     /// assets, for code that has no scene to be handed them by.
     /// </para>
     /// </remarks>
     public interface IMatchArtSource
     {
-        /// <summary>The nine models and clips, or a throw naming what is missing.</summary>
+        /// <summary>The models and clips, or a throw naming what is missing.</summary>
         MatchArt Load();
     }
 
@@ -55,7 +55,7 @@ namespace View
         public static void Use(IMatchArtSource source)
             => _current = source ?? throw new ArgumentNullException(nameof(source));
 
-        /// <summary>The nine models and clips, from whichever adapter is in force.</summary>
+        /// <summary>The models and clips, from whichever adapter is in force.</summary>
         public static MatchArt Load() => _current.Load();
     }
 

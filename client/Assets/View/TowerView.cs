@@ -18,13 +18,20 @@ namespace View
     /// </para>
     /// <para>
     /// <b>The two kinds are deliberately different, and the contrast is the
-    /// test.</b> The hitscan tower is a static building with no rig and no
-    /// clips: its shot puts nothing at all in the snapshot and exists only as
-    /// an event and a tracer the view draws and forgets. The projectile tower
-    /// is a skinned character that draws a bow, and its shot is a real snapshot
-    /// entity that can be scrubbed backwards through. Same seam, opposite
-    /// treatments — if both were drawn the same way the seam would not be being
-    /// tested by anything.
+    /// test.</b> A hitscan tower is posed by nothing: its shot puts nothing at
+    /// all in the snapshot and exists only as an event and a tracer the view
+    /// draws and forgets, so it stands as its model was imported. The
+    /// projectile tower is bound to three clips and draws a bow, and its shot
+    /// is a real snapshot entity that can be scrubbed backwards through. Same
+    /// seam, opposite treatments — if both were drawn the same way the seam
+    /// would not be being tested by anything.
+    /// </para>
+    /// <para>
+    /// <b>Which model it wears is not that distinction.</b> The model and the
+    /// scale come from <see cref="MatchArt"/> keyed by the unit type's id, so
+    /// the Soldier, the Archer, the Ranger and the Mage are four bodies on the
+    /// board rather than two deliveries. What the delivery still decides is
+    /// whether there is anything to pose.
     /// </para>
     /// <para>
     /// <b>Facing snaps, and that is not a shortcut.</b> Turning smoothly means
@@ -81,27 +88,16 @@ namespace View
         public int LastSlot { get; private set; }
 
         /// <summary>
-        /// The static building. No rig, no clips, nothing to sample — and
-        /// nothing in the snapshot for its shots either.
+        /// The unposed tower. No clips, nothing to sample — and nothing in the
+        /// snapshot for its shots either.
         /// </summary>
-        public void BuildStatic(int id, UnitType type, GameObject model, Quaternion resting)
+        public void BuildStatic(int id, UnitType type, GameObject model, float scale, Quaternion resting)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-
             Id = id;
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Instantiate(model, transform, false);
-            Model.name = model.name;
-            Model.transform.localPosition = Vector3.zero;
-
-            // The model's own local ROTATION is left exactly as the importer
-            // produced it. Forcing it to identity looks tidy and tips over any
-            // model whose FBX root carries an axis-conversion rotation -- which
-            // is how the hitscan tower came to be lying on its side on the road,
-            // while the characters, whose roots happen to be identity, stood up
-            // perfectly and hid the bug.
+            Model = Dress(model, scale);
 
             transform.rotation = resting;
         }
@@ -114,13 +110,13 @@ namespace View
             int id,
             UnitType type,
             GameObject model,
+            float scale,
             GameObject weapon,
             AnimationClip idle,
             AnimationClip windup,
             AnimationClip backswing,
             Quaternion resting)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
             if (weapon == null) throw new ArgumentNullException(nameof(weapon));
             if (idle == null) throw new ArgumentNullException(nameof(idle));
             if (windup == null) throw new ArgumentNullException(nameof(windup));
@@ -130,16 +126,7 @@ namespace View
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Instantiate(model, transform, false);
-            Model.name = model.name;
-            Model.transform.localPosition = Vector3.zero;
-
-            // The model's own local ROTATION is left exactly as the importer
-            // produced it. Forcing it to identity looks tidy and tips over any
-            // model whose FBX root carries an axis-conversion rotation -- which
-            // is how the hitscan tower came to be lying on its side on the road,
-            // while the characters, whose roots happen to be identity, stood up
-            // perfectly and hid the bug.
+            Model = Dress(model, scale);
 
             // The weapon goes on the bone before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
@@ -151,6 +138,39 @@ namespace View
             _animator = SimDrivenAnimator.Bind(Model, idle, windup, backswing);
 
             transform.rotation = resting;
+        }
+
+        /// <summary>
+        /// Instantiates the model under this object, at the size its unit type
+        /// is drawn at.
+        /// </summary>
+        /// <remarks>
+        /// The model's own local ROTATION is left exactly as the importer
+        /// produced it. Forcing it to identity looks tidy and tips over any
+        /// model whose FBX root carries an axis-conversion rotation — which is
+        /// how the hitscan tower came to be lying on its side on the road, while
+        /// the characters, whose roots happen to be identity, stood up perfectly
+        /// and hid the bug. The SCALE is multiplied into whatever the importer
+        /// produced for the same reason: an FBX root can carry a unit-conversion
+        /// factor, and assigning over it resizes the model by whatever that
+        /// factor was.
+        /// </remarks>
+        private GameObject Dress(GameObject model, float scale)
+        {
+            if (model == null) throw new ArgumentNullException(nameof(model));
+
+            if (scale <= 0f)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(scale), "a tower drawn at no size at all is a tower that never appeared");
+            }
+
+            GameObject instance = Instantiate(model, transform, false);
+            instance.name = model.name;
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localScale *= scale;
+
+            return instance;
         }
 
         /// <summary>
