@@ -67,6 +67,9 @@ namespace Tests.Fixtures
         public const string SpellcastClipName = "Ranged_Magic_Spellcasting";
         public const string ChopClipName = "Melee_1H_Attack_Chop";
 
+        /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
+        public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
+
         /// <summary>
         /// What each row in <c>content/units.txt</c> is drawn as, and how big,
         /// as signed in <c>docs/roster.md</c>.
@@ -87,24 +90,26 @@ namespace Tests.Fixtures
             string leftHand,
             string idle,
             string windup,
-            string backswing)[] UnitPaths =
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt)[] UnitPaths =
         {
-            (1, MinionModelPath, MatchArt.CreepScale, null, null, null, null, null),
-            (2, RogueModelPath, MatchArt.CreepScale, null, null, null, null, null),
+            (1, MinionModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
+            (2, RogueModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
             (3, RangerModelPath, MatchArt.TowerScale,
-                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, MageModelPath, MatchArt.TowerScale,
-                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName),
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, default, default),
             (7, SkeletonMageModelPath, MatchArt.CreepScale,
-                SkeletonStaffModelPath, null, null, null, null),
+                SkeletonStaffModelPath, null, null, null, null, default, default),
             (11, KnightModelPath, MatchArt.TowerScale,
-                SwordModelPath, null, RestClipName, ChopClipName, RestClipName),
+                SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, MinionModelPath, MatchArt.CreepScale,
-                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null),
+                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default),
             (13, WarriorModelPath, MatchArt.CreepScale,
-                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null),
+                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default),
             (14, RangerModelPath, MatchArt.RangerScale,
-                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -122,7 +127,9 @@ namespace Tests.Fixtures
                     MaybeModel(u.leftHand),
                     MaybeClip(u.idle),
                     MaybeClip(u.windup),
-                    MaybeClip(u.backswing))),
+                    MaybeClip(u.backswing),
+                    u.rightTilt,
+                    u.leftTilt)),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));
 

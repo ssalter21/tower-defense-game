@@ -154,12 +154,12 @@ namespace View
         {
             if (art.RightHand != null)
             {
-                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand);
+                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand, art.RightHandTilt);
             }
 
             if (art.LeftHand != null)
             {
-                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand);
+                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand, art.LeftHandTilt);
             }
         }
 

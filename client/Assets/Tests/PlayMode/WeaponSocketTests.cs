@@ -34,7 +34,8 @@ namespace Tests.PlayMode
             UnitArt archer = BowHolder();
 
             _holder = Object.Instantiate(archer.Model);
-            bow = WeaponSocket.Attach(_holder, archer.LeftHand, WeaponSocket.BowHand);
+            bow = WeaponSocket.Attach(
+                _holder, archer.LeftHand, WeaponSocket.BowHand, archer.LeftHandTilt);
             hand = WeaponSocket.FindBone(_holder, WeaponSocket.BowHand);
 
             return _holder;
@@ -80,8 +81,20 @@ namespace Tests.PlayMode
             // Zero offset is the contract, not an incidental starting value: the
             // pack authors the slot bone to be exactly where the held thing goes.
             Assert.AreEqual(Vector3.zero, bow.transform.localPosition);
-            Assert.Less(Quaternion.Angle(Quaternion.identity, bow.transform.localRotation), 1e-3f,
-                "the bow was rolled relative to the slot bone");
+
+            // The art's stated tilt, not identity. The bow is the only weapon
+            // in this project that goes in the left hand, the pack authors them
+            // all for the right, and at the bone's own rotation the bow came
+            // out belly-in and string-out — backwards. The half turn is written
+            // down per unit, so this asserts against what was written down
+            // rather than against a number repeated here.
+            Assert.Less(
+                Quaternion.Angle(BowHolder().LeftHandTilt, bow.transform.localRotation), 1e-3f,
+                "the bow is not turned the way its art says it should be");
+
+            Assert.Greater(
+                Quaternion.Angle(Quaternion.identity, BowHolder().LeftHandTilt), 1f,
+                "the bow's tilt is identity, so the flip that faces it forwards has been lost");
 
             // Position and rotation are the bone's; SIZE IS THE ASSET'S. This
             // asserted Vector3.one until 14 August 2026 and was wrong: the bow

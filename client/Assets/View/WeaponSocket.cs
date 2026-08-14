@@ -74,7 +74,21 @@ namespace View
         /// wrong" from every angle except the one that would show it is a
         /// misspelt string.
         /// </exception>
-        public static GameObject Attach(GameObject host, GameObject weapon, string boneName)
+        public static GameObject Attach(GameObject host, GameObject weapon, string boneName) =>
+            Attach(host, weapon, boneName, Quaternion.identity);
+
+        /// <summary>
+        /// As above, turned by <paramref name="tilt"/> relative to the bone.
+        /// </summary>
+        /// <remarks>
+        /// The tilt exists because this pack authors every weapon for the right
+        /// hand. Anything that goes in the left comes out mirrored, and the bow
+        /// — the only such thing — needs a half turn. It is an argument rather
+        /// than a rule about the left hand, because the shield goes there too
+        /// and needs none.
+        /// </remarks>
+        public static GameObject Attach(
+            GameObject host, GameObject weapon, string boneName, Quaternion tilt)
         {
             if (host == null) throw new System.ArgumentNullException(nameof(host));
             if (weapon == null) throw new System.ArgumentNullException(nameof(weapon));
@@ -92,7 +106,7 @@ namespace View
             held.name = weapon.name;
             held.transform.SetParent(bone, worldPositionStays: false);
             held.transform.localPosition = Vector3.zero;
-            held.transform.localRotation = Quaternion.identity;
+            held.transform.localRotation = tilt;
 
             // The prefab's own scale, NOT one. Measured on 14 August 2026: the
             // bow imports with a root scale of 100 and every other weapon in

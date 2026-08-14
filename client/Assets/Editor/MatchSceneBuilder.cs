@@ -68,6 +68,15 @@ namespace View.Editor
         private const string ChopClipName = "Melee_1H_Attack_Chop";
 
         /// <summary>
+        /// The bow's half turn. Every weapon in this pack is authored for the
+        /// right hand; the bow is the only one that goes in the left, and at
+        /// the bone's own rotation it comes out with its belly curving into the
+        /// archer and its string facing the target. Backwards, and it took
+        /// somebody looking at it to notice.
+        /// </summary>
+        private static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
+
+        /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row in
         /// <c>content/units.txt</c>.
         /// </summary>
@@ -110,26 +119,28 @@ namespace View.Editor
             string leftHand,
             string idle,
             string windup,
-            string backswing)[] UnitBindings =
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt)[] UnitBindings =
         {
             (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                null, null, null, null, null),
+                null, null, null, null, null, default, default),
             (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
-                null, null, null, null, null),
+                null, null, null, null, null, default, default),
             (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
-                StaffPath, null, RestClipName, SpellcastClipName, RestClipName),
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, default, default),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
-                SkeletonStaffPath, null, null, null, null),
+                SkeletonStaffPath, null, null, null, null, default, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
-                SwordPath, null, RestClipName, ChopClipName, RestClipName),
+                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldAPath, null, null, null),
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default),
             (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldBPath, null, null, null),
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default),
             (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
         };
 
         /// <summary>
@@ -233,6 +244,8 @@ namespace View.Editor
                 entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(binding.windup);
                 entry.FindPropertyRelative("backswingClip").objectReferenceValue =
                     MaybeClip(binding.backswing);
+                entry.FindPropertyRelative("rightHandTilt").vector3Value = binding.rightTilt;
+                entry.FindPropertyRelative("leftHandTilt").vector3Value = binding.leftTilt;
             }
 
             foreach ((string field, string asset, string clip) in SharedBindings)
@@ -287,7 +300,9 @@ namespace View.Editor
                     MaybeModel(binding.leftHand),
                     MaybeClip(binding.idle),
                     MaybeClip(binding.windup),
-                    MaybeClip(binding.backswing)));
+                    MaybeClip(binding.backswing),
+                    binding.rightTilt,
+                    binding.leftTilt));
             }
 
             return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));

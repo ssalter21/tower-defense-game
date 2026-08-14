@@ -89,12 +89,12 @@ namespace View
             // rows that share a skin. See docs/roster.md.
             if (art.RightHand != null)
             {
-                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand);
+                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand, art.RightHandTilt);
             }
 
             if (art.LeftHand != null)
             {
-                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand);
+                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand, art.LeftHandTilt);
             }
 
             // Generic transform curves and no avatar -- the path the Playables

@@ -39,6 +39,14 @@ namespace View
         private GameObject leftHand;
 
         [SerializeField]
+        [Tooltip("Euler degrees applied to the right-hand item, on top of the bone. Usually zero.")]
+        private Vector3 rightHandTilt;
+
+        [SerializeField]
+        [Tooltip("Euler degrees applied to the left-hand item, on top of the bone. Usually zero.")]
+        private Vector3 leftHandTilt;
+
+        [SerializeField]
         [Tooltip("Played while this tower is Idle. Null on a creep.")]
         private AnimationClip idleClip;
 
@@ -60,14 +68,7 @@ namespace View
         /// </summary>
         public static UnitArt Holding(
             int unitId, GameObject model, float scale, GameObject rightHand, GameObject leftHand) =>
-            new UnitArt
-            {
-                unitId = unitId,
-                model = model,
-                scale = scale,
-                rightHand = rightHand,
-                leftHand = leftHand,
-            };
+            Armed(unitId, model, scale, rightHand, leftHand, null, null, null);
 
         /// <summary>
         /// A tower: what it holds, and the three clips it is posed with.
@@ -86,7 +87,9 @@ namespace View
             GameObject leftHand,
             AnimationClip idle,
             AnimationClip windup,
-            AnimationClip backswing) =>
+            AnimationClip backswing,
+            Vector3 rightHandTilt = default,
+            Vector3 leftHandTilt = default) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -97,6 +100,8 @@ namespace View
                 idleClip = idle,
                 windupClip = windup,
                 backswingClip = backswing,
+                rightHandTilt = rightHandTilt,
+                leftHandTilt = leftHandTilt,
             };
 
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
@@ -113,6 +118,27 @@ namespace View
 
         /// <summary>What goes on <c>handslot.l</c>, or null.</summary>
         public GameObject LeftHand => leftHand;
+
+        /// <summary>
+        /// How the right-hand item is turned relative to the bone. Zero for
+        /// everything the pack authored for that hand.
+        /// </summary>
+        public Quaternion RightHandTilt => Quaternion.Euler(rightHandTilt);
+
+        /// <summary>
+        /// How the left-hand item is turned relative to the bone.
+        /// </summary>
+        /// <remarks>
+        /// Not zero for the bow. Every weapon in this pack is authored for the
+        /// right hand, which is the melee hand; the bow is the only thing that
+        /// goes in the left, and at the bone's own rotation it comes out with
+        /// its belly curving into the archer and its string facing the target —
+        /// backwards, and visibly so. A half turn about the vertical is the
+        /// correction, and it is written down per unit rather than baked into
+        /// the socket because the next off-hand item is a shield, which needs
+        /// none.
+        /// </remarks>
+        public Quaternion LeftHandTilt => Quaternion.Euler(leftHandTilt);
 
         /// <summary>The clip for <see cref="Sim.TowerState.Idle"/>, or null on a creep.</summary>
         public AnimationClip IdleClip => idleClip;
