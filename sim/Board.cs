@@ -149,6 +149,22 @@ namespace Sim
         public bool IsFree(int column, int row) => IndexOn(column, row) < 0;
 
         /// <summary>
+        /// The type standing on that cell, or null where the cell is free.
+        /// </summary>
+        /// <remarks>
+        /// What an upgrade is climbing from. The build phase needs the row
+        /// beneath an upgrade to check it against the ladder, and reading it
+        /// off <see cref="Placements"/> at the call site would put a scan of
+        /// this board's cells outside this board.
+        /// </remarks>
+        public UnitType? TypeOn(int column, int row)
+        {
+            int standing = IndexOn(column, row);
+
+            return standing < 0 ? null : _placements[standing].Type;
+        }
+
+        /// <summary>
         /// This board plus one more placement, which takes the next ordinal.
         /// </summary>
         /// <remarks>

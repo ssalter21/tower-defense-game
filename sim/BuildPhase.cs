@@ -265,7 +265,7 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="wave">Which round this is, for the refusals to name.</param>
-        /// <param name="ladder">The upgrade edges a <c>place</c> is refused against.</param>
+        /// <param name="ladder">The upgrade edges a <c>place</c> and an <c>upgrade</c> are both refused against.</param>
         /// <param name="purse">What the run has to spend.</param>
         /// <param name="costs">What everything is priced at, units and snapshots alike.</param>
         /// <param name="types">The roster an action's type id names a row of.</param>
@@ -479,6 +479,29 @@ namespace Sim
                 if (!footing.Possible)
                 {
                     throw new SimulationException(naming + ", " + footing.Fault);
+                }
+            }
+            else if (ladder.IsTargetOfAnEdge(action.TypeId))
+            {
+                // The other half of the same prerequisite. Refusing the place
+                // only says the row cannot be bought outright; without this,
+                // every standing tower is a rung below it and the ladder ranks
+                // nothing. A cell with nothing on it is left to Board.Upgrade,
+                // which refuses it in the words that fit.
+                UnitType? beneath = built.TypeOn(action.Column, action.Row);
+
+                if (!(beneath is null) && !ladder.HasEdge(beneath.Id, action.TypeId))
+                {
+                    throw new SimulationException(
+                        naming
+                        + " into type id "
+                        + action.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + ", where "
+                        + beneath.Label
+                        + " stands. The ladder carries no edge from that row to this one, and an upgrade "
+                        + "climbs an edge or it is not an upgrade -- a tier reachable from anything "
+                        + "standing is a tier with no tier under it, which is the thing refusing the "
+                        + "place exists to prevent.");
                 }
             }
 

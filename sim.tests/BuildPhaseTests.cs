@@ -793,6 +793,61 @@ public class BuildPhaseTests
     }
 
     [Fact]
+    public void A_rung_is_climbed_only_from_the_rung_under_it()
+    {
+        // The other half of #179's acceptance criterion, and the half that was
+        // missing: "a Ranger is reachable only through an Archer". Refusing the
+        // `place` alone does not say that. The ladder carries one edge, archer
+        // to ranger, so a soldier or a mage standing on a cell is not a rung
+        // below the ranger and cannot be upgraded into one -- otherwise the
+        // ranger is reachable for 30 gold and an upgrade, the cheapest tower on
+        // the roster is the prerequisite for the dearest, and the ladder ranks
+        // nothing.
+        //
+        // OBSERVED: return true unconditionally from UpgradeLadder.HasEdge.
+        // Both refusals below go red having caught nothing, and a soldier
+        // becomes a ranger for 30 + 40 -- ten gold under the 40 + 40 the
+        // criterion names, which is how the hole shows up in the price.
+        Run run = TheBuild.Fresh();
+        int soldier = run.Costs.PriceOf(Purchase.Unit(Soldier));
+        int mage = run.Costs.PriceOf(Purchase.Unit(Mage));
+        int ranger = run.Costs.PriceOf(Purchase.Unit(Ranger));
+
+        Assert.True(run.Ladder.HasEdge(Archer, Ranger), "The committed ladder carries no archer-to-ranger edge.");
+        Assert.False(run.Ladder.HasEdge(Soldier, Ranger), "The committed ladder carries a soldier-to-ranger edge.");
+
+        BuildPhase fromASoldier = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Soldier, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow));
+
+        SimulationException refused = Assert.Throws<SimulationException>(
+            () => Resolved(run, fromASoldier, soldier + ranger));
+
+        Assert.Contains("The ladder carries no edge from that row to this one", refused.Message, StringComparison.Ordinal);
+
+        // The mage is the same refusal from the other direction: dearer than the
+        // ranger, so this is not about price.
+        BuildPhase fromAMage = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Mage, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow));
+
+        Assert.Throws<SimulationException>(() => Resolved(run, fromAMage, mage + ranger));
+
+        // And the archer still climbs, so the refusal is the ladder speaking and
+        // not the upgrade verb being shut.
+        BuildPhase fromAnArcher = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow));
+
+        int archer = run.Costs.PriceOf(Purchase.Unit(Archer));
+
+        Assert.Equal(archer + ranger, Resolved(run, fromAnArcher, archer + ranger).Spent);
+    }
+
+    [Fact]
     public void An_upgrade_pays_the_targets_full_price_and_mints_no_new_placement_id()
     {
         // The full price of the row it names, read off the roster and not off

@@ -245,6 +245,31 @@ namespace Sim
             return false;
         }
 
+        /// <summary>
+        /// Whether one row may be swapped for another: true where this ladder
+        /// carries an edge from the first to the second.
+        /// </summary>
+        /// <remarks>
+        /// The other half of the prerequisite. <see cref="IsTargetOfAnEdge"/>
+        /// says a row cannot be bought outright; this says which row it may be
+        /// climbed from, and without it "reached by upgrading the rung below
+        /// it" is a sentence in a comment rather than a rule -- any standing
+        /// tower would do, which makes the rung below no prerequisite at all.
+        /// A linear scan, for the reason given above.
+        /// </remarks>
+        public bool HasEdge(int fromTypeId, int toTypeId)
+        {
+            for (int index = 0; index < _edges.Length; index++)
+            {
+                if (_edges[index].From == fromTypeId && _edges[index].To == toTypeId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Which row layout this ladder was written in and read through.</summary>
         public int Layout { get; }
 
