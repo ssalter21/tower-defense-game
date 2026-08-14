@@ -392,12 +392,12 @@ namespace Tests.PlayMode
             yield return null;
             yield return null;
 
-            // The palette sits on top of the playback bar, and both are anchored
-            // to the bottom edge of a panel laid out at 1080 high and scaled to
-            // the window's height.
+            // The palette is anchored to the bottom edge of a panel laid out at
+            // 1080 high and scaled to the window's height, so a point half its
+            // height up is a point on it.
             float scale = Screen.height / 1080f;
             var onTheBar = new Vector2(
-                Screen.width * 0.5f, (PlaybackControls.BarHeight + 52f) * scale);
+                Screen.width * 0.5f, TowerPalette.BarHeight * 0.5f * scale);
             var overTheBoard = new Vector2(Screen.width * 0.5f, Screen.height * 0.8f);
 
             Assert.That(root.Palette.Covers(onTheBar), Is.True, "A point on the palette bar.");
@@ -414,6 +414,54 @@ namespace Tests.PlayMode
             root.Pointer.Point(onTheBar);
 
             Assert.That(root.Building.IsLit, Is.False);
+        }
+
+        /// <summary>
+        /// The build chrome reaches the bottom edge of the screen. Nothing else
+        /// in build mode is drawn down there, so a gap under the palette is a
+        /// strip of board the player can see, cannot reach past the panels above
+        /// it, and has no reason to expect to be dead.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The point is a literal, on purpose.</b> The defect this pins was a
+        /// bar anchored to <c>PlaybackControls</c>'s height — watch mode's
+        /// chrome, which <see cref="RunLoop.Commit"/> only puts up after it has
+        /// taken this chrome down — and every assertion in this file computed
+        /// its click point from that same expression, so all of them moved with
+        /// it. An assertion written in the layout's own arithmetic cannot see a
+        /// layout mistake.
+        /// </para>
+        /// <para>
+        /// Two reference units up rather than zero: the bottom row of pixels is
+        /// where a rounding disagreement between the panel's scale and the
+        /// screen's height would land, and this test is about a bar being
+        /// eighty-eight units off the floor rather than about a pixel.
+        /// </para>
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator TheBuildChromeReachesTheBottomEdge()
+        {
+            MatchRoot root = Building(Opening());
+
+            yield return null;
+            yield return null;
+
+            float scale = Screen.height / 1080f;
+            var onTheEdge = new Vector2(Screen.width * 0.5f, 2f * scale);
+
+            Assert.That(
+                root.Palette.Covers(onTheEdge),
+                Is.True,
+                "The bottom edge of the screen in build mode is the palette.");
+
+            Select(root, ArcherId);
+
+            Assert.That(root.Pointer.Click(onTheEdge), Is.False);
+            Assert.That(
+                root.Composing.Phase.Actions.Count,
+                Is.EqualTo(0),
+                "And a click there is the palette's, not the board's.");
         }
 
         /// <summary>

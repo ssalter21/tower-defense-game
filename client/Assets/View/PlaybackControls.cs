@@ -61,11 +61,13 @@ namespace View
         public static readonly float[] Speeds = { 1f, 2f, 4f, 8f };
 
         /// <summary>
-        /// How tall the bar is. Public because the tower palette sits directly
-        /// on top of it — one number, in one file, rather than two that have to
-        /// be kept level by hand.
+        /// How tall the bar is. Private, and it stays private: this bar is the
+        /// whole of watch mode's chrome and nothing is stacked on it. Build
+        /// mode's bars are never on screen beside it, so anything over there
+        /// anchored to this number would be holding space for a bar that is not
+        /// there.
         /// </summary>
-        public const float BarHeight = 88f;
+        private const float BarHeight = 88f;
 
         private const float ButtonWidth = 132f;
 

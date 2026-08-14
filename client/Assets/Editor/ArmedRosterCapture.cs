@@ -83,7 +83,7 @@ namespace View.Editor
 
             try
             {
-                Camera camera = MakeCamera(host.transform, height, width);
+                Camera camera = MakeCamera(host.transform);
                 MakeSun(host.transform);
 
                 foreach (UnitType type in types.Types)
@@ -272,7 +272,13 @@ namespace View.Editor
             camera.transform.rotation = look;
         }
 
-        private static Camera MakeCamera(Transform parent, int height, int width)
+        /// <summary>
+        /// The camera every unit is shot through. It takes no size: the frame's
+        /// shape is <see cref="FrameAspect"/> and the pixels are the render
+        /// texture's, so a width and a height here would be two numbers nothing
+        /// read and a swap nothing could see.
+        /// </summary>
+        private static Camera MakeCamera(Transform parent)
         {
             var holder = new GameObject("Camera");
             holder.transform.SetParent(parent, worldPositionStays: false);

@@ -389,20 +389,16 @@ Warrior takes the warrior, the Scout the rogue and the Necromancer the mage. The
 sharing is a **kit variation and not a shortage** — the Skeleton is that model with shield and sword, and the
 pack ships the weapons for it.
 
-> **This page said "the four skeleton models are exactly spent" until 13 August 2026, and it was an
-> undercount.** The [collection inventory](research/kaykit-collection-inventory.md) counts six skeletons: the
-> two not named above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the
-> publisher sells as a boss.
-
-**No assignment moves on that correction.** The Necromancer keeps **`Skeleton_Mage`**; the dedicated
-Necromancer model is left unused, which is a choice and not an oversight.
+The two not named above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the
+publisher sells as a boss; the [collection inventory](research/kaykit-collection-inventory.md) counts all six.
+The Necromancer keeps **`Skeleton_Mage`**, and the dedicated Necromancer model is left unused, which is a
+choice and not an oversight.
 
 ### The assignments are signed
 
-**This page said "neither pack is on this machine" until 13 August 2026, and it had been false since the 8th.**
-The complete collection — 22 packs, CC0, 61 rigged characters, 159 clips — has been on disk since then and is
-catalogued from the archive itself in [the collection inventory](research/kaykit-collection-inventory.md). The
-assignments above are **adopted as written** rather than left as a plan, and they were adopted by a person.
+The complete collection — 22 packs, CC0, 61 rigged characters, 159 clips — is on disk and catalogued from the
+archive itself in [the collection inventory](research/kaykit-collection-inventory.md). The assignments above
+are **adopted as written** rather than left as a plan, and they were adopted by a person.
 
 **The collection is extracted, and the assignments are on screen.** It sits at
 `~/repos/kaykit-collection/`, beside the checkout rather than inside it, and the seven character models the

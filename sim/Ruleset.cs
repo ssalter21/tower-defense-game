@@ -70,12 +70,6 @@ namespace Sim
         /// <summary>The <see cref="InterestCapGold"/> that means no ceiling at all.</summary>
         public const int NoInterestCeiling = 0;
 
-        /// <summary>
-        /// The most options either half of a round's menu may carry. A menu is
-        /// walked rather than looked up, and a take names a position on it.
-        /// </summary>
-        public const int MostOptions = 64;
-
         /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
         private const int Percent = 100;
 

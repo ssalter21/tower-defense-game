@@ -69,16 +69,17 @@ namespace View
         public const int ShortcutCount = 9;
 
         /// <summary>
-        /// Drawn after the playback bar's panel, so the offer at a hex is over
-        /// the scrub bar rather than behind it when a tower stands low on the
-        /// screen.
+        /// Above the order a bar takes by default, so the offer at a hex is
+        /// over chrome rather than behind it when a tower stands low on the
+        /// screen. The wave row is above this again.
         /// </summary>
         private const int PanelSortingOrder = 1;
 
         /// <summary>
-        /// How tall the bar is. Public because the bars are stacked: the wave
-        /// row above it is anchored to the top of this one, and a copy of the
-        /// number over there would come apart the first time this one changed.
+        /// How tall the bar is. Public because the build chrome is stacked: the
+        /// wave row above it is anchored to the top of this one, and a copy of
+        /// the number over there would come apart the first time this one
+        /// changed.
         /// </summary>
         public const float BarHeight = 104f;
 
@@ -360,10 +361,19 @@ namespace View
         }
 
         /// <summary>
-        /// The bar itself: a row across the bottom of the screen, sitting on top
-        /// of the playback bar and opaque, so a click on it stops at it rather
-        /// than falling through onto the playfield behind.
+        /// The bar itself: a row across the bottom edge of the screen, and
+        /// opaque, so a click on it stops at it rather than falling through onto
+        /// the playfield behind.
         /// </summary>
+        /// <remarks>
+        /// <b>On the edge itself, and not above the playback bar.</b> The scrub
+        /// bar belongs to watch mode and this belongs to build mode --
+        /// <see cref="RunLoop.Commit"/> takes this chrome down before it puts
+        /// that bar up -- so the two are never on screen together and space
+        /// reserved here for it is a strip of board showing under the palette
+        /// that nothing will ever draw in. Every bar in a mode is anchored to
+        /// what is actually beneath it in that mode.
+        /// </remarks>
         private static VisualElement Bar()
         {
             var bar = new VisualElement { name = "Palette" };
@@ -371,7 +381,7 @@ namespace View
             bar.style.position = Position.Absolute;
             bar.style.left = 0f;
             bar.style.right = 0f;
-            bar.style.bottom = PlaybackControls.BarHeight;
+            bar.style.bottom = 0f;
             bar.style.height = BarHeight;
             bar.style.paddingLeft = RuntimePanel.Margin;
             bar.style.paddingRight = RuntimePanel.Margin;

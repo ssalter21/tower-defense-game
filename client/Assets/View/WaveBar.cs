@@ -498,10 +498,16 @@ namespace View
         }
 
         /// <summary>
-        /// The row itself: a strip across the bottom of the screen, above the
-        /// palette and the scrub bar, and opaque so a click on it stops at it
+        /// The row itself: a strip across the bottom of the screen sitting
+        /// directly on the palette, and opaque so a click on it stops at it
         /// rather than falling through onto the playfield behind.
         /// </summary>
+        /// <remarks>
+        /// The palette is the whole of what is under it. The scrub bar is watch
+        /// mode's and this is build mode's, so leaving room for it here would
+        /// reserve a strip of screen in the one mode that never draws it -- see
+        /// <see cref="TowerPalette"/>.
+        /// </remarks>
         private static VisualElement Row()
         {
             var row = new VisualElement { name = "Wave" };
@@ -509,7 +515,7 @@ namespace View
             row.style.position = Position.Absolute;
             row.style.left = 0f;
             row.style.right = 0f;
-            row.style.bottom = PlaybackControls.BarHeight + TowerPalette.BarHeight;
+            row.style.bottom = TowerPalette.BarHeight;
             row.style.height = BarHeight;
             row.style.paddingLeft = RuntimePanel.Margin;
             row.style.paddingRight = RuntimePanel.Margin;

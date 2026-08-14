@@ -6,15 +6,16 @@ namespace Sim
 {
     /// <summary>
     /// One build phase as the record carries it: the wave it was decided in, and
-    /// the decision -- the take, what it did to the board, and how the wave's
-    /// slots were filled.
+    /// the decision -- what it did to the board, and how the wave's slots were
+    /// filled.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Nothing else is stored, because nothing else has to be.</b> The
-    /// offering the take was made off is a pure function of the run's seed and
-    /// the wave, so it is redrawn at load rather than carried; storing it would
-    /// be a second copy of a derivation, free to disagree with the first.
+    /// <b>Nothing else is stored, because nothing else has to be.</b> The round
+    /// a decision was made in -- its purse, its board, the field it is fought
+    /// against -- is a pure function of the run's seed and the phases before it,
+    /// so it is replayed rather than carried; storing it would be a second copy
+    /// of a derivation, free to disagree with the first.
     /// </para>
     /// <para>
     /// <b>The slots are in the order they were filled, and that order is the
@@ -241,20 +242,20 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The seed is here for the same reason it is in a replay bundle.</b> A
-    /// round's offering is drawn from the run's seed and the wave, so a stream
-    /// without a seed would be checked against whichever menu the caller
-    /// happened to draw -- and a take validated against a different offering is
-    /// a decision read out of a different game.
+    /// run's field is drawn from its seed and the round, so a stream without a
+    /// seed would be replayed against whichever opponents the caller happened to
+    /// draw -- and a wave scored against a different field is a decision read
+    /// out of a different game.
     /// </para>
     /// <para>
     /// <b>Three content hashes, three gates.</b> The unit table's sits in the
-    /// shared header where every kind carries it. The ruleset's and the anchor
-    /// schedule's sit beside it because this is the first record kind whose
+    /// shared header where every kind carries it. The ruleset's and the upgrade
+    /// ladder's sit beside it because this is the first record kind whose
     /// meaning depends on them: the ruleset prices the wave, opens the purse and
-    /// pays the interest, and the schedule decides where the anchors are and how
-    /// wide a round's slots get. A stream replayed against either of them
-    /// retuned is a confidently wrong result, so each is compared on its own and
-    /// each refuses by its own name.
+    /// pays the interest, and the ladder decides what a placement standing on a
+    /// hex may be swapped into. A stream replayed against either of them
+    /// re-authored is a confidently wrong result, so each is compared on its own
+    /// and each refuses by its own name.
     /// </para>
     /// <para>
     /// <b>Reading and replaying are different gates.</b> Reading needs a known

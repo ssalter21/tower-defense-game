@@ -149,6 +149,7 @@ internal sealed class RunContent
     /// orders rather than a match's.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// An authored match wave parses here perfectly -- same keyword, same
     /// fields, same table -- and a report swept against one reads exactly like a
     /// real one while separating no creep from any other. What tells the two
@@ -157,14 +158,15 @@ internal sealed class RunContent
     /// <see cref="Match.SpawnIntervalTicks"/> per creep behind the order above
     /// it, because a slot's position is its release order. Any other spacing is
     /// a wave nothing in this economy composes.
-    /// </remarks>
-    /// <remarks>
+    /// </para>
+    /// <para>
     /// The check was "every order on tick zero" until #191, which is what a
     /// stored round looked like while a build phase composed what was sent and
     /// not when. It is tighter now rather than looser: tick zero admitted any
     /// number of simultaneous columns, and this admits exactly one arrangement
     /// per set of counts.
     /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
+    /// </para>
     /// </remarks>
     private static WaveScript Field(string fieldText, UnitTypeTable types)
     {

@@ -12,15 +12,15 @@ namespace Sim.Cli;
 /// <b>A run is played from a record, exactly as a match is.</b> The stream
 /// carries the seed, the build phases and the hashes of the three tables the
 /// decisions were made under; this program hands it the run it says it is about
-/// and reads the outcome off the other side. Every rule -- what a take may
-/// name, how wide a round's slots are, what a wave costs, when the run is over
-/// -- is behind <see cref="CommandStream.Replay"/> and none of it is here.
+/// and reads the outcome off the other side. Every rule -- what a placement may
+/// become, what a wave costs, what the purse can reach, when the run is over --
+/// is behind <see cref="CommandStream.Replay"/> and none of it is here.
 /// </para>
 /// <para>
-/// <b>The seed comes off the stream and never off an argument.</b> Every
-/// offering and every field in a run is derived from its seed, so a run built
-/// on a seed beside the record would be a different run wearing the record's
-/// decisions -- and the gate refuses that by name rather than playing it.
+/// <b>The seed comes off the stream and never off an argument.</b> Every field
+/// a run is scored against is derived from its seed, so a run built on a seed
+/// beside the record would be a different run wearing the record's decisions --
+/// and the gate refuses that by name rather than playing it.
 /// </para>
 /// </remarks>
 internal sealed class PlayedRun
@@ -167,8 +167,8 @@ internal sealed class PlayedRun
                 string.Empty,
                 "THIS IS A GENERATED FILE AND IT IS COMMITTED ON PURPOSE. It is the golden trace's rule",
                 "applied one level up: the trace pins a match tick by tick, and this pins a run round by",
-                "round, so a lifecycle regression -- an offering that moved, an interest rate that",
-                "compounded differently, a slot width that widened at the wrong anchor -- is a diff rather",
+                "round, so a lifecycle regression -- a price that moved, an interest rate that",
+                "compounded differently, a field that was drawn from somewhere else -- is a diff rather",
                 "than an argument. It is deliberately not produced by whatever is checking it.",
                 string.Empty,
                 "EVERY ROUND IS A DECISION, A PAIR AND AN ECONOMY. The decision came out of the command",

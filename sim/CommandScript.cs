@@ -5,28 +5,27 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// A run's build phases as authored text: a row per round naming the wave,
-    /// what was taken off that round's offering and how the wave's slots were
-    /// filled, and a row per defensive action beneath it.
+    /// A run's build phases as authored text: a row per round naming the wave
+    /// and how the wave's slots were filled, and a row per defensive action
+    /// beneath it.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>This is the authoring form of a command stream and nothing more.</b>
     /// It reads rows and hands them to <see cref="RecordCommand"/>, which is
-    /// where the rules about a decision already live -- so a slot at or below
-    /// the one above it, a wave counted from zero and a take id nothing can
-    /// answer are refused by the same code the stored bytes are refused by, and
-    /// each rule has one implementation rather than two. A refusal from there
-    /// is rewrapped with the line it happened on, because a person editing a
-    /// file needs to be told where.
+    /// where the rules about a decision already live -- so a creep filling two
+    /// slots, a wave counted from zero and a type id nothing can answer are
+    /// refused by the same code the stored bytes are refused by, and each rule
+    /// has one implementation rather than two. A refusal from there is rewrapped
+    /// with the line it happened on, because a person editing a file needs to be
+    /// told where.
     /// </para>
     /// <para>
     /// <b>A row's slots are a trailing run of pairs.</b> A row is
-    /// <c>build wave take-kind take-id</c> followed by a <c>type-id count</c>
-    /// pair for every slot, and <c>0 0</c> is the empty slot -- the same
-    /// spelling the record carries, so the authored file and the stored bytes
-    /// describe the same thing and the authoring format never needs a migration
-    /// to become a record.
+    /// <c>build wave</c> followed by a <c>type-id count</c> pair for every slot,
+    /// and <c>0 0</c> is the empty slot -- the same spelling the record carries,
+    /// so the authored file and the stored bytes describe the same thing and the
+    /// authoring format never needs a migration to become a record.
     /// </para>
     /// <para>
     /// <b>An action row has fixed arity instead:</b> <c>place wave type-id
@@ -49,10 +48,11 @@ namespace Sim
     /// build row is refused.
     /// </para>
     /// <para>
-    /// <b>Nothing here knows what is on an offering.</b> The take is a kind and
-    /// an id, checked against the round's menu when the stream is played, which
-    /// is the only place the menu exists -- an offering is drawn from the run's
-    /// seed and the wave, and a file cannot carry a seed it is not stamped with.
+    /// <b>Nothing here knows what a round can afford.</b> A slot is a type id
+    /// and a count, and whether the purse reaches it is settled when the stream
+    /// is played, which is the only place the purse exists -- a purse is walked
+    /// forward from the run's seed and every phase before this one, and a file
+    /// carries no run to walk.
     /// </para>
     /// </remarks>
     public static class CommandScript
@@ -210,7 +210,7 @@ namespace Sim
                     + count.ToString(CultureInfo.InvariantCulture)
                     + " fields. A '"
                     + DecisionWord
-                    + "' row carries the wave, the take kind and the take id, and then a type id and a "
+                    + "' row carries the wave, and then a type id and a "
                     + "count for each of the round's slots -- "
                     + FixedFields.ToString(CultureInfo.InvariantCulture)
                     + " fields plus two per slot. A row outside that is a slot with half of it missing, "
@@ -255,7 +255,7 @@ namespace Sim
 
         /// <summary>
         /// One action row's action. The kind comes off the keyword, on the same
-        /// terms the take kind comes off its own word.
+        /// terms the decision word tells a build row from an action row.
         /// </summary>
         private static BuildAction Action(string source, int line, string[] fields)
         {
@@ -365,9 +365,9 @@ namespace Sim
                 + wave.ToString(CultureInfo.InvariantCulture)
                 + " where the build row above it decided wave "
                 + open.ToString(CultureInfo.InvariantCulture)
-                + ". A wave's action rows follow its own build row, because a round's take is decided "
-                + "before what it spends the rest of its gold on, and an action above its build row would "
-                + "be paid for by the round before it.");
+                + ". A wave's action rows follow its own build row, because a build row is what opens "
+                + "the round the actions under it are paid for out of, and an action above its build row "
+                + "would be paid for by the round before it.");
         }
 
         /// <summary>

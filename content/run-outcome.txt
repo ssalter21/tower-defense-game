@@ -3,8 +3,8 @@
 #
 # THIS IS A GENERATED FILE AND IT IS COMMITTED ON PURPOSE. It is the golden trace's rule
 # applied one level up: the trace pins a match tick by tick, and this pins a run round by
-# round, so a lifecycle regression -- an offering that moved, an interest rate that
-# compounded differently, a slot width that widened at the wrong anchor -- is a diff rather
+# round, so a lifecycle regression -- a price that moved, an interest rate that
+# compounded differently, a field that was drawn from somewhere else -- is a diff rather
 # than an argument. It is deliberately not produced by whatever is checking it.
 #
 # EVERY ROUND IS A DECISION, A PAIR AND AN ECONOMY. The decision came out of the command

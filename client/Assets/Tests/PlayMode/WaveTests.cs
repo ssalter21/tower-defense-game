@@ -616,11 +616,11 @@ namespace Tests.PlayMode
             yield return null;
             yield return null;
 
-            // The wave row is anchored above the palette, which is above the
-            // scrub bar, on a panel laid out 1080 high and scaled to the
+            // The wave row sits directly on the palette, which sits on the
+            // bottom edge, on a panel laid out 1080 high and scaled to the
             // window's height.
             float scale = Screen.height / 1080f;
-            float middle = PlaybackControls.BarHeight + TowerPalette.BarHeight + (WaveBar.BarHeight * 0.5f);
+            float middle = TowerPalette.BarHeight + (WaveBar.BarHeight * 0.5f);
             var onTheRow = new Vector2(Screen.width * 0.5f, middle * scale);
             var overTheBoard = new Vector2(Screen.width * 0.5f, Screen.height * 0.8f);
 
