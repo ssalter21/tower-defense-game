@@ -17,6 +17,29 @@
 > field", which a placing or a ladder would want back. See
 > [the open question](../open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it).
 >
+> **Amended by [#208](https://github.com/ssalter21/tower-defense-game/issues/208), 15 August 2026: the pool is
+> a population per round, and the measurement stays flat.** A round is fought against the members recorded at
+> that round, so an opponent starts small and grows as a run does; the measurement below draws its samples and
+> their opponents over the whole population at once, round structure flattened away.
+>
+> **That is resolution 2 of the two the ticket put up, and it is the alternative this ADR rejected.** The
+> rejection stands as written — a pool and a distribution that describe different populations, with nothing
+> saying so — and what makes it the right answer now is that the distribution has no consumer: since #209 a
+> wave is paid a share of what it dealt, so nothing reads a percentile and the population the measurement
+> describes is a population nothing prices off. Resolution 1 — measure per round, compare like with like — is
+> the answer if anything ever prices off it again, and it costs the sweep a multiple of the round count.
+>
+> **What it costs to sweep, measured rather than estimated:** the committed sweep goes from **42 seconds to
+> 78**, on the same machine and the same 9,600 matches. The match count does not move — a played run has not
+> touched `Run.Field` since #209 — and what nearly doubles is how long a match takes, because a round-ten
+> column is ten times as deep and runs 6,098 ticks against 1,913. Resolution 1 would have multiplied the match
+> count instead.
+>
+> **What still holds from the sentence below:** the payment is a fold, the field is measured once per run, and
+> there is still exactly one pool argument, so swapping the canned stand-in for a real ghost pool is still that
+> argument and nothing else. What no longer holds is that the spread is the spread of the opponents this run
+> will actually be scored against; a round-seven opponent is not in the population any single round fights.
+>
 > The rest of this file is left as it was written. It describes rules that were in force and is a record of
 > them, not a description of the build.
 

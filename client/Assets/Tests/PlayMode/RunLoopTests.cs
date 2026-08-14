@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -11,13 +12,13 @@ using View;
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The run loop: build, commit, watch, and round again, ten times, then an
-    /// end frame and a script on disk.
+    /// The run loop: build, commit, watch, and round again, then an end frame
+    /// and a script on disk.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The whole loop is driven from a transcript, headless.</b> Ten rounds
-    /// of one line each — what to build and how many creeps to send — pressed
+    /// <b>The whole loop is driven from a transcript, headless.</b> One line a
+    /// round — what to build and how many creeps to send — pressed
     /// through the same screen a person presses: the palette selects, a click on
     /// a hex places, a box's list fills the wave, and the one button commits and
     /// then goes on. Nothing here reaches into <see cref="Run"/>.
@@ -36,7 +37,7 @@ namespace Tests.PlayMode
     /// <para>
     /// <b>Frames are deliberately not waited on.</b> The loop is driven
     /// synchronously, so the watched match never advances a tick — what is being
-    /// tested is the loop and not the clock, and a test that watched ten matches
+    /// tested is the loop and not the clock, and a test that watched every match
     /// at one tick a frame would take an hour. <see cref="PlaybackTests"/> is
     /// where the clock is tested.
     /// </para>
@@ -44,7 +45,7 @@ namespace Tests.PlayMode
     public class RunLoopTests : ViewTest
     {
         /// <summary>
-        /// Ten rounds, one to a line: what the round builds, on which cell, and
+        /// One round to a line: what the round builds, on which cell, and
         /// how many creeps it sends. <c>-</c> builds nothing; a caret upgrades
         /// what is standing rather than placing.
         /// </summary>
@@ -59,25 +60,32 @@ namespace Tests.PlayMode
         /// </para>
         /// <para>
         /// <b>It is the committed command file's defense, cell for cell.</b>
-        /// <c>content/commands.txt</c> is the one arrangement in this repository
-        /// that is known to hold ten waves at this ruleset, and a transcript
-        /// that built somewhere else would be testing the loop against a run
-        /// that dies of health in round three — which is the loop working and
-        /// the fixture proving nothing. It is a different seed, so the numbers
-        /// are not that file's; the shape of the defense is.
+        /// <c>content/commands.txt</c> is the best arrangement in this
+        /// repository at this ruleset, and a transcript that built somewhere
+        /// else would be testing the loop against a run that dies sooner — which
+        /// is the loop working and the fixture proving nothing. It is a
+        /// different seed, so the numbers are not that file's; the shape of the
+        /// defense is.
+        /// </para>
+        /// <para>
+        /// <b>It is four rounds because four is what the run survives.</b> The
+        /// opponent in the field buys its column again every round (#208) and a
+        /// wall stops a roughly fixed number of bodies, so the fourth round
+        /// spends the last of the health pool. A fifth line would put the loop
+        /// in <see cref="RunMode.Over"/> with a decision still to make, which is
+        /// the fixture asserting against a run nobody could play rather than a
+        /// longer test.
         /// </para>
         /// </remarks>
         private const string Transcript =
             "archer 6 2 0\n"
             + "archer 7 4 0\n"
             + "archer 7 6 0\n"
-            + "archer 4 4 2\n"
-            + "^ranger 6 2 2\n"
-            + "- 0 0 3\n"
-            + "- 0 0 3\n"
-            + "- 0 0 3\n"
-            + "- 0 0 3\n"
-            + "- 0 0 3\n";
+            + "archer 4 4 2\n";
+
+        /// <summary>How many rounds <see cref="Transcript"/> decides.</summary>
+        private static int TranscriptRounds =>
+            Transcript.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
 
         /// <summary>
         /// What <c>simcli play-run</c> prints for the script this transcript
@@ -92,7 +100,7 @@ namespace Tests.PlayMode
         /// moving the shell's turns this red on the push that moved it.
         /// </remarks>
         private const string TheShellPrinted =
-            "outcome    10 waves survived, 326 of 800 health left, 0 dealt over 10 rounds, ended OutOfWaves";
+            "outcome    3 waves survived, 0 of 800 health left, 0 dealt over 4 rounds, ended OutOfHealth";
 
         /// <summary>What a transcript line says instead of a tower to build.</summary>
         private const string Nothing = "-";
@@ -101,7 +109,7 @@ namespace Tests.PlayMode
         private const char Upgraded = '^';
 
         [Test]
-        public void TenWavesAreBuiltCommittedAndWatchedInOneScene()
+        public void EveryWaveIsBuiltCommittedAndWatchedInOneScene()
         {
             MatchRoot root = Playfield();
             RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
@@ -112,10 +120,10 @@ namespace Tests.PlayMode
             Play(root, loop);
 
             Assert.That(loop.Mode, Is.EqualTo(RunMode.Over));
-            Assert.That(loop.Rounds.Count, Is.EqualTo(Run.DefaultWaves), "Ten rounds were played.");
-            Assert.That(loop.Decisions.Count, Is.EqualTo(Run.DefaultWaves));
-            Assert.That(root.Run.Round, Is.EqualTo(Run.DefaultWaves));
-            Assert.That(root.Run.Ending, Is.EqualTo(RunEnding.OutOfWaves));
+            Assert.That(loop.Rounds.Count, Is.EqualTo(TranscriptRounds), "Every round of it was played.");
+            Assert.That(loop.Decisions.Count, Is.EqualTo(TranscriptRounds));
+            Assert.That(root.Run.Round, Is.EqualTo(TranscriptRounds));
+            Assert.That(root.Run.Ending, Is.EqualTo(RunEnding.OutOfHealth));
             Assert.That(root.Run.Board.Count, Is.GreaterThan(0), "The transcript stood towers.");
         }
 
@@ -133,7 +141,7 @@ namespace Tests.PlayMode
 
             Assert.That(loop.Proved, Is.Not.Null);
             Assert.That(loop.Proved.Agreed, Is.True, loop.Proved.Disagreement);
-            Assert.That(loop.Proved.RoundsProved, Is.EqualTo(Run.DefaultWaves));
+            Assert.That(loop.Proved.RoundsProved, Is.EqualTo(TranscriptRounds));
             Assert.That(loop.ScriptPath, Is.Not.Null, "An agreeing session writes its script.");
             Assert.That(File.Exists(loop.ScriptPath), Is.True, loop.ScriptPath);
 
@@ -149,7 +157,7 @@ namespace Tests.PlayMode
             (byte[] bytes, IReadOnlyList<RoundReport> compiled) =
                 CommandStream.Recorded(root.RunOn(TheMatchOnScreen.Seed), commands);
 
-            Assert.That(compiled.Count, Is.EqualTo(Run.DefaultWaves));
+            Assert.That(compiled.Count, Is.EqualTo(TranscriptRounds));
 
             CommandStream stream = CommandStream.FromBytes(WrittenRun.FileName, bytes);
             Run played = root.RunOn(TheMatchOnScreen.Seed);

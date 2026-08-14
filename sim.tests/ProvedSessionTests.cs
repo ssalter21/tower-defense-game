@@ -44,7 +44,7 @@ public class ProvedSessionTests
     [Fact]
     public void A_session_that_replays_as_it_played_hands_back_the_script_it_proved()
     {
-        // The whole claim, end to end: the committed run's ten rounds played one
+        // The whole claim, end to end: the committed run's rounds played one
         // at a time, compiled into a script, that script played into a run built
         // fresh on the same seed and shape, and every round and the outcome the
         // same on both sides. Only then is there a script to keep, and what
@@ -63,8 +63,8 @@ public class ProvedSessionTests
 
         Assert.True(proved.Agreed, proved.Disagreement);
         Assert.Null(proved.Disagreement);
-        Assert.Equal(Run.DefaultWaves, played.Decisions.Count);
-        Assert.Equal(Run.DefaultWaves, proved.RoundsProved);
+        Assert.Equal(TheCommands.Committed().Count, played.Decisions.Count);
+        Assert.Equal(played.Decisions.Count, proved.RoundsProved);
 
         Assert.Equal(
             played.Decisions.Select((decision, index) => RecordCommand.Of(index + 1, decision)),
@@ -74,21 +74,21 @@ public class ProvedSessionTests
     [Fact]
     public void A_round_the_fresh_run_plays_differently_is_named_with_both_sides_and_no_script_comes_back()
     {
-        // The refusal. The session hands over its own ten rounds with the
-        // fourth and fifth swapped, so the script is the real one and the fresh
-        // run plays it exactly as it was played -- and the two lists differ
-        // first at wave four. Both sides of that round are printed, because a
-        // person reading this has to be able to see which of the two is wrong.
+        // The refusal. The session hands over its own rounds with the last two
+        // swapped, so the script is the real one and the fresh run plays it
+        // exactly as it was played -- and the two lists differ first at wave
+        // three. Both sides of that round are printed, because a person reading
+        // this has to be able to see which of the two is wrong.
         //
         // OBSERVED: compare the outcome alone, on the argument that a run whose
-        // rounds differ ends differently. It does not: these are the same ten
+        // rounds differ ends differently. It does not: these are the same
         // rounds in a different order, every fold over them is identical, and
         // a caller that checked only the ending would keep the script and call
         // the session proved.
         Session played = Committed.Value;
 
         RoundReport[] lying = played.Rounds.ToArray();
-        (lying[3], lying[4]) = (lying[4], lying[3]);
+        (lying[2], lying[3]) = (lying[3], lying[2]);
 
         ProvedSession proved = ProvedSession.Of(played.Decisions, lying, played.Run, Fresh);
 
@@ -96,9 +96,9 @@ public class ProvedSessionTests
 
         string disagreement = proved.Disagreement!;
 
-        Assert.Contains("wave 4:", disagreement, StringComparison.Ordinal);
+        Assert.Contains("wave 3:", disagreement, StringComparison.Ordinal);
         Assert.Contains(
-            Shown + played.Rounds[4] + "\n" + Replayed + played.Rounds[3],
+            Shown + played.Rounds[3] + "\n" + Replayed + played.Rounds[2],
             disagreement,
             StringComparison.Ordinal);
 
@@ -129,21 +129,25 @@ public class ProvedSessionTests
         // printed, because which of the two is short is the whole of what is
         // wrong.
         //
-        // OBSERVED: walk the session's rounds and stop. The nine that were
-        // shown all match the first nine the script replays, the tenth is never
-        // looked at, and a session whose last round vanished somewhere writes a
-        // ten-round script and calls it proved.
+        // OBSERVED: walk the session's rounds and stop. The ones that were shown
+        // all match the same number the script replays, the last is never looked
+        // at, and a session whose last round vanished somewhere writes a whole
+        // script and calls it proved.
         Session played = Committed.Value;
+        int shown = played.Rounds.Count - 1;
 
         ProvedSession proved = ProvedSession.Of(
             played.Decisions,
-            played.Rounds.Take(Run.DefaultWaves - 1).ToArray(),
+            played.Rounds.Take(shown).ToArray(),
             played.Run,
             Fresh);
 
         Assert.False(proved.Agreed);
         Assert.Contains("how many rounds:", proved.Disagreement, StringComparison.Ordinal);
-        Assert.Contains(Shown + "9\n" + Replayed + "10", proved.Disagreement, StringComparison.Ordinal);
+        Assert.Contains(
+            Shown + shown + "\n" + Replayed + played.Rounds.Count,
+            proved.Disagreement,
+            StringComparison.Ordinal);
     }
 
     [Fact]

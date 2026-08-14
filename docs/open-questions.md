@@ -120,9 +120,14 @@ kept warm: it can rot without anything going red.
 
 **What deleting it costs is the only answer on file to "where does this run sit against the field".** A placing,
 a ladder, a percentile shown to a player, or a bonus that goes back to being relative all want exactly this,
-and it is about a hundred lines with an ADR behind it. [#208](https://github.com/ssalter21/tower-defense-game/issues/208)
-is a question about this measurement's *shape* and waits on the answer here: if the machinery goes, #208 goes
-with it.
+and it is about a hundred lines with an ADR behind it.
+
+**[#208](https://github.com/ssalter21/tower-defense-game/issues/208) has landed and did not wait on this.** The
+pool is now a population per round and the measurement reads all of it at once, so the two are decoupled: the
+answer here is still open, and taking it either way is still one measurement's worth of code. What #208 did
+settle is the price of keeping it as it stands — the spread it reports is over a population no single round
+fights, which is written into [ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md)'s amendment. Anything
+that gives the measurement a consumer has to pay that back by measuring per round.
 
 **Three answers, and the middle one is not obviously wrong.** Delete it and take it back off git if it is
 wanted. Keep it as it stands and accept untested-in-anger code. Or keep it and give it a consumer that is not

@@ -138,10 +138,16 @@ public class SweepTests
         // discriminator, because the seed drew the offering and the offering
         // decided which creep a run took; #179 deleted the offering, so the bot
         // sends its row's creep whatever the seed is and two populations spend
-        // identically. What the seed still reaches is the field each round is
-        // scored against -- so what a run took off that field is the number that
-        // has to disagree, and a sweep whose seed reached nothing would show it
-        // here.
+        // identically. What the seed reaches is every pairing's dice, so what a
+        // run got past its field is the number that has to disagree.
+        //
+        // IT IS WHAT A RUN DEALT AND NOT WHAT IT TOOK, and that is a statement
+        // about the field rather than about the seed. Since #208 the stand-in
+        // buys its column again every round, and a wave that deep leaks in full
+        // through anything a sweep's bot has managed to build -- so leak cost
+        // taken is the price of the incoming waves and the dice never touch it.
+        // The attacking direction still meets a whole six-tower wall, which
+        // kills some of what it is sent and kills it by rolling.
         //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
@@ -151,7 +157,7 @@ public class SweepTests
         SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
         SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "minion");
 
-        Assert.NotEqual(one.LeakCostTaken, other.LeakCostTaken);
+        Assert.NotEqual(one.LeakCostDealt, other.LeakCostDealt);
     }
 
     [Fact]

@@ -124,6 +124,19 @@ public class DerivationTests
         // fourth half that pays a purse off, and the label went to
         // rule-fingerprint/4.
         (5u, 0xB234D73EC659D3A7UL),
+
+        // Version 6 is #208 -- a pool records a population per round and a round
+        // is fought against the members recorded at that round. Every stored run
+        // replays to a different outcome under it, because the opponent a round
+        // walks into is no longer the one round one walked into.
+        //
+        // IT CAUGHT THE SAME HOLE A FOURTH TIME. Under rule-fingerprint/4 this
+        // build's fingerprint came out B234D73EC659D3A7 -- byte for byte version
+        // five's -- because every half of that fold is handed the pairing it
+        // folds, and who a round draws is decided above all of them. The fold
+        // gained a fifth half that plays a run against a population recorded per
+        // round, and the label went to rule-fingerprint/5.
+        (6u, 0x388DFE8C6880ED85UL),
     };
 
     /// <summary>
@@ -166,6 +179,32 @@ public class DerivationTests
         """;
 
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The deeper of the two waves the field half is fought against. Four times
+    /// the thin one, so a round that faced the wrong member of the population
+    /// folds a different number rather than the same one to within a leak.
+    /// </summary>
+    private const string FingerprintFatField = "order  0  1  12  0";
+
+    /// <summary>
+    /// The roster the field half is fought over: the same two rows as
+    /// <see cref="FingerprintUnits"/>, written in the current layout so that they
+    /// carry a price.
+    /// </summary>
+    /// <remarks>
+    /// A layout-1 row has no cost column, so every unit in it is free -- and a
+    /// leak that costs nothing folds to zero whoever sent it, which is a half of
+    /// the fingerprint that cannot see the rule it is here for. What this half
+    /// measures is priced in gold from end to end: leak cost dealt, leak cost
+    /// taken, the share of the first that a wave is paid, and what the purse
+    /// closed on.
+    /// </remarks>
+    private const string FingerprintFieldUnits = """
+        layout 2
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0
+        unit  3  turret  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0
+        """;
 
     /// <summary>
     /// The roster the composition half of the fingerprint composes out of: three
@@ -535,8 +574,10 @@ public class DerivationTests
     /// <c>rule-fingerprint/3</c> folds a match, a composition, and a second
     /// composition against a wave the round carries -- which is the only half
     /// that can see what a wave costs; <c>rule-fingerprint/4</c> folds a wave's
-    /// payment too, which is the only half that can see what a wave earns.
-    /// Versions 1 to 4 are recorded under earlier labels and cannot be
+    /// payment too, which is the only half that can see what a wave earns;
+    /// <c>rule-fingerprint/5</c> folds the rounds of a run against a population
+    /// recorded per round, which is the only half that can see who a round
+    /// fights. Versions 1 to 5 are recorded under earlier labels and cannot be
     /// recomputed here, which is a loss stated out loud rather than a table that quietly
     /// compares fewer things -- the same rule <see cref="Match"/> applies to its
     /// own state-hash label.
@@ -550,7 +591,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/4").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/5").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -565,7 +606,80 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint));
+        return FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)));
+    }
+
+    /// <summary>
+    /// The fifth half of the fold: what three rounds of a run walked into,
+    /// against a population recorded round by round.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the four above it missed one.</b> They
+    /// resolve matches, build phases and payments, and every one of them is
+    /// handed the pairing it folds -- so #208, which made a round draw from the
+    /// members recorded at that round rather than from the whole population and
+    /// moves what every stored run replays to, produced a fingerprint identical
+    /// to the version before it. The fourth time this file has had that hole.
+    /// </para>
+    /// <para>
+    /// The population is one member in the first round, two in the second and
+    /// one again in the third, and the two waves are far enough apart that
+    /// facing the wrong one is a different number. That shape folds all three
+    /// halves of the rule at once: which round's members are drawn from, how
+    /// many of them there are to draw from, and which of them the draw landed
+    /// on.
+    /// </para>
+    /// <para>
+    /// Death does not end it, because what this folds is what each round faced
+    /// and a run that stops early folds fewer rounds than the version before it
+    /// -- which would say the rule moved for a reason that is really the health
+    /// pool.
+    /// </para>
+    /// </remarks>
+    private static Hash64 FoughtIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint field units", FingerprintFieldUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+        Ruleset rules = Ruleset.Parse("fingerprint rules", FingerprintRules);
+        TowerLayout defense = TowerLayout.Parse("fingerprint defense", FingerprintDefense, types);
+        RoundOrders thin = RoundOrders.Of(
+            defense,
+            WaveScript.Parse("fingerprint thin field", FingerprintWave, types));
+        RoundOrders fat = RoundOrders.Of(
+            defense,
+            WaveScript.Parse("fingerprint fat field", FingerprintFatField, types));
+
+        var run = new Run(
+            map,
+            rules,
+            types,
+            UpgradeLadder.Parse("fingerprint ladder", FingerprintComposedLadder, types),
+            FieldPool.OfRounds(new[]
+            {
+                new[] { thin },
+                new[] { thin, fat },
+                new[] { fat },
+            }),
+            FingerprintSeed,
+            waves: 3,
+            fieldSize: 2,
+            deathEndsTheRun: false);
+
+        // OBSERVED: draw every round from the whole population -- FieldFor over
+        // Size and At(index). The fingerprint moves off the version-6 row and
+        // names both numbers, which is what it could not do before the fold had
+        // this half in it.
+        for (int round = 0; round < 3; round++)
+        {
+            RoundReport report = run.Advance(BuildPhase.Of(WaveSlot.Of(1, round + 1)));
+
+            fingerprint = fingerprint
+                .Add(report.Outcome.LeakCostDealt, report.Outcome.LeakCostTaken)
+                .Add(report.Payment.Bonus, report.Payment.Purse.Gold);
+        }
+
+        return fingerprint;
     }
 
     /// <summary>

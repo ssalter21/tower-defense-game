@@ -79,13 +79,19 @@ public class CommandLineTests
         //
         // OBSERVED, on the count: filter the file on "round " instead of
         // "wave ". Nothing matches, the loop below passes over an empty array,
-        // and this goes red -- 0 against 10 -- rather than the pass a filter
+        // and this goes red -- 0 against 4 -- rather than the pass a filter
         // that had stopped selecting anything would otherwise be.
+        //
+        // The count comes off the record rather than off N: the committed run
+        // ends on its health, so it is as many rounds as it has decisions and
+        // fewer than its wave cap.
         string[] rounds = File.ReadAllLines(outcome)
             .Where(line => line.StartsWith("wave ", StringComparison.Ordinal))
             .ToArray();
 
-        Assert.Equal(Run.DefaultWaves, rounds.Length);
+        Assert.Equal(
+            CommandStream.FromBytes(File.ReadAllBytes(RepoLayout.CommandFile)).Count,
+            rounds.Length);
 
         foreach (string round in rounds)
         {

@@ -531,7 +531,7 @@ namespace Sim
 
             return MatchFor(
                 _sent[round],
-                _pool.At(FieldFor(round)[opponent]),
+                _pool.At(round, FieldFor(round)[opponent]),
                 round,
                 opponent,
                 attacking ? Side.Attacking : Side.Defending);
@@ -574,7 +574,7 @@ namespace Sim
 
             for (int index = 0; index < drawn.Length; index++)
             {
-                RoundOrders against = _pool.At(drawn[index]);
+                RoundOrders against = _pool.At(round, drawn[index]);
 
                 dealt += LeakCost(orders, against, round, index, Side.Attacking);
                 taken += LeakCost(orders, against, round, index, Side.Defending);
@@ -632,14 +632,23 @@ namespace Sim
         /// of any kind happens inside a match, so a match's stream position stays
         /// a running count of the shots fired in it.
         /// </remarks>
-        private int[] FieldFor(int round)
+        private int[] FieldFor(int round) => FieldOf(round, _pool.SizeAt(round));
+
+        /// <summary>
+        /// One field draw: K members out of a population this many wide, off the
+        /// stream that round's position starts. The width is an argument because
+        /// a round draws from the members recorded at its own round and the
+        /// measurement draws from the whole population -- one draw shape, two
+        /// populations, rather than two loops that have to stay the same.
+        /// </summary>
+        private int[] FieldOf(int round, int size)
         {
             var dice = new Pcg32(FieldSeed(round));
             var drawn = new int[FieldSize];
 
             for (int index = 0; index < drawn.Length; index++)
             {
-                drawn[index] = (int)dice.NextBelow((uint)_pool.Size);
+                drawn[index] = (int)dice.NextBelow((uint)size);
             }
 
             return drawn;
@@ -668,12 +677,17 @@ namespace Sim
         /// bodies was one.
         /// </para>
         /// <para>
-        /// <b>Both the member being measured and the field it meets are drawn.</b>
-        /// A walk down the pool would sample a population wider than
-        /// <see cref="FieldSamples"/> by truncating it at its first members. The
-        /// field a sample meets is the field the round of the same index meets,
-        /// which is what makes the spread this comes back with the spread of the
-        /// opponents this run will actually be scored against.
+        /// <b>Both the member being measured and the field it meets are drawn,
+        /// and both are drawn over the whole population.</b> A walk down the
+        /// pool would sample a population wider than <see cref="FieldSamples"/>
+        /// by truncating it at its first members. The draw is round-blind where
+        /// a round's own is not: a pool records a population per round and this
+        /// reads all of them at once, so what it comes back with is one spread
+        /// for the run rather than one per round -- which is what keeps the
+        /// payment a fold. The price is that the population measured is not the
+        /// population any single round fights, which is the resolution
+        /// <c>docs/adr/0042-the-field-is-measured-off-the-pool.md</c> records
+        /// under its amendment.
         /// </para>
         /// <para>
         /// A pool thinner than K is not a thin measurement. The draw is with
@@ -690,7 +704,7 @@ namespace Sim
             for (int sample = 0; sample < worth.Length; sample++)
             {
                 RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
-                int[] field = FieldFor(sample);
+                int[] field = FieldOf(sample, _pool.Size);
                 long dealt = 0;
 
                 for (int index = 0; index < field.Length; index++)
