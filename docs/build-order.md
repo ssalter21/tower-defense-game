@@ -53,7 +53,10 @@ authoring new unit types.
 
 What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
 the special rounds and the per-wave type limit all come out of the played game, and go back when the roster
-is deep enough for a gate to be gating something worth having. Gating a shallow roster holds back early
+is deep enough for a gate to be gating something worth having. **The type limit is the first of the four to
+be redesigned rather than merely parked** — [the gate rounds](vision.md#three-gates-at-waves-3-6-and-9) make
+it a public capacity schedule with a second dimension in it, and the order is unchanged: the roster gets its
+depth first and the schedule is fitted to it afterwards. Gating a shallow roster holds back early
 testing and buys nothing, and a mechanic carried switched-off through a client build is a tax on every step
 of it. What stays is the **upgrade prerequisite**: a unit that is some edge's target cannot be placed
 directly, so an Archer must stand before a Ranger can.
@@ -128,6 +131,13 @@ than the offering. Seam 1 chooses which bends. It also owns the tension between 
 [not entering the placing](vision.md#a-run-is-ten-waves-and-health-is-money) and the attacking half being as
 deep as the defending one.
 
+**It owns the capacity schedule's numbers.** [The gate rounds](vision.md#three-gates-at-waves-3-6-and-9)
+fix the shape — two more slots and ten more count at each of waves 3, 6 and 9 — and every integer in it is a
+ruleset row and a sweep target: the starting width, the two steps, the three rounds, and how many capstone
+tokens a gate hands over. The question the sweep is owed is the one a capacity bound has and a purse does not:
+**whether a capped slot ever leaves gold with nowhere to go**, and whether the answer is interest or a wasted
+round.
+
 **The cheapest coherent starting point is already identified**, and it is what steps 1–3 build:
 [the sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave **is** the
 order and the clock* first, because its cost is approximately zero. The ordered wave, the tie-break rule and
@@ -158,14 +168,14 @@ Constrained by [§4](vision.md#4-what-persists) — nothing is unlocked, so ever
 the first run — and by [§6](vision.md#6-what-it-looks-like), since a unit whose role cannot be read off its
 silhouette fails the accessibility pillar however well it plays.
 
-Three inherited constraints. From [the anchor schedule](vision.md#three-anchors-a-shape-and-a-filling): a
-counter must be purchasable strictly before the anchor that needs it, and the schedule signs a bill of **nine
-game changer creeps per shape**, tiered across three anchors, one opening a genuine counter. From
+Three inherited constraints. From [the gate rounds](vision.md#three-gates-at-waves-3-6-and-9): a
+counter must be purchasable strictly before the gate that needs it, and the menu half of the schedule signs a
+bill of **nine game changer creeps per shape**, tiered across three gates, one opening a genuine counter. From
 [the damage model](vision.md#how-a-shot-resolves): every unit carries an attack or armour type from the fixed
 three-way cycle, a counter is a `bonusVsTag` integer rather than an immunity, and every damage and health
 number is authored at the ×10 scale.
 
-**The anchor half of that is deferred, and the bill is not owed yet.** The
+**The menu half of that is deferred, and the bill is not owed yet.** The
 [13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) took the take gate
 and the anchor schedule out of the played game until this seam has produced a roster deep enough for a gate to
 be gating something worth having, and
@@ -174,6 +184,17 @@ be gating something worth having, and
 should be designing yet. Re-authoring them is this seam's work if the depth ever calls for it.
 **The depth comes first, and the gate is fitted to it afterwards.** The damage-model constraints are
 untouched by that.
+
+**The capacity half came back on 14 August, and it needs no depth to be true** — a schedule of slots and count
+caps rations room rather than options, so none of it waits on the roster. What it does need is a roster worth
+rationing: two slots against four creep types is the shallow-roster complaint one round further on, which is
+why the schedule is design and not a ticket. See
+[the entry](decision-log.md#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant).
+
+**A third bill arrives with it: a capstone per tower line.** A gate hands over a token and the token buys the
+top of a line, so three tokens a run wants meaningfully more than three capstones to choose between — and each
+of them signed against a pricing rule that
+[no longer reaches them](roster.md#what-things-cost).
 
 What is left in their place is the upgrade ladder, which is now the one prerequisite the game has: a unit some
 edge of `content/upgrades.txt` points at is refused to `place` and reached by upgrading into. See

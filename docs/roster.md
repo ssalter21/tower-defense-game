@@ -50,11 +50,19 @@ signing **damage, cooldown and how many bodies it hits**.
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
-**Capstones are expected to break the rule, downward.** The intended reward curve is a shallow U: efficient at
-the bottom, dear in the middle, efficient again at the top. So a tier-3 tower should come in *under* what its
-damage implies. **This is intent, not a clause** — no capstone exists yet, and a stated exemption with no
-instance is a rule nobody can check, so `units.txt` states the rule plainly and says nothing about exceptions.
-The first capstone is where it gets written down.
+**The rule does not reach a capstone, because gold does not buy one.**
+[A gate hands the player one token](vision.md#a-capstone-is-granted-never-earned) at waves 3, 6 and 9, and the
+token is the whole price: three capstones a run, and the decision is which tower line to spend one on rather
+than what it costs. The cost column prices what gold buys, and the top of a line is not in it. That retires
+the shallow-U exemption this section used to reserve — an exemption to a gold rule, for a thing gold does not
+buy, is a clause about nothing.
+
+**What that leaves this file owing is the tiers themselves**: a capstone per tower line, none of them a strict
+upgrade on another, each strong enough that spending one of three tokens on it is a real decision — and a
+statement of how a capstone's numbers get chosen, since the damage rule no longer chooses them. **No capstone
+exists yet**, so this is intent rather than a clause: `units.txt` states the pricing rule plainly and says
+nothing about exceptions, because a stated exemption with no instance is a rule nobody can check. The first
+capstone is where it gets written down.
 
 ## The clock
 

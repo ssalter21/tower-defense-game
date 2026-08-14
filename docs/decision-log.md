@@ -283,7 +283,7 @@ of the reversals is of this file's own companion.
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[The build order](build-order.md#the-sequence)**, on why step 5 is fifth | *Is the economy tense, is composing a wave interesting, does send order matter, is the roster varied* — "every one is answerable from a command line and a spreadsheet" | **Half of them are.** The economy and the roster answered from a shell. **Composing a wave and send order did not**, and the reason is structural rather than a gap in the verb | The CLI will never carry the visual elements — video replays, range indicators — and building them there is not worth it. What a person would learn from them there, the simulation can compute and summarise instead |
-| **[§3 — three anchors, a shape and a filling](vision.md#three-anchors-a-shape-and-a-filling)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
+| **[§3 — three anchors, a shape and a filling](vision.md#three-gates-at-waves-3-6-and-9)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
 | **§3 — one purse** | The economy is the sharp decision the game is built around | **Not tense yet, and that is accepted rather than fixed** | Attack performance is rewarded, so spending on attack is the long-term investment and nothing argues against it. The expected correction is already in the design: health falls, and the run eventually has to pivot its spending. Not worth tuning before the roster can be judged |
 | **[Open questions](open-questions.md)** — is placement worth having on this geometry | Thin until the maze lands, per [#142](https://github.com/ssalter21/tower-defense-game/issues/142), and possibly not worth the tickets | **Placement earns its place**, and is expected to get more interesting as elevation lands | Played rather than argued. This does **not** settle the separate question of whether the defending side has to be *towers* — squads on a rampart are still live |
 
@@ -703,3 +703,76 @@ own wave compounds while the pressure coming back stays flat: the committed run 
 hundred gold. That asymmetry is [#208](https://github.com/ssalter21/tower-defense-game/issues/208), and it is
 not a free change — it collides with ADR-0042's rule that the field is measured once and fixed for the whole
 run, which is what keeps income a fold over the outcome vector.
+---
+
+## 14 August 2026, later still — the gates come back with a different job, and a capstone is paid for out of a grant
+
+Waves 3, 6 and 9 were deleted from the played game the day before yesterday, because a menu that rations a
+four-creep roster rations nothing worth having. They come back here doing something that is not a menu: **a
+gate widens the wave, deepens what a slot may hold, and pays for a capstone.**
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **The purse and a public capacity schedule.** A wave opens carrying two slots at ten apiece, and each gate adds two slots and ten count | A purse alone lets compounding gold end every run as one enormous box of whatever is most cost-efficient, which deletes send order as a decision by leaving one thing to order |
+| **[§3 — the gate rounds](vision.md#three-gates-at-waves-3-6-and-9)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
+| **[§3 — one purse](vision.md#one-purse)**, and [6 August](#6-august-2026--six-reversals)'s settled answer | One currency; a second was priced and declined the same day | **Still one *income* currency.** A second thing exists, is granted three times a run, has no exchange rate and buys exactly one object | The 6 August rejection was of two *wallets fed by income* — the thing that makes every purchase a question about which pool to feed. A grant with a single sink is not that |
+| **[The roster](roster.md#what-things-cost)** | Capstones are expected to break the pricing rule downward, and the first one is where the exemption gets written down | **There is no exemption, because gold does not buy a capstone.** The token is the whole price | An exemption to a gold rule, for a thing gold does not buy, is a clause about nothing |
+| **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | The per-wave type limit is deleted rather than deferred, along with the forced pick, the round menu and the special rounds | **The first of the four to be redesigned.** It returns as a capacity schedule with a second dimension; the other three stay deleted | Deleting it was right and restoring it unchanged would have been wrong. It was a bound with no clock on it, and a gate is the clock |
+
+### What a gate does, in one place
+
+Waves 3, 6 and 9. At each one the wave gains **two slots**, every slot's **count cap rises by ten**, and the
+player is handed **one capstone token**, spendable only on capstoning a tower already standing.
+
+| Waves | Slots | Count cap | Capstones held |
+|---|---|---|---|
+| 1–2 | 2 | 10 | 0 |
+| 3–5 | 4 | 20 | 1 |
+| 6–8 | 6 | 30 | 2 |
+| 9–10 | 8 | 40 | 3 |
+
+The player is expected to spend a gate round on the wave, and that expectation is the mechanism rather than a
+hope: a purchase is permanent and a wave only grows, so capacity — not gold — is what an attacking purchase is
+ultimately spending. Two rounds of banking at 10% against a known round where the wave can finally take the
+money is the timing decision the purse exists to make players practise.
+
+### Why a capacity gate is not the gate that was deleted
+
+[#179 deleted the gates](#13-august-2026-later-still--the-gates-are-actually-out-and-the-ladder-becomes-the-rule-it-was-an-annotation-to)
+on one argument: *there is no point in gating before we have the depth, it just holds back the early testing
+and experience.* That argument is about **options** — a menu offering one of three out of a roster of four
+decides nothing. A capacity schedule rations **room**, and room is scarce the moment the purse can afford more
+wave than the schedule allows, which is a question about the economy rather than about how many creeps exist.
+
+**The honest half: at today's roster the two arguments do converge.** Two slots against four creep types is a
+real bind, and it is the shallow-roster complaint one round further on. That is exactly why this lands as
+design rather than as a ticket — the schedule is fitted after [seam 3](build-order.md#3--the-roster) has
+produced something worth rationing, which is the order the 13 August entry already set.
+
+### Two numbers were read rather than stated, and one thing has no name
+
+The steps were specified: two slots and ten count per gate. **The opening pair was not** — 2 slots and 10
+count is what makes the schedule 2/4/6/8 and 10/20/30/40, and it is an inference from the step rather than a
+decision anybody made. So is **one token per gate**, which is what makes it three capstones a run. **And the
+currency has no name.** All three are [open questions](open-questions.md) and all three are cheap to move
+while nothing is built.
+
+### What it will cost to build, since none of it is
+
+Written down now because the shape of the bill is the argument for settling the numbers before the ticket:
+
+- **Five ruleset rows**, in the file that already holds every number the rules are made of: the gate rounds,
+  the starting width and its step, the starting count cap and its step, and the grant.
+- **A refusal in `BuildPhase.Resolve`**, which is where a cap has to bite. A wave is carried and the phase is
+  charged the increase ([ADR-0052](adr/0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md)),
+  so the new rule is not *this wave is illegal* but *this raise is refused* — and a wave that is legal at wave
+  5 is still legal at wave 6, because capacity only ever grows and a creep can never be taken back.
+- **A simulation version bump**, because a rule that refuses compositions the previous version accepted
+  changes what a stored record means.
+- **A behaviour fingerprint that will not see it.** The fold has had a blind half twice already; a fold that
+  composes only legal waves cannot tell a capacity rule from no capacity rule, so this one needs a composition
+  that gets refused or it will produce the predecessor's number again.
+- **A second currency in the record**, which is the only piece that is not a number. A token count is run
+  state, capstoning is a placement action nobody has priced, and both cross the command stream.
+- **A question the sweep cannot currently ask**: whether a capped slot ever strands gold. `EvenShareBot`
+  fills one slot a round, so nothing in `content/sweep.csv` today touches a bound of any kind.

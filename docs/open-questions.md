@@ -48,6 +48,18 @@ load-bearing half of rows 4 and 5 and is the reason those two stopped being judg
 not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
 somebody sits down with the build.
 
+**What the gate rounds' loose ends are, and what the defense currency is called.**
+[Three gates](vision.md#three-gates-at-waves-3-6-and-9) fix the capacity schedule and hand out a capstone
+token. Four things about them are readings rather than decisions, and all four are cheap to move while nothing
+is built. **The currency has no name**, and everything player-facing here gets named deliberately — gold took
+two goes. **The opening pair is two slots and ten count**, which is what makes the schedule 2/4/6/8 and
+10/20/30/40; only the steps were specified, so the starting values are an inference from them. **A gate grants
+one token**, which is what makes it three capstones a run. And **a capstone costs the token and no gold**,
+which is the simplest reading and the one [the roster](roster.md#what-things-cost) is now written against —
+charging gold on top would make the token a permit rather than a price, which is a different mechanic with a
+different failure mode. Open beside them: **whether a token banks**, which leans toward yes, since a token
+that must be spent on the round it arrives forces the decision at the moment the run knows least.
+
 **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
 loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
 is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
@@ -75,7 +87,7 @@ over. The three candidate answers are in
 [§3](vision.md#the-map-rotates-and-it-is-generated); the survey is
 [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking until
 step 6, since nothing before it reads a pool. **The rotation carries more than the map:** the
-[anchor schedule's *shape*](vision.md#three-anchors-a-shape-and-a-filling) is on the same clock, so a cadence
+[gate schedule's *shape*](vision.md#three-gates-at-waves-3-6-and-9) is on the same clock, so a cadence
 choice sets how long a *preparation* problem stays learnable as well as how long a map does. Both want the same
 answer — long enough to learn — which is a mild argument for slow.
 
