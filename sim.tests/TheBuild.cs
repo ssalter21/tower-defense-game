@@ -145,14 +145,7 @@ public static class TheBuild
             throw new ArgumentNullException(nameof(run));
         }
 
-        var slots = new WaveSlot[run.Carrying.Orders.Count];
-
-        for (int index = 0; index < slots.Length; index++)
-        {
-            slots[index] = WaveSlot.Of(run.Carrying.Orders[index].TypeId, run.Carrying.Orders[index].Count);
-        }
-
-        return BuildPhase.Of(slots);
+        return BuildPhase.Of(run.Carrying.AsSlots());
     }
 
     /// <summary>A round that spends the purse on the cheapest creep the roster has.</summary>

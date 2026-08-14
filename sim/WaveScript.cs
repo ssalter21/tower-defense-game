@@ -129,6 +129,30 @@ namespace Sim
         }
 
         /// <summary>
+        /// This wave as the slots a build phase would compose it from, in the
+        /// order it sends them.
+        /// </summary>
+        /// <remarks>
+        /// <b>The round trip a carried wave takes every round.</b> A phase names
+        /// the whole of its round's wave, so the wave the last round sent is
+        /// where the next round's phase starts -- on screen, in a fixture, and
+        /// in anything walking a stored stream. One conversion here rather than
+        /// one at each of those, because three of them would be three places for
+        /// the order or a count to be dropped.
+        /// </remarks>
+        public WaveSlot[] AsSlots()
+        {
+            var slots = new WaveSlot[_orders.Length];
+
+            for (int index = 0; index < slots.Length; index++)
+            {
+                slots[index] = WaveSlot.Of(_orders[index].TypeId, _orders[index].Count);
+            }
+
+            return slots;
+        }
+
+        /// <summary>
         /// The wave a run carries before it has played a round: nothing at all.
         /// </summary>
         /// <remarks>

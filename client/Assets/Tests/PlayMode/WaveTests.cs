@@ -118,9 +118,18 @@ namespace Tests.PlayMode
 
             Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(2), "Down to the floor.");
             Assert.That(root.Composing.CanSendFewer(0), Is.False, "And no further.");
-            Assert.That(root.Composing.CarriedIn(0), Is.EqualTo(2));
 
-            // The verb is a no-op at the floor rather than a refusal out of sim.
+            // So the bar does not offer the verb at all, which is the whole of
+            // what prevention means here.
+            root.Wave.Open(0);
+
+            Assert.That(
+                Wording(root.Wave.Choices),
+                Does.Not.Contain("One fewer"),
+                "A box at its floor is not offered a way down.");
+
+            // And reaching for it anyway leaves the wave alone rather than
+            // throwing out of the simulation.
             root.Wave.Open(0);
             root.Wave.Fewer();
 
@@ -432,6 +441,51 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A carried box drags like any other. #207's "done when" says the
+        /// accumulated wave can be dragged into any order in <b>any</b> build
+        /// phase — so the creeps an earlier round paid for are a floor under the
+        /// count and not a pin on the position.
+        /// </summary>
+        /// <remarks>
+        /// The sim side of this is covered by
+        /// <c>The_whole_carried_wave_is_reordered_by_a_later_round...</c>. This
+        /// is the clause the ticket actually wrote down, which names the drag:
+        /// the carried box is grabbed with a pointer and dropped at the front.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator ACarriedBoxIsDraggedLikeAnyOther()
+        {
+            MatchRoot root = Building(Opening(carried: Carrying(MinionId, 2, SkeletonId, 1)));
+
+            yield return null;
+            yield return null;
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { MinionId, SkeletonId }),
+                "Both boxes are carried, in the order they were last sent.");
+
+            // The second carried box, dragged in front of the first.
+            root.Wave.Grab(1, MiddleOf(root, 1));
+            root.Wave.Drag(MiddleOf(root, 0) - 1f);
+
+            Assert.That(root.Wave.DraggingTo, Is.EqualTo(0), "A drop here lands at the front.");
+
+            root.Wave.Release();
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { SkeletonId, MinionId }),
+                "A creep bought in an earlier round still chooses where in the column it walks.");
+
+            // Rearranging buys nothing, so it costs nothing — and the wave that
+            // comes out still carries every creep, at the counts it carried.
+            Assert.That(root.Composing.Gold, Is.EqualTo(100), "Reordering is free.");
+            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(1));
+            Assert.That(root.Composing.Slots[1].Count, Is.EqualTo(2));
+        }
+
+        /// <summary>
         /// A box dropped between two others lands between them, dragged either
         /// way.
         /// </summary>
@@ -651,6 +705,66 @@ namespace Tests.PlayMode
             Assert.That(run.Purse.Gold, Is.EqualTo(100), "The run's purse has not moved.");
             Assert.That(run.Round, Is.EqualTo(0), "Nor has its round.");
             Assert.That(run.Sent, Is.Empty, "And nothing has been sent.");
+        }
+
+        /// <summary>
+        /// The round after a real one opens holding what that round sent. This
+        /// is #207's "the wave bar opens each build phase already holding what
+        /// you carry", driven through <see cref="ComposedRound.For"/> off a run
+        /// that has actually played a round — rather than a hand-built wave
+        /// handed to the constructor.
+        /// </summary>
+        [Test]
+        public void TheRoundAfterOneThatSentSomethingOpensHoldingIt()
+        {
+            MatchRoot root = Playfield();
+            UnitTypeTable types = Types();
+
+            var run = new Run(
+                root.Map,
+                StreamingContent.ReadRuleset(),
+                types,
+                StreamingContent.ReadUpgrades(types),
+                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadField(types)),
+                TheMatchOnScreen.Seed);
+
+            // Round one, composed and committed through the screen's own phase.
+            root.BeginBuilding(ComposedRound.For(run), TheMatchOnScreen.Art());
+
+            Send(root, 0, MinionId);
+            root.Wave.Open(0);
+            root.Wave.More();
+
+            int gold = root.Composing.Gold;
+
+            run.Advance(root.Composing.Phase);
+
+            Assert.That(run.Round, Is.EqualTo(1));
+            Assert.That(run.Sent[0].Wave.CountOf(MinionId), Is.EqualTo(2), "Round one sent two Minions.");
+
+            // Round two, opened off the same run. The first round's chrome comes
+            // down first, exactly as the run loop takes it down to watch.
+            root.EndBuilding();
+            root.BeginBuilding(ComposedRound.For(run), TheMatchOnScreen.Art());
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { MinionId }),
+                "The row opened holding what round one sent.");
+
+            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(2));
+            Assert.That(root.Composing.Wave, Is.EqualTo(2));
+
+            // And they are not charged again: the round opens on the run's own
+            // purse, with the whole of it still there.
+            Assert.That(root.Composing.Gold, Is.EqualTo(run.Purse.Gold), "Nothing was re-bought.");
+            Assert.That(
+                root.Composing.Gold,
+                Is.GreaterThan(gold),
+                "Round two is richer than round one was after paying for those Minions.");
+
+            // The floor came with them: neither Minion can be taken back off.
+            Assert.That(root.Composing.CanSendFewer(0), Is.False);
         }
 
         /// <summary>

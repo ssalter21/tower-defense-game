@@ -727,7 +727,15 @@ namespace View
                     AddChoice("One more   " + RosterNames.Gold(_round.PriceOf(creep)), More);
                 }
 
-                AddChoice("One fewer", Fewer);
+                // Only where there is one to take off. A creep is bought once
+                // and attacks every round after, so a box holding nothing but
+                // carried creeps is at its floor and the verb is not offered --
+                // the same prevention that leaves "One more" off a box the
+                // purse cannot raise.
+                if (_round.CanSendFewer(index))
+                {
+                    AddChoice("One fewer", Fewer);
+                }
             }
 
             foreach (UnitType creep in creeps)

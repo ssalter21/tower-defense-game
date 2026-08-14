@@ -111,7 +111,7 @@ namespace View
             // last sent in. A round that changes nothing about its wave sends
             // those same slots again, so the empty phase is only ever round
             // one's opening position.
-            _phase = BuildPhase.Of(Held(carried));
+            _phase = BuildPhase.Of(carried.AsSlots());
             _resolved = Resolve(_phase);
         }
 
@@ -328,33 +328,37 @@ namespace View
         }
 
         /// <summary>
-        /// How many of the box at <paramref name="index"/> are carried, and so
-        /// cannot be taken back off.
-        /// </summary>
-        public int CarriedIn(int index)
-        {
-            Bounded(index, Slots.Count - One);
-
-            return _carried.CountOf(Slots[index].TypeId);
-        }
-
-        /// <summary>
         /// Whether the box at <paramref name="index"/> can be lowered at all.
+        /// False where there is no such box.
         /// </summary>
         /// <remarks>
         /// <b>A count only lowers as far as what is carried.</b> A creep is
         /// bought once and attacks every round after, so the creeps a previous
         /// round paid for are a floor under this one's box rather than a bill it
         /// may reconsider. This is the offering call the wave bar asks before it
-        /// offers the verb -- prevention rather than a refusal out of the
-        /// simulation, on ADR-0051's rule.
+        /// offers the verb.
+        /// <para>
+        /// It asks by resolving the wave that would result and discarding it,
+        /// exactly as <see cref="CanSendMore"/> does, so the floor is read off
+        /// the same rule that enforces it. Comparing the count against
+        /// <c>_carried</c> here would have been a second copy of the monotone
+        /// rule, free to disagree with <c>sim</c> -- which is the one thing this
+        /// class exists not to have.
+        /// </para>
         /// </remarks>
-        public bool CanSendFewer(int index)
-        {
-            Bounded(index, Slots.Count - One);
+        public bool CanSendFewer(int index) =>
+            index >= 0
+            && index < Slots.Count
+            && Resolves(Lowered(index));
 
-            return Slots[index].Count > _carried.CountOf(Slots[index].TypeId);
-        }
+        /// <summary>
+        /// The wave this box one lower makes: the count less one, or the box
+        /// gone where it was holding a single creep.
+        /// </summary>
+        private WaveSlot[] Lowered(int index) =>
+            Slots[index].Count <= One
+                ? Without(index)
+                : Rewritten(index, WaveSlot.Of(Slots[index].TypeId, Slots[index].Count - One));
 
         /// <summary>
         /// Sends one fewer. At one more than is carried this empties the box,
@@ -371,22 +375,12 @@ namespace View
         {
             Bounded(index, Slots.Count - One);
 
-            WaveSlot slot = Slots[index];
-            int held = _carried.CountOf(slot.TypeId);
-
-            if (slot.Count <= held)
+            if (!CanSendFewer(index))
             {
                 return;
             }
 
-            if (slot.Count <= One)
-            {
-                SendNone(index);
-
-                return;
-            }
-
-            Compose(Rewritten(index, WaveSlot.Of(slot.TypeId, slot.Count - One)));
+            Compose(Lowered(index));
         }
 
         /// <summary>
@@ -402,7 +396,7 @@ namespace View
         {
             Bounded(index, Slots.Count - One);
 
-            if (_carried.CountOf(Slots[index].TypeId) > 0)
+            if (!Resolves(Without(index)))
             {
                 return;
             }
@@ -555,22 +549,6 @@ namespace View
         /// </summary>
         private Build Resolve(BuildPhase phase) =>
             phase.Resolve(Wave, _carried, _ladder, _opening, _costs, _types, _map, _standing);
-
-        /// <summary>
-        /// A carried wave as the slots a phase opens holding, in the order it
-        /// was sent in.
-        /// </summary>
-        private static WaveSlot[] Held(WaveScript carried)
-        {
-            var slots = new WaveSlot[carried.Orders.Count];
-
-            for (int index = 0; index < slots.Length; index++)
-            {
-                slots[index] = WaveSlot.Of(carried.Orders[index].TypeId, carried.Orders[index].Count);
-            }
-
-            return slots;
-        }
 
         /// <summary>
         /// Whether a wave would resolve on this phase's actions. The wave half

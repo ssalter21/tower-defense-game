@@ -237,12 +237,11 @@ public class BuildPhaseTests
         Assert.Equal(0, third.Build.Spent);
         Assert.Equal(3, third.Build.Wave.TotalUnits);
 
-        // Every round of the run fielded everything the rounds before it
-        // bought, which is the whole of what accumulating means.
-        for (int round = 1; round < run.Sent.Count; round++)
-        {
-            Assert.True(run.Sent[round].Wave.CountOf(creep.Id) >= run.Sent[round - 1].Wave.CountOf(creep.Id));
-        }
+        // What is NOT asserted here: that each round's wave contains the one
+        // before it. Every count above is written down in this test, so a loop
+        // comparing them would hold the fixture against itself and pass with the
+        // rule ripped out. That claim is made over the committed run instead,
+        // where the price is what carries it -- see GoldenRunTests.
     }
 
     [Fact]

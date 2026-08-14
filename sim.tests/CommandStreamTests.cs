@@ -706,23 +706,24 @@ public class CommandStreamTests
     /// </summary>
     private static WaveSlot[] Adding(WaveScript carried, int typeId, int more)
     {
-        var slots = new List<WaveSlot>();
+        WaveSlot[] slots = carried.AsSlots();
+        var grown = new List<WaveSlot>(slots);
         bool raised = false;
 
-        for (int index = 0; index < carried.Orders.Count; index++)
+        for (int index = 0; index < grown.Count; index++)
         {
-            UnitOrder order = carried.Orders[index];
-            bool target = order.TypeId == typeId;
-            raised = raised || target;
-
-            slots.Add(WaveSlot.Of(order.TypeId, order.Count + (target ? more : 0)));
+            if (grown[index].TypeId == typeId)
+            {
+                grown[index] = WaveSlot.Of(typeId, grown[index].Count + more);
+                raised = true;
+            }
         }
 
         if (!raised)
         {
-            slots.Add(WaveSlot.Of(typeId, more));
+            grown.Add(WaveSlot.Of(typeId, more));
         }
 
-        return slots.ToArray();
+        return grown.ToArray();
     }
 }

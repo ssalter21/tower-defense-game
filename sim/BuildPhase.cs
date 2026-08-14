@@ -450,9 +450,16 @@ namespace Sim
                         + "for the increase precisely because it cannot give up what it already fields.");
                 }
 
+                // The increase, worked out once. What is checked against the
+                // purse below and what is taken out of it are the same number
+                // by construction rather than by two subtractions agreeing --
+                // and a phase priced at one and charged at the other is a purse
+                // spent on a wave that was never affordable.
+                int adding = slot.Count - held;
+
                 already.Add(slot.TypeId);
-                bought.Add(slot.Count - held);
-                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count - held);
+                bought.Add(adding);
+                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), adding);
                 orders.Add(new UnitOrder(
                     FirstReleaseTick + (ahead * Match.SpawnIntervalTicks),
                     types.Require(slot.TypeId, UnitRole.Moving, Filling(index, wave)),

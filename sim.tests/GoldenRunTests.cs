@@ -161,6 +161,77 @@ public class GoldenRunTests
         Assert.Contains(Committed().ToString(), committed, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Every_round_of_the_committed_run_fields_every_creep_bought_before_it_and_pays_for_none_of_them()
+    {
+        // #207's "done when", over the run in content/ rather than over a
+        // scenario written here: a creep bought in round three is still in the
+        // wave in round ten, and is not paid for again.
+        //
+        // The second half is what makes this test rather than a restatement of
+        // the file. Round N's wave containing round N-1's creeps is true of the
+        // authored script by inspection -- the lines only grow -- so asserting
+        // it alone would pass with the accumulation rule ripped out. What cannot
+        // survive that is the PRICE: with the rule gone every round pays for its
+        // whole column, and a round carrying thirty creeps and adding one costs
+        // thirty-one creeps rather than one.
+        //
+        // OBSERVED: charge the full count in BuildPhase.Resolve -- push
+        // slot.Count into `bought` rather than the increase. This goes red on
+        // the purse itself: "A purse holding 17 gold was spent 38 on 2 of one
+        // unit of type 7", because the committed run cannot afford to buy its
+        // own wave a second time.
+        //
+        // OBSERVED, and it is the reason `adding` is now one local rather than
+        // two subtractions: changing only the affordability sum and leaving the
+        // charge alone leaves this test GREEN. The two had to be the same
+        // number by construction before that mutation could be caught at all.
+        Run run = Fresh();
+        CommandStream stream = Committed();
+        IReadOnlyList<RoundReport> rounds = stream.Replay(run);
+        var carried = new Dictionary<int, int>();
+
+        for (int index = 0; index < rounds.Count; index++)
+        {
+            WaveScript sent = rounds[index].Build.Wave;
+            long added = 0;
+
+            foreach (KeyValuePair<int, int> held in carried)
+            {
+                Assert.True(
+                    sent.CountOf(held.Key) >= held.Value,
+                    "Round "
+                        + (index + 1)
+                        + " fields "
+                        + sent.CountOf(held.Key)
+                        + " of type "
+                        + held.Key
+                        + " where the rounds before it bought "
+                        + held.Value
+                        + ".");
+            }
+
+            for (int order = 0; order < sent.Orders.Count; order++)
+            {
+                UnitOrder line = sent.Orders[order];
+                carried.TryGetValue(line.TypeId, out int before);
+                added += run.Costs.PriceOf(Purchase.Unit(line.TypeId), line.Count - before);
+                carried[line.TypeId] = line.Count;
+            }
+
+            // What the round spent on its wave: everything it spent, less what
+            // the board took. Equal to the increase and to nothing else.
+            Assert.Equal(added, rounds[index].Build.Spent - rounds[index].Build.Defense);
+        }
+
+        // And the run really did accumulate rather than sending one round's
+        // worth ten times -- otherwise every "increase" above is the whole wave
+        // and the assertion is trivially true.
+        Assert.True(
+            rounds[rounds.Count - 1].Build.Wave.TotalUnits > rounds[0].Build.Wave.TotalUnits * 10,
+            "The committed run's last wave is not meaningfully larger than its first.");
+    }
+
     /// <summary>The committed command file, read through the read gate.</summary>
     private static CommandStream Committed() =>
         CommandStream.FromBytes("run.commands", File.ReadAllBytes(RepoLayout.CommandFile));

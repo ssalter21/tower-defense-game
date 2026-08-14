@@ -61,7 +61,7 @@ directly, so an Archer must stand before a Ranger can.
 ## Three obligations the sequence carries
 
 - **Step 1 builds the whole economy, not the easy half.** One purse, a flat base plus percentile-band bonuses,
-  10% interest on the bank, an unlock gate and scarce wave slots. The trap is shipping the cost column and the
+  10% interest on the bank, and a purchase that is permanent. The trap is shipping the cost column and the
   base income and calling it done: the base needs nothing to measure against, and the bands — which do, and
   which are what stops attacking being dominated — are what gets dropped. The harness's canned pool is the
   distribution the bands read until real ghosts are stored. [§3](vision.md#one-purse)
@@ -182,8 +182,9 @@ edge of `content/upgrades.txt` points at is refused to `place` and reached by up
 ### 4 · The balance harness
 
 The tool and the definitions underneath it: what a sweep is, what it measures, what a red cell means, what
-*cost-efficient* is in a one-purse economy where a unit competes with a tower, a wave slot and 10% interest at
-once, and how a verdict gets back into `content/` without invalidating a pool of stored ghosts.
+*cost-efficient* is in a one-purse economy where a unit competes with a tower and 10% interest at once — and
+is paid for once, against every round of the run that is left — and how a verdict gets back into `content/`
+without invalidating a pool of stored ghosts.
 
 **It owes step 1 a debt it does not obviously owe.** The percentile bands are measured against a field, and
 there is no field until step 6 — so the sweep's canned set is what the economy measures against meanwhile. That

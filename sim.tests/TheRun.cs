@@ -61,11 +61,14 @@ public static class TheRun
     /// while the first climbs every single round without exception.
     /// </para>
     /// <para>
-    /// <b>That first column is #207 written down.</b> A creep is bought once
-    /// and attacks every round after, so a round's wave is every round's
-    /// purchases and the leak cost it deals can only go up. A vector whose
-    /// first column ever fell would be a run that left a creep at home, which
-    /// is refused -- which is why these numbers are worth writing down twice.
+    /// <b>That first column climbing is #207 showing up in the data.</b> A creep
+    /// is bought once and attacks every round after, so this run's wave grows
+    /// every round and what it gets past a thinning field grows with it.
+    /// <b>The monotonicity is a property of this run and not a rule.</b> What
+    /// the rules make monotone is the wave; leak cost dealt is what a match did
+    /// with it, and the committed run in <c>content/</c> has a round where a
+    /// bigger wave deals a point less. Nothing here may be read as saying that
+    /// cannot happen.
     /// </para>
     /// <para>
     /// <b>This player runs out of health, and that is the point.</b> #179 moved

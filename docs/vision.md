@@ -164,8 +164,7 @@ to supply one.
   decision the round makes over everything it fields, not only over what it just bought. A creep fills at most
   one slot, so buying more of something you already send raises that box rather than opening a second one.
 - **Nothing is gated and nothing is unlocked.** Every creep in the roster is sendable from wave one, priced
-  and nothing else. The offering that used to ration the roster three creeps at a time came out with the
-  anchor schedule; the purse is the only scarcity on the sending side.
+  and nothing else. The purse is the only scarcity on the sending side.
 - **Timing comes from interest.** Unspent gold banks at **10% a wave, rounded up**, uncapped for now. Every
   purchase is measured against compounding, and adding nothing to the wave is investment rather than waste.
 
@@ -176,8 +175,8 @@ The coupling is **statistical**: you are paid against the field's distribution, 
 reads the same whether the field is one lobby or a global population. Bands are progressive and never negative.
 
 Base, thresholds and creep costs are sweep targets, and a permanent purchase makes the last of those the
-sharpest of them: a creep's price is now paid once against every remaining round of leak cost it deals, so the
-cost column moves further per unit of retune than it did when a wave was rebought each round. One consequence: **the bonus needs
+sharpest of them: a creep's price is paid once against every remaining round of leak cost it deals, so a small
+retune of the cost column moves a whole run. One consequence: **the bonus needs
 a distribution to measure against**, and until real ghosts are stored the harness's canned field supplies one —
 which cannot tell the middle bands apart, so four authored bands behave as two until a real pool exists
 ([measured](research/a-canned-field-of-one-collapses-the-bands.md)).
@@ -323,9 +322,9 @@ cannot have both — fixed everywhere is solved by Tuesday, drawn everywhere has
 **The anchors are the constant; the ordinary offering is the churn**, drawn per round and identical for
 everyone, which is where most of a week's variety comes from.
 
-**Wave slots grow on the same cadence, and only there** — starting at 2 and gaining one at each anchor:
-**2, 2, 3, 3, 3, 4, 4, 4, 5, 5**. One per round would reach ten slots by wave 10 and dissolve the scarcity
-entirely.
+**Nothing bounds how many slots a wave carries.** Scarcity on the sending side is the purse and the
+permanence of a purchase, not a slot count — see [One purse](#one-purse). A creep fills at most one slot, so
+what a wave can hold is what the roster has.
 
 **The ghost pool does not shard.** Ghosts draw on `(map, stage)` alone, and a ghost from this rotation was
 played under the same shape, so anything it fields is from the same tier on the same axis — unfamiliar, never
