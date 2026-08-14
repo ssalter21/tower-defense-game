@@ -70,29 +70,10 @@ namespace View
         /// </summary>
         public void Build(GameObject model, float scale, AnimationClip walk, AnimationClip death)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
             if (walk == null) throw new ArgumentNullException(nameof(walk));
             if (death == null) throw new ArgumentNullException(nameof(death));
-            if (scale <= 0f)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(scale), "a creep drawn at no size at all is a creep that never appeared");
-            }
 
-            Model = Instantiate(model, transform, false);
-            Model.name = model.name;
-            Model.transform.localPosition = Vector3.zero;
-            Model.transform.localScale *= scale;
-
-            // The model's own local ROTATION is left exactly as the importer
-            // produced it. Forcing it to identity looks tidy and tips over any
-            // model whose FBX root carries an axis-conversion rotation -- which
-            // is how the hitscan tower came to be lying on its side on the road,
-            // while the characters, whose roots happen to be identity, stood up
-            // perfectly and hid the bug. The SCALE is multiplied into whatever
-            // the importer produced for the same reason: an FBX root can carry a
-            // unit-conversion factor, and assigning over it resizes the model by
-            // whatever that factor was.
+            Model = DrawnModel.Under(transform, model, scale);
 
             // Generic transform curves and no avatar -- the path the Playables
             // validation proved. Binding is SimDrivenAnimator's business,

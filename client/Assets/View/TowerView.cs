@@ -97,7 +97,7 @@ namespace View
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Dress(model, scale);
+            Model = DrawnModel.Under(transform, model, scale);
 
             transform.rotation = resting;
         }
@@ -126,7 +126,7 @@ namespace View
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Dress(model, scale);
+            Model = DrawnModel.Under(transform, model, scale);
 
             // The weapon goes on the bone before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
@@ -138,39 +138,6 @@ namespace View
             _animator = SimDrivenAnimator.Bind(Model, idle, windup, backswing);
 
             transform.rotation = resting;
-        }
-
-        /// <summary>
-        /// Instantiates the model under this object, at the size its unit type
-        /// is drawn at.
-        /// </summary>
-        /// <remarks>
-        /// The model's own local ROTATION is left exactly as the importer
-        /// produced it. Forcing it to identity looks tidy and tips over any
-        /// model whose FBX root carries an axis-conversion rotation — which is
-        /// how the hitscan tower came to be lying on its side on the road, while
-        /// the characters, whose roots happen to be identity, stood up perfectly
-        /// and hid the bug. The SCALE is multiplied into whatever the importer
-        /// produced for the same reason: an FBX root can carry a unit-conversion
-        /// factor, and assigning over it resizes the model by whatever that
-        /// factor was.
-        /// </remarks>
-        private GameObject Dress(GameObject model, float scale)
-        {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-
-            if (scale <= 0f)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(scale), "a tower drawn at no size at all is a tower that never appeared");
-            }
-
-            GameObject instance = Instantiate(model, transform, false);
-            instance.name = model.name;
-            instance.transform.localPosition = Vector3.zero;
-            instance.transform.localScale *= scale;
-
-            return instance;
         }
 
         /// <summary>
@@ -192,7 +159,7 @@ namespace View
 
             if (_animator == null)
             {
-                // A static building has nothing to sample. Its whole
+                // A tower with no clips has nothing to sample. Its whole
                 // contribution to the picture is standing where it was put.
                 return;
             }

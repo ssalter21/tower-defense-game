@@ -45,11 +45,11 @@ namespace Tests.EditMode
         /// The static mesh half of the pipeline.
         /// </summary>
         /// <remarks>
-        /// No unit is drawn with it — every row in <c>content/units.txt</c> is a
-        /// character now — but the building is still in the repository and the
-        /// non-skinned import path is still the half of this pipeline nothing
-        /// else exercises. Named here rather than in <see cref="ChosenArt"/>,
-        /// which is the list of what a match is actually drawn with.
+        /// No unit is drawn with it: every row in <c>content/units.txt</c> is a
+        /// character. It stays in the project because the non-skinned import
+        /// path is the half of this pipeline nothing else exercises. Named here
+        /// rather than in <see cref="ChosenArt"/>, which is the list of what a
+        /// match is actually drawn with.
         /// </remarks>
         public const string TowerPath = "Assets/Art/Buildings/building_tower_A_blue.fbx";
 
@@ -191,7 +191,10 @@ namespace Tests.EditMode
         /// <para>
         /// The scales are checked against the role rather than written out per
         /// unit, because "towers 1, every creep a half" is the rule and the
-        /// Ranger is its one stated exception.
+        /// Ranger is its one stated exception. That makes this a third
+        /// transcription of the roster, after the scene builder's table and the
+        /// fixture's, and deliberately so: an assertion that read either table
+        /// would be checking it against itself.
         /// </para>
         /// </remarks>
         [Test]
@@ -287,27 +290,39 @@ namespace Tests.EditMode
             return bounds.size.y * art.ScaleFor(unitId);
         }
 
+        /// <summary>
+        /// Every model a unit is drawn with came in through the skinned path,
+        /// with the bone a weapon hangs off.
+        /// </summary>
+        /// <remarks>
+        /// All of them, rather than the one the spike started with. The bone is
+        /// the rig coupling this project has: <c>handslot.l</c> is a KayKit
+        /// name, and a model imported without it has nowhere for a weapon to go
+        /// — a fact that only surfaces the day that model is given one. Looked
+        /// up by string here rather than through the shipped helper, so this
+        /// file asserts what the import produced and nothing about how the view
+        /// uses it.
+        /// </remarks>
         [Test]
-        public void TheProjectileTowerIsASkinnedAnimatedCharacter()
+        public void EveryUnitModelIsSkinnedAndCarriesTheWeaponBone()
         {
-            GameObject ranger = Instantiate(RangerPath);
-
-            SkinnedMeshRenderer[] skinned = ranger.GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            Assert.IsNotEmpty(skinned, "the Ranger imported with no skinned mesh — this is the skinned import path");
-
-            foreach (SkinnedMeshRenderer renderer in skinned)
+            foreach (string path in ChosenArt.ModelPaths)
             {
-                Assert.Greater(renderer.bones.Length, 0, $"{renderer.name} is skinned to no bones");
-                Assert.IsNotNull(renderer.rootBone, $"{renderer.name} has no root bone");
-            }
+                GameObject character = Instantiate(path);
 
-            // The bone the bow goes on has to be one of them, or the weapon half
-            // of this pipeline has nowhere to attach. Looked up by string here
-            // rather than through the shipped helper, so this file asserts what
-            // the import produced and nothing about how the view uses it.
-            Assert.IsNotNull(
-                ranger.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "handslot.l"),
-                "the Ranger carries no 'handslot.l' bone");
+                SkinnedMeshRenderer[] skinned = character.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+                Assert.IsNotEmpty(skinned, $"{path} imported with no skinned mesh — this is the skinned import path");
+
+                foreach (SkinnedMeshRenderer renderer in skinned)
+                {
+                    Assert.Greater(renderer.bones.Length, 0, $"{path}/{renderer.name} is skinned to no bones");
+                    Assert.IsNotNull(renderer.rootBone, $"{path}/{renderer.name} has no root bone");
+                }
+
+                Assert.IsNotNull(
+                    character.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "handslot.l"),
+                    $"{path} carries no 'handslot.l' bone");
+            }
         }
 
         [Test]

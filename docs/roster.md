@@ -411,6 +411,17 @@ nine units need are imported into `client/Assets/Art/Characters/` — see
 [§10](research/kaykit-collection-inventory.md#10-already-imported). Nothing in the project reads that folder;
 imports are copied out of it by hand.
 
+> ⚠️ **The one thing on the board that is not signed is the bow.** The models are per unit type; the *weapon*
+> is still per delivery, so `bow_withString` goes into the hand of whichever row is a `projectile` — and the
+> Mage is the only one. **So the Mage draws a bow rather than holding a book**, and the Archer and the Ranger,
+> being hitscan, hold nothing and stand in their bind pose.
+>
+> **This was not chosen; it is what the delivery rule already did**, showing through now that the models are
+> right. Fixing it is three decisions nobody has made and none of them is on this page: which prop the Mage
+> holds, which prop the Soldier and the two archers hold, and which clips a hitscan tower is posed by — the
+> ranged bank has bow and magic sets, the melee bank a `Melee_1H_*` set, and picking between them is an art
+> decision. Recorded here rather than guessed at.
+
 **Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it is drawn:
 
 | What | Scale | Why |

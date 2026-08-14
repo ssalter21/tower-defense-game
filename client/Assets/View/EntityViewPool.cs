@@ -37,8 +37,8 @@ namespace View
     /// idle Skeleton Warrior cannot stand in for a Minion — handing it over
     /// would draw the wrong body at the wrong size and nothing would throw. So
     /// idle views are kept in one stack per variant and a claim names the
-    /// variant it needs. A pool whose views are all alike names none, and gets
-    /// the single-stack behaviour it always had.
+    /// variant it needs. A pool whose views are all alike names none, and works
+    /// out of a single stack.
     /// </para>
     /// <para>
     /// <b>Usage is three calls, in order.</b>
@@ -63,7 +63,7 @@ namespace View
 
         private readonly HashSet<int> _claimed = new HashSet<int>();
 
-        private readonly List<int> _departed = new List<int>();
+        private readonly List<int> _retiring = new List<int>();
 
         private readonly Func<int, T> _create;
 
@@ -109,7 +109,26 @@ namespace View
         /// number that stops growing once the match reaches its busiest moment,
         /// which is the whole point of pooling.
         /// </summary>
-        public int IdleCount { get; private set; }
+        /// <remarks>
+        /// Counted on the way out rather than kept as a running total: a
+        /// hand-maintained tally is an invariant two call sites have to hold
+        /// true, and there are only ever as many stacks here as the match has
+        /// kinds of body.
+        /// </remarks>
+        public int IdleCount
+        {
+            get
+            {
+                var waiting = 0;
+
+                foreach (KeyValuePair<int, Stack<T>> variant in _idle)
+                {
+                    waiting += variant.Value.Count;
+                }
+
+                return waiting;
+            }
+        }
 
         /// <summary>
         /// How many views this pool has ever built. A test watches this stop
@@ -172,7 +191,6 @@ namespace View
             if (_idle.TryGetValue(variant, out Stack<T> waiting) && waiting.Count > 0)
             {
                 view = waiting.Pop();
-                IdleCount--;
             }
             else
             {
@@ -199,17 +217,17 @@ namespace View
             }
 
             _syncing = false;
-            _departed.Clear();
+            _retiring.Clear();
 
             foreach (KeyValuePair<int, T> entry in _live)
             {
                 if (!_claimed.Contains(entry.Key))
                 {
-                    _departed.Add(entry.Key);
+                    _retiring.Add(entry.Key);
                 }
             }
 
-            foreach (int id in _departed)
+            foreach (int id in _retiring)
             {
                 Retire(id);
             }
@@ -228,14 +246,14 @@ namespace View
                 _claimed.Clear();
             }
 
-            _departed.Clear();
+            _retiring.Clear();
 
             foreach (KeyValuePair<int, T> entry in _live)
             {
-                _departed.Add(entry.Key);
+                _retiring.Add(entry.Key);
             }
 
-            foreach (int id in _departed)
+            foreach (int id in _retiring)
             {
                 Retire(id);
             }
@@ -258,7 +276,6 @@ namespace View
             }
 
             waiting.Push(view);
-            IdleCount++;
         }
 
         /// <summary>
