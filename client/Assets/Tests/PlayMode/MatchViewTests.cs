@@ -413,34 +413,83 @@ namespace Tests.PlayMode
                 + "lies on its side and nothing else in this suite notices");
         }
 
+        /// <summary>
+        /// Every tower holds what its own art says it holds, and is posed with
+        /// its own clips.
+        /// </summary>
+        /// <remarks>
+        /// This used to assert the opposite and pass: towers split on
+        /// <c>Delivery</c>, so the mage — the only projectile row — was the one
+        /// animated and holding a weapon, and the archer and the ranger stood
+        /// still with empty hands. The weapon and the clips are per unit now, so
+        /// the question is no longer "which kind of tower is this" but "what did
+        /// its art say", and the answer is checked against the art rather than
+        /// against a rule about damage.
+        /// </remarks>
         [Test]
-        public void TheTwoKindsOfTowerAreBuiltDifferently()
+        public void EveryTowerHoldsWhatItsArtSaysAndIsPosedWithItsOwnClips()
         {
             MatchView view = Begin();
+            MatchArt art = TheMatchOnScreen.Art();
 
             Assert.That(view.Towers.Count, Is.EqualTo(6), "the defense has six towers");
 
             foreach (TowerView tower in view.Towers.Values)
             {
-                if (tower.Type.Delivery == Delivery.Projectile)
-                {
-                    Assert.That(tower.IsAnimated, Is.True, "the projectile tower is a skinned character");
-                    Assert.That(tower.Weapon, Is.Not.Null, "it draws a bow, so it has to be holding one");
-                    Assert.That(
-                        tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                        Is.Not.Empty);
-                }
-                else
-                {
-                    Assert.That(tower.IsAnimated, Is.False,
-                        "a hitscan tower's shot puts nothing in the snapshot, so it has nothing to pose to");
-                    Assert.That(tower.Weapon, Is.Null, "it draws no bow, so it holds none");
-                    Assert.That(
-                        tower.Model.GetComponentInChildren<SimDrivenAnimator>(true),
-                        Is.Null,
-                        "a hitscan tower was bound to a graph, so both halves of the seam are the same half");
-                }
+                UnitArt expected = art.ArtFor(tower.Type.Id);
+
+                Assert.That(tower.IsAnimated, Is.EqualTo(expected.IsPosed),
+                    tower.Type.Label + " is posed when its art carries no clips, or the other way round");
+
+                Assert.That(
+                    tower.RightHand == null, Is.EqualTo(expected.RightHand == null),
+                    tower.Type.Label + "'s right hand disagrees with its art");
+
+                Assert.That(
+                    tower.LeftHand == null, Is.EqualTo(expected.LeftHand == null),
+                    tower.Type.Label + "'s left hand disagrees with its art");
+
+                Assert.That(
+                    tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
+                    Is.Not.Empty,
+                    tower.Type.Label + " is not a skinned character");
             }
+        }
+
+        /// <summary>
+        /// The mage does not draw a bow, and the archer and the ranger do.
+        /// </summary>
+        /// <remarks>
+        /// Named units on purpose. The test above proves the view agrees with
+        /// the art table; this one proves the art table itself is not the thing
+        /// that is wrong, which is exactly how the original defect survived —
+        /// every layer faithfully carried out an assignment nobody had checked.
+        /// </remarks>
+        [Test]
+        public void TheBowIsHeldByTheArchersAndNotByTheMage()
+        {
+            MatchArt art = TheMatchOnScreen.Art();
+
+            const int Archer = 3;
+            const int Mage = 4;
+            const int Soldier = 11;
+            const int Ranger = 14;
+
+            foreach (int id in new[] { Archer, Ranger })
+            {
+                Assert.That(art.ArtFor(id).LeftHand, Is.Not.Null, "unit " + id + " draws no bow");
+                Assert.That(art.ArtFor(id).LeftHand.name, Does.Contain("bow").IgnoreCase,
+                    "unit " + id + " holds '" + art.ArtFor(id).LeftHand.name + "' rather than a bow");
+            }
+
+            Assert.That(art.ArtFor(Mage).RightHand, Is.Not.Null, "the mage holds nothing");
+            Assert.That(art.ArtFor(Mage).RightHand.name, Does.Contain("staff").IgnoreCase,
+                "the mage holds '" + art.ArtFor(Mage).RightHand.name + "' rather than a staff");
+            Assert.That(art.ArtFor(Mage).LeftHand, Is.Null, "the mage still carries something off-hand");
+
+            Assert.That(art.ArtFor(Soldier).RightHand, Is.Not.Null, "the soldier holds nothing");
+            Assert.That(art.ArtFor(Soldier).RightHand.name, Does.Contain("sword").IgnoreCase,
+                "the soldier holds '" + art.ArtFor(Soldier).RightHand.name + "' rather than a sword");
         }
 
         /// <summary>

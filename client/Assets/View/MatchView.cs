@@ -502,27 +502,21 @@ namespace View
                 var view = host.AddComponent<TowerView>();
                 Quaternion resting = RestingRotationFor(host.transform.localPosition);
 
-                // The model and the size are the unit type's, and the delivery
-                // decides only whether there are clips to pose it with.
-                GameObject model = _art.ModelFor(placed.Type.Id);
-                float scale = _art.ScaleFor(placed.Type.Id);
+                // Everything this unit type is drawn with, in one piece. What
+                // decides whether it can be posed is whether its own art
+                // carries clips -- not its delivery, which is a rule about
+                // where its damage comes from and says nothing about how it
+                // holds itself. Keying on delivery is what put the bow in the
+                // mage's hands and left the archer holding air.
+                UnitArt art = _art.ArtFor(placed.Type.Id);
 
-                if (placed.Type.Delivery == Delivery.Projectile)
+                if (art.IsPosed)
                 {
-                    view.BuildAnimated(
-                        id,
-                        placed.Type,
-                        model,
-                        scale,
-                        _art.BowModel,
-                        _art.TowerIdleClip,
-                        _art.TowerWindupClip,
-                        _art.TowerBackswingClip,
-                        resting);
+                    view.BuildAnimated(id, placed.Type, art, resting);
                 }
                 else
                 {
-                    view.BuildStatic(id, placed.Type, model, scale, resting);
+                    view.BuildStatic(id, placed.Type, art, resting);
                 }
 
                 _towers.Add(id, view);
@@ -575,11 +569,7 @@ namespace View
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(
-                _art.ModelFor(unitId),
-                _art.ScaleFor(unitId),
-                _art.CreepWalkClip,
-                _art.CreepDeathClip);
+            view.Build(_art.ArtFor(unitId), _art.CreepWalkClip, _art.CreepDeathClip);
 
             return view;
         }

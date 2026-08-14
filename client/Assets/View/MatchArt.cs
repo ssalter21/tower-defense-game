@@ -30,9 +30,74 @@ namespace View
         [Tooltip("Multiplied into the imported model's own scale.")]
         private float scale;
 
-        /// <summary>One unit's art, for a caller that has the model in hand.</summary>
+        [SerializeField]
+        [Tooltip("Hung off handslot.r. Null for a unit that carries nothing there.")]
+        private GameObject rightHand;
+
+        [SerializeField]
+        [Tooltip("Hung off handslot.l. Null for a unit that carries nothing there.")]
+        private GameObject leftHand;
+
+        [SerializeField]
+        [Tooltip("Played while this tower is Idle. Null on a creep.")]
+        private AnimationClip idleClip;
+
+        [SerializeField]
+        [Tooltip("Played across this tower's Windup. Null on a creep.")]
+        private AnimationClip windupClip;
+
+        [SerializeField]
+        [Tooltip("Played across this tower's Backswing. Null on a creep.")]
+        private AnimationClip backswingClip;
+
+        /// <summary>A unit that stands there and holds nothing.</summary>
         public static UnitArt Of(int unitId, GameObject model, float scale) =>
             new UnitArt { unitId = unitId, model = model, scale = scale };
+
+        /// <summary>
+        /// A unit that holds something. Either hand may be null; a unit holding
+        /// nothing in either is <see cref="Of(int, GameObject, float)"/>.
+        /// </summary>
+        public static UnitArt Holding(
+            int unitId, GameObject model, float scale, GameObject rightHand, GameObject leftHand) =>
+            new UnitArt
+            {
+                unitId = unitId,
+                model = model,
+                scale = scale,
+                rightHand = rightHand,
+                leftHand = leftHand,
+            };
+
+        /// <summary>
+        /// A tower: what it holds, and the three clips it is posed with.
+        /// </summary>
+        /// <remarks>
+        /// The clips are per unit and not per project because a mage casting
+        /// and an archer drawing are different actions on the same three
+        /// simulation states. They were one shared set until the weapons became
+        /// per unit, and that shared set is what put a bow in the mage's hands.
+        /// </remarks>
+        public static UnitArt Armed(
+            int unitId,
+            GameObject model,
+            float scale,
+            GameObject rightHand,
+            GameObject leftHand,
+            AnimationClip idle,
+            AnimationClip windup,
+            AnimationClip backswing) =>
+            new UnitArt
+            {
+                unitId = unitId,
+                model = model,
+                scale = scale,
+                rightHand = rightHand,
+                leftHand = leftHand,
+                idleClip = idle,
+                windupClip = windup,
+                backswingClip = backswing,
+            };
 
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
         public int UnitId => unitId;
@@ -43,12 +108,38 @@ namespace View
         /// <summary>How much bigger or smaller than the imported model this draws.</summary>
         public float Scale => scale;
 
+        /// <summary>What goes on <c>handslot.r</c>, or null.</summary>
+        public GameObject RightHand => rightHand;
+
+        /// <summary>What goes on <c>handslot.l</c>, or null.</summary>
+        public GameObject LeftHand => leftHand;
+
+        /// <summary>The clip for <see cref="Sim.TowerState.Idle"/>, or null on a creep.</summary>
+        public AnimationClip IdleClip => idleClip;
+
+        /// <summary>The clip for <see cref="Sim.TowerState.Windup"/>, or null on a creep.</summary>
+        public AnimationClip WindupClip => windupClip;
+
+        /// <summary>The clip for <see cref="Sim.TowerState.Backswing"/>, or null on a creep.</summary>
+        public AnimationClip BackswingClip => backswingClip;
+
         /// <summary>
         /// True when both halves are filled in. A zero scale is as incomplete as
         /// a null model: it draws the unit at no size at all, which on screen is
         /// a unit that never appeared.
         /// </summary>
         public bool IsComplete => model != null && scale > 0f;
+
+        /// <summary>
+        /// True when this unit carries all three clips, which is what makes it
+        /// a posed tower rather than a thing standing where it was put.
+        /// </summary>
+        /// <remarks>
+        /// All three or none. Two clips and a null is a wiring mistake that
+        /// would otherwise reach the animator as a bind-pose freeze in one
+        /// state only, which is the hardest kind of animation bug to see.
+        /// </remarks>
+        public bool IsPosed => idleClip != null && windupClip != null && backswingClip != null;
     }
 
     /// <summary>
@@ -66,13 +157,22 @@ namespace View
     /// defaults: an unfilled field throws by name.
     /// </para>
     /// <para>
-    /// <b>Models are per unit type; clips are per role.</b> The lookup is by
-    /// the id in <c>content/units.txt</c>, so the Necromancer and the Skeleton
-    /// Warrior are two different bodies on the board rather than two rows that
-    /// happen to draw the same. What is still shared is the animation — one
-    /// walk and one death for every creep, one clip per state for the tower
-    /// that draws a bow — because all nine models are on <c>Rig_Medium</c> and
-    /// a clip from any bank drives any of them.
+    /// <b>Models, weapons and tower clips are all per unit type.</b> The lookup
+    /// is by the id in <c>content/units.txt</c>, so the Necromancer and the
+    /// Skeleton Warrior are two different bodies on the board rather than two
+    /// rows that happen to draw the same. What is still shared is the creep
+    /// animation — one walk and one death for all of them — because all nine
+    /// models are on <c>Rig_Medium</c> and a clip from any bank drives any of
+    /// them.
+    /// </para>
+    /// <para>
+    /// <b>The tower's weapon and clips were shared once, and that was the bug.</b>
+    /// One bow and one set of three clips hung off <c>Delivery</c> rather than
+    /// off the unit, so the mage — the only projectile row in
+    /// <c>content/units.txt</c> — drew the bow, while the archer and the ranger,
+    /// which are hitscan, drew nothing at all. A unit's weapon and the clips
+    /// animated for that weapon are one choice, so they are made together, per
+    /// unit, on <see cref="UnitArt"/>.
     /// </para>
     /// <para>
     /// <b>Serialized references rather than a runtime lookup.</b>
@@ -123,23 +223,6 @@ namespace View
         [Tooltip("Death_A. Played across exactly the tick duration the simulation gave the Dying state.")]
         private AnimationClip creepDeathClip;
 
-        [Header("The projectile tower — the skinned import path")]
-        [SerializeField]
-        [Tooltip("The bow, hung off handslot.l at runtime.")]
-        private GameObject bowModel;
-
-        [SerializeField]
-        [Tooltip("Ranged_Bow_Idle — played while the tower is Idle.")]
-        private AnimationClip towerIdleClip;
-
-        [SerializeField]
-        [Tooltip("Ranged_Bow_Draw — played across the Windup, which ends when the shot is released.")]
-        private AnimationClip towerWindupClip;
-
-        [SerializeField]
-        [Tooltip("Ranged_Bow_Release — played across the Backswing, after the shot has landed.")]
-        private AnimationClip towerBackswingClip;
-
         /// <summary>
         /// A bundle built in memory, for a caller that already has the assets
         /// in hand.
@@ -154,20 +237,12 @@ namespace View
         public static MatchArt Of(
             IEnumerable<UnitArt> units,
             AnimationClip walk,
-            AnimationClip death,
-            GameObject bow,
-            AnimationClip idle,
-            AnimationClip windup,
-            AnimationClip backswing) =>
+            AnimationClip death) =>
             new MatchArt
             {
                 units = new List<UnitArt>(units ?? throw new ArgumentNullException(nameof(units))),
                 creepWalkClip = walk,
                 creepDeathClip = death,
-                bowModel = bow,
-                towerIdleClip = idle,
-                towerWindupClip = windup,
-                towerBackswingClip = backswing,
             };
 
         /// <summary>Every unit type that has art, in the order it was wired.</summary>
@@ -179,18 +254,18 @@ namespace View
         /// <summary>The death clip.</summary>
         public AnimationClip CreepDeathClip => Required(creepDeathClip, nameof(creepDeathClip));
 
-        /// <summary>The weapon the projectile tower holds.</summary>
-        public GameObject BowModel => Required(bowModel, nameof(bowModel));
-
-        /// <summary>The clip for <see cref="Sim.TowerState.Idle"/>.</summary>
-        public AnimationClip TowerIdleClip => Required(towerIdleClip, nameof(towerIdleClip));
-
-        /// <summary>The clip for <see cref="Sim.TowerState.Windup"/>.</summary>
-        public AnimationClip TowerWindupClip => Required(towerWindupClip, nameof(towerWindupClip));
-
-        /// <summary>The clip for <see cref="Sim.TowerState.Backswing"/>.</summary>
-        public AnimationClip TowerBackswingClip =>
-            Required(towerBackswingClip, nameof(towerBackswingClip));
+        /// <summary>
+        /// Everything one unit type is drawn with — its model, its size, what
+        /// it holds and, on a tower, the three clips it is posed with.
+        /// </summary>
+        /// <remarks>
+        /// Handed over whole rather than a field at a time. The model and the
+        /// scale always travel together, the hands travel with the model that
+        /// has the bones, and the clips only mean anything against the weapon
+        /// they were animated for — so a caller taking them separately is a
+        /// caller that can put a bow in a mage's hands.
+        /// </remarks>
+        public UnitArt ArtFor(int unitId) => For(unitId);
 
         /// <summary>The model a unit type is drawn with.</summary>
         public GameObject ModelFor(int unitId) => For(unitId).Model;
@@ -219,12 +294,7 @@ namespace View
                     }
                 }
 
-                return creepWalkClip != null
-                    && creepDeathClip != null
-                    && bowModel != null
-                    && towerIdleClip != null
-                    && towerWindupClip != null
-                    && towerBackswingClip != null;
+                return creepWalkClip != null && creepDeathClip != null;
             }
         }
 

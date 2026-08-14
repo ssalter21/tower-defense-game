@@ -127,6 +127,19 @@ namespace Tests.EditMode
                     GeneratedTestAssets.ManifestPath + " names a different " + field
                     + " than ChosenArt does. Run tools/build-test-assets.ps1 and commit what it writes.");
 
+            // Is.SameAs does not hold for two nulls, and two nulls are exactly
+            // what an empty hand or a creep's absent clips look like on both
+            // sides. Absent-on-one-side-only is still a failure.
+            void SameOrBothEmpty(Object inManifest, Object inChosenArt, string field)
+            {
+                if (inManifest == null && inChosenArt == null)
+                {
+                    return;
+                }
+
+                Same(inManifest, inChosenArt, field);
+            }
+
             Assert.That(
                 generated.Units.Select(u => u.UnitId),
                 Is.EqualTo(chosen.Units.Select(u => u.UnitId)),
@@ -135,20 +148,30 @@ namespace Tests.EditMode
 
             foreach (UnitArt unit in chosen.Units)
             {
-                Same(generated.ModelFor(unit.UnitId), unit.Model, "model for unit " + unit.UnitId);
+                UnitArt made = generated.ArtFor(unit.UnitId);
 
-                Assert.That(generated.ScaleFor(unit.UnitId), Is.EqualTo(unit.Scale),
+                Same(made.Model, unit.Model, "model for unit " + unit.UnitId);
+
+                Assert.That(made.Scale, Is.EqualTo(unit.Scale),
                     GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
                     + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
                     + "and commit what it writes.");
+
+                // What a unit holds and the clips it holds it with are per unit
+                // and generated the same way the model is, so they drift the
+                // same way and are compared the same way. Optional, though: an
+                // empty hand and a creep's absent clips are both a legitimate
+                // null, and two nulls agree.
+                SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
+                SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
+                SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
+                SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
+                SameOrBothEmpty(
+                    made.BackswingClip, unit.BackswingClip, "backswing clip for unit " + unit.UnitId);
             }
 
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
             Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
-            Same(generated.BowModel, chosen.BowModel, nameof(chosen.BowModel));
-            Same(generated.TowerIdleClip, chosen.TowerIdleClip, nameof(chosen.TowerIdleClip));
-            Same(generated.TowerWindupClip, chosen.TowerWindupClip, nameof(chosen.TowerWindupClip));
-            Same(generated.TowerBackswingClip, chosen.TowerBackswingClip, nameof(chosen.TowerBackswingClip));
         }
 
         /// <summary>

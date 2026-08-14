@@ -46,16 +46,26 @@ namespace Tests.Fixtures
         public const string MageModelPath = "Assets/Art/Characters/Mage.fbx";
 
         public const string BowModelPath = "Assets/Art/Weapons/bow_withString.fbx";
+        public const string StaffModelPath = "Assets/Art/Weapons/staff.fbx";
+        public const string SwordModelPath = "Assets/Art/Weapons/sword_1handed.fbx";
+        public const string SkeletonStaffModelPath = "Assets/Art/Weapons/Skeleton_Staff.fbx";
+        public const string SkeletonBladeModelPath = "Assets/Art/Weapons/Skeleton_Blade.fbx";
+        public const string SkeletonShieldAModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx";
+        public const string SkeletonShieldBModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
 
         public const string MovementBankPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
         public const string GeneralBankPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
         public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
+        public const string MeleeBankPath = "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx";
 
         public const string WalkClipName = "Walking_A";
         public const string DeathClipName = "Death_A";
-        public const string TowerIdleClipName = "Ranged_Bow_Idle";
-        public const string TowerWindupClipName = "Ranged_Bow_Draw";
-        public const string TowerBackswingClipName = "Ranged_Bow_Release";
+        public const string RestClipName = "Idle_A";
+        public const string BowIdleClipName = "Ranged_Bow_Idle";
+        public const string BowDrawClipName = "Ranged_Bow_Draw";
+        public const string BowReleaseClipName = "Ranged_Bow_Release";
+        public const string SpellcastClipName = "Ranged_Magic_Spellcasting";
+        public const string ChopClipName = "Melee_1H_Attack_Chop";
 
         /// <summary>
         /// What each row in <c>content/units.txt</c> is drawn as, and how big,
@@ -69,17 +79,32 @@ namespace Tests.Fixtures
         /// again here, so this table and the builder's can disagree about which
         /// model a unit takes but never about what a half is.
         /// </remarks>
-        public static readonly (int unitId, string model, float scale)[] UnitPaths =
+        public static readonly (
+            int unitId,
+            string model,
+            float scale,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing)[] UnitPaths =
         {
-            (1, MinionModelPath, MatchArt.CreepScale),
-            (2, RogueModelPath, MatchArt.CreepScale),
-            (3, RangerModelPath, MatchArt.TowerScale),
-            (4, MageModelPath, MatchArt.TowerScale),
-            (7, SkeletonMageModelPath, MatchArt.CreepScale),
-            (11, KnightModelPath, MatchArt.TowerScale),
-            (12, MinionModelPath, MatchArt.CreepScale),
-            (13, WarriorModelPath, MatchArt.CreepScale),
-            (14, RangerModelPath, MatchArt.RangerScale),
+            (1, MinionModelPath, MatchArt.CreepScale, null, null, null, null, null),
+            (2, RogueModelPath, MatchArt.CreepScale, null, null, null, null, null),
+            (3, RangerModelPath, MatchArt.TowerScale,
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+            (4, MageModelPath, MatchArt.TowerScale,
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName),
+            (7, SkeletonMageModelPath, MatchArt.CreepScale,
+                SkeletonStaffModelPath, null, null, null, null),
+            (11, KnightModelPath, MatchArt.TowerScale,
+                SwordModelPath, null, RestClipName, ChopClipName, RestClipName),
+            (12, MinionModelPath, MatchArt.CreepScale,
+                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null),
+            (13, WarriorModelPath, MatchArt.CreepScale,
+                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null),
+            (14, RangerModelPath, MatchArt.RangerScale,
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -89,13 +114,44 @@ namespace Tests.Fixtures
         /// <summary>Every asset above, loaded now.</summary>
         public static MatchArt Load() =>
             MatchArt.Of(
-                UnitPaths.Select(u => UnitArt.Of(u.unitId, Model(u.model), u.scale)),
+                UnitPaths.Select(u => UnitArt.Armed(
+                    u.unitId,
+                    Model(u.model),
+                    u.scale,
+                    MaybeModel(u.rightHand),
+                    MaybeModel(u.leftHand),
+                    MaybeClip(u.idle),
+                    MaybeClip(u.windup),
+                    MaybeClip(u.backswing))),
                 Clip(MovementBankPath, WalkClipName),
-                Clip(GeneralBankPath, DeathClipName),
-                Model(BowModelPath),
-                Clip(RangedBankPath, TowerIdleClipName),
-                Clip(RangedBankPath, TowerWindupClipName),
-                Clip(RangedBankPath, TowerBackswingClipName));
+                Clip(GeneralBankPath, DeathClipName));
+
+        private static GameObject MaybeModel(string path) => path == null ? null : Model(path);
+
+        /// <summary>
+        /// A clip by name from whichever bank holds it. The fixture searches
+        /// rather than being told the bank, because which bank a clip lives in
+        /// is the pack's business and not a choice anybody signed off.
+        /// </summary>
+        private static AnimationClip MaybeClip(string name)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+
+            foreach (string bank in new[] { MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath })
+            {
+                AnimationClip found = Clips(bank).FirstOrDefault(c => c.name == name);
+
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            throw new InvalidOperationException("No clip called '" + name + "' in any of the four banks.");
+        }
 
         /// <summary>Every model path in the table above, each named once.</summary>
         public static IEnumerable<string> ModelPaths => UnitPaths.Select(u => u.model).Distinct();
@@ -120,10 +176,7 @@ namespace Tests.Fixtures
         /// </summary>
         private static AnimationClip Clip(string bank, string name)
         {
-            AnimationClip[] clips = AssetDatabase.LoadAllAssetsAtPath(bank)
-                .OfType<AnimationClip>()
-                .Where(c => !c.name.StartsWith("__preview__", StringComparison.Ordinal))
-                .ToArray();
+            AnimationClip[] clips = Clips(bank);
 
             AnimationClip clip = clips.FirstOrDefault(c => c.name == name);
 
@@ -136,6 +189,13 @@ namespace Tests.Fixtures
 
             return clip;
         }
+
+        /// <summary>Every real clip in a bank, the preview duplicates dropped.</summary>
+        private static AnimationClip[] Clips(string bank) =>
+            AssetDatabase.LoadAllAssetsAtPath(bank)
+                .OfType<AnimationClip>()
+                .Where(c => !c.name.StartsWith("__preview__", StringComparison.Ordinal))
+                .ToArray();
 
         private sealed class Adapter : IMatchArtSource
         {

@@ -42,6 +42,22 @@ namespace Tests.EditMode
         public const string BowPath = ChosenArt.BowModelPath;
 
         /// <summary>
+        /// Everything a unit holds. Each is its own import, hung off a bone at
+        /// runtime rather than baked into the body, which is why the body and
+        /// the thing it carries can be assigned separately per unit.
+        /// </summary>
+        public static readonly string[] HeldPaths =
+        {
+            ChosenArt.BowModelPath,
+            ChosenArt.StaffModelPath,
+            ChosenArt.SwordModelPath,
+            ChosenArt.SkeletonStaffModelPath,
+            ChosenArt.SkeletonBladeModelPath,
+            ChosenArt.SkeletonShieldAModelPath,
+            ChosenArt.SkeletonShieldBModelPath,
+        };
+
+        /// <summary>
         /// The static mesh half of the pipeline.
         /// </summary>
         /// <remarks>
@@ -92,6 +108,12 @@ namespace Tests.EditMode
         {
             (RangerPath, RangerAtlasPath),
             (BowPath, RangerAtlasPath),
+            (ChosenArt.StaffModelPath, "Assets/Art/Characters/mage_texture.png"),
+            (ChosenArt.SwordModelPath, "Assets/Art/Characters/knight_texture.png"),
+            (ChosenArt.SkeletonStaffModelPath, SkeletonAtlasPath),
+            (ChosenArt.SkeletonBladeModelPath, SkeletonAtlasPath),
+            (ChosenArt.SkeletonShieldAModelPath, SkeletonAtlasPath),
+            (ChosenArt.SkeletonShieldBModelPath, SkeletonAtlasPath),
             (TowerPath, "Assets/Art/Buildings/hexagons_medieval.png"),
             (ChosenArt.WarriorModelPath, "Assets/Art/Characters/skeleton_texture.png"),
             (ChosenArt.MinionModelPath, SkeletonAtlasPath),
@@ -101,12 +123,20 @@ namespace Tests.EditMode
             (ChosenArt.MageModelPath, "Assets/Art/Characters/mage_texture.png"),
         };
 
-        /// <summary>The tower's three states, one clip each. See #44.</summary>
+        /// <summary>
+        /// Every clip a tower is posed with. Three states each, and the set a
+        /// tower gets depends on what it holds — the bow three for the Archer
+        /// and the Ranger, rest-and-cast for the Mage, rest-and-chop for the
+        /// Soldier. See #44 and the 14 August weapon pass.
+        /// </summary>
         private static readonly string[] TowerClipNames =
         {
-            ChosenArt.TowerIdleClipName,       // Idle
-            ChosenArt.TowerWindupClipName,     // Windup
-            ChosenArt.TowerBackswingClipName,  // Backswing
+            ChosenArt.BowIdleClipName,
+            ChosenArt.BowDrawClipName,
+            ChosenArt.BowReleaseClipName,
+            ChosenArt.RestClipName,
+            ChosenArt.SpellcastClipName,
+            ChosenArt.ChopClipName,
         };
 
         /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
@@ -115,6 +145,7 @@ namespace Tests.EditMode
             ChosenArt.MovementBankPath,
             ChosenArt.GeneralBankPath,
             ChosenArt.RangedBankPath,
+            ChosenArt.MeleeBankPath,
         };
 
         /// <summary>
@@ -169,7 +200,7 @@ namespace Tests.EditMode
         [Test]
         public void EverySelectedAssetIsImported()
         {
-            foreach (string path in RiggedPaths.Concat(new[] { BowPath, TowerPath }))
+            foreach (string path in RiggedPaths.Concat(HeldPaths).Concat(new[] { TowerPath }))
             {
                 Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<Object>(path),
                     $"{path} is not in the project — the import was not selective, it was absent");
@@ -291,6 +322,131 @@ namespace Tests.EditMode
         }
 
         /// <summary>
+        /// Everything a unit holds is on the bone it was assigned to, and is
+        /// big enough to see.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>What this does not prove, and why.</b> The first version of this
+        /// asserted that a held item's bounding box reaches outside the body's,
+        /// on the strength of <c>WeaponSocket</c>'s note that a bow on the wrong
+        /// bone "sits 100% inside the Ranger's own". Measured here it does not
+        /// hold even for the bow on the right bone: a character's imported
+        /// bounds are its bind pose, arms out, and that box swallows anything in
+        /// either hand. Containment is not a signal at this scale, so the
+        /// assertion was dropped rather than loosened until it passed.
+        /// </para>
+        /// <para>
+        /// <b>Size is asserted, and it caught the bug this test was written
+        /// for.</b> The bow imports with a root scale of 100 and every other
+        /// weapon with 1, and <c>WeaponSocket.Attach</c> used to force a scale
+        /// of one — so the bow drew two centimetres across, in a hand, from the
+        /// day it was added. Nothing threw and no test failed; it simply looked
+        /// like an archer holding nothing, and nobody had opened the editor.
+        /// The margin is wide because the two cases are three orders of
+        /// magnitude apart: a correctly sized weapon measures around half the
+        /// body it is held by, and the broken bow measured under one hundredth.
+        /// </para>
+        /// <para>
+        /// It also proves the other silent failure: an item parented to the
+        /// rig's root instead of to a hand, which draws as a weapon lying
+        /// through the middle of the body. Which hand looks <i>right</i> is
+        /// still an eye check, and this project makes those by opening the
+        /// editor.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EverythingHeldIsOnItsBoneAndBigEnoughToSee()
+        {
+            MatchArt art = ChosenArt.Load();
+
+            var measured = 0;
+
+            foreach (UnitArt unit in art.Units)
+            {
+                measured += MeasureHeld(unit, unit.RightHand, WeaponSocket.MeleeHand);
+                measured += MeasureHeld(unit, unit.LeftHand, WeaponSocket.OffHand);
+            }
+
+            Assert.That(measured, Is.GreaterThan(0),
+                "no unit holds anything, so this measured nothing at all");
+        }
+
+        /// <summary>
+        /// Attaches one held item and measures it. Returns 1 when something was
+        /// measured, 0 when the hand was empty.
+        /// </summary>
+        private int MeasureHeld(UnitArt unit, GameObject held, string bone)
+        {
+            if (held == null)
+            {
+                return 0;
+            }
+
+            GameObject body = Instantiate(AssetDatabase.GetAssetPath(unit.Model));
+
+            Transform socket = WeaponSocket.FindBone(body, bone);
+
+            Assert.That(socket, Is.Not.Null,
+                $"unit {unit.UnitId}'s model has no {bone} to hang {held.name} off");
+
+            GameObject instance = WeaponSocket.Attach(body, held, bone);
+
+            Assert.That(instance.transform.IsChildOf(socket), Is.True,
+                $"unit {unit.UnitId}'s {held.name} is not under {bone} — it is hanging off the root, "
+                + "which draws as a weapon lying through the middle of the body");
+
+            Bounds bodyBounds = WorldBounds(body, except: instance);
+            Bounds heldBounds = WorldBounds(instance, except: null);
+
+            float ratio = heldBounds.size.magnitude / bodyBounds.size.magnitude;
+
+            Debug.Log(
+                $"[held] unit {unit.UnitId} carries {held.name} on {bone}: "
+                + $"{heldBounds.size.magnitude:F2} m across against a {bodyBounds.size.magnitude:F2} m body "
+                + $"({ratio:P0})");
+
+            Assert.That(ratio, Is.GreaterThan(0.1f),
+                $"unit {unit.UnitId}'s {held.name} measures {ratio:P0} of the body holding it. That is a "
+                + "weapon whose own scale was thrown away on the way to the bone, and it draws as an "
+                + "empty hand.");
+
+            return 1;
+        }
+
+        /// <summary>
+        /// The world bounds of every renderer under an object, optionally
+        /// ignoring one subtree — used to measure a body without the thing it
+        /// is holding.
+        /// </summary>
+        private static Bounds WorldBounds(GameObject root, GameObject except)
+        {
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            Bounds? bounds = null;
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (except != null && renderer.transform.IsChildOf(except.transform))
+                {
+                    continue;
+                }
+
+                bounds = bounds == null ? renderer.bounds : Encapsulated(bounds.Value, renderer.bounds);
+            }
+
+            Assert.That(bounds, Is.Not.Null, root.name + " has no renderer to measure");
+
+            return bounds.Value;
+        }
+
+        private static Bounds Encapsulated(Bounds first, Bounds second)
+        {
+            first.Encapsulate(second);
+
+            return first;
+        }
+
+        /// <summary>
         /// Every model a unit is drawn with came in through the skinned path,
         /// with the bone a weapon hangs off.
         /// </summary>
@@ -319,9 +475,15 @@ namespace Tests.EditMode
                     Assert.IsNotNull(renderer.rootBone, $"{path}/{renderer.name} has no root bone");
                 }
 
-                Assert.IsNotNull(
-                    character.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "handslot.l"),
-                    $"{path} carries no 'handslot.l' bone");
+                // Both hands, not just the one the bow found. A model missing
+                // handslot.r imports and draws perfectly and only fails the day
+                // somebody gives that unit a sword.
+                foreach (string bone in new[] { "handslot.l", "handslot.r" })
+                {
+                    Assert.IsNotNull(
+                        character.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == bone),
+                        $"{path} carries no '{bone}' bone");
+                }
             }
         }
 
@@ -416,12 +578,22 @@ namespace Tests.EditMode
             }
         }
 
+        /// <summary>
+        /// Every clip a tower is posed with is in one of the banks.
+        /// </summary>
+        /// <remarks>
+        /// They were all in the ranged bank while every tower drew a bow. Now a
+        /// mage casts and a soldier chops, so the set spans three banks and the
+        /// assertion is that a name resolves at all rather than that it resolves
+        /// in one particular file.
+        /// </remarks>
         [Test]
-        public void TheThreeTowerStateClipsAreInTheRangedBank()
+        public void EveryTowerStateClipIsInSomeBank()
         {
             // "__preview__" duplicates are editor thumbnail bookkeeping that
             // Unity hangs off any clip it has ever drawn an icon for.
-            string[] names = AssetDatabase.LoadAllAssetsAtPath(RangedBankPath)
+            string[] names = ClipBankPaths
+                .SelectMany(AssetDatabase.LoadAllAssetsAtPath)
                 .OfType<AnimationClip>()
                 .Select(c => c.name)
                 .Where(n => !n.StartsWith("__preview__"))
@@ -430,7 +602,8 @@ namespace Tests.EditMode
             foreach (string wanted in TowerClipNames)
             {
                 Assert.Contains(wanted, names,
-                    $"'{wanted}' is not in {RangedBankPath}. Found: {string.Join(", ", names)}");
+                    $"'{wanted}' is in none of the {ClipBankPaths.Length} banks. "
+                    + $"Found: {string.Join(", ", names)}");
             }
         }
 

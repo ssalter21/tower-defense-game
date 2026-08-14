@@ -31,27 +31,41 @@ namespace Tests.PlayMode
 
         private GameObject BuildArmedTower(out GameObject bow, out Transform hand)
         {
-            MatchArt art = TheMatchOnScreen.Art();
+            UnitArt archer = BowHolder();
 
-            _holder = Object.Instantiate(BowHolderModel());
-            bow = WeaponSocket.Attach(_holder, art.BowModel, WeaponSocket.BowHand);
+            _holder = Object.Instantiate(archer.Model);
+            bow = WeaponSocket.Attach(_holder, archer.LeftHand, WeaponSocket.BowHand);
             hand = WeaponSocket.FindBone(_holder, WeaponSocket.BowHand);
 
             return _holder;
         }
 
         /// <summary>
-        /// The model of the one tower that actually holds a bow: the projectile
-        /// one. Found through the unit table rather than named, because models
-        /// are per unit type and the row that draws a bow is a content fact.
+        /// The art of a unit that actually holds a bow.
         /// </summary>
-        private static GameObject BowHolderModel()
+        /// <remarks>
+        /// Found by asking which unit holds something in its off hand and is
+        /// posed, not by asking which row is <c>Delivery.Projectile</c>. Those
+        /// were the same question while the weapon hung off delivery, and the
+        /// answer was wrong: the mage is the only projectile row and the archer,
+        /// which is hitscan, is the one that draws a bow. A test that asks the
+        /// old question tests the bug.
+        ///
+        /// A shield is the other off-hand item, and every unit carrying one is a
+        /// creep with no clips — so "off hand, and posed" is the bow and only
+        /// the bow. Asserted below rather than assumed.
+        /// </remarks>
+        private static UnitArt BowHolder()
         {
-            UnitType holder = StreamingContent.ReadUnitTypes()
-                .Types
-                .First(t => t.Delivery == Delivery.Projectile);
+            UnitArt holder = TheMatchOnScreen.Art().Units.FirstOrDefault(u => u.LeftHand != null && u.IsPosed);
 
-            return TheMatchOnScreen.Art().ModelFor(holder.Id);
+            Assert.That(holder, Is.Not.Null,
+                "no unit holds anything in its off hand and is posed, so nothing draws a bow");
+
+            Assert.That(holder.LeftHand.name, Does.Contain("bow").IgnoreCase,
+                "the posed off-hand item is '" + holder.LeftHand.name + "', which is not a bow");
+
+            return holder;
         }
 
         [Test]
@@ -68,7 +82,15 @@ namespace Tests.PlayMode
             Assert.AreEqual(Vector3.zero, bow.transform.localPosition);
             Assert.Less(Quaternion.Angle(Quaternion.identity, bow.transform.localRotation), 1e-3f,
                 "the bow was rolled relative to the slot bone");
-            Assert.AreEqual(Vector3.one, bow.transform.localScale);
+
+            // Position and rotation are the bone's; SIZE IS THE ASSET'S. This
+            // asserted Vector3.one until 14 August 2026 and was wrong: the bow
+            // imports at a root scale of 100, so forcing one drew it two
+            // centimetres across in the archer's hand — invisible, and pinned
+            // in place by this line. See WeaponSocket.Attach.
+            Assert.AreEqual(
+                BowHolder().LeftHand.transform.localScale, bow.transform.localScale,
+                "the bow was not drawn at the scale it was imported at");
         }
 
         [Test]
@@ -93,7 +115,7 @@ namespace Tests.PlayMode
             BuildArmedTower(out GameObject bow, out Transform hand);
 
             // The wind-up clip: the hand travels furthest during this one.
-            AnimationClip draw = TheMatchOnScreen.Art().TowerWindupClip;
+            AnimationClip draw = BowHolder().WindupClip;
 
             SimDrivenAnimator poser = SimDrivenAnimator.Bind(_holder, draw);
 
@@ -125,11 +147,11 @@ namespace Tests.PlayMode
         [Test]
         public void AttachingToABoneThatIsNotThereThrowsRatherThanHangingItOffTheRoot()
         {
-            MatchArt art = TheMatchOnScreen.Art();
-            _holder = Object.Instantiate(BowHolderModel());
+            UnitArt archer = BowHolder();
+            _holder = Object.Instantiate(archer.Model);
 
             Assert.Throws<System.InvalidOperationException>(
-                () => WeaponSocket.Attach(_holder, art.BowModel, "handslot.left"));
+                () => WeaponSocket.Attach(_holder, archer.LeftHand, "handslot.left"));
         }
     }
 }

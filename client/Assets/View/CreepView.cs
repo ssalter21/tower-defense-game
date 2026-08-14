@@ -63,17 +63,39 @@ namespace View
         /// <summary>The clip time the death slot was last sampled at, in seconds.</summary>
         public float LastDeathTime { get; private set; }
 
+        /// <summary>What it carries in <c>handslot.r</c>, or null.</summary>
+        public GameObject RightHand { get; private set; }
+
+        /// <summary>What it carries in <c>handslot.l</c>, or null.</summary>
+        public GameObject LeftHand { get; private set; }
+
         /// <summary>
         /// Builds the view: instantiates the model under this object at the
         /// size its unit type is drawn at, and wires its two clips into a
         /// Playables graph with no playback head.
         /// </summary>
-        public void Build(GameObject model, float scale, AnimationClip walk, AnimationClip death)
+        public void Build(UnitArt art, AnimationClip walk, AnimationClip death)
         {
+            if (art == null) throw new ArgumentNullException(nameof(art));
             if (walk == null) throw new ArgumentNullException(nameof(walk));
             if (death == null) throw new ArgumentNullException(nameof(death));
 
-            Model = DrawnModel.Under(transform, model, scale);
+            Model = DrawnModel.Under(transform, art.Model, art.Scale);
+
+            // What it carries goes on before the graph is built, so it is in
+            // hand for the first frame the creep is ever drawn in. A creep's
+            // weapon is scenery -- nothing in the simulation swings it, because
+            // a walker has no attack at all -- but it is what separates two
+            // rows that share a skin. See docs/roster.md.
+            if (art.RightHand != null)
+            {
+                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand);
+            }
+
+            if (art.LeftHand != null)
+            {
+                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand);
+            }
 
             // Generic transform curves and no avatar -- the path the Playables
             // validation proved. Binding is SimDrivenAnimator's business,

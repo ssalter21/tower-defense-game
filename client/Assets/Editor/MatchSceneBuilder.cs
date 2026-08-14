@@ -38,15 +38,34 @@ namespace View.Editor
 
         private const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
 
+        private const string StaffPath = "Assets/Art/Weapons/staff.fbx";
+
+        private const string SwordPath = "Assets/Art/Weapons/sword_1handed.fbx";
+
+        private const string SkeletonStaffPath = "Assets/Art/Weapons/Skeleton_Staff.fbx";
+
+        private const string SkeletonBladePath = "Assets/Art/Weapons/Skeleton_Blade.fbx";
+
+        private const string SkeletonShieldAPath = "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx";
+
+        private const string SkeletonShieldBPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
+
         private const string WalkClipName = "Walking_A";
 
         private const string DeathClipName = "Death_A";
 
-        private const string TowerIdleClipName = "Ranged_Bow_Idle";
+        /// <summary>The clip a tower rests in between shots, whatever it holds.</summary>
+        private const string RestClipName = "Idle_A";
 
-        private const string TowerWindupClipName = "Ranged_Bow_Draw";
+        private const string BowIdleClipName = "Ranged_Bow_Idle";
 
-        private const string TowerBackswingClipName = "Ranged_Bow_Release";
+        private const string BowDrawClipName = "Ranged_Bow_Draw";
+
+        private const string BowReleaseClipName = "Ranged_Bow_Release";
+
+        private const string SpellcastClipName = "Ranged_Magic_Spellcasting";
+
+        private const string ChopClipName = "Melee_1H_Attack_Chop";
 
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row in
@@ -70,18 +89,47 @@ namespace View.Editor
         /// The numbers are <see cref="MatchArt"/>'s, so the two tables that
         /// carry these rows cannot disagree about what a half is.
         /// </para>
+        /// <para>
+        /// <b>What each unit holds, and the clips it holds it with, are the
+        /// same choice and are made in the same row.</b> They were two
+        /// project-wide fields until 14 August 2026, keyed on <c>Delivery</c>,
+        /// which put the bow on the mage — the one projectile row — and left
+        /// the archer and the ranger, both hitscan, holding nothing. The pairs
+        /// were signed off by the developer: staff and Spellcasting for the
+        /// Mage, bow and the three Ranged_Bow clips for the Archer and Ranger,
+        /// sword and 1H_Attack_Chop for the Soldier. Creeps carry scenery and
+        /// no clips of their own — nothing in the simulation swings a walker's
+        /// weapon.
+        /// </para>
         /// </remarks>
-        private static readonly (int unitId, string model, float scale)[] UnitBindings =
+        private static readonly (
+            int unitId,
+            string model,
+            float scale,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing)[] UnitBindings =
         {
-            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale),
-            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale),
-            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale),
-            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale),
-            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale),
-            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale),
-            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale),
-            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale),
-            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale),
+            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+                null, null, null, null, null),
+            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
+                null, null, null, null, null),
+            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
+            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName),
+            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
+                SkeletonStaffPath, null, null, null, null),
+            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
+                SwordPath, null, RestClipName, ChopClipName, RestClipName),
+            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null),
+            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null),
+            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName),
         };
 
         /// <summary>
@@ -89,37 +137,37 @@ namespace View.Editor
         /// name to asset.
         /// </summary>
         /// <remarks>
-        /// The clips are shared because all nine models are on
-        /// <c>Rig_Medium</c>. Each was chosen by the developer on issue #44 —
-        /// the walk and the death picked from a live scrubber rather than from
-        /// filenames, the three bow clips picked to stand one per simulation
-        /// state. Written down rather than looked up by convention, because a
-        /// convention would silently pick a different clip the day a pack adds
-        /// one. A missing entry throws by name.
+        /// Only the creep clips are shared now, and they are shared because
+        /// every creep does the same two things: it walks and it dies. Both
+        /// were chosen by the developer on issue #44, picked from a live
+        /// scrubber rather than from filenames. Written down rather than looked
+        /// up by convention, because a convention would silently pick a
+        /// different clip the day a pack adds one. A missing entry throws by
+        /// name.
         /// </remarks>
         private static readonly (string field, string asset, string clip)[] SharedBindings =
         {
             ("creepWalkClip", null, WalkClipName),
             ("creepDeathClip", null, DeathClipName),
-            ("bowModel", BowPath, null),
-            ("towerIdleClip", null, TowerIdleClipName),
-            ("towerWindupClip", null, TowerWindupClipName),
-            ("towerBackswingClip", null, TowerBackswingClipName),
         };
 
         /// <summary>
-        /// The three clip banks, searched in order for a clip by name.
+        /// The four clip banks, searched in order for a clip by name.
         /// </summary>
         /// <remarks>
-        /// All three share one rig, which is why a clip from any of them drives
+        /// All four share one rig, which is why a clip from any of them drives
         /// any of the characters — verified by measurement rather than trusted,
-        /// and the reason this project has one artist rather than two.
+        /// and the reason this project has one artist rather than two. The
+        /// melee bank is the newest and arrived with the Soldier's sword: a
+        /// tower holding a sword and playing <c>Ranged_Bow_Draw</c> is the same
+        /// class of mistake as a mage holding a bow.
         /// </remarks>
         private static readonly string[] ClipBankPaths =
         {
             "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
             "Assets/Art/Animations/Rig_Medium_General.fbx",
             "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
+            "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
         [MenuItem("Tools/Rebuild the match scene")]
@@ -173,12 +221,18 @@ namespace View.Editor
 
             for (var i = 0; i < UnitBindings.Length; i++)
             {
-                (int unitId, string model, float scale) = UnitBindings[i];
+                var binding = UnitBindings[i];
                 SerializedProperty entry = units.GetArrayElementAtIndex(i);
 
-                entry.FindPropertyRelative("unitId").intValue = unitId;
-                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
-                entry.FindPropertyRelative("scale").floatValue = scale;
+                entry.FindPropertyRelative("unitId").intValue = binding.unitId;
+                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(binding.model);
+                entry.FindPropertyRelative("scale").floatValue = binding.scale;
+                entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(binding.rightHand);
+                entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(binding.leftHand);
+                entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(binding.idle);
+                entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(binding.windup);
+                entry.FindPropertyRelative("backswingClip").objectReferenceValue =
+                    MaybeClip(binding.backswing);
             }
 
             foreach ((string field, string asset, string clip) in SharedBindings)
@@ -223,20 +277,35 @@ namespace View.Editor
         {
             var units = new List<UnitArt>(UnitBindings.Length);
 
-            foreach ((int unitId, string model, float scale) in UnitBindings)
+            foreach (var binding in UnitBindings)
             {
-                units.Add(UnitArt.Of(unitId, LoadModel(model), scale));
+                units.Add(UnitArt.Armed(
+                    binding.unitId,
+                    LoadModel(binding.model),
+                    binding.scale,
+                    MaybeModel(binding.rightHand),
+                    MaybeModel(binding.leftHand),
+                    MaybeClip(binding.idle),
+                    MaybeClip(binding.windup),
+                    MaybeClip(binding.backswing)));
             }
 
-            return MatchArt.Of(
-                units,
-                LoadClip(WalkClipName),
-                LoadClip(DeathClipName),
-                LoadModel(BowPath),
-                LoadClip(TowerIdleClipName),
-                LoadClip(TowerWindupClipName),
-                LoadClip(TowerBackswingClipName));
+            return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));
         }
+
+        /// <summary>
+        /// The model at a path, or null when the path is null — a unit that
+        /// holds nothing in that hand.
+        /// </summary>
+        /// <remarks>
+        /// A null path means "empty hand" and a path that finds nothing means
+        /// "the import is missing", which is why this cannot simply return null
+        /// on failure. <see cref="LoadModel"/> throws for the second case.
+        /// </remarks>
+        private static GameObject MaybeModel(string path) => path == null ? null : LoadModel(path);
+
+        /// <summary>The named clip, or null when the name is null — a creep.</summary>
+        private static AnimationClip MaybeClip(string clip) => clip == null ? null : LoadClip(clip);
 
         /// <summary>The imported model at a path, or a throw naming it.</summary>
         private static GameObject LoadModel(string path)
@@ -254,7 +323,7 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The clip of that name, from whichever of the three banks holds it.
+        /// The clip of that name, from whichever of the four banks holds it.
         /// </summary>
         /// <remarks>
         /// <c>__preview__</c> duplicates are editor thumbnail bookkeeping Unity
@@ -285,7 +354,7 @@ namespace View.Editor
             }
 
             throw new IOException(
-                "No clip called '" + name + "' in any of the three banks. Found: "
+                "No clip called '" + name + "' in any of the four banks. Found: "
                 + string.Join(", ", found));
         }
 
