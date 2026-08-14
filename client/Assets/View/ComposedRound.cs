@@ -44,8 +44,12 @@ namespace View
     /// </remarks>
     public sealed class ComposedRound
     {
-        /// <summary>How many of one tower an action buys. An action names one cell.</summary>
-        private const int OneTower = 1;
+        /// <summary>
+        /// One of something: what an action buys, and what a box is filled
+        /// with. An action names one cell, and a box that is handed a creep
+        /// starts at one of it.
+        /// </summary>
+        private const int One = 1;
 
         private readonly UpgradeLadder _ladder;
 
@@ -60,6 +64,8 @@ namespace View
         private readonly Board _standing;
 
         private readonly UnitType[] _palette;
+
+        private readonly UnitType[] _roster;
 
         private BuildPhase _phase;
 
@@ -93,6 +99,7 @@ namespace View
             _map = map ?? throw new ArgumentNullException(nameof(map));
             _standing = board ?? throw new ArgumentNullException(nameof(board));
             _palette = Buildable(types, ladder, costs);
+            _roster = Walkers(types, costs);
 
             _phase = BuildPhase.Of();
             _resolved = Resolve(_phase);
@@ -150,15 +157,218 @@ namespace View
         /// </remarks>
         public IReadOnlyList<UnitType> Palette => _palette;
 
+        /// <summary>
+        /// Every creep the roster can send, cheapest first. What a box's list is
+        /// drawn from before legality narrows it.
+        /// </summary>
+        /// <remarks>
+        /// <b>All of them, from wave one.</b> There are no unlocks: the
+        /// offering, the take and the rounds that widened them came off with
+        /// #179, so what a wave may carry is the roster and the only question
+        /// left is price. Same ordering rule as <see cref="Palette"/> for the
+        /// same reason -- a list that reshuffled itself as the purse moved would
+        /// make the thing under the pointer depend on what was last bought.
+        /// </remarks>
+        public IReadOnlyList<UnitType> Roster => _roster;
+
+        /// <summary>
+        /// The wave as it has been composed: one slot per box, in the order they
+        /// arrive in.
+        /// </summary>
+        /// <remarks>
+        /// <b>Never an empty slot.</b> The rules model one -- a phase may carry
+        /// a slot nobody filled in, and <see cref="BuildPhase.Resolve"/> skips
+        /// it -- and nothing on this side produces one: emptying a box takes it
+        /// out of the row and closes the gap. That is a narrowing in what the
+        /// screen composes rather than a change to what a phase may say, which
+        /// is why nothing about it moved in <c>sim</c>. See #197.
+        /// </remarks>
+        public IReadOnlyList<WaveSlot> Slots => _phase.Slots;
+
         /// <summary>What one of these costs, out of the table a purchase is actually priced by.</summary>
-        public int PriceOf(UnitType type)
+        public int PriceOf(UnitType type) => PriceOf(type, One);
+
+        /// <summary>What this many of them come to, out of that same table.</summary>
+        public int PriceOf(UnitType type, int count)
         {
             if (type is null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            return _costs.PriceOf(Purchase.Unit(type.Id), OneTower);
+            return _costs.PriceOf(Purchase.Unit(type.Id), count);
+        }
+
+        /// <summary>
+        /// What the box at <paramref name="index"/> is sending. Never null,
+        /// because a composed wave carries no empty slot.
+        /// </summary>
+        public UnitType CreepIn(int index) => _types.ById(Slots[index].TypeId);
+
+        /// <summary>
+        /// The creeps that may fill the box at <paramref name="index"/>, in
+        /// roster order. What that box's list offers, and the whole of it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Three rules, none of them written here.</b> Every one is answered
+        /// by resolving a candidate wave and throwing the <see cref="Build"/>
+        /// away, exactly as <see cref="Allows"/> does for the board: a creep the
+        /// purse cannot cover once the towers have been paid for is absent, and
+        /// so is one another box already sends -- <see cref="BuildPhase.Resolve"/>
+        /// refuses a duplicate, so the list simply does not offer one. There is
+        /// no copy of either rule over here to disagree with <c>sim</c>.
+        /// </para>
+        /// <para>
+        /// <b>The creep already in the box is not in its own list.</b> Choosing
+        /// it would be an allocation that allocates nothing, and it would arrive
+        /// as a change of count nobody asked for -- see <see cref="Send"/>,
+        /// which fills a box with one. Raising a count is
+        /// <see cref="SendMore"/>, and it is a separate affordance because it is
+        /// a separate decision.
+        /// </para>
+        /// <para>
+        /// <paramref name="index"/> may be one past the last filled box, which
+        /// is the trailing empty one: filling it appends a slot and the row
+        /// grows by the box behind it. Nothing bounds how far that goes, which
+        /// is <c>sim/BuildPhase.cs</c>'s "nothing bounds how many slots a wave
+        /// carries" said on screen.
+        /// </para>
+        /// </remarks>
+        public IReadOnlyList<UnitType> Sendable(int index)
+        {
+            var creeps = new List<UnitType>();
+
+            if (index < 0 || index > Slots.Count)
+            {
+                return creeps;
+            }
+
+            int standing = index < Slots.Count ? Slots[index].TypeId : 0;
+
+            foreach (UnitType creep in _roster)
+            {
+                if (creep.Id != standing && Resolves(Rewritten(index, WaveSlot.Of(creep.Id, One))))
+                {
+                    creeps.Add(creep);
+                }
+            }
+
+            return creeps;
+        }
+
+        /// <summary>
+        /// Whether the box at <paramref name="index"/> could send one more than
+        /// it does. False where there is no such box.
+        /// </summary>
+        public bool CanSendMore(int index) =>
+            index >= 0
+            && index < Slots.Count
+            && Resolves(Rewritten(index, WaveSlot.Of(Slots[index].TypeId, Slots[index].Count + One)));
+
+        /// <summary>
+        /// Puts one of <paramref name="creep"/> in the box at
+        /// <paramref name="index"/>, appending a box where that is one past the
+        /// end.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One of them, never the count the box was holding.</b> A box
+        /// holding three of something and handed something dearer would either
+        /// refuse or spend the round's purse on a click that read as "this one
+        /// instead". Starting at one is the reading that is affordable wherever
+        /// the creep was offered at all, because one of it is exactly what
+        /// <see cref="Sendable"/> priced.
+        /// </para>
+        /// <para>
+        /// The refusal is not caught, for the reason it is not caught in
+        /// <see cref="Do"/>: every box asks <see cref="Sendable"/> first, so a
+        /// creep arriving here that does not resolve means something offered
+        /// what it should not have.
+        /// </para>
+        /// </remarks>
+        public void Send(int index, UnitType creep)
+        {
+            if (creep is null)
+            {
+                throw new ArgumentNullException(nameof(creep));
+            }
+
+            Compose(Rewritten(index, WaveSlot.Of(creep.Id, One)));
+        }
+
+        /// <summary>Sends one more of what the box at <paramref name="index"/> holds.</summary>
+        public void SendMore(int index) =>
+            Compose(Rewritten(index, WaveSlot.Of(Slots[index].TypeId, Slots[index].Count + One)));
+
+        /// <summary>
+        /// Sends one fewer. At one this empties the box, which takes it out of
+        /// the row and closes the gap behind it.
+        /// </summary>
+        /// <remarks>
+        /// Lowering a count is never refused -- it is the same wave for less
+        /// gold -- so there is no offering call to ask first, and the resolve
+        /// this goes through is what re-prices the purse rather than what
+        /// permits it.
+        /// </remarks>
+        public void SendFewer(int index)
+        {
+            WaveSlot slot = Slots[index];
+
+            if (slot.Count <= One)
+            {
+                SendNone(index);
+
+                return;
+            }
+
+            Compose(Rewritten(index, WaveSlot.Of(slot.TypeId, slot.Count - One)));
+        }
+
+        /// <summary>
+        /// Takes the box at <paramref name="index"/> out of the row. What is
+        /// behind it closes up, so a composed wave never carries a hole.
+        /// </summary>
+        public void SendNone(int index) => Compose(Without(index));
+
+        /// <summary>
+        /// Moves the box at <paramref name="from"/> to <paramref name="to"/>,
+        /// which is what dragging one does.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is a decision and not a tidy-up.</b> A slot's position is its
+        /// release order -- ADR-0051, and <c>sim/BuildPhase.cs</c> -- so the box
+        /// dragged to the front is the creep that walks out first, and the same
+        /// creeps in another order are a different round rather than a second
+        /// spelling of one.
+        /// </para>
+        /// <para>
+        /// It cannot be refused. Rearranging changes neither the bill nor which
+        /// creeps are sent, so a wave that resolved resolves in every order. The
+        /// resolve below is what re-prices what is on screen rather than what
+        /// permits the move, and it is here because every other verb goes
+        /// through it and a second path that skipped it is the one that would
+        /// leave the purse stale.
+        /// </para>
+        /// </remarks>
+        public void Rearrange(int from, int to)
+        {
+            if (from < 0 || from >= Slots.Count || to < 0 || to >= Slots.Count || from == to)
+            {
+                return;
+            }
+
+            WaveSlot moved = Slots[from];
+            WaveSlot[] shortened = Without(from);
+            var rearranged = new WaveSlot[shortened.Length + 1];
+
+            for (int index = 0; index < rearranged.Length; index++)
+            {
+                rearranged[index] = index == to ? moved : shortened[index < to ? index : index - 1];
+            }
+
+            Compose(rearranged);
         }
 
         /// <summary>Whether the purse could cover one of these, as it stands.</summary>
@@ -268,6 +478,73 @@ namespace View
             phase.Resolve(Wave, _ladder, _opening, _costs, _types, _map, _standing);
 
         /// <summary>
+        /// Whether a wave would resolve on this phase's actions. The wave half
+        /// of <see cref="Allows"/>, and the same discarded candidate.
+        /// </summary>
+        private bool Resolves(WaveSlot[] slots)
+        {
+            try
+            {
+                Resolve(_phase.Sending(slots));
+
+                return true;
+            }
+            catch (SimulationException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Takes a composed wave, and takes the purse and the board that follow
+        /// from it. The one write the wave verbs above all end at.
+        /// </summary>
+        /// <remarks>
+        /// The refusal is not caught, for the reason it is not caught in
+        /// <see cref="Do"/>. Everything that reaches here either asked
+        /// <see cref="Sendable"/> or <see cref="CanSendMore"/> first, or is a
+        /// move that spends nothing.
+        /// </remarks>
+        private void Compose(WaveSlot[] slots)
+        {
+            BuildPhase sending = _phase.Sending(slots);
+
+            _resolved = Resolve(sending);
+            _phase = sending;
+        }
+
+        /// <summary>
+        /// The composed wave with one box's slot replaced, or with a box
+        /// appended where <paramref name="index"/> is one past the end.
+        /// </summary>
+        private WaveSlot[] Rewritten(int index, WaveSlot slot)
+        {
+            IReadOnlyList<WaveSlot> slots = Slots;
+            var rewritten = new WaveSlot[index < slots.Count ? slots.Count : slots.Count + 1];
+
+            for (int at = 0; at < rewritten.Length; at++)
+            {
+                rewritten[at] = at == index ? slot : slots[at];
+            }
+
+            return rewritten;
+        }
+
+        /// <summary>The composed wave with one box taken out and the gap closed.</summary>
+        private WaveSlot[] Without(int index)
+        {
+            IReadOnlyList<WaveSlot> slots = Slots;
+            var shortened = new WaveSlot[slots.Count - 1];
+
+            for (int at = 0; at < shortened.Length; at++)
+            {
+                shortened[at] = slots[at < index ? at : at + 1];
+            }
+
+            return shortened;
+        }
+
+        /// <summary>
         /// Every tower the roster can stand on a cell outright, cheapest first,
         /// then by id so the order is settled.
         /// </summary>
@@ -287,13 +564,49 @@ namespace View
 
             towers.Sort((left, right) =>
             {
-                int byPrice = costs.PriceOf(Purchase.Unit(left.Id), OneTower)
-                    .CompareTo(costs.PriceOf(Purchase.Unit(right.Id), OneTower));
+                int byPrice = costs.PriceOf(Purchase.Unit(left.Id), One)
+                    .CompareTo(costs.PriceOf(Purchase.Unit(right.Id), One));
 
                 return byPrice != 0 ? byPrice : left.Id.CompareTo(right.Id);
             });
 
             return towers.ToArray();
+        }
+
+        /// <summary>
+        /// Every creep the roster can send, cheapest first, then by id so the
+        /// order is settled.
+        /// </summary>
+        /// <remarks>
+        /// No filter beyond the role. A tower is left off a palette when the
+        /// ladder points at it, because placing one is refused; there is no
+        /// equivalent on this side -- a wave has no prerequisites and no
+        /// unlocks, so every walking row is sendable and price is the only
+        /// question. See ADR-0051 and #179.
+        /// </remarks>
+        private static UnitType[] Walkers(UnitTypeTable types, CostTable costs)
+        {
+            var creeps = new List<UnitType>();
+
+            for (int index = 0; index < types.Count; index++)
+            {
+                UnitType type = types.Types[index];
+
+                if (type.Role == UnitRole.Moving)
+                {
+                    creeps.Add(type);
+                }
+            }
+
+            creeps.Sort((left, right) =>
+            {
+                int byPrice = costs.PriceOf(Purchase.Unit(left.Id), One)
+                    .CompareTo(costs.PriceOf(Purchase.Unit(right.Id), One));
+
+                return byPrice != 0 ? byPrice : left.Id.CompareTo(right.Id);
+            });
+
+            return creeps.ToArray();
         }
     }
 }

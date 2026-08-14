@@ -229,6 +229,51 @@ namespace Sim
         }
 
         /// <summary>
+        /// This phase sending a different wave, with the actions it already
+        /// carries left where they are.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The wave's half of <see cref="With"/>, and it replaces where that
+        /// one appends.</b> An action's position is the order it was written in
+        /// and nothing else can be done to it, so appending is the whole of that
+        /// verb. A slot's position is the release order -- so a wave is
+        /// rearranged, emptied and regrown as well as extended, and there is no
+        /// one edit an append could stand for.
+        /// </para>
+        /// <para>
+        /// <b>It exists so that a screen composing a wave does not have to know
+        /// how a phase is put together.</b> ADR-0051 has the client hold a phase
+        /// in a local and price every change by resolving a candidate; without
+        /// this the candidate had to be reassembled from
+        /// <see cref="Of"/> and a replay of <see cref="Actions"/>, which is the
+        /// view knowing this class's shape well enough to rebuild one -- and
+        /// quietly dropping anything a phase gains that those two do not carry.
+        /// </para>
+        /// <para>
+        /// Nothing is checked here, as nothing is checked in <see cref="Of"/>:
+        /// a phase is data, and <see cref="Resolve"/> is where a wave meets the
+        /// purse and the roster.
+        /// </para>
+        /// </remarks>
+        public BuildPhase Sending(params WaveSlot[] slots)
+        {
+            if (slots is null)
+            {
+                throw new ArgumentNullException(nameof(slots));
+            }
+
+            var copied = new WaveSlot[slots.Length];
+
+            for (int index = 0; index < copied.Length; index++)
+            {
+                copied[index] = slots[index];
+            }
+
+            return new BuildPhase(copied, _actions);
+        }
+
+        /// <summary>
         /// Checks this decision against the round it was made in, and turns it
         /// into the board it leaves and the wave it composes.
         /// </summary>

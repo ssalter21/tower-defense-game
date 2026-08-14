@@ -58,6 +58,8 @@ namespace View
 
         private BuildBoard _board;
 
+        private WaveBar _wave;
+
         private Camera _camera;
 
         private UIDocument _otherChrome;
@@ -75,6 +77,11 @@ namespace View
         /// <param name="round">The decision a click is appended to.</param>
         /// <param name="palette">What is selected, and where a ladder is offered.</param>
         /// <param name="board">What is drawn, and which hex lights.</param>
+        /// <param name="wave">
+        /// The wave being composed. The other half of one build phase, so the
+        /// gold it spends is gold the palette can no longer offer — and its row
+        /// is one more piece of chrome a click has to stop at.
+        /// </param>
         /// <param name="camera">The camera a screen point is cast through.</param>
         /// <param name="otherChrome">
         /// Any other panel on screen — the playback bar — so that a click on it
@@ -85,6 +92,7 @@ namespace View
             ComposedRound round,
             TowerPalette palette,
             BuildBoard board,
+            WaveBar wave,
             Camera camera,
             UIDocument otherChrome)
         {
@@ -92,6 +100,7 @@ namespace View
             if (round == null) throw new ArgumentNullException(nameof(round));
             if (palette == null) throw new ArgumentNullException(nameof(palette));
             if (board == null) throw new ArgumentNullException(nameof(board));
+            if (wave == null) throw new ArgumentNullException(nameof(wave));
 
             var host = new GameObject("BuildInput");
             host.transform.SetParent(parent, worldPositionStays: false);
@@ -101,10 +110,18 @@ namespace View
             input._round = round;
             input._palette = palette;
             input._board = board;
+            input._wave = wave;
             input._camera = camera;
             input._otherChrome = otherChrome;
 
             palette.UpgradeChosen += input.Upgrade;
+
+            // One purse buys both halves of a phase, so a creep bought is a
+            // tower that may no longer be affordable and a hex that may no
+            // longer light. The wave bar writes its own half — see
+            // WaveBar.Changed — and this is what puts the rest of the screen
+            // back in step with it, through the same call a placement does.
+            wave.Changed += input.Redraw;
 
             return input;
         }
@@ -272,6 +289,11 @@ namespace View
             {
                 _palette.UpgradeChosen -= Upgrade;
             }
+
+            if (_wave != null)
+            {
+                _wave.Changed -= Redraw;
+            }
         }
 
         /// <summary>A rung of an open offer was clicked.</summary>
@@ -308,6 +330,8 @@ namespace View
         /// kept level with a bar over there.
         /// </summary>
         private bool IsOverChrome(Vector2 screenPoint) =>
-            _palette.Covers(screenPoint) || RuntimePanel.Covers(_otherChrome, screenPoint);
+            _palette.Covers(screenPoint)
+            || _wave.Covers(screenPoint)
+            || RuntimePanel.Covers(_otherChrome, screenPoint);
     }
 }

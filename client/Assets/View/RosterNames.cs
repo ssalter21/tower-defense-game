@@ -75,5 +75,20 @@ namespace View
         /// <summary>An amount of gold, in words: <c>40 gold</c>.</summary>
         public static string Gold(int gold) =>
             gold.ToString(CultureInfo.InvariantCulture) + " gold";
+
+        /// <summary>
+        /// How many of one creep a wave box is sending: <c>x3</c>.
+        /// </summary>
+        /// <remarks>
+        /// Here rather than in <see cref="WaveBar"/> for the reason the price
+        /// format is here: it is player-facing wording, and a second surface
+        /// that showed a count would otherwise invent its own. The letter is
+        /// ASCII on purpose -- the multiplication sign is the typographically
+        /// right character and it is one the runtime theme's font is not
+        /// guaranteed to carry, and a missing glyph draws as an empty box,
+        /// which on a bar made of boxes reads as a bug.
+        /// </remarks>
+        public static string Count(int count) =>
+            "x" + count.ToString(CultureInfo.InvariantCulture);
     }
 }

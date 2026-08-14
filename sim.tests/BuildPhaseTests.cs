@@ -100,6 +100,61 @@ public class BuildPhaseTests
     }
 
     [Fact]
+    public void Sending_replaces_a_phases_wave_and_leaves_the_actions_it_already_carries_alone()
+    {
+        // The wave half of With. An action's position is the order it was
+        // written in, so appending is the whole of that verb; a slot's position
+        // is the release order, so a wave is rearranged and emptied as well as
+        // grown and there is no one edit an append could stand for.
+        //
+        // It exists for the screen that composes a wave -- ADR-0051 -- which
+        // otherwise had to rebuild a candidate phase out of Of() and a replay
+        // of Actions, which is a view that knows how this class is assembled
+        // and silently drops whatever a phase gains that those two do not
+        // carry.
+        //
+        // OBSERVED: return `new BuildPhase(copied, NoActions)` instead, which
+        // is what Of() does. The action assertions go red, and a wave edited on
+        // screen quietly forgets every tower the same round placed.
+        Run run = TheBuild.Fresh();
+        int[] creeps = Creeps(run);
+
+        BuildPhase placing = BuildPhase.Of(WaveSlot.Of(creeps[0], 2))
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow));
+
+        BuildPhase resent = placing.Sending(WaveSlot.Of(creeps[1], 3), WaveSlot.Of(creeps[0], 1));
+
+        Assert.Equal(new[] { WaveSlot.Of(creeps[1], 3), WaveSlot.Of(creeps[0], 1) }, resent.Slots);
+        Assert.Single(resent.Actions);
+        Assert.Equal(ActionKind.Place, resent.Actions[0].Kind);
+        Assert.Equal(Archer, resent.Actions[0].TypeId);
+
+        // And the phase it came from did not move. Every verb on this class
+        // hands back a new one, which is what lets a candidate be resolved and
+        // thrown away without the decision it was derived from changing.
+        //
+        // OBSERVED: keep the array the caller passed rather than copying it,
+        // and mutate it after the call. This half goes red, and a composed
+        // round's phase changes under a candidate nobody kept.
+        Assert.Equal(new[] { WaveSlot.Of(creeps[0], 2) }, placing.Slots);
+
+        // Resolving the result is resolving both halves: the tower stands and
+        // the new wave is what leaves.
+        Build built = Resolved(run, resent, 1000);
+
+        Assert.Equal(1, built.Board.Count);
+        Assert.Equal(2, built.Wave.Count);
+        Assert.Equal(creeps[1], built.Wave.Orders[0].TypeId);
+        Assert.Equal(creeps[0], built.Wave.Orders[1].TypeId);
+        Assert.Equal(4, built.Wave.TotalUnits);
+
+        // A wave of nothing is spelled by sending no slots at all, which is the
+        // arrangement the screen's wave bar produces when every box is emptied.
+        Assert.Empty(placing.Sending().Slots);
+        Assert.Throws<ArgumentNullException>(() => placing.Sending(null!));
+    }
+
+    [Fact]
     public void A_slot_may_be_left_empty_and_an_empty_slot_is_a_legal_wave_rather_than_an_error()
     {
         // Not sending is a position rather than an omission: an empty slot

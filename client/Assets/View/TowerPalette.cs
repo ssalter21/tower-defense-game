@@ -50,6 +50,14 @@ namespace View
     /// price — see <see cref="RosterNames"/>. The digit on an entry is the key
     /// that selects it and nothing else.
     /// </para>
+    /// <para>
+    /// <b>Named and not pictured.</b> An entry asks
+    /// <see cref="RosterThumbnails"/> for a picture of the tower and lays out
+    /// without one while there is none, which there is: no per-unit image is
+    /// committed anywhere and choosing or baking one is an art decision. That
+    /// seam is shared with <see cref="WaveBar"/>, so whichever answer arrives
+    /// lands once rather than twice.
+    /// </para>
     /// </remarks>
     [DisallowMultipleComponent]
     public sealed class TowerPalette : MonoBehaviour
@@ -67,7 +75,12 @@ namespace View
         /// </summary>
         private const int PanelSortingOrder = 1;
 
-        private const float BarHeight = 104f;
+        /// <summary>
+        /// How tall the bar is. Public because the bars are stacked: the wave
+        /// row above it is anchored to the top of this one, and a copy of the
+        /// number over there would come apart the first time this one changed.
+        /// </summary>
+        public const float BarHeight = 104f;
 
         private const float EntryWidth = 208f;
 
@@ -387,6 +400,13 @@ namespace View
             button.style.flexDirection = FlexDirection.Column;
             button.style.justifyContent = Justify.Center;
             button.style.backgroundColor = RuntimePanel.ControlColor;
+
+            VisualElement picture = RosterThumbnails.Of(type);
+
+            if (picture != null)
+            {
+                button.Add(picture);
+            }
 
             var name = new Label { name = "Name", text = RosterNames.Of(type), pickingMode = PickingMode.Ignore };
             name.style.color = RuntimePanel.LabelColor;

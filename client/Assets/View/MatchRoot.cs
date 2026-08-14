@@ -95,7 +95,10 @@ namespace View
         /// </remarks>
         public Run Run { get; private set; }
 
-        /// <summary>The round being composed on screen, once there is a run.</summary>
+        /// <summary>
+        /// The round being composed on screen, once there is a run: both halves
+        /// of one build phase, over one purse.
+        /// </summary>
         public ComposedRound Composing { get; private set; }
 
         /// <summary>What may be built, once there is a round to build in.</summary>
@@ -103,6 +106,9 @@ namespace View
 
         /// <summary>The board as it is being built, and the hex that lights.</summary>
         public BuildBoard Building { get; private set; }
+
+        /// <summary>The wave being composed, once there is a round to compose one in.</summary>
+        public WaveBar Wave { get; private set; }
 
         /// <summary>What turns a click into a build action.</summary>
         public BuildInput Pointer { get; private set; }
@@ -216,11 +222,13 @@ namespace View
             Composing = round;
             Building = BuildBoard.Build(transform, round, art, RoutePath.For(Map), TileMesh);
             Palette = TowerPalette.Build(transform, round, CameraRig.Camera);
+            Wave = WaveBar.Build(transform, round);
             Pointer = BuildInput.Build(
                 transform,
                 round,
                 Palette,
                 Building,
+                Wave,
                 CameraRig.Camera,
                 Controls != null ? Controls.Document : null);
         }
