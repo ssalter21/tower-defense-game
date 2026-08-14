@@ -77,7 +77,7 @@ namespace View.Editor
         private static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
         /// <summary>
-        /// The staff's quarter turn, which stands it on end.
+        /// The quarter turn a staff is hung at, which stands it on end.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -91,6 +91,19 @@ namespace View.Editor
         /// <c>Idle_A</c> that bone axis points forward, world
         /// <c>(0.263, 0, 0.965)</c>, so the shaft lies flat and the orb comes to
         /// rest out by the feet.
+        /// </para>
+        /// <para>
+        /// <b>The Soldier's sword is in exactly the same position, and is left
+        /// there.</b> Measured the same way, in all three of its states: its
+        /// blade also runs along the bone's local +Y, and it also comes out
+        /// 90.0° off vertical with the tip level with the hand at world Y
+        /// 0.536, pointing forward. So the geometry does not separate the two
+        /// cases at all — what separates them is the read. A sword held out
+        /// level at hip height is a stance; an orb resting by the feet is a
+        /// staff somebody dropped. Which of those is wrong is the developer's
+        /// call and not this table's, and issue #204 asked for the staffs and
+        /// recorded the sword as reading correctly. Anyone changing that should
+        /// change it on a ticket, not by noticing this paragraph.
         /// </para>
         /// <para>
         /// The bone's local +X is world <c>(0, 1, 0)</c> in that same pose —
@@ -110,7 +123,7 @@ namespace View.Editor
         /// a bigger number here.
         /// </para>
         /// </remarks>
-        private static readonly Vector3 StaffUpright = new Vector3(0f, 0f, -90f);
+        private static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row in
@@ -166,9 +179,9 @@ namespace View.Editor
             (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
                 null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
-                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffUpright, default),
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
-                SkeletonStaffPath, null, null, null, null, StaffUpright, default),
+                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
                 SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,

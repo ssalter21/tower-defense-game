@@ -71,18 +71,32 @@ namespace Tests.Fixtures
         public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
         /// <summary>
-        /// The staff's quarter turn, which stands it on end. Nothing about the
-        /// staff is inverted -- it is horizontal. Its shaft runs along the hand
-        /// bone's local +Y with the orb at the +Y end, the same axis and
-        /// direction as the sword's blade, and in the Mage's Idle_A that axis
-        /// points forward. The bone's local +X is exactly world up in that pose,
-        /// so the quarter turn about Z that carries the shaft onto local +X is
-        /// what stands it up. Only exactly upright in the pose it was measured
-        /// in -- a weapon parented to a hand turns with the arm. See
-        /// MatchSceneBuilder.StaffUpright, which carries the measurement.
+        /// The quarter turn a staff is hung at, which stands it on end. Nothing
+        /// about the staff is inverted -- it is horizontal. Measured on 14
+        /// August 2026 from the mesh's vertices expressed in the hand bone's own
+        /// frame: the shaft runs along the bone's local +Y with the orb at the
+        /// +Y end, and in the Mage's Idle_A that axis points forward, world
+        /// (0.263, 0, 0.965), so the shaft lies flat and the orb comes to rest
+        /// out by the feet. The bone's local +X is world (0, 1, 0) in that same
+        /// pose -- exactly up, out of the fist -- so the quarter turn about Z
+        /// that carries the shaft from local +Y onto local +X is what stands it
+        /// up.
+        /// <para>
+        /// Only exactly upright in the pose it was measured in, because a weapon
+        /// parented to a hand turns with the arm. The Necromancer's capture pose
+        /// is a quarter of the way through Walking_A and leans about 43 degrees,
+        /// head-up.
+        /// </para>
+        /// <para>
+        /// Re-derive this rather than copying it -- from the vertices and the
+        /// bone's world basis, and NOT from the [grip] bounds
+        /// tools/capture-armed-roster.ps1 logs. Those are a world AABB
+        /// re-expressed in the bone's frame, a box drawn round a box, and they
+        /// are why the first attempt at this number was a half turn: they cannot
+        /// tell a staff's orb from a sword's tip.
+        /// </para>
         /// </summary>
-        public static readonly Vector3 StaffUpright = new Vector3(0f, 0f, -90f);
-
+        public static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
         /// What each row in <c>content/units.txt</c> is drawn as, and how big,
@@ -113,9 +127,9 @@ namespace Tests.Fixtures
             (3, RangerModelPath, MatchArt.TowerScale,
                 null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, MageModelPath, MatchArt.TowerScale,
-                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffUpright, default),
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
             (7, SkeletonMageModelPath, MatchArt.CreepScale,
-                SkeletonStaffModelPath, null, null, null, null, StaffUpright, default),
+                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default),
             (11, KnightModelPath, MatchArt.TowerScale,
                 SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, MinionModelPath, MatchArt.CreepScale,

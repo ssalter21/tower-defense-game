@@ -140,6 +140,12 @@ namespace Tests.EditMode
                 Same(inManifest, inChosenArt, field);
             }
 
+            void SameTilt(Quaternion inManifest, Quaternion inChosenArt, string field) =>
+                Assert.That(Quaternion.Angle(inManifest, inChosenArt), Is.LessThan(0.01f),
+                    GeneratedTestAssets.ManifestPath + " turns the " + field
+                    + " differently than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
             Assert.That(
                 generated.Units.Select(u => u.UnitId),
                 Is.EqualTo(chosen.Units.Select(u => u.UnitId)),
@@ -162,6 +168,20 @@ namespace Tests.EditMode
                 // same way and are compared the same way. Optional, though: an
                 // empty hand and a creep's absent clips are both a legitimate
                 // null, and two nulls agree.
+                // Tilt, and this is the field that proves the comparison has to
+                // be exhaustive rather than representative. The staffs' quarter
+                // turn went into ChosenArt and into the builder on 14 August
+                // 2026 and not into the manifest, and this test stayed green
+                // over a manifest that disagreed with its own source -- so the
+                // player path, which is the manifest, went on drawing both
+                // staffs flat while every editor path drew them upright.
+                //
+                // Compared as an angle and not as Euler triples: two different
+                // triples can name the same rotation, and a failure on that
+                // difference would name a drift nobody could act on.
+                SameTilt(made.RightHandTilt, unit.RightHandTilt, "right-hand item for unit " + unit.UnitId);
+                SameTilt(made.LeftHandTilt, unit.LeftHandTilt, "left-hand item for unit " + unit.UnitId);
+
                 SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
