@@ -54,6 +54,17 @@ namespace View
     /// <see cref="WatchedOpponent"/>.
     /// </para>
     /// <para>
+    /// <b>Two screens, and the second one has two views.</b> Building is a
+    /// single joint screen: the towers and the wave are composed together and
+    /// committed together. Watching is the Offence and Defence Results Screen,
+    /// and the pairing it draws is resolved in both directions - so the same
+    /// round can be watched as your towers against their wave or as your wave
+    /// against their defence, and neither is a fresh simulation. It opens on the
+    /// defence, which is the loop the game is about: you build towers and you
+    /// watch those towers work. <see cref="ResultsSwitch"/> is the control, and
+    /// <see cref="Watch"/> is what it presses.
+    /// </para>
+    /// <para>
     /// <b>The session is proved before it is kept.</b> At the end the decisions
     /// are compiled into a command script, played into a run built fresh on the
     /// same seed and the same shape, and held round for round against what the
@@ -88,6 +99,17 @@ namespace View
         /// <summary>What it says while a round is being watched.</summary>
         public const string GoOnLabel = "Next wave";
 
+        /// <summary>
+        /// Which direction a committed round opens on: the defence, always.
+        /// </summary>
+        /// <remarks>
+        /// The core viewing loop, and the direction the header's health is spent
+        /// on - so the number on the bar and the picture under it are the same
+        /// match. #206: it was the other one, and a player watched their own
+        /// wave walk into a stranger's towers with none of theirs on the board.
+        /// </remarks>
+        public const bool OpensAttacking = false;
+
         private readonly List<BuildPhase> _decisions = new List<BuildPhase>();
 
         private readonly List<RoundReport> _rounds = new List<RoundReport>();
@@ -108,6 +130,24 @@ namespace View
 
         /// <summary>The header. Built once, up in every mode.</summary>
         public RunHeader Header { get; private set; }
+
+        /// <summary>
+        /// The results screen's two views and the control between them. Built
+        /// once, drawn only while a round is being watched.
+        /// </summary>
+        public ResultsSwitch Switch { get; private set; }
+
+        /// <summary>
+        /// Whether the round on screen is the offence - this round's wave
+        /// against an opponent's defence - rather than the defence.
+        /// </summary>
+        /// <remarks>
+        /// False every time a round is committed and every time one is left, so
+        /// a run is a sequence of defences unless somebody asks otherwise. It
+        /// means nothing outside <see cref="RunMode.Watching"/>: there is no
+        /// match on screen for it to be a direction of.
+        /// </remarks>
+        public bool WatchingAttack { get; private set; }
 
         /// <summary>
         /// Which wave is on screen: the one being composed, or the one being
@@ -207,6 +247,7 @@ namespace View
             loop._directory = directory;
             loop.Run = afresh();
             loop.Header = RunHeader.Build(root.transform, loop);
+            loop.Switch = ResultsSwitch.Build(root.transform, loop);
 
             loop.OpenBuildPhase();
 
@@ -215,6 +256,7 @@ namespace View
             loop.Mode = RunMode.Building;
 
             loop.Header.Follow();
+            loop.Switch.Follow();
 
             return loop;
         }
@@ -270,13 +312,67 @@ namespace View
             _rounds.Add(report);
 
             _root.EndBuilding();
-            _root.BeginWatching(Run.MatchAt(Run.Round - 1, WatchedOpponent), Run.Types, _art);
+
+            // Written before the match goes up, because it is what says which of
+            // the round's two matches that is. A round always opens on the
+            // defence.
+            WatchingAttack = OpensAttacking;
+
+            _root.BeginWatching(
+                Run.MatchAt(Run.Round - 1, WatchedOpponent, WatchingAttack),
+                Run.Types,
+                _art);
 
             // Last, so that anything above throwing leaves the loop saying what
             // is actually on screen rather than naming a mode nothing drew.
             Mode = RunMode.Watching;
 
             Header.Follow();
+            Switch.Follow();
+        }
+
+        /// <summary>
+        /// Draws the other direction of the round already on screen: the wave
+        /// this round sent, or the towers it built.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A view control and not a mode.</b> Both matches were resolved when
+        /// the round was committed - a wave is scored against every opponent and
+        /// the defence is scored against the same ones - so this asks
+        /// <see cref="Run.MatchAt"/> for a copy of a fight that is over. The run
+        /// does not move, the purse does not move, the health does not move, and
+        /// there is no phase being composed to disturb. It is the same
+        /// re-simulation a scrub already does, over the other pairing of one
+        /// round.
+        /// </para>
+        /// <para>
+        /// <b>The match comes down before the next one goes up</b>, for the
+        /// reason a root refuses a second one: the scrub bar is wired to the
+        /// view it was built for, so one left standing over a replaced view is a
+        /// bar that moves and changes nothing on screen.
+        /// </para>
+        /// </remarks>
+        /// <param name="attacking">
+        /// True for the offence - this round's wave against an opponent's
+        /// defence. False for the defence, which is what a round opens on.
+        /// </param>
+        public void Watch(bool attacking)
+        {
+            if (Mode != RunMode.Watching || attacking == WatchingAttack)
+            {
+                return;
+            }
+
+            WatchingAttack = attacking;
+
+            _root.EndMatch();
+            _root.BeginWatching(
+                Run.MatchAt(Run.Round - 1, WatchedOpponent, attacking),
+                Run.Types,
+                _art);
+
+            Switch.Follow();
         }
 
         /// <summary>
@@ -292,6 +388,11 @@ namespace View
 
             _root.EndMatch();
 
+            // The next round opens on its defence whatever this one was left
+            // showing, so switching is a decision about one round rather than a
+            // setting that follows the run.
+            WatchingAttack = OpensAttacking;
+
             if (Run.IsOver)
             {
                 Finish();
@@ -304,6 +405,7 @@ namespace View
             }
 
             Header.Follow();
+            Switch.Follow();
         }
 
         private void OpenBuildPhase() =>

@@ -446,12 +446,26 @@ namespace Sim
         /// anything.
         /// </para>
         /// <para>
-        /// <b>The offense direction, and for now only that</b> -- this round's
-        /// wave against that opponent's defense, which is the direction that
-        /// scores and the one the player composed. The defending direction is a
-        /// second match at a seed of its own, and this surface is expected to
-        /// change as the game grows: it is the smallest thing that puts a round
-        /// on screen.
+        /// <b>Both directions of a pairing, and the caller names which.</b> A
+        /// round is resolved twice against every opponent -- see
+        /// <see cref="Play"/>, which sums what the wave dealt over one direction
+        /// and what the defense took over the other -- so both matches are
+        /// already scored by the time anybody asks for one. Naming the direction
+        /// therefore chooses between two fights that happened rather than
+        /// starting a third; <see cref="Advance"/> is still the only member that
+        /// moves anything, and switching between them costs a rebuild and
+        /// nothing else.
+        /// </para>
+        /// <para>
+        /// <b>A bool and not the side enum</b>, which is ADR-0039's surface pin:
+        /// every public member of this type other than <see cref="Advance"/>
+        /// takes primitives, so that nothing a caller composes can reach a run
+        /// except through a stored command. It buys a second thing here that an
+        /// enum would have cost -- <see cref="Side"/> has a third member,
+        /// <see cref="Side.Measured"/>, which is the stream the field is
+        /// measured on and is not a fight anybody watched. Two watchable
+        /// directions are two values, so the unwatchable one is unreachable by
+        /// construction rather than by a guard somebody has to write.
         /// </para>
         /// </remarks>
         /// <param name="round">
@@ -460,7 +474,12 @@ namespace Sim
         /// to hand back.
         /// </param>
         /// <param name="opponent">Which of the round's K pairings, counted from zero.</param>
-        public Match MatchAt(int round, int opponent)
+        /// <param name="attacking">
+        /// True for this round's wave against that opponent's defense -- the
+        /// direction that scores. False for that opponent's wave against this
+        /// round's defense, which is the direction health is spent on.
+        /// </param>
+        public Match MatchAt(int round, int opponent, bool attacking)
         {
             if (round < 0 || round >= _sent.Count)
             {
@@ -485,7 +504,12 @@ namespace Sim
                     + "pairing the round never fought.");
             }
 
-            return MatchFor(_sent[round], _pool.At(FieldFor(round)[opponent]), round, opponent, Side.Attacking);
+            return MatchFor(
+                _sent[round],
+                _pool.At(FieldFor(round)[opponent]),
+                round,
+                opponent,
+                attacking ? Side.Attacking : Side.Defending);
         }
 
         /// <summary>

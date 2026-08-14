@@ -266,12 +266,21 @@ public class CommandStreamTests
         //
         // MatchAt is on the list and is not one. #192 gave it to the client so
         // a round that has already resolved can be drawn, and its whole
-        // signature is two integers naming a pairing the run has already
-        // fought: there is nothing in it for a view to compose, and what comes
-        // back is a copy of a fight rather than a handle on the run --
+        // signature is two integers naming a pairing the run has already fought
+        // and a bool naming which of that pairing's two directions: there is
+        // nothing in it for a view to compose, and what comes back is a copy of
+        // a fight rather than a handle on the run --
         // RunTests.Watching_a_round_moves_nothing is the behavioural half of
         // that. It is here because the list is what makes admitting a member
         // deliberate.
+        //
+        // The bool arrived with #206 and is a primitive on purpose, which is
+        // this page's rule rather than a preference: the sim's Side enum is
+        // private, and handing it out would put a simulation type on the one
+        // surface this test exists to keep made of things a stored command
+        // could carry. It also has a third member -- the stream the field is
+        // measured on -- which is not a fight anybody watched, and two
+        // directions spelled as two values cannot name it.
         //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
         // choose)` to Run, which is exactly the shape a view would reach for.
@@ -314,7 +323,7 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase)", "MatchAt(Int32, Int32)" },
+            new[] { "Advance(BuildPhase)", "MatchAt(Int32, Int32, Boolean)" },
             moves);
 
         // And Advance is still the only one of them that takes anything a view

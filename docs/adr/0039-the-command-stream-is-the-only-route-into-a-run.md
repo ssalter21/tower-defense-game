@@ -26,6 +26,26 @@ decision reachable by handing one in is a decision a command could have made.
 > what a stored command carries, and it is still asserted rather than described — `CommandStreamTests` names
 > the members and goes red when one is added.
 
+> **Amended 14 August 2026.** `MatchAt` grew a third parameter, `bool attacking`, in
+> [#206](https://github.com/ssalter21/tower-defense-game/issues/206): a round is resolved in both directions
+> against every opponent, and the member handed back one of them and only one, so the screen watching it showed
+> the player their own wave walking into a stranger's defense with none of their towers on it. Both matches are
+> now reachable and the caller names which.
+>
+> **A primitive, and this page is the reason.** The obvious spelling is the simulation's own `Side` enum, and
+> it is refused for the rule above: every public member of `Run` other than `Advance` takes primitives, so that
+> nothing composed outside a stored command can reach a run through an argument. A bool costs nothing here — the
+> parameter is a choice between two things — and it buys a second guarantee the enum would not have. `Side` has
+> a third member, `Measured`, which is the stream the performance field is measured on and is not a fight
+> anybody watched; a bool cannot name it, so the unwatchable direction is unreachable by construction rather
+> than by a guard somebody has to remember to write. `Side` accordingly stays private.
+>
+> **The member is still a reader.** It rebuilds a match that was already resolved and scored, it comes back on
+> tick zero, and switching between the two directions costs a rebuild and moves nothing —
+> `RunTests.Watching_a_round_moves_nothing` resolves both directions of every pairing and then reads every
+> field a round does move. The structural claim is unchanged: two integers and a bool are still a question
+> about a round that already happened, and `Advance` is still the only route in.
+
 **A wave nobody was charged for cannot be handed to a run at all.** `Advance` once had a second overload
 taking a `RoundOrders` — a defense and a wave, composed by anybody, resolved against no offering, checked
 against no unlock, held to no slot width and bought out of no purse. It survived because the economy suite was

@@ -41,6 +41,16 @@ by the end of one. The client needs exactly one of them to look at, so `Run` gai
 match it builds is the match that was resolved; determinism is what makes asking twice cheaper than
 remembering.
 
+> **Amended 14 August 2026.** The call is `MatchAt(round, opponent, attacking)`, and the screen it feeds is the
+> Offence and Defence Results Screen: a pairing is resolved in both directions, so a committed round can be
+> watched as this round's towers against an opponent's wave or as this round's wave against an opponent's
+> towers. It opens on the defence, which is the loop the game is about.
+> [#206](https://github.com/ssalter21/tower-defense-game/issues/206) is why — the call was pinned to the
+> offence, and what a player saw after pressing Done was their own wave walking into a stranger's defense.
+> **The paragraph above is otherwise unchanged and is what it is for**: both matches were resolved by the
+> round, switching between them rebuilds rather than re-simulates anything new, and no forecast is computed in
+> either view. The build phase stays one joint screen.
+
 **The record is still the only route in.** [ADR-0039](0039-the-command-stream-is-the-only-route-into-a-run.md)
 holds: a decision reaches the simulation through a stored command and by no other route. Nothing a player
 clicks touches a tick. What was `simcli`'s alone — compiling the played phases into a script, replaying it

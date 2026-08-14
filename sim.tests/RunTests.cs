@@ -1146,12 +1146,20 @@ public class RunTests
         // position zero, before a tick has been advanced: tick zero's hash
         // folds how many towers stand and how many bodies walk, and the
         // defending direction has the other one's of each.
+        //
+        // The direction is named at the call rather than pinned inside MatchAt,
+        // which is #206: the member was hardcoded to Side.Attacking, and a
+        // screen that watched what it handed back watched the player's own wave
+        // walk into a stranger's defense. Both directions are reachable now, so
+        // this asks for the one it is about, and
+        // Each_direction_of_a_pairing_is_the_other_ones_defense_and_wave is
+        // where the other one is held to the same standard.
         UnitTypeTable types = TheMatch.Types();
         RoundOrders opponent = TheRun.Orders(types, towers: 6, orders: 4);
         Run run = OneOnOne(types, opponent);
 
         RoundReport report = run.Advance(TheBuild.Shopping(run));
-        Match watched = run.MatchAt(0, 0);
+        Match watched = run.MatchAt(0, 0, attacking: true);
 
         // Handed back unresolved, because a match nobody has advanced is the
         // only kind that can be watched from the beginning.
@@ -1182,6 +1190,71 @@ public class RunTests
     }
 
     [Fact]
+    public void Each_direction_of_a_pairing_is_the_other_ones_defense_and_wave()
+    {
+        // A pairing is two matches, and the two are each other's mirror: whose
+        // towers stand and whose bodies walk swap, and nothing else about them
+        // does. Both are resolved by the round that fought them -- Play sums
+        // one direction into what the wave dealt and the other into what the
+        // defense took -- so naming a direction chooses between two fights that
+        // already happened.
+        //
+        // This is #206. MatchAt handed back the attacking direction and only
+        // that, so the screen watching it showed the player their own wave
+        // walking into a stranger's defense: their towers were not on it, and a
+        // round that composed no wave showed an empty map. The defending
+        // direction is what the core loop watches and it was never reachable.
+        //
+        // The pool is one member with a defense of six towers and a wave of
+        // four orders, and the round shops for creeps and builds nothing -- so
+        // every piece below is known from outside the run, and the two sides
+        // cannot be confused for each other by having the same thing on them.
+        //
+        // OBSERVED: hand Side.Attacking back whichever direction was asked
+        // for, which is what this looked like before. The first defending
+        // assertion goes red with the opponent's six-tower layout where this
+        // round's own -- empty -- was asked for, and the seed assertion below
+        // goes red too, because one stream cannot be two.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opponent = TheRun.Orders(types, towers: 6, orders: 4);
+        Run run = OneOnOne(types, opponent);
+
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+
+        Match attacking = run.MatchAt(0, 0, attacking: true);
+        Match defending = run.MatchAt(0, 0, attacking: false);
+
+        Assert.Same(opponent.Defense, attacking.Layout);
+        Assert.Same(run.Sent[0].Wave, attacking.Wave);
+
+        Assert.Same(run.Sent[0].Defense, defending.Layout);
+        Assert.Same(opponent.Wave, defending.Wave);
+
+        // Two fights and not one seen twice: the seed folds the direction as
+        // well as the pairing, so the same pieces at the same coordinates are
+        // still two streams. Without it a round would be scored both ways off
+        // one roll of the dice.
+        Assert.NotEqual(attacking.Seed, defending.Seed);
+
+        // Both come back on tick zero, because a match nobody has advanced is
+        // the only kind that can be watched from the beginning -- and asking
+        // for one direction does not resolve the other.
+        Assert.Equal(0, attacking.Tick);
+        Assert.Equal(0, defending.Tick);
+
+        // And health is spent on the defending direction, gold for gold. This
+        // is the number a header carries, so the picture and the figure are the
+        // same match only while the defending one is what is on screen.
+        Assert.True(
+            report.Outcome.LeakCostTaken > 0,
+            "Nothing got past this round's defense, so the equality below is zero against zero.");
+
+        defending.Resolve();
+
+        Assert.Equal(report.Outcome.LeakCostTaken, Priced(run, opponent.Wave, defending));
+    }
+
+    [Fact]
     public void Every_pairing_of_a_round_is_reachable_and_together_they_are_what_it_dealt()
     {
         // One pairing agreeing is not the field agreeing. A round's offense
@@ -1203,7 +1276,7 @@ public class RunTests
 
         for (int opponent = 0; opponent < run.FieldSize; opponent++)
         {
-            Match watched = run.MatchAt(0, opponent);
+            Match watched = run.MatchAt(0, opponent, attacking: true);
             watched.Resolve();
             dealt += Priced(run, run.Sent[0].Wave, watched);
         }
@@ -1238,7 +1311,8 @@ public class RunTests
 
         for (int opponent = 0; opponent < run.FieldSize; opponent++)
         {
-            run.MatchAt(0, opponent).Resolve();
+            run.MatchAt(0, opponent, attacking: true).Resolve();
+            run.MatchAt(0, opponent, attacking: false).Resolve();
         }
 
         Assert.Equal(round, run.Round);
@@ -1275,7 +1349,8 @@ public class RunTests
         Run run = TheRun.Wealthy(TheRun.AttackingPurse);
         run.Advance(TheBuild.Shopping(run));
 
-        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent));
+        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent, attacking: true));
+        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent, attacking: false));
     }
 
     /// <summary>

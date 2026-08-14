@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Sim;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 using View;
 
 namespace Tests.PlayMode
@@ -418,9 +419,298 @@ namespace Tests.PlayMode
             Assert.That(root.Building.IsLit, Is.False);
         }
 
+        /// <summary>
+        /// <b>What you watch is your own towers.</b> You build a defence, you
+        /// press Done, and the round that goes up is that defence against
+        /// somebody else's wave. The other direction of the same round -- the
+        /// wave you composed, walking into somebody else's towers -- is the
+        /// screen's second view and is one press away.
+        /// </summary>
+        /// <remarks>
+        /// #206. The screen showed the offence and only the offence, so the
+        /// towers on it were a stranger's and the creeps were the player's own
+        /// -- and a round that composed no wave drew an empty map. What pins it
+        /// is the pieces rather than a label: the layout on screen is the one
+        /// this round committed, object for object, and the wave walking is not
+        /// the one it sent.
+        /// </remarks>
+        [Test]
+        public void TheResultsScreenOpensOnYourDefenceAndSwitchesToYourOffence()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            Assert.That(loop.Switch, Is.Not.Null, "The control is built with the run.");
+
+            Compose(root, "soldier 7 0 1");
+            loop.Press();
+
+            RoundOrders sent = loop.Run.Sent[0];
+
+            Assert.That(loop.WatchingAttack, Is.False, "A committed round opens on the defence.");
+            Assert.That(
+                root.MatchView.Match.Layout,
+                Is.SameAs(sent.Defense),
+                "The towers on screen are the ones this round built.");
+            Assert.That(
+                root.MatchView.Match.Layout.Count,
+                Is.EqualTo(1),
+                "Which is the one the transcript line stood.");
+            Assert.That(
+                root.MatchView.Match.Wave,
+                Is.Not.SameAs(sent.Wave),
+                "And the creeps walking at them are somebody else's.");
+
+            ulong defending = root.MatchView.Match.Seed;
+
+            Press(loop.Switch.Offence);
+
+            Assert.That(loop.WatchingAttack, Is.True);
+            Assert.That(
+                root.MatchView.Match.Wave,
+                Is.SameAs(sent.Wave),
+                "The offence is the wave this round composed ...");
+            Assert.That(
+                root.MatchView.Match.Layout,
+                Is.Not.SameAs(sent.Defense),
+                "... against somebody else's towers.");
+            Assert.That(
+                root.MatchView.Match.Seed,
+                Is.Not.EqualTo(defending),
+                "Two fights and not one seen twice: the seed folds the direction.");
+
+            Press(loop.Switch.Defence);
+
+            Assert.That(loop.WatchingAttack, Is.False, "And back, as often as anybody likes.");
+            Assert.That(root.MatchView.Match.Layout, Is.SameAs(sent.Defense));
+            Assert.That(root.MatchView.Match.Seed, Is.EqualTo(defending));
+
+            loop.Press();
+
+            Assert.That(loop.Mode, Is.EqualTo(RunMode.Building));
+            Assert.That(loop.WatchingAttack, Is.False, "The next round opens on its defence too.");
+        }
+
+        /// <summary>
+        /// <b>Switching is a view control and not a mode.</b> Both matches were
+        /// resolved when the round was committed, so asking for the other one
+        /// moves nothing: not the round, not the purse, not the health, and not
+        /// the phase, because there is no phase being composed.
+        /// </summary>
+        [Test]
+        public void SwitchingTheViewDoesNotMoveTheRun()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            Compose(root, "soldier 7 0 2");
+            loop.Press();
+
+            int round = loop.Run.Round;
+            int gold = loop.Run.Purse.Gold;
+            int health = loop.Run.Health;
+            int towers = loop.Run.Board.Count;
+            int sent = loop.Run.Sent.Count;
+
+            loop.Watch(attacking: true);
+            loop.Watch(attacking: false);
+            loop.Watch(attacking: true);
+
+            Assert.That(loop.Run.Round, Is.EqualTo(round), "Advance is still the only thing that moves a run.");
+            Assert.That(loop.Run.Purse.Gold, Is.EqualTo(gold));
+            Assert.That(loop.Run.Health, Is.EqualTo(health));
+            Assert.That(loop.Run.Board.Count, Is.EqualTo(towers));
+            Assert.That(loop.Run.Sent.Count, Is.EqualTo(sent));
+
+            Assert.That(loop.Mode, Is.EqualTo(RunMode.Watching), "And it is not a mode of its own.");
+            Assert.That(root.Composing, Is.Null, "Nothing is being composed behind it.");
+            Assert.That(root.Building, Is.Null);
+            Assert.That(root.Wave, Is.Null, "The wave bar is #197's and this does not touch it.");
+            Assert.That(root.MatchView, Is.Not.Null, "There is exactly one match on screen ...");
+            Assert.That(root.Controls, Is.Not.Null, "... and one scrub bar over it.");
+        }
+
+        /// <summary>
+        /// <b>The number and the picture are the same match.</b> Health is spent
+        /// on what got past this round's own towers, and those towers are what
+        /// the screen opens on -- so the figure on the header and the fight
+        /// under it finally agree. Watching the offence does not move it, because
+        /// the offence is not what it is measured from.
+        /// </summary>
+        [Test]
+        public void TheHeadersHealthMovesOnTheDefenceItIsShowing()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+            RunHeader header = loop.Header;
+
+            Assert.That(header.Health.text, Is.EqualTo("Health 800 of 800"));
+
+            Compose(root, "soldier 7 0 1");
+            loop.Press();
+
+            int health = loop.Run.Health;
+
+            Assert.That(health, Is.LessThan(800), "Something got past this round's defence.");
+            Assert.That(header.Health.text, Is.EqualTo("Health " + health + " of 800"));
+            Assert.That(
+                root.MatchView.Match.Layout,
+                Is.SameAs(loop.Run.Sent[0].Defense),
+                "And the defence it was taken off is the one on screen.");
+
+            Press(loop.Switch.Offence);
+            header.Follow();
+
+            Assert.That(
+                loop.Run.Health,
+                Is.EqualTo(health),
+                "Watching the other direction does not spend health, because health is not what it scores.");
+            Assert.That(header.Health.text, Is.EqualTo("Health " + health + " of 800"));
+        }
+
+        /// <summary>
+        /// The control is up only while a round is being watched, it says the
+        /// two views in words, and neither word is a type id or the record's
+        /// vocabulary.
+        /// </summary>
+        [Test]
+        public void TheResultsSwitchIsUpOnlyWhileARoundIsWatched()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+            ResultsSwitch control = loop.Switch;
+
+            Assert.That(control.Defence.text, Is.EqualTo("Defence"));
+            Assert.That(control.Offence.text, Is.EqualTo("Offence"));
+            Assert.That(
+                control.Covers(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f)),
+                Is.False,
+                "Nothing of it is over the board while a round is being composed.");
+
+            Compose(root, "soldier 7 0 1");
+            loop.Press();
+            control.Follow();
+
+            Assert.That(control.Defence.text, Is.EqualTo("Defence"), "The labels do not move with the view.");
+            Assert.That(control.Offence.text, Is.EqualTo("Offence"));
+        }
+
+        /// <summary>
+        /// <b>A session that does not agree writes nothing, and says why.</b> The
+        /// simulation's half of that is <c>ProvedSession</c>; this is the
+        /// client's half, which #198 shipped untested -- the branch that hands
+        /// back no path and the two sentences a person is shown where there is
+        /// no path to name.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The disagreement is made rather than waited for. Two rounds are
+        /// played through the screen and then handed back to the prover in the
+        /// wrong order, so what the session claims it was shown at round one is
+        /// what round two actually came to. That is a session that did not see
+        /// what it played, which is the whole class of fault this step exists to
+        /// catch, and it is arranged rather than hoped for -- a fresh run on a
+        /// different seed was tried first and agreed, because the pool is one
+        /// canned member and both runs met the same defence.
+        /// </para>
+        /// <para>
+        /// The structural guarantee is what is asserted first: there is no
+        /// script at all, so there is nothing this side could write even by
+        /// ignoring the sentence.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void ADisagreeingSessionWritesNothingAndSaysSo()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            Compose(root, "archer 6 2 2");
+            loop.Press();
+            loop.Press();
+
+            Compose(root, "archer 7 4 0");
+            loop.Press();
+            loop.Press();
+
+            Assert.That(
+                loop.Rounds[0].ToString(),
+                Is.Not.EqualTo(loop.Rounds[1].ToString()),
+                "The two rounds have to differ for swapping them to be a disagreement.");
+
+            var outOfOrder = new List<RoundReport> { loop.Rounds[1], loop.Rounds[0] };
+
+            ProvedSession astray = ProvedSession.Of(
+                loop.Decisions,
+                outOfOrder,
+                loop.Run,
+                () => root.RunOn(TheMatchOnScreen.Seed));
+
+            Assert.That(astray.Agreed, Is.False, "The fresh run did not say what this session claims it saw.");
+            Assert.That(astray.Script, Is.Empty, "So it hands back no script at all.");
+            Assert.That(astray.Disagreement, Is.Not.Null);
+
+            string path = WrittenRun.Written(astray, Scratch());
+
+            Assert.That(path, Is.Null, "And nothing lands on disk.");
+            Assert.That(
+                WrittenRun.Wording(astray, path),
+                Is.EqualTo(astray.Disagreement),
+                "What a person is shown is the prover's own sentence, which names the round the two runs "
+                + "parted on. A screen that replaced it with 'could not save' would throw away the only "
+                + "description of the bug there is.");
+        }
+
+        /// <summary>
+        /// A session that committed no round decided nothing, so there is no
+        /// script, nothing is written, and what is said is that rather than a
+        /// disagreement.
+        /// </summary>
+        [Test]
+        public void ASessionThatPlayedNoRoundWritesNothingAndSaysThat()
+        {
+            MatchRoot root = Playfield();
+            RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            ProvedSession nothing = ProvedSession.Of(
+                new BuildPhase[0],
+                new RoundReport[0],
+                loop.Run,
+                () => root.RunOn(TheMatchOnScreen.Seed));
+
+            Assert.That(nothing.Agreed, Is.True, "Two runs that played nothing did not disagree.");
+            Assert.That(nothing.Script, Is.Empty);
+
+            string path = WrittenRun.Written(nothing, Scratch());
+
+            Assert.That(path, Is.Null, "An empty script is not a file with nothing in it.");
+            Assert.That(
+                WrittenRun.Wording(nothing, path),
+                Is.EqualTo("No round was played, so there is no script to write."));
+        }
+
         // ---------------------------------------------------------------
         // Scaffolding
         // ---------------------------------------------------------------
+
+        /// <summary>
+        /// One button on the chrome, pressed.
+        /// </summary>
+        /// <remarks>
+        /// A submit rather than a synthesised pointer press, because a pointer
+        /// press is answered from the element's laid-out rectangle and nothing
+        /// here has been through a layout pass -- a test that clicked at
+        /// coordinates would be asserting on the panel's geometry by accident.
+        /// Both routes end in the same <c>Clickable</c>.
+        /// </remarks>
+        private static void Press(Button button)
+        {
+            using (NavigationSubmitEvent submit = NavigationSubmitEvent.GetPooled())
+            {
+                submit.target = button;
+                button.SendEvent(submit);
+            }
+        }
 
         private MatchRoot Playfield() =>
             Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();

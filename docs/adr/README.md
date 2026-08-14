@@ -46,7 +46,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0015](0015-replay-bundles-are-self-contained.md) | A replay bundle is self-contained, and the seed lives in it |
 | [0017](0017-canonical-order-is-asserted-not-restored.md) | Canonical order is asserted at load, never restored |
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
-| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against — **amended by #191: the slots no longer ascend by type id; position is the release order** |
+| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against — **amended by #191: the slots no longer ascend by type id; position is the release order** — **amended by #206: `MatchAt` names the direction of the pairing it hands back, as a bool; `Side` stays private** |
 | [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
 | [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
@@ -56,7 +56,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0048](0048-a-board-is-not-a-layout.md) | A board is not a layout, and deriving one is a computation |
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
 | [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written — **the verb it was decided about is deleted by #200; the shape stands and is spent at the screen in 0051** |
-| [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command |
+| [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command — **amended by #206: the watched round is the Offence and Defence Results Screen, two views of one resolved pairing, opening on the defence** |
 
 ## Drawing the match
 
