@@ -84,9 +84,9 @@ public static class TheRun
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
         new RoundOutcome(23, 239),
-        new RoundOutcome(128, 220),
-        new RoundOutcome(273, 178),
-        new RoundOutcome(398, 177),
+        new RoundOutcome(136, 220),
+        new RoundOutcome(313, 178),
+        new RoundOutcome(488, 177),
     };
 
     /// <summary>
@@ -101,15 +101,15 @@ public static class TheRun
     public static IReadOnlyList<RoundOutcome> TheCommittedRunWithoutDeath => new[]
     {
         new RoundOutcome(23, 239),
-        new RoundOutcome(128, 220),
-        new RoundOutcome(273, 178),
-        new RoundOutcome(398, 177),
-        new RoundOutcome(517, 144),
-        new RoundOutcome(631, 91),
-        new RoundOutcome(863, 86),
-        new RoundOutcome(1064, 97),
-        new RoundOutcome(1267, 87),
-        new RoundOutcome(1473, 85),
+        new RoundOutcome(136, 220),
+        new RoundOutcome(313, 178),
+        new RoundOutcome(488, 177),
+        new RoundOutcome(697, 144),
+        new RoundOutcome(951, 91),
+        new RoundOutcome(1373, 86),
+        new RoundOutcome(1894, 97),
+        new RoundOutcome(2537, 87),
+        new RoundOutcome(3343, 85),
     };
 
     /// <summary>What that run had left of the pool when it stopped: none of it.</summary>
@@ -250,13 +250,12 @@ public static class TheRun
     /// <remarks>
     /// <para>
     /// The committed hundred buys five bodies, and five bodies get past nobody
-    /// in a field drawn from <see cref="Pool"/>: every round of such a run is
-    /// placed in the bottom band, so what it earned for its offense is a column
-    /// of zeroes and an assertion over that column is an assertion about
-    /// nothing. Opening on more than a wave's income is what puts a bought wave
-    /// in front of the bands the pool is measured into, so that the three lines
-    /// a purse moves on are three real numbers and a fold over them has
-    /// something to be wrong about.
+    /// in a field drawn from <see cref="Pool"/>: every round of such a run deals
+    /// nothing, so what it earned for its offense is a column of zeroes and an
+    /// assertion over that column is an assertion about nothing. Opening on more
+    /// than a wave's income is what buys a wave big enough to get something
+    /// past, so that the three lines a purse moves on are three real numbers and
+    /// a fold over them has something to be wrong about.
     /// </para>
     /// <para>
     /// Death does not end it, because it builds nothing and a run standing

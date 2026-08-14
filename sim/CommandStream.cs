@@ -536,13 +536,14 @@ namespace Sim
         /// </para>
         /// <para>
         /// <b>The purse this walk carries is a ceiling and not the run's own.</b>
-        /// A wave's income includes the band its offense reached in the field,
-        /// and what a round got past the field is a number only a resolved round
-        /// has -- so the walk closes every wave at
-        /// <see cref="Purse.CloseWaveAtBest"/>, the most the bands can pay. Every
-        /// decision refused here is one no run could have afforded however well
-        /// it played; a decision the ceiling admits is checked again, against the
-        /// purse the round really holds, by the same
+        /// A wave's income includes a share of what its offense got past the
+        /// field, and that is a number only a resolved round has -- so the walk
+        /// closes every wave at <see cref="Purse.CloseWaveAtBest"/>, against the
+        /// most the round could possibly have dealt: the full price of the wave
+        /// the stored decision composes, every creep of it leaking against every
+        /// opponent. Every decision refused here is one no run could have
+        /// afforded however well it played; a decision the ceiling admits is
+        /// checked again, against the purse the round really holds, by the same
         /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
@@ -596,7 +597,7 @@ namespace Sim
                 Build build = command.ToPhase().Resolve(
                     round, carried, run.Ladder, purse, run.Costs, run.Types, run.Map, board);
 
-                purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
+                purse = build.Purse.CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs)).Purse;
                 board = build.Board;
                 carried = build.Wave;
                 builds.Add(build);
@@ -627,8 +628,8 @@ namespace Sim
         /// fourth and leave an outcome somebody keeps. Everything a walk can
         /// settle without playing the run is settled there; what it cannot is
         /// how much a wave's own performance paid, so a decision affordable only
-        /// under the best band the run did not reach is the one refusal that
-        /// still lands mid-run.
+        /// under damage the run did not deal is the one refusal that still lands
+        /// mid-run.
         /// </para>
         /// <para>
         /// <b>Every round comes back.</b> What each one took, what its wave cost

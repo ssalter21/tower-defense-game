@@ -9,8 +9,8 @@ namespace Sim
     /// <remarks>
     /// Itemised rather than summed, because the three lines answer different
     /// questions: the interest is what banking was worth, the base is what the
-    /// wave was worth for happening, and the bonus is what the wave was worth
-    /// against the field. A run's retrospective is a fold over these.
+    /// wave was worth for happening, and the bonus is what the wave's own
+    /// damage was worth. A run's retrospective is a fold over these.
     /// </remarks>
     public sealed class WavePayment
     {
@@ -33,10 +33,10 @@ namespace Sim
         public int IncomeBase { get; }
 
         /// <summary>
-        /// The performance bonus: the share of the base the band this wave's
-        /// result reached in the field pays. Never negative, and zero only for a
-        /// wave in the bottom band or one measured against
-        /// <see cref="PerformanceField.Absent"/>.
+        /// The performance bonus: the ruleset's share of what this wave got
+        /// past the field, priced in gold. Proportional and uncapped, so twice
+        /// the damage is twice the bonus, and zero only for a wave that got
+        /// nothing past.
         /// </summary>
         public int Bonus { get; }
 
@@ -213,29 +213,20 @@ namespace Sim
         /// Three lines, in this order. The interest is taken on what the purse
         /// carried <b>through</b> the wave, before the wave's own money lands,
         /// which is what makes not spending an investment rather than a
-        /// rebate. The base is flat. The bonus is a share of the base decided by
-        /// the band the wave's result reached in the field.
+        /// rebate. The base is flat. The bonus is the ruleset's share of what
+        /// the wave got past, so a wave that dealt twice as much is paid twice
+        /// as much for it.
         /// </remarks>
-        /// <param name="rules">The rate, the ceiling, the base and the bands.</param>
-        /// <param name="field">
-        /// What everybody else's round was worth. A population of nobody --
-        /// <see cref="PerformanceField.Absent"/> -- has no percentile to report
-        /// and so pays no bonus.
-        /// </param>
+        /// <param name="rules">The interest rate, its ceiling, the base and the bonus rate.</param>
         /// <param name="leakCostDealt">What this wave got past its opponents, priced in gold.</param>
-        public WavePayment CloseWave(Ruleset rules, PerformanceField field, int leakCostDealt)
+        public WavePayment CloseWave(Ruleset rules, int leakCostDealt)
         {
             if (rules is null)
             {
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            if (field is null)
-            {
-                throw new ArgumentNullException(nameof(field));
-            }
-
-            return Closed(rules, BonusOn(rules, field, leakCostDealt));
+            return Closed(rules, BonusOn(rules, leakCostDealt));
         }
 
         /// <summary>
@@ -244,10 +235,17 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The interest and the base, and then the top band rather than the band
-        /// a result reached -- so this is an upper bound on the payment and never
-        /// the payment. What a wave earns depends on what it got past the field,
-        /// which is a number only a resolved round has.
+        /// The interest and the base, and then the bonus on the most leak cost
+        /// the wave could conceivably have dealt rather than on what it dealt --
+        /// so this is an upper bound on the payment and never the payment. What
+        /// a wave earns depends on what it got past the field, which is a number
+        /// only a resolved round has.
+        /// </para>
+        /// <para>
+        /// <b>The ceiling is finite because leak cost is.</b> A leak costs its
+        /// creep's price one for one, so a round deals at most the full price of
+        /// the wave it sent -- <see cref="WaveScript.FullPrice"/>, which a
+        /// stored decision yields without playing anything.
         /// </para>
         /// <para>
         /// <b>The bound is above rather than below on purpose.</b> A walk over a
@@ -258,41 +256,47 @@ namespace Sim
         /// refuse decisions the run affords perfectly well.
         /// </para>
         /// </remarks>
-        /// <param name="rules">The rate, the ceiling, the base and the bands.</param>
-        public WavePayment CloseWaveAtBest(Ruleset rules)
+        /// <param name="rules">The interest rate, its ceiling, the base and the bonus rate.</param>
+        /// <param name="mostLeakCostDealable">
+        /// The most this wave could have got past, priced in gold. A number
+        /// below what the round could really deal turns this into a floor, which
+        /// is the one way the walk goes wrong.
+        /// </param>
+        public WavePayment CloseWaveAtBest(Ruleset rules, int mostLeakCostDealable)
         {
             if (rules is null)
             {
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            return Closed(rules, ShareOfTheBase(rules, rules.BestBand));
+            return Closed(rules, BonusOn(rules, mostLeakCostDealable));
         }
 
         /// <summary>
-        /// What the bonus came to over a whole run: what each round dealt, placed
-        /// against the field, priced out of the bands and added up.
+        /// What the bonus came to over a whole run: what each round dealt,
+        /// priced at the ruleset's rate and added up.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <b>A fold over the outcome vector and nothing else.</b> The vector
         /// carries what every round of the run got past the field it faced, so
         /// what a run earned for its offense is arithmetic over a stored run --
         /// no tick is replayed and no match is resolved to find out what a round
         /// paid.
+        /// </para>
+        /// <para>
+        /// <b>Round by round rather than over the total.</b> A round's bonus is
+        /// truncated where it is paid, so the rate applied once to the sum would
+        /// come out above what the rounds were handed.
+        /// </para>
         /// </remarks>
-        /// <param name="rules">Where the base and the bands are authored.</param>
-        /// <param name="field">The distribution every round of the run was paid against.</param>
+        /// <param name="rules">Where the bonus rate is authored.</param>
         /// <param name="outcome">The vector, played or rebuilt from a stored one.</param>
-        public static int BonusOver(Ruleset rules, PerformanceField field, RunOutcome outcome)
+        public static int BonusOver(Ruleset rules, RunOutcome outcome)
         {
             if (rules is null)
             {
                 throw new ArgumentNullException(nameof(rules));
-            }
-
-            if (field is null)
-            {
-                throw new ArgumentNullException(nameof(field));
             }
 
             if (outcome is null)
@@ -304,7 +308,7 @@ namespace Sim
 
             for (int round = 0; round < outcome.Rounds.Count; round++)
             {
-                earned += BonusOn(rules, field, outcome.Rounds[round].LeakCostDealt);
+                earned += BonusOn(rules, outcome.Rounds[round].LeakCostDealt);
             }
 
             if (earned > int.MaxValue)
@@ -313,8 +317,8 @@ namespace Sim
                     "A run's waves earned "
                     + earned.ToString(CultureInfo.InvariantCulture)
                     + " gold in performance bonuses, which does not fit in the 32-bit integer gold is "
-                    + "counted in. A bonus is a share of the flat base, so a total past that range is a "
-                    + "base or a band authored in the wrong units.");
+                    + "counted in. A bonus is a share of what a round dealt, so a total past that range "
+                    + "is a bonus rate or a cost column authored in the wrong units.");
             }
 
             return (int)earned;
@@ -364,21 +368,23 @@ namespace Sim
         }
 
         /// <summary>
-        /// The band's share of the base. No field means no percentile to be at,
-        /// so it pays nothing.
+        /// The ruleset's share of what a wave got past, in gold, truncated. A
+        /// wave that got nothing past is paid nothing for it.
         /// </summary>
-        private static long BonusOn(Ruleset rules, PerformanceField field, int leakCostDealt)
+        private static long BonusOn(Ruleset rules, int leakCostDealt)
         {
-            if (!field.IsPresent)
+            if (leakCostDealt < 0)
             {
-                return 0;
+                throw new SimulationException(
+                    "A bonus was asked for on "
+                    + leakCostDealt.ToString(CultureInfo.InvariantCulture)
+                    + " gold of leak cost. A leak costs its creep's price one for one and a price is "
+                    + "never negative, so a figure below zero is a subtraction somebody performed twice "
+                    + "-- and the bonus is proportional to it, so it would be a wave charged for "
+                    + "attacking.");
             }
 
-            return ShareOfTheBase(rules, rules.BandFor(field.PercentileOf(leakCostDealt)));
+            return (long)leakCostDealt * rules.BonusPercentOfLeakCost / Percent;
         }
-
-        /// <summary>What one band pays, in gold. Truncated, and never negative.</summary>
-        private static long ShareOfTheBase(Ruleset rules, PerformanceBand band) =>
-            (long)rules.IncomeBasePerWave * band.BonusPercentOfBase / Percent;
     }
 }

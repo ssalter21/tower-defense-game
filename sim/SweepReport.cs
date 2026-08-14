@@ -195,11 +195,11 @@ namespace Sim
         /// What these runs' waves were paid for how they did, in gold, summed.
         /// </summary>
         /// <remarks>
-        /// The performance bonus, beside the base it is a share of, so the two
-        /// integers say what attacking earned its sender and what it would have
-        /// earned by turning up. A row where this is nothing is a creep whose
-        /// runs never cleared the bottom band; a row where it is missing across
-        /// the whole report is an economy paying the base alone.
+        /// The performance bonus, beside the flat base, so the two integers say
+        /// what attacking earned its sender and what it would have earned by
+        /// turning up. A row where this is nothing is a creep whose runs never
+        /// got anything past; a row where it is missing across the whole report
+        /// is an economy paying the base alone.
         /// </remarks>
         public long BonusGold { get; }
 

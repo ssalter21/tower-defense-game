@@ -204,7 +204,7 @@ namespace View
         /// and a run scored against one dies of health in round three. See
         /// <see cref="StreamingContent.FieldFileName"/>. The field is a number
         /// rather than anything on screen: the player watches one member of it,
-        /// and the other nine arrive as the band that feeds the purse.
+        /// and what the wave got past all ten of them is what feeds the purse.
         /// </para>
         /// <para>
         /// <b>The run arrives as a way to make one, not as one already made.</b>

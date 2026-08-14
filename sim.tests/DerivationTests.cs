@@ -109,6 +109,21 @@ public class DerivationTests
         // wave and folds what it cost, and the label went to
         // rule-fingerprint/3.
         (4u, 0x67E9F86CA94BE2D6UL),
+
+        // Version 5 is #209 -- gold is paid for the health damage a wave does.
+        // The bonus was one of four percentile bands worth at most a fifth of
+        // the flat base; it is now a share of the leak cost the wave dealt, so
+        // every stored run replays to a different purse from its first round
+        // that gets anything past.
+        //
+        // IT CAUGHT THE SAME HOLE A THIRD TIME. Under rule-fingerprint/3 this
+        // build's fingerprint came out 67E9F86CA94BE2D6 -- byte for byte
+        // version 4's -- because all three halves of that fold resolve matches
+        // and build phases and not one of them closes a wave. The rule that
+        // moved lives in Purse, which the fold could not see. The fold gained a
+        // fourth half that pays a purse off, and the label went to
+        // rule-fingerprint/4.
+        (5u, 0xB234D73EC659D3A7UL),
     };
 
     /// <summary>
@@ -128,6 +143,27 @@ public class DerivationTests
         """;
 
     private const string FingerprintDefense = "tower  3  2  1";
+
+    /// <summary>
+    /// The rules the payment half is folded through. Written out here rather
+    /// than read off <c>content/ruleset.txt</c>, because the payment is
+    /// arithmetic over authored numbers: folded against the committed file, a
+    /// retune of the bonus rate or the income base would move this fingerprint
+    /// and retire every record made under rules nobody changed.
+    /// </summary>
+    private const string FingerprintRules = """
+        matrix pierce 140 70 100
+        matrix impact 70 100 140
+        matrix magic 100 140 70
+        armour 1 100
+        floor 1
+        interest 10 0
+        income 168
+        purse 100
+        bonus 25
+        health 800
+        snapshot 10 25
+        """;
 
     private const string FingerprintWave = "order  0  1  3  0";
 
@@ -157,6 +193,16 @@ public class DerivationTests
     /// simulation-version bump.
     /// </summary>
     private const int FingerprintComposedGold = 100000;
+
+    /// <summary>What the purse the payment half is folded through carries in.</summary>
+    private const int FingerprintBank = 4321;
+
+    /// <summary>
+    /// The whole price of the wave the payment half's ceiling is taken against.
+    /// A number rather than a wave, because what the ceiling is a ceiling on is
+    /// a leak cost and this half is not composing one.
+    /// </summary>
+    private const int FingerprintWavePrice = 1300;
 
     private const ulong FingerprintSeed = 20260802UL;
 
@@ -217,10 +263,9 @@ public class DerivationTests
         string original = TheRuleset.CommittedText();
         Hash64 hash = Ruleset.Parse(original).ContentHash;
 
-        // The two row-shaped rules moved. Every other number the file holds is
+        // The one row-shaped rule moved. Every other number the file holds is
         // covered one at a time by the theory below, which is derived off the
-        // file rather than listed; these two are here because neither of them
-        // is a column.
+        // file rather than listed; this one is here because it is not a column.
         //
         // The matrix, twice: once widened and once permuted. A single cell
         // cannot move on its own without the square stopping being a Latin
@@ -229,13 +274,6 @@ public class DerivationTests
         // folded rather than the multiset of nine numbers.
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, "150    70       100", "70   100       150", "100   150        70")).ContentHash);
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, " 70   100       140", "100   140        70", "140    70       100")).ContentHash);
-
-        // A band's bonus, which the band folds rather than a column.
-        // OBSERVED: delete the band loop from Ruleset.FoldBands, leaving the
-        // count. This goes red with a top band paying 20 and one paying 21 both
-        // hashing 41DA8EEE80D8B334, and every record pinned to one performance
-        // curve would replay against another.
-        Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
 
         // Nothing that is not a number moved. Each of these changes the file
         // and none of them changes a rule.
@@ -249,8 +287,8 @@ public class DerivationTests
     [MemberData(nameof(TheRuleset.EveryNumber), MemberType = typeof(TheRuleset))]
     public void Moving_any_one_number_of_the_ruleset_moves_its_content_hash(string keyword, int column)
     {
-        // One case per number the committed file holds outside the matrix and
-        // the bands, taken off the file rather than written down here. The
+        // One case per number the committed file holds outside the matrix,
+        // taken off the file rather than written down here. The
         // simulation declares a ruleset field once, on the row that carries it,
         // and refuses a file with a row missing or a row carrying the wrong
         // number of columns -- so the columns of the committed file ARE the
@@ -496,8 +534,9 @@ public class DerivationTests
     /// match alone; <c>rule-fingerprint/2</c> folded a match and a composition;
     /// <c>rule-fingerprint/3</c> folds a match, a composition, and a second
     /// composition against a wave the round carries -- which is the only half
-    /// that can see what a wave costs.
-    /// Versions 1 to 3 are recorded under earlier labels and cannot be
+    /// that can see what a wave costs; <c>rule-fingerprint/4</c> folds a wave's
+    /// payment too, which is the only half that can see what a wave earns.
+    /// Versions 1 to 4 are recorded under earlier labels and cannot be
     /// recomputed here, which is a loss stated out loud rather than a table that quietly
     /// compares fewer things -- the same rule <see cref="Match"/> applies to its
     /// own state-hash label.
@@ -511,7 +550,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/3").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/4").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -526,7 +565,55 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return ComposedIntoFingerprint(fingerprint);
+        return PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint));
+    }
+
+    /// <summary>
+    /// The fourth half of the fold: what a wave pays a purse, itemised, and the
+    /// ceiling a walk over a stored stream folds instead.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the three above it missed one.</b> They
+    /// resolve matches and build phases, and not one of them closes a wave -- so
+    /// #209, which changed the bonus from a percentile band into a share of what
+    /// a wave dealt and moves what every stored run replays to, produced a
+    /// fingerprint identical to the version before it. The third time this file
+    /// has had that hole.
+    /// </para>
+    /// <para>
+    /// Three leak costs, an order of magnitude apart, because a bonus that
+    /// ignores what a wave dealt folds all three the same -- which is exactly
+    /// the shape the band lookup had.
+    /// </para>
+    /// </remarks>
+    private static Hash64 PaidIntoFingerprint(Hash64 fingerprint)
+    {
+        Ruleset rules = Ruleset.Parse("fingerprint rules", FingerprintRules);
+        Purse purse = Purse.Holding(FingerprintBank);
+        int[] dealt = { 0, 37, 673 };
+
+        // OBSERVED: pay a flat share of the income base -- the shape the four
+        // bands had -- rather than a share of what the wave dealt. The
+        // fingerprint goes B234D73EC659D3A7 to 80A3DB0779957EA1 and the
+        // version-5 row goes red naming both numbers, which is what it could not
+        // do before the fold had this half in it.
+        for (int index = 0; index < dealt.Length; index++)
+        {
+            WavePayment paid = purse.CloseWave(rules, dealt[index]);
+
+            fingerprint = fingerprint
+                .Add(paid.Interest, paid.IncomeBase)
+                .Add(paid.Bonus, paid.Purse.Gold);
+        }
+
+        // And the ceiling, which is the other thing a rule change to the payment
+        // moves: a walk over a stored stream folds this instead of the payment,
+        // and a ceiling that stops being one admits decisions no run could
+        // afford.
+        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice);
+
+        return fingerprint.Add(ceiling.Bonus, ceiling.Purse.Gold);
     }
 
     /// <summary>

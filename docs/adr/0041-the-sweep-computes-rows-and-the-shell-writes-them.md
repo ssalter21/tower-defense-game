@@ -49,6 +49,13 @@ seed space is 2^64 wide and no run count enumerates it.
 **The canned field is part of the economy rather than a tool pointed at it.** The percentile bands are measured
 against a distribution of other players' rounds and no such pool exists until runs are stored, so the pool a
 sweep is handed is what the bands are computed against — literally, since ADR-0042 measures it.
+
+> **Amended by [#209](https://github.com/ssalter21/tower-defense-game/issues/209), 14 August 2026.** The bands
+> are gone and nothing prices off the distribution, so the pool is no longer measured to pay anybody. The
+> paragraph's conclusion survives on a different argument: a round is still resolved against K members of this
+> pool, so what the sweep is handed is still what a run's damage is dealt to, and the two file choices below
+> are unaffected.
+
 `content/field.txt` is that stand-in, and it is deliberately not `content/wave.txt`: the
 authored match is forty creeps and three hundred and eighty gold, and a run's purse is paid one wave's base a
 wave, so a field member composed of it outspends every opponent it faces three and a half times over. A sweep

@@ -47,11 +47,11 @@ public class RulesetTests
         Assert.Equal(10, rules.FreeSnapshotsPerRun);
         Assert.Equal(25, rules.SnapshotPriceGold);
 
-        Assert.Equal(4, rules.Bands.Count);
-        Assert.Equal(0, rules.Bands[0].PercentileThreshold);
-        Assert.Equal(0, rules.Bands[0].BonusPercentOfBase);
-        Assert.Equal(90, rules.Bands[3].PercentileThreshold);
-        Assert.Equal(20, rules.Bands[3].BonusPercentOfBase);
+        // What a wave is paid for the damage it does, as a share of the leak
+        // cost it dealt. OBSERVED: change "bonus          25" to
+        // "bonus          40" in content/ruleset.txt. This goes red, 25 against
+        // 40, which is what a retuned bonus rate nobody re-read here looks like.
+        Assert.Equal(25, rules.BonusPercentOfLeakCost);
     }
 
     [Fact]
@@ -121,9 +121,8 @@ public class RulesetTests
     {
         // Two rows claiming one rule means the ruleset in force is whichever of
         // them was read last, which is a coin flip nobody can see in a diff.
-        // The matrix and the bands are not here because both are authored as
-        // several rows on purpose, and both have their own refusals for a row
-        // too many.
+        // The matrix is not here because it is authored as several rows on
+        // purpose, and it has its own refusal for a row too many.
         //
         // OBSERVED: delete the duplicate loop in Draft.Once, leaving the Add.
         // All nine rows go red having caught nothing, and a file stating the
@@ -287,64 +286,17 @@ public class RulesetTests
     }
 
     [Fact]
-    public void Bands_that_do_not_open_at_the_zeroth_percentile_refuse_to_load()
+    public void A_negative_bonus_rate_refuses_to_load()
     {
-        // A wave below the first threshold would fall in no band at all, and
-        // what it earns would be whatever the reader supplied.
+        // The bonus is proportional to what a wave dealt, so a negative rate is
+        // a wave charged for attacking -- the run's own offense taking gold off
+        // it, which nothing in this economy does.
         //
-        // OBSERVED: drop the first-band check in Draft.AddBand. This goes red
-        // having caught nothing, and a ruleset whose bands open at the tenth
-        // percentile loads -- BandFor then answers the bottom band for a wave
-        // that reached no band at all.
+        // OBSERVED: open the bonus rate's range at int.MinValue. This goes red
+        // having caught nothing, and a ruleset paying -25% of leak cost dealt
+        // loads: the more a wave gets past, the poorer the run that sent it.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 0 0", "band 10 0")));
-
-        Assert.Contains("first band starts at zero", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Bands_that_do_not_ascend_refuse_to_load()
-    {
-        // OBSERVED: drop the threshold comparison against the band below it in
-        // Draft.AddBand. This goes red having caught nothing, and two bands
-        // both opening at the zeroth percentile load -- at which point the band
-        // a wave falls in is whichever of them the walk stopped on.
-        ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 50 5", "band 0 5")));
-
-        Assert.Contains("ascend strictly", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_band_paying_less_than_the_one_below_it_refuses_to_load()
-    {
-        // The bands are progressive and never negative: performing below
-        // average earns a smaller bonus and never a penalty. A band that pays
-        // less than the one under it is a penalty written as a bonus.
-        //
-        // OBSERVED: drop the comparison against the band below in
-        // Draft.AddBand. This goes red having caught nothing, and a ruleset in
-        // which the 50th percentile pays less than the 0th loads quietly.
-        ContentException thrown = Assert.Throws<ContentException>(() => Ruleset.Parse(
-            PlantedText.Replace(PlantedText.Replace(TheRuleset.Minimal, "band 0 0", "band 0 10"), "band 50 5", "band 50 4")));
-
-        Assert.Contains("doing better never pays less", thrown.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void A_negative_band_bonus_refuses_to_load()
-    {
-        // Refused by the column's own range, and asserted by name because two
-        // rules can refuse this file: a bonus below zero is also a bonus below
-        // the band under it.
-        //
-        // OBSERVED: open the band bonus's range at int.MinValue. This goes red
-        // on the message, "pays -5 where the band below it pays 0" against the
-        // range's own refusal -- the progressive rule catching a negative bonus
-        // for a reason that says nothing about the column's floor, and the
-        // reason a bare Assert.Throws here stayed green under the same edit.
-        ContentException thrown = Assert.Throws<ContentException>(
-            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "band 50 5", "band 50 -5")));
+            () => Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "bonus 25", "bonus -25")));
 
         Assert.Contains("outside the allowed range", thrown.Message, StringComparison.Ordinal);
     }
@@ -463,7 +415,7 @@ public class RulesetTests
         Assert.Equal(authored.IncomeBasePerWave, retuned.IncomeBasePerWave);
         Assert.Equal(authored.StartingPurseGold, retuned.StartingPurseGold);
         Assert.Equal(authored.HealthPoolGold, retuned.HealthPoolGold);
-        Assert.Equal(authored.Bands.Count, retuned.Bands.Count);
+        Assert.Equal(authored.BonusPercentOfLeakCost, retuned.BonusPercentOfLeakCost);
     }
 
     [Fact]

@@ -74,8 +74,8 @@ namespace Sim
     /// <b>A vector, not a score.</b> Health, waves survived, how it ended and
     /// every score in the game are folds over those pairs, and they are computed
     /// here as folds rather than carried alongside as running totals. That is
-    /// what lets a percentile band, a placing or a retrospective be arithmetic
-    /// over a stored outcome instead of a re-simulation.
+    /// what lets what a wave was paid, a placing or a retrospective be
+    /// arithmetic over a stored outcome instead of a re-simulation.
     /// </para>
     /// <para>
     /// <b>The placing is waves survived, then health remaining.</b> The graded

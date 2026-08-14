@@ -129,6 +129,47 @@ namespace Sim
         }
 
         /// <summary>
+        /// Every creep this wave sends, priced: what the wave would cost bought
+        /// outright, whatever any of it has already been paid for.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is the ceiling on what a round can deal.</b> Leak cost sums
+        /// price times leaked over these same orders, and an order can leak at
+        /// most its whole count, so no round of this wave gets more than this
+        /// past its opponents -- which is what lets a walk over a stored stream
+        /// bound the bonus without playing a tick. See
+        /// <see cref="Purse.CloseWaveAtBest"/>.
+        /// </remarks>
+        /// <param name="costs">What every creep on this wave is priced at.</param>
+        public int FullPrice(CostTable costs)
+        {
+            if (costs is null)
+            {
+                throw new ArgumentNullException(nameof(costs));
+            }
+
+            long price = 0;
+
+            for (int index = 0; index < _orders.Length; index++)
+            {
+                price += costs.PriceOf(Purchase.Unit(_orders[index].TypeId), _orders[index].Count);
+            }
+
+            if (price > int.MaxValue)
+            {
+                throw new SimulationException(
+                    "A wave of "
+                    + TotalUnits.ToString(CultureInfo.InvariantCulture)
+                    + " creeps costs "
+                    + price.ToString(CultureInfo.InvariantCulture)
+                    + " gold, which does not fit in the 32-bit integer a purse is kept in. A wave that "
+                    + "costs more than a purse can hold is a cost column authored in the wrong units.");
+            }
+
+            return (int)price;
+        }
+
+        /// <summary>
         /// This wave as the slots a build phase would compose it from, in the
         /// order it sends them.
         /// </summary>

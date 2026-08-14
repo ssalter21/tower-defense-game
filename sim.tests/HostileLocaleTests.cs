@@ -166,9 +166,9 @@ public class HostileLocaleTests
     {
         // Every number the rules are made of, read under a culture chosen to
         // break the parse. The matrix cells, the armour expression, the floor,
-        // the interest rate and its ceiling, the income base, the bands, the
-        // health pool, the slot widths, the offering and the snapshot price are
-        // all integers a framework parser would consult a culture about.
+        // the interest rate and its ceiling, the income base, the bonus rate,
+        // the health pool, the opening purse and the snapshot price are all
+        // integers a framework parser would consult a culture about.
         string text = File.ReadAllText(RepoLayout.RulesetFile);
         Ruleset invariant = Ruleset.Parse(text);
         Ruleset hostile;
@@ -190,13 +190,7 @@ public class HostileLocaleTests
         Assert.Equal(invariant.FreeSnapshotsPerRun, hostile.FreeSnapshotsPerRun);
         Assert.Equal(invariant.SnapshotPriceGold, hostile.SnapshotPriceGold);
 
-        Assert.Equal(invariant.Bands.Count, hostile.Bands.Count);
-
-        for (int index = 0; index < invariant.Bands.Count; index++)
-        {
-            Assert.Equal(invariant.Bands[index].PercentileThreshold, hostile.Bands[index].PercentileThreshold);
-            Assert.Equal(invariant.Bands[index].BonusPercentOfBase, hostile.Bands[index].BonusPercentOfBase);
-        }
+        Assert.Equal(invariant.BonusPercentOfLeakCost, hostile.BonusPercentOfLeakCost);
     }
 
     [Theory]

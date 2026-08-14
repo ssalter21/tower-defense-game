@@ -131,12 +131,13 @@ namespace Sim
         /// is a longer list at <see cref="Of"/> and no change anywhere else.
         /// </para>
         /// <para>
-        /// <b>What a field of one collapses is the bands and not the
-        /// arithmetic.</b> The percentile a round is paid on is read off the
-        /// pool itself (ADR-0042), so a population of one puts nearly every
-        /// round above the field or below it. That is a property of the
-        /// stand-in, measured in
-        /// <c>docs/research/a-canned-field-of-one-collapses-the-bands.md</c>.
+        /// <b>What a field of one collapses is a rank and not a payment.</b> A
+        /// wave is paid a share of the leak cost it dealt, so nothing here
+        /// prices anything; a population of one puts nearly every round above
+        /// the field or below it, which is a property of the stand-in measured
+        /// in <c>docs/research/a-canned-field-of-one-collapses-the-bands.md</c>
+        /// and now bears only on <see cref="PerformanceField"/>, which nothing
+        /// consumes.
         /// </para>
         /// </remarks>
         public static FieldPool Canned(TowerLayout defense, WaveScript wave) =>

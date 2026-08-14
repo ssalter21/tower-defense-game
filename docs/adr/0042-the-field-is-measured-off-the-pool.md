@@ -1,5 +1,25 @@
 # 0042 — The distribution the bands are read off is measured from the pool, and a walk folds a ceiling
 
+> **Largely superseded by [#209](https://github.com/ssalter21/tower-defense-game/issues/209), 14 August 2026,
+> and the question of what to do about it is open.** The bands are gone: gold is paid for the health damage a
+> wave does, at a rate on leak cost dealt, so nothing reads a percentile any more. What survives from this ADR
+> is the walk's ceiling, and it survives with a better bound — the full price of the wave a stored decision
+> composes, rather than the top band.
+>
+> **What has no consumer left**: `PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the
+> `run-measure/1` draw, and the percentile lookup this ADR exists to justify. They all still compile, are all
+> still tested, and nothing in the build calls any of them — a played run no longer touches `Run.Field` at all,
+> so the **half a run per run** this ADR records is no longer being spent.
+>
+> **Whether the machinery is deleted or kept is a decision for a human, not a cleanup.** Deleting a working
+> capability is not an agent's call. What it costs to keep is one measurement's worth of code that nothing
+> exercises in anger; what it costs to delete is the only implementation of "where does a run sit against the
+> field", which a placing or a ladder would want back. See
+> [the open question](../open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it).
+>
+> The rest of this file is left as it was written. It describes rules that were in force and is a record of
+> them, not a description of the build.
+
 The economy pays a wave a flat base plus a performance bonus in progressive percentile bands. The bands, the
 percentile lookup and the payment were built with the purse (ADR-0035 and the ruleset's `band` rows); what they
 had nothing to be measured against was a **distribution of other players' rounds**, and no population of stored

@@ -523,32 +523,35 @@ public class CommandStreamTests
     {
         // Check applies nothing, so it has to fold what a round moves -- the
         // purse -- through a value of its own. It cannot fold it exactly,
-        // because a wave's income includes the band its offense reached and a
-        // walk has not played the round. So the walk closes every wave at the
-        // top band, and what it carries is a ceiling: strictly above the run's
-        // own purse for a run that did not top every band, which is this one.
+        // because a wave's income includes a share of what its offense got past
+        // and a walk has not played the round. So the walk closes every wave on
+        // the most that wave could conceivably have dealt -- its own full price,
+        // every creep of it leaking against every opponent -- and what it
+        // carries is a ceiling: at or above the run's own purse, and strictly
+        // above it for a run whose waves did not all leak whole, which is this
+        // one.
         //
         // OBSERVED: fold the purse forward without the wave's payment -- assign
         // build.Purse straight to purse in Check. The ceiling collapses to 80
         // gold and the Check below goes red on an exception, "A build phase at
-        // wave 4 buys 700 gold of creeps out of a purse holding 80": a walk
+        // wave 4 buys 680 gold of creeps out of a purse holding 80": a walk
         // that stopped paying the rounds it was walking refuses at load what it
         // has no way of knowing the run could afford.
         //
-        // The ceiling is observed by what it admits. This run holds 663 gold
-        // when its fourth build phase stands and the walk carries 772 -- three
-        // waves of the top band it did not reach, and the interest on them --
-        // so a fourth wave costing 700 is a decision the walk has to let past
-        // and the round itself has to refuse. That ordering is the whole design:
-        // everything refused at load was unaffordable however the run played.
+        // The ceiling is observed by what it admits. This run holds 666 gold
+        // when its fourth build phase stands and the walk carries 681 -- three
+        // waves whose whole price it credited them with leaking -- so a fourth
+        // wave costing 680 is a decision the walk has to let past and the round
+        // itself has to refuse. That ordering is the whole design: everything
+        // refused at load was unaffordable however the run played.
         //
         // OBSERVED, on the ceiling: close the walk's waves at
-        // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The walk
-        // then holds exactly the 663 the run itself does and the Check below
-        // goes red -- "A build phase at wave 4 buys 700 gold of creeps out of a
-        // purse holding 663" -- refusing at load rather than at the round,
-        // which is what a floor does to every decision a run's own bonus paid
-        // for.
+        // CloseWaveAtBest(run.Rules, 0) instead -- a bound of nothing dealt. The
+        // walk then holds 663, three gold under the 666 the run itself does, and
+        // the Check below goes red -- "A build phase at wave 4 buys 680 gold of
+        // creeps out of a purse holding 663" -- refusing at load rather than at
+        // the round, which is what a floor does to every decision a run's own
+        // bonus paid for.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
         CommandStream stream = CommandStream.Of(run, decisions);
@@ -566,16 +569,18 @@ public class CommandStreamTests
 
         UnitType fourth = TheBuild.FirstCreep(run.Types);
 
-        // What the last wave carries, with 64 more of one creep on the end of
+        // What the last wave carries, with 68 more of one creep on the end of
         // it. The overspend has to be an increase over what the round already
         // fields, because a creep is bought once and only the increase is
         // charged -- and every carried slot has to stay in, because a wave may
-        // only grow.
+        // only grow. Sixty-eight of them is 680 gold: over the 666 the round
+        // holds and under the 681 the walk carries, which is the window the
+        // ordering below is about and which the tighter ceiling narrowed.
         var overspent = new List<RecordCommand>(decisions)
         {
             [TheCommands.Waves - 1] = RecordCommand.Of(
                 TheCommands.Waves,
-                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 70))),
+                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 68))),
         };
 
         Assert.Equal(10, run.Costs.PriceOf(Purchase.Unit(fourth.Id)));
@@ -598,14 +603,44 @@ public class CommandStreamTests
         SimulationException refused = Assert.Throws<SimulationException>(
             () => beyond.Replay(partway));
 
-        Assert.Contains("700", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("680", refused.Message, StringComparison.Ordinal);
         Assert.Equal(TheCommands.Waves - 1, partway.Round);
 
         // The purse the round really held, which is the lower half of the
-        // ordering: the walk let 700 past on a ceiling of 772 and the round
-        // turned it down on 663. Asserted rather than described, so that a
+        // ordering: the walk let 680 past on a ceiling of 681 and the round
+        // turned it down on 666. Asserted rather than described, so that a
         // change to either number is a red test and not a stale comment.
-        Assert.Equal(663, partway.Purse.Gold);
+        Assert.Equal(666, partway.Purse.Gold);
+
+        // And the upper half: a wave over the ceiling is refused at load, before
+        // a round is played, because no run could have afforded it however well
+        // it played. Seventy of the same creep is 700 gold against a walk
+        // carrying 681 -- twenty more than the wave above, which is the width of
+        // the window the whole ordering lives in.
+        //
+        // OBSERVED: close the walk's waves at CloseWaveAtBest(run.Rules,
+        // 1000000) -- a bound nothing on this roster can reach. The Assert.Throws
+        // below goes red saying no exception was thrown: an uncapped bonus with
+        // no real bound on what a wave could deal admits every decision anybody
+        // ever stored, which is the failure WaveScript.FullPrice exists to
+        // prevent. A million rather than int.MaxValue because the latter closes
+        // the walk's purse past the range gold is counted in and refuses for
+        // arithmetic reasons instead.
+        var unaffordable = new List<RecordCommand>(decisions)
+        {
+            [TheCommands.Waves - 1] = RecordCommand.Of(
+                TheCommands.Waves,
+                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 70))),
+        };
+
+        Run never = TheCommands.Fresh();
+
+        SimulationException atLoad = Assert.Throws<SimulationException>(
+            () => CommandStream.Of(run, unaffordable).Check(never));
+
+        Assert.Contains("700 gold of creeps", atLoad.Message, StringComparison.Ordinal);
+        Assert.Contains("purse holding 681", atLoad.Message, StringComparison.Ordinal);
+        Assert.Equal(0, never.Round);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above

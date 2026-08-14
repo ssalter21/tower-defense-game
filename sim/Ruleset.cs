@@ -5,34 +5,6 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// One band of the performance bonus: the percentile a wave has to reach,
-    /// and what reaching it pays on top of the income base.
-    /// </summary>
-    public sealed class PerformanceBand
-    {
-        internal PerformanceBand(int percentileThreshold, int bonusPercentOfBase)
-        {
-            PercentileThreshold = percentileThreshold;
-            BonusPercentOfBase = bonusPercentOfBase;
-        }
-
-        /// <summary>The percentile of the field this band starts at, inclusive.</summary>
-        public int PercentileThreshold { get; }
-
-        /// <summary>What this band pays, as a percentage of the income base. Never negative.</summary>
-        public int BonusPercentOfBase { get; }
-
-        public override string ToString() =>
-            "p"
-            + PercentileThreshold.ToString(CultureInfo.InvariantCulture)
-            + " pays +"
-            + BonusPercentOfBase.ToString(CultureInfo.InvariantCulture)
-            + "%";
-
-        internal Hash64 Fold(Hash64 hash) => hash.Add(PercentileThreshold).Add(BonusPercentOfBase);
-    }
-
-    /// <summary>
     /// Every number the rules are made of, parsed from authored text, and the
     /// content hash over what was parsed.
     /// </summary>
@@ -65,13 +37,10 @@ namespace Sim
         /// Names this ruleset and its field layout inside the hash. The digit is
         /// the layout version: moving, adding or removing a field bumps it.
         /// </summary>
-        private const string HashLabel = "ruleset/3";
+        private const string HashLabel = "ruleset/4";
 
         /// <summary>The <see cref="InterestCapGold"/> that means no ceiling at all.</summary>
         public const int NoInterestCeiling = 0;
-
-        /// <summary>What a percentage is out of. Not a lever: it is what the word means.</summary>
-        private const int Percent = 100;
 
         /// <summary>
         /// The largest any factor of the damage expression may be -- a matrix
@@ -100,11 +69,10 @@ namespace Sim
         /// order of its own to disagree with the file's.
         /// </para>
         /// <para>
-        /// The damage matrix and the performance bands are row-shaped rather
-        /// than column-shaped -- three rows of a square read in attack-type
-        /// order, and however many ascending bands the file states -- so they
-        /// carry no columns and bring their own reader and their own fold. Where
-        /// they sit in this array is where they sit in the hash.
+        /// The damage matrix is row-shaped rather than column-shaped -- three
+        /// rows of a square, read in attack-type order -- so it carries no
+        /// columns and brings its own reader and its own fold. Where it sits in
+        /// this array is where it sits in the hash.
         /// </para>
         /// </remarks>
         private static readonly Rule[] Rules =
@@ -121,7 +89,9 @@ namespace Sim
                 new Column(Field.InterestCapGold, "the interest cap", 0, int.MaxValue)),
             Rule.Numbers("income", new Column(Field.IncomeBasePerWave, "the income base", 0, int.MaxValue)),
             Rule.Numbers("purse", new Column(Field.StartingPurseGold, "the starting purse", 0, int.MaxValue)),
-            Rule.RowShaped("band", 3, ReadBandRow, FoldBands),
+            Rule.Numbers(
+                "bonus",
+                new Column(Field.BonusPercentOfLeakCost, "the bonus rate", 0, int.MaxValue)),
             Rule.Numbers("health", new Column(Field.HealthPoolGold, "the health pool", 1, int.MaxValue)),
             Rule.Numbers(
                 "snapshot",
@@ -138,27 +108,23 @@ namespace Sim
         /// </summary>
         private static readonly Column[] ColumnByField = IndexColumns();
 
-        private readonly PerformanceBand[] _bands;
-
         private readonly int[] _values;
 
         private Ruleset(Draft draft)
         {
             Matrix = draft.Matrix!;
-            _bands = draft.Bands.ToArray();
             _values = draft.Values;
             ContentHash = Fold();
         }
 
         /// <summary>
-        /// The same rules with some of their numbers replaced. The matrix and
-        /// the bands are carried across by reference to the same values, so the
-        /// two rulesets differ in exactly what was asked for.
+        /// The same rules with some of their numbers replaced. The matrix is
+        /// carried across by reference to the same value, so the two rulesets
+        /// differ in exactly what was asked for.
         /// </summary>
         private Ruleset(Ruleset original, int[] values)
         {
             Matrix = original.Matrix;
-            _bands = original._bands;
             _values = values;
             ContentHash = Fold();
         }
@@ -177,6 +143,7 @@ namespace Sim
             InterestCapGold,
             IncomeBasePerWave,
             StartingPurseGold,
+            BonusPercentOfLeakCost,
             HealthPoolGold,
             FreeSnapshotsPerRun,
             SnapshotPriceGold,
@@ -227,18 +194,11 @@ namespace Sim
         public int StartingPurseGold => _values[(int)Field.StartingPurseGold];
 
         /// <summary>
-        /// The performance bonus, as bands against the field's distribution.
-        /// Ascending by threshold, starting at the zeroth percentile, and never
-        /// negative.
+        /// The performance bonus, in percent of the leak cost a wave dealt.
+        /// Uncapped: what bounds a wave's bonus is what the wave itself could
+        /// get past the field, which is its own full price.
         /// </summary>
-        public IReadOnlyList<PerformanceBand> Bands => _bands;
-
-        /// <summary>
-        /// The band that pays the most: the last one, because the bands ascend
-        /// by threshold and none of them pays less than the one below it. What
-        /// a wave earns is at most this, whatever it did.
-        /// </summary>
-        public PerformanceBand BestBand => _bands[_bands.Length - 1];
+        public int BonusPercentOfLeakCost => _values[(int)Field.BonusPercentOfLeakCost];
 
         /// <summary>The health pool a run starts with, denominated in gold.</summary>
         public int HealthPoolGold => _values[(int)Field.HealthPoolGold];
@@ -323,45 +283,6 @@ namespace Sim
         }
 
         /// <summary>
-        /// The band a wave that reached this percentile of the field falls in:
-        /// the last one whose threshold it reaches. Every band pays at least
-        /// what the one below it pays and none of them is negative, so falling
-        /// short of the field is a smaller bonus and never a penalty.
-        /// </summary>
-        /// <param name="percentile">
-        /// How much of the field the wave beat, 0 to 100. A hundred is a wave
-        /// nothing in the field matched, which is inside the top band rather
-        /// than past it.
-        /// </param>
-        public PerformanceBand BandFor(int percentile)
-        {
-            if (percentile < 0 || percentile > Percent)
-            {
-                throw new SimulationException(
-                    "A wave came in at the "
-                    + percentile.ToString(CultureInfo.InvariantCulture)
-                    + "th percentile of its field. A percentile is how much of the field the wave beat, "
-                    + "so it runs from 0 to "
-                    + Percent.ToString(CultureInfo.InvariantCulture)
-                    + " and a value outside that is a count that was never divided by the field's size.");
-            }
-
-            PerformanceBand reached = _bands[0];
-
-            for (int index = 1; index < _bands.Length; index++)
-            {
-                if (_bands[index].PercentileThreshold > percentile)
-                {
-                    break;
-                }
-
-                reached = _bands[index];
-            }
-
-            return reached;
-        }
-
-        /// <summary>
         /// The content hash: every parsed integer under the layout label, in the
         /// order <see cref="Rules"/> declares the rules that hold them. Computed
         /// from the fields rather than from whatever built them, so a parsed
@@ -382,23 +303,6 @@ namespace Sim
 
         /// <summary>The matrix, at the position in the hash its row is declared at.</summary>
         private static Hash64 FoldMatrix(Ruleset rules, Hash64 hash) => rules.Matrix.Fold(hash);
-
-        /// <summary>
-        /// The bands, counted and then folded in order. The count goes in
-        /// because a ruleset with a band removed must not hash as the prefix of
-        /// one that still has it.
-        /// </summary>
-        private static Hash64 FoldBands(Ruleset rules, Hash64 hash)
-        {
-            hash = hash.Add(rules._bands.Length);
-
-            for (int index = 0; index < rules._bands.Length; index++)
-            {
-                hash = rules._bands[index].Fold(hash);
-            }
-
-            return hash;
-        }
 
         /// <summary>
         /// A retuned number written into a copy of the values, refused where the
@@ -511,13 +415,6 @@ namespace Sim
                 Cell(source, row.Line, "the armoured cell", row.Fields[3]),
                 Cell(source, row.Line, "the arcane cell", row.Fields[4]));
 
-        private static void ReadBandRow(string source, DataText.Row row, Draft draft) =>
-            draft.AddBand(
-                source,
-                row.Line,
-                DataText.IntegerInRange(source, row.Line, "the band's percentile", row.Fields[1], 0, 99),
-                DataText.IntegerInRange(source, row.Line, "the band's bonus", row.Fields[2], 0, int.MaxValue));
-
         private static int Cell(string source, int line, string name, string field) =>
             DataText.IntegerInRange(source, line, name, field, 1, MaximumFactor);
 
@@ -585,9 +482,9 @@ namespace Sim
             internal Column[] Columns { get; }
 
             /// <summary>
-            /// True for the matrix and the bands: rules whose rows describe a
-            /// shape rather than filling a column, so that a completeness check
-            /// over them is about how many rows arrived.
+            /// True for the matrix: a rule whose rows describe a shape rather
+            /// than filling a column, so that a completeness check over it is
+            /// about how many rows arrived.
             /// </summary>
             internal bool IsRowShaped => _read is not null;
 
@@ -662,8 +559,6 @@ namespace Sim
 
             internal DamageMatrix? Matrix { get; private set; }
 
-            internal List<PerformanceBand> Bands { get; } = new List<PerformanceBand>();
-
             /// <summary>Every number a column filled, indexed by its field.</summary>
             internal int[] Values { get; } = new int[(int)Field.Count];
 
@@ -729,53 +624,6 @@ namespace Sim
                 }
             }
 
-            /// <summary>Adds a band, in ascending order and never paying less than the one below it.</summary>
-            internal void AddBand(string source, int line, int threshold, int bonus)
-            {
-                if (Bands.Count == 0 && threshold != 0)
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "opens the bands at the "
-                        + threshold.ToString(CultureInfo.InvariantCulture)
-                        + "th percentile. The first band starts at zero, so that every wave falls in one "
-                        + "and the bonus is never undefined for a wave that did badly.");
-                }
-
-                if (Bands.Count > 0)
-                {
-                    PerformanceBand below = Bands[Bands.Count - 1];
-
-                    if (threshold <= below.PercentileThreshold)
-                    {
-                        throw new ContentException(
-                            source,
-                            line,
-                            "starts at the "
-                            + threshold.ToString(CultureInfo.InvariantCulture)
-                            + "th percentile, at or below the "
-                            + below.PercentileThreshold.ToString(CultureInfo.InvariantCulture)
-                            + "th above it. Bands ascend strictly down this file, which is what makes the "
-                            + "band a wave falls in the last one it reaches.");
-                    }
-
-                    if (bonus < below.BonusPercentOfBase)
-                    {
-                        throw new ContentException(
-                            source,
-                            line,
-                            "pays "
-                            + bonus.ToString(CultureInfo.InvariantCulture)
-                            + " where the band below it pays "
-                            + below.BonusPercentOfBase.ToString(CultureInfo.InvariantCulture)
-                            + ". The bands are progressive: doing better never pays less.");
-                    }
-                }
-
-                Bands.Add(new PerformanceBand(threshold, bonus));
-            }
-
             /// <summary>Every rule stated, or a refusal naming the first one that was not.</summary>
             internal void RequireEverything(string source)
             {
@@ -789,15 +637,6 @@ namespace Sim
                         + " of the "
                         + DamageMatrix.AttackTypes.ToString(CultureInfo.InvariantCulture)
                         + " 'matrix' rows the damage matrix is made of.");
-                }
-
-                if (Bands.Count == 0)
-                {
-                    throw new ContentException(
-                        source,
-                        0,
-                        "has no 'band' rows, so the performance bonus has no distribution to be measured "
-                        + "against and every wave would be paid an amount nobody authored.");
                 }
 
                 for (int index = 0; index < Rules.Length; index++)

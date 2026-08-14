@@ -103,6 +103,31 @@ choice and not a capacity one — and it is the cadence question viewed from the
 **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those are
 one ladder or two is unresolved.
 
+### Is the field measurement kept, now that nothing prices off it?
+
+**A decision for a human, raised by [#209](https://github.com/ssalter21/tower-defense-game/issues/209) and
+deliberately not taken by it.** Gold is now paid for the health damage a wave does, so the payment reads no
+distribution and no rank. That leaves `PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the
+`run-measure/1` draw and the percentile lookup compiling, tested, and called by nothing —
+[ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md) is largely superseded, its own recorded cost
+included.
+
+**What keeping it costs is now nearly nothing, which is the surprise.** The measurement was lazy already and a
+played round no longer asks for it, so the **half a run per run** the ADR records — the committed sweep going
+from 9,600 matches to 14,400, and from about eight seconds to thirteen — is not being spent. What is left is
+one measurement's worth of code that nothing exercises in anger, which is the ordinary cost of a capability
+kept warm: it can rot without anything going red.
+
+**What deleting it costs is the only answer on file to "where does this run sit against the field".** A placing,
+a ladder, a percentile shown to a player, or a bonus that goes back to being relative all want exactly this,
+and it is about a hundred lines with an ADR behind it. [#208](https://github.com/ssalter21/tower-defense-game/issues/208)
+is a question about this measurement's *shape* and waits on the answer here: if the machinery goes, #208 goes
+with it.
+
+**Three answers, and the middle one is not obviously wrong.** Delete it and take it back off git if it is
+wanted. Keep it as it stands and accept untested-in-anger code. Or keep it and give it a consumer that is not
+the purse — the sweep reporting where a run sat is the cheap one.
+
 **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** **Current assumption:
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send
 someone who does not have the game is a different artefact from one you watch in the client.

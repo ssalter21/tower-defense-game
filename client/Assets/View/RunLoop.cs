@@ -49,9 +49,9 @@ namespace View
     /// </para>
     /// <para>
     /// <b>The field is a number and the player watches one member of it.</b> A
-    /// round resolves against K opponents; the rest of them are the band that
-    /// feeds the purse, and drawing one of them is what a round looks like. See
-    /// <see cref="WatchedOpponent"/>.
+    /// round resolves against K opponents and is paid on the average of what it
+    /// got past them, so the rest of them feed the purse too; drawing one of
+    /// them is what a round looks like. See <see cref="WatchedOpponent"/>.
     /// </para>
     /// <para>
     /// <b>Two screens, and the second one has two views.</b> Building is a
@@ -88,8 +88,8 @@ namespace View
         /// The first, always, because a round has to be watched against
         /// somebody and every choice among K identically-derived pairings is
         /// arbitrary. It is not <c>fieldSize: 1</c>: the round still resolves
-        /// against the whole field, and the other K-1 pairings are what the
-        /// performance band — and therefore the purse — is measured from.
+        /// against the whole field, and what the wave dealt — and therefore what
+        /// the purse is paid — is the average over all K of them.
         /// </remarks>
         public const int WatchedOpponent = 0;
 

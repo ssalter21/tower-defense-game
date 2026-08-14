@@ -41,12 +41,11 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The canned field is the economy's stand-in and not a tool pointed at
-    /// it.</b> The percentile bands are measured against a distribution of other
-    /// players' rounds, and no such pool exists until runs are stored, so the
-    /// pool a sweep is handed <i>is</i> what the bands are computed against --
-    /// what a run earns for its offense is decided by the harness's own canned
-    /// opponent. <see cref="SweepRow.BonusGold"/> is that money, on the row,
-    /// beside the base it is a share of.
+    /// it.</b> A wave is paid a share of the leak cost it dealt, and what a wave
+    /// gets past is decided by the wall in front of it -- so the pool a sweep is
+    /// handed is what a run's offense earns its money against.
+    /// <see cref="SweepRow.BonusGold"/> is that money, on the row, beside the
+    /// base it is a share of.
     /// </para>
     /// <para>
     /// <b>What <see cref="SweepRow.DealtPerHundredGold"/> measures, and what it
@@ -182,9 +181,9 @@ namespace Sim
             }
 
             // The bonus is read off the finished vector rather than added up as
-            // the rounds went by: what each round dealt is on the vector, the
-            // field is fixed for the run, and the bands are a lookup -- so what
-            // a run earned for its offense is a fold and never a second play.
+            // the rounds went by: what each round dealt is on the vector and the
+            // rate is a multiplication, so what a run earned for its offense is
+            // a fold and never a second play.
             //
             // The purse is read where the loop stopped, which is the end of the
             // run by either of the two ways one ends.
@@ -196,7 +195,7 @@ namespace Sim
                 plan.Waves,
                 run.Round,
                 (long)plan.Rules.IncomeBasePerWave * run.Round,
-                Purse.BonusOver(plan.Rules, run.Field, run.Outcome));
+                Purse.BonusOver(plan.Rules, run.Outcome));
         }
 
 

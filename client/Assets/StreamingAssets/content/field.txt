@@ -6,7 +6,7 @@
 # population is this one pair -- this wave, standing behind the committed
 # defense -- drawn with replacement, so a field of ten is this opponent ten
 # times. That makes the harness part of the economy rather than a tool pointed
-# at it: the percentile bands are measured against whatever is in here.
+# at it: what a run's wave is paid for getting past is whatever is in here.
 #
 # IT IS NOT wave.txt, AND THE DIFFERENCE IS THE WHOLE POINT. That file is the
 # skeleton's authored match -- forty creeps, three hundred and eighty gold of
@@ -49,21 +49,24 @@
 # neither of those reports says anything about a creep.
 #
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
-# calibration argument carries. A round of this opponent is worth about
-# seventeen gold, which sits under what a run's own wave gets past it, so
-# roughly half a run's rounds clear the top band and the bonus comes out
-# between eight and thirteen percent of the flat base, creep by creep. Against
-# wave.txt, whose rounds are worth about a hundred and twenty-five, no run
-# clears the bottom band and the bonus is zero on every row -- a field that
-# outspends every opponent it faces turns the offense half of the economy off
+# calibration argument carries -- more directly than it used to. The bonus is a
+# share of the leak cost a run's wave dealt, so this opponent's WALL is what
+# decides it: swept at the committed shape the roster's five earn between 9,288
+# and 12,586 gold of bonus against 13,440 of flat base, and the column separates
+# them creep by creep. Against wave.txt, which outspends every opponent it faces
+# three and a half times over, a run gets nothing past and the bonus is zero on
+# every row -- a field of that shape turns the offense half of the economy off
 # as well as the win-rate column.
 #
-# ONE MEMBER IS A DISTRIBUTION WITH ALMOST NO SPREAD, AND THAT IS THIS FILE'S
-# REAL LIMIT. Ten samples of one opponent land between fourteen and nineteen
-# gold, so a round is above the field or below it and almost never inside it:
-# the 50th and 75th bands are unreachable in practice, and the four authored
-# bands behave as two. The measured evidence, and what a pool of four does
-# instead, is in docs/research/a-canned-field-of-one-collapses-the-bands.md.
+# THAT COLUMN USED TO BE A BINARY, WHICH IS HOW #209 WAS FOUND. Four percentile
+# bands worth at most a fifth of the base paid four of the five creeps exactly
+# 2,376 gold, and a round dealing eighteen times another round's damage was paid
+# the same. One member is a distribution with almost no spread -- ten samples of
+# one opponent land between fourteen and nineteen gold -- so the middle bands
+# were unreachable and four authored bands behaved as two. The measured evidence
+# is in docs/research/a-canned-field-of-one-collapses-the-bands.md. Nothing
+# prices off that spread any more; whether it is still measured at all is an
+# open question, in docs/open-questions.md.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 # Orders ascend by tick and then by type id, and that order is asserted rather

@@ -776,3 +776,86 @@ Written down now because the shape of the bill is the argument for settling the 
   state, capstoning is a placement action nobody has priced, and both cross the command stream.
 - **A question the sweep cannot currently ask**: whether a capped slot ever strands gold. `EvenShareBot`
   fills one slot a round, so nothing in `content/sweep.csv` today touches a bound of any kind.
+
+---
+
+## 14 August 2026, last of the day — gold is paid for the damage a wave does
+
+Implementing [#209](https://github.com/ssalter21/tower-defense-game/issues/209), raised by the developer
+reading the committed run: *"what is the gold gain based on? It was supposed to be based on how much health
+damage you do with your offense creep wave."* It was not. It was based on your **rank** against the field.
+
+### What it said, and what is true now
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§3** — one purse | Income is a flat base **plus a bonus in non-linear percentile bands over two distributions**: how your wave performed and how your defense performed, each against the field | **The bonus is proportional to the leak cost your wave dealt, uncapped.** One ruleset row, `bonus 25`, and every point of health damage pays gold at that rate |
+| **§3** — one purse | The bonus is paid over **two** distributions, the wave's and the defense's | **The second half never existed and is not going in.** A defense already pays by not costing you health, and health is the run's clock. The claim came out of the vision rather than the code going in to meet it |
+| **§3** — the coupling | You are paid against the field's distribution, never a named opponent | **You are paid for what your wave dealt.** No money still moves between players, and the reason is now simpler rather than statistical |
+
+### The bands were paying a binary, and the committed run is the evidence
+
+The bands paid 0, 5, 10 or 20 percent of a 168-gold base — one of 0, 8, 16 or 33 gold. Against the canned field
+of one they [collapse to two](research/a-canned-field-of-one-collapses-the-bands.md), so in practice the wave
+was answering *did anything get through*. Four rounds of the committed run, before and after:
+
+| Round | Leak cost dealt | Bonus under the bands | Bonus at 25% |
+|---|---|---|---|
+| 4 | 36 | 33 | **9** |
+| 6 | 198 | 33 | **49** |
+| 9 | 416 | 33 | **104** |
+| 10 | 673 | 33 | **168** |
+
+Eighteen times the damage was paid identically; it is now paid about eighteen times as much. **25% is a
+starting figure and a sweep target**, exactly as the base and the creep costs are.
+
+### The ceiling got better rather than being given up
+
+The load walk folds the purse forward at the most a round could have earned, so that a stored decision refused
+at load was unaffordable however the run played
+([ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md)). An uncapped bonus reads like the end of that, and
+is not: leak cost sums price times leaked over a wave's own orders, so a round deals at most **the full price
+of the wave it sent** — computable from the stored slots without playing anything. The bound is now much
+tighter, and the test that watches it says so: the walk used to carry 772 gold into the committed fixture's
+fourth phase against a real purse of 663, and now carries 681 against 666.
+
+### The behaviour fingerprint could not see this, for the third time
+
+Simulation version to **5**, which retires every record made under 4. Under `rule-fingerprint/3` this build's
+fingerprint came out `67E9F86CA94BE2D6` — **byte for byte version 4's**. All three halves of that fold resolve
+matches and build phases and not one of them closes a wave, so the rule that moved lived somewhere the fold
+could not reach. It gained a fourth half — what a wave pays a purse, itemised, and the ceiling a walk folds
+instead — and the label went `rule-fingerprint/3` → `rule-fingerprint/4`. Reverting the payment to a flat share
+of the base now moves the number `B234D73EC659D3A7` → `80A3DB0779957EA1`, which was watched rather than
+reasoned about.
+
+**The new half is folded through a ruleset written out in the test file**, not through
+`content/ruleset.txt`. The payment is arithmetic over authored numbers, so folding the committed file would
+make a retune of the bonus rate move the fingerprint and retire every record made under rules nobody changed —
+which is the exact confusion the fingerprint exists to tell apart from a rule change.
+
+### ADR-0042 is largely superseded, and what to do about that is a human's call
+
+`PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the `run-measure/1` draw and the
+percentile lookup exist only to price the bonus, and now have no consumer. **Nothing was deleted**: deleting a
+working capability is not an agent's call, and the question is written down as an
+[open one](open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it) with what each
+answer costs. One consequence is already banked either way — a played round no longer reads `Run.Field`, so the
+**half a run per run** the ADR records as its price is not being spent.
+
+### What regenerated, and what did not need to
+
+`content/commands.txt` **did not need re-authoring**, which was the open risk: the early rounds send nothing
+and are paid nothing, and the run still plays all ten waves. The ruleset hash moved (`7E1DA52C5F85D545` →
+`D01EB9595248D3C9`), so `content/run.commands`, `content/run-outcome.txt`, `content/match.replay`, the goldens
+and the streaming copy all regenerated.
+
+**`content/sweep.csv` moved on every row, and the `bonus_gold` column stopped being a binary.** Under the bands
+four of the five creeps earned *exactly* 2,376 gold over eight runs each — the failure this ticket is about,
+sitting in the committed report where nobody read it. They now earn 9,288, 10,060, 10,901, 12,052 and 12,586
+against a flat base of 13,440, which separates them in the order their leak cost dealt already did. The rest of
+the report moved with it: leak cost dealt rose by a fifth to a third, the runs bank two and a half times as
+much unspent gold, and cost efficiency fell from 362–442 to 316–360 because the extra income buys creeps faster
+than they pay for themselves at this rate. **The win-rate column says nothing either way** — it was already
+saturated at 10000 basis points on every row before this ticket, from #207. 25% is a starting figure and the
+sweep is where it gets moved.

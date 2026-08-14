@@ -460,9 +460,9 @@ public class RunTests
     [Fact]
     public void Health_and_waves_survived_are_folds_over_the_vector_and_need_no_re_simulation()
     {
-        // The whole reason the outcome is a vector: a percentile band, a
-        // placing or a retrospective computed later is arithmetic over what was
-        // stored, and nothing has to be simulated twice to get it.
+        // The whole reason the outcome is a vector: a placing or a
+        // retrospective computed later is arithmetic over what was stored, and
+        // nothing has to be simulated twice to get it.
         //
         // OBSERVED: fold the run against `_rules.HealthPoolGold * 2` in
         // Run.Folded, so that the run's own health comes off a pool the vector
@@ -486,7 +486,7 @@ public class RunTests
     }
 
     [Fact]
-    public void The_distribution_the_bands_are_measured_against_comes_out_of_the_pool()
+    public void The_distribution_a_run_is_ranked_against_comes_out_of_the_pool()
     {
         // The canned field is a parameter and not a fixture: the pool a run is
         // handed IS the population its percentile is a percentile of, so
@@ -494,11 +494,14 @@ public class RunTests
         // that one argument and nothing else. A run cannot be given a pool and a
         // distribution that disagree, because there is only the one of them.
         //
+        // NOTHING IN THIS BUILD PRICES ANYTHING OFF IT -- a wave is paid a share
+        // of what it dealt. See docs/adr/0042, which is open for a decision on
+        // whether this measurement is kept at all.
+        //
         // OBSERVED: measure nothing -- return PerformanceField.Of(new int[0])
         // from Run.MeasureField, which is the Absent a run carried before there
         // was a pool to measure. This goes red on the first assertion, IsPresent
-        // against a field of nobody, and the run goes back to paying the base
-        // alone.
+        // against a field of nobody.
         Run run = TheRun.Fresh(waves: 4, fieldSize: 4);
 
         Assert.True(run.Field.IsPresent);
@@ -530,16 +533,15 @@ public class RunTests
     {
         // A round of a run that shops moves the purse three ways: the build
         // phase takes what its wave cost out of it, the bank pays interest on
-        // whatever survived that, and the wave pays the flat base and the band
-        // its offense reached in the field. Folded here out of the stored
-        // vector, the run's own field and what each round reported spending,
-        // with no match resolved and no tick replayed -- and it has to come out
-        // at the gold the run actually holds.
+        // whatever survived that, and the wave pays the flat base and a share of
+        // what its offense got past. Folded here out of the stored vector and
+        // what each round reported spending, with no match resolved and no tick
+        // replayed -- and it has to come out at the gold the run actually holds.
         //
         // The run spends a third of its purse a round, so all three lines are
         // real numbers rather than one line and two zeroes: it buys every round,
         // it banks the rest at compound interest, and every one of its ten
-        // rounds is placed above the bottom band.
+        // rounds gets something past.
         //
         // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
         // outcome.LeakCostDealt in Run.Play. The purse assertion goes red: the
@@ -549,8 +551,8 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 824 against 8399: the 4000 gold of
-        // creeps, and the interest a bank that never paid for them would have
+        // over bought nothing. It goes red at 6488 against 21605: the 9540 gold
+        // of creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
         Ruleset rules = run.Rules;
@@ -570,20 +572,19 @@ public class RunTests
             spent += rounds[round].Build.Spent;
             folded = Purse.Holding(folded.Gold - rounds[round].Build.Spent);
 
-            WavePayment paid = folded.CloseWave(
-                rules, run.Field, run.Outcome.Rounds[round].LeakCostDealt);
+            WavePayment paid = folded.CloseWave(rules, run.Outcome.Rounds[round].LeakCostDealt);
 
             bonus += paid.Bonus;
             folded = paid.Purse;
         }
 
         Assert.Equal(run.Purse.Gold, folded.Gold);
-        Assert.Equal(bonus, Purse.BonusOver(rules, run.Field, run.Outcome));
+        Assert.Equal(bonus, Purse.BonusOver(rules, run.Outcome));
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(4000, spent);
-        Assert.Equal(330, bonus);
+        Assert.Equal(9540, spent);
+        Assert.Equal(10417, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -925,26 +926,23 @@ public class RunTests
     }
 
     [Fact]
-    public void A_round_whose_field_measurement_refuses_leaves_the_run_exactly_where_it_was()
+    public void A_run_plays_its_rounds_without_measuring_the_field_at_all()
     {
-        // The second of the three things a round can refuse at. What a round of
-        // the pool is worth is measured on first use, which is inside the first
-        // round of the run, and measuring plays matches of its own -- so it can
-        // refuse for the reason a round's own matches can.
+        // What the proportional bonus took off the price of a round. A wave is
+        // paid a share of what it dealt, so nothing a round does reads the
+        // distribution -- and the measurement, which plays FieldSamples rounds
+        // of the pool and cost about half a run per run, never happens.
         //
-        // The measurement is the only thing here that reaches for that refusal,
-        // and the pool is two members so that it is. Ruinously priced, the long
-        // wave costs more than a purse can hold once it leaks and the short one
-        // does not; the round is fought against the short member and the
-        // measurement draws the long one. Measured: with the Field read in
-        // Run.Play moved back down to the CloseWave call, so that the round's
-        // own matches all resolve first, this still throws -- none of them was
-        // ever over the limit.
+        // The pool is two members and both are ruinously priced: the long wave
+        // leaks more gold than a purse can hold and the short one does not. The
+        // round's own draw lands on the short member; the measurement samples
+        // both, so the measurement running at all is a refusal this round cannot
+        // otherwise reach.
         //
-        // OBSERVED: give the pool's second member the short wave too --
-        // TheRun.Orders(types, 6, 1) for both. The test goes red having caught
-        // nothing, because the round plays out: no match in it, measured or
-        // fought, leaks more gold than a purse can hold.
+        // OBSERVED: read Field in Run.Play, as it did while the bands priced the
+        // bonus. The Advance goes red on "does not fit in the 32-bit integer
+        // health and gold", which is the measurement's own matches resolving
+        // inside a round that had no use for them.
         UnitTypeTable types = TheRun.RuinouslyPricedTypes();
         Ruleset rules = TheRuleset.Committed();
 
@@ -953,24 +951,25 @@ public class RunTests
             rules,
             types,
             TheLadder.Committed(types),
-            FieldPool.Of(new[] { TheRun.Orders(types, 6, 1), TheRun.Orders(types, 6, 6) }),
+            FieldPool.Of(new[] { TheRun.Orders(types, 6, 6), TheRun.Orders(types, 6, 1) }),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
 
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing()));
+        run.Advance(TheBuild.BuyingNothing());
+
+        Assert.Equal(1, run.Round);
+        Assert.Single(run.Outcome.Rounds);
+
+        // And the measurement is still there for whoever asks for it, which is
+        // the capability docs/adr/0042 is open about keeping: asked, it refuses
+        // on the member the round never met.
+        SimulationException thrown = Assert.Throws<SimulationException>(() => run.Field);
 
         Assert.Contains(
             "does not fit in the 32-bit integer health and gold",
             thrown.Message,
             StringComparison.Ordinal);
-
-        Assert.Equal(0, run.Round);
-        Assert.Empty(run.Sent);
-        Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(rules.HealthPoolGold, run.Health);
-        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
     }
 
     [Fact]
@@ -1034,10 +1033,10 @@ public class RunTests
         // payment's purse is the one the run now holds.
         //
         // OBSERVED: compose the report's payment from
-        // build.Purse.CloseWaveAtBest(Rules) -- the ceiling the load walk
-        // carries -- rather than from the payment the round made. The closing
-        // assertion goes red, 192 against 212: a report of what a wave earned
-        // that says what it could have earned instead.
+        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs))
+        // -- the ceiling the load walk carries -- rather than from the payment
+        // the round made. The closing assertion goes red: a report of what a
+        // wave earned that says what it could have earned instead.
         Run run = TheBuild.Fresh(waves: 2);
 
         UnitType first = TheBuild.FirstCreep(run.Types);

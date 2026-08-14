@@ -68,7 +68,7 @@ namespace Sim
         /// the ruleset and refusing anything the harness cannot play.
         /// </summary>
         /// <param name="map">The board every match of every run is fought on.</param>
-        /// <param name="rules">The matrix, the purse, the bands and the dials below.</param>
+        /// <param name="rules">The matrix, the purse, the bonus rate and the dials below.</param>
         /// <param name="types">The roster the rows are scored over and every cost is read out of.</param>
         /// <param name="ladder">The upgrade edges a placement is refused against.</param>
         /// <param name="field">

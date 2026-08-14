@@ -63,11 +63,10 @@ directly, so an Archer must stand before a Ranger can.
 
 ## Three obligations the sequence carries
 
-- **Step 1 builds the whole economy, not the easy half.** One purse, a flat base plus percentile-band bonuses,
-  10% interest on the bank, and a purchase that is permanent. The trap is shipping the cost column and the
-  base income and calling it done: the base needs nothing to measure against, and the bands — which do, and
-  which are what stops attacking being dominated — are what gets dropped. The harness's canned pool is the
-  distribution the bands read until real ghosts are stored. [§3](vision.md#one-purse)
+- **Step 1 builds the whole economy, not the easy half.** One purse, a flat base plus a bonus proportional to
+  the leak cost a wave dealt, 10% interest on the bank, and a purchase that is permanent. The trap is shipping
+  the cost column and the base income and calling it done: the base pays a wave for happening, and the bonus —
+  which is what stops attacking being dominated — is what gets dropped. [§3](vision.md#one-purse)
 - **Step 2 opens the input seam, and is the one place worth being slow.** ADRs and tests assert that no input
   reaches the simulation, and that discipline is why determinism holds. The shape that preserves it: **the view
   emits a command, the command goes into the record, the record is what the match consumes.** Done that way
@@ -207,9 +206,9 @@ The tool and the definitions underneath it: what a sweep is, what it measures, w
 is paid for once, against every round of the run that is left — and how a verdict gets back into `content/`
 without invalidating a pool of stored ghosts.
 
-**It owes step 1 a debt it does not obviously owe.** The percentile bands are measured against a field, and
-there is no field until step 6 — so the sweep's canned set is what the economy measures against meanwhile. That
-makes the harness part of the economy rather than a tool pointed at it.
+**It owes step 1 less than it used to.** The bonus was measured against a field until #209 made it a share of
+what a wave dealt; a round is still resolved against K opponents drawn from the sweep's canned set, so the
+harness is still what a run's damage is dealt *to* — but nothing about the payment waits on step 6 any more.
 
 **It waits for no other seam.** At 2.75 ms a match it is a `simcli` mode and a CSV. If the generative direction
 is ever adopted, its documented failure mode — a U-shaped meta where the widest and narrowest builds dominate —

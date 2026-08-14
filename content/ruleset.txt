@@ -126,27 +126,34 @@ income        168
 
 purse         100
 
-#         band  percentile  percent
+#         bonus  percent
 #
-# The performance bonus, paid on top of the base in progressive percentile
-# bands measured against the field. THE BANDS ARE NEVER NEGATIVE: performing
-# below average earns a smaller bonus and never a penalty. Thresholds ascend
-# strictly, the first is zero so every wave falls in a band, and no band pays
-# less than the one below it. Nothing here moves gold between players: a wave
-# is paid against the field's distribution and never against a named opponent,
-# so it reads the same whether the field is one lobby or a population.
+# The performance bonus, as a share of what a wave got past the field. Leak cost
+# dealt is priced in gold -- a leaked creep costs its own price, one for one --
+# so this row says what one point of health damage pays. A wave that deals
+# eighteen times as much is paid eighteen times as much, which is the whole of
+# the rule: gold is earned for the damage a wave does and for nothing else.
 #
-# THESE BANDS PAY, AND WHAT THEY ARE MEASURED AGAINST IS THE POOL A RUN WAS
-# HANDED. A run prices ten of the pool's own rounds and reads its percentile off
-# that spread, so the canned opponent field.txt describes is the distribution
-# today and a stored population of real rounds is the same argument tomorrow.
-# Retuning a threshold or a percentage here is an edit to these four lines and
-# no compile.
+# IT IS NOT CAPPED, AND WHAT BOUNDS IT IS THE WAVE. Leak cost sums price times
+# leaked over a wave's own orders, so a round can deal at most the full price of
+# the wave it sent -- every creep leaking against every opponent. That number is
+# computable from a stored decision without playing anything, which is what lets
+# the load walk fold a stored stream at a real ceiling instead of admitting
+# everything.
+#
+# NOTHING HERE MOVES GOLD BETWEEN PLAYERS. A wave is paid for what it dealt and
+# never against a named opponent, so the rate reads the same whether the field
+# is one lobby or a population, and beating somebody takes nothing off them.
+#
+# HOLDING THE DEFENSE WELL PAYS NOTHING EXTRA, deliberately. A defense already
+# pays by not costing health, and health is the run's clock.
+#
+# 25 IS A STARTING FIGURE AND A SWEEP TARGET, exactly as the income base above
+# and the creep costs are. What it replaced paid one of 0, 8, 16 or 33 gold off
+# four percentile bands, so a round dealing 673 and a round dealing 36 were paid
+# the same 33 -- eighteen times the damage for identical pay.
 
-band            0        0
-band           50        5
-band           75       10
-band           90       20
+bonus          25
 
 #         health  gold
 #

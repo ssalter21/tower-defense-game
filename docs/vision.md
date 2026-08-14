@@ -139,9 +139,9 @@ and nothing else** — in tension with [the attacking half being as deep as the 
 one](#depth-is-the-point), which [seam 1](build-order.md#1--the-match-format) reconciles.
 
 **A run's outcome is a vector, not a score:** per round, `(leak cost dealt, leak cost taken)`, plus how the run
-terminated. Health, waves survived and any score are folds over it; a scalar would force re-simulation to
-recover the two distributions the percentile bands read. A round's **offense** score is the average of the ten
-rather than the best, symmetric with the damage rule.
+terminated. Health, waves survived, any score and what every wave was paid are folds over it; a scalar would
+force re-simulation to recover them. A round's **offense** score is the average of the ten rather than the
+best, symmetric with the damage rule.
 
 ### One purse
 
@@ -153,9 +153,10 @@ The objection a single wallet must answer: a coin spent attacking is simply gone
 loss and, at equilibrium, **dominated**. The answer is a payback, and a second currency is not the cheapest way
 to supply one.
 
-- **Attacking pays back through performance, not a second wallet.** Income is a flat base per wave **plus a
-  bonus on top**, paid in non-linear percentile bands over two distributions: how your wave performed, and how
-  your defense performed, each against the field.
+- **Attacking pays back through damage, not a second wallet.** Income is a flat base per wave **plus a bonus
+  on top, at 25% of the leak cost your wave dealt**. Every point of health damage pays gold at that rate,
+  uncapped: a wave that deals eighteen times as much is paid eighteen times as much. **Holding your defense
+  well pays nothing extra** — a defense already pays by not costing you health, and health is the run's clock.
 - **A creep is bought once and attacks every round after.** Buying is permanent: what you paid for in round
   three is still walking in round ten, and the round is charged only for what it *adds* to the wave. So an
   early purchase compounds — it is a stream of leak cost for the rest of the run rather than one round's
@@ -176,15 +177,18 @@ Each build phase therefore stays one decision over one wallet, and the three gat
 exception.
 
 **No money moves between players.** Denial — Legion TD 2's rule that leaking pays the attacker — is rejected.
-The coupling is **statistical**: you are paid against the field's distribution, never a named opponent, which
-reads the same whether the field is one lobby or a global population. Bands are progressive and never negative.
+You are paid for what your wave dealt, never against a named opponent, so the payment reads the same whether
+the field is one lobby or a global population and beating somebody takes nothing off them. The rate is never
+negative: a wave is never charged for attacking.
 
-Base, thresholds and creep costs are sweep targets, and a permanent purchase makes the last of those the
-sharpest of them: a creep's price is paid once against every remaining round of leak cost it deals, so a small
-retune of the cost column moves a whole run. One consequence: **the bonus needs
-a distribution to measure against**, and until real ghosts are stored the harness's canned field supplies one —
-which cannot tell the middle bands apart, so four authored bands behave as two until a real pool exists
-([measured](research/a-canned-field-of-one-collapses-the-bands.md)).
+**The bonus is bounded by the wave and by nothing else.** Leak cost sums price times leaked over a wave's own
+orders, so a round deals at most the full price of the wave it sent — which is computable from a stored
+decision without playing anything, and is what lets a stored stream still be refused at load for a decision no
+run could have afforded.
+
+Base, rate and creep costs are sweep targets, and a permanent purchase makes the last of those the sharpest of
+them: a creep's price is paid once against every remaining round of leak cost it deals, so a small retune of
+the cost column moves a whole run.
 
 ### Depth is the point
 
@@ -667,7 +671,7 @@ free or paid.
   Breach's calibration, and hiding any of it would only tax the players who do not keep a spreadsheet.
   **"Damage preview" means one shot, not one round** — showing what your *wave* does to a *field* is a
   forecast, and there is no such thing in this game.
-- **Outcome is not computed at all.** No preview, no dummy defense, no distribution, no band, no number that
+- **Outcome is not computed at all.** No preview, no dummy defense, no distribution, no rate, no number that
   predicts a result. **The offense in particular gets nothing**: a wave is composed from the rules and from
   memory, which gives the two halves genuinely different textures — the defense is engineering, the offense is
   judgement. The one pre-commit channel is [scouting incoming waves](#scouting-depends-on-the-mode).

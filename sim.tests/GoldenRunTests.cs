@@ -108,8 +108,8 @@ public class GoldenRunTests
         // The round is the whole of what a round reported: the pair, what the
         // wave cost and what it paid the purse. The economy is pinned round by
         // round for the reason the pair is -- an interest rate that compounded
-        // differently or a band that paid the wrong share moves a number here
-        // long before it moves health.
+        // differently or a bonus rate that paid the wrong share moves a number
+        // here long before it moves health.
         //
         // OBSERVED: doctor content/run-outcome.txt. Wave six's "dealt 206" to
         // "dealt 260" reddens the round-six assertion and nothing else; the

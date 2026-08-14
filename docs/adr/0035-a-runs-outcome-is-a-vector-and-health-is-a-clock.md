@@ -51,8 +51,10 @@ disagree, which is the whole reason both are reported.
 
 ## What was rejected
 
-**A single score.** It cannot be recomputed against a distribution that did not exist when the run was
-played, which is every distribution the bands are measured against.
+**A single score.** It cannot be recomputed against a distribution that did not exist when the run was played,
+and a placing is exactly that. (The performance bonus was a second such consumer until
+[#209](https://github.com/ssalter21/tower-defense-game/issues/209) made it a share of what a wave dealt; what
+that changed is where the bonus is read from, not that the vector is what it is read from.)
 
 **Health as its own currency.** A second denomination needs an exchange rate, and an exchange rate is a table
 nobody can check by eye. Gold is the only denomination in the game and health is spent in it.
