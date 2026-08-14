@@ -57,9 +57,9 @@ namespace View
     /// <b>The session is proved before it is kept.</b> At the end the decisions
     /// are compiled into a command script, played into a run built fresh on the
     /// same seed and the same shape, and held round for round against what the
-    /// player was shown — <see cref="ProvedSession"/>, which is the same claim
-    /// <c>simcli play</c> makes at a prompt. A session that disagrees hands back
-    /// no script, so nothing is written. A playtest is a determinism test.
+    /// player was shown — <see cref="ProvedSession"/>. A session that disagrees
+    /// hands back no script, so nothing is written. A playtest is a determinism
+    /// test.
     /// </para>
     /// <para>
     /// <b>A run does not survive quitting.</b> There is no save and no resume:

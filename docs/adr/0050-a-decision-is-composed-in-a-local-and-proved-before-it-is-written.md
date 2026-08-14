@@ -1,5 +1,20 @@
 # 0050 — A decision is composed in a local and proved before it is written
 
+> **The verb this was decided about is deleted — [#200](https://github.com/ssalter21/tower-defense-game/issues/200), 14 August 2026.**
+> `simcli play` is gone, and with it `BuildPrompt`, `RoundFrame`, `TypedLine`, `RunPrompt` and the shell's
+> `Written` extension. Read every present tense below as the shell's, at the time.
+>
+> **What was decided stands, and the client is where it is spent.** A round is still composed in a local, still
+> priced by the call that would refuse it, still handed to the run by exactly one commit, and still proved by
+> replaying its own compiled script into a fresh run before anything is kept — which is
+> [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md), this shape at the screen.
+> `PlayedScript` and `ProvedSession` are in `sim/`, and the file is the caller's:
+> `client/Assets/View/WrittenRun.cs` is now the only half that opens one. The guarantee that carried the whole
+> step — a session that disagreed hands back **no script at all** — is the script's own and is unweakened.
+>
+> Why the verb went is [the decision log's](../decision-log.md#the-interactive-verb-is-not-what-the-shell-is-for);
+> what it was built from is [the archived specification](../archive/playing-a-run-from-a-shell.md).
+
 The interactive verb adds no simulation surface. `play` composes a round's `BuildPhase` **in a local**, prices
 it after every typed word by calling the pure `BuildPhase.Resolve` and throwing the `Build` away, hands the run
 nothing until `done`, and at the end **replays its own compiled script into a fresh run** and writes only if
