@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -49,6 +50,9 @@ namespace Tests.PlayMode
 
         /// <summary>The committed archer, which is what these tests spend on the board.</summary>
         private const int ArcherId = 3;
+
+        /// <summary>What an Archer climbs into: the one edge the committed ladder carries.</summary>
+        private const int RangerId = 14;
 
         /// <summary>A cell of ground with nothing on it, well clear of the corridor.</summary>
         private const int FreeColumn = 7;
@@ -116,13 +120,17 @@ namespace Tests.PlayMode
 
             Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("Skeleton Warrior"));
             Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("x1"));
-            Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("31 gold"));
 
             root.Wave.Open(0);
             root.Wave.More();
 
             Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("x2"));
-            Assert.That(Wording(root.Wave.Boxes[0]), Does.Contain("62 gold"));
+
+            Assert.That(
+                Wording(root.Wave.Boxes[0]),
+                Does.Not.Contain("gold"),
+                "A box is a creep and a count. What it costs is said where the buying is decided, which "
+                + "is the box's own list.");
 
             foreach (VisualElement box in root.Wave.Boxes)
             {
@@ -356,12 +364,166 @@ namespace Tests.PlayMode
             // resolving it is what turns those positions into release ticks.
             WaveScript wave = Resolved(root.Composing.Phase).Wave;
 
+
             Assert.That(wave.Count, Is.EqualTo(3));
             Assert.That(wave.Orders[0].TypeId, Is.EqualTo(SkeletonId));
             Assert.That(wave.Orders[1].TypeId, Is.EqualTo(SkeletonScoutId));
             Assert.That(wave.Orders[2].TypeId, Is.EqualTo(MinionId));
             Assert.That(wave.Orders[0].TickOffset, Is.LessThan(wave.Orders[1].TickOffset));
             Assert.That(wave.Orders[1].TickOffset, Is.LessThan(wave.Orders[2].TickOffset));
+        }
+
+        /// <summary>
+        /// A box dropped between two others lands between them, dragged either
+        /// way.
+        /// </summary>
+        /// <remarks>
+        /// <b>The two directions are not one case.</b>
+        /// <see cref="ComposedRound.Rearrange"/> takes the box out of the row
+        /// before putting it back, so what it is handed is a position in a row
+        /// one shorter — and taking a box out shifts everything after it down by
+        /// one and nothing before it. A landing that named the index of the last
+        /// box it passed rather than counting the boxes it passed was therefore
+        /// right dragging rightwards and one place too far left dragging
+        /// leftwards, and a test that only ever dropped at the front could not
+        /// see it: the front is the one position both readings agree on.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator ABoxDroppedBetweenTwoOthersLandsBetweenThem()
+        {
+            MatchRoot root = Building(Opening());
+
+            Send(root, 0, MinionId);
+            Send(root, 1, SkeletonScoutId);
+            Send(root, 2, SkeletonId);
+
+            yield return null;
+            yield return null;
+
+            // Leftwards: the third box, dropped between the first two.
+            root.Wave.Grab(2, MiddleOf(root, 2));
+            root.Wave.Drag(Between(root, 0, 1));
+
+            Assert.That(root.Wave.DraggingTo, Is.EqualTo(1));
+
+            root.Wave.Release();
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { MinionId, SkeletonId, SkeletonScoutId }),
+                "Between the first two, not in front of them.");
+
+            yield return null;
+            yield return null;
+
+            // Rightwards: the first box, dropped between the other two.
+            root.Wave.Grab(0, MiddleOf(root, 0));
+            root.Wave.Drag(Between(root, 1, 2));
+
+            Assert.That(root.Wave.DraggingTo, Is.EqualTo(1));
+
+            root.Wave.Release();
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { SkeletonId, MinionId, SkeletonScoutId }));
+
+            yield return null;
+            yield return null;
+
+            // And a press that goes nowhere leaves the row exactly as it was.
+            root.Wave.Grab(1, MiddleOf(root, 1));
+            root.Wave.Drag(MiddleOf(root, 1));
+            root.Wave.Release();
+
+            Assert.That(Sent(root), Is.EqualTo(new[] { SkeletonId, MinionId, SkeletonScoutId }));
+        }
+
+        /// <summary>
+        /// <b>An open list does not outlive the purse it was priced against.</b>
+        /// One wallet buys both halves of a phase, so a tower bought while a box
+        /// is open can make what that box is offering unaffordable — and
+        /// ADR-0051 says illegality is prevented and never refused, so an
+        /// affordance that survived the answer it was built from is the one way
+        /// this screen could hand <c>BuildPhase.Resolve</c> something it throws
+        /// on.
+        /// </summary>
+        [Test]
+        public void ABoardClickPutsAnOpenListAway()
+        {
+            MatchRoot root = Building(Opening(gold: 60));
+
+            root.Wave.Open(0);
+
+            Assert.That(root.Wave.IsListing, Is.True);
+            Assert.That(
+                Ids(root.Composing.Sendable(0)),
+                Has.Member(SkeletonWarriorId),
+                "A Skeleton Warrior is 31 out of 60.");
+
+            Select(root, ArcherId);
+
+            Assert.That(root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow)), Is.True);
+            Assert.That(root.Composing.Gold, Is.EqualTo(20), "Sixty, less an Archer.");
+            Assert.That(root.Wave.IsListing, Is.False, "And the list it priced went with it.");
+
+            // Which is also the whole of the dismissal: there is no other way to
+            // put a box's list away without taking something out of it.
+            root.Wave.Choose(Types().ById(SkeletonWarriorId));
+
+            Assert.That(root.Composing.Slots, Is.Empty, "A closed list offers nothing.");
+        }
+
+        /// <summary>
+        /// The same, for the route that never touches the board: taking a rung
+        /// of a tower's ladder spends from the same purse.
+        /// </summary>
+        [Test]
+        public void TakingAnUpgradePutsAnOpenListAway()
+        {
+            MatchRoot root = Building(Opening(gold: 120));
+
+            Select(root, ArcherId);
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+
+            Assert.That(root.Palette.IsOffering, Is.True);
+
+            root.Wave.Open(0);
+
+            Assert.That(root.Wave.IsListing, Is.True);
+
+            root.Palette.Take(Types().ById(RangerId));
+
+            Assert.That(root.Composing.Gold, Is.EqualTo(40), "A hundred and twenty, less 40 and 40.");
+            Assert.That(root.Wave.IsListing, Is.False);
+        }
+
+        /// <summary>
+        /// A box that is not in the row is refused rather than clamped. Every
+        /// affordance on screen counts the row first, so an index naming nothing
+        /// means the screen counted it wrong — which wants a stack trace, not a
+        /// wave quietly composed at the wrong position.
+        /// </summary>
+        [Test]
+        public void ABoxThatIsNotInTheRowIsRefused()
+        {
+            MatchRoot root = Building(Opening());
+
+            Send(root, 0, MinionId);
+
+            UnitType scout = Types().ById(SkeletonScoutId);
+
+            Assert.That(
+                () => root.Composing.Send(1, scout),
+                Throws.Nothing,
+                "One past the end is the trailing empty box, and it appends.");
+
+            Assert.That(() => root.Composing.Send(9, scout), Throws.InstanceOf<ArgumentOutOfRangeException>());
+            Assert.That(() => root.Composing.Send(-1, scout), Throws.InstanceOf<ArgumentOutOfRangeException>());
+            Assert.That(() => root.Composing.SendMore(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
+            Assert.That(() => root.Composing.SendFewer(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
+            Assert.That(() => root.Composing.SendNone(2), Throws.InstanceOf<ArgumentOutOfRangeException>());
         }
 
         /// <summary>
@@ -578,6 +740,13 @@ namespace Tests.PlayMode
         /// <summary>Where a box's middle is, in the panel's own coordinates.</summary>
         private static float MiddleOf(MatchRoot root, int index) =>
             root.Wave.Boxes[index].worldBound.center.x;
+
+        /// <summary>
+        /// A point halfway between two boxes' middles: past the first and not
+        /// yet past the second, which is what "dropped between them" means.
+        /// </summary>
+        private static float Between(MatchRoot root, int left, int right) =>
+            (MiddleOf(root, left) + MiddleOf(root, right)) * 0.5f;
 
         /// <summary>The creep in each filled box, in the order the row shows them.</summary>
         private static int[] Sent(MatchRoot root)

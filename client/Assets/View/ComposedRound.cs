@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Sim;
 
 namespace View
@@ -153,7 +154,7 @@ namespace View
         /// refused to <c>place</c> and reached by upgrading the rung below it —
         /// so listing it would be offering an action the rules turn down. Same
         /// list, same order and the same reasoning as the command line's panel
-        /// in <c>simcli/RoundFrame.cs</c>.
+        /// in <c>simcli/RoundFrame.cs</c>. See <see cref="Cheapest"/>.
         /// </remarks>
         public IReadOnlyList<UnitType> Palette => _palette;
 
@@ -294,12 +295,22 @@ namespace View
                 throw new ArgumentNullException(nameof(creep));
             }
 
+            // One past the end is the trailing empty box and appends. Anything
+            // further along is a box that does not exist, and it is refused
+            // rather than clamped: every caller of these four asks Sendable or
+            // CanSendMore first, so an index arriving here that names nothing
+            // means something on screen counted the row wrong, which wants a
+            // stack trace and not a wave quietly composed at the wrong position.
+            Bounded(index, Slots.Count);
             Compose(Rewritten(index, WaveSlot.Of(creep.Id, One)));
         }
 
         /// <summary>Sends one more of what the box at <paramref name="index"/> holds.</summary>
-        public void SendMore(int index) =>
+        public void SendMore(int index)
+        {
+            Bounded(index, Slots.Count - One);
             Compose(Rewritten(index, WaveSlot.Of(Slots[index].TypeId, Slots[index].Count + One)));
+        }
 
         /// <summary>
         /// Sends one fewer. At one this empties the box, which takes it out of
@@ -313,6 +324,8 @@ namespace View
         /// </remarks>
         public void SendFewer(int index)
         {
+            Bounded(index, Slots.Count - One);
+
             WaveSlot slot = Slots[index];
 
             if (slot.Count <= One)
@@ -329,7 +342,11 @@ namespace View
         /// Takes the box at <paramref name="index"/> out of the row. What is
         /// behind it closes up, so a composed wave never carries a hole.
         /// </summary>
-        public void SendNone(int index) => Compose(Without(index));
+        public void SendNone(int index)
+        {
+            Bounded(index, Slots.Count - One);
+            Compose(Without(index));
+        }
 
         /// <summary>
         /// Moves the box at <paramref name="from"/> to <paramref name="to"/>,
@@ -514,6 +531,23 @@ namespace View
         }
 
         /// <summary>
+        /// Refuses a box that is not in the row. <paramref name="last"/> is the
+        /// furthest position the verb accepts.
+        /// </summary>
+        private static void Bounded(int index, int last)
+        {
+            if (index < 0 || index > last)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    index,
+                    "There is no such box in the composed wave. The row runs from 0 to "
+                    + last.ToString(CultureInfo.InvariantCulture)
+                    + " for this verb.");
+            }
+        }
+
+        /// <summary>
         /// The composed wave with one box's slot replaced, or with a box
         /// appended where <paramref name="index"/> is one past the end.
         /// </summary>
@@ -545,60 +579,53 @@ namespace View
         }
 
         /// <summary>
-        /// Every tower the roster can stand on a cell outright, cheapest first,
-        /// then by id so the order is settled.
-        /// </summary>
-        private static UnitType[] Buildable(UnitTypeTable types, UpgradeLadder ladder, CostTable costs)
-        {
-            var towers = new List<UnitType>();
-
-            for (int index = 0; index < types.Count; index++)
-            {
-                UnitType type = types.Types[index];
-
-                if (type.Role == UnitRole.Placed && !ladder.IsTargetOfAnEdge(type.Id))
-                {
-                    towers.Add(type);
-                }
-            }
-
-            towers.Sort((left, right) =>
-            {
-                int byPrice = costs.PriceOf(Purchase.Unit(left.Id), One)
-                    .CompareTo(costs.PriceOf(Purchase.Unit(right.Id), One));
-
-                return byPrice != 0 ? byPrice : left.Id.CompareTo(right.Id);
-            });
-
-            return towers.ToArray();
-        }
-
-        /// <summary>
-        /// Every creep the roster can send, cheapest first, then by id so the
-        /// order is settled.
+        /// Every tower the roster can stand on a cell outright, cheapest first.
         /// </summary>
         /// <remarks>
-        /// No filter beyond the role. A tower is left off a palette when the
+        /// A row some edge of the ladder points at is left off, because it is
+        /// refused to <c>place</c> and reached by upgrading the rung below it.
+        /// </remarks>
+        private static UnitType[] Buildable(UnitTypeTable types, UpgradeLadder ladder, CostTable costs) =>
+            Cheapest(types, costs, type => type.Role == UnitRole.Placed && !ladder.IsTargetOfAnEdge(type.Id));
+
+        /// <summary>Every creep the roster can send, cheapest first.</summary>
+        /// <remarks>
+        /// No filter beyond the role. A tower is left off the palette when the
         /// ladder points at it, because placing one is refused; there is no
         /// equivalent on this side -- a wave has no prerequisites and no
         /// unlocks, so every walking row is sendable and price is the only
         /// question. See ADR-0051 and #179.
         /// </remarks>
-        private static UnitType[] Walkers(UnitTypeTable types, CostTable costs)
+        private static UnitType[] Walkers(UnitTypeTable types, CostTable costs) =>
+            Cheapest(types, costs, type => type.Role == UnitRole.Moving);
+
+        /// <summary>
+        /// The rows of a roster that <paramref name="wanted"/> keeps, cheapest
+        /// first and then by id so the order is settled.
+        /// </summary>
+        /// <remarks>
+        /// One ordering for both lists, because they are the same list read two
+        /// ways: the palette and the wave bar are the two halves of one purse,
+        /// and a bar that sorted by price beside one that sorted by id would be
+        /// two answers to a question nobody asked twice. Same rule and the same
+        /// order as the command line's panel in <c>simcli/RoundFrame.cs</c>.
+        /// </remarks>
+        private static UnitType[] Cheapest(
+            UnitTypeTable types, CostTable costs, Func<UnitType, bool> wanted)
         {
-            var creeps = new List<UnitType>();
+            var rows = new List<UnitType>();
 
             for (int index = 0; index < types.Count; index++)
             {
                 UnitType type = types.Types[index];
 
-                if (type.Role == UnitRole.Moving)
+                if (wanted(type))
                 {
-                    creeps.Add(type);
+                    rows.Add(type);
                 }
             }
 
-            creeps.Sort((left, right) =>
+            rows.Sort((left, right) =>
             {
                 int byPrice = costs.PriceOf(Purchase.Unit(left.Id), One)
                     .CompareTo(costs.PriceOf(Purchase.Unit(right.Id), One));
@@ -606,7 +633,7 @@ namespace View
                 return byPrice != 0 ? byPrice : left.Id.CompareTo(right.Id);
             });
 
-            return creeps.ToArray();
+            return rows.ToArray();
         }
     }
 }

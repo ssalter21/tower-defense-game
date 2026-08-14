@@ -145,9 +145,6 @@ namespace View
 
         private float _grabbedAt;
 
-        /// <summary>Where the held box's middle sits when it is not being carried.</summary>
-        private float _grabbedMiddle;
-
         private float _offset;
 
         private bool _moved;
@@ -346,11 +343,6 @@ namespace View
                 return;
             }
 
-            // Read before anything moves. The held box is carried under the
-            // pointer, so where it is drawn stops being where it belongs the
-            // moment the drag starts -- and comparing a pointer against a box
-            // travelling with it would come out the same every time.
-            _grabbedMiddle = _boxes[index].worldBound.center.x;
             _from = index;
             _to = index;
             _grabbedAt = panelX;
@@ -430,17 +422,30 @@ namespace View
         public bool Covers(Vector2 screenPoint) => RuntimePanel.Covers(Document, screenPoint);
 
         /// <summary>
-        /// Which box a point in the panel's own coordinates would drop onto: the
-        /// last box whose middle it has passed, and the first where it has
-        /// passed none.
+        /// Where a drop at a point in the panel's own coordinates would put the
+        /// held box: how many of the boxes that are staying put it has been
+        /// carried past.
         /// </summary>
         /// <remarks>
-        /// <b>The held box is measured where it was picked up.</b> It is carried
+        /// <para>
+        /// <b>Counted, never indexed, and that is the whole of the arithmetic.</b>
+        /// <see cref="ComposedRound.Rearrange"/> takes the box out of the row
+        /// and then puts it back, so what it is handed is a position in the row
+        /// <i>without</i> it — which is exactly how many of the others the
+        /// pointer has passed. Taking the index of the last box whose middle was
+        /// passed is the same number only while the held box is to the left of
+        /// it, because removing it shifts everything after it down by one and
+        /// nothing before it. So a rightward drag came out right and a leftward
+        /// one landed a box too far left: grab the last of three, drop it
+        /// between the first two, and it went to the front.
+        /// </para>
+        /// <para>
+        /// <b>The held box is skipped rather than measured.</b> It is carried
         /// under the pointer, so its drawn middle travels with the thing being
-        /// compared against it and every comparison would come out the same; the
-        /// middle recorded at <see cref="Grab"/> is where it sits in the row.
-        /// The trailing empty box is not a landing place -- there is nothing in
-        /// it to come before.
+        /// compared against it — and it is not one of the boxes a landing is
+        /// counted among, because it is the one being placed. The trailing empty
+        /// box is not counted either: there is nothing in it to arrive before.
+        /// </para>
         /// </remarks>
         public int Landing(float panelX)
         {
@@ -448,11 +453,9 @@ namespace View
 
             for (int index = 0; index < _round.Slots.Count && index < _boxes.Count; index++)
             {
-                float middle = index == _from ? _grabbedMiddle : _boxes[index].worldBound.center.x;
-
-                if (panelX > middle)
+                if (index != _from && panelX > _boxes[index].worldBound.center.x)
                 {
-                    landing = index;
+                    landing++;
                 }
             }
 
@@ -571,10 +574,14 @@ namespace View
             name.style.fontSize = NameSize;
             name.style.unityTextAlign = TextAnchor.MiddleCenter;
 
+            // A name and a count, and nothing else in the box. What this many
+            // come to is a purse fact, and it is said where the decision to buy
+            // them is made — in the box's own list, which prices every creep it
+            // offers and the raise it offers on top of them.
             var sending = new Label
             {
                 name = "Sending",
-                text = RosterNames.Count(count) + "   " + RosterNames.Gold(_round.PriceOf(creep, count)),
+                text = RosterNames.Count(count),
                 pickingMode = PickingMode.Ignore,
             };
 
@@ -598,11 +605,16 @@ namespace View
 
             box.RegisterCallback<PointerMoveEvent>(pointer => Drag(pointer.position.x));
 
-            box.RegisterCallback<PointerUpEvent>(pointer =>
-            {
-                box.ReleasePointer(pointer.pointerId);
-                Release();
-            });
+            box.RegisterCallback<PointerUpEvent>(pointer => box.ReleasePointer(pointer.pointerId));
+
+            // The drag ends where the capture ends, and not on the pointer-up.
+            // A capture can be lost without one ever arriving — the panel takes
+            // it back, or the element leaves the hierarchy — and hanging the end
+            // of the drag on the up event leaves the row tinted and IsDragging
+            // stuck true until something else is grabbed. Releasing the capture
+            // above raises this, so the ordinary path runs through here too and
+            // there is one ending rather than two.
+            box.RegisterCallback<PointerCaptureOutEvent>(_ => Release());
 
             _row.Add(box);
             _boxes.Add(box);

@@ -184,6 +184,14 @@ namespace View
                 return false;
             }
 
+            // A click that reached the board is a click away from the wave row,
+            // which is the only way to put a box's list away without taking
+            // something out of it — the same job the ladder's dismissal does.
+            // It is also what stops the list going stale: it was priced against
+            // the purse as it stood when it opened, and the click about to be
+            // handled may be a tower coming out of that purse.
+            _wave.Close();
+
             if (!TryPick(screenPoint, out int column, out int row))
             {
                 // Off the board. A click on nothing puts the ladder away, which
@@ -320,6 +328,14 @@ namespace View
             // no longer exists.
             _lit = None;
 
+            // And so is any open list on the wave row. Its entries are what
+            // ComposedRound.Sendable resolved when it opened, and one purse
+            // buys both halves of a phase — so an upgrade taken at a hex can
+            // leave a creep on screen that no longer resolves. ADR-0051 says
+            // illegality is prevented and never refused, and an affordance that
+            // outlived the answer it was built from is the one way this screen
+            // could offer something Resolve would throw on.
+            _wave.Close();
             _board.Follow();
             _palette.Follow();
         }
