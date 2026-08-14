@@ -38,6 +38,15 @@ $project = (Resolve-Path "$PSScriptRoot\..\client").Path
 
 if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
 
+# ABSOLUTE, ALWAYS. A relative path handed to -executeMethod is resolved
+# against the editor's working directory, which is the Unity project and not
+# the repository root -- so a default of "docs/frames/roster" quietly writes
+# client/docs/frames/roster, outside the ignore rule that is supposed to cover
+# it, and leaves untracked PNGs for the gate's tree-clean step to fail on.
+# capture-match-frames.ps1 has the same trap; this one closes it here.
+if (-not $OutDir) { $OutDir = Join-Path (Resolve-Path "$PSScriptRoot\..").Path "docs\frames\roster" }
+if (-not [System.IO.Path]::IsPathRooted($OutDir)) { $OutDir = Join-Path (Get-Location).Path $OutDir }
+
 $unityArgs = @(
     '-batchmode', '-quit',
     '-projectPath', "`"$project`"",
@@ -46,7 +55,7 @@ $unityArgs = @(
     '-rosterWidth', $Width
 )
 
-if ($OutDir) { $unityArgs += @('-rosterOutDir', "`"$OutDir`"") }
+$unityArgs += @('-rosterOutDir', "`"$OutDir`"")
 
 Write-Host "drawing the armed roster from $project"
 

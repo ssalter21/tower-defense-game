@@ -76,6 +76,7 @@ namespace View.Editor
         /// </summary>
         private static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
+
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row in
         /// <c>content/units.txt</c>.

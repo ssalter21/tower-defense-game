@@ -163,6 +163,8 @@ namespace View.Editor
                         0f);
                 }
 
+                ReportHeld(stand, type);
+
                 Frame(camera, Measured(stand));
 
                 return Grab(camera, width, height).EncodeToPNG();
@@ -170,6 +172,67 @@ namespace View.Editor
             finally
             {
                 Object.DestroyImmediate(stand);
+            }
+        }
+
+        /// <summary>
+        /// Where each held item's mesh sits relative to the hand holding it.
+        /// </summary>
+        /// <remarks>
+        /// Orientation cannot be guessed from a render and then guessed again:
+        /// the first guess at the staffs' half turn buried them in the body,
+        /// because the correction assumed the pivot was at the grip. These are
+        /// the numbers that say where the pivot actually is — the mesh's bounds
+        /// expressed in the hand bone's own frame, so a positive Y means the
+        /// item reaches up out of the fist and a negative Y means it hangs.
+        /// </remarks>
+        private static void ReportHeld(GameObject stand, UnitType type)
+        {
+            foreach (string bone in new[] { WeaponSocket.MeleeHand, WeaponSocket.OffHand })
+            {
+                Transform socket = WeaponSocket.FindBone(stand, bone);
+
+                if (socket == null || socket.childCount == 0)
+                {
+                    continue;
+                }
+
+                Transform item = socket.GetChild(0);
+                Renderer[] renderers = item.GetComponentsInChildren<Renderer>(true);
+
+                if (renderers.Length == 0)
+                {
+                    continue;
+                }
+
+                var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+                var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+                foreach (Renderer renderer in renderers)
+                {
+                    Bounds world = renderer.bounds;
+
+                    // Eight corners, each brought back into the bone's frame.
+                    // The centre alone would not say which way a long thing
+                    // points, and that is the whole question.
+                    for (var corner = 0; corner < 8; corner++)
+                    {
+                        var offset = new Vector3(
+                            (corner & 1) == 0 ? world.min.x : world.max.x,
+                            (corner & 2) == 0 ? world.min.y : world.max.y,
+                            (corner & 4) == 0 ? world.min.z : world.max.z);
+
+                        Vector3 local = socket.InverseTransformPoint(offset);
+
+                        min = Vector3.Min(min, local);
+                        max = Vector3.Max(max, local);
+                    }
+                }
+
+                Debug.Log(
+                    $"[grip] unit {type.Id} {item.name} on {bone}: "
+                    + $"min ({min.x:F2}, {min.y:F2}, {min.z:F2}) "
+                    + $"max ({max.x:F2}, {max.y:F2}, {max.z:F2})");
             }
         }
 

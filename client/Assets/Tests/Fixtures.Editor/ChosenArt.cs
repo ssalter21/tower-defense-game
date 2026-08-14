@@ -70,6 +70,7 @@ namespace Tests.Fixtures
         /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
         public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
+
         /// <summary>
         /// What each row in <c>content/units.txt</c> is drawn as, and how big,
         /// as signed in <c>docs/roster.md</c>.
