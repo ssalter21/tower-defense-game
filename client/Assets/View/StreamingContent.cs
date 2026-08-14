@@ -74,6 +74,24 @@ namespace View
         public const string WaveFileName = "wave.txt";
 
         /// <summary>
+        /// The round the field a run is scored against is drawn from.
+        /// </summary>
+        /// <remarks>
+        /// <b>This and not <see cref="WaveFileName"/>, and the difference is the
+        /// whole point.</b> A run resolves each round against K opponents drawn
+        /// from a population of other players' rounds, and until runs are stored
+        /// that population is this one pair — this wave standing behind the
+        /// committed defense. <c>wave.txt</c> is the skeleton's authored match:
+        /// forty creeps and three hundred and eighty gold of them, released over
+        /// fourteen hundred ticks, which no purse in this economy can compose.
+        /// A run scored against one is measured against an opponent no player
+        /// could be, and it dies of health in round three. The shell's run verbs
+        /// refuse a wave released over time by name; see
+        /// <c>simcli/RunContent.cs</c> and this file's own header.
+        /// </remarks>
+        public const string FieldFileName = "field.txt";
+
+        /// <summary>
         /// Every number a shot resolves through: the damage matrix, the armour
         /// expression and the floor.
         /// </summary>
@@ -142,6 +160,7 @@ namespace View
             RulesetFileName,
             DefenseFileName,
             WaveFileName,
+            FieldFileName,
             ReplayFileName,
         };
 
@@ -225,6 +244,13 @@ namespace View
         /// <summary>The wave, parsed against <paramref name="types"/>.</summary>
         public static WaveScript ReadWave(UnitTypeTable types) =>
             WaveScript.ParseUtf8(WaveFileName, Read(WaveFileName), types);
+
+        /// <summary>
+        /// The canned field's round, parsed against <paramref name="types"/>.
+        /// What a run is scored against — see <see cref="FieldFileName"/>.
+        /// </summary>
+        public static WaveScript ReadField(UnitTypeTable types) =>
+            WaveScript.ParseUtf8(FieldFileName, Read(FieldFileName), types);
 
         /// <summary>
         /// The recorded match, read but not yet gated: the bytes the command

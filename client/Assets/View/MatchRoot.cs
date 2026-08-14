@@ -1,5 +1,6 @@
 using Sim;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace View
 {
@@ -74,26 +75,31 @@ namespace View
         public MatchArt Art => art;
 
         /// <summary>
+        /// Build, commit, watch, ten waves — and which of those is on screen.
+        /// Null until <see cref="BeginRun(ulong)"/>.
+        /// </summary>
+        public RunLoop Loop { get; private set; }
+
+        /// <summary>
         /// The run the board is built against, once there is one.
         /// </summary>
         /// <remarks>
         /// <para>
         /// <b>The client holds the run, and the view still holds nothing</b> —
-        /// ADR-0051. It lives out here on the root beside the mode the player is
-        /// in, not inside <see cref="MatchView"/>, because what a build phase
-        /// draws from is a decision being composed rather than game state being
-        /// simulated: no tick has seen it. <see cref="MatchView"/> still reads
-        /// snapshots and nothing else, which is ADR-0007 untouched.
+        /// ADR-0051. It lives out here beside the mode the player is in, not
+        /// inside <see cref="MatchView"/>, because what a build phase draws from
+        /// is a decision being composed rather than game state being simulated:
+        /// no tick has seen it. <see cref="MatchView"/> still reads snapshots
+        /// and nothing else, which is ADR-0007 untouched.
         /// </para>
         /// <para>
-        /// <b>Nothing here advances it.</b> Committing a round is
-        /// <see cref="Run.Advance"/>, and the loop that presses it — build,
-        /// commit, watch, ten waves — is #198. What this file does is stand the
-        /// run up and point the palette and the pointer at it, which is what
-        /// makes the board clickable.
+        /// <b>It is the loop's, and this is a reader.</b> What advances it is
+        /// <see cref="RunLoop.Commit"/> and nothing else — see that class for
+        /// why a phase reaching the simulation by any other route would be the
+        /// one thing this architecture is built to prevent.
         /// </para>
         /// </remarks>
-        public Run Run { get; private set; }
+        public Run Run => Loop == null ? null : Loop.Run;
 
         /// <summary>
         /// The round being composed on screen, once there is a run: both halves
@@ -113,14 +119,37 @@ namespace View
         /// <summary>What turns a click into a build action.</summary>
         public BuildInput Pointer { get; private set; }
 
+        /// <summary>
+        /// The scene opens on the first round's build phase, and there is no
+        /// match on screen until one has been committed.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The recorded match is not what a player sees any more.</b> It was,
+        /// for the whole of the walking skeleton, and while the build chrome had
+        /// no modes to switch between it went on playing underneath one — so a
+        /// composed tower could be stood on a hex a recorded tower was already
+        /// drawn on. Two things drawing one board is what the mode switch
+        /// removes. The record is still read, for the playfield and for the
+        /// seed; what is gone is the match built from it. It is still reachable
+        /// through <see cref="BeginMatch(UnitTypeTable, Ruleset, ReplayBundle, MatchArt)"/>,
+        /// which is what the frame capture draws.
+        /// </para>
+        /// <para>
+        /// Missing content is reported and not thrown. A player whose streaming
+        /// copy was never generated should show its playfield and say what is
+        /// missing, rather than dying in <c>Awake</c> and leaving a scene that
+        /// is half built for a reason nobody can see. The build gate is where a
+        /// missing content file is supposed to be caught, and it is caught
+        /// there.
+        /// </para>
+        /// </remarks>
         private void Awake()
         {
             // Read once, used twice. The floor is drawn from the record's own
             // inlined grid rather than from map.txt, because the floor and the
-            // match have to be the same playfield and the only way to be certain
-            // of that is for there to be one of them. Where there is no record
-            // to read, the authored map still draws a floor and BeginMatch says
-            // what is missing.
+            // run have to be the same playfield and the only way to be certain
+            // of that is for there to be one of them.
             ReplayBundle record = StreamingContent.HasEveryMatchFile()
                 ? StreamingContent.ReadRecordedMatch()
                 : null;
@@ -130,33 +159,34 @@ namespace View
                 Build(record != null ? record.Map : StreamingContent.ReadMap());
             }
 
-            if (MatchView == null)
+            if (record == null)
             {
-                BeginMatch(record);
+                Debug.LogWarning(
+                    "MatchRoot: no run started — the streaming copy is incomplete. Run "
+                    + "tools/sync-streaming-content.ps1 and commit what it writes. Looked in "
+                    + StreamingContent.Directory);
+
+                return;
             }
 
-            // Only when there is a match. A run that could not read its content
-            // or its art has already said so, and a scrub bar over nothing is a
-            // second, quieter way of reporting the same thing.
-            if (MatchView != null && Controls == null)
+            if (!art.IsComplete)
             {
-                Playback = new PlaybackController(MatchView);
-                Controls = PlaybackControls.Build(transform, Playback);
+                Debug.LogWarning(
+                    "MatchRoot: no run started — the art is not wired up. The scene is generated: run "
+                    + "tools/build-match-scene.ps1 and commit what it writes.");
+
+                return;
             }
 
-            // Same two conditions as the match: a run needs the content, and
-            // drawing what it builds needs the art. A checkout missing either
-            // has already said so once, and a palette listing towers that cannot
-            // be drawn would be a second, quieter way of reporting it.
-            if (record != null && art.IsComplete && Run == null)
+            if (Loop == null)
             {
-                BeginBuilding(record.Seed);
+                BeginRun(record.Seed);
             }
         }
 
         /// <summary>
-        /// Stands up a run on the playfield this object already built, and puts
-        /// the palette, the board and the pointer over it.
+        /// Stands a run up on the playfield this object already built, and opens
+        /// its first build phase.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -164,36 +194,73 @@ namespace View
         /// cannot read a clock and is not going to start: a run seeded from the
         /// wall clock would be a different game every time somebody pressed
         /// play, which is exactly the property that makes a playtest also a
-        /// determinism test. See <see cref="BeginMatch(ReplayBundle)"/>, which
-        /// takes its seed from the same place for the same reason.
+        /// determinism test.
         /// </para>
         /// <para>
         /// <b>The field is the canned pairing</b> — the committed defense
-        /// against the committed wave, which is the population
-        /// <c>content/defense.txt</c> and <c>content/wave.txt</c> describe. It
-        /// is what a round is scored against, and it is a number rather than
-        /// anything on screen until #198 draws a header.
+        /// behind the canned round, which is the population
+        /// <c>content/defense.txt</c> and <c>content/field.txt</c> describe.
+        /// <b>Not <c>content/wave.txt</c></b>: that is a whole authored match
+        /// and a run scored against one dies of health in round three. See
+        /// <see cref="StreamingContent.FieldFileName"/>. The field is a number
+        /// rather than anything on screen: the player watches one member of it,
+        /// and the other nine arrive as the band that feeds the purse.
+        /// </para>
+        /// <para>
+        /// <b>The run arrives as a way to make one, not as one already made.</b>
+        /// Proving the session on the way out needs a second run on the same
+        /// seed and the same shape that nothing has been played into, and a
+        /// factory is the only thing that can hand back both.
         /// </para>
         /// </remarks>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
-        public void BeginBuilding(ulong seed)
+        public RunLoop BeginRun(ulong seed) => BeginRun(seed, Application.persistentDataPath);
+
+        /// <summary>
+        /// The same, writing the session's script into a folder the caller
+        /// names. What a test calls, so a run played by a test does not write
+        /// over the one a person played.
+        /// </summary>
+        public RunLoop BeginRun(ulong seed, string directory) => BeginRun(seed, directory, art);
+
+        /// <summary>
+        /// The same, drawn with art the caller supplies rather than the art
+        /// serialized on this object — the same seam, for the same reason, as
+        /// <see cref="BeginBuilding(ComposedRound, MatchArt)"/>.
+        /// </summary>
+        public RunLoop BeginRun(ulong seed, string directory, MatchArt art)
+        {
+            if (Map == null)
+            {
+                throw new System.InvalidOperationException(
+                    "BeginRun was called before Build, so there is no playfield to run on.");
+            }
+
+            Loop = RunLoop.Build(this, art, () => RunOn(seed), directory);
+
+            return Loop;
+        }
+
+        /// <summary>
+        /// A run on <paramref name="seed"/> with nothing played into it, over
+        /// this object's playfield and the shipped content.
+        /// </summary>
+        public Run RunOn(ulong seed)
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
-            Run = new Run(
+            return new Run(
                 Map,
                 StreamingContent.ReadRuleset(),
                 types,
                 StreamingContent.ReadUpgrades(types),
-                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadWave(types)),
+                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadField(types)),
                 seed);
-
-            BeginBuilding(ComposedRound.For(Run));
         }
 
         /// <summary>
-        /// The same, over a round the caller composed. What a test calls, with a
-        /// run of its own or none at all.
+        /// Puts the build chrome up over a round the caller composed. What a
+        /// test calls, with a run of its own or none at all.
         /// </summary>
         public void BeginBuilding(ComposedRound round) => BeginBuilding(round, art);
 
@@ -208,7 +275,18 @@ namespace View
         /// them from would otherwise get an empty board on exactly the checkout
         /// where somebody is trying to see whether building works.
         /// </remarks>
-        public void BeginBuilding(ComposedRound round, MatchArt art)
+        public void BeginBuilding(ComposedRound round, MatchArt art) =>
+            BeginBuilding(round, art, otherChrome: null);
+
+        /// <summary>
+        /// The same, told about one more panel a click has to stop at.
+        /// </summary>
+        /// <param name="otherChrome">
+        /// A panel that is up in build mode and is not the pointer's own — the
+        /// header, whose button is the one thing on screen a click could reach
+        /// through onto the board behind it. Null where there is none.
+        /// </param>
+        public void BeginBuilding(ComposedRound round, MatchArt art, UIDocument otherChrome)
         {
             if (round == null) throw new System.ArgumentNullException(nameof(round));
             if (art == null) throw new System.ArgumentNullException(nameof(art));
@@ -217,6 +295,14 @@ namespace View
             {
                 throw new System.InvalidOperationException(
                     "BeginBuilding was called before Build, so there is no playfield to build on.");
+            }
+
+            if (Composing != null)
+            {
+                throw new System.InvalidOperationException(
+                    "This root is already composing a round. A second set of build chrome over the first "
+                    + "would leave two palettes selecting into two phases, only one of which anybody is "
+                    + "going to commit. End the one that is up first.");
             }
 
             Composing = round;
@@ -230,65 +316,72 @@ namespace View
                 Building,
                 Wave,
                 CameraRig.Camera,
-                Controls != null ? Controls.Document : null);
+                otherChrome);
         }
 
         /// <summary>
-        /// Starts the recorded match on the floor this object already built.
+        /// Takes the build chrome down: the composed board, the palette, the
+        /// wave bar and the pointer.
+        /// </summary>
+        /// <remarks>
+        /// <b>Deactivated and then destroyed, in that order.</b>
+        /// <see cref="Object.Destroy(Object)"/> is deferred to the end of the
+        /// frame, so on its own it would leave the round's towers drawn over the
+        /// watched match's for exactly as long as it takes the mode to
+        /// change — which is the overlap this method exists to remove.
+        /// Deactivating is what makes it immediate; destroying is what stops it
+        /// leaking.
+        /// </remarks>
+        public void EndBuilding()
+        {
+            // The pointer first, so it unsubscribes from a palette and a wave
+            // bar that are still there to unsubscribe from.
+            Retire(Pointer);
+            Retire(Wave);
+            Retire(Palette);
+            Retire(Building);
+
+            Pointer = null;
+            Wave = null;
+            Palette = null;
+            Building = null;
+            Composing = null;
+        }
+
+        /// <summary>
+        /// Puts a match a caller already built on screen, with the scrub bar
+        /// over it. What the run loop calls with what
+        /// <see cref="Run.MatchAt"/> handed back.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Separate from <see cref="Build"/>, and deliberately so. The floor is
-        /// drawable from a map alone, which is what lets a test write four rows
-        /// of characters and check the tiles; a match needs the type table and a
-        /// record as well. Folding the two together would make every floor test
-        /// depend on content it does not care about.
+        /// <b>The match is read rather than advanced.</b> Seeking re-simulates
+        /// from tick zero — ADR-0026 — so what a view has to remember about a
+        /// match is the five things it was built from, and it builds its own
+        /// from them. This one is therefore a description and is let go; asking
+        /// twice is cheaper than remembering, which is the same reason
+        /// <see cref="Run.MatchAt"/> rebuilds rather than keeps.
         /// </para>
         /// <para>
-        /// <b>The match on screen is the recorded one, seed included.</b> Which
-        /// match this is decides what every tick number in
-        /// <c>docs/sit-down.md</c> means: the checklist is written against
-        /// <c>content/landmarks.txt</c>, and that table is what a real run of
-        /// these exact bytes reported. A seed serialized on this object instead
-        /// would be a second copy of a number that already lives in the record —
-        /// and the two the project actually had differed by eleven ticks on the
-        /// last creep to die, which does not look wrong from the screen and
-        /// simply sends somebody to the wrong second of the match.
-        /// </para>
-        /// <para>
-        /// Missing content is reported and not thrown. A player whose streaming
-        /// copy was never generated should show its playfield and say what is
-        /// missing, rather than dying in <c>Awake</c> and leaving a scene that
-        /// is half built for a reason nobody can see. The build gate is where a
-        /// missing content file is supposed to be caught, and it is caught
-        /// there.
+        /// The playfield is checked rather than taken. A match built over a
+        /// different map than the floor under it would draw creeps walking a
+        /// corridor that is not the one on screen, and nothing else in the
+        /// project would notice.
         /// </para>
         /// </remarks>
-        /// <param name="record">
-        /// The recorded match, or null when the streaming copy is incomplete.
-        /// </param>
-        public void BeginMatch(ReplayBundle record)
+        public MatchView BeginMatch(Match match, UnitTypeTable types, MatchArt art)
         {
-            if (record == null)
-            {
-                Debug.LogWarning(
-                    "MatchRoot: no match drawn — the streaming copy is incomplete. Run "
-                    + "tools/sync-streaming-content.ps1 and commit what it writes. Looked in "
-                    + StreamingContent.Directory);
+            if (match == null) throw new System.ArgumentNullException(nameof(match));
 
-                return;
+            if (!ReferenceEquals(match.Map, Map))
+            {
+                throw new System.InvalidOperationException(
+                    "This match is fought on a different playfield than the floor this root drew. One "
+                    + "of the two is not the run's map, and drawing them together would put creeps on a "
+                    + "corridor that is not the one under them.");
             }
 
-            if (!art.IsComplete)
-            {
-                Debug.LogWarning(
-                    "MatchRoot: no match drawn — the art is not wired up. The scene is generated: run "
-                    + "tools/build-match-scene.ps1 and commit what it writes.");
-
-                return;
-            }
-
-            BeginMatch(StreamingContent.ReadUnitTypes(), StreamingContent.ReadRuleset(), record, art);
+            return BeginMatch(types, match.Rules, match.Layout, match.Wave, match.Seed, art);
         }
 
         /// <summary>
@@ -382,7 +475,50 @@ namespace View
             MatchView = host.AddComponent<MatchView>();
             MatchView.Begin(Map, rules, types, layout, wave, seed, art);
 
+            // Built with the match rather than once for the scene, because they
+            // are wired to the view that exists when they are built and there is
+            // a new view every round. A scrub bar with no match under it would
+            // be a control that moves and changes nothing.
+            Playback = new PlaybackController(MatchView);
+            Controls = PlaybackControls.Build(transform, Playback);
+
             return MatchView;
+        }
+
+        /// <summary>
+        /// Takes the match and its scrub bar down, so a second one can go up.
+        /// </summary>
+        /// <remarks>
+        /// Both together and neither alone: the controls hold the view they were
+        /// built for, so a bar that outlived its match would drive a match
+        /// nobody is looking at. Deactivated before destroying for the reason
+        /// <see cref="EndBuilding"/> is — a deferred destroy leaves the finished
+        /// round's creeps on the board for the frame the next one is composed
+        /// in.
+        /// </remarks>
+        public void EndMatch()
+        {
+            Retire(Controls);
+            Retire(MatchView);
+
+            Controls = null;
+            Playback = null;
+            MatchView = null;
+        }
+
+        /// <summary>
+        /// Takes one piece of chrome or one drawn thing off the screen now and
+        /// out of memory at the end of the frame.
+        /// </summary>
+        private static void Retire(Component component)
+        {
+            if (component == null)
+            {
+                return;
+            }
+
+            component.gameObject.SetActive(false);
+            Destroy(component.gameObject);
         }
 
         /// <summary>

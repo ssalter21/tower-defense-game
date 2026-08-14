@@ -23,6 +23,15 @@ those exact bytes. That is why this reads "drag to tick 1662, then back to tick
 
 Then double-click `client/Builds/Windows/TowerDefense.exe`.
 
+**What a build opens on moved with #198, and these rows have not caught up.** The player used to open on
+`content/match.replay` — the recorded match every tick number below is a tick of. It now opens on a run's first
+build phase and reaches a match to scrub only once a round has been committed, so the readout will not say 5283
+and the moments the rows point at are moments of a match this build no longer plays. Rows 1, 2, 3, 11 and 12 ask
+nothing about *which* match and can be read against any committed round. Rows 4 to 10 name a tick, and what to do
+about them — re-anchor them to a round a run can reproduce, or retire them onto the assertions that already
+carry the load-bearing half — is not decided here. `content/landmarks.txt` and the four bindings `SitDownTests`
+holds this document to are untouched either way.
+
 The controls are the whole interface: **Pause/Play**, a **speed** button that
 cycles 1x → 2x → 4x → 8x, **To the end**, and the **scrub bar**. The readout on
 the right says which tick is on screen and which tick the match ends on. The

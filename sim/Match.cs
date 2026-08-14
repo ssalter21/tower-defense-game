@@ -242,6 +242,7 @@ namespace Sim
 
             _coverage = TowerCoverage.For(map, layout);
             _dice = new Pcg32(seed);
+            Map = map;
             Seed = seed;
             _routeLength = _coverage.RouteLength;
 
@@ -311,6 +312,35 @@ namespace Sim
 
         /// <summary>The seed the dice were started from.</summary>
         public ulong Seed { get; }
+
+        /// <summary>The board this match is fought on.</summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The four things a match is made of, readable off the match.</b>
+        /// A match already holds every one of them; what these add is the
+        /// ability for something handed a match to build the same match again,
+        /// which is what a view that seeks by re-simulating has to do. See
+        /// <see cref="Run.MatchAt"/>, which hands one back for exactly that,
+        /// and <c>client/Assets/View/MatchView.cs</c>, whose whole memory of a
+        /// match is these and <see cref="Seed"/>.
+        /// </para>
+        /// <para>
+        /// <b>They are readers and nothing more.</b> None of them is settable
+        /// and none of the four types is mutable, so nothing reached through
+        /// here can move a match -- <see cref="Advance"/> remains the only
+        /// thing that does.
+        /// </para>
+        /// </remarks>
+        public HexMap Map { get; }
+
+        /// <summary>The matrix, the armour expression and the floor every hit goes through.</summary>
+        public Ruleset Rules => _rules;
+
+        /// <summary>The towers that stand for the whole of it.</summary>
+        public TowerLayout Layout => _layout;
+
+        /// <summary>The orders that walk.</summary>
+        public WaveScript Wave => _wave;
 
         /// <summary>Which tick the match is on. Zero before it has been advanced.</summary>
         public int Tick { get; private set; }
