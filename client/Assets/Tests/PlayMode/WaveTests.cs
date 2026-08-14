@@ -76,6 +76,64 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A round that carries creeps opens with them already in the row. A
+        /// creep is bought once and attacks every round after (#207), so the
+        /// build phase a later round opens on is not the empty one — it is the
+        /// wave the last round sent, ready to be added to and rearranged.
+        /// </summary>
+        [Test]
+        public void TheRowOpensHoldingWhatTheRunAlreadyCarries()
+        {
+            MatchRoot root = Building(Opening(carried: Carrying(MinionId, 2, SkeletonId, 1)));
+
+            Assert.That(
+                Sent(root),
+                Is.EqualTo(new[] { MinionId, SkeletonId }),
+                "The carried creeps opened the row, in the order they were last sent in.");
+
+            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(2));
+            Assert.That(root.Wave.Boxes.Count, Is.EqualTo(3), "Two carried and the trailing empty one.");
+
+            // And none of it was charged again: the purse the round opens on is
+            // the purse it still has.
+            Assert.That(root.Composing.Gold, Is.EqualTo(100), "A carried creep is not paid for twice.");
+        }
+
+        /// <summary>
+        /// A carried box lowers to what is carried and no further, and it cannot
+        /// be emptied at all. There is no selling a creep back, so the screen
+        /// does not offer the verb rather than letting the simulation refuse it
+        /// — ADR-0051's prevention, applied to #207's floor.
+        /// </summary>
+        [Test]
+        public void ACarriedCreepIsAFloorTheBoxDoesNotLowerPast()
+        {
+            MatchRoot root = Building(Opening(carried: Carrying(MinionId, 2)));
+
+            // One more on top of the two carried, then straight back off again.
+            root.Wave.Open(0);
+            root.Wave.More();
+            root.Wave.Open(0);
+            root.Wave.Fewer();
+
+            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(2), "Down to the floor.");
+            Assert.That(root.Composing.CanSendFewer(0), Is.False, "And no further.");
+            Assert.That(root.Composing.CarriedIn(0), Is.EqualTo(2));
+
+            // The verb is a no-op at the floor rather than a refusal out of sim.
+            root.Wave.Open(0);
+            root.Wave.Fewer();
+
+            Assert.That(root.Composing.Slots[0].Count, Is.EqualTo(2));
+            Assert.That(root.Composing.Slots.Count, Is.EqualTo(1), "The box is still in the row.");
+
+            // And it cannot be taken out from underneath either.
+            root.Composing.SendNone(0);
+
+            Assert.That(root.Composing.Slots.Count, Is.EqualTo(1), "A carried box cannot be emptied.");
+        }
+
+        /// <summary>
         /// Filling the last box appends a new empty one behind it, and the row
         /// keeps growing for as long as the purse reaches. Nothing bounds it:
         /// <c>sim/BuildPhase.cs</c> says nothing bounds how many slots a wave
@@ -660,13 +718,14 @@ namespace Tests.PlayMode
         /// A round opening on an empty board with as much gold as the caller
         /// says, priced and laddered out of the shipped content.
         /// </summary>
-        private static ComposedRound Opening(int gold = 100)
+        private static ComposedRound Opening(int gold = 100, WaveScript carried = null)
         {
             UnitTypeTable types = Types();
             Ruleset rules = StreamingContent.ReadRuleset();
 
             return new ComposedRound(
                 wave: 1,
+                carried ?? WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(gold),
                 CostTable.From(rules, types),
@@ -678,6 +737,29 @@ namespace Tests.PlayMode
         private static UnitTypeTable Types() => StreamingContent.ReadUnitTypes();
 
         /// <summary>
+        /// A wave a round carries into its build phase, spelled as the pairs it
+        /// holds: type id, then count, and so on.
+        /// </summary>
+        /// <remarks>
+        /// Parsed from the wave text rather than composed through a build phase,
+        /// so that what a round carries into these tests is written out here and
+        /// not derived by the code under test.
+        /// </remarks>
+        private static WaveScript Carrying(params int[] pairs)
+        {
+            var text = new System.Text.StringBuilder();
+            int tick = 0;
+
+            for (int index = 0; index < pairs.Length; index += 2)
+            {
+                text.AppendLine("order  " + tick + "  " + pairs[index] + "  " + pairs[index + 1] + "  0");
+                tick += pairs[index + 1];
+            }
+
+            return WaveScript.Parse("carried", text.ToString(), Types());
+        }
+
+        /// <summary>
         /// What the composed phase would come to, resolved against the same
         /// content the round was opened on.
         /// </summary>
@@ -687,6 +769,7 @@ namespace Tests.PlayMode
 
             return phase.Resolve(
                 1,
+                WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(100),
                 CostTable.From(StreamingContent.ReadRuleset(), types),

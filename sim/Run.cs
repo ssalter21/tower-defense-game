@@ -322,6 +322,28 @@ namespace Sim
         /// </summary>
         public IReadOnlyList<RoundOrders> Sent => _sent;
 
+        /// <summary>
+        /// The creeps the next round already fields, and does not pay for again.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A creep is bought once and attacks every round after.</b> A build
+        /// phase composes the whole of its round's wave -- what it carries and
+        /// what it is adding, in whatever release order it wants -- and is
+        /// charged only for the increase over this. So a wave that sends fewer
+        /// of a type than this holds is refused rather than discounted: there is
+        /// no selling a creep back, and a purchase is a lasting commitment.
+        /// </para>
+        /// <para>
+        /// It is the last round's wave and not a running total kept beside it,
+        /// because the last round's wave <i>is</i> the running total -- every
+        /// round already sends everything the ones before it bought. A second
+        /// tally would be free to disagree with the record.
+        /// </para>
+        /// </remarks>
+        public WaveScript Carrying =>
+            _sent.Count == 0 ? WaveScript.Nothing : _sent[_sent.Count - 1].Wave;
+
         /// <summary>The vector, and the folds over it. Rebuilt after every round.</summary>
         public RunOutcome Outcome => _outcome;
 
@@ -349,7 +371,7 @@ namespace Sim
         /// <para>
         /// The decision is checked against this run's upgrade ladder, this run's
         /// board and map, and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(int, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
@@ -400,7 +422,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Round + 1, Ladder, Purse, Costs, Types, Map, Board);
+            Build build = phase.Resolve(Round + 1, Carrying, Ladder, Purse, Costs, Types, Map, Board);
             RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();

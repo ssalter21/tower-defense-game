@@ -529,24 +529,26 @@ public class CommandStreamTests
         // own purse for a run that did not top every band, which is this one.
         //
         // OBSERVED: fold the purse forward without the wave's payment -- assign
-        // build.Purse straight to purse in Check. This goes red on an exception:
-        // "A build phase at wave 4 buys 90 gold of creeps out of a purse
-        // holding 52", refusing at load a wave the run affords perfectly well,
-        // because the walk stopped paying the rounds it was walking.
+        // build.Purse straight to purse in Check. The ceiling collapses to 80
+        // gold and the Check below goes red on an exception, "A build phase at
+        // wave 4 buys 700 gold of creeps out of a purse holding 80": a walk
+        // that stopped paying the rounds it was walking refuses at load what it
+        // has no way of knowing the run could afford.
         //
-        // The ceiling is observed by what it admits. This run holds 582 gold
-        // when its fourth build phase stands and the walk carries 691 -- three
+        // The ceiling is observed by what it admits. This run holds 663 gold
+        // when its fourth build phase stands and the walk carries 772 -- three
         // waves of the top band it did not reach, and the interest on them --
-        // so a fourth wave costing 640 is a decision the walk has to let past
+        // so a fourth wave costing 700 is a decision the walk has to let past
         // and the round itself has to refuse. That ordering is the whole design:
         // everything refused at load was unaffordable however the run played.
         //
         // OBSERVED, on the ceiling: close the walk's waves at
-        // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The Check
-        // above goes red on an exception -- "A build phase at wave 4 buys 640
-        // gold of creeps out of a purse holding 582" -- refusing at load rather
-        // than at the round, which is what a floor does to every decision a
-        // run's own bonus paid for.
+        // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The walk
+        // then holds exactly the 663 the run itself does and the Check below
+        // goes red -- "A build phase at wave 4 buys 700 gold of creeps out of a
+        // purse holding 663" -- refusing at load rather than at the round,
+        // which is what a floor does to every decision a run's own bonus paid
+        // for.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
         CommandStream stream = CommandStream.Of(run, decisions);
@@ -563,11 +565,17 @@ public class CommandStreamTests
         Assert.Equal(TheCommands.Waves, played.Round);
 
         UnitType fourth = TheBuild.FirstCreep(run.Types);
+
+        // What the last wave carries, with 64 more of one creep on the end of
+        // it. The overspend has to be an increase over what the round already
+        // fields, because a creep is bought once and only the increase is
+        // charged -- and every carried slot has to stay in, because a wave may
+        // only grow.
         var overspent = new List<RecordCommand>(decisions)
         {
             [TheCommands.Waves - 1] = RecordCommand.Of(
                 TheCommands.Waves,
-                BuildPhase.Of(WaveSlot.Of(fourth.Id, 64))),
+                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 70))),
         };
 
         Assert.Equal(10, run.Costs.PriceOf(Purchase.Unit(fourth.Id)));
@@ -590,8 +598,14 @@ public class CommandStreamTests
         SimulationException refused = Assert.Throws<SimulationException>(
             () => beyond.Replay(partway));
 
-        Assert.Contains("640", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("700", refused.Message, StringComparison.Ordinal);
         Assert.Equal(TheCommands.Waves - 1, partway.Round);
+
+        // The purse the round really held, which is the lower half of the
+        // ordering: the walk let 700 past on a ceiling of 772 and the round
+        // turned it down on 663. Asserted rather than described, so that a
+        // change to either number is a red test and not a stale comment.
+        Assert.Equal(663, partway.Purse.Gold);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above
@@ -683,5 +697,32 @@ public class CommandStreamTests
         commands[index] = replacement;
 
         return CommandStream.Of(run, commands);
+    }
+
+    /// <summary>
+    /// A carried wave as slots, with <paramref name="more"/> extra of one creep
+    /// in it. What a round that adds to its wave and gives nothing up looks
+    /// like.
+    /// </summary>
+    private static WaveSlot[] Adding(WaveScript carried, int typeId, int more)
+    {
+        var slots = new List<WaveSlot>();
+        bool raised = false;
+
+        for (int index = 0; index < carried.Orders.Count; index++)
+        {
+            UnitOrder order = carried.Orders[index];
+            bool target = order.TypeId == typeId;
+            raised = raised || target;
+
+            slots.Add(WaveSlot.Of(order.TypeId, order.Count + (target ? more : 0)));
+        }
+
+        if (!raised)
+        {
+            slots.Add(WaveSlot.Of(typeId, more));
+        }
+
+        return slots.ToArray();
     }
 }

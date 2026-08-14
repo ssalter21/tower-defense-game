@@ -127,6 +127,34 @@ public static class TheBuild
     /// </remarks>
     public static BuildPhase BuyingNothing() => BuildPhase.Of();
 
+    /// <summary>
+    /// A round that buys nothing, out of a run that has already sent something:
+    /// the slots it carries, sent again and paid for again by nobody.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="BuyingNothing()"/> is the empty phase, which is only a round
+    /// that spends nothing while nothing is carried. Once a creep has been
+    /// bought it attacks every round after, so the way to spend nothing from
+    /// there is to send exactly what is already fielded -- and a phase that
+    /// named no slot would be trying to leave it at home.
+    /// </remarks>
+    public static BuildPhase BuyingNothing(Run run)
+    {
+        if (run is null)
+        {
+            throw new ArgumentNullException(nameof(run));
+        }
+
+        var slots = new WaveSlot[run.Carrying.Orders.Count];
+
+        for (int index = 0; index < slots.Length; index++)
+        {
+            slots[index] = WaveSlot.Of(run.Carrying.Orders[index].TypeId, run.Carrying.Orders[index].Count);
+        }
+
+        return BuildPhase.Of(slots);
+    }
+
     /// <summary>A round that spends the purse on the cheapest creep the roster has.</summary>
     public static BuildPhase Shopping(Run run) => Shopping(run, run.Purse.Gold);
 
@@ -150,7 +178,13 @@ public static class TheBuild
     public static BuildPhase Shopping(Run run, int budget)
     {
         UnitType first = FirstCreep(run.Types);
-        int count = budget / run.Costs.PriceOf(Purchase.Unit(first.Id));
+
+        // What the round already fields, plus whatever the budget adds to it. A
+        // creep is bought once and attacks every round after, so a fixture that
+        // sent only this round's purchase would be asking to leave the earlier
+        // rounds' creeps at home, which is refused.
+        int count = run.Carrying.CountOf(first.Id)
+            + (budget / run.Costs.PriceOf(Purchase.Unit(first.Id)));
 
         return count == 0
             ? BuildPhase.Of()

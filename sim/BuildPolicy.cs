@@ -80,7 +80,15 @@ namespace Sim
 
             IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
             int wave = run.Purse.Gold - CoverThenUpgradeBot.BudgetOf(run.Purse);
-            int count = wave / PriceOf(run.Costs, preferred);
+
+            // What the round already fields, plus whatever this round's share
+            // adds to it. A creep is bought once and attacks every round after,
+            // so a bot that sent only what it could afford this round would be
+            // asking to send fewer than it carries -- which is refused, and
+            // rightly. A sweep row therefore measures a creep accumulating,
+            // which is what a run of it now actually is.
+            int held = run.Carrying.CountOf(preferred);
+            int count = held + (wave / PriceOf(run.Costs, preferred));
 
             // The record stores a slot's count as a u16, so a purse that could
             // buy more bodies than that fills the slot to its ceiling.

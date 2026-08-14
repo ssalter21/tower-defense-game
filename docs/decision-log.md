@@ -673,3 +673,33 @@ phase's output, which is `field.txt`, and the shell's run verbs refuse a wave re
 advanced the run. The first run that actually did died of health in round three. `field.txt` now ships in the
 streaming copy; the refusal is still only the shell's, and what stands in for it on this side is that the right
 file ships.
+
+### A creep is bought once and attacks every round after
+
+The wave was whatever the round in front of it happened to buy: round seven could field fewer creeps than round
+six, and every round paid for its whole column again. Found on 14 August 2026 by playing it — *"the wave you
+build is supposed to accumulate over the rounds, you aren't just paying for 1 creep for 1 round."*
+
+Buying is now permanent. A build phase names the whole of its round's wave and is charged only for the increase
+over what it carries; sending fewer of a type than is carried, or leaving one off altogether, is refused where
+the decision is read. Two things were decided with it: the whole accumulated wave stays rearrangeable every
+round, which is what keeps #197's drag live for the length of a run, and there is no selling a creep back — a
+bad early purchase is a lasting commitment, which is the point.
+
+**This replaced half of what `vision.md` said about the purse.** Scarcity used to come from a bounded, growing
+set of wave slots refilled each round, with only the *unlock* permanent. No slot bound was ever implemented,
+the unlocks came out with the offering in #179, and what is left is the rule above: the purse is the only
+scarcity on the sending side, and permanence is what makes attacking compound. See
+[ADR-0052](adr/0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) for the shape and
+[#207](https://github.com/ssalter21/tower-defense-game/issues/207) for the ticket.
+
+**It is simulation version 4, and it exposed a hole in the mechanism that is supposed to catch exactly that.**
+The behaviour fingerprint came out identical to version 3's, because every composition it folded resolved a
+phase carrying nothing — and a phase carrying nothing prices as it always did. That is the second time the
+table has had a blind half. The fold gained a third one.
+
+**What it does not fix is the opponent.** The canned field is one stored round drawn ten times, so the run's
+own wave compounds while the pressure coming back stays flat: the committed run now ends holding sixteen
+hundred gold. That asymmetry is [#208](https://github.com/ssalter21/tower-defense-game/issues/208), and it is
+not a free change — it collides with ADR-0042's rule that the field is measured once and fixed for the whole
+run, which is what keeps income a fold over the outcome vector.

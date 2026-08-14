@@ -94,6 +94,21 @@ public class DerivationTests
         // is not evidence, so the fold gained a second half and the label went
         // to rule-fingerprint/2.
         (3u, 0x97AE0A007D5A9AB9UL),
+
+        // Version 4 is #207 -- a creep is bought once and attacks every round
+        // after, so a build phase names the whole of its round's wave and is
+        // charged only for the increase over what it carries. Every stored run
+        // replays to a different outcome under it, because every round after
+        // the first now sends more than it did and pays less for it.
+        //
+        // IT CAUGHT THE SAME HOLE A SECOND TIME. Under rule-fingerprint/2 this
+        // build's fingerprint came out 97AE0A007D5A9AB9 -- byte for byte
+        // version 3's -- because both halves of that fold resolve a phase that
+        // carries nothing, and a phase carrying nothing prices exactly as it did
+        // before. The fold gained a third half that resolves against a carried
+        // wave and folds what it cost, and the label went to
+        // rule-fingerprint/3.
+        (4u, 0x67E9F86CA94BE2D6UL),
     };
 
     /// <summary>
@@ -478,9 +493,12 @@ public class DerivationTests
     /// <para>
     /// <b>The label carries the shape of the fold, and bumping it retires the
     /// rows taken under the old one.</b> <c>rule-fingerprint/1</c> folded a
-    /// match alone; <c>rule-fingerprint/2</c> folds a match and a composition.
-    /// Versions 1 and 2 are recorded under the first and cannot be recomputed
-    /// here, which is a loss stated out loud rather than a table that quietly
+    /// match alone; <c>rule-fingerprint/2</c> folded a match and a composition;
+    /// <c>rule-fingerprint/3</c> folds a match, a composition, and a second
+    /// composition against a wave the round carries -- which is the only half
+    /// that can see what a wave costs.
+    /// Versions 1 to 3 are recorded under earlier labels and cannot be
+    /// recomputed here, which is a loss stated out loud rather than a table that quietly
     /// compares fewer things -- the same rule <see cref="Match"/> applies to its
     /// own state-hash label.
     /// </para>
@@ -493,7 +511,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/2").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/3").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -547,6 +565,7 @@ public class DerivationTests
                 WaveSlot.Of(4, 2))
             .Resolve(
                 1,
+                WaveScript.Nothing,
                 ladder,
                 Purse.Holding(FingerprintComposedGold),
                 CostTable.From(rules, types),
@@ -562,7 +581,34 @@ public class DerivationTests
             fingerprint = fingerprint.Add(order.TickOffset, order.TypeId).Add(order.Count);
         }
 
-        return fingerprint;
+        // The same phase again, against a round that already carries part of
+        // what it sends. What this half sees that the one above cannot is what a
+        // wave COSTS: a creep is bought once and attacks every round after, so
+        // the price is the increase over what is carried and nothing else in
+        // this file resolves a phase that carries anything.
+        //
+        // OBSERVED: price the slots at their full count -- charge slot.Count
+        // rather than slot.Count minus what is held. The fingerprint goes back
+        // to 97AE0A007D5A9AB9, byte for byte version 3's, and the version-4 row
+        // goes red naming both numbers. Under rule-fingerprint/2 the same edit
+        // was invisible, which is the hole this half closes and the second time
+        // this file has had one.
+        Build carried = BuildPhase
+            .Of(
+                WaveSlot.Of(2, 5),
+                WaveSlot.Of(1, 1),
+                WaveSlot.Of(4, 2))
+            .Resolve(
+                2,
+                composed.Wave,
+                ladder,
+                Purse.Holding(FingerprintComposedGold),
+                CostTable.From(rules, types),
+                types,
+                map,
+                Board.Empty);
+
+        return fingerprint.Add(carried.Spent, carried.Wave.TotalUnits);
     }
 
     private static (uint Version, ulong Fingerprint) Row(uint version)

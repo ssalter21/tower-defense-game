@@ -300,9 +300,14 @@ public class BuildPolicyTests
         int wave = run.Purse.Gold - CoverThenUpgradeBot.BudgetOf(run.Purse);
         int sent = 0;
 
+        // What the slots cost, which is what they add rather than what they
+        // hold: a creep is bought once and attacks every round after, so the
+        // bot carries its previous rounds' creeps forward for free and spends
+        // its share on the increase.
         foreach (WaveSlot slot in phase.Slots)
         {
-            sent += run.Costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
+            sent += run.Costs.PriceOf(
+                Purchase.Unit(slot.TypeId), slot.Count - run.Carrying.CountOf(slot.TypeId));
         }
 
         Assert.InRange(sent, wave - run.Costs.PriceOf(Purchase.Unit(Minion)) + 1, wave);

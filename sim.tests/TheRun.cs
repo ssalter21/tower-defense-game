@@ -57,9 +57,15 @@ public static class TheRun
     /// <see cref="TheBuild.Fortifying"/>. Every round of it added a tower to the
     /// wall while there was one left to add, and spent what remained of the
     /// purse on the roster's first creep. So the second column falls by more
-    /// than half over the rounds the wall is going up, the first dips while it
-    /// does -- gold standing on the board is gold the wave was not sent out of
-    /// -- and the first jumps once the wall stops eating the purse.
+    /// than half over the rounds the wall is going up -- the wall is working --
+    /// while the first climbs every single round without exception.
+    /// </para>
+    /// <para>
+    /// <b>That first column is #207 written down.</b> A creep is bought once
+    /// and attacks every round after, so a round's wave is every round's
+    /// purchases and the leak cost it deals can only go up. A vector whose
+    /// first column ever fell would be a run that left a creep at home, which
+    /// is refused -- which is why these numbers are worth writing down twice.
     /// </para>
     /// <para>
     /// <b>This player runs out of health, and that is the point.</b> #179 moved
@@ -75,9 +81,9 @@ public static class TheRun
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
         new RoundOutcome(23, 239),
-        new RoundOutcome(69, 220),
-        new RoundOutcome(90, 178),
-        new RoundOutcome(59, 177),
+        new RoundOutcome(128, 220),
+        new RoundOutcome(273, 178),
+        new RoundOutcome(398, 177),
     };
 
     /// <summary>
@@ -92,15 +98,15 @@ public static class TheRun
     public static IReadOnlyList<RoundOutcome> TheCommittedRunWithoutDeath => new[]
     {
         new RoundOutcome(23, 239),
-        new RoundOutcome(69, 220),
-        new RoundOutcome(90, 178),
-        new RoundOutcome(59, 177),
-        new RoundOutcome(33, 144),
-        new RoundOutcome(36, 91),
-        new RoundOutcome(124, 86),
-        new RoundOutcome(135, 97),
-        new RoundOutcome(138, 87),
-        new RoundOutcome(144, 85),
+        new RoundOutcome(128, 220),
+        new RoundOutcome(273, 178),
+        new RoundOutcome(398, 177),
+        new RoundOutcome(517, 144),
+        new RoundOutcome(631, 91),
+        new RoundOutcome(863, 86),
+        new RoundOutcome(1064, 97),
+        new RoundOutcome(1267, 87),
+        new RoundOutcome(1473, 85),
     };
 
     /// <summary>What that run had left of the pool when it stopped: none of it.</summary>

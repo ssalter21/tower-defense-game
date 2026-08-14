@@ -20,7 +20,8 @@ These were extracted from the source comments when the project moved to a commen
 | [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints — **superseded by #179** |
 | [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once — **superseded by #179** |
 | [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |
-| [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling |
+| [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling — **its "fixed for the whole run" is under question in #208, because the canned opponent does not grow while an accumulating wave does** |
+| [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
 
 ## The simulation/view boundary
 

@@ -309,11 +309,12 @@ namespace View
 
         /// <summary>
         /// Sends one fewer. At one this empties the box, which takes it out of
-        /// the row.
+        /// the row — unless the box holds creeps the round carries, which are a
+        /// floor it does not lower past.
         /// </summary>
         public void Fewer()
         {
-            if (!_listing || _listingAt >= _round.Slots.Count)
+            if (!_listing || _listingAt >= _round.Slots.Count || !_round.CanSendFewer(_listingAt))
             {
                 return;
             }

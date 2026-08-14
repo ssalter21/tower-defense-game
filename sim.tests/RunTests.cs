@@ -337,8 +337,12 @@ public class RunTests
         Assert.Equal(3, run.Round);
         Assert.True(run.Waves > run.Round, "The run ran out of waves rather than out of health.");
 
+        // Sending exactly what the run carries, so that the refusal below is the
+        // run being over and not the wave being shrunk: a phase that named no
+        // slot would be leaving this run's creeps at home, which refuses first
+        // and would make this assertion about the wrong rule.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing()));
+            () => run.Advance(TheBuild.BuyingNothing(run)));
 
         Assert.Contains("This run is over", thrown.Message, StringComparison.Ordinal);
     }
@@ -579,7 +583,7 @@ public class RunTests
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
         Assert.Equal(4000, spent);
-        Assert.Equal(313, bonus);
+        Assert.Equal(330, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }

@@ -64,6 +64,8 @@ namespace View
 
         private readonly Board _standing;
 
+        private readonly WaveScript _carried;
+
         private readonly UnitType[] _palette;
 
         private readonly UnitType[] _roster;
@@ -77,6 +79,7 @@ namespace View
         /// resolved against.
         /// </summary>
         /// <param name="wave">Which round this is, as <see cref="Run.Advance"/> counts them.</param>
+        /// <param name="carried">What the round already fields and cannot give up.</param>
         /// <param name="ladder">The upgrade edges. What may be placed and what may be climbed into.</param>
         /// <param name="purse">What the round opens with.</param>
         /// <param name="costs">What everything is priced at.</param>
@@ -85,6 +88,7 @@ namespace View
         /// <param name="board">What stands before this round acts.</param>
         public ComposedRound(
             int wave,
+            WaveScript carried,
             UpgradeLadder ladder,
             Purse purse,
             CostTable costs,
@@ -93,6 +97,7 @@ namespace View
             Board board)
         {
             Wave = wave;
+            _carried = carried ?? throw new ArgumentNullException(nameof(carried));
             _ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
             _opening = purse ?? throw new ArgumentNullException(nameof(purse));
             _costs = costs ?? throw new ArgumentNullException(nameof(costs));
@@ -102,7 +107,11 @@ namespace View
             _palette = Buildable(types, ladder, costs);
             _roster = Walkers(types, costs);
 
-            _phase = BuildPhase.Of();
+            // The row opens holding what the run carries, in the order it was
+            // last sent in. A round that changes nothing about its wave sends
+            // those same slots again, so the empty phase is only ever round
+            // one's opening position.
+            _phase = BuildPhase.Of(Held(carried));
             _resolved = Resolve(_phase);
         }
 
@@ -124,7 +133,14 @@ namespace View
             }
 
             return new ComposedRound(
-                run.Round + 1, run.Ladder, run.Purse, run.Costs, run.Types, run.Map, run.Board);
+                run.Round + 1,
+                run.Carrying,
+                run.Ladder,
+                run.Purse,
+                run.Costs,
+                run.Types,
+                run.Map,
+                run.Board);
         }
 
         /// <summary>Which round of the run this is.</summary>
@@ -312,20 +328,56 @@ namespace View
         }
 
         /// <summary>
-        /// Sends one fewer. At one this empties the box, which takes it out of
-        /// the row and closes the gap behind it.
+        /// How many of the box at <paramref name="index"/> are carried, and so
+        /// cannot be taken back off.
+        /// </summary>
+        public int CarriedIn(int index)
+        {
+            Bounded(index, Slots.Count - One);
+
+            return _carried.CountOf(Slots[index].TypeId);
+        }
+
+        /// <summary>
+        /// Whether the box at <paramref name="index"/> can be lowered at all.
         /// </summary>
         /// <remarks>
-        /// Lowering a count is never refused -- it is the same wave for less
-        /// gold -- so there is no offering call to ask first, and the resolve
-        /// this goes through is what re-prices the purse rather than what
-        /// permits it.
+        /// <b>A count only lowers as far as what is carried.</b> A creep is
+        /// bought once and attacks every round after, so the creeps a previous
+        /// round paid for are a floor under this one's box rather than a bill it
+        /// may reconsider. This is the offering call the wave bar asks before it
+        /// offers the verb -- prevention rather than a refusal out of the
+        /// simulation, on ADR-0051's rule.
+        /// </remarks>
+        public bool CanSendFewer(int index)
+        {
+            Bounded(index, Slots.Count - One);
+
+            return Slots[index].Count > _carried.CountOf(Slots[index].TypeId);
+        }
+
+        /// <summary>
+        /// Sends one fewer. At one more than is carried this empties the box,
+        /// which takes it out of the row and closes the gap behind it.
+        /// </summary>
+        /// <remarks>
+        /// Lowering costs nothing and is refunded, so it is never refused for
+        /// money -- but it is refused below what the round carries, and
+        /// <see cref="CanSendFewer"/> is what a screen asks first. Reaching here
+        /// on a box already at its floor leaves the wave alone rather than
+        /// composing one the simulation would throw on.
         /// </remarks>
         public void SendFewer(int index)
         {
             Bounded(index, Slots.Count - One);
 
             WaveSlot slot = Slots[index];
+            int held = _carried.CountOf(slot.TypeId);
+
+            if (slot.Count <= held)
+            {
+                return;
+            }
 
             if (slot.Count <= One)
             {
@@ -341,9 +393,20 @@ namespace View
         /// Takes the box at <paramref name="index"/> out of the row. What is
         /// behind it closes up, so a composed wave never carries a hole.
         /// </summary>
+        /// <remarks>
+        /// A box holding carried creeps cannot be taken out at all -- there is
+        /// no leaving a creep at home -- so this leaves the wave alone rather
+        /// than composing one that would be refused.
+        /// </remarks>
         public void SendNone(int index)
         {
             Bounded(index, Slots.Count - One);
+
+            if (_carried.CountOf(Slots[index].TypeId) > 0)
+            {
+                return;
+            }
+
             Compose(Without(index));
         }
 
@@ -491,7 +554,23 @@ namespace View
         /// The single call every question in this class is answered by.
         /// </summary>
         private Build Resolve(BuildPhase phase) =>
-            phase.Resolve(Wave, _ladder, _opening, _costs, _types, _map, _standing);
+            phase.Resolve(Wave, _carried, _ladder, _opening, _costs, _types, _map, _standing);
+
+        /// <summary>
+        /// A carried wave as the slots a phase opens holding, in the order it
+        /// was sent in.
+        /// </summary>
+        private static WaveSlot[] Held(WaveScript carried)
+        {
+            var slots = new WaveSlot[carried.Orders.Count];
+
+            for (int index = 0; index < slots.Length; index++)
+            {
+                slots[index] = WaveSlot.Of(carried.Orders[index].TypeId, carried.Orders[index].Count);
+            }
+
+            return slots;
+        }
 
         /// <summary>
         /// Whether a wave would resolve on this phase's actions. The wave half

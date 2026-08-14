@@ -512,13 +512,14 @@ namespace Tests.PlayMode
         /// A round opening on an empty board with as much gold as the caller
         /// says, priced and laddered out of the shipped content.
         /// </summary>
-        private static ComposedRound Opening(int gold = 100)
+        private static ComposedRound Opening(int gold = 100, WaveScript carried = null)
         {
             UnitTypeTable types = Types();
             Ruleset rules = StreamingContent.ReadRuleset();
 
             return new ComposedRound(
                 wave: 1,
+                carried ?? WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(gold),
                 CostTable.From(rules, types),

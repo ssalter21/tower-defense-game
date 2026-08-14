@@ -779,18 +779,55 @@ namespace Tests.PlayMode
 
             int creeps = Number(words[3]);
 
+            // What the round walked in already holding. A creep is bought once
+            // and attacks every round after (#207), so what this line names is
+            // how many bodies the round ADDS and the row it adds them to is the
+            // one the last round left.
+            int carried = Bodies(root);
+
             for (int sent = 0; sent < creeps; sent++)
             {
                 int box = root.Composing.Slots.Count;
                 IReadOnlyList<UnitType> offered = root.Composing.Sendable(box);
 
-                Assert.That(offered, Is.Not.Empty, "Box " + box + " of wave " + root.Composing.Wave + " offers nothing.");
+                if (offered.Count > 0)
+                {
+                    root.Wave.Open(box);
+                    root.Wave.Choose(offered[0]);
 
-                root.Wave.Open(box);
-                root.Wave.Choose(offered[0]);
+                    continue;
+                }
+
+                // Every creep the roster has is already in the row, which is
+                // reachable now that a row keeps what it bought: a creep fills
+                // at most one slot, so past that point another body is a higher
+                // count on a box rather than a new one.
+                Assert.That(
+                    root.Composing.CanSendMore(0),
+                    Is.True,
+                    "Wave " + root.Composing.Wave + " can neither open a box nor raise one.");
+
+                root.Wave.Open(0);
+                root.Wave.More();
             }
 
-            Assert.That(root.Composing.Slots.Count, Is.EqualTo(creeps), "The wave was filled.");
+            Assert.That(
+                Bodies(root),
+                Is.EqualTo(carried + creeps),
+                "The wave was filled, on top of what the round carries.");
+        }
+
+        /// <summary>How many creeps the composed wave sends, over all its boxes.</summary>
+        private static int Bodies(MatchRoot root)
+        {
+            int bodies = 0;
+
+            for (int index = 0; index < root.Composing.Slots.Count; index++)
+            {
+                bodies += root.Composing.Slots[index].Count;
+            }
+
+            return bodies;
         }
 
         /// <summary>

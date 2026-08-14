@@ -301,6 +301,24 @@ namespace Sim
         /// is bought: the purse is the only scarcity on the sending side.
         /// </para>
         /// <para>
+        /// <b>The slots are the whole of the round's wave, and only the increase
+        /// over <paramref name="carried"/> is charged.</b> A creep is bought
+        /// once and attacks every round after, so a phase names everything it
+        /// fields -- what it carries and what it is adding -- and pays for the
+        /// difference. Storing only the addition would have been fewer bytes and
+        /// was rejected: the release order is a decision the round makes over
+        /// the whole wave, including creeps it did not buy, so a record that
+        /// held only the new ones could not say what the round actually sent.
+        /// </para>
+        /// <para>
+        /// <b>Sending fewer of a type than is carried is refused.</b>
+        /// Accumulation is monotone: there is no selling a creep back and no
+        /// leaving one at home, so a bad early purchase is a lasting commitment.
+        /// That refusal and the pricing above are one rule read twice rather
+        /// than two rules -- what cannot be given up is exactly what is not
+        /// charged for again.
+        /// </para>
+        /// <para>
         /// <b>The ladder is read here, and that is a reversal.</b>
         /// <c>content/upgrades.txt</c> long carried a standing claim that the
         /// simulation never walks one; it is now false by intent. A unit that is
@@ -310,6 +328,7 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="wave">Which round this is, for the refusals to name.</param>
+        /// <param name="carried">What the round already fields and is not charged for again.</param>
         /// <param name="ladder">The upgrade edges a <c>place</c> and an <c>upgrade</c> are both refused against.</param>
         /// <param name="purse">What the run has to spend.</param>
         /// <param name="costs">What everything is priced at, units and snapshots alike.</param>
@@ -318,6 +337,7 @@ namespace Sim
         /// <param name="board">What stands before this phase acts.</param>
         public Build Resolve(
             int wave,
+            WaveScript carried,
             UpgradeLadder ladder,
             Purse purse,
             CostTable costs,
@@ -325,6 +345,11 @@ namespace Sim
             HexMap map,
             Board board)
         {
+            if (carried is null)
+            {
+                throw new ArgumentNullException(nameof(carried));
+            }
+
             if (ladder is null)
             {
                 throw new ArgumentNullException(nameof(ladder));
@@ -371,6 +396,11 @@ namespace Sim
             long spent = 0;
             var already = new List<int>();
 
+            // How many of each order is new, in step with orders. The purse is
+            // spent out of this and never out of the count released, which is
+            // the whole of what "bought once" costs to implement.
+            var bought = new List<int>();
+
             // Where in the column this slot's first creep stands: behind every
             // creep the slots above it send. An empty slot contributes nothing
             // and costs nothing, so banking a slot closes the gap rather than
@@ -402,8 +432,27 @@ namespace Sim
                         + "of the rule that they ascend.");
                 }
 
+                int held = carried.CountOf(slot.TypeId);
+
+                if (slot.Count < held)
+                {
+                    throw new SimulationException(
+                        "A build phase at wave "
+                        + wave.ToString(CultureInfo.InvariantCulture)
+                        + " sends "
+                        + slot.Count.ToString(CultureInfo.InvariantCulture)
+                        + " of type id "
+                        + slot.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + " where the round already carries "
+                        + held.ToString(CultureInfo.InvariantCulture)
+                        + ". A creep is bought once and attacks every round after, so a wave may only grow: "
+                        + "there is no selling one back and no leaving one at home, and the round is charged "
+                        + "for the increase precisely because it cannot give up what it already fields.");
+                }
+
                 already.Add(slot.TypeId);
-                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
+                bought.Add(slot.Count - held);
+                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count - held);
                 orders.Add(new UnitOrder(
                     FirstReleaseTick + (ahead * Match.SpawnIntervalTicks),
                     types.Require(slot.TypeId, UnitRole.Moving, Filling(index, wave)),
@@ -411,6 +460,28 @@ namespace Sim
                     Corridor));
 
                 ahead += slot.Count;
+            }
+
+            // A carried creep that no slot names at all is the same refusal as
+            // one a slot sends too few of, and it is checked here because a
+            // missing slot is not reachable from inside the loop above.
+            for (int index = 0; index < carried.Orders.Count; index++)
+            {
+                UnitOrder held = carried.Orders[index];
+
+                if (!already.Contains(held.TypeId))
+                {
+                    throw new SimulationException(
+                        "A build phase at wave "
+                        + wave.ToString(CultureInfo.InvariantCulture)
+                        + " sends none of type id "
+                        + held.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + " where the round already carries "
+                        + carried.CountOf(held.TypeId).ToString(CultureInfo.InvariantCulture)
+                        + ". A creep is bought once and attacks every round after, so a wave may only grow: "
+                        + "a slot left off is a creep left at home, and there is no leaving one at home. "
+                        + "A round that wants to change nothing about its wave sends the same slots again.");
+                }
             }
 
             if (spent > left.Gold)
@@ -431,7 +502,10 @@ namespace Sim
 
             for (int index = 0; index < orders.Count; index++)
             {
-                left = left.Spend(costs, Purchase.Unit(orders[index].TypeId), orders[index].Count);
+                if (bought[index] > 0)
+                {
+                    left = left.Spend(costs, Purchase.Unit(orders[index].TypeId), bought[index]);
+                }
             }
 
             return new Build(

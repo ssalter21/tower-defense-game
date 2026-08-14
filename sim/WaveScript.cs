@@ -102,6 +102,43 @@ namespace Sim
         /// <summary>Every unit this wave sends, summed.</summary>
         public int TotalUnits { get; }
 
+        /// <summary>
+        /// How many of one creep type this wave sends, over all of its orders.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is what a round is measured as carrying.</b> A wave a build
+        /// phase composed holds a type in exactly one order, because a creep
+        /// fills at most one slot -- but an authored wave may spell the same
+        /// type at several ticks, and a count that ignored the others would
+        /// under-report what a run already fields. Summing is the reading that
+        /// is right for both.
+        /// </remarks>
+        public int CountOf(int typeId)
+        {
+            int found = 0;
+
+            for (int index = 0; index < _orders.Length; index++)
+            {
+                if (_orders[index].TypeId == typeId)
+                {
+                    found += _orders[index].Count;
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// The wave a run carries before it has played a round: nothing at all.
+        /// </summary>
+        /// <remarks>
+        /// Round one is the one round that pays for every creep in it, and this
+        /// is what says so. It is <see cref="FromSlots"/> over no orders rather
+        /// than a fourth kind of wave, so it is the same empty wave a build
+        /// phase composes when every slot is banked.
+        /// </remarks>
+        public static WaveScript Nothing { get; } = FromSlots(Array.Empty<UnitOrder>());
+
         /// <summary>Parses a wave from text, against the types it is allowed to name.</summary>
         public static WaveScript Parse(string text, UnitTypeTable types) => Parse("wave", text, types);
 

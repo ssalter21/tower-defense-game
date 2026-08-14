@@ -155,14 +155,19 @@ to supply one.
 - **Attacking pays back through performance, not a second wallet.** Income is a flat base per wave **plus a
   bonus on top**, paid in non-linear percentile bands over two distributions: how your wave performed, and how
   your defense performed, each against the field.
-- **The offense is separated by a gate, not a budget.** Taking one of the round's options **unlocks a creep
-  permanently for the run** — free to unlock, paid to buy. What you may field is bounded by what you have
-  unlocked.
-- **Scarcity comes from wave slots.** A wave has limited slots, growing each round. A slot is one creep type
-  plus a count and may be left empty, so **a slot spent on a cheap column is a slot not spent on a heavy
-  unit** — the opportunity cost a second wallet would manufacture.
+- **A creep is bought once and attacks every round after.** Buying is permanent: what you paid for in round
+  three is still walking in round ten, and the round is charged only for what it *adds* to the wave. So an
+  early purchase compounds — it is a stream of leak cost for the rest of the run rather than one round's
+  worth — and a wave can only ever grow. There is no selling a creep back and no leaving one at home, which
+  makes a bad early buy a lasting mistake and is the point.
+- **The whole wave is rearranged every round.** A slot's position is its release order, and the order is a
+  decision the round makes over everything it fields, not only over what it just bought. A creep fills at most
+  one slot, so buying more of something you already send raises that box rather than opening a second one.
+- **Nothing is gated and nothing is unlocked.** Every creep in the roster is sendable from wave one, priced
+  and nothing else. The offering that used to ration the roster three creeps at a time came out with the
+  anchor schedule; the purse is the only scarcity on the sending side.
 - **Timing comes from interest.** Unspent gold banks at **10% a wave, rounded up**, uncapped for now. Every
-  purchase is measured against compounding, and leaving a slot empty is investment rather than waste.
+  purchase is measured against compounding, and adding nothing to the wave is investment rather than waste.
 
 Each build phase therefore stays one decision over one wallet.
 
@@ -170,7 +175,9 @@ Each build phase therefore stays one decision over one wallet.
 The coupling is **statistical**: you are paid against the field's distribution, never a named opponent, which
 reads the same whether the field is one lobby or a global population. Bands are progressive and never negative.
 
-Base, thresholds, slot count and growth, and creep costs are sweep targets. One consequence: **the bonus needs
+Base, thresholds and creep costs are sweep targets, and a permanent purchase makes the last of those the
+sharpest of them: a creep's price is now paid once against every remaining round of leak cost it deals, so the
+cost column moves further per unit of retune than it did when a wave was rebought each round. One consequence: **the bonus needs
 a distribution to measure against**, and until real ghosts are stored the harness's canned field supplies one —
 which cannot tell the middle bands apart, so four authored bands behave as two until a real pool exists
 ([measured](research/a-canned-field-of-one-collapses-the-bands.md)).

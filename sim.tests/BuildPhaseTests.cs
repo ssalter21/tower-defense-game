@@ -3,8 +3,8 @@ using System.Globalization;
 namespace Sim.Tests;
 
 /// <summary>
-/// The build phase: a public offering, permanent unlocks, and a wave of scarce
-/// slots.
+/// The build phase: a board built out of one purse, and a wave that keeps
+/// everything it has ever bought.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -169,24 +169,139 @@ public class BuildPhaseTests
         Run run = TheBuild.Fresh(waves: 3);
         UnitType first = TheBuild.FirstCreep(run.Types);
 
+        // Every slot empty, which is the whole round banked. It is round one,
+        // because a creep is bought once and attacks every round after -- so a
+        // round that carries something and sends nothing is a creep left at
+        // home rather than a round banked, and that is refused below.
+        run.Advance(TheBuild.Filling(WaveSlot.Empty, WaveSlot.Empty));
+
+        Assert.Equal(0, run.Sent[0].Wave.TotalUnits);
+        Assert.Equal(0, run.Sent[0].Wave.Count);
+        Assert.Equal(0, run.Outcome.Rounds[0].LeakCostDealt);
+
         // One filled, one empty.
         run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 2), WaveSlot.Empty));
 
-        Assert.Equal(2, run.Sent[0].Wave.TotalUnits);
-        Assert.Equal(1, run.Sent[0].Wave.Count);
+        Assert.Equal(2, run.Sent[1].Wave.TotalUnits);
+        Assert.Equal(1, run.Sent[1].Wave.Count);
 
-        // Every slot empty, which is the whole round banked.
-        run.Advance(TheBuild.Filling(WaveSlot.Empty, WaveSlot.Empty));
-
-        Assert.Equal(0, run.Sent[1].Wave.TotalUnits);
-        Assert.Equal(0, run.Sent[1].Wave.Count);
-        Assert.Equal(0, run.Outcome.Rounds[1].LeakCostDealt);
+        // Emptying every slot now is not banking the round -- it is trying to
+        // leave two creeps at home, and there is no doing that. Banking a later
+        // round is sending the same slots again, which is the test below.
+        Assert.Throws<SimulationException>(
+            () => run.Advance(TheBuild.Filling(WaveSlot.Empty, WaveSlot.Empty)));
 
         // A slot nobody filled in at all is the empty one rather than one creep
         // of a type that does not exist.
         Assert.True(default(WaveSlot).IsEmpty);
         Assert.Equal(WaveSlot.Empty, default(WaveSlot));
         Assert.Equal(0, WaveSlot.Empty.TypeId);
+    }
+
+    [Fact]
+    public void A_creep_is_bought_once_and_attacks_every_round_after()
+    {
+        // #207, found by playing it: a wave was whatever the round in front of
+        // it happened to buy, so round seven could field fewer creeps than
+        // round six and every round paid for its whole column again.
+        //
+        // OBSERVED: price the slots at their full count in BuildPhase.Resolve
+        // instead of at the increase over what is carried. The second round
+        // below is charged twice -- once for the creeps it is adding and once
+        // for the ones it already owns -- and the third round's purse is short
+        // by the whole of the first round's wave.
+        Run run = TheBuild.Fresh(waves: 4);
+        UnitType creep = TheBuild.FirstCreep(run.Types);
+        int price = run.Costs.PriceOf(Purchase.Unit(creep.Id));
+
+        // Nothing is carried into round one, so round one pays for all of it.
+        Assert.Equal(0, run.Carrying.TotalUnits);
+
+        RoundReport first = run.Advance(BuildPhase.Of(WaveSlot.Of(creep.Id, 2)));
+
+        Assert.Equal(price * 2, first.Build.Spent);
+        Assert.Equal(2, run.Carrying.CountOf(creep.Id));
+
+        // Round two sends the same two and adds a third. Two of the three walk
+        // for free, because they were paid for in round one.
+        RoundReport second = run.Advance(BuildPhase.Of(WaveSlot.Of(creep.Id, 3)));
+
+        Assert.Equal(price, second.Build.Spent);
+        Assert.Equal(3, second.Build.Wave.TotalUnits);
+        Assert.Equal(3, run.Carrying.CountOf(creep.Id));
+
+        // Round three adds nothing at all: it sends the slots it carries, pays
+        // nothing for the wave, and still sends every creep.
+        RoundReport third = run.Advance(BuildPhase.Of(WaveSlot.Of(creep.Id, 3)));
+
+        Assert.Equal(0, third.Build.Spent);
+        Assert.Equal(3, third.Build.Wave.TotalUnits);
+
+        // Every round of the run fielded everything the rounds before it
+        // bought, which is the whole of what accumulating means.
+        for (int round = 1; round < run.Sent.Count; round++)
+        {
+            Assert.True(run.Sent[round].Wave.CountOf(creep.Id) >= run.Sent[round - 1].Wave.CountOf(creep.Id));
+        }
+    }
+
+    [Fact]
+    public void A_wave_may_only_grow_and_both_ways_of_shrinking_one_are_refused()
+    {
+        // There is no selling a creep back and no leaving one at home, so a bad
+        // early purchase is a lasting commitment. The two spellings of taking
+        // one back -- a smaller count, and a slot dropped altogether -- are one
+        // rule and both name what is carried.
+        Run run = TheBuild.Fresh(waves: 4);
+        UnitType creep = TheBuild.FirstCreep(run.Types);
+
+        run.Advance(BuildPhase.Of(WaveSlot.Of(creep.Id, 3)));
+
+        SimulationException fewer = Assert.Throws<SimulationException>(
+            () => run.Advance(BuildPhase.Of(WaveSlot.Of(creep.Id, 2))));
+
+        Assert.Contains("sends 2 of type id " + creep.Id, fewer.Message);
+        Assert.Contains("already carries 3", fewer.Message);
+
+        SimulationException none = Assert.Throws<SimulationException>(
+            () => run.Advance(BuildPhase.Of()));
+
+        Assert.Contains("sends none of type id " + creep.Id, none.Message);
+        Assert.Contains("already carries 3", none.Message);
+
+        // Refused whole: neither attempt moved the run or its purse.
+        Assert.Equal(1, run.Round);
+        Assert.Equal(3, run.Carrying.CountOf(creep.Id));
+    }
+
+    [Fact]
+    public void The_whole_carried_wave_is_reordered_by_a_later_round_and_costs_nothing_to_reorder()
+    {
+        // A round's decision is over everything it fields, not only over what
+        // it just bought -- so a phase names the whole wave and may put the
+        // creeps it carries anywhere in the column. That is why a stored
+        // command holds the whole wave rather than the round's additions.
+        Run run = TheBuild.Fresh(waves: 4);
+        UnitType[] creeps = Walkers(run.Types);
+        UnitType first = creeps[0];
+        UnitType second = creeps[1];
+
+        run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 2), WaveSlot.Of(second.Id, 1)));
+
+        Assert.Equal(first.Id, run.Sent[0].Wave.Orders[0].TypeId);
+
+        // The same creeps, the other way round, adding nothing.
+        RoundReport swapped = run.Advance(
+            BuildPhase.Of(WaveSlot.Of(second.Id, 1), WaveSlot.Of(first.Id, 2)));
+
+        Assert.Equal(0, swapped.Build.Spent);
+        Assert.Equal(second.Id, swapped.Build.Wave.Orders[0].TypeId);
+        Assert.Equal(first.Id, swapped.Build.Wave.Orders[1].TypeId);
+
+        // And the release order moved with it: what is at the front walks out
+        // first, whoever paid for it and whenever they did.
+        Assert.Equal(0, swapped.Build.Wave.Orders[0].TickOffset);
+        Assert.True(swapped.Build.Wave.Orders[1].TickOffset > swapped.Build.Wave.Orders[0].TickOffset);
     }
 
     [Fact]
@@ -1070,6 +1185,7 @@ public class BuildPhaseTests
     private static Build Resolved(Run run, BuildPhase phase, int gold, Board? board = null) =>
         phase.Resolve(
             run.Round + 1,
+            run.Carrying,
             run.Ladder,
             Purse.Holding(gold),
             run.Costs,
