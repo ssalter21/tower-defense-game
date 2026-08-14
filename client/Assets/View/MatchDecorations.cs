@@ -39,8 +39,8 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Real geometry only.</b> A tracer is a thin stretched box and a spark
-    /// is a small sphere, because the camera yaws through six snapped positions
-    /// and the standing art rule is that nothing may turn to face it. Unity's
+    /// is a small sphere, because the camera orbits freely and the standing art
+    /// rule is that nothing may turn to face it. Unity's
     /// line renderers and default particles both billboard, so neither is used
     /// here — which is a constraint that showed up as a choice of primitive
     /// rather than as a problem.

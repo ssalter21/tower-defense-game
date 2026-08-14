@@ -47,7 +47,7 @@ namespace View
 
         /// <summary>
         /// Builds the shell: real geometry at a real size, because the camera
-        /// yaws through six snaps and anything flat would turn to face it.
+        /// orbits freely and anything flat would turn to face it.
         /// </summary>
         public void Build(Material material)
         {

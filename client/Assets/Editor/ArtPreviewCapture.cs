@@ -31,10 +31,10 @@ namespace View.Editor
     /// the editor's own preview window would do.
     /// </description></item>
     /// <item><description>
-    /// <b>Models</b> become a six-frame turntable at the six snapped camera
-    /// angles from <see cref="SceneFraming"/>, lit by the same sun. A model that
-    /// reads well from one side and vanishes from another is a fact about this
-    /// game's camera, and it only shows up if the preview uses that camera.
+    /// <b>Models</b> become a six-frame turntable, evenly spaced round the
+    /// subject and lit by the same sun the match uses. A model that reads well
+    /// from one side and vanishes from another is a fact a player can find by
+    /// orbiting, and it only shows up if the sheet turns too.
     /// </description></item>
     /// </list>
     /// <para>

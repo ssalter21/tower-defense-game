@@ -715,8 +715,8 @@ namespace Tests.PlayMode
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// Nothing in the match turns to face the camera, so yawing through all
-        /// six snaps is a real check rather than a formality.
+        /// Nothing in the match turns to face the camera, so orbiting to look
+        /// at a thing from another side is a real check rather than a formality.
         /// </summary>
         /// <remarks>
         /// Checked by type rather than by looking, because the components that
