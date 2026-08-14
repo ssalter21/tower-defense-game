@@ -40,7 +40,7 @@ namespace Sim
     /// itself before it lands anywhere. <c>System.IO</c> is a banned namespace in
     /// this assembly and the IL scan rejects any reference to it, so the writer
     /// cannot grow a path argument. See
-    /// <c>docs/playing-a-run-from-a-shell.md</c> §4.
+    /// <c>docs/archive/playing-a-run-from-a-shell.md</c> §4.
     /// </para>
     /// <para>
     /// <b>A session that played no round writes nothing at all.</b> There is no

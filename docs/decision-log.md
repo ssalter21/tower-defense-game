@@ -438,12 +438,12 @@ sweep harness is pointed at it afterwards rather than before.
 
 `simcli play` was built so the build phase could be judged a fortnight before a client existed, and it did
 that. But the shell's standing purpose is **mass headless simulation** — pricing the roster by computing it —
-and `play` is the only one of nine verbs that takes human input. The balance work needs none of it.
+and `play` is the only one of eight verbs that takes human input. The balance work needs none of it.
 
 So **`play` is deleted**, and deliberately last: the proving machinery moves into `sim` first, the client is
 made to write command scripts, `play-run` is confirmed to replay one headlessly, and only then does the verb
 go. Done in that order nothing is lost, because reproducing a run without opening Unity survives in `play-run`.
-[The shell specification](playing-a-run-from-a-shell.md) is archived in the same commit; its sections were
+[The shell specification](archive/playing-a-run-from-a-shell.md) is archived in the same commit; its sections were
 load-bearing only while the tests that pinned them existed.
 
 Two things about the sweep harness that were assumed missing and are not: a **complete automated player

@@ -129,7 +129,7 @@ public class PlayedScriptTests
     public void A_run_cut_short_writes_a_script_record_run_compiles_and_play_run_plays_as_it_was_played()
     {
         // A session abandoned part-way is the artefact
-        // docs/playing-a-run-from-a-shell.md §8 most wants written down, so what
+        // docs/archive/playing-a-run-from-a-shell.md §8 most wants written down, so what
         // it writes has to stand on its own: six rounds, in the grammar, taken
         // through the actual verb -- read as bytes, played to the end and only
         // then written. Nothing about the six rows knows the four that never
@@ -166,7 +166,7 @@ public class PlayedScriptTests
         Assert.Equal(TheCommittedScript().Take(CutShortAt), recorded.Commands);
 
         // And then it plays, which is the other half of what
-        // docs/playing-a-run-from-a-shell.md §5 claims of a session that quit:
+        // docs/archive/playing-a-run-from-a-shell.md §5 claims of a session that quit:
         // record-run compiles the short script AND play-run plays it. The six
         // rounds that come back are the first six of content/run-outcome.txt
         // character for character -- the rounds the session was shown -- so the

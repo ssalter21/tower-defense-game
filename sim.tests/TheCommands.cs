@@ -1,11 +1,9 @@
-using Sim.Cli;
-
 namespace Sim.Tests;
 
 /// <summary>
 /// The committed content arranged as a command stream: a run to play, the
 /// decisions to play into it, the bytes they become, and the committed script's
-/// own decisions as somebody would type them at a prompt.
+/// own decisions.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -50,53 +48,17 @@ public static class TheCommands
     private const int Sent = 2;
 
     /// <summary>
-    /// The committed run's decisions spelled as somebody would type them at a
-    /// prompt: the take, what the round builds, what it sends, and
-    /// <c>done</c>.
+    /// The committed run's own decisions, read off <c>content/commands.txt</c>.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Compiled out of <c>content/commands.txt</c> rather than written out, so
-    /// that the committed run is an <i>input</i> to whatever plays these words
-    /// -- which is what <c>docs/playing-a-run-from-a-shell.md</c> §5 asks of the
-    /// interactive verb. <c>RunPromptTests</c> is where the typed words and that
-    /// file are held against each other, hand-spelled on both sides; a second
-    /// copy of them here would be a second thing to keep current.
-    /// </para>
-    /// <para>
-    /// The empty slots are dropped: <c>0 0</c> is how a stored row says a slot
-    /// was left alone, and at a prompt a slot nobody filled is a <c>send</c>
-    /// nobody typed.
-    /// </para>
+    /// Read out of the committed script rather than written out here, so that
+    /// the committed run is an <i>input</i> to whatever plays it and there is no
+    /// second copy of those ten rounds to keep current. What a caller does with
+    /// them is play them into a run a round at a time, which is what the client
+    /// does and what <see cref="ProvedSession"/> is handed.
     /// </remarks>
-    public static string[] TypedAtAPrompt()
-    {
-        var typed = new List<string>();
-
-        foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
-        {
-            foreach (BuildAction action in command.Actions)
-            {
-                typed.Add(
-                    CommandScript.WordFor(action.Kind)
-                    + " " + PlainText.Number(action.TypeId)
-                    + " " + PlainText.Number(action.Column)
-                    + " " + PlainText.Number(action.Row));
-            }
-
-            foreach (WaveSlot slot in command.Slots)
-            {
-                if (slot.Count > 0)
-                {
-                    typed.Add("send " + PlainText.Number(slot.TypeId) + " " + PlainText.Number(slot.Count));
-                }
-            }
-
-            typed.Add("done");
-        }
-
-        return typed.ToArray();
-    }
+    public static IReadOnlyList<RecordCommand> Committed() =>
+        CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile));
 
     /// <summary>A run on the committed content, with nothing played into it yet.</summary>
     public static Run Fresh(int waves = Waves, ulong seed = TheRun.Seed)

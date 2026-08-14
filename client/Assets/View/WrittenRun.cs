@@ -12,13 +12,12 @@ namespace View
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The same split as the shell's, for the same reason.</b>
+    /// <b>The claim is the simulation's and the file is this file's.</b>
     /// <c>System.IO</c> is a banned namespace in <c>sim</c> and the build gate
     /// scans the compiled image for it, so the claim — that the run somebody
     /// played and the record of it are one run — lives down there and the file
-    /// lives up here. <c>simcli/WrittenSession.cs</c> is the other half of the
-    /// same shape; the two do not share code because what they differ in is the
-    /// whole of what they do.
+    /// lives up here. The shell once had a half of its own for the deleted
+    /// <c>play</c> verb; this is now the only one, and a run is played here.
     /// </para>
     /// <para>
     /// <b>The decision to write is still the prover's.</b> A session that did

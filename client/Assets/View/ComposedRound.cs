@@ -152,9 +152,8 @@ namespace View
         /// <remarks>
         /// A row some edge of the ladder points at is left off, because it is
         /// refused to <c>place</c> and reached by upgrading the rung below it —
-        /// so listing it would be offering an action the rules turn down. Same
-        /// list, same order and the same reasoning as the command line's panel
-        /// in <c>simcli/RoundFrame.cs</c>. See <see cref="Cheapest"/>.
+        /// so listing it would be offering an action the rules turn down. See
+        /// <see cref="Cheapest"/>.
         /// </remarks>
         public IReadOnlyList<UnitType> Palette => _palette;
 
@@ -607,8 +606,7 @@ namespace View
         /// One ordering for both lists, because they are the same list read two
         /// ways: the palette and the wave bar are the two halves of one purse,
         /// and a bar that sorted by price beside one that sorted by id would be
-        /// two answers to a question nobody asked twice. Same rule and the same
-        /// order as the command line's panel in <c>simcli/RoundFrame.cs</c>.
+        /// two answers to a question nobody asked twice.
         /// </remarks>
         private static UnitType[] Cheapest(
             UnitTypeTable types, CostTable costs, Func<UnitType, bool> wanted)

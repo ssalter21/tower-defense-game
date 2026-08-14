@@ -28,7 +28,7 @@ was built on.
 
 ## Getting started
 
-Three things run today, and they need nothing but the .NET SDK — no engine, no
+Two things run today, and they need nothing but the .NET SDK — no engine, no
 editor, no licence:
 
 ```
@@ -80,19 +80,12 @@ matrix, costs a flag rather than an edit.
 the sweep placed on itself — a sampled seed count, a truncated roster — is a row
 of the file, so a partial report never reads as a complete one.
 
-The third is a run played by hand:
-
-```
-./tools/play-run-interactive.ps1
-```
-
-It draws the round in front of you — the board, this wave's menu, what a slot may
-be filled with and what everything costs — and takes a decision a word at a time,
-pricing the whole of it after each one so a refusal arrives at the word that
-caused it. Ten waves is about five minutes. What a session decided is written out
-as a `content/commands.txt` script, but only after that script has been replayed
-into a fresh run and agreed round for round with what you were shown: a session
-that disagrees writes nothing and exits non-zero.
+A run is played in the client rather than at a prompt. What a session decided is
+written out there as a `content/commands.txt` script, but only after that script
+has been replayed into a fresh run and agreed round for round with what you were
+shown — a session that disagrees writes nothing at all. `simcli record-run`
+compiles that script and `simcli play-run` plays it back headlessly, which is how
+a run somebody played is reproduced without opening the editor.
 
 ## Looking at it
 

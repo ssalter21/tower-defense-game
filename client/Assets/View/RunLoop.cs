@@ -314,8 +314,7 @@ namespace View
         /// written.
         /// </summary>
         /// <remarks>
-        /// The write is the client's and the proving is the simulation's, which
-        /// is the same split <c>simcli/WrittenSession.cs</c> lives under:
+        /// The write is the client's and the proving is the simulation's:
         /// <c>System.IO</c> is a banned namespace in <c>sim</c>, so a session
         /// that agreed hands back a script and where it lands is whoever is
         /// holding it. A disagreement hands back no script at all, so there is

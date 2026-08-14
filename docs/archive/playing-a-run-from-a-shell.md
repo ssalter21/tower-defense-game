@@ -2,19 +2,24 @@
 
 **A specification** · 10 August 2026 · written against `main` at `b5cf627`
 
-> What `simcli` has to grow to become the first thing in this repository that a person **plays** rather than
-> reads. It is written to be lifted into a wayfinder map, so §7 is a ticket list and §8 is the set of
-> questions a map would grill before any of them are cut.
+> ### 📦 Archived — the verb it specified is deleted
 >
-> **The work described here was built**, so this is no longer a plan. What was *decided* along the way is
-> [ADR-0050](adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) and what the first
-> played run reversed is [the decision log](decision-log.md); neither is restated here.
+> What `simcli` had to grow to become the first thing in this repository that a person **played** rather than
+> read. It was written to be lifted into a wayfinder map, so §7 is a ticket list and §8 is the set of
+> questions a map would grill before any of them were cut.
 >
-> What is still load-bearing is the worked detail the tests pin: §2's frame is asserted character for
-> character by `RoundFrameTests`, §3's words are the list `TypedLineTests` walks, and §5's rows name the four
-> tests that hold the verb up. Source comments cite those sections because a test does. **Amending one of
-> them means moving a test**, which is the only thing that keeps a specification from going quietly out of
-> date after the thing it specified exists.
+> **The work described here was built, and then it was deleted.** The shell's standing purpose is mass
+> headless simulation, the client is where a run is played now, and reproducing a run without opening Unity
+> survives in `play-run`. That reversal is
+> [the decision log's](../decision-log.md#the-interactive-verb-is-not-what-the-shell-is-for), and what was
+> *decided* along the way is
+> [ADR-0050](../adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md); neither is
+> restated here.
+>
+> Nothing below is pinned by a test any more. §2's frame, §3's words and §5's rows named `RoundFrameTests`,
+> `TypedLineTests`, `BuildPromptTests` and `RunPromptTests`, and all four went with the verb. **Read this for
+> the reasoning, not for the current state of anything** — what survived it is `PlayedScript` and
+> `ProvedSession` in `sim/`, which the client uses to write and prove a session of its own.
 
 ---
 
