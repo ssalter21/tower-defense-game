@@ -70,6 +70,19 @@ namespace Tests.Fixtures
         /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
         public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
+        /// <summary>
+        /// The staff's quarter turn, which stands it on end. Nothing about the
+        /// staff is inverted -- it is horizontal. Its shaft runs along the hand
+        /// bone's local +Y with the orb at the +Y end, the same axis and
+        /// direction as the sword's blade, and in the Mage's Idle_A that axis
+        /// points forward. The bone's local +X is exactly world up in that pose,
+        /// so the quarter turn about Z that carries the shaft onto local +X is
+        /// what stands it up. Only exactly upright in the pose it was measured
+        /// in -- a weapon parented to a hand turns with the arm. See
+        /// MatchSceneBuilder.StaffUpright, which carries the measurement.
+        /// </summary>
+        public static readonly Vector3 StaffUpright = new Vector3(0f, 0f, -90f);
+
 
         /// <summary>
         /// What each row in <c>content/units.txt</c> is drawn as, and how big,
@@ -100,9 +113,9 @@ namespace Tests.Fixtures
             (3, RangerModelPath, MatchArt.TowerScale,
                 null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, MageModelPath, MatchArt.TowerScale,
-                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, default, default),
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffUpright, default),
             (7, SkeletonMageModelPath, MatchArt.CreepScale,
-                SkeletonStaffModelPath, null, null, null, null, default, default),
+                SkeletonStaffModelPath, null, null, null, null, StaffUpright, default),
             (11, KnightModelPath, MatchArt.TowerScale,
                 SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, MinionModelPath, MatchArt.CreepScale,

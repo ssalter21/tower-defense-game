@@ -76,6 +76,41 @@ namespace View.Editor
         /// </summary>
         private static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
 
+        /// <summary>
+        /// The staff's quarter turn, which stands it on end.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Nothing about the staff is inverted — it is horizontal.</b>
+        /// Measured on 14 August 2026 from its vertices expressed in the hand
+        /// bone's own frame: the shaft runs along the bone's local +Y and the
+        /// orb is at the +Y end, which is the same axis and the same direction
+        /// as the sword's blade. That is why the <c>[grip]</c> bounds could not
+        /// tell the two apart, and why a half turn — the first guess — buried
+        /// the staff in the body instead of righting it. In the Mage's
+        /// <c>Idle_A</c> that bone axis points forward, world
+        /// <c>(0.263, 0, 0.965)</c>, so the shaft lies flat and the orb comes to
+        /// rest out by the feet.
+        /// </para>
+        /// <para>
+        /// The bone's local +X is world <c>(0, 1, 0)</c> in that same pose —
+        /// exactly up, out of the fist. So the correction is the quarter turn
+        /// about Z that carries the shaft from local +Y onto local +X, and it is
+        /// read off the measured bone frame rather than fitted to a screenshot.
+        /// </para>
+        /// <para>
+        /// <b>It is only exactly upright in the pose it was measured in.</b> A
+        /// weapon parented to a hand turns with the arm, so no fixed tilt can be
+        /// right everywhere. This one was taken in <c>Idle_A</c> at frame 0,
+        /// which is where the Mage stands. The Necromancer is a creep and the
+        /// roster capture poses it a quarter of the way through <c>Walking_A</c>,
+        /// where the same bone axis is about 43° off vertical: head-up, and
+        /// leaning. If a pose ever needs the staff dead upright regardless of
+        /// the arm, that is a different mechanism — an aim constraint — and not
+        /// a bigger number here.
+        /// </para>
+        /// </remarks>
+        private static readonly Vector3 StaffUpright = new Vector3(0f, 0f, -90f);
 
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row in
@@ -131,9 +166,9 @@ namespace View.Editor
             (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
                 null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
-                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, default, default),
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffUpright, default),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
-                SkeletonStaffPath, null, null, null, null, default, default),
+                SkeletonStaffPath, null, null, null, null, StaffUpright, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
                 SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
             (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
