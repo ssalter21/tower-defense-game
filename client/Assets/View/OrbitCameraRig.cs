@@ -107,13 +107,30 @@ namespace View
             camera.farClipPlane = SceneFraming.CameraFarClip;
 
             rig.Camera = camera;
-            rig._framedDistance = FitDistance(floor, camera.aspect, camera.fieldOfView);
-            rig.PointAt(
-                SceneFraming.CameraDefaultYawDegrees,
-                SceneFraming.CameraDefaultPitchDegrees,
-                rig._framedDistance);
+            rig.Reframe(floor);
 
             return rig;
+        }
+
+        /// <summary>
+        /// Fits the framed distance to <paramref name="floor"/> at the camera's
+        /// current aspect and puts the camera back at the default view.
+        /// </summary>
+        /// <remarks>
+        /// Called once by <see cref="Build"/>, and again by anything that sets
+        /// the camera's aspect for itself afterwards — the frame capture renders
+        /// into a texture of its own shape, and a framed distance still measured
+        /// against the aspect a headless editor happened to report would be
+        /// wrong by whatever the two disagree by.
+        /// </remarks>
+        public void Reframe(Bounds floor)
+        {
+            _framedDistance = FitDistance(floor, Camera.aspect);
+
+            PointAt(
+                SceneFraming.CameraDefaultYawDegrees,
+                SceneFraming.CameraDefaultPitchDegrees,
+                _framedDistance);
         }
 
         /// <summary>
@@ -146,13 +163,13 @@ namespace View
         /// foreshortened sideways at all.
         /// </para>
         /// </remarks>
-        public static float FitDistance(Bounds floor, float aspect, float fieldOfViewDegrees)
+        private static float FitDistance(Bounds floor, float aspect)
         {
             float halfWidth = SceneFraming.CameraFramingMargin * 0.5f * floor.size.x;
             float halfDepth = SceneFraming.CameraFramingMargin * 0.5f * floor.size.z;
 
             float pitch = SceneFraming.CameraDefaultPitchDegrees * Mathf.Deg2Rad;
-            float halfVertical = 0.5f * fieldOfViewDegrees * Mathf.Deg2Rad;
+            float halfVertical = 0.5f * SceneFraming.CameraFieldOfViewDegrees * Mathf.Deg2Rad;
             float halfHorizontal = Mathf.Atan(Mathf.Tan(halfVertical) * Mathf.Max(aspect, 0.01f));
 
             float vertical = halfDepth * Mathf.Sin(pitch) / Mathf.Tan(halfVertical);

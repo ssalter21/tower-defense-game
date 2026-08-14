@@ -14,8 +14,9 @@ match at a named tick without opening the editor.
 
 They are drawn through the real thing: the real `MatchRoot`, the real hex floor,
 the real `OrbitCameraRig` pointed where the arguments say, and the real
-`MatchView` stepping the real simulation. A capture path that built its own approximation of
-the scene would be a picture of something this project does not ship.
+`MatchView` stepping the real simulation. A capture path that built its own
+approximation of the scene would be a picture of something this project does not
+ship.
 
 **And it is the real match**, read out of `content/match.replay` — the same
 bytes the command line replays and the player plays, seed included. The tick in
@@ -28,7 +29,7 @@ row that says "drag to tick 1096" are about the same moment.
 ```powershell
 ./tools/capture-match-frames.ps1                       # the default ticks
 ./tools/capture-match-frames.ps1 -Ticks "366,900"      # named ticks
-./tools/capture-match-frames.ps1 -Yaw 120 -Size 1920   # another heading, wider
+./tools/capture-match-frames.ps1 -Yaw 120 -Width 1920  # another heading, wider
 ./tools/capture-match-frames.ps1 -Distance 25          # down among the creeps
 ```
 

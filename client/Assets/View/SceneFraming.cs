@@ -60,9 +60,11 @@ namespace View
         public const float CameraNearClip = 0.3f;
 
         /// <summary>
-        /// The far plane. Has to clear the far edge of the floor from the
+        /// The far plane. Has to clear the far edge of the floor seen from the
         /// dolly's outermost stop, which is <see cref="CameraMaxDistanceFactor"/>
-        /// times the framed distance plus the floor's own radius.
+        /// times the framed distance plus the floor's own diagonal. That cannot
+        /// be derived here, because this file has never seen a floor — so a test
+        /// measures it against the committed one instead.
         /// </summary>
         public const float CameraFarClip = 600f;
 

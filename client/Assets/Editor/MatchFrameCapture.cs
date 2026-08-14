@@ -27,9 +27,8 @@ namespace View.Editor
     /// It draws through the real thing: the real <see cref="MatchRoot"/>, the
     /// real floor, the real <see cref="OrbitCameraRig"/> pointed where the
     /// arguments say, and the real <see cref="MatchView"/> stepping the real
-    /// simulation. A
-    /// capture path that built its own approximation of the scene would be a
-    /// picture of something this project does not ship.
+    /// simulation. A capture path that built its own approximation of the scene
+    /// would be a picture of something this project does not ship.
     /// </para>
     /// <para>
     /// Runs headless, from a shell, with no editor session and nobody at a
@@ -54,7 +53,7 @@ namespace View.Editor
         public const string DistanceArgument = "-matchFrameDistance";
 
         /// <summary>How wide each frame is, in pixels.</summary>
-        public const string SizeArgument = "-matchFrameSize";
+        public const string WidthArgument = "-matchFrameWidth";
 
         /// <summary>
         /// The shape of a frame. Sixteen by nine, the same shape the playback
@@ -87,7 +86,7 @@ namespace View.Editor
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
-            int width = ParseInt(BatchArguments.Value(SizeArgument), 1280);
+            int width = ParseInt(BatchArguments.Value(WidthArgument), 1280);
             int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
 
             Directory.CreateDirectory(outDir);
@@ -120,17 +119,15 @@ namespace View.Editor
 
                 // A camera built against whatever aspect a headless editor
                 // reports would be framed for a window that is never rendered.
-                // Fixing the aspect to the frame's own and framing against it
+                // Fixing the aspect to the frame's own and re-framing against it
                 // is what puts both ends of the corridor in the picture.
                 camera.aspect = FrameAspect;
+                root.CameraRig.Reframe(root.Floor.WorldBounds);
 
                 root.CameraRig.PointAt(
                     yaw,
                     SceneFraming.CameraDefaultPitchDegrees,
-                    distance > 0f
-                        ? distance
-                        : OrbitCameraRig.FitDistance(
-                            root.Floor.WorldBounds, camera.aspect, camera.fieldOfView));
+                    distance > 0f ? distance : root.CameraRig.FramedDistance);
 
                 // A warm-up render, thrown away. The first render in a fresh
                 // batchmode editor happens before shaders and textures have
@@ -283,6 +280,5 @@ namespace View.Editor
             string.IsNullOrWhiteSpace(value)
                 ? fallback
                 : float.Parse(value, CultureInfo.InvariantCulture);
-
     }
 }

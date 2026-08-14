@@ -178,6 +178,17 @@ namespace Tests.PlayMode
             Assert.That(
                 rig.Distance,
                 Is.EqualTo(framed * SceneFraming.CameraMaxDistanceFactor).Within(0.001f));
+
+            // The far plane is a typed constant with a derivation in its
+            // comment, and this is the derivation: from the outermost stop, the
+            // whole floor is still in front of it.
+            foreach (Vector3 corner in GroundCorners(root.Floor.WorldBounds))
+            {
+                Assert.That(
+                    rig.Camera.WorldToViewportPoint(corner).z,
+                    Is.LessThan(SceneFraming.CameraFarClip),
+                    "The far plane cuts " + corner + " off at the outermost dolly stop.");
+            }
         }
 
         /// <summary>

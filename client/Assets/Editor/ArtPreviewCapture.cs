@@ -16,9 +16,9 @@ namespace View.Editor
     /// <b>This exists so that no art gets picked from a name.</b> "Idle_A" and
     /// "Skeletons_Idle" are indistinguishable as strings and completely
     /// different as poses; "building_tower_A" and "building_tower_catapult" are
-    /// two different silhouettes at the only six camera angles this game ever
-    /// shows. The choosing is the developer's, and this is the thing put in
-    /// front of him to choose from.
+    /// two different silhouettes from every angle a player can orbit to. The
+    /// choosing is the developer's, and this is the thing put in front of him to
+    /// choose from.
     /// </para>
     /// <para>
     /// Two kinds of sheet, one per kind of question:
@@ -81,6 +81,14 @@ namespace View.Editor
         /// far enough that nothing crosses the near plane.
         /// </summary>
         private const float PreviewCameraDistance = 60f;
+
+        /// <summary>
+        /// The preview camera's far plane. Its own, rather than the match
+        /// camera's, whose value is set by how far the match's dolly pulls out
+        /// — a distance nothing on a contact sheet ever travels. Twice the
+        /// distance the camera sits at clears any subject that fits the frame.
+        /// </summary>
+        private const float PreviewCameraFarClip = 2f * PreviewCameraDistance;
 
         /// <summary>
         /// Fill light, so the side the sun does not reach is dark rather than
@@ -677,7 +685,7 @@ namespace View.Editor
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = SceneFraming.BackgroundColor;
             camera.nearClipPlane = SceneFraming.CameraNearClip;
-            camera.farClipPlane = SceneFraming.CameraFarClip;
+            camera.farClipPlane = PreviewCameraFarClip;
 
             go.transform.rotation = rotation;
             go.transform.position = pivot - (go.transform.forward * PreviewCameraDistance);
