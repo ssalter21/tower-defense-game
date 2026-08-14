@@ -209,28 +209,43 @@ namespace Tests.PlayMode
             float distance = rig.Distance;
             rig.Fly(Vector3.forward);
 
-            AssertMoved(rig.Pivot - from, new Vector3(0f, 0f, distance), "forward at yaw 0");
+            AssertVector(rig.Pivot - from, new Vector3(0f, 0f, distance), "forward at yaw 0");
 
             // Half a turn, and the same press goes the other way.
             rig.PointAt(180f, rig.Pitch, distance);
             from = rig.Pivot;
             rig.Fly(Vector3.forward);
 
-            AssertMoved(rig.Pivot - from, new Vector3(0f, 0f, -distance), "forward at yaw 180");
+            AssertVector(rig.Pivot - from, new Vector3(0f, 0f, -distance), "forward at yaw 180");
 
             // A quarter turn: forward is +X, and right is -Z.
             rig.PointAt(90f, rig.Pitch, distance);
             from = rig.Pivot;
             rig.Fly(Vector3.forward + Vector3.right);
 
-            AssertMoved(rig.Pivot - from, new Vector3(distance, 0f, -distance), "forward and right at yaw 90");
+            AssertVector(rig.Pivot - from, new Vector3(distance, 0f, -distance), "forward and right at yaw 90");
 
             // Up is world up however the rig is turned or tilted.
             rig.PointAt(213f, 250f, distance);
             from = rig.Pivot;
             rig.Fly(Vector3.up);
 
-            AssertMoved(rig.Pivot - from, new Vector3(0f, distance, 0f), "up at yaw 213, pitch 250");
+            AssertVector(rig.Pivot - from, new Vector3(0f, distance, 0f), "up at yaw 213, pitch 250");
+
+            // Orbited over the top, the picture is upside down and the camera's
+            // own forward has turned over with it. Flying follows the heading
+            // instead, which is still the direction up the screen — so a press
+            // goes into the picture rather than out of the back of it.
+            rig.PointAt(0f, 180f - SceneFraming.CameraDefaultPitchDegrees, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            Vector3 upTheScreen = Vector3.ProjectOnPlane(rig.Camera.transform.up, Vector3.up);
+
+            Assert.That(
+                Vector3.Dot((rig.Pivot - from).normalized, upTheScreen.normalized),
+                Is.GreaterThan(0.99f),
+                "Inverted, flying forward left the picture instead of going up the screen.");
 
             // Off the board and under it. There are no bounds on the pivot, on
             // purpose: a limit would be a guess at which views are worth having.
@@ -289,14 +304,14 @@ namespace Tests.PlayMode
 
             rig.Reframe(root.Floor.WorldBounds);
 
-            AssertMoved(rig.Pivot, rig.FramedPivot, "the reframed pivot");
+            AssertVector(rig.Pivot, rig.FramedPivot, "the reframed pivot");
             Assert.That(rig.Yaw, Is.EqualTo(SceneFraming.CameraDefaultYawDegrees).Within(0.001f));
             Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.001f));
             Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
         }
 
         /// <summary>Asserts a vector component by component.</summary>
-        private static void AssertMoved(Vector3 actual, Vector3 expected, string what)
+        private static void AssertVector(Vector3 actual, Vector3 expected, string what)
         {
             Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.001f), what + ": x");
             Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.001f), what + ": y");
@@ -358,10 +373,13 @@ namespace Tests.PlayMode
                 Vector3.Distance(rig.Pivot, rig.FramedPivot),
                 Is.LessThan(0.001f),
                 "The angle and the distance came home and the position stayed where it was flown to.");
-            Assert.That(
+
+            Bounds floor = root.Floor.WorldBounds;
+
+            AssertVector(
                 rig.FramedPivot,
-                Is.EqualTo(new Vector3(root.Floor.WorldBounds.center.x, 0f, root.Floor.WorldBounds.center.z)),
-                "Home is the middle of the floor, in the ground plane.");
+                new Vector3(floor.center.x, 0f, floor.center.z),
+                "home is the middle of the floor, in the ground plane");
 
             // A hand on the mouse wins: the ease stops where the drag put it
             // rather than dragging the camera back out from underneath.

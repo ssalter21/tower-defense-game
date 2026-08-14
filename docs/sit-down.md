@@ -28,8 +28,9 @@ cycles 1x → 2x → 4x → 8x, **To the end**, and the **scrub bar**. The reado
 the right says which tick is on screen and which tick the match ends on. The
 scrub bar is in whole ticks, so nudging it moves the match one tick — that is
 how the rows below say "a tick at a time". Drag with the **right mouse button**
-to orbit the camera, **scroll** to go in and out, and **F** to ease back to the
-angle it started at.
+to orbit the camera, **scroll** to go in and out, **WASD** to fly it across the
+board and **E** and **Q** to lift it and drop it — or middle-drag to pan — and
+**F** to ease back to the view it started at.
 
 Dragging the scrubber pauses. That is deliberate, and it is not one of the
 things being tested.
@@ -78,7 +79,7 @@ for the other.
 | 8 | The projectile tower as it fires: nudge a tick at a time from tick 314 to tick 347 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
 | 9 | A creep at death: drag to tick 5210 and play at 1x through tick 5247 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
 | 10 | Two creeps overtaking: drag to tick 1060 and play at 1x to tick 1130, watching for the pass on tick 1096 | Draw order flickering, or the pass not visible at all |
-| 11 | **Orbit all the way round** by right-dragging, parked at tick 2700; scroll in until one creep fills the screen, then press F | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule; a model that reads at board distance falling apart up close; or F snapping rather than easing, or landing somewhere other than the starting angle |
+| 11 | **Orbit all the way round** by right-dragging, parked at tick 2700; scroll in until one creep fills the screen; fly off the far end of the board with W and drop under it with Q; then press F | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule; a model that reads at board distance falling apart up close; W going somewhere other than into the picture after a half turn; or F snapping rather than easing, or landing somewhere other than the view it started at |
 | 12 | Double-click the build on a clean machine — one that never cloned this repository and has no editor on it | Missing assembly, or a runtime prompt |
 
 ## Rows 4 and 5 are assertions now, and this is why

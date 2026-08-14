@@ -40,15 +40,16 @@ namespace View
     /// </para>
     /// <para>
     /// <b>The rig has no clock of its own.</b> The reset ease is stepped by
-    /// <see cref="Advance"/>, which is handed the seconds that have passed;
-    /// <see cref="Update"/> is the only thing that passes it a frame's worth,
-    /// and the frame capture and the tests drive it by hand.
+    /// <see cref="Advance"/>, which is handed the seconds that have passed, and
+    /// <see cref="Fly"/> is handed a step rather than a speed.
+    /// <see cref="Update"/> is the only thing that turns a frame into either,
+    /// and the frame capture and the tests drive both by hand.
     /// </para>
     /// </remarks>
     [DisallowMultipleComponent]
     public sealed class OrbitCameraRig : MonoBehaviour
     {
-        private Vector3 _position;
+        private Vector3 _pivot;
         private float _yaw;
         private float _pitch;
         private float _distance;
@@ -58,7 +59,7 @@ namespace View
 
         private bool _easing;
         private float _easeSeconds;
-        private Vector3 _easeFromPosition;
+        private Vector3 _easeFromPivot;
         private float _easeFromYaw;
         private float _easeFromPitch;
         private float _easeFromDistance;
@@ -92,7 +93,7 @@ namespace View
         /// The point the camera orbits. Starts at the middle of the floor and
         /// goes wherever <see cref="Fly"/> takes it, on or off the board.
         /// </summary>
-        public Vector3 Pivot => _position;
+        public Vector3 Pivot => _pivot;
 
         /// <summary>
         /// The middle of the floor, in the ground plane. Where
@@ -202,21 +203,21 @@ namespace View
         }
 
         /// <summary>
-        /// Puts the camera at an angle and a distance at once, leaving the
-        /// pivot where it is.
+        /// Puts the camera at an angle and a distance at once, cancelling any
+        /// reset in flight and leaving the pivot where it is.
         /// </summary>
         public void PointAt(float yawDegrees, float pitchDegrees, float distance) =>
-            PointAt(_position, yawDegrees, pitchDegrees, distance);
+            PointAt(_pivot, yawDegrees, pitchDegrees, distance);
 
         /// <summary>
         /// Writes the whole of the rig's state at once, cancelling any reset in
         /// flight. The distance is held inside the dolly's limits; the pivot is
         /// held nowhere, and may be off the board or under it.
         /// </summary>
-        public void PointAt(Vector3 pivot, float yawDegrees, float pitchDegrees, float distance)
+        private void PointAt(Vector3 pivot, float yawDegrees, float pitchDegrees, float distance)
         {
             _easing = false;
-            _position = pivot;
+            _pivot = pivot;
             _yaw = Mathf.Repeat(yawDegrees, 360f);
             _pitch = Mathf.Repeat(pitchDegrees, 360f);
             _distance = ClampDistance(distance);
@@ -248,13 +249,25 @@ namespace View
         /// the picture at every zoom.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The heading rotation is about <c>Y</c> alone, which is what leaves
         /// <c>step.y</c> pointing at the sky however far the camera has been
         /// tilted or turned.
+        /// </para>
+        /// <para>
+        /// Forward is the heading rather than the camera's own forward
+        /// flattened, and the two part company once the pitch goes past
+        /// straight down. The heading is the one that holds up there: the
+        /// camera's forward has no ground direction at all at ninety degrees,
+        /// so a step taken from it would be undefined looking straight down and
+        /// would reverse under the hand on either side of it. The heading is
+        /// also what is up the screen for every pitch from level to inverted,
+        /// because the picture turns over together with the forward.
+        /// </para>
         /// </remarks>
         public void Fly(Vector3 step) =>
             PointAt(
-                _position + (SceneFraming.CameraRotation(_yaw, 0f) * step * _distance),
+                _pivot + (SceneFraming.CameraRotation(_yaw, 0f) * step * _distance),
                 _yaw,
                 _pitch,
                 _distance);
@@ -268,7 +281,7 @@ namespace View
         {
             _easing = true;
             _easeSeconds = 0f;
-            _easeFromPosition = _position;
+            _easeFromPivot = _pivot;
             _easeFromYaw = _yaw;
             _easeFromPitch = _pitch;
             _easeFromDistance = _distance;
@@ -300,7 +313,7 @@ namespace View
             // arrives without a visible kick.
             float eased = progress * progress * (3f - (2f * progress));
 
-            _position = Vector3.Lerp(_easeFromPosition, _framedPivot, eased);
+            _pivot = Vector3.Lerp(_easeFromPivot, _framedPivot, eased);
             _yaw = Mathf.Repeat(
                 Mathf.LerpAngle(_easeFromYaw, SceneFraming.CameraDefaultYawDegrees, eased), 360f);
             _pitch = Mathf.Repeat(
@@ -310,7 +323,7 @@ namespace View
             if (progress >= 1f)
             {
                 _easing = false;
-                _position = _framedPivot;
+                _pivot = _framedPivot;
                 _yaw = Mathf.Repeat(SceneFraming.CameraDefaultYawDegrees, 360f);
                 _pitch = Mathf.Repeat(SceneFraming.CameraDefaultPitchDegrees, 360f);
                 _distance = _framedDistance;
@@ -336,7 +349,7 @@ namespace View
         /// </summary>
         private void Apply()
         {
-            transform.position = _position;
+            transform.position = _pivot;
             transform.rotation = SceneFraming.CameraRotation(_yaw, _pitch);
 
             if (Camera != null)
@@ -371,8 +384,9 @@ namespace View
                         drag.y * SceneFraming.CameraOrbitDegreesPerPixel);
                 }
 
-                // Negated, so the board follows the cursor rather than running
-                // away from it.
+                // Negated, so the board goes the way the hand does. The rate is
+                // a feel number rather than a projection, so it does not track
+                // the cursor exactly.
                 if (mouse.middleButton.isPressed && drag != Vector2.zero)
                 {
                     Fly(
