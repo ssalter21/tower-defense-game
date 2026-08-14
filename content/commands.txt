@@ -112,7 +112,7 @@
 # hundred -- so what gets past is almost the whole of the increase. This run
 # takes 100, then 190, then 265, and the fourth round's 330 is more health than
 # it has left. The measurements are in
-# docs/research/a-scaling-opponent-outruns-a-wall.md.
+# docs/research/a-wall-kills-a-count-not-a-share.md.
 #
 # SO THE FILE IS FOUR ROWS, AND THAT IS THE RUN THIS ECONOMY SUPPORTS. A fifth
 # build row could not be recorded at all: record-run plays a script to the end

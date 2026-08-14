@@ -68,11 +68,13 @@ internal readonly struct RunShape
 /// </para>
 /// <para>
 /// <b>The field is canned and it stands in for a ghost pool that does not
-/// exist.</b> What that means -- one pair of orders, drawn with replacement, so
-/// a field of ten is that opponent ten times -- is composed by
-/// <see cref="FieldPool.Canned"/> and described there. It is the simulation's
+/// exist.</b> What that means -- one player, recorded once per round and drawn
+/// with replacement, buying the authored column again every round -- is composed
+/// by <see cref="FieldPool.Canned"/> and described there. It is the simulation's
 /// answer to how thin a pool may be rather than this reader's, which is why the
-/// two files meeting here does not make it this file's decision.
+/// two files meeting here does not make it this file's decision. What this file
+/// does decide is how deep to record it, because the run's wave count is here
+/// and not there -- see <see cref="Pool"/>.
 /// </para>
 /// </remarks>
 internal sealed class RunContent
@@ -89,7 +91,9 @@ internal sealed class RunContent
 
     private readonly Ruleset _rules;
 
-    private readonly FieldPool _pool;
+    private readonly TowerLayout _defense;
+
+    private readonly WaveScript _field;
 
     private RunContent(
         HexMap map,
@@ -101,7 +105,8 @@ internal sealed class RunContent
     {
         _map = map;
         _rules = rules;
-        _pool = FieldPool.Canned(defense, field);
+        _defense = defense;
+        _field = field;
         Types = types;
         Ladder = ladder;
     }
@@ -204,6 +209,23 @@ internal sealed class RunContent
         return field;
     }
 
+    /// <summary>
+    /// The canned population, recorded as deep as the run is long.
+    /// </summary>
+    /// <remarks>
+    /// The stand-in buys its column again every round, so a pool shallower than
+    /// the run would leave the last rounds fighting the deepest one it has --
+    /// which is the flat field this replaced, arriving late. A run with no last
+    /// wave has no number to be as deep as, so it gets the default depth and the
+    /// deepest round stands from there, which is the rule
+    /// <see cref="FieldPool.OfRounds"/> carries.
+    /// </remarks>
+    private FieldPool Pool(RunShape shape) =>
+        FieldPool.Canned(
+            _defense,
+            _field,
+            shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves);
+
     /// <summary>A run on this content, with nothing played into it yet.</summary>
     public Run Fresh(ulong seed, RunShape shape) =>
         new Run(
@@ -211,7 +233,7 @@ internal sealed class RunContent
             _rules,
             Types,
             Ladder,
-            _pool,
+            Pool(shape),
             seed,
             shape.Waves,
             shape.FieldSize,
@@ -239,7 +261,7 @@ internal sealed class RunContent
             _rules,
             Types,
             Ladder,
-            _pool,
+            Pool(shape),
             firstSeed,
             runsPerCreep,
             shape.Waves,

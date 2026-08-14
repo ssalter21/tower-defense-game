@@ -29,6 +29,12 @@
 > describes is a population nothing prices off. Resolution 1 — measure per round, compare like with like — is
 > the answer if anything ever prices off it again, and it costs the sweep a multiple of the round count.
 >
+> **What it costs to sweep, measured rather than estimated:** the committed sweep goes from **42 seconds to
+> 78**, on the same machine and the same 9,600 matches. The match count does not move — a played run has not
+> touched `Run.Field` since #209 — and what nearly doubles is how long a match takes, because a round-ten
+> column is ten times as deep and runs 6,098 ticks against 1,913. Resolution 1 would have multiplied the match
+> count instead.
+>
 > **What still holds from the sentence below:** the payment is a fold, the field is measured once per run, and
 > there is still exactly one pool argument, so swapping the canned stand-in for a real ghost pool is still that
 > argument and nothing else. What no longer holds is that the spread is the spread of the opponents this run

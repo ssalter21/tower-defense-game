@@ -55,14 +55,19 @@ fold resolve a phase carrying nothing and a phase carrying nothing prices exactl
 evidence equals its predecessor's is not evidence. The fold gained a third half — a composition against a
 carried wave, folding what it *cost* — and the label went to `rule-fingerprint/3`.
 
-**The committed run had to be re-authored monotone**, and it says the change out loud: leak cost dealt went
-from 261 over ten rounds to 1757, waves six to eight now cost 19 to 34 gold apiece, and the wave lines get
-longer and never shorter.
+**The committed run had to be re-authored monotone**, and the wave lines get longer and never shorter. The
+numbers that re-authoring produced — leak cost dealt from 261 over ten rounds to 1757, waves six to eight
+costing 19 to 34 gold apiece — belonged to a ten-round run against a stand-in that never grew, and
+[#208](https://github.com/ssalter21/tower-defense-game/issues/208) has since taken both away: the file is four
+rounds and deals 229. **What this decision claims is unaffected.** A round still names its whole wave, is still
+charged the increase, and the file still only grows: round three names the ten runners round two bought and
+pays for the ten it adds.
 
-**The run ends rich, and that is the stand-in showing through.** The canned field is one stored round drawn ten
-times, so the pressure coming back is flat while the run's own wave compounds. [#208](https://github.com/ssalter21/tower-defense-game/issues/208)
-is that asymmetry, and it collides with ADR-0042's "fixed for the whole run" in a way that needs deciding
-rather than implementing.
+**The run ended rich, and that was the stand-in showing through** — the field was one stored round drawn ten
+times, so the pressure coming back was flat while the run's own wave compounded. **#208 closed that**: the
+stand-in is recorded once per round and buys its column again every round, so the run no longer outgrows what
+it fights. It dies in the fourth round instead, which is a statement about the tuning rather than about this
+rule — see [`a-wall-kills-a-count-not-a-share.md`](../research/a-wall-kills-a-count-not-a-share.md).
 
 **A creep fills at most one slot, so depth is the only thing left to buy** once every type is in the wave.
 That rule predates this decision and is not being broken for it; what it means now is that a late round raises

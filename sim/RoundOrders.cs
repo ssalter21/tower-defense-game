@@ -146,39 +146,6 @@ namespace Sim
         }
 
         /// <summary>
-        /// One round of the population, copied and checked. An empty round is
-        /// refused here rather than at the draw that finds nobody in it.
-        /// </summary>
-        private static RoundOrders[] Copied(IReadOnlyList<RoundOrders> members, int round)
-        {
-            if (members is null || members.Count == 0)
-            {
-                throw new SimulationException(
-                    "The pool has nobody recorded at round "
-                    + (round + 1).ToString(CultureInfo.InvariantCulture)
-                    + ", and its later rounds are not empty. A round of a run is fought against the members "
-                    + "recorded at that round, so a hole in the middle of a population is a round nobody "
-                    + "could be drawn for rather than a population that thins out.");
-            }
-
-            var copied = new RoundOrders[members.Count];
-
-            for (int index = 0; index < copied.Length; index++)
-            {
-                copied[index] = members[index]
-                    ?? throw new SimulationException(
-                        "The pool's member at index "
-                        + index.ToString(CultureInfo.InvariantCulture)
-                        + " of round "
-                        + (round + 1).ToString(CultureInfo.InvariantCulture)
-                        + " is nothing at all. Every member of a field is a defense and a wave, because a "
-                        + "round measures both directions against each of them.");
-            }
-
-            return copied;
-        }
-
-        /// <summary>
         /// The canned pool: one player's run, standing in for a population of
         /// stored ones.
         /// </summary>
@@ -245,6 +212,83 @@ namespace Sim
         }
 
         /// <summary>
+        /// How many members are recorded at this round, counted from zero as a
+        /// run's own rounds are.
+        /// </summary>
+        public int SizeAt(int round) => Recorded(round).Length;
+
+        /// <summary>The member at this index of the population recorded at this round.</summary>
+        public RoundOrders At(int round, int index)
+        {
+            RoundOrders[] members = Recorded(round);
+
+            if (index < 0 || index >= members.Length)
+            {
+                throw new SimulationException(
+                    "The pool was asked for member "
+                    + index.ToString(CultureInfo.InvariantCulture)
+                    + " of the "
+                    + members.Length.ToString(CultureInfo.InvariantCulture)
+                    + " recorded at round "
+                    + (round + 1).ToString(CultureInfo.InvariantCulture)
+                    + ". A field is drawn inside the bounds of its own round's population, so an index "
+                    + "outside them is a draw that was taken against the wrong size.");
+            }
+
+            return members[index];
+        }
+
+        /// <summary>The member at this index of the whole population, round structure flattened away.</summary>
+        public RoundOrders At(int index)
+        {
+            if (index < 0 || index >= _members.Length)
+            {
+                throw new SimulationException(
+                    "The pool was asked for member "
+                    + index.ToString(CultureInfo.InvariantCulture)
+                    + " of "
+                    + _members.Length.ToString(CultureInfo.InvariantCulture)
+                    + ". A field is drawn inside the pool's own bounds, so an index outside them is a draw "
+                    + "that was taken against the wrong size.");
+            }
+
+            return _members[index];
+        }
+
+        /// <summary>
+        /// One round of the population, copied and checked. An empty round is
+        /// refused here rather than at the draw that finds nobody in it.
+        /// </summary>
+        private static RoundOrders[] Copied(IReadOnlyList<RoundOrders> members, int round)
+        {
+            if (members is null || members.Count == 0)
+            {
+                throw new SimulationException(
+                    "The pool has nobody recorded at round "
+                    + (round + 1).ToString(CultureInfo.InvariantCulture)
+                    + ", and somebody recorded at another one. A round of a run is fought against the "
+                    + "members recorded at that round, so an empty round is a round nobody could be drawn "
+                    + "for rather than a population that thins out.");
+            }
+
+            var copied = new RoundOrders[members.Count];
+
+            for (int index = 0; index < copied.Length; index++)
+            {
+                copied[index] = members[index]
+                    ?? throw new SimulationException(
+                        "The pool's member at index "
+                        + index.ToString(CultureInfo.InvariantCulture)
+                        + " of round "
+                        + (round + 1).ToString(CultureInfo.InvariantCulture)
+                        + " is nothing at all. Every member of a field is a defense and a wave, because a "
+                        + "round measures both directions against each of them.");
+            }
+
+            return copied;
+        }
+
+        /// <summary>
         /// The same wave bought this many times: every order's count multiplied,
         /// at the ticks and in the columns it was authored with.
         /// </summary>
@@ -286,33 +330,6 @@ namespace Sim
         }
 
         /// <summary>
-        /// How many members are recorded at this round, counted from zero as a
-        /// run's own rounds are.
-        /// </summary>
-        public int SizeAt(int round) => Recorded(round).Length;
-
-        /// <summary>The member at this index of the population recorded at this round.</summary>
-        public RoundOrders At(int round, int index)
-        {
-            RoundOrders[] members = Recorded(round);
-
-            if (index < 0 || index >= members.Length)
-            {
-                throw new SimulationException(
-                    "The pool was asked for member "
-                    + index.ToString(CultureInfo.InvariantCulture)
-                    + " of the "
-                    + members.Length.ToString(CultureInfo.InvariantCulture)
-                    + " recorded at round "
-                    + (round + 1).ToString(CultureInfo.InvariantCulture)
-                    + ". A field is drawn inside the bounds of its own round's population, so an index "
-                    + "outside them is a draw that was taken against the wrong size.");
-            }
-
-            return members[index];
-        }
-
-        /// <summary>
         /// The members recorded at this round, or the deepest round's members
         /// for a round the pool does not reach.
         /// </summary>
@@ -328,23 +345,6 @@ namespace Sim
             }
 
             return _rounds[round < _rounds.Length ? round : _rounds.Length - 1];
-        }
-
-        /// <summary>The member at this index of the whole population, round structure flattened away.</summary>
-        public RoundOrders At(int index)
-        {
-            if (index < 0 || index >= _members.Length)
-            {
-                throw new SimulationException(
-                    "The pool was asked for member "
-                    + index.ToString(CultureInfo.InvariantCulture)
-                    + " of "
-                    + _members.Length.ToString(CultureInfo.InvariantCulture)
-                    + ". A field is drawn inside the pool's own bounds, so an index outside them is a draw "
-                    + "that was taken against the wrong size.");
-            }
-
-            return _members[index];
         }
     }
 }

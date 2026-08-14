@@ -632,14 +632,23 @@ namespace Sim
         /// of any kind happens inside a match, so a match's stream position stays
         /// a running count of the shots fired in it.
         /// </remarks>
-        private int[] FieldFor(int round)
+        private int[] FieldFor(int round) => FieldOf(round, _pool.SizeAt(round));
+
+        /// <summary>
+        /// One field draw: K members out of a population this many wide, off the
+        /// stream that round's position starts. The width is an argument because
+        /// a round draws from the members recorded at its own round and the
+        /// measurement draws from the whole population -- one draw shape, two
+        /// populations, rather than two loops that have to stay the same.
+        /// </summary>
+        private int[] FieldOf(int round, int size)
         {
             var dice = new Pcg32(FieldSeed(round));
             var drawn = new int[FieldSize];
 
             for (int index = 0; index < drawn.Length; index++)
             {
-                drawn[index] = (int)dice.NextBelow((uint)_pool.SizeAt(round));
+                drawn[index] = (int)dice.NextBelow((uint)size);
             }
 
             return drawn;
@@ -695,17 +704,15 @@ namespace Sim
             for (int sample = 0; sample < worth.Length; sample++)
             {
                 RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
-                var opponents = new Pcg32(FieldSeed(sample));
+                int[] field = FieldOf(sample, _pool.Size);
                 long dealt = 0;
 
-                for (int index = 0; index < FieldSize; index++)
+                for (int index = 0; index < field.Length; index++)
                 {
-                    RoundOrders against = _pool.At((int)opponents.NextBelow((uint)_pool.Size));
-
-                    dealt += LeakCost(member, against, sample, index, Side.Measured);
+                    dealt += LeakCost(member, _pool.At(field[index]), sample, index, Side.Measured);
                 }
 
-                worth[sample] = (int)(dealt / FieldSize);
+                worth[sample] = (int)(dealt / field.Length);
             }
 
             return PerformanceField.Of(worth);
