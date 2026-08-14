@@ -500,7 +500,7 @@ namespace View
                 host.transform.localPosition = HexGeometry.ToWorld(placed.Hex);
 
                 var view = host.AddComponent<TowerView>();
-                Quaternion resting = RestingRotationFor(host.transform.localPosition);
+                Quaternion resting = _route.FacingFrom(host.transform.localPosition);
 
                 // Everything this unit type is drawn with, in one piece. What
                 // decides whether it can be posed is whether its own art
@@ -521,41 +521,6 @@ namespace View
 
                 _towers.Add(id, view);
             }
-        }
-
-        /// <summary>
-        /// Which way a tower faces with nothing to shoot at: towards the
-        /// nearest point of the corridor.
-        /// </summary>
-        /// <remarks>
-        /// Derived rather than authored, so a tower moved in the defense file
-        /// faces sensibly without anybody editing a second file — and so there
-        /// is no per-tower rotation to get out of step with a per-tower
-        /// position.
-        /// </remarks>
-        private Quaternion RestingRotationFor(Vector3 position)
-        {
-            float best = float.MaxValue;
-            Vector3 nearest = _route.Entrance;
-
-            for (int step = 0; step <= _route.StepCount; step++)
-            {
-                Vector3 point = _route.Step(step);
-                float distance = (point - position).sqrMagnitude;
-
-                if (distance < best)
-                {
-                    best = distance;
-                    nearest = point;
-                }
-            }
-
-            Vector3 toward = nearest - position;
-            toward.y = 0f;
-
-            return toward.sqrMagnitude < 1e-6f
-                ? Quaternion.identity
-                : Quaternion.LookRotation(toward.normalized, Vector3.up);
         }
 
         /// <summary>

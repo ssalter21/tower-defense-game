@@ -49,18 +49,21 @@ namespace View
         /// <summary>Which unit follows which: the upgrade ladder.</summary>
         /// <remarks>
         /// <para>
-        /// <b>Nothing on the view side reads an edge, and this still has to
-        /// ship.</b> The ladder is folded into the unit table's content hash, and
-        /// that hash is what <see cref="Sim.ReplayBundle.Replay"/> compares the
-        /// record's stamped one against. A player without this file rebuilds the
-        /// wrong hash and the shipped record is refused at the gate — which
-        /// presents as a floor that draws and a match that never starts.
+        /// <b>It ships twice over.</b> The client reads the edges — a build phase
+        /// is refused against them, so a <see cref="Sim.Run"/> is handed a ladder
+        /// and the client has to have one; see <see cref="ReadUpgrades"/>. And
+        /// the ladder is folded into the unit table's content hash, which is what
+        /// <see cref="Sim.ReplayBundle.Replay"/> compares the record's stamped one
+        /// against. A player without this file rebuilds the wrong hash and the
+        /// shipped record is refused at the gate — which presents as a floor that
+        /// draws and a match that never starts.
         /// </para>
         /// <para>
-        /// So it is neither of the two failures the sync list is usually about.
-        /// It is not content that ships and is never read, and it is not content
-        /// that is read and does not ship. It is an honest third case: content
-        /// that ships because a hash covers it.
+        /// The second half of that used to be the whole of it, and this remark
+        /// said so: the file shipped because a hash covered it and nothing over
+        /// here ever looked inside. #179 made the ladder the one prerequisite the
+        /// game has and #196 put a build phase on the screen, so it is now
+        /// ordinary content that is read as well.
         /// </para>
         /// </remarks>
         public const string UpgradesFileName = "upgrades.txt";
@@ -189,9 +192,28 @@ namespace View
         {
             UnitTypeTable types = UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
 
-            return types.WithLadder(
-                UpgradeLadder.ParseUtf8(UpgradesFileName, Read(UpgradesFileName), types));
+            return types.WithLadder(ReadUpgrades(types));
         }
+
+        /// <summary>
+        /// The upgrade ladder itself, parsed against
+        /// <paramref name="types"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A run is handed one because <see cref="Sim.BuildPhase.Resolve"/> asks
+        /// it which rows may be placed and which may be climbed into, so the
+        /// client needs the object and not only the hash it contributes.
+        /// </para>
+        /// <para>
+        /// It is one reading of one file either way: <see cref="ReadUnitTypes"/>
+        /// folds the result of this call into the table's content hash, so the
+        /// ladder a run enforces and the ladder the replay gate checks against
+        /// cannot be two different opinions about the same bytes.
+        /// </para>
+        /// </remarks>
+        public static UpgradeLadder ReadUpgrades(UnitTypeTable types) =>
+            UpgradeLadder.ParseUtf8(UpgradesFileName, Read(UpgradesFileName), types);
 
         /// <summary>The rules every shot in a match is resolved through.</summary>
         public static Ruleset ReadRuleset() =>

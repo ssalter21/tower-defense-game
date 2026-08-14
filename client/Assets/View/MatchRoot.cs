@@ -73,6 +73,40 @@ namespace View
         /// <summary>The art the match is drawn with.</summary>
         public MatchArt Art => art;
 
+        /// <summary>
+        /// The run the board is built against, once there is one.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The client holds the run, and the view still holds nothing</b> --
+        /// ADR-0051. It lives out here on the root beside the mode the player is
+        /// in, not inside <see cref="MatchView"/>, because what a build phase
+        /// draws from is a decision being composed rather than game state being
+        /// simulated: no tick has seen it. <see cref="MatchView"/> still reads
+        /// snapshots and nothing else, which is ADR-0007 untouched.
+        /// </para>
+        /// <para>
+        /// <b>Nothing here advances it.</b> Committing a round is
+        /// <see cref="Run.Advance"/>, and the loop that presses it -- build,
+        /// commit, watch, ten waves -- is #198. What this file does is stand the
+        /// run up and point the palette and the pointer at it, which is what
+        /// makes the board clickable.
+        /// </para>
+        /// </remarks>
+        public Run Run { get; private set; }
+
+        /// <summary>The round being composed on screen, once there is a run.</summary>
+        public ComposedRound Composing { get; private set; }
+
+        /// <summary>What may be built, once there is a round to build in.</summary>
+        public TowerPalette Palette { get; private set; }
+
+        /// <summary>The board as it is being built, and the hex that lights.</summary>
+        public BuildBoard Building { get; private set; }
+
+        /// <summary>What turns a click into a build action.</summary>
+        public BuildInput Pointer { get; private set; }
+
         private void Awake()
         {
             // Read once, used twice. The floor is drawn from the record's own
@@ -103,6 +137,92 @@ namespace View
                 Playback = new PlaybackController(MatchView);
                 Controls = PlaybackControls.Build(transform, Playback);
             }
+
+            // Same two conditions as the match: a run needs the content, and
+            // drawing what it builds needs the art. A checkout missing either
+            // has already said so once, and a palette listing towers that cannot
+            // be drawn would be a second, quieter way of reporting it.
+            if (record != null && art.IsComplete && Run == null)
+            {
+                BeginBuilding(record.Seed);
+            }
+        }
+
+        /// <summary>
+        /// Stands up a run on the playfield this object already built, and puts
+        /// the palette, the board and the pointer over it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The seed is the record's, like the match's.</b> This assembly
+        /// cannot read a clock and is not going to start: a run seeded from the
+        /// wall clock would be a different game every time somebody pressed
+        /// play, which is exactly the property that makes a playtest also a
+        /// determinism test. See <see cref="BeginMatch(ReplayBundle)"/>, which
+        /// takes its seed from the same place for the same reason.
+        /// </para>
+        /// <para>
+        /// <b>The field is the canned pairing</b> -- the committed defense
+        /// against the committed wave, which is the population
+        /// <c>content/defense.txt</c> and <c>content/wave.txt</c> describe. It
+        /// is what a round is scored against, and it is a number rather than
+        /// anything on screen until #198 draws a header.
+        /// </para>
+        /// </remarks>
+        /// <param name="seed">The one seed every draw in the run is derived from.</param>
+        public void BeginBuilding(ulong seed)
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            Run = new Run(
+                Map,
+                StreamingContent.ReadRuleset(),
+                types,
+                StreamingContent.ReadUpgrades(types),
+                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadWave(types)),
+                seed);
+
+            BeginBuilding(ComposedRound.For(Run));
+        }
+
+        /// <summary>
+        /// The same, over a round the caller composed. What a test calls, with a
+        /// run of its own or none at all.
+        /// </summary>
+        public void BeginBuilding(ComposedRound round) => BeginBuilding(round, art);
+
+        /// <summary>
+        /// The same, drawn with art the caller supplies rather than the art
+        /// serialized on this object.
+        /// </summary>
+        /// <remarks>
+        /// The same seam, for the same reason, as
+        /// <see cref="BeginMatch(UnitTypeTable, Ruleset, TowerLayout, WaveScript, ulong, MatchArt)"/>:
+        /// a caller that has the assets in hand and no generated scene to read
+        /// them from would otherwise get an empty board on exactly the checkout
+        /// where somebody is trying to see whether building works.
+        /// </remarks>
+        public void BeginBuilding(ComposedRound round, MatchArt art)
+        {
+            if (round == null) throw new System.ArgumentNullException(nameof(round));
+            if (art == null) throw new System.ArgumentNullException(nameof(art));
+
+            if (Map == null)
+            {
+                throw new System.InvalidOperationException(
+                    "BeginBuilding was called before Build, so there is no playfield to build on.");
+            }
+
+            Composing = round;
+            Building = BuildBoard.Build(transform, round, art, RoutePath.For(Map), TileMesh);
+            Palette = TowerPalette.Build(transform, round, CameraRig.Camera);
+            Pointer = BuildInput.Build(
+                transform,
+                round,
+                Palette,
+                Building,
+                CameraRig.Camera,
+                Controls != null ? Controls.Document : null);
         }
 
         /// <summary>

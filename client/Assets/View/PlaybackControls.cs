@@ -76,7 +76,12 @@ namespace View
         /// <summary>The resolution the bar is laid out at, and scaled from.</summary>
         private static readonly Vector2Int ReferenceResolution = new Vector2Int(1920, 1080);
 
-        private const float BarHeight = 88f;
+        /// <summary>
+        /// How tall the bar is. Public because the tower palette sits directly
+        /// on top of it — one number, in one file, rather than two that have to
+        /// be kept level by hand.
+        /// </summary>
+        public const float BarHeight = 88f;
 
         private const float Margin = 24f;
 
