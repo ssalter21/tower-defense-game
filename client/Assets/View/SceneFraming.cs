@@ -100,8 +100,23 @@ namespace View
         public const float CameraDollyPerScrollUnit = 0.002f;
 
         /// <summary>
-        /// How long the reset key takes to ease the camera back to the default
-        /// angle and the framed distance, in seconds.
+        /// How far one second of a held flight key moves the pivot, as a
+        /// fraction of the camera's current distance. A fraction rather than a
+        /// speed in metres, so a press covers the same part of the picture
+        /// whether the whole board is on screen or one creep is. A feel number,
+        /// here to be changed in one line.
+        /// </summary>
+        public const float CameraFlyDistanceFractionPerSecond = 1f;
+
+        /// <summary>
+        /// How far one pixel of a middle-button drag moves the pivot, as a
+        /// fraction of the camera's current distance.
+        /// </summary>
+        public const float CameraPanDistanceFractionPerPixel = 0.001f;
+
+        /// <summary>
+        /// How long the reset key takes to ease the camera back to the middle
+        /// of the floor, the default angle and the framed distance, in seconds.
         /// </summary>
         public const float CameraResetSeconds = 0.25f;
 

@@ -9,8 +9,9 @@ using View;
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The camera: perspective, freely orbited, dollied close enough to read
-    /// one model, and unable to change what happens in the match.
+    /// The camera: perspective, freely orbited, flown anywhere, dollied close
+    /// enough to read one model, and unable to change what happens in the
+    /// match.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -25,9 +26,9 @@ namespace Tests.PlayMode
     /// <para>
     /// <b>Orbiting is a real check because nothing billboards.</b> If any part
     /// of the view turned to face the camera, turning the rig would look the
-    /// same from everywhere and prove nothing. So one of these tests orbits the
-    /// whole rig and requires every other transform in the scene to be
-    /// bit-for-bit where it was.
+    /// same from everywhere and prove nothing. So one of these tests orbits and
+    /// flies the whole rig and requires every other transform in the scene to
+    /// be bit-for-bit where it was.
     /// </para>
     /// </remarks>
     public class CameraRigTests
@@ -192,9 +193,127 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// The reset key eases rather than cuts, takes about a quarter of a
-        /// second, and gives way to a hand on the mouse.
+        /// The pivot flies, and it flies where the camera is looking: forward
+        /// is the heading flattened into the ground plane, so a press still
+        /// goes into the picture after a half turn. Up is world up at every
+        /// heading, and nothing stops the camera leaving the board.
         /// </summary>
+        [Test]
+        public void FlyingMovesThePivotAlongTheCurrentHeading()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            // Yaw zero looks down +Z, so forward is +Z.
+            Vector3 from = rig.Pivot;
+            float distance = rig.Distance;
+            rig.Fly(Vector3.forward);
+
+            AssertMoved(rig.Pivot - from, new Vector3(0f, 0f, distance), "forward at yaw 0");
+
+            // Half a turn, and the same press goes the other way.
+            rig.PointAt(180f, rig.Pitch, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            AssertMoved(rig.Pivot - from, new Vector3(0f, 0f, -distance), "forward at yaw 180");
+
+            // A quarter turn: forward is +X, and right is -Z.
+            rig.PointAt(90f, rig.Pitch, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward + Vector3.right);
+
+            AssertMoved(rig.Pivot - from, new Vector3(distance, 0f, -distance), "forward and right at yaw 90");
+
+            // Up is world up however the rig is turned or tilted.
+            rig.PointAt(213f, 250f, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.up);
+
+            AssertMoved(rig.Pivot - from, new Vector3(0f, distance, 0f), "up at yaw 213, pitch 250");
+
+            // Off the board and under it. There are no bounds on the pivot, on
+            // purpose: a limit would be a guess at which views are worth having.
+            rig.PointAt(0f, rig.Pitch, distance);
+            rig.Fly(new Vector3(0f, -4f, 20f));
+
+            Bounds floor = root.Floor.WorldBounds;
+
+            Assert.That(rig.Pivot.z, Is.GreaterThan(floor.max.z), "The camera cannot fly off the end of the board.");
+            Assert.That(rig.Pivot.y, Is.LessThan(0f), "The camera cannot fly under the board.");
+        }
+
+        /// <summary>
+        /// One press covers the same fraction of what is on screen at every
+        /// zoom, which is the same reason the dolly is exponential: a fixed
+        /// speed is glacial framed on the board and uncontrollable on a creep.
+        /// </summary>
+        [Test]
+        public void FlightSpeedScalesWithTheDolly()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            rig.PointAt(0f, rig.Pitch, rig.FramedDistance);
+
+            Vector3 from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+            float framed = Vector3.Distance(rig.Pivot, from);
+
+            Assert.That(framed, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+
+            rig.PointAt(0f, rig.Pitch, 0.5f * rig.FramedDistance);
+
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            Assert.That(
+                Vector3.Distance(rig.Pivot, from),
+                Is.EqualTo(0.5f * framed).Within(0.001f),
+                "Dollying halfway in did not halve the step, so the flight is a speed rather than a fraction.");
+        }
+
+        /// <summary>
+        /// Reframing puts the pivot back with the angle and the distance. The
+        /// frame capture reframes against its own aspect, so anything less than
+        /// this would let a capture inherit wherever somebody had flown to.
+        /// </summary>
+        [Test]
+        public void ReframingPutsThePivotBackAsWellAsTheAngle()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            rig.PointAt(97f, 12f, 0.3f * rig.FramedDistance);
+            rig.Fly(new Vector3(3f, 2f, -5f));
+
+            rig.Reframe(root.Floor.WorldBounds);
+
+            AssertMoved(rig.Pivot, rig.FramedPivot, "the reframed pivot");
+            Assert.That(rig.Yaw, Is.EqualTo(SceneFraming.CameraDefaultYawDegrees).Within(0.001f));
+            Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.001f));
+            Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+        }
+
+        /// <summary>Asserts a vector component by component.</summary>
+        private static void AssertMoved(Vector3 actual, Vector3 expected, string what)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.001f), what + ": x");
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.001f), what + ": y");
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(0.001f), what + ": z");
+        }
+
+        /// <summary>
+        /// The reset key eases rather than cuts, brings the position back along
+        /// with the angle and the distance, takes about a quarter of a second,
+        /// and gives way to a hand on the mouse.
+        /// </summary>
+        /// <remarks>
+        /// Easing the pivot is what makes the reset mean <i>the default view</i>
+        /// rather than <i>the default angle</i>. It is also the only way home
+        /// from far enough out that the board has left the frustum, which is
+        /// what an unbounded flight buys.
+        /// </remarks>
         [Test]
         public void TheResetEasesBackToTheDefaultViewInAQuarterOfASecond()
         {
@@ -202,6 +321,13 @@ namespace Tests.PlayMode
             OrbitCameraRig rig = root.CameraRig;
 
             rig.PointAt(140f, 8f, 0.4f * rig.FramedDistance);
+            rig.Fly(new Vector3(6f, 3f, 9f));
+
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.GreaterThan(rig.FramedDistance),
+                "The camera has not been flown far enough for the reset to be worth measuring.");
+
             rig.ResetView();
 
             Assert.That(rig.IsEasing, Is.True);
@@ -209,6 +335,10 @@ namespace Tests.PlayMode
             rig.Advance(0.1f);
 
             Assert.That(rig.IsEasing, Is.True, "A quarter of a second is not up after a tenth of one.");
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.GreaterThan(0.01f),
+                "The pivot arrived instantly, so the position is cut rather than eased.");
             Assert.That(
                 Mathf.DeltaAngle(rig.Yaw, SceneFraming.CameraDefaultYawDegrees),
                 Is.Not.EqualTo(0f).Within(1f),
@@ -224,6 +354,14 @@ namespace Tests.PlayMode
             Assert.That(rig.Yaw, Is.EqualTo(SceneFraming.CameraDefaultYawDegrees).Within(0.001f));
             Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.001f));
             Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.LessThan(0.001f),
+                "The angle and the distance came home and the position stayed where it was flown to.");
+            Assert.That(
+                rig.FramedPivot,
+                Is.EqualTo(new Vector3(root.Floor.WorldBounds.center.x, 0f, root.Floor.WorldBounds.center.z)),
+                "Home is the middle of the floor, in the ground plane.");
 
             // A hand on the mouse wins: the ease stops where the drag put it
             // rather than dragging the camera back out from underneath.
@@ -241,11 +379,12 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// No billboards, no flat cards. Orbiting moves the camera and nothing
-        /// else — asserted over every transform under the root.
+        /// No billboards, no flat cards. Orbiting, flying and dollying move the
+        /// camera and nothing else — asserted over every transform under the
+        /// root.
         /// </summary>
         [Test]
-        public void OrbitingTheCameraMovesNothingButTheCamera()
+        public void MovingTheCameraMovesNothingButTheCamera()
         {
             MatchRoot root = BuildPlayfield();
             OrbitCameraRig rig = root.CameraRig;
@@ -262,6 +401,7 @@ namespace Tests.PlayMode
             {
                 rig.Orbit(31f, 13f);
                 rig.Dolly(0.2f);
+                rig.Fly(new Vector3(0.3f, 0.1f, 0.4f));
 
                 for (var index = 0; index < others.Length; index++)
                 {
@@ -384,8 +524,8 @@ namespace Tests.PlayMode
 
         /// <summary>
         /// The behavioural half: the same match, run once per starting angle,
-        /// with the camera orbited and dollied every single tick — and every
-        /// per-tick state hash identical.
+        /// with the camera orbited, dollied and flown every single tick — and
+        /// every per-tick state hash identical.
         /// </summary>
         /// <remarks>
         /// The hash is over internal simulation state rather than over the
@@ -419,9 +559,9 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// Plays a whole match, orbiting and dollying <paramref name="rig"/> —
-        /// if there is one — on every tick, and returns the rolling state hash
-        /// per tick.
+        /// Plays a whole match, orbiting, dollying and flying
+        /// <paramref name="rig"/> — if there is one — on every tick, and
+        /// returns the rolling state hash per tick.
         /// </summary>
         /// <remarks>
         /// The content is written here rather than read from a file: two unit
@@ -453,6 +593,7 @@ namespace Tests.PlayMode
                 {
                     rig.Orbit(11f, 3f);
                     rig.Dolly(0.05f);
+                    rig.Fly(new Vector3(0.2f, 0.05f, 0.3f));
                 }
             }
 
