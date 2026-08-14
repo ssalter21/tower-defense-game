@@ -859,3 +859,79 @@ much unspent gold, and cost efficiency fell from 362–442 to 316–360 because 
 than they pay for themselves at this rate. **The win-rate column says nothing either way** — it was already
 saturated at 10000 basis points on every row before this ticket, from #207. 25% is a starting figure and the
 sweep is where it gets moved.
+
+---
+
+## 15 August 2026 — the opponent accumulates, and the run it kills is the evidence
+
+Implementing [#208](https://github.com/ssalter21/tower-defense-game/issues/208), raised by the developer after
+playing #207: *"the opponents field will need to start small and scale like the player now does."* It did not.
+The field was one stored round drawn ten times, so a round-one opponent and a round-ten opponent sent the same
+wave while the player's own wave compounded — and the committed run finished holding 1,647 gold it had no
+reason to spend.
+
+### What it said, and what is true now
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **ADR-0042** — the pool | The pool is a population, and the field is the K of it a round is resolved against | **The pool is a population per round.** Round seven draws from the members recorded at round seven, which is the shape a ghost pool has anyway: stored ghosts are accumulated rounds |
+| **ADR-0042** — the measurement | *"It is fixed for the whole run, and that is what keeps the payment a fold"* | **Still true, and now at a price that is named.** The draw grew per round and the measurement did not — it reads the whole population at once, so the pool a run fights and the distribution it is measured against describe different populations |
+| **`content/field.txt`** — the stand-in | One pair of orders, drawn with replacement | **One player, recorded once per round**, buying that column again every round: ten bodies in round one, seventy in round seven |
+
+### Resolution 2, taken by the developer, and what it cost
+
+The ticket put two resolutions up. **Resolution 1** measures the field per round — arguably more correct, and
+it multiplies the sweep by the number of rounds. **Resolution 2** grows only what a run fights and leaves the
+measurement flat, which is the alternative ADR-0042 explicitly considered and rejected on the grounds that the
+pool and the distribution would then describe different populations.
+
+Resolution 2 was taken, and most of the collision it was worried about had already evaporated: since #209
+nothing prices off the distribution at all, so the population it describes is a population nothing consumes.
+The ADR carries the amendment.
+
+### The measurement that decided the shape of the committed run
+
+**A wall kills a count, not a share.** The committed six-tower defense stops twelve bodies out of twenty, out
+of forty, out of a hundred — the kill column is flat and every creep added to a column is a creep that gets
+through. So an opponent who accumulates outruns any wall a run can afford: the ten-round committed run takes
+**5,011 gold of damage against a health pool of 800** and dies in the fourth round. The numbers are in
+[`a-wall-kills-a-count-not-a-share.md`](research/a-wall-kills-a-count-not-a-share.md).
+
+The developer's ruling was to **grow the opponent and let the run die** rather than raise the health pool or
+soften the curve: the tuning is what it is, and hiding it behind a gentle curve would have left the imbalance
+in the file where nobody reads it.
+
+### So `content/commands.txt` is four rounds long
+
+Not by choice. `record-run` plays a script to the end before it writes anything, so a fifth build row is a row
+nobody was alive to play and the file could not be recorded at all. The four rounds still demonstrate what they
+are there for — the wall going up one tower a round, and #207's accumulation, with round three naming the ten
+runners round two bought and paying for the ten it adds.
+
+**The run also stops banking.** Waiting five rounds and spending the bank in one is the play against a field
+that never grows; against one that does, the rounds a run banks through are the rounds that kill it.
+
+### What the sweep lost, and what it kept
+
+`content/sweep.csv` moved on exactly two columns. **The win rate went from 10000 basis points on every row to
+zero** — every run of every creep now loses — and taken went from 1,634 to 33,512, identical on all five rows
+because the incoming waves leak in full and the dice never touch them. Everything else is byte for byte what it
+was: dealt, spent, defense, unspent, cost efficiency, base and bonus. The report is still an instrument on the
+offense axis and is no longer one on the defensive axis, which is the honest reading of a tuning where offense
+dominates.
+
+**The sweep costs 78 seconds against 42.** Same 9,600 matches; a round-ten column is ten times as deep and its
+match runs 6,098 ticks against 1,913. Measured on the same machine, both including the build.
+
+### The behaviour fingerprint could not see this, for the fourth time
+
+Simulation version to **6**, which retires every record made under 5. Under `rule-fingerprint/4` this build's
+fingerprint came out `B234D73EC659D3A7` — **byte for byte version 5's**. Every half of that fold is *handed*
+the pairing it folds, and who a round draws is decided above all of them. It gained a fifth half that plays a
+three-round run against a population recorded per round, and the label went `rule-fingerprint/4` →
+`rule-fingerprint/5`.
+
+**The new half is folded over a roster written in the current column layout, and that is the second thing the
+half caught.** A layout-1 row carries no cost column, so every unit in the fingerprint's own roster is free —
+and a leak that costs nothing folds to zero whoever sent it. The half was written, watched passing under a
+deliberately flat draw, and only the priced roster made it able to see the rule it is there for.

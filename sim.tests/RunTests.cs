@@ -713,26 +713,154 @@ public class RunTests
     }
 
     [Fact]
-    public void The_canned_pool_is_one_pair_of_orders_and_a_field_is_that_pair_over_and_over()
+    public void A_round_is_fought_against_the_population_recorded_at_that_round()
+    {
+        // What a run walks into grows as the run does. The pool records a
+        // population per round, and round two is fought against round two's --
+        // so a run's incoming pressure climbs with its own wave instead of
+        // staying at whatever the opening round faced.
+        //
+        // OBSERVED: draw the field flat -- give FieldFor the whole population's
+        // size and read At(index). The second round's opponent comes back as
+        // whichever member the dice landed on, the wave assertion goes red on
+        // the total it sends, and the two rounds take the same damage on
+        // average.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 6, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        Run run = Played(new Run(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheLadder.Committed(types),
+            FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } }),
+            TheRun.Seed,
+            waves: 2,
+            fieldSize: 2,
+            deathEndsTheRun: false));
+
+        // The match a round can be asked to rebuild is against its own round's
+        // member, in both directions.
+        Assert.Equal(
+            opening.Wave.Count,
+            run.MatchAt(0, 0, attacking: false).LeakedByOrder.Count);
+        Assert.Equal(
+            later.Wave.Count,
+            run.MatchAt(1, 0, attacking: false).LeakedByOrder.Count);
+
+        // And the health it costs to stand there follows the population rather
+        // than the round number.
+        Assert.True(
+            run.Outcome.Rounds[1].LeakCostTaken > run.Outcome.Rounds[0].LeakCostTaken,
+            "A run's second round faced the population recorded at its second round, so the wave it took "
+            + "should be the longer one: " + run.Outcome.Rounds[1].LeakCostTaken + " against "
+            + run.Outcome.Rounds[0].LeakCostTaken + ".");
+    }
+
+    [Fact]
+    public void What_a_round_of_the_pool_is_worth_is_measured_over_the_whole_population()
+    {
+        // The draw grew per round and the measurement did not: what a round of
+        // the pool is worth is one number for the whole run, read off every
+        // member the population has at any round. That is the resolution #208
+        // took -- the fold ADR-0042 describes stays a fold, at the price of a
+        // measurement whose population is not the one any single round fights.
+        //
+        // OBSERVED: have MeasureField draw its members and their opponents per
+        // round, off SizeAt. The two fields stop agreeing, because a per-round
+        // measurement reads the first rounds of the population and this reads
+        // all of it.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 6, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        PerformanceField perRound =
+            Against(types, FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } })).Field;
+        PerformanceField flat = Against(types, FieldPool.Of(new[] { opening, later })).Field;
+
+        Assert.Equal(flat.Size, perRound.Size);
+        Assert.Equal(
+            Enumerable.Range(0, 400).Select(dealt => flat.PercentileOf(dealt)),
+            Enumerable.Range(0, 400).Select(dealt => perRound.PercentileOf(dealt)));
+    }
+
+    [Fact]
+    public void A_pool_holds_a_population_per_round_and_a_round_draws_from_its_own()
+    {
+        // A member is somebody's round, so it is recorded at the round it was
+        // played in and a round is fought against the members recorded at that
+        // one. Rounds past the last the pool reaches are fought against its
+        // deepest, which is what a run longer than any stored ghost does.
+        //
+        // OBSERVED: have At(round, index) ignore its round and read the flat
+        // population. The second assertion goes red -- round one's opponent is
+        // handed back for round two -- which is the field of one stored round
+        // drawn N times that this replaces.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 1, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        FieldPool pool = FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } });
+
+        Assert.Same(opening, pool.At(0, 0));
+        Assert.Same(later, pool.At(1, 0));
+        Assert.Same(later, pool.At(9, 0));
+        Assert.Equal(1, pool.SizeAt(0));
+
+        // The whole population, round structure flattened away: what a pool is
+        // worth is measured over all of it at once.
+        Assert.Equal(2, pool.Size);
+        Assert.Same(opening, pool.At(0));
+        Assert.Same(later, pool.At(1));
+
+        // A pool written as a flat population is one round's worth of members
+        // standing at every round, which is what every caller that has no
+        // rounds to record means by handing over a list.
+        FieldPool flat = FieldPool.Of(new[] { opening, later });
+
+        Assert.Equal(2, flat.SizeAt(0));
+        Assert.Same(later, flat.At(7, 1));
+    }
+
+    [Fact]
+    public void The_canned_pool_is_one_opponent_who_buys_the_same_wave_again_every_round()
     {
         // The population every run in this repository is played against, and it
         // is composed here rather than by whoever happened to read the two
-        // files: a defense and a wave are one member, and a field of any width
-        // is that member drawn as many times.
+        // files: one member a round, behind the one committed defense, sending
+        // the authored wave bought once more every round. A player accumulates
+        // a wave over a run, so a stand-in that sent the same wave in round ten
+        // as in round one is a run whose incoming pressure is flat while its
+        // own climbs.
         //
-        // OBSERVED: hand Canned the pool's own wave twice -- Of(new[] { orders,
-        // orders }) -- and the size assertion goes red at 2 against 1. A pool
-        // whose members are all the same opponent is a field that reads exactly
-        // like a wide one and is not one.
+        // OBSERVED: hand every round the authored counts -- drop the
+        // multiplication in Grown. The round-seven assertion goes red at 10
+        // against 70, and every run against this pool ends holding a purse it
+        // had no reason to spend.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout defense = TheMatch.Layout(types);
         WaveScript wave = TheRun.FieldWave(types);
 
-        FieldPool canned = FieldPool.Canned(defense, wave);
+        FieldPool canned = FieldPool.Canned(defense, wave, rounds: 10);
 
-        Assert.Equal(1, canned.Size);
-        Assert.Same(defense, canned.At(0).Defense);
-        Assert.Same(wave, canned.At(0).Wave);
+        Assert.Equal(10, canned.Rounds);
+        Assert.Equal(10, canned.Size);
+        Assert.Equal(1, canned.SizeAt(6));
+
+        // The same wall in every round: what grows is what it sends.
+        Assert.Same(defense, canned.At(0, 0).Defense);
+        Assert.Same(defense, canned.At(9, 0).Defense);
+
+        // One column, deeper every round. The shape is what content/field.txt
+        // is calibrated for, so growth is a count and never a second order.
+        Assert.Equal(wave.TotalUnits, canned.At(0, 0).Wave.TotalUnits);
+        Assert.Equal(wave.Count, canned.At(6, 0).Wave.Count);
+        Assert.Equal(wave.TotalUnits * 7, canned.At(6, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.At(9, 0).Wave.TotalUnits);
+
+        // And past the last round it recorded, the deepest round stands.
+        Assert.Equal(wave.TotalUnits * 10, canned.At(40, 0).Wave.TotalUnits);
     }
 
     [Fact]

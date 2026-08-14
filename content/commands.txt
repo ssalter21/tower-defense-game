@@ -101,13 +101,24 @@
 # ---------------------------------------------------------------------------
 # WHAT THIS PARTICULAR RUN DOES
 #
-# Ten waves against the canned field.
+# Four rounds against the canned field, and it dies in the fourth.
 #
-# THE OPENING BUILDS AND THE MIDDLE SENDS. The board is empty when wave one's
-# build phase opens, so the opening rounds put a wall up and send almost
-# nothing: an empty slot is a position, what is not spent compounds at the
-# ruleset's interest, and a wave big enough to get past a full defense costs
-# more than one round of income. Waves six onwards are what that opening bought.
+# THE OPPONENT ACCUMULATES, SO THE PRESSURE CLIMBS FASTER THAN A WALL CAN. The
+# field is a population recorded round by round now, and the stand-in in it buys
+# content/field.txt's column once more every round: ten bodies in round one,
+# twenty in round two, forty in round four. What a wall stops is close to a
+# fixed NUMBER of creeps rather than a fixed share -- the committed six-tower
+# defense kills twelve of a column whether the column is twenty deep or a
+# hundred -- so what gets past is almost the whole of the increase. This run
+# takes 100, then 190, then 265, and the fourth round's 330 is more health than
+# it has left. The measurements are in
+# docs/research/a-scaling-opponent-outruns-a-wall.md.
+#
+# SO THE FILE IS FOUR ROWS, AND THAT IS THE RUN THIS ECONOMY SUPPORTS. A fifth
+# build row could not be recorded at all: record-run plays a script to the end
+# before it writes anything, and a round after this one is a round nobody was
+# alive to play. What the run demonstrates is the ramp and the accumulation
+# either side of it, which is what four rounds are enough for.
 #
 # THE WALL IS FOUR ARCHERS AND IT GOES UP ONE A ROUND. The corridor crosses the
 # map four times -- east along row 1, back west along row 3, east again along
@@ -119,64 +130,31 @@
 # towers spread thinly enough that each sees a creep once. The fourth, at column
 # four, watches the western turn instead: the single hex at row 4 where the
 # corridor doubles back, and the stretch either side of it, which nothing at
-# column seven reaches. It is the cheapest forty gold in the file -- the round
-# it goes up is the round the leak halves.
+# column seven reaches. It is the cheapest forty gold in the file.
 #
-# THEN REACH. Wave five upgrades the first archer into a ranger, which is
-# content/upgrades.txt's one edge, paid at the ranger's full price for a hex of
-# extra range on the seam that meets the entrance run. It is the whole round:
-# it adds nothing to the wave, so the bank carries into wave six. Its slot line
-# still names the twenty runners, because wave four bought them and a creep is
-# bought once and attacks every round after -- naming them is what sending them
-# again costs, which is nothing. The upgrade is also the only way a ranger
-# reaches this board, because the edge that names it forbids placing it.
-#
-# NOTHING IS BUILT AFTER WAVE FIVE. From there the purse buys waves, because a
-# round is scored on what it got past the field and a fifth tower is worth less
-# than the bodies it would cost. Wave six is what five rounds of banking paid
-# for, and every round after it is what income alone sustains.
+# AND IT SENDS FROM ROUND TWO, BECAUSE BANKING NO LONGER PAYS. Waiting five
+# rounds and spending the bank in one is the play against a field that never
+# grows; against one that does, the rounds a run banks through are the rounds
+# that kill it, and gold held at the end is gold that bought nothing. So every
+# round after the first buys creeps as well as a tower.
 #
 # EVERY WAVE NAMES EVERY CREEP THE RUN HAS EVER BOUGHT. That is #207: a phase's
 # slot lines are the whole of its round's wave, and the purse is charged only
-# for the increase over the round before. So the lines get longer and never
-# shorter, waves six to eight add almost nothing and cost almost nothing --
-# nineteen gold buys wave eight's one skeleton -- and the leak cost this run
-# deals goes from nothing to six hundred and seventy three. A line that named
-# fewer of a creep than the line above it would be refused where it is read.
-#
-# WHAT IS MONOTONE IS THE WAVE AND NOT WHAT IT GETS PAST. Rounds seven and eight
-# add two ogres and a skeleton to a wave of thirty and deal 198, 198 and 197 --
-# flat, then a point down. A wave that grows by a body or two runs into towers
-# that were already killing everything ahead of it, so the leak cost dealt only
-# moves when the wave grows enough to saturate them, which is what rounds nine
-# and ten do. Reading the dip as a bug is the mistake this paragraph exists to
-# stop.
+# for the increase over the round before. Round three names the ten runners
+# round two bought and pays for the ten it adds; round four names all twenty and
+# pays for the minions alone. A line that named fewer of a creep than the line
+# above it would be refused where it is read.
 #
 # THE LATE ROUNDS SPEND ON DEPTH RATHER THAN ON WIDTH. A count is released one
 # body every forty-five ticks, so gold split across more columns arrives as more
 # bodies per tick over fewer ticks and saturates the towers less;
-# content/field.txt's header carries the measurements. Once the four types are
-# all in the wave the only thing left to buy is more of them, which is what
-# waves nine and ten do.
-#
-# THIS RUN ENDS RICH, AND THAT IS AN ARTEFACT RATHER THAN A RESULT. It finishes
-# holding sixteen hundred gold because the canned opponent's wave does not grow
-# while this one does -- the field is one stored round drawn ten times, so the
-# pressure coming back is flat. Issue #208 is that asymmetry; do not read the
-# surplus as a balance finding.
+# content/field.txt's header carries the measurements.
 
 build    1   0 0
 place    1  3   6  2
-build    2   0 0
+build    2   2 10
 place    2  3   7  4
-build    3   0 0
+build    3   2 20
 place    3  3   7  6
-build    4   2 20
+build    4   1 10  2 20
 place    4  3   4  4
-build    5   2 20
-upgrade  5  14  6  2
-build    6   1 10  2 20
-build    7   1 10  2 20  12 2
-build    8   1 10  2 20  7 1   12 2
-build    9   1 20  2 30  7 2   12 3
-build   10   1 30  2 45  7 3   12 5

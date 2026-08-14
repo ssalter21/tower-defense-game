@@ -3,10 +3,26 @@
 # THIS IS THE GHOST POOL'S STAND-IN AND NOT A MATCH'S WAVE. A round is resolved
 # against a field of K opponents drawn from a population of other players'
 # rounds, and no such population exists until runs are stored. Until then the
-# population is this one pair -- this wave, standing behind the committed
-# defense -- drawn with replacement, so a field of ten is this opponent ten
-# times. That makes the harness part of the economy rather than a tool pointed
-# at it: what a run's wave is paid for getting past is whatever is in here.
+# population is the one player written here -- this wave, standing behind the
+# committed defense -- recorded once per round and drawn with replacement, so a
+# field of ten is that opponent's round ten times. That makes the harness part
+# of the economy rather than a tool pointed at it: what a run's wave is paid for
+# getting past is whatever is in here.
+#
+# AND THIS IS THE OPENING ROUND, NOT THE WHOLE RUN. The stand-in buys this
+# column once more every round -- ten bodies in round one, seventy in round
+# seven -- because a player accumulates a wave over a run and an opponent who
+# did not would leave the incoming pressure flat while the player's own climbed.
+# The multiplication is in FieldPool.Canned and the rounds it records are the
+# run's wave count.
+#
+# WHICH IS WHY A RUN AGAINST THIS FIELD DIES. A wall stops a roughly fixed
+# NUMBER of creeps rather than a share of them -- the committed defense kills
+# twelve of a column whether the column is twenty deep or a hundred -- so the
+# whole of each round's increase gets through, and ten rounds of it come to
+# 5,011 gold of damage against a health pool of 800. That is a property of the
+# tuning rather than of this file, and it is measured in
+# docs/research/a-wall-kills-a-count-not-a-share.md.
 #
 # IT IS NOT wave.txt, AND THE DIFFERENCE IS THE WHOLE POINT. That file is the
 # skeleton's authored match -- forty creeps, three hundred and eighty gold of
@@ -42,11 +58,13 @@
 # not a slightly different opponent, it is a walkover.
 #
 # WHICH IS ALSO WHY THIS ONE IS CALIBRATED AND NOT AVERAGED. It is the shape
-# that makes the report an instrument: over thirty-two runs a creep the
-# roster's six come in between forty-one and sixty-six percent of runs won,
-# which is a column that separates them. Against the two-column wave every
-# creep wins every run, and against wave.txt none of them wins any -- and
-# neither of those reports says anything about a creep.
+# that makes the report an instrument, and the instrument is now the offense
+# half of it alone: every row of content/sweep.csv loses every run against an
+# opponent who accumulates, so the win-rate column reads zero on all five and
+# what separates the creeps is what they got past this opponent's WALL --
+# dealt, bonus and cost efficiency. Against the two-column wave every creep got
+# past everything, and against wave.txt none of them got past anything; neither
+# of those reports says anything about a creep either.
 #
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
 # calibration argument carries -- more directly than it used to. The bonus is a
