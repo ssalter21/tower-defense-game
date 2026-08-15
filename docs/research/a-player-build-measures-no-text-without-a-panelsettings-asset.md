@@ -11,9 +11,13 @@ different about a player, and what is the smallest thing that fixes it?
 
 ## Verdict
 
-**Unity's advanced text generator shapes and measures every string through ICU data, and a player carries that
-data only when the build contains a `PanelSettings` *asset*.** The editor process has it loaded regardless, so
+**Unity's advanced text generator shapes and measures every string through ICU data, and a player gets that
+data only when it *loads* a `PanelSettings` **asset**.** The editor process has it loaded regardless, so
 Play mode is immune by construction — the difference has nothing to do with what the code does.
+
+Note the verb. Unity's own error says to make sure the build *contains* such an asset, and containing one is
+not sufficient: a build carrying the asset with nothing loading it fails exactly as a build with no asset does.
+That was measured, and it is the single most surprising thing in this note.
 
 This project built every panel's settings with `ScriptableObject.CreateInstance<PanelSettings>()` and committed
 no such asset. In a player that means every string fails to measure, every label resolves to zero by zero, each
@@ -39,9 +43,10 @@ m_ICUDataAsset: {fileID: 20204, guid: 0000000000000000f000000000000000, type: 0}
 little-endian data. So the reference is into the engine, which is why the asset cannot be hand-authored: no
 YAML typed from memory could name that file id and be checked.
 
-`RuntimePanel.Settings` therefore clones the committed asset — `Object.Instantiate` copies the serialized
-reference along with everything else — and then assigns every field that decides a layout, so the asset holds
-no chrome and editing its values changes nothing on screen.
+`RuntimePanel.LoadTextData` therefore loads the committed asset and throws it away. Nothing is built from it:
+each panel's settings are still `ScriptableObject.CreateInstance<PanelSettings>()`, exactly as before, so no
+value in that YAML reaches anything on screen. The load is the whole contribution, and it is the load rather
+than the file's presence that counts — see the second table below.
 
 ## The measurement
 
@@ -69,6 +74,25 @@ the one nobody had run.
 `NullReferenceException`s in twenty seconds of play, and a `Player.log` of 222 MB in two minutes, against a
 clean editor log for the same commit.
 
+## Containing the asset is not enough — it has to be loaded
+
+The first fix cloned the asset, which loads it as a side effect, so it could not tell the two explanations
+apart. Three player runs on the same commit and the same committed asset, differing only in what the code does
+with it:
+
+| what `RuntimePanel.Settings` does | tests | failed |
+|---|---|---|
+| clones the asset (`Instantiate`) | 132 | 1 |
+| loads it and discards the result | 132 | 1 |
+| never loads it | 132 | **36** |
+
+The one failure in the first two rows is `RunLoopTests.TheEndFrameSaysWhatTheRunCameTo`, which is unrelated to
+text and fails in the editor too. The 36 are the ICU failures returning in full.
+
+So the asset being in the build does nothing on its own. Something has to load it, which means the code that
+does cannot be deleted as dead — and it looks exactly like dead code, since it returns a value nobody uses.
+That is what `Tests.PlayMode.ChromeLayoutTests` under `tools/run-player-tests.ps1` is there to notice.
+
 ## Why the asset rather than turning the advanced text generator off
 
 Switching the project to the legacy text path would also have worked, and would have kept every panel in code
@@ -78,9 +102,9 @@ being made blind. And it is a project setting, which in this repository only Uni
 reads those files and never edits them, deliberately.
 
 The asset costs one serialized file in a project whose chrome is otherwise all code. That objection is real and
-the answer is containment rather than denial: it is referenced from exactly one place, every layout field is
-reassigned over it, and both `RuntimePanel.Base` and `View.Editor.PanelSettingsAsset` say in as many words that
-it is an ICU carrier — so the next reader does not wire panels to it.
+the answer is containment rather than denial: it is loaded from exactly one place, nothing is built from what
+that load returns, and both `RuntimePanel.LoadTextData` and `View.Editor.PanelSettingsAsset` say in as many
+words that it is an ICU carrier — so the next reader does not wire panels to it.
 
 ## What would have caught it, and now does
 
@@ -96,8 +120,6 @@ a stated height and passes on its own whatever happens to the text, so the claim
 one about labels, which have no size except what measuring returns.
 
 A second guard sits beside it in the editor.
-`Tests.EditMode.GeneratedProjectFilesTests.TheCommittedPanelSettingsCarryICUDataAndNothingElse` walks the
-committed asset's serialized properties against a fresh `PanelSettings` and fails on any difference beyond the
-ICU reference and the theme. It exists because `Instantiate` copies *everything*: the clear colour, the render
-mode and the DPI pair are inherited by every panel in the game, so a value edited into that YAML would reach
-the whole HUD without appearing in any code.
+`Tests.EditMode.GeneratedProjectFilesTests.TheCommittedPanelSettingsCarryICUData` asserts the committed asset
+has the reference at all, because an asset written without it exists, loads, and leaves a player measuring
+nothing — identical from the outside to a working one.

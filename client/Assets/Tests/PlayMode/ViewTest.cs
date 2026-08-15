@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using View;
@@ -51,6 +52,14 @@ namespace Tests.PlayMode
         protected MatchView Begin() => TheMatchOnScreen.Begin(Spawn(GetType().Name));
 
         /// <summary>
+        /// The scene's one root object, with nothing built on it yet — what a
+        /// fixture calls before <c>Build</c>, <c>BeginBuilding</c> or
+        /// <c>BeginRun</c>.
+        /// </summary>
+        protected MatchRoot Playfield() =>
+            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
+
+        /// <summary>
         /// Where a played session's script lands in a test — one directory per
         /// fixture, so two of them cannot read each other's.
         /// </summary>
@@ -60,7 +69,7 @@ namespace Tests.PlayMode
         /// somebody was about to paste into <c>content/commands.txt</c>.
         /// </remarks>
         protected string Scratch() =>
-            System.IO.Path.Combine(Application.temporaryCachePath, GetType().Name);
+            Path.Combine(Application.temporaryCachePath, GetType().Name);
 
         /// <summary>
         /// Steps the match, drawing every tick, until <paramref name="stop"/>

@@ -79,9 +79,6 @@ namespace Tests.PlayMode
             Measured(root.Loop.Switch.Document, "Results");
         }
 
-        private MatchRoot Playfield() =>
-            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
-
         /// <summary>
         /// Asserts the bar called <paramref name="barName"/> on
         /// <paramref name="document"/> has a size, and that every piece of text

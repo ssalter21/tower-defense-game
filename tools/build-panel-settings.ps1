@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Writes the one PanelSettings asset the chrome is cloned from.
+    Writes the one PanelSettings asset a player build takes its text data from.
 
 .DESCRIPTION
-    Assets/Resources/RuntimePanelSettings.asset -- the base every runtime panel
-    in this project is instantiated from, and the reason a player build has the
-    text engine's ICU data at all. Unity attaches that data to a PanelSettings
-    in the editor and to nothing that is created at runtime, so a build with no
-    such asset in it measures every string as nothing: labels come back zero by
-    zero, every bar of the HUD collapses, and Player.log fills with
-    UITKTextHandle null references.
+    Assets/Resources/RuntimePanelSettings.asset -- no panel is built from it,
+    and loading it is the reason a player build has the text engine's ICU data
+    at all. Unity attaches that data to a PanelSettings in the editor and to
+    nothing that is created at runtime, so a build that never loads such an
+    asset measures every string as nothing: labels come back zero by zero, every
+    bar of the HUD collapses, and Player.log fills with UITKTextHandle null
+    references.
 
     Written by the editor rather than by hand, like every other generated file
     here. What it carries is a reference into the engine's built-in resources; a

@@ -816,9 +816,6 @@ namespace Tests.PlayMode
         // Scaffolding
         // ---------------------------------------------------------------
 
-        private MatchRoot Playfield() =>
-            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
-
         private MatchRoot Building(ComposedRound round)
         {
             MatchRoot root = Playfield();

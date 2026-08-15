@@ -8,13 +8,13 @@ namespace View.Editor
 {
     /// <summary>
     /// Generates the one <see cref="PanelSettings"/> asset in this project: the
-    /// base every runtime panel is cloned from.
+    /// one a player build takes its text data from.
     /// </summary>
     /// <remarks>
     /// <para>
     /// Why an asset exists at all, in a project whose chrome is built in code,
-    /// is <see cref="RuntimePanel.Base"/>'s to explain, and the measurement
-    /// behind it is in
+    /// is <see cref="RuntimePanel.LoadTextData"/>'s to explain, and the
+    /// measurement behind it is in
     /// <c>docs/research/a-player-build-measures-no-text-without-a-panelsettings-asset.md</c>.
     /// What is written here is a bare <see cref="PanelSettings"/> plus the
     /// theme, which the editor stamps the text engine's ICU data onto on its
@@ -24,9 +24,6 @@ namespace View.Editor
     /// The write is read back and the ICU reference asserted, because an asset
     /// that exists, loads and carries nothing is exactly the file this one
     /// replaces and looks identical from the outside.
-    /// <c>Tests.EditMode.GeneratedProjectFilesTests</c> then holds every other
-    /// value on it to a fresh instance's default, since the clone carries those
-    /// too.
     /// </para>
     /// <para>
     /// Runs from a shell — <c>tools/build-panel-settings.ps1</c>, which is
@@ -44,7 +41,7 @@ namespace View.Editor
         /// The field the editor puts the text engine's ICU data in. Named here
         /// because it is what the asset is for and nothing public reports it.
         /// </summary>
-        private const string ICUDataField = "m_ICUDataAsset";
+        public const string ICUDataField = "m_ICUDataAsset";
 
         [MenuItem("Tools/Rewrite the panel settings")]
         public static void Run()

@@ -70,6 +70,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0026](0026-seeking-re-simulates-rather-than-caching.md) | Seeking re-simulates; there is no snapshot cache |
 | [0028](0028-generated-placeholder-art-marks-the-seam.md) | Placeholder geometry is generated in code, marking the art seam |
 | [0029](0029-exactly-one-match-root.md) | Exactly one match root in the scene |
+| [0053](0053-the-chrome-loads-one-settings-asset-for-its-text-data.md) | The chrome loads one settings asset, for its text data and nothing else |
 
 ## Reporting
 

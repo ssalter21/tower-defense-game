@@ -26,8 +26,9 @@ namespace View
     /// numbers here are chrome rather than playfield, which is why they are not
     /// in <see cref="SceneFraming"/> or <see cref="MatchTuning"/> — change every
     /// one and neither the match nor the playfield looks any different. The one
-    /// asset in the way of that is <see cref="Base"/>, which decides nothing
-    /// about a layout and exists for the reason given there.
+    /// asset in the way of that is the settings <see cref="LoadTextData"/>
+    /// loads, which no panel is built from and which decides nothing about a
+    /// layout.
     /// </para>
     /// <para>
     /// <b>UI Toolkit, and the scene runs no other UI system.</b> A runtime panel
@@ -50,8 +51,9 @@ namespace View
         public const string ThemeResourcePath = "RuntimeTheme";
 
         /// <summary>
-        /// The base settings asset's path inside <c>Resources</c>, without
-        /// extension. Written by <c>tools/build-panel-settings.ps1</c>.
+        /// The committed settings asset's path inside <c>Resources</c>, without
+        /// extension. Written by <c>tools/build-panel-settings.ps1</c>, loaded
+        /// by <see cref="LoadTextData"/>.
         /// </summary>
         public const string SettingsResourcePath = "RuntimePanelSettings";
 
@@ -74,10 +76,8 @@ namespace View
         public static Color LabelColor => new Color(0.9f, 0.92f, 0.95f, 1f);
 
         /// <summary>
-        /// One panel's settings: a clone of <see cref="Base"/>, so whoever made
-        /// it destroys it and an orphaned one cannot outlive the play session.
-        /// The six values below decide how a bar is scaled and stacked;
-        /// everything else on the clone comes from the asset.
+        /// One panel's settings, made rather than loaded — so whoever made it
+        /// destroys it, and an orphaned one cannot outlive the play session.
         /// </summary>
         /// <param name="name">What it is called in a profiler and a leak report.</param>
         /// <param name="sortingOrder">
@@ -86,7 +86,9 @@ namespace View
         /// </param>
         public static PanelSettings Settings(string name, int sortingOrder = 0)
         {
-            PanelSettings settings = UnityEngine.Object.Instantiate(Base());
+            LoadTextData();
+
+            var settings = ScriptableObject.CreateInstance<PanelSettings>();
             settings.name = name;
             settings.themeStyleSheet = Theme();
             settings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
@@ -104,28 +106,30 @@ namespace View
         }
 
         /// <summary>
-        /// The committed settings asset every panel is cloned from.
+        /// Loads the committed <see cref="PanelSettings"/> asset, and does
+        /// nothing with it. Loading it is what gives the text engine the ICU
+        /// data it shapes and measures every string through.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>It is an ICU carrier.</b> The editor attaches the text engine's
-        /// ICU data to a <see cref="PanelSettings"/> asset when that asset is
-        /// written, and to nothing created at runtime; a build containing no
-        /// such asset carries no ICU data, so every string in it measures as
-        /// nothing, every label resolves to zero by zero and each bar collapses.
-        /// See
-        /// <c>docs/research/a-player-build-measures-no-text-without-a-panelsettings-asset.md</c>.
+        /// <b>The call looks removable and is not.</b> Nothing is built from
+        /// what it returns. Without it a player build measures every string as
+        /// nothing: each label resolves to zero by zero, every bar of the HUD
+        /// collapses, and what is drawn stops agreeing with what is hit-tested.
+        /// The editor is immune, because its own process has the data loaded
+        /// either way, so the run that fails when this goes is
+        /// <c>tools/run-player-tests.ps1</c> and
+        /// <c>Tests.PlayMode.ChromeLayoutTests</c> is the fixture.
         /// </para>
         /// <para>
-        /// <b>Everything else on it is a fresh <see cref="PanelSettings"/>'s
-        /// default, and that is asserted rather than assumed.</b>
-        /// <see cref="Settings"/> assigns the six values that decide how a bar
-        /// is scaled and stacked, and <see cref="UnityEngine.Object.Instantiate"/>
-        /// copies the rest of the asset — the clear colour, the render mode, the
-        /// DPI pair — onto every panel in the game. So a value edited into this
-        /// asset's YAML would reach the whole HUD without appearing in any code.
-        /// <c>Tests.EditMode.GeneratedProjectFilesTests</c> holds the asset to
-        /// its defaults for exactly that reason.
+        /// <b>Committing the asset is not enough on its own — that was
+        /// measured.</b> A build carrying the asset with nothing loading it
+        /// failed 36 of 132 player tests on the ICU error; the same build
+        /// loading it and discarding it passed. The measurement and the engine's
+        /// side of it are in
+        /// <c>docs/research/a-player-build-measures-no-text-without-a-panelsettings-asset.md</c>,
+        /// and what the asset costs is
+        /// <c>docs/adr/0053-the-chrome-loads-one-settings-asset-for-its-text-data.md</c>.
         /// </para>
         /// <para>
         /// Written by <c>tools/build-panel-settings.ps1</c> rather than by hand,
@@ -133,20 +137,8 @@ namespace View
         /// resources that no hand-authored YAML could name.
         /// </para>
         /// </remarks>
-        public static PanelSettings Base()
-        {
-            var settings = Resources.Load<PanelSettings>(SettingsResourcePath);
-
-            if (settings == null)
-            {
-                throw new InvalidOperationException(
-                    "No panel settings at Resources/" + SettingsResourcePath
-                    + ". It is committed, so a checkout without it is incomplete rather than "
-                    + "unconfigured; tools/build-panel-settings.ps1 writes it.");
-            }
-
-            return settings;
-        }
+        public static void LoadTextData() =>
+            Required<PanelSettings>(SettingsResourcePath, "panel settings");
 
         /// <summary>
         /// The theme style sheet every panel is laid out against.
@@ -157,19 +149,31 @@ namespace View
         /// laid out with. A panel without one draws a bar of invisible text and a
         /// slider with nothing to drag.
         /// </remarks>
-        public static ThemeStyleSheet Theme()
-        {
-            var theme = Resources.Load<ThemeStyleSheet>(ThemeResourcePath);
+        public static ThemeStyleSheet Theme() =>
+            Required<ThemeStyleSheet>(ThemeResourcePath, "theme style sheet");
 
-            if (theme == null)
+        /// <summary>
+        /// The asset at <paramref name="path"/> inside <c>Resources</c>, or a
+        /// throw naming <paramref name="what"/> it was.
+        /// </summary>
+        /// <remarks>
+        /// Both assets under <c>Resources</c> are committed, so a checkout
+        /// missing one is incomplete rather than unconfigured — which is a
+        /// different thing to tell whoever hits it than a null.
+        /// </remarks>
+        private static T Required<T>(string path, string what) where T : UnityEngine.Object
+        {
+            var asset = Resources.Load<T>(path);
+
+            if (asset == null)
             {
                 throw new InvalidOperationException(
-                    "No theme style sheet at Resources/" + ThemeResourcePath
+                    "No " + what + " at Resources/" + path
                     + ". It is committed, so a checkout without it is incomplete rather than "
                     + "unconfigured.");
             }
 
-            return theme;
+            return asset;
         }
 
         /// <summary>

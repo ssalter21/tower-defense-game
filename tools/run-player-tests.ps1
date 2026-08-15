@@ -16,6 +16,12 @@
     -MinimumTests tests. A green run of nothing is exactly the failure this
     exists to make impossible.
 
+    THE FLOOR TRACKS THE SUITE. It sits just under the number of tests there
+    are, so that a fixture disappearing from a player build is caught and not
+    only a suite emptied to zero -- which is what a floor far below the count
+    would catch and nothing else. Raise it when the suite grows; lowering it is
+    a decision about what the run stops guarding, not a formality.
+
     Requires the Unity Editor to be CLOSED -- batchmode needs the project lock.
 
 .EXAMPLE
@@ -26,7 +32,7 @@ param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$Results = "$PSScriptRoot\..\player-tests.xml",
     [string]$LogFile = "$PSScriptRoot\..\player-tests.log",
-    [int]$MinimumTests = 30
+    [int]$MinimumTests = 125
 )
 
 $ErrorActionPreference = 'Stop'

@@ -738,9 +738,6 @@ namespace Tests.PlayMode
             }
         }
 
-        private MatchRoot Playfield() =>
-            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
-
         /// <summary>Drives the whole transcript, one round to a line.</summary>
         private static void Play(MatchRoot root, RunLoop loop)
         {

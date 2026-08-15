@@ -496,9 +496,6 @@ namespace Tests.PlayMode
 
         private static readonly IEqualityComparer<Vector3> Near = new Nearly();
 
-        private MatchRoot Playfield() =>
-            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
-
         private MatchRoot Building(ComposedRound round)
         {
             MatchRoot root = Playfield();

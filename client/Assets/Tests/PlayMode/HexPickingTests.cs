@@ -187,8 +187,5 @@ namespace Tests.PlayMode
             Assert.That(HexPicking.TryHexAt(new Vector3(1e9f, 0f, 0f), out _), Is.False);
             Assert.That(HexPicking.TryHexAt(new Vector3(0f, 0f, -1e9f), out _), Is.False);
         }
-
-        private MatchRoot Playfield() =>
-            Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
     }
 }
