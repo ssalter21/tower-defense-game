@@ -63,9 +63,14 @@ namespace Tests.PlayMode
         /// <c>content/commands.txt</c> is the best arrangement in this
         /// repository at this ruleset, and a transcript that built somewhere
         /// else would be testing the loop against a run that dies sooner — which
-        /// is the loop working and the fixture proving nothing. It is a
-        /// different seed, so the numbers are not that file's; the shape of the
-        /// defense is.
+        /// is the loop working and the fixture proving nothing. The defense is
+        /// all it shares: the seed is 1 rather than that file's, and the whole
+        /// run sends the two bodies on the last line where
+        /// <c>content/commands.txt</c> sends ten, twenty and thirty over its
+        /// last three rounds. So none of the numbers here are
+        /// <c>content/run-outcome.txt</c>'s, and the leak cost dealt least of
+        /// all — a wave that small is a leak the field of ten averages down to
+        /// nothing.
         /// </para>
         /// <para>
         /// <b>It is four rounds because four is what the run survives.</b> The
@@ -88,19 +93,35 @@ namespace Tests.PlayMode
             Transcript.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length;
 
         /// <summary>
-        /// What <c>simcli play-run</c> prints for the script this transcript
-        /// writes, transcribed by hand from a real run of the shell.
+        /// The folds out of the line <c>simcli play-run</c> prints for the
+        /// script this transcript writes, transcribed by hand from a real run of
+        /// the shell.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// A second copy of a number, and pinned — say exactly to what. Every
         /// other assertion in this file compares the client against itself,
         /// which is a check that cannot catch the two programs drifting apart.
         /// This one is the shell's own answer, taken out of the other process
         /// and written down, so a change that moves the client's run without
         /// moving the shell's turns this red on the push that moved it.
+        /// </para>
+        /// <para>
+        /// <b>It is the one transcription in this fixture, and both places read
+        /// it.</b> The terminal prints these folds inside a line of its own and
+        /// the end frame shows them bare, so the same three numbers are checked
+        /// twice — and a copy each would be a pair that can be refreshed one at
+        /// a time, which is a run the client and the shell agree about failing
+        /// against a run neither of them played.
+        /// </para>
         /// </remarks>
-        private const string TheShellPrinted =
-            "outcome    3 waves survived, 0 of 800 health left, 0 dealt over 4 rounds, ended OutOfHealth";
+        private const string TheFold = "3 waves survived, 0 of 800 health left, 0 dealt over 4 rounds";
+
+        /// <summary>
+        /// The whole of that line: the terminal's prefix, the folds, and the
+        /// ending named by its enum member.
+        /// </summary>
+        private const string TheShellPrinted = "outcome    " + TheFold + ", ended OutOfHealth";
 
         /// <summary>What a transcript line says instead of a tower to build.</summary>
         private const string Nothing = "-";
@@ -317,16 +338,18 @@ namespace Tests.PlayMode
             Assert.That(loop.Header.Action.text, Is.Empty, "There is nothing left to press.");
             Assert.That(
                 loop.Header.Ending.text,
-                Does.Contain("10 waves survived, 326 of 800 health left, 0 dealt over 10 rounds"),
-                "The fold the shell prints for this run, written out rather than re-derived from the "
+                Does.Contain(TheFold),
+                "The folds the shell prints for this run, written out rather than re-derived from the "
                 + "expression that produced it.");
             Assert.That(loop.Header.Ending.text, Does.Contain(loop.ScriptPath));
-            Assert.That(loop.Header.Wave.text, Is.EqualTo("Wave 10 of 10"));
+            Assert.That(loop.Header.Wave.text, Is.EqualTo("Wave " + TranscriptRounds + " of 10"));
 
             // None of the record's vocabulary on screen. RunSummary.Outcome is
             // the terminal's line and names the ending by its enum member, which
             // is why the end frame is the fold's own sentence and not that one.
-            Assert.That(loop.Header.Ending.text, Does.Not.Contain(RunEnding.OutOfWaves.ToString()));
+            // The ending named is this run's own: a run that ended some other
+            // way is one the absence proves nothing about.
+            Assert.That(loop.Header.Ending.text, Does.Not.Contain(RunEnding.OutOfHealth.ToString()));
             Assert.That(loop.Header.Ending.text, Does.Not.Contain("outcome    "));
         }
 
