@@ -64,13 +64,22 @@ namespace Tests.PlayMode
         /// repository at this ruleset, and a transcript that built somewhere
         /// else would be testing the loop against a run that dies sooner — which
         /// is the loop working and the fixture proving nothing. The defense is
-        /// all it shares: the seed is 1 rather than that file's, and the whole
-        /// run sends the two bodies on the last line where
-        /// <c>content/commands.txt</c> sends ten, twenty and thirty over its
-        /// last three rounds. So none of the numbers here are
-        /// <c>content/run-outcome.txt</c>'s, and the leak cost dealt least of
-        /// all — a wave that small is a leak the field of ten averages down to
-        /// nothing.
+        /// all it shares: this run is seeded 1 where the record compiled out of
+        /// that file is seeded 20260807 — the seed lives in the record and not
+        /// in the script — and the whole of this one sends the two bodies on the
+        /// last line where that one sends ten, twenty and thirty over its last
+        /// three rounds.
+        /// </para>
+        /// <para>
+        /// <b>Two runs that land on the same three folds are still two runs.</b>
+        /// This one and the committed file's both come to three waves survived,
+        /// none of eight hundred health left and four rounds, which is close
+        /// enough to read as one run and is not one. They part on the leak cost
+        /// dealt: 229 there against nothing here, because a wave of two bodies
+        /// gets past nobody. Nothing in that gap is the view and the shell
+        /// disagreeing — the committed file's own second round sends ten of a
+        /// type and also deals nothing, and the first leak it records is on
+        /// twenty.
         /// </para>
         /// <para>
         /// <b>It is four rounds because four is what the run survives.</b> The
@@ -99,7 +108,7 @@ namespace Tests.PlayMode
         /// </summary>
         /// <remarks>
         /// <para>
-        /// A second copy of a number, and pinned — say exactly to what. Every
+        /// A second copy of the numbers, and pinned — say exactly to what. Every
         /// other assertion in this file compares the client against itself,
         /// which is a check that cannot catch the two programs drifting apart.
         /// This one is the shell's own answer, taken out of the other process
@@ -109,10 +118,10 @@ namespace Tests.PlayMode
         /// <para>
         /// <b>It is the one transcription in this fixture, and both places read
         /// it.</b> The terminal prints these folds inside a line of its own and
-        /// the end frame shows them bare, so the same three numbers are checked
-        /// twice — and a copy each would be a pair that can be refreshed one at
-        /// a time, which is a run the client and the shell agree about failing
-        /// against a run neither of them played.
+        /// the end frame shows them bare, so the same folds are checked twice —
+        /// and a copy each would be a pair that can be refreshed one at a time,
+        /// which is a run the client and the shell agree about failing against a
+        /// run neither of them played.
         /// </para>
         /// </remarks>
         private const string TheFold = "3 waves survived, 0 of 800 health left, 0 dealt over 4 rounds";
