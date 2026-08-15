@@ -88,6 +88,7 @@ namespace Sim
             }
 
             UnitType[] byPrice = ByPrice(run.Types, run.Costs);
+            UnitType[] placeable = Placeable(byPrice, run.Ladder);
             bool[] covered = CoveredBy(run.Map, run.Board);
             Board board = run.Board;
             var actions = new List<BuildAction>();
@@ -95,9 +96,16 @@ namespace Sim
 
             // Cover: the type that reaches the most route nothing reaches for
             // what it costs, until nothing on any free cell reaches any more of it.
+            //
+            // The rungs are left out of this half and only this half. A type
+            // some edge of the ladder points at is refused to `place` -- it is
+            // reached by standing the rung below it -- so a bot that chose one
+            // here would compose a phase the rules refuse, however good the
+            // cell was. The upgrade loop below still reaches them, which is the
+            // only way anything does.
             while (true)
             {
-                (UnitType? type, int column, int row) = BestValue(run.Map, board, byPrice, run.Costs, covered);
+                (UnitType? type, int column, int row) = BestValue(run.Map, board, placeable, run.Costs, covered);
 
                 if (type is null)
                 {
@@ -274,6 +282,30 @@ namespace Sim
             }
 
             return (default, null);
+        }
+
+        /// <summary>
+        /// The rows of an ordered roster that may be placed outright: every one
+        /// no edge of the ladder points at, in the order they came.
+        /// </summary>
+        /// <remarks>
+        /// A separate list rather than a filter inside <see cref="ByPrice"/>,
+        /// because the upgrade half wants the whole ordering: what a placement
+        /// climbs into is exactly a row this leaves out.
+        /// </remarks>
+        private static UnitType[] Placeable(UnitType[] byPrice, UpgradeLadder ladder)
+        {
+            var placeable = new List<UnitType>();
+
+            for (int index = 0; index < byPrice.Length; index++)
+            {
+                if (!ladder.IsTargetOfAnEdge(byPrice[index].Id))
+                {
+                    placeable.Add(byPrice[index]);
+                }
+            }
+
+            return placeable.ToArray();
         }
 
         /// <summary>

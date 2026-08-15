@@ -17,10 +17,11 @@ These were extracted from the source comments when the project moved to a commen
 | [0033](0033-one-fused-damage-expression-and-a-named-pipeline.md) | One fused damage expression, evaluated once, behind a named pipeline |
 | [0034](0034-run-level-draws-are-derived-positions.md) | Run-level draws come from derived positions; the match keeps its one stream |
 | [0035](0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | A run's outcome is a vector, and health is a clock denominated in gold |
-| [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints |
-| [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once |
+| [0036](0036-the-anchor-schedule-is-a-shape-and-a-filling.md) | The anchor schedule is a shape and a filling, and the loader holds its constraints — **superseded by #179** |
+| [0037](0037-the-offering-is-public-because-it-is-derived.md) | The offering is public because it is derived, and a build phase is validated once — **superseded by #179** |
 | [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |
-| [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling |
+| [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling — **largely superseded by #209: the bands are gone and nothing prices off the field, so whether the measurement is kept at all is an [open question](../open-questions.md), which #208 waits on** |
+| [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
 
 ## The simulation/view boundary
 
@@ -46,16 +47,17 @@ These were extracted from the source comments when the project moved to a commen
 | [0015](0015-replay-bundles-are-self-contained.md) | A replay bundle is self-contained, and the seed lives in it |
 | [0017](0017-canonical-order-is-asserted-not-restored.md) | Canonical order is asserted at load, never restored |
 | [0018](0018-the-simulation-never-touches-the-filesystem.md) | The simulation is handed text and bytes, never paths |
-| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against |
+| [0039](0039-the-command-stream-is-the-only-route-into-a-run.md) | The command stream is the only route into a run, and it stamps every table it means anything against — **amended by #191: the slots no longer ascend by type id; position is the release order** — **amended by #206: `MatchAt` names the direction of the pairing it hands back, as a bool; `Side` stays private** |
 | [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
 | [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
 | [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
-| [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing, and the content hash covers content the simulation never reads |
+| [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing — **the second clause is overturned by #179; the simulation reads the ladder** |
 | [0047](0047-a-bundle-stamps-its-ruleset.md) | A replay bundle stamps its ruleset, and a bundle that names none is retired |
 | [0048](0048-a-board-is-not-a-layout.md) | A board is not a layout, and deriving one is a computation |
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
-| [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written |
+| [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written — **the verb it was decided about is deleted by #200; the shape stands and is spent at the screen in 0051** |
+| [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command — **amended by #206: the watched round is the Offence and Defence Results Screen, two views of one resolved pairing, opening on the defence** |
 
 ## Drawing the match
 
@@ -68,6 +70,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0026](0026-seeking-re-simulates-rather-than-caching.md) | Seeking re-simulates; there is no snapshot cache |
 | [0028](0028-generated-placeholder-art-marks-the-seam.md) | Placeholder geometry is generated in code, marking the art seam |
 | [0029](0029-exactly-one-match-root.md) | Exactly one match root in the scene |
+| [0053](0053-the-chrome-loads-one-settings-asset-for-its-text-data.md) | The chrome loads one settings asset, for its text data and nothing else |
 
 ## Reporting
 

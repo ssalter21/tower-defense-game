@@ -23,12 +23,22 @@ those exact bytes. That is why this reads "drag to tick 1662, then back to tick
 
 Then double-click `client/Builds/Windows/TowerDefense.exe`.
 
+**A build opens on a run's first build phase, and these twelve rows are written about `content/match.replay`.**
+Compose a round and press Done and the round you get is a match with the same controls over it, which is what
+rows 1, 2, 3, 11 and 12 need — they ask about the floor, the models, the camera and the build itself, and any
+match answers them. Rows 4 to 10 name a tick, and the ticks are a tick of the recorded match; a round you
+composed is a different match and the readout will say a different final tick. What to do about those seven is
+[an open question](open-questions.md). The reasoning in each row is what the row is for and it survives either
+answer.
+
 The controls are the whole interface: **Pause/Play**, a **speed** button that
 cycles 1x → 2x → 4x → 8x, **To the end**, and the **scrub bar**. The readout on
 the right says which tick is on screen and which tick the match ends on. The
 scrub bar is in whole ticks, so nudging it moves the match one tick — that is
-how the rows below say "a tick at a time". **Q** and **E**, or the left and
-right arrow keys, yaw the camera between its six snaps.
+how the rows below say "a tick at a time". Drag with the **right mouse button**
+to orbit the camera, **scroll** to go in and out, **WASD** to fly it across the
+board and **E** and **Q** to lift it and drop it — or middle-drag to pan — and
+**F** to ease back to the view it started at.
 
 Dragging the scrubber pauses. That is deliberate, and it is not one of the
 things being tested.
@@ -77,7 +87,7 @@ for the other.
 | 8 | The projectile tower as it fires: nudge a tick at a time from tick 314 to tick 347 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
 | 9 | A creep at death: drag to tick 5210 and play at 1x through tick 5247 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
 | 10 | Two creeps overtaking: drag to tick 1060 and play at 1x to tick 1130, watching for the pass on tick 1096 | Draw order flickering, or the pass not visible at all |
-| 11 | **Yaw the camera through all six snaps** with Q and E, parked at tick 2700 | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule |
+| 11 | **Orbit all the way round** by right-dragging, parked at tick 2700; scroll in until one creep fills the screen; fly off the far end of the board with W and drop under it with Q; then press F | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule; a model that reads at board distance falling apart up close; W going somewhere other than into the picture after a half turn; or F snapping rather than easing, or landing somewhere other than the view it started at |
 | 12 | Double-click the build on a clean machine — one that never cloned this repository and has no editor on it | Missing assembly, or a runtime prompt |
 
 ## Rows 4 and 5 are assertions now, and this is why

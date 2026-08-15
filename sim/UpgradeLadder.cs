@@ -220,6 +220,56 @@ namespace Sim
         /// <summary>How many edges there are. Zero is a legal answer.</summary>
         public int Count => _edges.Length;
 
+        /// <summary>
+        /// Whether this id is some edge's target, and therefore a rung that has
+        /// to be upgraded into rather than placed.
+        /// </summary>
+        /// <remarks>
+        /// A linear scan, on the arrangement the rest of this file is built on:
+        /// a ladder is a handful of rows and the alternative is a hashed
+        /// collection whose enumeration order is an implementation detail. This
+        /// is the one question the build phase asks a ladder, and asking it is
+        /// the reversal of the standing claim that the simulation never reads
+        /// this file -- see <see cref="BuildPhase.Resolve"/>.
+        /// </remarks>
+        public bool IsTargetOfAnEdge(int typeId)
+        {
+            for (int index = 0; index < _edges.Length; index++)
+            {
+                if (_edges[index].To == typeId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Whether one row may be swapped for another: true where this ladder
+        /// carries an edge from the first to the second.
+        /// </summary>
+        /// <remarks>
+        /// The other half of the prerequisite. <see cref="IsTargetOfAnEdge"/>
+        /// says a row cannot be bought outright; this says which row it may be
+        /// climbed from, and without it "reached by upgrading the rung below
+        /// it" is a sentence in a comment rather than a rule -- any standing
+        /// tower would do, which makes the rung below no prerequisite at all.
+        /// A linear scan, for the reason given above.
+        /// </remarks>
+        public bool HasEdge(int fromTypeId, int toTypeId)
+        {
+            for (int index = 0; index < _edges.Length; index++)
+            {
+                if (_edges[index].From == fromTypeId && _edges[index].To == toTypeId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Which row layout this ladder was written in and read through.</summary>
         public int Layout { get; }
 

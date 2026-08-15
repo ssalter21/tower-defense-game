@@ -54,11 +54,11 @@ public class CommandStreamTests
         Assert.Equal(run.Types.ContentHash.Value, BitConverter.ToUInt64(bytes, RecordBytes.ContentHashOffset));
         Assert.Equal(run.Rules.ContentHash.Value, BitConverter.ToUInt64(bytes, RecordBytes.CommandRulesetHashOffset));
         Assert.Equal(
-            run.Schedule.ContentHash.Value,
-            BitConverter.ToUInt64(bytes, RecordBytes.CommandScheduleHashOffset));
+            run.Ladder.ContentHash.Value,
+            BitConverter.ToUInt64(bytes, RecordBytes.CommandLadderHashOffset));
         Assert.Equal(run.Seed, BitConverter.ToUInt64(bytes, RecordBytes.CommandSeedOffset));
 
-        // Header, ruleset hash, schedule hash, seed, count, and four build
+        // Header, ruleset hash, ladder hash, seed, count, and four build
         // phases of one slot each. Nothing else fits.
         Assert.Equal(TheCommands.Waves, stream.Count);
         Assert.Equal(
@@ -81,32 +81,31 @@ public class CommandStreamTests
     [Fact]
     public void A_decision_survives_the_round_trip_with_nothing_reshaped()
     {
-        // The three things a decision is -- the take's kind, the take's id and
-        // the slots -- are the three things the record carries, so the phase
-        // that comes back out is the phase that went in. A record that summarised
-        // a decision would be a record that replays something else.
+        // What a decision is -- the slots, in the order they were written, and
+        // what the phase built -- is what the record carries, so the phase that
+        // comes back out is the phase that went in. A record that summarised a
+        // decision would be a record that replays something else.
+        //
+        // The take used to be two of these fields and is gone with the offering
+        // it named. An empty slot is still carried rather than dropped, because
+        // a position a player left alone is a position and not an omission.
         //
         // OBSERVED: have RecordCommand.ToPhase drop the slots -- call
-        // BuildPhase.Of(Take, TakeId) with none. The slots assertion goes red,
-        // [empty, 3 of type 5] against [], and a stored run replays as a run
-        // that took the right things every round and sent nothing at all.
+        // BuildPhase.Of() with none. The slots assertion goes red,
+        // [empty, 3 of type 1] against [], and a stored run replays as a run
+        // that sent nothing at all.
         Run run = TheCommands.Fresh();
-        BuildPhase decided = BuildPhase.Of(
-            OptionKind.Ordinary,
-            run.Offering.Options[0].Id,
-            WaveSlot.Empty,
-            WaveSlot.Of(run.Offering.Options[0].TypeId, 3));
+        UnitType first = TheBuild.FirstCreep(run.Types);
+        BuildPhase decided = BuildPhase.Of(WaveSlot.Empty, WaveSlot.Of(first.Id, 3));
 
         RecordCommand command = RecordCommand.Of(1, decided);
         BuildPhase restored = CommandStream.FromBytes(TheCommands.Stream(run).ToBytes())
             .Commands[0]
             .ToPhase();
 
-        Assert.Equal(decided.Take, command.ToPhase().Take);
-        Assert.Equal(decided.TakeId, command.ToPhase().TakeId);
         Assert.Equal(decided.Slots, command.ToPhase().Slots);
+        Assert.Equal(2, command.ToPhase().Slots.Count);
 
-        Assert.Equal(run.Offering.Options[0].Id, restored.TakeId);
         Assert.Single(restored.Slots);
     }
 
@@ -169,12 +168,12 @@ public class CommandStreamTests
     }
 
     [Fact]
-    public void A_decision_prints_its_actions_between_the_take_and_the_slots()
+    public void A_decision_prints_its_actions_before_the_slots()
     {
         // The decision half of a round line, which a run's report prints
-        // whole: the take, then what the phase built in the order it was
-        // written, then the wave's slots. One line, because the column header
-        // over it promises one per round.
+        // whole: what the phase built in the order it was written, then the
+        // wave's slots. One line, because the column header over it promises
+        // one per round.
         //
         // The cell is the column and row an action row of a command script
         // names, so what is printed reads back into the file a person would
@@ -182,8 +181,8 @@ public class CommandStreamTests
         //
         // OBSERVED: print the actions after the slots in
         // RecordCommand.ToString. The action assertion goes red -- the run no
-        // longer has the slots' comma behind it -- on a line reading take,
-        // slots, actions, which is an order no purse ever walked.
+        // longer has the slots' comma behind it -- on a line reading slots then
+        // actions, which is an order no purse ever walked.
         //
         // OBSERVED, on the spelling: swap the two coordinates for
         // Hex.FromOddRowOffset(Column, Row) in BuildAction.ToString. The
@@ -195,33 +194,32 @@ public class CommandStreamTests
         string line = acting.ToString();
 
         Assert.Contains(
-            ", place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
+            "place type 3 at column 9, row 0, upgrade type 4 at column 9, row 0, ",
             line,
             StringComparison.Ordinal);
 
         Assert.True(
-            line.IndexOf("take ", StringComparison.Ordinal)
-                < line.IndexOf("place type 3", StringComparison.Ordinal)
+            line.IndexOf("place type 3", StringComparison.Ordinal)
+                < line.IndexOf("upgrade type 4", StringComparison.Ordinal)
             && line.IndexOf("upgrade type 4", StringComparison.Ordinal)
                 < line.IndexOf(" of type ", StringComparison.Ordinal),
-            line + " does not put its actions between the take and the slots.");
+            line + " does not put its actions before its slots.");
     }
 
     [Fact]
     public void The_run_consumes_the_record_and_gets_the_run_the_decisions_played()
     {
         // The whole point of the kind, in one assertion: the bytes reproduce the
-        // run, round for round -- the same outcome vector, the same waves sent,
-        // the same unlocks and the same purse -- and the decisions went through
-        // a serialisation in between.
+        // run, round for round -- the same outcome vector, the same waves sent
+        // and the same purse -- and the decisions went through a serialisation
+        // in between.
         //
         // OBSERVED: play the stream backwards -- reverse the loop in
         // CommandStream.Replay. This goes red on an exception rather than on a
-        // comparison: "A build phase at wave 2 takes ordinary option 5, which
-        // that round's offering does not carry", thrown by the run after it had
-        // already resolved wave four's decision as round one. The walk passed,
-        // because a walk in the stored order is a walk of a legal stream; what
-        // the order is load-bearing for is the playing.
+        // comparison: "A build phase is stored for wave 4 where the run is
+        // about to play round 1", thrown by the run's own wave-index check. The
+        // walk passed, because a walk in the stored order is a walk of a legal
+        // stream; what the order is load-bearing for is the playing.
         Run recorded = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(recorded);
 
@@ -241,7 +239,6 @@ public class CommandStreamTests
         Assert.Equal(live.Outcome.Rounds, rounds.Select(round => round.Outcome));
         Assert.Equal(live.Health, fromRecord.Health);
         Assert.Equal(live.Purse.Gold, fromRecord.Purse.Gold);
-        Assert.Equal(live.Unlocks.Count, fromRecord.Unlocks.Count);
         Assert.Equal(TheCommands.Waves, fromRecord.Round);
 
         for (int index = 0; index < live.Sent.Count; index++)
@@ -266,6 +263,24 @@ public class CommandStreamTests
         // list: a wave a view composed cannot be handed to a run at all, because
         // the only thing Advance takes is the decision a command carries. What
         // the list still catches is a second route being added beside it.
+        //
+        // MatchAt is on the list and is not one. #192 gave it to the client so
+        // a round that has already resolved can be drawn, and its whole
+        // signature is two integers naming a pairing the run has already fought
+        // and a bool naming which of that pairing's two directions: there is
+        // nothing in it for a view to compose, and what comes back is a copy of
+        // a fight rather than a handle on the run --
+        // RunTests.Watching_a_round_moves_nothing is the behavioural half of
+        // that. It is here because the list is what makes admitting a member
+        // deliberate.
+        //
+        // The bool arrived with #206 and is a primitive on purpose, which is
+        // this page's rule rather than a preference: the sim's Side enum is
+        // private, and handing it out would put a simulation type on the one
+        // surface this test exists to keep made of things a stored command
+        // could carry. It also has a third member -- the stream the field is
+        // measured on -- which is not a fight anybody watched, and two
+        // directions spelled as two values cannot name it.
         //
         // OBSERVED: add `public RoundOutcome Advance(Func<Offering, BuildPhase>
         // choose)` to Run, which is exactly the shape a view would reach for.
@@ -296,7 +311,7 @@ public class CommandStreamTests
         // a stored command. So a decision handed straight to Advance is a
         // decision a command could have carried, and the direct overload is the
         // record's own shape rather than a way around it.
-        Assert.Equal(new[] { "Actions", "Slots", "Take", "TakeId" }, carried);
+        Assert.Equal(new[] { "Actions", "Slots" }, carried);
 
         string[] moves = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
@@ -308,8 +323,37 @@ public class CommandStreamTests
             .ToArray();
 
         Assert.Equal(
-            new[] { "Advance(BuildPhase)", "OfferingAt(Int32)" },
+            new[] { "Advance(BuildPhase)", "MatchAt(Int32, Int32, Boolean)" },
             moves);
+
+        // And Advance is still the only one of them that takes anything a view
+        // could have composed. A member that took a wave, a layout or a board
+        // would be a second route in whatever it claimed to be for; two integers
+        // naming a pairing are a question about a round that already happened.
+        //
+        // It fires only once the list above has been updated, because any
+        // signature at all trips the list first. That is what it is for: the
+        // list makes admitting a member deliberate, and this decides what may
+        // be admitted.
+        //
+        // OBSERVED: add `public Match Watch(TowerLayout defense)` to Run -- the
+        // shape a view would reach for, putting a defense nobody paid for in
+        // front of a tick loop -- and admit it to the list above, as somebody
+        // adding it would. This goes red: "Run.Watch takes a TowerLayout, so
+        // something a view composed reaches a run by a route that is not
+        // Advance."
+        foreach (MethodInfo reader in typeof(Run)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(method => !method.IsSpecialName && method.Name != nameof(Run.Advance)))
+        {
+            foreach (ParameterInfo parameter in reader.GetParameters())
+            {
+                Assert.True(
+                    parameter.ParameterType.IsPrimitive,
+                    "Run." + reader.Name + " takes a " + parameter.ParameterType.Name
+                    + ", so something a view composed reaches a run by a route that is not Advance.");
+            }
+        }
 
         foreach (Type surface in new[] { typeof(Run), typeof(Match) })
         {
@@ -339,123 +383,12 @@ public class CommandStreamTests
     }
 
     [Fact]
-    public void A_take_naming_an_option_that_rounds_offering_did_not_carry_is_refused_at_load()
-    {
-        // Refused where the stream is read rather than where the round is
-        // played, and refused rather than skipped: a run that partially
-        // validates produces a confidently wrong result that still looks like
-        // one. The run has not moved when it comes back.
-        //
-        // OBSERVED: delete the Check call from CommandStream.Replay. The refusal
-        // still fires and it still names the option, so a suite that stopped at
-        // the message would stay green; the round-count assertion goes red, 0
-        // against 3. Three rounds of a stored run resolved and folded into an
-        // outcome before the fourth was found to be a decision nobody could have
-        // made -- which is the whole difference between refusing at load and
-        // refusing wherever the run happens to get to.
-        Run run = TheCommands.Fresh();
-        IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
-        Offering last = run.OfferingAt(TheCommands.Waves);
-        int absent = last.Options.Max(option => option.Id) + 1;
-
-        CommandStream stream = Recomposed(
-            run,
-            decisions,
-            TheCommands.Waves - 1,
-            RecordCommand.Of(TheCommands.Waves, OptionKind.Ordinary, absent, WaveSlot.Empty));
-
-        Run into = TheCommands.Fresh();
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into));
-
-        Assert.Contains("which that round's offering does not carry", thrown.Message, StringComparison.Ordinal);
-        Assert.Equal(0, into.Round);
-        Assert.Equal(0, into.Unlocks.Count);
-    }
-
-    [Fact]
-    public void A_slot_naming_a_creep_the_run_never_unlocked_is_refused_at_load()
-    {
-        // The unlock gate, reached through the record. What may be fielded is
-        // bounded by what was taken, and a gate that let one stored purchase
-        // through is a gate nobody has.
-        //
-        // OBSERVED: drop the after.Has check in BuildPhase.Resolve, which is the
-        // gate this reaches through. This goes red on the message rather than on
-        // the throw: what fires instead is "Type id 1 has no unit row among 1
-        // taken", one layer later, from a guard whose own comment says the case
-        // cannot happen. Asserting by name is what keeps a missing gate from
-        // reading as an internal contradiction.
-        Run run = TheCommands.Fresh();
-        IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
-        Offering opening = run.Offering;
-        int never = TheMatch.Types().Types
-            .First(type => type.Role == UnitRole.Moving && type.Id != opening.Options[0].TypeId)
-            .Id;
-
-        CommandStream stream = Recomposed(
-            run,
-            decisions,
-            0,
-            RecordCommand.Of(1, opening.Options[0].Kind, opening.Options[0].Id, WaveSlot.Of(never, 1)));
-
-        Run into = TheCommands.Fresh();
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into));
-
-        Assert.Contains("which this run never unlocked", thrown.Message, StringComparison.Ordinal);
-        Assert.Equal(0, into.Round);
-    }
-
-    [Fact]
-    public void A_slot_beyond_the_rounds_width_is_refused_at_load()
-    {
-        // Slot width is the scarcity that stands in for a second wallet, and it
-        // is derived from the anchor schedule. Wave one has two slots on the
-        // committed shape, so a stored decision filling three is a wave nobody
-        // could have composed.
-        //
-        // OBSERVED: drop the width check in BuildPhase.Resolve, which is the
-        // gate this reaches through. This goes red having caught nothing -- no
-        // exception was thrown -- and a stored wave-one build phase fills three
-        // slots in a round the schedule gave two.
-        Run run = TheCommands.Fresh();
-        IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
-        Offering opening = run.Offering;
-
-        Assert.Equal(2, opening.WaveSlots);
-
-        CommandStream stream = Recomposed(
-            run,
-            decisions,
-            0,
-            RecordCommand.Of(
-                1,
-                opening.Options[0].Kind,
-                opening.Options[0].Id,
-                WaveSlot.Empty,
-                WaveSlot.Empty,
-                WaveSlot.Empty));
-
-        Run into = TheCommands.Fresh();
-
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => stream.Replay(into));
-
-        Assert.Contains("slots where that round has 2", thrown.Message, StringComparison.Ordinal);
-        Assert.Equal(0, into.Round);
-    }
-
-    [Fact]
     public void A_stored_wave_index_that_is_not_the_round_being_played_is_refused()
     {
         // The one check the build phase surface cannot make. Resolve is handed
-        // an offering and has no way to know which round is about to be played,
-        // so a decision made at wave four and stored at wave two resolves
-        // perfectly against wave two's menu -- against a menu it was never
-        // shown, at a slot width it never had, out of a purse it never held.
+        // a wave number and has no way to know which round is about to be
+        // played, so a decision made at wave four and stored at wave two
+        // resolves perfectly -- out of a purse it never held.
         //
         // OBSERVED: drop the wave-index check from CommandStream.Check. This
         // goes red having caught nothing -- no exception was thrown -- and the
@@ -469,10 +402,8 @@ public class CommandStreamTests
         // A stream of three build phases whose third is filed under wave five.
         // The bytes are canonical -- the waves ascend strictly -- and the run
         // is about to play round three.
-        Option fifth = run.OfferingAt(5).Options[0];
-
         decisions.RemoveAt(3);
-        decisions[2] = RecordCommand.Of(5, fifth.Kind, fifth.Id, WaveSlot.Empty);
+        decisions[2] = RecordCommand.Of(5, WaveSlot.Empty);
 
         Run into = TheCommands.Fresh();
 
@@ -578,7 +509,7 @@ public class CommandStreamTests
         Run doomed = TheCommands.Fresh();
         var wrong = new List<RecordCommand>(decisions)
         {
-            RecordCommand.Of(TheCommands.Waves + 1, OptionKind.Ordinary, 1, WaveSlot.Empty),
+            RecordCommand.Of(TheCommands.Waves + 1, WaveSlot.Empty),
         };
 
         Assert.Throws<SimulationException>(
@@ -588,36 +519,39 @@ public class CommandStreamTests
     }
 
     [Fact]
-    public void The_load_walk_folds_the_unlocks_the_way_a_played_round_does_and_the_purse_at_its_ceiling()
+    public void The_load_walk_folds_the_purse_forward_at_its_ceiling()
     {
-        // Check applies nothing, so it has to fold the two things a round moves
-        // -- what has been taken and what is in the purse -- through values of
-        // its own. The unlocks it predicts are the run's exactly; the purse
-        // cannot be, because a wave's income now includes the band its offense
-        // reached and a walk has not played the round. So the walk closes every
-        // wave at the top band, and what it carries is a ceiling: strictly above
-        // the run's own purse for a run that did not top every band, which is
-        // this one.
+        // Check applies nothing, so it has to fold what a round moves -- the
+        // purse -- through a value of its own. It cannot fold it exactly,
+        // because a wave's income includes a share of what its offense got past
+        // and a walk has not played the round. So the walk closes every wave on
+        // the most that wave could conceivably have dealt -- its own full price,
+        // every creep of it leaking against every opponent -- and what it
+        // carries is a ceiling: at or above the run's own purse, and strictly
+        // above it for a run whose waves did not all leak whole, which is this
+        // one.
         //
         // OBSERVED: fold the purse forward without the wave's payment -- assign
-        // build.Purse straight to purse in Check. This goes red on an exception:
-        // "A build phase at wave 4 buys 90 gold of creeps out of a purse
-        // holding 52", refusing at load a wave the run affords perfectly well,
-        // because the walk stopped paying the rounds it was walking.
+        // build.Purse straight to purse in Check. The ceiling collapses to 80
+        // gold and the Check below goes red on an exception, "A build phase at
+        // wave 4 buys 680 gold of creeps out of a purse holding 80": a walk
+        // that stopped paying the rounds it was walking refuses at load what it
+        // has no way of knowing the run could afford.
         //
-        // The ceiling is observed by what it admits. This run holds 582 gold
-        // when its fourth build phase stands and the walk carries 691 -- three
-        // waves of the top band it did not reach, and the interest on them --
-        // so a fourth wave costing 640 is a decision the walk has to let past
-        // and the round itself has to refuse. That ordering is the whole design:
-        // everything refused at load was unaffordable however the run played.
+        // The ceiling is observed by what it admits. This run holds 666 gold
+        // when its fourth build phase stands and the walk carries 681 -- three
+        // waves whose whole price it credited them with leaking -- so a fourth
+        // wave costing 680 is a decision the walk has to let past and the round
+        // itself has to refuse. That ordering is the whole design: everything
+        // refused at load was unaffordable however the run played.
         //
         // OBSERVED, on the ceiling: close the walk's waves at
-        // CloseWave(run.Rules, PerformanceField.Absent, 0) instead. The Check
-        // above goes red on an exception -- "A build phase at wave 4 buys 640
-        // gold of creeps out of a purse holding 582" -- refusing at load rather
-        // than at the round, which is what a floor does to every decision a
-        // run's own bonus paid for.
+        // CloseWaveAtBest(run.Rules, 0) instead -- a bound of nothing dealt. The
+        // walk then holds 663, three gold under the 666 the run itself does, and
+        // the Check below goes red -- "A build phase at wave 4 buys 680 gold of
+        // creeps out of a purse holding 663" -- refusing at load rather than at
+        // the round, which is what a floor does to every decision a run's own
+        // bonus paid for.
         Run run = TheCommands.Fresh();
         IReadOnlyList<RecordCommand> decisions = TheCommands.Decisions(run);
         CommandStream stream = CommandStream.Of(run, decisions);
@@ -628,17 +562,28 @@ public class CommandStreamTests
         stream.Replay(played);
 
         Assert.Equal(TheCommands.Waves, walked.Count);
-        Assert.Equal(played.Unlocks.Count, walked[walked.Count - 1].Unlocks.Count);
 
-        Option fourth = run.OfferingAt(TheCommands.Waves).Options[0];
+        // The walk moved the run nowhere: it is the played run beside it that
+        // has a purse and rounds.
+        Assert.Equal(TheCommands.Waves, played.Round);
+
+        UnitType fourth = TheBuild.FirstCreep(run.Types);
+
+        // What the last wave carries, with 68 more of one creep on the end of
+        // it. The overspend has to be an increase over what the round already
+        // fields, because a creep is bought once and only the increase is
+        // charged -- and every carried slot has to stay in, because a wave may
+        // only grow. Sixty-eight of them is 680 gold: over the 666 the round
+        // holds and under the 681 the walk carries, which is the window the
+        // ordering below is about and which the tighter ceiling narrowed.
         var overspent = new List<RecordCommand>(decisions)
         {
             [TheCommands.Waves - 1] = RecordCommand.Of(
                 TheCommands.Waves,
-                BuildPhase.Of(fourth.Kind, fourth.Id, WaveSlot.Of(fourth.TypeId, 64))),
+                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 68))),
         };
 
-        Assert.Equal(10, run.Costs.PriceOf(Purchase.Unit(fourth.TypeId)));
+        Assert.Equal(10, run.Costs.PriceOf(Purchase.Unit(fourth.Id)));
 
         CommandStream beyond = CommandStream.Of(run, overspent);
 
@@ -658,20 +603,55 @@ public class CommandStreamTests
         SimulationException refused = Assert.Throws<SimulationException>(
             () => beyond.Replay(partway));
 
-        Assert.Contains("640", refused.Message, StringComparison.Ordinal);
+        Assert.Contains("680", refused.Message, StringComparison.Ordinal);
         Assert.Equal(TheCommands.Waves - 1, partway.Round);
+
+        // The purse the round really held, which is the lower half of the
+        // ordering: the walk let 680 past on a ceiling of 681 and the round
+        // turned it down on 666. Asserted rather than described, so that a
+        // change to either number is a red test and not a stale comment.
+        Assert.Equal(666, partway.Purse.Gold);
+
+        // And the upper half: a wave over the ceiling is refused at load, before
+        // a round is played, because no run could have afforded it however well
+        // it played. Seventy of the same creep is 700 gold against a walk
+        // carrying 681 -- twenty more than the wave above, which is the width of
+        // the window the whole ordering lives in.
+        //
+        // OBSERVED: close the walk's waves at CloseWaveAtBest(run.Rules,
+        // 1000000) -- a bound nothing on this roster can reach. The Assert.Throws
+        // below goes red saying no exception was thrown: an uncapped bonus with
+        // no real bound on what a wave could deal admits every decision anybody
+        // ever stored, which is the failure WaveScript.FullPrice exists to
+        // prevent. A million rather than int.MaxValue because the latter closes
+        // the walk's purse past the range gold is counted in and refuses for
+        // arithmetic reasons instead.
+        var unaffordable = new List<RecordCommand>(decisions)
+        {
+            [TheCommands.Waves - 1] = RecordCommand.Of(
+                TheCommands.Waves,
+                BuildPhase.Of(Adding(walked[TheCommands.Waves - 2].Wave, fourth.Id, 70))),
+        };
+
+        Run never = TheCommands.Fresh();
+
+        SimulationException atLoad = Assert.Throws<SimulationException>(
+            () => CommandStream.Of(run, unaffordable).Check(never));
+
+        Assert.Contains("700 gold of creeps", atLoad.Message, StringComparison.Ordinal);
+        Assert.Contains("purse holding 681", atLoad.Message, StringComparison.Ordinal);
+        Assert.Equal(0, never.Round);
 
         // The walk moved nothing. A stream can be checked and then refused
         // without the run having taken a step. No mutation is written above
-        // these four, and the reason is that they are guarded by construction:
-        // a run's unlocks, purse and board all have private setters, and the
-        // board the walk folds is a value of its own, so nothing outside a run
-        // can move one. They are here to go red the day that stops being true.
+        // these three, and the reason is that they are guarded by construction:
+        // a run's purse and board both have private setters, and the board the
+        // walk folds is a value of its own, so nothing outside a run can move
+        // one. They are here to go red the day that stops being true.
         Run untouched = TheCommands.Fresh();
         stream.Check(untouched);
 
         Assert.Equal(0, untouched.Round);
-        Assert.Equal(0, untouched.Unlocks.Count);
         Assert.Equal(TheRuleset.Committed().StartingPurseGold, untouched.Purse.Gold);
         Assert.Equal(0, untouched.Board.Count);
     }
@@ -752,5 +732,33 @@ public class CommandStreamTests
         commands[index] = replacement;
 
         return CommandStream.Of(run, commands);
+    }
+
+    /// <summary>
+    /// A carried wave as slots, with <paramref name="more"/> extra of one creep
+    /// in it. What a round that adds to its wave and gives nothing up looks
+    /// like.
+    /// </summary>
+    private static WaveSlot[] Adding(WaveScript carried, int typeId, int more)
+    {
+        WaveSlot[] slots = carried.AsSlots();
+        var grown = new List<WaveSlot>(slots);
+        bool raised = false;
+
+        for (int index = 0; index < grown.Count; index++)
+        {
+            if (grown[index].TypeId == typeId)
+            {
+                grown[index] = WaveSlot.Of(typeId, grown[index].Count + more);
+                raised = true;
+            }
+        }
+
+        if (!raised)
+        {
+            grown.Add(WaveSlot.Of(typeId, more));
+        }
+
+        return grown.ToArray();
     }
 }

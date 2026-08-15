@@ -261,6 +261,28 @@ namespace View
         public void ClearDecorations() => Decorations?.Clear();
 
         /// <summary>
+        /// The materials this made are destroyed here, because whoever made one
+        /// destroys it.
+        /// </summary>
+        /// <remarks>
+        /// A material is an asset instance, and destroying the object that draws
+        /// with it leaves it behind. It never showed while one match was the
+        /// whole play session and four orphans were a constant; a run begins a
+        /// match a round and ends it again, so what used to be a constant is now
+        /// four per wave. Same rule as <see cref="PlaybackControls"/>'s panel
+        /// settings and <see cref="BuildBoard"/>'s hex light.
+        /// </remarks>
+        private void OnDestroy()
+        {
+            if (_projectileMaterial != null)
+            {
+                Destroy(_projectileMaterial);
+            }
+
+            Decorations?.DestroyMaterials();
+        }
+
+        /// <summary>
         /// Puts the match on <paramref name="tick"/> by playing it again from
         /// tick zero, and draws it. The mechanism behind every seek.
         /// </summary>
@@ -344,7 +366,7 @@ namespace View
 
             foreach (CreepSnapshot creep in Current.Creeps)
             {
-                CreepView view = _creepPool.Claim(creep.Id);
+                CreepView view = _creepPool.Claim(creep.Id, creep.TypeId);
 
                 bool paired = _previousCreeps.TryGetValue(creep.Id, out CreepSnapshot before);
 
@@ -500,23 +522,23 @@ namespace View
                 host.transform.localPosition = HexGeometry.ToWorld(placed.Hex);
 
                 var view = host.AddComponent<TowerView>();
-                Quaternion resting = RestingRotationFor(host.transform.localPosition);
+                Quaternion resting = _route.FacingFrom(host.transform.localPosition);
 
-                if (placed.Type.Delivery == Delivery.Projectile)
+                // Everything this unit type is drawn with, in one piece. What
+                // decides whether it can be posed is whether its own art
+                // carries clips -- not its delivery, which is a rule about
+                // where its damage comes from and says nothing about how it
+                // holds itself. Keying on delivery is what put the bow in the
+                // mage's hands and left the archer holding air.
+                UnitArt art = _art.ArtFor(placed.Type.Id);
+
+                if (art.IsPosed)
                 {
-                    view.BuildAnimated(
-                        id,
-                        placed.Type,
-                        _art.ProjectileTowerModel,
-                        _art.BowModel,
-                        _art.TowerIdleClip,
-                        _art.TowerWindupClip,
-                        _art.TowerBackswingClip,
-                        resting);
+                    view.BuildAnimated(id, placed.Type, art, resting);
                 }
                 else
                 {
-                    view.BuildStatic(id, placed.Type, _art.HitscanTowerModel, resting);
+                    view.BuildStatic(id, placed.Type, art, resting);
                 }
 
                 _towers.Add(id, view);
@@ -524,47 +546,17 @@ namespace View
         }
 
         /// <summary>
-        /// Which way a tower faces with nothing to shoot at: towards the
-        /// nearest point of the corridor.
+        /// One creep view, built for one unit type. The pool asks for a type
+        /// rather than for "a creep", because a view carries its type's model
+        /// and cannot be lent to a body of another.
         /// </summary>
-        /// <remarks>
-        /// Derived rather than authored, so a tower moved in the defense file
-        /// faces sensibly without anybody editing a second file — and so there
-        /// is no per-tower rotation to get out of step with a per-tower
-        /// position.
-        /// </remarks>
-        private Quaternion RestingRotationFor(Vector3 position)
+        private CreepView MakeCreepView(int unitId)
         {
-            float best = float.MaxValue;
-            Vector3 nearest = _route.Entrance;
-
-            for (int step = 0; step <= _route.StepCount; step++)
-            {
-                Vector3 point = _route.Step(step);
-                float distance = (point - position).sqrMagnitude;
-
-                if (distance < best)
-                {
-                    best = distance;
-                    nearest = point;
-                }
-            }
-
-            Vector3 toward = nearest - position;
-            toward.y = 0f;
-
-            return toward.sqrMagnitude < 1e-6f
-                ? Quaternion.identity
-                : Quaternion.LookRotation(toward.normalized, Vector3.up);
-        }
-
-        private CreepView MakeCreepView()
-        {
-            var host = new GameObject("Creep");
+            var host = new GameObject("Creep " + _types.ById(unitId).Label);
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(_art.CreepModel, _art.CreepWalkClip, _art.CreepDeathClip);
+            view.Build(_art.ArtFor(unitId), _art.CreepWalkClip, _art.CreepDeathClip);
 
             return view;
         }

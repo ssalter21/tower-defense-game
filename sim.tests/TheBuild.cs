@@ -20,17 +20,21 @@ namespace Sim.Tests;
 /// </remarks>
 public static class TheBuild
 {
-    /// <summary>How many ordinary options the committed ruleset offers.</summary>
+    /// <summary>
+    /// The committed ruleset, which is what a run of this suite plays.
+    /// </summary>
+    /// <remarks>
+    /// It planted an offering ratio into the text before #179 deleted the
+    /// offering. The name is kept and the argument ignored so that the call
+    /// sites reading a purse or a health pool off "the rules this suite plays"
+    /// keep saying that; there is nothing left for them to have planted.
+    /// </remarks>
+    public static Ruleset RulesOffering(int ordinary) => TheRuleset.Committed();
+
+    /// <summary>How many ordinary options the committed ruleset offered, before it offered none.</summary>
     public const int Ordinary = 3;
 
-    /// <summary>The committed ruleset with the offering's ordinary count moved.</summary>
-    public static Ruleset RulesOffering(int ordinary) =>
-        Ruleset.Parse(PlantedText.Replace(
-            TheRuleset.CommittedText(),
-            "offering        3         3",
-            "offering        " + ordinary.ToString(System.Globalization.CultureInfo.InvariantCulture) + "         3"));
-
-    /// <summary>A run over the committed roster, at whatever ordinary count is wanted.</summary>
+    /// <summary>A run over the committed roster and the committed rules.</summary>
     public static Run Fresh(
         int waves = Run.DefaultWaves,
         int fieldSize = 4,
@@ -45,7 +49,7 @@ public static class TheBuild
             TheMatch.Map(),
             rules,
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             TheRun.Pool(types),
             seed,
             waves,
@@ -104,36 +108,47 @@ public static class TheBuild
             : Shopping(run, run.Purse.Gold - tower).With(next);
     }
 
-    /// <summary>Every option on a round's menu, as the pair a decision names.</summary>
-    public static (OptionKind Kind, int Id)[] Named(Offering offering) =>
-        offering.Options.Select(option => (option.Kind, option.Id)).ToArray();
-
-    /// <summary>
-    /// The first thing on a round's menu, which is always an ordinary option,
-    /// filling the slots named here.
-    /// </summary>
+    /// <summary>A round filling the slots named here and building nothing.</summary>
     /// <remarks>
     /// A decision that names no slot at all is spelled
     /// <see cref="BuyingNothing"/>, so that the two spellings of a wave nobody
     /// paid for are one.
     /// </remarks>
-    public static BuildPhase TakeFirst(Offering offering, params WaveSlot[] slots) =>
-        BuildPhase.Of(offering.Options[0].Kind, offering.Options[0].Id, slots);
+    public static BuildPhase Filling(params WaveSlot[] slots) => BuildPhase.Of(slots);
 
     /// <summary>
-    /// A round that takes the first thing on its menu and buys nothing at all.
+    /// A round that buys nothing at all.
     /// </summary>
     /// <remarks>
     /// No slot named, so the purse carries into the wave exactly as it came out
     /// of the last one. It is named for that because a round that spends
     /// nothing is one build phase among many and not a way into a run that
-    /// never charges: the take is still read off the round's own offering, and
-    /// what it unlocks is still what the run may field.
+    /// never charges.
     /// </remarks>
-    public static BuildPhase BuyingNothing(Offering offering) =>
-        BuildPhase.Of(offering.Options[0].Kind, offering.Options[0].Id);
+    public static BuildPhase BuyingNothing() => BuildPhase.Of();
 
-    /// <summary>A round that takes the first thing on its menu and spends the purse on the creep it unlocks.</summary>
+    /// <summary>
+    /// A round that buys nothing, out of a run that has already sent something:
+    /// the slots it carries, sent again and paid for again by nobody.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="BuyingNothing()"/> is the empty phase, which is only a round
+    /// that spends nothing while nothing is carried. Once a creep has been
+    /// bought it attacks every round after, so the way to spend nothing from
+    /// there is to send exactly what is already fielded -- and a phase that
+    /// named no slot would be trying to leave it at home.
+    /// </remarks>
+    public static BuildPhase BuyingNothing(Run run)
+    {
+        if (run is null)
+        {
+            throw new ArgumentNullException(nameof(run));
+        }
+
+        return BuildPhase.Of(run.Carrying.AsSlots());
+    }
+
+    /// <summary>A round that spends the purse on the cheapest creep the roster has.</summary>
     public static BuildPhase Shopping(Run run) => Shopping(run, run.Purse.Gold);
 
     /// <summary>
@@ -141,9 +156,9 @@ public static class TheBuild
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The take comes first because unlocking happens before buying, so the
-    /// creep a round takes is the creep its wave sends -- which is what makes
-    /// this the shortest decision that shops at all.
+    /// The creep is the first walking row of the roster, which nothing gates:
+    /// every creep is sendable from wave one, so the shortest decision that
+    /// shops at all is one slot on whichever row comes first.
     /// </para>
     /// <para>
     /// A budget short of one body fills no slot rather than borrowing against
@@ -155,11 +170,32 @@ public static class TheBuild
     /// <param name="budget">What the round is willing to spend, in gold.</param>
     public static BuildPhase Shopping(Run run, int budget)
     {
-        Option first = run.Offering.Options[0];
-        int count = budget / run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+        UnitType first = FirstCreep(run.Types);
+
+        // What the round already fields, plus whatever the budget adds to it. A
+        // creep is bought once and attacks every round after, so a fixture that
+        // sent only this round's purchase would be asking to leave the earlier
+        // rounds' creeps at home, which is refused.
+        int count = run.Carrying.CountOf(first.Id)
+            + (budget / run.Costs.PriceOf(Purchase.Unit(first.Id)));
 
         return count == 0
-            ? BuildPhase.Of(first.Kind, first.Id)
-            : BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, count));
+            ? BuildPhase.Of()
+            : BuildPhase.Of(WaveSlot.Of(first.Id, count));
+    }
+
+    /// <summary>The first walking row of a roster, which is what a fixture sends.</summary>
+    public static UnitType FirstCreep(UnitTypeTable types)
+    {
+        for (int index = 0; index < types.Count; index++)
+        {
+            if (types.Types[index].Role == UnitRole.Moving)
+            {
+                return types.Types[index];
+            }
+        }
+
+        throw new SimulationException(
+            "A fixture asked a roster with no walking row in it for a creep to send.");
     }
 }

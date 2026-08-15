@@ -18,13 +18,20 @@ namespace View
     /// </para>
     /// <para>
     /// <b>The two kinds are deliberately different, and the contrast is the
-    /// test.</b> The hitscan tower is a static building with no rig and no
-    /// clips: its shot puts nothing at all in the snapshot and exists only as
-    /// an event and a tracer the view draws and forgets. The projectile tower
-    /// is a skinned character that draws a bow, and its shot is a real snapshot
-    /// entity that can be scrubbed backwards through. Same seam, opposite
-    /// treatments — if both were drawn the same way the seam would not be being
-    /// tested by anything.
+    /// test.</b> A hitscan tower is posed by nothing: its shot puts nothing at
+    /// all in the snapshot and exists only as an event and a tracer the view
+    /// draws and forgets, so it stands as its model was imported. The
+    /// projectile tower is bound to three clips and draws a bow, and its shot
+    /// is a real snapshot entity that can be scrubbed backwards through. Same
+    /// seam, opposite treatments — if both were drawn the same way the seam
+    /// would not be being tested by anything.
+    /// </para>
+    /// <para>
+    /// <b>Which model it wears is not that distinction.</b> The model and the
+    /// scale come from <see cref="MatchArt"/> keyed by the unit type's id, so
+    /// the Soldier, the Archer, the Ranger and the Mage are four bodies on the
+    /// board rather than two deliveries. What the delivery still decides is
+    /// whether there is anything to pose.
     /// </para>
     /// <para>
     /// <b>Facing snaps, and that is not a shortcut.</b> Turning smoothly means
@@ -62,8 +69,11 @@ namespace View
         /// <summary>The instantiated model.</summary>
         public GameObject Model { get; private set; }
 
-        /// <summary>The weapon, on a hitscan tower's <c>null</c>.</summary>
-        public GameObject Weapon { get; private set; }
+        /// <summary>What it holds in <c>handslot.r</c>, or null.</summary>
+        public GameObject RightHand { get; private set; }
+
+        /// <summary>What it holds in <c>handslot.l</c>, or null.</summary>
+        public GameObject LeftHand { get; private set; }
 
         /// <summary>True when this tower has a rig and three clips.</summary>
         public bool IsAnimated => _animator != null;
@@ -81,76 +91,76 @@ namespace View
         public int LastSlot { get; private set; }
 
         /// <summary>
-        /// The static building. No rig, no clips, nothing to sample — and
-        /// nothing in the snapshot for its shots either.
+        /// The unposed tower. No clips, nothing to sample — and nothing in the
+        /// snapshot for its shots either.
         /// </summary>
-        public void BuildStatic(int id, UnitType type, GameObject model, Quaternion resting)
+        public void BuildStatic(int id, UnitType type, UnitArt art, Quaternion resting)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (art == null) throw new ArgumentNullException(nameof(art));
 
             Id = id;
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Instantiate(model, transform, false);
-            Model.name = model.name;
-            Model.transform.localPosition = Vector3.zero;
+            Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
-            // The model's own local ROTATION is left exactly as the importer
-            // produced it. Forcing it to identity looks tidy and tips over any
-            // model whose FBX root carries an axis-conversion rotation -- which
-            // is how the hitscan tower came to be lying on its side on the road,
-            // while the characters, whose roots happen to be identity, stood up
-            // perfectly and hid the bug.
+            Hold(art);
 
             transform.rotation = resting;
         }
 
         /// <summary>
-        /// The skinned character, its weapon and its three clips — one per
+        /// The skinned character, what it holds and its three clips — one per
         /// simulation state.
         /// </summary>
-        public void BuildAnimated(
-            int id,
-            UnitType type,
-            GameObject model,
-            GameObject weapon,
-            AnimationClip idle,
-            AnimationClip windup,
-            AnimationClip backswing,
-            Quaternion resting)
+        /// <remarks>
+        /// The clips come off the unit's own art rather than off a set shared
+        /// by every tower, because a mage casting and an archer drawing are
+        /// different actions on the same three states. See <see cref="MatchArt"/>.
+        /// </remarks>
+        public void BuildAnimated(int id, UnitType type, UnitArt art, Quaternion resting)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
-            if (weapon == null) throw new ArgumentNullException(nameof(weapon));
-            if (idle == null) throw new ArgumentNullException(nameof(idle));
-            if (windup == null) throw new ArgumentNullException(nameof(windup));
-            if (backswing == null) throw new ArgumentNullException(nameof(backswing));
+            if (art == null) throw new ArgumentNullException(nameof(art));
+
+            if (!art.IsPosed)
+            {
+                throw new ArgumentException(
+                    "Unit " + art.UnitId + " has no clips, so there is nothing to pose it with. A tower "
+                    + "with all three clips is animated and one with none is static; call BuildStatic.",
+                    nameof(art));
+            }
 
             Id = id;
             Type = type ?? throw new ArgumentNullException(nameof(type));
             _restingRotation = resting;
 
-            Model = Instantiate(model, transform, false);
-            Model.name = model.name;
-            Model.transform.localPosition = Vector3.zero;
+            Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
-            // The model's own local ROTATION is left exactly as the importer
-            // produced it. Forcing it to identity looks tidy and tips over any
-            // model whose FBX root carries an axis-conversion rotation -- which
-            // is how the hitscan tower came to be lying on its side on the road,
-            // while the characters, whose roots happen to be identity, stood up
-            // perfectly and hid the bug.
-
-            // The weapon goes on the bone before the graph is built, so the
+            // What it holds goes on the bones before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
-            Weapon = WeaponSocket.Attach(Model, weapon, WeaponSocket.BowHand);
+            Hold(art);
 
             // Binding is SimDrivenAnimator's business, including the ban on a
             // RuntimeAnimatorController, and the clip lengths stay over there
             // with the clips.
-            _animator = SimDrivenAnimator.Bind(Model, idle, windup, backswing);
+            _animator = SimDrivenAnimator.Bind(
+                Model, art.IdleClip, art.WindupClip, art.BackswingClip);
 
             transform.rotation = resting;
+        }
+
+        /// <summary>Puts whatever the art names into whichever hands it names.</summary>
+        private void Hold(UnitArt art)
+        {
+            if (art.RightHand != null)
+            {
+                RightHand = WeaponSocket.Attach(Model, art.RightHand, WeaponSocket.MeleeHand, art.RightHandTilt);
+            }
+
+            if (art.LeftHand != null)
+            {
+                LeftHand = WeaponSocket.Attach(Model, art.LeftHand, WeaponSocket.OffHand, art.LeftHandTilt);
+            }
         }
 
         /// <summary>
@@ -172,7 +182,7 @@ namespace View
 
             if (_animator == null)
             {
-                // A static building has nothing to sample. Its whole
+                // A tower with no clips has nothing to sample. Its whole
                 // contribution to the picture is standing where it was put.
                 return;
             }

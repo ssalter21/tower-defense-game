@@ -25,12 +25,12 @@ namespace Sim.Tests;
 public class PlayedScriptTests
 {
     /// <summary>Where a run cut short in the middle of the committed script stops.</summary>
-    private const int CutShortAt = 6;
+    private const int CutShortAt = 3;
 
     /// <summary>
     /// The committed run's decisions, read once for the whole class: every case
-    /// here starts from the same ten, and a file parsed per assertion would be
-    /// the same parse four times.
+    /// here starts from the same rounds, and a file parsed per assertion would
+    /// be the same parse four times.
     /// </summary>
     private static readonly Lazy<IReadOnlyList<RecordCommand>> Committed = new(() =>
         CommandScript.Parse("commands.txt", File.ReadAllText(RepoLayout.CommandScriptFile)));
@@ -111,20 +111,10 @@ public class PlayedScriptTests
 
             Assert.Equal(wave.ToString(CultureInfo.InvariantCulture), fields[1]);
 
-            // The take kind is the one word on a decision row that is not a
-            // number, and it is one of the two the grammar declares.
-            if (decides)
-            {
-                Assert.Contains(
-                    fields[2],
-                    new[]
-                    {
-                        CommandScript.WordFor(OptionKind.Ordinary),
-                        CommandScript.WordFor(OptionKind.GameChanger),
-                    });
-            }
-
-            for (int index = decides ? 3 : 2; index < fields.Length; index++)
+            // Every field after the wave is a number. The take used to put one
+            // word among them and went with the offering it named, so a build
+            // row is now the wave and pairs of integers all the way across.
+            for (int index = 2; index < fields.Length; index++)
             {
                 Assert.True(
                     int.TryParse(fields[index], NumberStyles.Integer, CultureInfo.InvariantCulture, out _),
@@ -132,17 +122,17 @@ public class PlayedScriptTests
             }
         }
 
-        Assert.Equal(Run.DefaultWaves, wave);
+        Assert.Equal(TheCommittedScript().Count, wave);
     }
 
     [Fact]
     public void A_run_cut_short_writes_a_script_record_run_compiles_and_play_run_plays_as_it_was_played()
     {
         // A session abandoned part-way is the artefact
-        // docs/playing-a-run-from-a-shell.md §8 most wants written down, so what
-        // it writes has to stand on its own: six rounds, in the grammar, taken
+        // docs/archive/playing-a-run-from-a-shell.md §8 most wants written down, so what
+        // it writes has to stand on its own: three rounds, in the grammar, taken
         // through the actual verb -- read as bytes, played to the end and only
-        // then written. Nothing about the six rows knows the four that never
+        // then written. Nothing about the three rows knows the round that never
         // happened.
         //
         // OBSERVED: number the waves from zero. record-run exits 1 rather than
@@ -167,18 +157,18 @@ public class PlayedScriptTests
             }.Concat(TheCommandLine.RunContent))
             .Succeeded();
 
-        // Six rounds, and each of them the decision the committed script made
+        // Three rounds, and each of them the decision the committed script made
         // in that wave -- so a run cut short is the run it was up to the wave it
-        // stopped on, rather than six rows that merely compile.
+        // stopped on, rather than three rows that merely compile.
         CommandStream recorded = CommandStream.FromBytes(File.ReadAllBytes(written));
 
         Assert.Equal(CutShortAt, recorded.Commands.Count);
         Assert.Equal(TheCommittedScript().Take(CutShortAt), recorded.Commands);
 
         // And then it plays, which is the other half of what
-        // docs/playing-a-run-from-a-shell.md §5 claims of a session that quit:
-        // record-run compiles the short script AND play-run plays it. The six
-        // rounds that come back are the first six of content/run-outcome.txt
+        // docs/archive/playing-a-run-from-a-shell.md §5 claims of a session that quit:
+        // record-run compiles the short script AND play-run plays it. The three
+        // rounds that come back are the first three of content/run-outcome.txt
         // character for character -- the rounds the session was shown -- so the
         // chain from a decision typed at a prompt to a committed round line is
         // closed rather than asserted a link at a time.
@@ -186,7 +176,7 @@ public class PlayedScriptTests
         // OBSERVED: stop at the compile above, which is where this test stopped
         // until now. Every assertion stays green against a record that reads
         // back and would refuse to play: the compile proves the grammar and the
-        // bytes, and says nothing about whether the six rounds are the six.
+        // bytes, and says nothing about whether the three rounds are the three.
         string played = TheCommandLine.Invoke(
             new[] { "play-run", "--commands", written }.Concat(TheCommandLine.RunContent))
             .Succeeded()
@@ -214,8 +204,8 @@ public class PlayedScriptTests
         // OBSERVED: leave the padding on the end of a row that stops early. The
         // commands still compare equal, because trailing blanks tokenise away;
         // the field count below is what notices.
-        BuildPhase nothing = BuildPhase.Of(OptionKind.Ordinary, 1);
-        BuildPhase sending = BuildPhase.Of(OptionKind.Ordinary, 2, WaveSlot.Of(1, 2))
+        BuildPhase nothing = BuildPhase.Of();
+        BuildPhase sending = BuildPhase.Of(WaveSlot.Of(1, 2))
             .With(BuildAction.Of(ActionKind.Place, 3, 6, 2));
 
         string written = PlayedScript.Of(new[] { nothing, sending });
@@ -227,9 +217,7 @@ public class PlayedScriptTests
         string[] rows = written.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(3, rows.Length);
-        Assert.Equal(
-            CommandScript.DecisionWord + "    1  " + CommandScript.WordFor(OptionKind.Ordinary) + "   1",
-            rows[0]);
+        Assert.Equal(CommandScript.DecisionWord + "    1", rows[0]);
     }
 
     [Fact]
@@ -246,10 +234,9 @@ public class PlayedScriptTests
         // makes look correct. The wave row comes out as "12 10013 5", the
         // parser refuses seven fields on a build row, and the round trip dies on
         // a script this writer wrote.
-        BuildPhase wide = BuildPhase.Of(
-            OptionKind.Ordinary, 1, WaveSlot.Of(12, 100), WaveSlot.Of(13, 5));
+        BuildPhase wide = BuildPhase.Of(WaveSlot.Of(12, 100), WaveSlot.Of(13, 5));
 
-        BuildPhase acting = BuildPhase.Of(OptionKind.Ordinary, 2)
+        BuildPhase acting = BuildPhase.Of()
             .With(BuildAction.Of(ActionKind.Place, 65535, 100, 2));
 
         string written = PlayedScript.Of(new[] { wide, acting });
@@ -308,8 +295,8 @@ public class PlayedScriptTests
     /// them: the decision, the arrow, and the round the committed run reported.
     /// </summary>
     /// <remarks>
-    /// A prefix of a run is the run: the first six rounds of a six-round record
-    /// and of the ten-round one it was cut from are resolved against the same
+    /// A prefix of a run is the run: the first rounds of a cut-short record and
+    /// of the whole one it was cut from are resolved against the same
     /// seed, the same offerings and the same purse, so the committed file is an
     /// oracle for the short one and nothing here has to re-derive a round to
     /// have something to compare against.
@@ -328,8 +315,9 @@ public class PlayedScriptTests
 
         // The file holds a whole run, so a prefix of it is a prefix of
         // something -- a file that had lost rows would otherwise be compared
-        // against happily.
-        Assert.Equal(Run.DefaultWaves, lines.Count);
+        // against happily. It is the script's own length rather than N: the
+        // committed run ends on its health rather than on its wave count.
+        Assert.Equal(TheCommittedScript().Count, lines.Count);
 
         return string.Join('\n', lines.Take(rounds));
     }

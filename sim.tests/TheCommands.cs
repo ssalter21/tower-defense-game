@@ -1,11 +1,9 @@
-using Sim.Cli;
-
 namespace Sim.Tests;
 
 /// <summary>
 /// The committed content arranged as a command stream: a run to play, the
 /// decisions to play into it, the bytes they become, and the committed script's
-/// own decisions as somebody would type them at a prompt.
+/// own decisions.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -50,55 +48,17 @@ public static class TheCommands
     private const int Sent = 2;
 
     /// <summary>
-    /// The committed run's decisions spelled as somebody would type them at a
-    /// prompt: the take, what the round builds, what it sends, and
-    /// <c>done</c>.
+    /// The committed run's own decisions, read off <c>content/commands.txt</c>.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Compiled out of <c>content/commands.txt</c> rather than written out, so
-    /// that the committed run is an <i>input</i> to whatever plays these words
-    /// -- which is what <c>docs/playing-a-run-from-a-shell.md</c> §5 asks of the
-    /// interactive verb. <c>RunPromptTests</c> is where the typed words and that
-    /// file are held against each other, hand-spelled on both sides; a second
-    /// copy of them here would be a second thing to keep current.
-    /// </para>
-    /// <para>
-    /// The empty slots are dropped: <c>0 0</c> is how a stored row says a slot
-    /// was left alone, and at a prompt a slot nobody filled is a <c>send</c>
-    /// nobody typed.
-    /// </para>
+    /// Read out of the committed script rather than written out here, so that
+    /// the committed run is an <i>input</i> to whatever plays it and there is no
+    /// second copy of those ten rounds to keep current. What a caller does with
+    /// them is play them into a run a round at a time, which is what the client
+    /// does and what <see cref="ProvedSession"/> is handed.
     /// </remarks>
-    public static string[] TypedAtAPrompt()
-    {
-        var typed = new List<string>();
-
-        foreach (RecordCommand command in CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile)))
-        {
-            typed.Add("take " + CommandScript.WordFor(command.Take) + " " + PlainText.Number(command.TakeId));
-
-            foreach (BuildAction action in command.Actions)
-            {
-                typed.Add(
-                    CommandScript.WordFor(action.Kind)
-                    + " " + PlainText.Number(action.TypeId)
-                    + " " + PlainText.Number(action.Column)
-                    + " " + PlainText.Number(action.Row));
-            }
-
-            foreach (WaveSlot slot in command.Slots)
-            {
-                if (slot.Count > 0)
-                {
-                    typed.Add("send " + PlainText.Number(slot.TypeId) + " " + PlainText.Number(slot.Count));
-                }
-            }
-
-            typed.Add("done");
-        }
-
-        return typed.ToArray();
-    }
+    public static IReadOnlyList<RecordCommand> Committed() =>
+        CommandScript.Parse(File.ReadAllText(RepoLayout.CommandScriptFile));
 
     /// <summary>A run on the committed content, with nothing played into it yet.</summary>
     public static Run Fresh(int waves = Waves, ulong seed = TheRun.Seed)
@@ -109,7 +69,7 @@ public static class TheCommands
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             TheRun.Pool(types),
             seed,
             waves,
@@ -117,26 +77,22 @@ public static class TheCommands
     }
 
     /// <summary>
-    /// One decision per wave: take the first thing on that round's menu, and
-    /// send two of the creep it unlocks.
+    /// One decision per wave: send two of the roster's first creep.
     /// </summary>
     /// <remarks>
-    /// Read off <see cref="Run.OfferingAt"/> rather than off a run being
-    /// played, because an offering is a function of the seed and the wave --
-    /// which is the property that lets a whole stream be composed, and checked,
-    /// before a round resolves.
+    /// Composed off the roster rather than off a run being played, because
+    /// nothing rations what a wave may send any more -- every creep is sendable
+    /// from wave one, which is the property that lets a whole stream be
+    /// composed, and checked, before a round resolves.
     /// </remarks>
     public static IReadOnlyList<RecordCommand> Decisions(Run run, int waves = Waves)
     {
         var commands = new List<RecordCommand>();
+        UnitType first = TheBuild.FirstCreep(run.Types);
 
         for (int wave = 1; wave <= waves; wave++)
         {
-            Option first = run.OfferingAt(wave).Options[0];
-
-            commands.Add(RecordCommand.Of(
-                wave,
-                BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, Sent))));
+            commands.Add(RecordCommand.Of(wave, WaveSlot.Of(first.Id, Sent)));
         }
 
         return commands;
@@ -181,7 +137,7 @@ public static class TheCommands
     public static byte[] Bytes(int waves = Waves) => Stream(waves: waves).ToBytes();
 
     /// <summary>A run built on tables the caller names, on the seed and the pool everything else here uses.</summary>
-    public static Run Against(Ruleset rules, AnchorSchedule? schedule = null, int waves = Waves)
+    public static Run Against(Ruleset rules, UpgradeLadder? ladder = null, int waves = Waves)
     {
         UnitTypeTable types = TheMatch.Types();
 
@@ -189,7 +145,7 @@ public static class TheCommands
             TheMatch.Map(),
             rules,
             types,
-            schedule ?? TheSchedule.Committed(types),
+            ladder ?? TheLadder.Committed(types),
             TheRun.Pool(types),
             TheRun.Seed,
             waves,

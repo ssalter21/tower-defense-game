@@ -2,8 +2,7 @@
     "name": "View",
     "rootNamespace": "View",
     "references": [
-        "Unity.InputSystem",
-        "UnityEngine.UI"
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

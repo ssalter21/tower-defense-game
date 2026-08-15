@@ -6,21 +6,31 @@ namespace Sim
 {
     /// <summary>
     /// One build phase as the record carries it: the wave it was decided in, and
-    /// the decision -- the take, what it did to the board, and how the wave's
-    /// slots were filled.
+    /// the decision -- what it did to the board, and how the wave's slots were
+    /// filled.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Nothing else is stored, because nothing else has to be.</b> The
-    /// offering the take was made off is a pure function of the run's seed and
-    /// the wave, so it is redrawn at load rather than carried; storing it would
-    /// be a second copy of a derivation, free to disagree with the first.
+    /// <b>Nothing else is stored, because nothing else has to be.</b> The round
+    /// a decision was made in -- its purse, its board, the field it is fought
+    /// against -- is a pure function of the run's seed and the phases before it,
+    /// so it is replayed rather than carried; storing it would be a second copy
+    /// of a derivation, free to disagree with the first.
     /// </para>
     /// <para>
-    /// <b>The filled slots ascend strictly by type id here as well as at
-    /// load.</b> A command that could be built and not read back would be a
-    /// writer emitting bytes its own reader refuses, so the order is asserted
-    /// where a command is made and asserted again where one is read.
+    /// <b>The slots are in the order they were filled, and that order is the
+    /// decision.</b> A slot's position is when its creeps walk out, so the same
+    /// two slots the other way round are a different wave rather than a second
+    /// spelling of one -- which is why nothing here sorts them and nothing
+    /// asserts an ascending order over them. Until format 3 they had to ascend
+    /// strictly by type id, because until then position meant nothing and the
+    /// arrangement needed canonicalising.
+    /// </para>
+    /// <para>
+    /// <b>What is asserted is that a creep fills at most one slot</b>, here as
+    /// well as at load. A command that could be built and not read back would be
+    /// a writer emitting bytes its own reader refuses, so the rule is checked
+    /// where a command is made and checked again where one is read.
     /// </para>
     /// <para>
     /// <b>The actions do not, and that is not an oversight.</b> Their order is
@@ -38,26 +48,16 @@ namespace Sim
 
         private RecordCommand(
             int wave,
-            OptionKind take,
-            int takeId,
             WaveSlot[] slots,
             BuildAction[] actions)
         {
             Wave = wave;
-            Take = take;
-            TakeId = takeId;
             _slots = slots;
             _actions = actions;
         }
 
         /// <summary>Which wave of the run this decision was made in. Counted from one.</summary>
         public int Wave { get; }
-
-        /// <summary>Which half of that round's menu the take came off.</summary>
-        public OptionKind Take { get; }
-
-        /// <summary>Which option of that kind was taken.</summary>
-        public int TakeId { get; }
 
         /// <summary>The slots, in the order they were filled. Empty ones included.</summary>
         public IReadOnlyList<WaveSlot> Slots => _slots;
@@ -90,7 +90,7 @@ namespace Sim
             }
 
             var slots = new WaveSlot[decision.Slots.Count];
-            int previousTypeId = 0;
+            var already = new List<int>();
 
             for (int index = 0; index < slots.Length; index++)
             {
@@ -98,7 +98,7 @@ namespace Sim
 
                 if (!slot.IsEmpty)
                 {
-                    if (slot.TypeId <= previousTypeId)
+                    if (already.Contains(slot.TypeId))
                     {
                         throw new SimulationException(
                             "A command for wave "
@@ -107,14 +107,12 @@ namespace Sim
                             + (index + 1).ToString(CultureInfo.InvariantCulture)
                             + " with type id "
                             + slot.TypeId.ToString(CultureInfo.InvariantCulture)
-                            + ", at or below the "
-                            + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                            + " a slot above it already sent. Filled slots ascend strictly by type id, and a "
-                            + "command that could be written and not read back is a writer emitting bytes its "
-                            + "own reader refuses.");
+                            + ", which a slot above it already sent. A creep fills at most one slot of a "
+                            + "wave, and a command that could be written and not read back is a writer "
+                            + "emitting bytes its own reader refuses.");
                     }
 
-                    previousTypeId = slot.TypeId;
+                    already.Add(slot.TypeId);
                 }
 
                 slots[index] = slot;
@@ -131,16 +129,15 @@ namespace Sim
                 actions[index] = decision.Actions[index];
             }
 
-            return new RecordCommand(wave, decision.Take, decision.TakeId, slots, actions);
+            return new RecordCommand(wave, slots, actions);
         }
 
         /// <summary>
         /// The same, spelled out, for whoever is composing a decision rather
-        /// than recording one that was made. The take is checked by
-        /// <see cref="BuildPhase.Of"/>, which is where that rule lives.
+        /// than recording one that was made.
         /// </summary>
-        public static RecordCommand Of(int wave, OptionKind take, int takeId, params WaveSlot[] slots) =>
-            Of(wave, BuildPhase.Of(take, takeId, slots));
+        public static RecordCommand Of(int wave, params WaveSlot[] slots) =>
+            Of(wave, BuildPhase.Of(slots));
 
         /// <summary>
         /// This command with one more action after the ones it already carries.
@@ -162,7 +159,7 @@ namespace Sim
 
             grown[_actions.Length] = action;
 
-            return new RecordCommand(Wave, Take, TakeId, _slots, grown);
+            return new RecordCommand(Wave, _slots, grown);
         }
 
         public static bool operator ==(RecordCommand? a, RecordCommand? b) =>
@@ -172,11 +169,11 @@ namespace Sim
 
         /// <summary>
         /// The decision as the build phase surface wants it, with nothing
-        /// reshaped: the four things stored are the four things a phase is.
+        /// reshaped: the three things stored are the three things a phase is.
         /// </summary>
         public BuildPhase ToPhase()
         {
-            BuildPhase phase = BuildPhase.Of(Take, TakeId, _slots);
+            BuildPhase phase = BuildPhase.Of(_slots);
 
             for (int index = 0; index < _actions.Length; index++)
             {
@@ -190,8 +187,6 @@ namespace Sim
         {
             if (other is null
                 || Wave != other.Wave
-                || Take != other.Take
-                || TakeId != other.TakeId
                 || _slots.Length != other._slots.Length
                 || _actions.Length != other._actions.Length)
             {
@@ -220,16 +215,12 @@ namespace Sim
         public override bool Equals(object? obj) => Equals(obj as RecordCommand);
 
         public override int GetHashCode() =>
-            (((Wave * 31 ^ (int)Take) * 31 ^ TakeId) * 31 ^ _slots.Length) * 31 ^ _actions.Length;
+            (Wave * 31 ^ _slots.Length) * 31 ^ _actions.Length;
 
         public override string ToString() =>
             "wave "
             + Wave.ToString(CultureInfo.InvariantCulture)
-            + ": take "
-            + Option.NameOf(Take)
-            + " "
-            + TakeId.ToString(CultureInfo.InvariantCulture)
-            + ", "
+            + ": "
             + (_actions.Length == 0
                 ? string.Empty
                 : string.Join(", ", Array.ConvertAll(_actions, action => action.ToString())) + ", ")
@@ -251,20 +242,20 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The seed is here for the same reason it is in a replay bundle.</b> A
-    /// round's offering is drawn from the run's seed and the wave, so a stream
-    /// without a seed would be checked against whichever menu the caller
-    /// happened to draw -- and a take validated against a different offering is
-    /// a decision read out of a different game.
+    /// run's field is drawn from its seed and the round, so a stream without a
+    /// seed would be replayed against whichever opponents the caller happened to
+    /// draw -- and a wave scored against a different field is a decision read
+    /// out of a different game.
     /// </para>
     /// <para>
     /// <b>Three content hashes, three gates.</b> The unit table's sits in the
-    /// shared header where every kind carries it. The ruleset's and the anchor
-    /// schedule's sit beside it because this is the first record kind whose
+    /// shared header where every kind carries it. The ruleset's and the upgrade
+    /// ladder's sit beside it because this is the first record kind whose
     /// meaning depends on them: the ruleset prices the wave, opens the purse and
-    /// pays the interest, and the schedule decides where the anchors are and how
-    /// wide a round's slots get. A stream replayed against either of them
-    /// retuned is a confidently wrong result, so each is compared on its own and
-    /// each refuses by its own name.
+    /// pays the interest, and the ladder decides what a placement standing on a
+    /// hex may be swapped into. A stream replayed against either of them
+    /// re-authored is a confidently wrong result, so each is compared on its own
+    /// and each refuses by its own name.
     /// </para>
     /// <para>
     /// <b>Reading and replaying are different gates.</b> Reading needs a known
@@ -280,13 +271,13 @@ namespace Sim
         private CommandStream(
             RecordHeader header,
             Hash64 rulesetHash,
-            Hash64 scheduleHash,
+            Hash64 ladderHash,
             ulong seed,
             RecordCommand[] commands)
         {
             Header = header;
             RulesetHash = rulesetHash;
-            ScheduleHash = scheduleHash;
+            LadderHash = ladderHash;
             Seed = seed;
             _commands = commands;
         }
@@ -297,8 +288,8 @@ namespace Sim
         /// <summary>The hash of the parsed ruleset these decisions were made under.</summary>
         public Hash64 RulesetHash { get; }
 
-        /// <summary>The hash of the parsed anchor schedule they were made against.</summary>
-        public Hash64 ScheduleHash { get; }
+        /// <summary>The hash of the parsed upgrade ladder they were made against.</summary>
+        public Hash64 LadderHash { get; }
 
         /// <summary>The seed every draw in the run is derived from.</summary>
         public ulong Seed { get; }
@@ -366,7 +357,7 @@ namespace Sim
             return new CommandStream(
                 RecordHeader.Current(RecordKind.Command, run.Types.ContentHash),
                 run.Rules.ContentHash,
-                run.Schedule.ContentHash,
+                run.Ladder.ContentHash,
                 run.Seed,
                 copied);
         }
@@ -436,6 +427,14 @@ namespace Sim
                     read = ReadVersion1(cursor, header);
                     break;
 
+                case 2:
+                    read = ReadVersion2(cursor, header);
+                    break;
+
+                case 3:
+                    read = ReadVersion3(cursor, header);
+                    break;
+
                 default:
                     throw cursor.Fault(
                         "is command stream format version "
@@ -465,7 +464,7 @@ namespace Sim
 
             Header.Write(writer);
             writer.U64(RulesetHash.Value);
-            writer.U64(ScheduleHash.Value);
+            writer.U64(LadderHash.Value);
             writer.U64(Seed);
             writer.U16("command count", _commands.Length);
 
@@ -474,8 +473,6 @@ namespace Sim
                 RecordCommand command = _commands[index];
 
                 writer.U16("command wave", command.Wave);
-                writer.U8("command take kind", (int)command.Take);
-                writer.U16("command take id", command.TakeId);
                 writer.U16("command action count", command.Actions.Count);
 
                 for (int action = 0; action < command.Actions.Count; action++)
@@ -504,12 +501,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Every failure here is a refusal and never a skip.</b> A take
-        /// naming an option that round's offering did not carry, a slot naming a
-        /// creep the run never unlocked, a slot beyond the round's width, an
-        /// action on a cell no tower could stand on and a wave nobody can afford
-        /// are all
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// <b>Every failure here is a refusal and never a skip.</b> A place
+        /// naming a unit some edge of the ladder targets, an action on a cell no
+        /// tower could stand on, two slots of one wave on one creep and a wave
+        /// nobody can afford are all
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// refusing -- the same surface a live build phase is checked by, so
         /// there is one implementation of the rules and not two.
         /// </para>
@@ -523,41 +519,41 @@ namespace Sim
         /// </para>
         /// <para>
         /// <b>The one check that surface cannot make is the wave index.</b>
-        /// <c>Resolve</c> is handed an offering and has no way to know which
-        /// round is about to be played, so a decision made at wave seven and
-        /// stored at wave three would resolve perfectly against wave three's
-        /// menu. It is checked here, where both numbers are in hand.
+        /// <c>Resolve</c> is handed the round about to be played and never the
+        /// one the decision was stored for, so it cannot see the two disagree: a
+        /// decision made at wave seven and stored at wave three would resolve
+        /// perfectly. It is checked here, where both numbers are in hand.
         /// </para>
         /// <para>
-        /// <b>Nothing is applied.</b> The three things a round moves -- the
-        /// unlocks, the purse and the board -- are folded forward through local
-        /// values exactly as a round moves them: a build phase's take, then
-        /// what it builds, then the wave's own purchases, then what the wave
-        /// pays. The run is untouched, so a stream can be checked and then
+        /// <b>Nothing is applied.</b> The two things a round moves -- the purse
+        /// and the board -- are folded forward through local values exactly as a
+        /// round moves them: what a build phase builds, then the wave's own
+        /// purchases, then what the wave pays. The run is untouched, so a stream can be checked and then
         /// refused without the run having moved. The board the walk carries is
-        /// a value like the other two -- <see cref="Board.Place"/> and
+        /// a value like the other one -- <see cref="Board.Place"/> and
         /// <see cref="Board.Upgrade"/> return new boards -- so folding one
         /// forward here cannot reach the run's.
         /// </para>
         /// <para>
         /// <b>The purse this walk carries is a ceiling and not the run's own.</b>
-        /// A wave's income includes the band its offense reached in the field,
-        /// and what a round got past the field is a number only a resolved round
-        /// has -- so the walk closes every wave at
-        /// <see cref="Purse.CloseWaveAtBest"/>, the most the bands can pay. Every
-        /// decision refused here is one no run could have afforded however well
-        /// it played; a decision the ceiling admits is checked again, against the
-        /// purse the round really holds, by the same
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// A wave's income includes a share of what its offense got past the
+        /// field, and that is a number only a resolved round has -- so the walk
+        /// closes every wave at <see cref="Purse.CloseWaveAtBest"/>, against the
+        /// most the round could possibly have dealt: the full price of the wave
+        /// the stored decision composes, every creep of it leaking against every
+        /// opponent. Every decision refused here is one no run could have
+        /// afforded however well it played; a decision the ceiling admits is
+        /// checked again, against the purse the round really holds, by the same
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
         /// </para>
         /// <para>
         /// <b>With the board folded, that ceiling is the last thing a decision
         /// can be refused for after a round has resolved.</b> Everything else a
-        /// stored decision can be wrong about -- the take, the unlocks, the
-        /// slot width, the cell, the wave index -- is settled here, over values
-        /// that do not depend on how a round played.
+        /// stored decision can be wrong about -- the ladder, the cell, the wave
+        /// index -- is settled here, over values that do not depend on how a
+        /// round played.
         /// </para>
         /// </remarks>
         /// <param name="run">The run these decisions are about to be played into.</param>
@@ -571,9 +567,13 @@ namespace Sim
             RequireRoundsLeftFor(run);
 
             var builds = new List<Build>();
-            Unlocks unlocks = run.Unlocks;
             Purse purse = run.Purse;
             Board board = run.Board;
+
+            // Folded forward exactly as the purse and the board are, and for the
+            // same reason: what a stored decision is charged depends on what the
+            // decisions before it left standing.
+            WaveScript carried = run.Carrying;
             int round = run.Round;
 
             for (int index = 0; index < _commands.Length; index++)
@@ -590,16 +590,16 @@ namespace Sim
                         + command.Wave.ToString(CultureInfo.InvariantCulture)
                         + " where the run is about to play round "
                         + round.ToString(CultureInfo.InvariantCulture)
-                        + ". The wave index says which round a decision was made in, and playing it at "
-                        + "another round would resolve it against an offering nobody was shown.");
+                        + ". The wave index says which round a decision was made in, and a decision "
+                        + "played at another round is a round nobody decided.");
                 }
 
                 Build build = command.ToPhase().Resolve(
-                    run.OfferingAt(round), unlocks, purse, run.Costs, run.Types, run.Map, board);
+                    round, carried, run.Ladder, purse, run.Costs, run.Types, run.Map, board);
 
-                unlocks = build.Unlocks;
-                purse = build.Purse.CloseWaveAtBest(run.Rules).Purse;
+                purse = build.Purse.CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs)).Purse;
                 board = build.Board;
+                carried = build.Wave;
                 builds.Add(build);
             }
 
@@ -613,7 +613,7 @@ namespace Sim
         /// <para>
         /// Four stamps declared to <see cref="ReplayGate"/>: the simulation
         /// version against this build, and the unit table, the ruleset and the
-        /// anchor schedule against the ones the run is playing. They are
+        /// upgrade ladder against the ones the run is playing. They are
         /// independent, so a stream can fail exactly one of them; a stream that
         /// fails several is named by the first declared.
         /// </para>
@@ -628,8 +628,8 @@ namespace Sim
         /// fourth and leave an outcome somebody keeps. Everything a walk can
         /// settle without playing the run is settled there; what it cannot is
         /// how much a wave's own performance paid, so a decision affordable only
-        /// under the best band the run did not reach is the one refusal that
-        /// still lands mid-run.
+        /// under damage the run did not deal is the one refusal that still lands
+        /// mid-run.
         /// </para>
         /// <para>
         /// <b>Every round comes back.</b> What each one took, what its wave cost
@@ -653,7 +653,7 @@ namespace Sim
                     + Seed.ToString(CultureInfo.InvariantCulture)
                     + " and it was handed the run seeded "
                     + run.Seed.ToString(CultureInfo.InvariantCulture)
-                    + ". Every offering, filling and field in a run is derived from its seed, so these are "
+                    + ". A run's field is derived from its seed, so these are "
                     + "two different runs and the decisions of one were read off the other's menus.");
             }
 
@@ -661,7 +661,7 @@ namespace Sim
                 Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
                 Stamp.Of("content", Header.ContentHash, run.Types.ContentHash),
                 Stamp.Of("ruleset", RulesetHash, run.Rules.ContentHash),
-                Stamp.Of("schedule", ScheduleHash, run.Schedule.ContentHash));
+                Stamp.Of("ladder", LadderHash, run.Ladder.ContentHash));
 
             Check(run);
 
@@ -680,7 +680,7 @@ namespace Sim
             if (other is null
                 || Header != other.Header
                 || RulesetHash != other.RulesetHash
-                || ScheduleHash != other.ScheduleHash
+                || LadderHash != other.LadderHash
                 || Seed != other.Seed
                 || _commands.Length != other._commands.Length)
             {
@@ -706,8 +706,8 @@ namespace Sim
             Header.ToString()
             + ", ruleset "
             + RulesetHash.ToString()
-            + ", schedule "
-            + ScheduleHash.ToString()
+            + ", ladder "
+            + LadderHash.ToString()
             + ", seed "
             + Seed.ToString(CultureInfo.InvariantCulture)
             + ", "
@@ -720,6 +720,7 @@ namespace Sim
         /// <c>u16 wave + u8 take_kind + u16 take_id + u16 slot_count</c>
         /// followed by that many <c>(u16 type_id, u16 count)</c> slots. No
         /// action run, so every build phase reads back having built nothing.
+        /// The take is read past and dropped -- see <see cref="ReadVersion2"/>.
         /// </summary>
         /// <remarks>
         /// <b>This branch never goes away.</b> Version 1 sits beside it and this
@@ -729,7 +730,7 @@ namespace Sim
         /// rather than a quiet loss.
         /// </remarks>
         private static CommandStream ReadVersion0(ByteCursor cursor, RecordHeader header) =>
-            ReadCommands(cursor, header, storesActions: false);
+            ReadCommands(cursor, header, storesActions: false, storesTake: true);
 
         /// <summary>
         /// Version 1: the same, with <c>u16 action_count</c> and that many
@@ -737,7 +738,61 @@ namespace Sim
         /// command, between the take and the slot count.
         /// </summary>
         private static CommandStream ReadVersion1(ByteCursor cursor, RecordHeader header) =>
-            ReadCommands(cursor, header, storesActions: true);
+            ReadCommands(cursor, header, storesActions: true, storesTake: true);
+
+        /// <summary>
+        /// Version 2: the same as version 1 with <c>u8 take_kind</c> and
+        /// <c>u16 take_id</c> gone from every command, and the third stamp
+        /// naming the upgrade ladder rather than the anchor schedule.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The take went because the gate did.</b> Nothing is unlocked, so a
+        /// round has nothing to take and a field for it would be two bytes
+        /// every writer had to invent a value for.
+        /// </para>
+        /// <para>
+        /// <b>The third stamp changed meaning rather than moving.</b> It stood
+        /// for <c>content/schedule.txt</c>, which no longer exists; it now
+        /// stands for <c>content/upgrades.txt</c>, which the simulation began
+        /// reading in the same change. Same offset, same width, different
+        /// content -- which is exactly what a format version is for, and why a
+        /// version-1 stream cannot be replayed against a version-2 run by
+        /// accident.
+        /// </para>
+        /// </remarks>
+        private static CommandStream ReadVersion2(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true, storesTake: false);
+
+        /// <summary>
+        /// Version 3: the same bytes as version 2, and a different meaning for
+        /// the order they are in. A slot's position is its release order, so
+        /// slot one's creeps walk out first and the wave is a sequence rather
+        /// than a set.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A version bump with no field in it, which is the point.</b>
+        /// Nothing moved and nothing was added: the layout of a version-2
+        /// command and a version-3 command is byte for byte the same. What
+        /// changed is what the slot order means, and a reader cannot tell the
+        /// two apart by looking -- an ascending version-2 wave and an ascending
+        /// version-3 wave are the same bytes describing two different fights.
+        /// That is exactly the case a format version exists for, and the
+        /// alternative was a stream that replays into a confidently wrong
+        /// result while validating.
+        /// </para>
+        /// <para>
+        /// <b>The simulation version moved with it</b>, from 2 to 3, because
+        /// the release schedule a wave resolves to is behaviour rather than
+        /// layout -- the same bump the spawn cadence took when it went from 15
+        /// ticks to 45. Streams at 0, 1 and 2 stay readable forever and stop
+        /// being replayable here, which is the split
+        /// <c>docs/adr/0009-three-identity-fields.md</c> draws.
+        /// </para>
+        /// </remarks>
+        private static CommandStream ReadVersion3(ByteCursor cursor, RecordHeader header) =>
+            ReadCommands(cursor, header, storesActions: true, storesTake: false);
 
         /// <summary>
         /// The body both versions share, told whether the bytes in front of it
@@ -749,10 +804,14 @@ namespace Sim
         /// checks drift between them, and the version that lost one would go on
         /// loading streams the other refuses.
         /// </remarks>
-        private static CommandStream ReadCommands(ByteCursor cursor, RecordHeader header, bool storesActions)
+        private static CommandStream ReadCommands(
+            ByteCursor cursor,
+            RecordHeader header,
+            bool storesActions,
+            bool storesTake)
         {
             ulong rulesetHash = cursor.U64("the ruleset hash");
-            ulong scheduleHash = cursor.U64("the schedule hash");
+            ulong ladderHash = cursor.U64("the ladder hash");
             ulong seed = cursor.U64("the run seed");
             int count = cursor.U16("the command count");
 
@@ -775,8 +834,6 @@ namespace Sim
                     + count.ToString(CultureInfo.InvariantCulture);
 
                 int wave = cursor.U16("the wave of " + what);
-                int take = cursor.U8("the take kind of " + what);
-                int takeId = cursor.U16("the take id of " + what);
 
                 if (wave == 0)
                 {
@@ -797,25 +854,18 @@ namespace Sim
                         + "identical runs cannot have two different sets of bytes.");
                 }
 
-                if (take != (int)OptionKind.Ordinary && take != (int)OptionKind.GameChanger)
+                // Read past and dropped rather than kept. A version-0 or
+                // version-1 stream carries a take, and the gate it was taken
+                // off no longer exists to check it against -- so the bytes are
+                // consumed so the cursor stays aligned, and the decision they
+                // described replays as the one thing it still is: the slots and
+                // the actions beside them. The two checks that used to stand
+                // here asked whether the take named a menu, and there is no
+                // menu to name.
+                if (storesTake)
                 {
-                    throw cursor.Fault(
-                        what
-                        + " takes option kind "
-                        + take.ToString(CultureInfo.InvariantCulture)
-                        + ", and the kinds an offering has halves for are "
-                        + ((int)OptionKind.Ordinary).ToString(CultureInfo.InvariantCulture)
-                        + " and "
-                        + ((int)OptionKind.GameChanger).ToString(CultureInfo.InvariantCulture)
-                        + ". A kind nothing declares scopes the take's id to a menu that does not exist.");
-                }
-
-                if (takeId == 0)
-                {
-                    throw cursor.Fault(
-                        what
-                        + " has take id 0. Every option on an offering carries an identity counted from "
-                        + "one, so zero is a take nothing on any menu can answer.");
+                    cursor.U8("the take kind of " + what);
+                    cursor.U16("the take id of " + what);
                 }
 
                 previousWave = wave;
@@ -825,7 +875,7 @@ namespace Sim
                 int slotCount = cursor.U16("the slot count of " + what);
 
                 RecordCommand command = RecordCommand.Of(
-                    wave, (OptionKind)take, takeId, ReadSlots(cursor, what, slotCount));
+                    wave, ReadSlots(cursor, what, slotCount));
 
                 for (int action = 0; action < actions.Length; action++)
                 {
@@ -838,7 +888,7 @@ namespace Sim
             return new CommandStream(
                 header,
                 Hash64.FromValue(rulesetHash),
-                Hash64.FromValue(scheduleHash),
+                Hash64.FromValue(ladderHash),
                 seed,
                 commands);
         }
@@ -898,14 +948,23 @@ namespace Sim
         }
 
         /// <summary>
-        /// One command's slots. <c>(0, 0)</c> is the empty slot; a type id
-        /// without a count and a count without a type id are both refused,
-        /// because leaving a slot empty already has exactly one spelling.
+        /// One command's slots, in the order they were filled -- which from
+        /// format 3 is the order the creeps walk out in. <c>(0, 0)</c> is the
+        /// empty slot; a type id without a count and a count without a type id
+        /// are both refused, because leaving a slot empty already has exactly
+        /// one spelling.
         /// </summary>
+        /// <remarks>
+        /// <b>No ascending order is asserted, and one was until format 3.</b>
+        /// Position is the decision now, so sorting or refusing an arrangement
+        /// would delete the lever rather than canonicalise it. Every stream at
+        /// format 0, 1 or 2 was written under the old rule and so ascends
+        /// anyway; nothing that could be read before is refused here.
+        /// </remarks>
         private static WaveSlot[] ReadSlots(ByteCursor cursor, string what, int count)
         {
             var slots = new WaveSlot[count];
-            int previousTypeId = 0;
+            var already = new List<int>();
 
             for (int index = 0; index < count; index++)
             {
@@ -944,20 +1003,18 @@ namespace Sim
                         + "second spelling of one wave and two sets of bytes for one run.");
                 }
 
-                if (typeId <= previousTypeId)
+                if (already.Contains(typeId))
                 {
                     throw cursor.Fault(
                         which
                         + " sends type id "
                         + typeId.ToString(CultureInfo.InvariantCulture)
-                        + ", at or below the "
-                        + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                        + " a slot above it already sent. Filled slots are out of canonical order: they "
-                        + "ascend strictly by type id, asserted rather than sorted, because sorting would "
-                        + "leave two identical waves with two different sets of bytes.");
+                        + ", which a slot above it already sent. A creep fills at most one slot of a wave: "
+                        + "the same wave is spelled by putting the whole count in one slot, so two slots on "
+                        + "one creep would be two sets of bytes for one run.");
                 }
 
-                previousTypeId = typeId;
+                already.Add(typeId);
                 slots[index] = WaveSlot.Of(typeId, units);
             }
 

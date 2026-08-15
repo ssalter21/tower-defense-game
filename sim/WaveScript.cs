@@ -102,6 +102,108 @@ namespace Sim
         /// <summary>Every unit this wave sends, summed.</summary>
         public int TotalUnits { get; }
 
+        /// <summary>
+        /// How many of one creep type this wave sends, over all of its orders.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is what a round is measured as carrying.</b> A wave a build
+        /// phase composed holds a type in exactly one order, because a creep
+        /// fills at most one slot -- but an authored wave may spell the same
+        /// type at several ticks, and a count that ignored the others would
+        /// under-report what a run already fields. Summing is the reading that
+        /// is right for both.
+        /// </remarks>
+        public int CountOf(int typeId)
+        {
+            int found = 0;
+
+            for (int index = 0; index < _orders.Length; index++)
+            {
+                if (_orders[index].TypeId == typeId)
+                {
+                    found += _orders[index].Count;
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>
+        /// Every creep this wave sends, priced: what the wave would cost bought
+        /// outright, whatever any of it has already been paid for.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is the ceiling on what a round can deal.</b> Leak cost sums
+        /// price times leaked over these same orders, and an order can leak at
+        /// most its whole count, so no round of this wave gets more than this
+        /// past its opponents -- which is what lets a walk over a stored stream
+        /// bound the bonus without playing a tick. See
+        /// <see cref="Purse.CloseWaveAtBest"/>.
+        /// </remarks>
+        /// <param name="costs">What every creep on this wave is priced at.</param>
+        public int FullPrice(CostTable costs)
+        {
+            if (costs is null)
+            {
+                throw new ArgumentNullException(nameof(costs));
+            }
+
+            long price = 0;
+
+            for (int index = 0; index < _orders.Length; index++)
+            {
+                price += costs.PriceOf(Purchase.Unit(_orders[index].TypeId), _orders[index].Count);
+            }
+
+            if (price > int.MaxValue)
+            {
+                throw new SimulationException(
+                    "A wave of "
+                    + TotalUnits.ToString(CultureInfo.InvariantCulture)
+                    + " creeps costs "
+                    + price.ToString(CultureInfo.InvariantCulture)
+                    + " gold, which does not fit in the 32-bit integer a purse is kept in. A wave that "
+                    + "costs more than a purse can hold is a cost column authored in the wrong units.");
+            }
+
+            return (int)price;
+        }
+
+        /// <summary>
+        /// This wave as the slots a build phase would compose it from, in the
+        /// order it sends them.
+        /// </summary>
+        /// <remarks>
+        /// <b>The round trip a carried wave takes every round.</b> A phase names
+        /// the whole of its round's wave, so the wave the last round sent is
+        /// where the next round's phase starts -- on screen, in a fixture, and
+        /// in anything walking a stored stream. One conversion here rather than
+        /// one at each of those, because three of them would be three places for
+        /// the order or a count to be dropped.
+        /// </remarks>
+        public WaveSlot[] AsSlots()
+        {
+            var slots = new WaveSlot[_orders.Length];
+
+            for (int index = 0; index < slots.Length; index++)
+            {
+                slots[index] = WaveSlot.Of(_orders[index].TypeId, _orders[index].Count);
+            }
+
+            return slots;
+        }
+
+        /// <summary>
+        /// The wave a run carries before it has played a round: nothing at all.
+        /// </summary>
+        /// <remarks>
+        /// Round one is the one round that pays for every creep in it, and this
+        /// is what says so. It is <see cref="FromSlots"/> over no orders rather
+        /// than a fourth kind of wave, so it is the same empty wave a build
+        /// phase composes when every slot is banked.
+        /// </remarks>
+        public static WaveScript Nothing { get; } = FromSlots(Array.Empty<UnitOrder>());
+
         /// <summary>Parses a wave from text, against the types it is allowed to name.</summary>
         public static WaveScript Parse(string text, UnitTypeTable types) => Parse("wave", text, types);
 

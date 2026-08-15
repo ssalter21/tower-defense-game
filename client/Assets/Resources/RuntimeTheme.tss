@@ -1,0 +1,7 @@
+/* The client's one UI Toolkit theme: Unity's default runtime theme and nothing
+   on top of it. Every colour and size this project chose is set in code, from
+   the constants in PlaybackControls; what this file is for is the two things a
+   panel cannot draw without and no inline style can supply -- the default
+   font, and the absolute positioning the built-in slider's track and handle
+   are laid out with. */
+@import url("unity-theme://default");

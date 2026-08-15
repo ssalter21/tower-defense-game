@@ -26,11 +26,8 @@ public static class TheRuleset
         interest 10 0
         income 100
         purse 100
-        band 0 0
-        band 50 5
-        health 1500
-        slots 2 1
-        offering 3 3
+        bonus 25
+        health 800
         snapshot 10 25
         """;
 
@@ -221,10 +218,9 @@ public static class TheRuleset
 
     /// <summary>
     /// True for a rule the committed file states on more than one row: the
-    /// damage matrix, which is three rows of a Latin square, and the performance
-    /// bands, which are however many ascending rows the file states. Those two
-    /// describe a shape; every other rule is a keyword and one number per
-    /// column, stated exactly once.
+    /// damage matrix, which is three rows of a Latin square. That one describes
+    /// a shape; every other rule is a keyword and one number per column, stated
+    /// exactly once.
     /// </summary>
     private static bool IsRepeated(string keyword) =>
         DataRows(CommittedText()).Count(fields => fields[0] == keyword) > 1;

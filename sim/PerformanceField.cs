@@ -5,15 +5,21 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
-    /// The distribution a wave's result is paid against: what everybody else's
+    /// The distribution a wave's result is ranked against: what everybody else's
     /// round was worth.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>No gold moves between players.</b> A wave is measured against the
-    /// spread of the field and never against a named opponent, so the payment
-    /// reads the same whether the field is one lobby or a whole population, and
-    /// beating somebody takes nothing off them.
+    /// <b>Nothing in this build reads it.</b> A wave is paid a share of the leak
+    /// cost it dealt, so no payment consults a rank. This is a measurement of
+    /// the pool with no consumer, kept while
+    /// <c>docs/open-questions.md</c> carries the question of whether it stays.
+    /// </para>
+    /// <para>
+    /// <b>A spread and not a list of opponents.</b> A wave is placed against the
+    /// shape of the field and never against a named member, so a rank reads the
+    /// same whether the field is one lobby or a whole population, and taking one
+    /// takes nothing off anybody.
     /// </para>
     /// <para>
     /// The measure is leak cost dealt -- what a wave got past its opponents,
@@ -36,14 +42,14 @@ namespace Sim
 
         /// <summary>
         /// No field at all: nobody to be measured against, so nothing to
-        /// measure. A wave paid against this earns its base and a bonus of zero.
+        /// measure.
         /// </summary>
         /// <remarks>
-        /// <b>No run carries this.</b> A run measures its pool and is paid out
-        /// of what it measured, so the bonus a wave earns is a real number off
-        /// the bands. This is what the measurement itself is played against --
-        /// the pool's own rounds are being priced, not paid -- and it is the
-        /// honest answer for anybody holding a population of nobody.
+        /// <b>No run carries this.</b> A run measures its pool, so what it
+        /// holds is a real spread. This is what the measurement itself is
+        /// played against -- the pool's own rounds are being priced there --
+        /// and it is the honest answer for anybody holding a population of
+        /// nobody.
         /// </remarks>
         public static PerformanceField Absent => NoField;
 
@@ -85,7 +91,7 @@ namespace Sim
                 throw new SimulationException(
                     "A wave was ranked against a field of nobody. A percentile is a share of the field, "
                     + "and there is no share of nothing -- see PerformanceField.Absent, which is the field "
-                    + "a population of nobody makes and which pays no bonus rather than reporting a rank.");
+                    + "a population of nobody makes and which has no rank to report.");
             }
 
             int beaten = 0;

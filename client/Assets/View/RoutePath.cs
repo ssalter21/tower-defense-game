@@ -141,6 +141,53 @@ namespace View
             Quaternion.LookRotation(TangentAt(distance), Vector3.up);
 
         /// <summary>
+        /// Which way something standing at <paramref name="position"/> and
+        /// watching the corridor faces: towards the nearest point of the route.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Derived rather than authored, so a tower moved in the defense file or
+        /// dropped on a hex by hand faces sensibly without anybody editing a
+        /// second file — and so there is no per-tower rotation to get out of
+        /// step with a per-tower position.
+        /// </para>
+        /// <para>
+        /// It lives here rather than beside either of the two things that draw a
+        /// tower — the played match and the board being built — because it is a
+        /// question about the corridor, and two copies of it would be two
+        /// answers about the same route.
+        /// </para>
+        /// <para>
+        /// A position exactly on the route has nothing to look at and keeps the
+        /// identity rotation, which is the only case with no direction in it.
+        /// </para>
+        /// </remarks>
+        public Quaternion FacingFrom(Vector3 position)
+        {
+            float best = float.MaxValue;
+            Vector3 nearest = Entrance;
+
+            for (int step = 0; step <= StepCount; step++)
+            {
+                Vector3 point = _points[step];
+                float distance = (point - position).sqrMagnitude;
+
+                if (distance < best)
+                {
+                    best = distance;
+                    nearest = point;
+                }
+            }
+
+            Vector3 toward = nearest - position;
+            toward.y = 0f;
+
+            return toward.sqrMagnitude < 1e-6f
+                ? Quaternion.identity
+                : Quaternion.LookRotation(toward.normalized, Vector3.up);
+        }
+
+        /// <summary>
         /// Splits a distance into the segment it lies on and how far along that
         /// segment it is.
         /// </summary>

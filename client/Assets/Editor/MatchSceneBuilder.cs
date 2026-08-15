@@ -36,52 +36,198 @@ namespace View.Editor
         /// <summary>Everything else's material.</summary>
         public const string GrassMaterialPath = "Assets/Materials/Grass.mat";
 
+        private const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
+
+        private const string StaffPath = "Assets/Art/Weapons/staff.fbx";
+
+        private const string SwordPath = "Assets/Art/Weapons/sword_1handed.fbx";
+
+        private const string SkeletonStaffPath = "Assets/Art/Weapons/Skeleton_Staff.fbx";
+
+        private const string SkeletonBladePath = "Assets/Art/Weapons/Skeleton_Blade.fbx";
+
+        private const string SkeletonShieldAPath = "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx";
+
+        private const string SkeletonShieldBPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
+
+        private const string WalkClipName = "Walking_A";
+
+        private const string DeathClipName = "Death_A";
+
+        /// <summary>The clip a tower rests in between shots, whatever it holds.</summary>
+        private const string RestClipName = "Idle_A";
+
+        private const string BowIdleClipName = "Ranged_Bow_Idle";
+
+        private const string BowDrawClipName = "Ranged_Bow_Draw";
+
+        private const string BowReleaseClipName = "Ranged_Bow_Release";
+
+        private const string SpellcastClipName = "Ranged_Magic_Spellcasting";
+
+        private const string ChopClipName = "Melee_1H_Attack_Chop";
+
         /// <summary>
-        /// The models and clips the match is drawn with, as
-        /// <c>MatchArt</c> field name to asset.
+        /// The bow's half turn. Every weapon in this pack is authored for the
+        /// right hand; the bow is the only one that goes in the left, and at
+        /// the bone's own rotation it comes out with its belly curving into the
+        /// archer and its string facing the target. Backwards, and it took
+        /// somebody looking at it to notice.
+        /// </summary>
+        private static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
+
+        /// <summary>
+        /// The quarter turn a staff is hung at, which stands it on end.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Every one of these was chosen by the developer, on issue #44, and
-        /// none of them is chosen here.</b> This table is a transcription of
-        /// answers already given — the walk and the death picked from a live
-        /// scrubber rather than from filenames, the three bow clips picked to
-        /// stand one per simulation state. A builder that reached for "the
-        /// obvious clip" would be making an art decision unattended, which is a
+        /// <b>Nothing about the staff is inverted — it is horizontal.</b>
+        /// Measured on 14 August 2026 from its vertices expressed in the hand
+        /// bone's own frame: the shaft runs along the bone's local +Y and the
+        /// orb is at the +Y end, which is the same axis and the same direction
+        /// as the sword's blade. That is why the <c>[grip]</c> bounds could not
+        /// tell the two apart, and why a half turn — the first guess — buried
+        /// the staff in the body instead of righting it. In the Mage's
+        /// <c>Idle_A</c> that bone axis points forward, world
+        /// <c>(0.263, 0, 0.965)</c>, so the shaft lies flat and the orb comes to
+        /// rest out by the feet.
+        /// </para>
+        /// <para>
+        /// <b>The Soldier's sword is in exactly the same position, and is left
+        /// there.</b> Measured the same way, in all three of its states: its
+        /// blade also runs along the bone's local +Y, and it also comes out
+        /// 90.0° off vertical with the tip level with the hand at world Y
+        /// 0.536, pointing forward. So the geometry does not separate the two
+        /// cases at all — what separates them is the read. A sword held out
+        /// level at hip height is a stance; an orb resting by the feet is a
+        /// staff somebody dropped. Which of those is wrong is the developer's
+        /// call and not this table's, and issue #204 asked for the staffs and
+        /// recorded the sword as reading correctly. Anyone changing that should
+        /// change it on a ticket, not by noticing this paragraph.
+        /// </para>
+        /// <para>
+        /// The bone's local +X is world <c>(0, 1, 0)</c> in that same pose —
+        /// exactly up, out of the fist. So the correction is the quarter turn
+        /// about Z that carries the shaft from local +Y onto local +X, and it is
+        /// read off the measured bone frame rather than fitted to a screenshot.
+        /// </para>
+        /// <para>
+        /// <b>It is only exactly upright in the pose it was measured in.</b> A
+        /// weapon parented to a hand turns with the arm, so no fixed tilt can be
+        /// right everywhere. This one was taken in <c>Idle_A</c> at frame 0,
+        /// which is where the Mage stands. The Necromancer is a creep and the
+        /// roster capture poses it a quarter of the way through <c>Walking_A</c>,
+        /// where the same bone axis is about 43° off vertical: head-up, and
+        /// leaning. If a pose ever needs the staff dead upright regardless of
+        /// the arm, that is a different mechanism — an aim constraint — and not
+        /// a bigger number here.
+        /// </para>
+        /// </remarks>
+        private static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
+
+        /// <summary>
+        /// What each unit type is drawn as, and how big — one entry per row in
+        /// <c>content/units.txt</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Every one of these was chosen by the developer and none of them
+        /// is chosen here.</b> The assignments are signed in
+        /// <c>docs/roster.md</c> — the Minion and the Skeleton share the minion
+        /// skin, the Warrior takes the warrior, the Scout the rogue, the
+        /// Necromancer the mage, and the four towers take the Knight, the
+        /// Ranger twice and the Mage. A builder that reached for "the obvious
+        /// model" would be making an art decision unattended, which is a
         /// standing prohibition on this project and not a style preference.
         /// </para>
         /// <para>
-        /// Written down here rather than looked up by convention because a
-        /// convention would silently pick a different clip the day a pack adds
-        /// one. A missing entry throws by name.
+        /// <b>The scale is the tier signal and it is the only one.</b> Towers
+        /// draw at 1, every creep at a half, and the Ranger — which shares the
+        /// Archer's model and differs from it in one stat — at one and a half.
+        /// The numbers are <see cref="MatchArt"/>'s, so the two tables that
+        /// carry these rows cannot disagree about what a half is.
+        /// </para>
+        /// <para>
+        /// <b>What each unit holds, and the clips it holds it with, are the
+        /// same choice and are made in the same row.</b> They were two
+        /// project-wide fields until 14 August 2026, keyed on <c>Delivery</c>,
+        /// which put the bow on the mage — the one projectile row — and left
+        /// the archer and the ranger, both hitscan, holding nothing. The pairs
+        /// were signed off by the developer: staff and Spellcasting for the
+        /// Mage, bow and the three Ranged_Bow clips for the Archer and Ranger,
+        /// sword and 1H_Attack_Chop for the Soldier. Creeps carry scenery and
+        /// no clips of their own — nothing in the simulation swings a walker's
+        /// weapon.
         /// </para>
         /// </remarks>
-        private static readonly (string field, string asset, string clip)[] ArtBindings =
+        private static readonly (
+            int unitId,
+            string model,
+            float scale,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt)[] UnitBindings =
         {
-            ("creepModel", "Assets/Art/Characters/Skeleton_Warrior.fbx", null),
-            ("creepWalkClip", null, "Walking_A"),
-            ("creepDeathClip", null, "Death_A"),
-            ("projectileTowerModel", "Assets/Art/Characters/Ranger.fbx", null),
-            ("bowModel", "Assets/Art/Weapons/bow_withString.fbx", null),
-            ("towerIdleClip", null, "Ranged_Bow_Idle"),
-            ("towerWindupClip", null, "Ranged_Bow_Draw"),
-            ("towerBackswingClip", null, "Ranged_Bow_Release"),
-            ("hitscanTowerModel", "Assets/Art/Buildings/building_tower_A_blue.fbx", null),
+            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+                null, null, null, null, null, default, default),
+            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
+                null, null, null, null, null, default, default),
+            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
+            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
+                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default),
+            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
+                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
+            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default),
+            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default),
+            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
         };
 
         /// <summary>
-        /// The three clip banks, searched in order for a clip by name.
+        /// Everything on <c>MatchArt</c> that is not per unit type, as field
+        /// name to asset.
         /// </summary>
         /// <remarks>
-        /// All three share one rig, which is why a clip from any of them drives
+        /// Only the creep clips are shared now, and they are shared because
+        /// every creep does the same two things: it walks and it dies. Both
+        /// were chosen by the developer on issue #44, picked from a live
+        /// scrubber rather than from filenames. Written down rather than looked
+        /// up by convention, because a convention would silently pick a
+        /// different clip the day a pack adds one. A missing entry throws by
+        /// name.
+        /// </remarks>
+        private static readonly (string field, string asset, string clip)[] SharedBindings =
+        {
+            ("creepWalkClip", null, WalkClipName),
+            ("creepDeathClip", null, DeathClipName),
+        };
+
+        /// <summary>
+        /// The four clip banks, searched in order for a clip by name.
+        /// </summary>
+        /// <remarks>
+        /// All four share one rig, which is why a clip from any of them drives
         /// any of the characters — verified by measurement rather than trusted,
-        /// and the reason this project has one artist rather than two.
+        /// and the reason this project has one artist rather than two. The
+        /// melee bank is the newest and arrived with the Soldier's sword: a
+        /// tower holding a sword and playing <c>Ranged_Bow_Draw</c> is the same
+        /// class of mistake as a mage holding a bow.
         /// </remarks>
         private static readonly string[] ClipBankPaths =
         {
             "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
             "Assets/Art/Animations/Rig_Medium_General.fbx",
             "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
+            "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
         [MenuItem("Tools/Rebuild the match scene")]
@@ -130,23 +276,103 @@ namespace View.Editor
         /// </remarks>
         private static void WireArt(SerializedObject serialized)
         {
-            foreach ((string field, string asset, string clip) in ArtBindings)
+            SerializedProperty units = Field(serialized, "units");
+            units.arraySize = UnitBindings.Length;
+
+            for (var i = 0; i < UnitBindings.Length; i++)
             {
-                SerializedProperty property = serialized.FindProperty("art." + field);
+                var binding = UnitBindings[i];
+                SerializedProperty entry = units.GetArrayElementAtIndex(i);
 
-                if (property == null)
-                {
-                    throw new IOException(
-                        "MatchArt has no serialized field called '" + field + "'. The binding table in "
-                        + "MatchSceneBuilder and the fields on MatchArt have drifted apart.");
-                }
+                entry.FindPropertyRelative("unitId").intValue = binding.unitId;
+                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(binding.model);
+                entry.FindPropertyRelative("scale").floatValue = binding.scale;
+                entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(binding.rightHand);
+                entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(binding.leftHand);
+                entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(binding.idle);
+                entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(binding.windup);
+                entry.FindPropertyRelative("backswingClip").objectReferenceValue =
+                    MaybeClip(binding.backswing);
+                entry.FindPropertyRelative("rightHandTilt").vector3Value = binding.rightTilt;
+                entry.FindPropertyRelative("leftHandTilt").vector3Value = binding.leftTilt;
+            }
 
-                property.objectReferenceValue = clip == null ? LoadModel(asset) : LoadClip(clip);
+            foreach ((string field, string asset, string clip) in SharedBindings)
+            {
+                Field(serialized, field).objectReferenceValue =
+                    clip == null ? LoadModel(asset) : LoadClip(clip);
             }
         }
 
+        /// <summary>
+        /// One serialized field on the root's <c>MatchArt</c>, or a throw
+        /// saying the tables here and the fields over there have drifted apart.
+        /// </summary>
+        private static SerializedProperty Field(SerializedObject serialized, string field)
+        {
+            SerializedProperty property = serialized.FindProperty("art." + field);
+
+            if (property == null)
+            {
+                throw new IOException(
+                    "MatchArt has no serialized field called '" + field + "'. The binding tables in "
+                    + "MatchSceneBuilder and the fields on MatchArt have drifted apart.");
+            }
+
+            return property;
+        }
+
+        /// <summary>
+        /// The same art the scene is wired with, as a bundle in memory.
+        /// </summary>
+        /// <remarks>
+        /// For an editor tool that draws a match without reading the generated
+        /// scene — the frame capture, which has to work on a checkout whose
+        /// scene has not been rebuilt yet, and which would otherwise be a third
+        /// transcription of these paths. The <i>tests</i> deliberately keep
+        /// their own list, in <c>Tests.Fixtures.ChosenArt</c>: a fixture that
+        /// took its art from this class could not catch this class choosing the
+        /// wrong model, because it would be asserting that the choice matched
+        /// itself.
+        /// </remarks>
+        public static MatchArt Art()
+        {
+            var units = new List<UnitArt>(UnitBindings.Length);
+
+            foreach (var binding in UnitBindings)
+            {
+                units.Add(UnitArt.Armed(
+                    binding.unitId,
+                    LoadModel(binding.model),
+                    binding.scale,
+                    MaybeModel(binding.rightHand),
+                    MaybeModel(binding.leftHand),
+                    MaybeClip(binding.idle),
+                    MaybeClip(binding.windup),
+                    MaybeClip(binding.backswing),
+                    binding.rightTilt,
+                    binding.leftTilt));
+            }
+
+            return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));
+        }
+
+        /// <summary>
+        /// The model at a path, or null when the path is null — a unit that
+        /// holds nothing in that hand.
+        /// </summary>
+        /// <remarks>
+        /// A null path means "empty hand" and a path that finds nothing means
+        /// "the import is missing", which is why this cannot simply return null
+        /// on failure. <see cref="LoadModel"/> throws for the second case.
+        /// </remarks>
+        private static GameObject MaybeModel(string path) => path == null ? null : LoadModel(path);
+
+        /// <summary>The named clip, or null when the name is null — a creep.</summary>
+        private static AnimationClip MaybeClip(string clip) => clip == null ? null : LoadClip(clip);
+
         /// <summary>The imported model at a path, or a throw naming it.</summary>
-        private static Object LoadModel(string path)
+        private static GameObject LoadModel(string path)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
@@ -161,7 +387,7 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The clip of that name, from whichever of the three banks holds it.
+        /// The clip of that name, from whichever of the four banks holds it.
         /// </summary>
         /// <remarks>
         /// <c>__preview__</c> duplicates are editor thumbnail bookkeeping Unity
@@ -169,7 +395,7 @@ namespace View.Editor
         /// into a scene would work in the editor and resolve to nothing in a
         /// build, which is the worst of both.
         /// </remarks>
-        private static Object LoadClip(string name)
+        private static AnimationClip LoadClip(string name)
         {
             var found = new List<string>();
 
@@ -192,7 +418,7 @@ namespace View.Editor
             }
 
             throw new IOException(
-                "No clip called '" + name + "' in any of the three banks. Found: "
+                "No clip called '" + name + "' in any of the four banks. Found: "
                 + string.Join(", ", found));
         }
 

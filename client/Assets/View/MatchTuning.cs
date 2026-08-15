@@ -192,5 +192,28 @@ namespace View
 
         /// <summary>The mortar shell's colour.</summary>
         public static Color ProjectileColor => new Color(0.22f, 0.2f, 0.19f, 1f);
+
+        // ---------------------------------------------------------------
+        // The board being built
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// How far above the floor the hex under the pointer is drawn, in
+        /// metres. Enough to clear the tile it covers without floating off it.
+        /// </summary>
+        /// <remarks>
+        /// Here rather than in <see cref="SceneFraming"/> because the floor is
+        /// framed once and this moves every time the pointer does — which is the
+        /// split those two files are divided on. It is not a simulation input by
+        /// the same test as everything else in this file: change it and the
+        /// match's result, its per-tick hash and its landmark table do not move.
+        /// </remarks>
+        public const float BuildLightHeight = 0.02f;
+
+        /// <summary>
+        /// The colour of the hex under the pointer when the selected tower could
+        /// stand on it.
+        /// </summary>
+        public static Color BuildLightColor => new Color(0.55f, 0.82f, 1f, 1f);
     }
 }

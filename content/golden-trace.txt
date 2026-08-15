@@ -20,10 +20,10 @@
 #
 # The run this came from:
 #
-#   replay bundle format 1, simulation version 2, content 51BC7297223A70E8
+#   replay bundle format 1, simulation version 6, content 51BC7297223A70E8
 #   seed       20260801
-#   defense    7A696149E8C67620, read at defense record format 1
-#   wave       B9C1B643DC253568
+#   defense    3E1861C697B2C5CC, read at defense record format 1
+#   wave       E10C9A44A67339C4
 #   result     12 of 40 leaked, tick 5283 (176 seconds at 30 ticks a second), state B58DBED2315303D2
 #
 # Any of those moving moves every line below it. That is the point: the trace is

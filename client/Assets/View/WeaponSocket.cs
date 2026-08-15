@@ -39,6 +39,28 @@ namespace View
         public const string BowHand = "handslot.l";
 
         /// <summary>
+        /// The bone a melee weapon goes on, and it is the RIGHT hand.
+        /// </summary>
+        /// <remarks>
+        /// The other half of the measurement above. Every melee weapon on this
+        /// rig is right-handed — which is why the bow, the one thing that is
+        /// not, had to be measured onto the left before it would sit in a fist
+        /// at all. A staff counts as melee here: it is gripped, not drawn.
+        /// </remarks>
+        public const string MeleeHand = "handslot.r";
+
+        /// <summary>
+        /// The bone an off-hand item goes on. Same bone as <see cref="BowHand"/>,
+        /// named for what it means rather than for the one weapon that found it.
+        /// </summary>
+        /// <remarks>
+        /// A shield and a bow never appear on the same unit, so one bone serves
+        /// both. Two names because a reader of <c>OffHand</c> at a shield's call
+        /// site should not have to know that the constant is spelled after a bow.
+        /// </remarks>
+        public const string OffHand = BowHand;
+
+        /// <summary>
         /// Instantiates <paramref name="weapon"/> and parents it to the bone
         /// named <paramref name="boneName"/> on <paramref name="host"/>, at zero
         /// local offset. Returns the instantiated weapon.
@@ -52,7 +74,21 @@ namespace View
         /// wrong" from every angle except the one that would show it is a
         /// misspelt string.
         /// </exception>
-        public static GameObject Attach(GameObject host, GameObject weapon, string boneName)
+        public static GameObject Attach(GameObject host, GameObject weapon, string boneName) =>
+            Attach(host, weapon, boneName, Quaternion.identity);
+
+        /// <summary>
+        /// As above, turned by <paramref name="tilt"/> relative to the bone.
+        /// </summary>
+        /// <remarks>
+        /// The tilt exists because this pack authors every weapon for the right
+        /// hand. Anything that goes in the left comes out mirrored, and the bow
+        /// — the only such thing — needs a half turn. It is an argument rather
+        /// than a rule about the left hand, because the shield goes there too
+        /// and needs none.
+        /// </remarks>
+        public static GameObject Attach(
+            GameObject host, GameObject weapon, string boneName, Quaternion tilt)
         {
             if (host == null) throw new System.ArgumentNullException(nameof(host));
             if (weapon == null) throw new System.ArgumentNullException(nameof(weapon));
@@ -70,8 +106,17 @@ namespace View
             held.name = weapon.name;
             held.transform.SetParent(bone, worldPositionStays: false);
             held.transform.localPosition = Vector3.zero;
-            held.transform.localRotation = Quaternion.identity;
-            held.transform.localScale = Vector3.one;
+            held.transform.localRotation = tilt;
+
+            // The prefab's own scale, NOT one. Measured on 14 August 2026: the
+            // bow imports with a root scale of 100 and every other weapon in
+            // this project with 1, so forcing one drew the bow at a hundredth
+            // of its size -- two centimetres across, in the hand, invisible
+            // from any camera. It had been that way since the bow was the only
+            // weapon there was, and it never showed up because nobody had
+            // opened the editor to look. Position and rotation are still the
+            // bone's; size is the asset's.
+            held.transform.localScale = weapon.transform.localScale;
 
             return held;
         }

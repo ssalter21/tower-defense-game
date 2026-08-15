@@ -80,8 +80,6 @@ public class GoldenSweepTests
         Ruleset rules = TheRuleset.Committed();
 
         Assert.Equal(rules.ContentHash.ToString(), Parameter("ruleset_hash"));
-        Assert.Equal(Number(rules.OrdinaryOptionsPerRound), Parameter("ordinary_options"));
-        Assert.Equal(Number(rules.GameChangersPerAnchor), Parameter("game_changers"));
         Assert.Equal(Number(rules.FreeSnapshotsPerRun), Parameter("free_snapshots"));
         Assert.Equal(Number(rules.SnapshotPriceGold), Parameter("snapshot_price"));
 

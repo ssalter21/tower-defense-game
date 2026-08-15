@@ -38,6 +38,28 @@ entity drawn as N bodies, and hitscan for fast squad weapons — with delivery k
 legibility, and the attention budget of watching two boards — converge on squads being an archetype rather than
 the model for the whole defense.** [Seam 1](build-order.md#1--the-match-format)'s to take or leave.
 
+**What the seven tick-anchored sit-down rows point at now that a build opens on a run.**
+[The sit-down](sit-down.md)'s rows 4 to 10 name a tick of `content/match.replay`, which the player opened on
+until [#198](decision-log.md#14-august-2026-later--the-client-stops-opening-on-the-recorded-match) and no longer
+does. Two answers, and both are cheap: **re-anchor them** to a round a run reproduces — which needs a committed
+script, a seed and a landmark table for that round rather than for the recorded match, and buys a checklist that
+walks the same path a player does — or **retire them** onto `LocomotionTests`, which already carries the
+load-bearing half of rows 4 and 5 and is the reason those two stopped being judgements. The rows themselves are
+not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
+somebody sits down with the build.
+
+**What the gate rounds' loose ends are, and what the defense currency is called.**
+[Three gates](vision.md#three-gates-at-waves-3-6-and-9) fix the capacity schedule and hand out a capstone
+token. Four things about them are readings rather than decisions, and all four are cheap to move while nothing
+is built. **The currency has no name**, and everything player-facing here gets named deliberately — gold took
+two goes. **The opening pair is two slots and ten count**, which is what makes the schedule 2/4/6/8 and
+10/20/30/40; only the steps were specified, so the starting values are an inference from them. **A gate grants
+one token**, which is what makes it three capstones a run. And **a capstone costs the token and no gold**,
+which is the simplest reading and the one [the roster](roster.md#what-things-cost) is now written against —
+charging gold on top would make the token a permit rather than a price, which is a different mechanic with a
+different failure mode. Open beside them: **whether a token banks**, which leans toward yes, since a token
+that must be spent on the round it arrives forces the decision at the moment the run knows least.
+
 **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
 loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
 is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.
@@ -65,7 +87,7 @@ over. The three candidate answers are in
 [§3](vision.md#the-map-rotates-and-it-is-generated); the survey is
 [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking until
 step 6, since nothing before it reads a pool. **The rotation carries more than the map:** the
-[anchor schedule's *shape*](vision.md#three-anchors-a-shape-and-a-filling) is on the same clock, so a cadence
+[gate schedule's *shape*](vision.md#three-gates-at-waves-3-6-and-9) is on the same clock, so a cadence
 choice sets how long a *preparation* problem stays learnable as well as how long a map does. Both want the same
 answer — long enough to learn — which is a mild argument for slow.
 
@@ -80,6 +102,36 @@ choice and not a capacity one — and it is the cadence question viewed from the
 
 **Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those are
 one ladder or two is unresolved.
+
+### Is the field measurement kept, now that nothing prices off it?
+
+**A decision for a human, raised by [#209](https://github.com/ssalter21/tower-defense-game/issues/209) and
+deliberately not taken by it.** Gold is now paid for the health damage a wave does, so the payment reads no
+distribution and no rank. That leaves `PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the
+`run-measure/1` draw and the percentile lookup compiling, tested, and called by nothing —
+[ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md) is largely superseded, its own recorded cost
+included.
+
+**What keeping it costs is now nearly nothing, which is the surprise.** The measurement was lazy already and a
+played round no longer asks for it, so the **half a run per run** the ADR records — the committed sweep going
+from 9,600 matches to 14,400, and from about eight seconds to thirteen — is not being spent. What is left is
+one measurement's worth of code that nothing exercises in anger, which is the ordinary cost of a capability
+kept warm: it can rot without anything going red.
+
+**What deleting it costs is the only answer on file to "where does this run sit against the field".** A placing,
+a ladder, a percentile shown to a player, or a bonus that goes back to being relative all want exactly this,
+and it is about a hundred lines with an ADR behind it.
+
+**[#208](https://github.com/ssalter21/tower-defense-game/issues/208) has landed and did not wait on this.** The
+pool is now a population per round and the measurement reads all of it at once, so the two are decoupled: the
+answer here is still open, and taking it either way is still one measurement's worth of code. What #208 did
+settle is the price of keeping it as it stands — the spread it reports is over a population no single round
+fights, which is written into [ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md)'s amendment. Anything
+that gives the measurement a consumer has to pay that back by measuring per round.
+
+**Three answers, and the middle one is not obviously wrong.** Delete it and take it back off git if it is
+wanted. Keep it as it stands and accept untested-in-anger code. Or keep it and give it a consumer that is not
+the purse — the sweep reporting where a run sat is the cheap one.
 
 **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** **Current assumption:
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send

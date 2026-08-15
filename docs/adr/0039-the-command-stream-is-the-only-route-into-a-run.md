@@ -12,12 +12,39 @@ buys the submission barrier nearly free later, because a submitted turn *is* a c
 played run a replayable record, which makes every playtest a determinism test.
 
 That claim is asserted structurally rather than described: `Run`'s public surface is exactly
-`Advance(BuildPhase)` and `OfferingAt`, no parameter of `Run` or `Match` is a delegate, and the only interface
+`Advance(BuildPhase)`, no parameter of `Run` or `Match` is a delegate, and the only interface
 either accepts is the decorative event listener, whose every method returns void. A run cannot be asked a
 question it could answer with something a record does not carry. Handing a decision straight in is
 not a way around the record either, and that is asserted rather than argued: a `BuildPhase`'s whole public
-data surface is `Take`, `TakeId` and `Slots`, which are the three fields a stored command carries, so every
+data surface is `Slots` and `Actions`, which are the two fields a stored command carries, so every
 decision reachable by handing one in is a decision a command could have made.
+
+> **Amended 13 August 2026.** Two names in the paragraph above moved. `OfferingAt` came off `Run` with the
+> offering in [#179](https://github.com/ssalter21/tower-defense-game/issues/179), and a `BuildPhase`'s data
+> surface was `Take`, `TakeId` and `Slots` until the same change deleted the take and format 1 added the
+> actions. **The structural claim is unchanged and is what the paragraph is for**: the surface is still exactly
+> what a stored command carries, and it is still asserted rather than described — `CommandStreamTests` names
+> the members and goes red when one is added.
+
+> **Amended 14 August 2026.** `MatchAt` grew a third parameter, `bool attacking`, in
+> [#206](https://github.com/ssalter21/tower-defense-game/issues/206): a round is resolved in both directions
+> against every opponent, and the member handed back one of them and only one, so the screen watching it showed
+> the player their own wave walking into a stranger's defense with none of their towers on it. Both matches are
+> now reachable and the caller names which.
+>
+> **A primitive, and this page is the reason.** The obvious spelling is the simulation's own `Side` enum, and
+> it is refused for the rule above: every public member of `Run` other than `Advance` takes primitives, so that
+> nothing composed outside a stored command can reach a run through an argument. A bool costs nothing here — the
+> parameter is a choice between two things — and it buys a second guarantee the enum would not have. `Side` has
+> a third member, `Measured`, which is the stream the performance field is measured on and is not a fight
+> anybody watched; a bool cannot name it, so the unwatchable direction is unreachable by construction rather
+> than by a guard somebody has to remember to write. `Side` accordingly stays private.
+>
+> **The member is still a reader.** It rebuilds a match that was already resolved and scored, it comes back on
+> tick zero, and switching between the two directions costs a rebuild and moves nothing —
+> `RunTests.Watching_a_round_moves_nothing` resolves both directions of every pairing and then reads every
+> field a round does move. The structural claim is unchanged: two integers and a bool are still a question
+> about a round that already happened, and `Advance` is still the only route in.
 
 **A wave nobody was charged for cannot be handed to a run at all.** `Advance` once had a second overload
 taking a `RoundOrders` — a defense and a wave, composed by anybody, resolved against no offering, checked
@@ -76,12 +103,21 @@ the stream's stamps against the tables the run is actually playing rather than a
 alongside, which is the whole difference between a gate and a courtesy. The cost is three more public
 properties on a type that was previously opaque about its inputs.
 
+> **Amended 13 August 2026.** The strict-ascending half of the ordering rule is gone: a slot's position is now
+> its release order, so an arrangement is a decision rather than a spelling to canonicalise. The three places
+> below still refuse a *repeated* creep; none of them refuses one out of ascending order.
+> [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) says why, and
+> [the decision log](../decision-log.md) records what it cost. Everything else on this page stands.
+
 **The ordering rule is written three times.** `BuildPhase.Resolve` refuses a repeated creep when a decision is
 resolved, `RecordCommand.Of` refuses one when a command is composed, and `ReadSlots` refuses one when bytes are
 read. The middle one is what stops a writer emitting bytes its own reader would refuse, and the outer two fail
-with different exception types on purpose — a fault in this program against a fault in stored bytes. The take's
-own bounds are not duplicated: the spelled-out `RecordCommand.Of` overload builds a `BuildPhase` and inherits
-that check rather than restating it.
+with different exception types on purpose — a fault in this program against a fault in stored bytes.
+
+What the three of them no longer buy is canonical bytes, and they do not need to. The release offsets a
+`BuildPhase` composes ascend strictly across filled slots — every filled slot sends at least one creep, and each
+creep holds the column for one spawn interval — so a wave's orders are still unique and ascending on
+`(tick, type)`. The ordering became a consequence of the release rule instead of a rule of its own.
 
 **The load walk's purse fold is the run's arithmetic, restated.** `Check` closes each wave exactly as
 `Run.Advance` does, and both read the distribution from one place, `Run.Field`, so the field a wave is paid

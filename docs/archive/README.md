@@ -1,7 +1,10 @@
 # The archive
 
-**The five deep dives the vision was built on.** They are an input to it, not the current state of anything.
-Read them for their evidence; read [The Vision](../vision.md) for the plan.
+**Documents that are no longer current, kept for what they were reasoning from.** They are an input to the
+plan, not the current state of anything. Read them for their evidence; read [The Vision](../vision.md) for the
+plan.
+
+## The five deep dives the vision was built on
 
 They read best in sequence — each answers a question raised by the one before it.
 
@@ -12,6 +15,12 @@ They read best in sequence — each answers a question raised by the one before 
 | III | [Technology Stack Assessment](tech-stack-assessment.md) | What do we build it with? |
 | IV | [Art Direction & Asset Pack Strategy](art-direction-and-assets.md) | What does it look like, and what do we buy to get there fast? |
 | V | [Tower & Creep Variance Levers](variance-levers-and-unit-schema.md) | What can a tower or a creep differ by, and what data structure holds all of it? |
+
+## Specifications whose implementation is gone
+
+| Document | What it specified, and why it is here |
+|---|---|
+| [Playing a run from a shell](playing-a-run-from-a-shell.md) | `simcli play` — a run taken a round at a time at a prompt. Built, then deleted: the shell is for mass headless simulation, the client is where a run is played, and `play-run` still replays one. The tests that pinned its §2, §3 and §5 went with the verb. |
 
 ## What the vision overturns
 

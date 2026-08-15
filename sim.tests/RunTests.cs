@@ -59,15 +59,16 @@ public class RunTests
         // round. The wall it puts up is the same wall every round, so the four
         // scenarios still differ in nothing but their arguments.
         //
-        // The run survives its last wave by 96 gold of health, which is what
-        // makes the death flag inert here: the no-death row produces the same
-        // vector as the rest rather than a longer one, so the flag is an
-        // argument and not a different lifecycle.
+        // This player runs out of health in its fourth round, so the death flag
+        // is live: the no-death row plays ten rounds and the rest play four.
+        // What makes the flag an argument rather than a different lifecycle is
+        // that the four they share are identical, gold for gold -- the flag
+        // stops the loop and touches nothing inside it.
         //
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
-        // anything. The no-death row goes red on the health it finished with,
-        // 96 against 1500, which is what a second code path hiding behind an
+        // anything. The no-death row goes red on its very first round, (0, 0)
+        // against (23, 239), which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -102,15 +103,35 @@ public class RunTests
             run = again;
         }
 
-        IReadOnlyList<RoundOutcome> expected = TheRun.TheCommittedRun;
+        IReadOnlyList<RoundOutcome> expected = deathEndsTheRun
+            ? TheRun.TheCommittedRun
+            : TheRun.TheCommittedRunWithoutDeath;
+
         RunOutcome actual = run.Outcome;
 
-        Assert.Equal(RunEnding.OutOfWaves, actual.Ending);
-        Assert.Equal(Run.DefaultWaves, actual.Rounds.Count);
+        Assert.Equal(
+            deathEndsTheRun ? RunEnding.OutOfHealth : RunEnding.OutOfWaves,
+            actual.Ending);
+
         Assert.Equal(expected.Count, actual.Rounds.Count);
         Assert.Equal(TheRun.HealthLeftInTheCommittedRun, actual.HealthRemaining);
-        Assert.Equal(Run.DefaultWaves, actual.WavesSurvived);
-        Assert.Equal(10, run.Sent.Count);
+        Assert.Equal(expected.Count, run.Sent.Count);
+
+        // A wave survived is a wave the pool outlasted, and the pool empties in
+        // the fourth round of both shapes. So both say three, however many
+        // rounds the flag let them go on to resolve -- which is the same claim
+        // as the shared vector above, read off a single number.
+        Assert.Equal(TheRun.TheCommittedRun.Count - 1, actual.WavesSurvived);
+
+        // The rounds the two shapes share are the same rounds. This is the
+        // whole of "an argument and not a lifecycle": the flag decides where
+        // the vector stops and nothing about what is in it.
+        for (int round = 0; round < TheRun.TheCommittedRun.Count; round++)
+        {
+            Assert.Equal(
+                TheRun.TheCommittedRun[round],
+                TheRun.TheCommittedRunWithoutDeath[round]);
+        }
 
         for (int round = 0; round < expected.Count; round++)
         {
@@ -170,9 +191,9 @@ public class RunTests
         Assert.Equal((23 * 10) + (17 * 9), incoming);
         Assert.Equal(383, incoming);
 
-        // The pool is worth about three waves of average creep value: the third
-        // concession is affordable and the fourth is the end of the run.
-        Assert.Equal(1500, TheRuleset.Committed().HealthPoolGold);
+        // The pool is worth about two waves of average creep value: the second
+        // concession is affordable and the third is the end of the run.
+        Assert.Equal(800, TheRuleset.Committed().HealthPoolGold);
 
         var health = new List<int>();
 
@@ -183,10 +204,10 @@ public class RunTests
             health.Add(run.Health);
         }
 
-        Assert.Equal(new[] { 1117, 734, 351, 0 }, health);
+        Assert.Equal(new[] { 417, 34, 0 }, health);
         Assert.Equal(RunEnding.OutOfHealth, run.Ending);
-        Assert.Equal(3, run.Outcome.WavesSurvived);
-        Assert.Equal(4, run.Round);
+        Assert.Equal(2, run.Outcome.WavesSurvived);
+        Assert.Equal(3, run.Round);
     }
 
     [Fact]
@@ -282,19 +303,19 @@ public class RunTests
     [Fact]
     public void Death_is_a_flag_so_a_sweep_row_always_yields_N_rounds_of_data()
     {
-        // The same run that dies in its fourth round above, with the flag off:
-        // ten rounds of data, health on the floor from the fourth onwards, and
-        // waves survived still saying three. A sweep needs the full row.
+        // The same run that dies in its third round above, with the flag off:
+        // ten rounds of data, health on the floor from the third onwards, and
+        // waves survived still saying two. A sweep needs the full row.
         //
         // OBSERVED: have Run.IsOver report true at zero health whatever the
-        // flag says. The round-count assertion goes red, 10 against 4, and a
+        // flag says. The round-count assertion goes red, 10 against 3, and a
         // sweep's rows become as long as each row's luck.
         Run run = Played(TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
         Assert.Equal(10, run.Outcome.Rounds.Count);
         Assert.Equal(RunEnding.OutOfWaves, run.Ending);
         Assert.Equal(0, run.Health);
-        Assert.Equal(3, run.Outcome.WavesSurvived);
+        Assert.Equal(2, run.Outcome.WavesSurvived);
         Assert.All(run.Outcome.Rounds, round => Assert.Equal(383, round.LeakCostTaken));
     }
 
@@ -306,18 +327,22 @@ public class RunTests
         //
         // OBSERVED: let health end only a run whose round cap was lifted --
         // add `&& waves == Purse.RoundCapLifted` to the first branch of
-        // RunOutcome's ending. The round-count assertion goes red, 4 against
-        // 10, and the run plays out its remaining six waves on a pool of
+        // RunOutcome's ending. The round-count assertion goes red, 3 against
+        // 10, and the run plays out its remaining seven waves on a pool of
         // nothing.
         Run run = Played(TheRun.Unstoppable(fieldSize: 1));
 
         Assert.Equal(0, run.Health);
         Assert.True(run.IsOver);
-        Assert.Equal(4, run.Round);
+        Assert.Equal(3, run.Round);
         Assert.True(run.Waves > run.Round, "The run ran out of waves rather than out of health.");
 
+        // Sending exactly what the run carries, so that the refusal below is the
+        // run being over and not the wave being shrunk: a phase that named no
+        // slot would be leaving this run's creeps at home, which refuses first
+        // and would make this assertion about the wrong rule.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing(run)));
 
         Assert.Contains("This run is over", thrown.Message, StringComparison.Ordinal);
     }
@@ -328,21 +353,24 @@ public class RunTests
         // Gold cannot repair health, so the pool is a clock and nobody is sold
         // a way to stay in a run they are losing. The claim is structural: a
         // Repair(int) added later would look perfectly reasonable at the call
-        // site that used it, so what is asserted is that Advance is the only
-        // member that moves anything at all.
+        // site that used it, so what is asserted is the whole list of methods
+        // this type has, written out, and that only one of them moves anything.
         //
         // OBSERVED: add an empty `public void Repair(int gold)` to Run. The
-        // first assertion goes red, ["Advance", "OfferingAt"] against
-        // ["Advance", "OfferingAt", "Repair"], which is the whole of what this
-        // test is here to notice -- and it notices a member that does not even
-        // do anything yet.
+        // first assertion goes red, listing it beside the two below, which is
+        // the whole of what this test is here to notice -- and it notices a
+        // member that does not even do anything yet.
         //
-        // Two names are on the list and only one of them moves anything.
-        // Advance takes a build phase and nothing else, so what it spends and
-        // what it unlocks are read off a round's own offering.
-        // OfferingAt is a draw over the run's seed and is asserted below to
-        // leave the run exactly where it found it.
-        string[] movers = typeof(Run)
+        // Two names are on the list, and only the first is a mover. Advance
+        // takes a build phase and nothing else, so what a round spends is read
+        // off the decision it was handed. MatchAt is a reader: #192 gave it to
+        // the client so a resolved round can be drawn, and it rebuilds a match
+        // that was already played rather than playing one -- which is a claim
+        // about behaviour rather than about signatures, so
+        // Watching_a_round_moves_nothing is the test of it and this only pins
+        // that nothing else was added beside it. OfferingAt was here too and
+        // went with the offering in #179.
+        string[] members = typeof(Run)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Where(method => !method.IsSpecialName)
             .Select(method => method.Name)
@@ -350,24 +378,11 @@ public class RunTests
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(new[] { "Advance", "OfferingAt" }, movers);
+        Assert.Equal(new[] { "Advance", "MatchAt" }, members);
         Assert.Null(typeof(Run).GetProperty("Health")!.SetMethod);
         Assert.Null(typeof(RunOutcome).GetProperty("HealthRemaining")!.SetMethod);
 
-        // Reading the offering is a read: it costs nothing, moves nothing and
-        // answers the same thing twice.
-        //
-        // OBSERVED: pay the run a coin for reading -- open Run.OfferingAt with
-        // Purse = Purse.Holding(Purse.Gold + 1). The purse assertion goes red,
-        // 104 against 108, which is a member on the movers list moving
-        // something while the list itself stays exactly as long.
-        Run untouched = TheRun.Fresh(waves: 4, fieldSize: 3);
-
-        Assert.Equal(untouched.Health, Drawn(untouched).Health);
-        Assert.Equal(untouched.Purse.Gold, Drawn(untouched).Purse.Gold);
-        Assert.Equal(0, Drawn(untouched).Unlocks.Count);
-
-        // And across a run it only ever goes one way, whatever the purse beside
+        // And across a run health only ever goes one way, whatever the purse beside
         // it did. The purse is checked against the round's own ledger -- what it
         // opened on, less what the build cost, plus what the wave paid -- so a
         // round that shops has its money accounted for both ways while the
@@ -415,13 +430,13 @@ public class RunTests
         // longer level, because one of them sent a better wave.
         int pool = TheRuleset.Committed().HealthPoolGold;
 
-        RunOutcome healthier = Outcome(pool, (0, 400), (0, 400), (0, 400));
-        RunOutcome thinner = Outcome(pool, (0, 500), (0, 500), (0, 400));
-        RunOutcome shorter = Outcome(pool, (0, 1500));
-        RunOutcome loud = Outcome(pool, (9000, 400), (9000, 400), (9000, 400));
+        RunOutcome healthier = Outcome(pool, (0, 200), (0, 200), (0, 200));
+        RunOutcome thinner = Outcome(pool, (0, 250), (0, 250), (0, 200));
+        RunOutcome shorter = Outcome(pool, (0, 800));
+        RunOutcome loud = Outcome(pool, (9000, 200), (9000, 200), (9000, 200));
 
         Assert.Equal(3, healthier.WavesSurvived);
-        Assert.Equal(300, healthier.HealthRemaining);
+        Assert.Equal(200, healthier.HealthRemaining);
         Assert.Equal(3, thinner.WavesSurvived);
         Assert.Equal(100, thinner.HealthRemaining);
         Assert.Equal(0, shorter.WavesSurvived);
@@ -445,9 +460,9 @@ public class RunTests
     [Fact]
     public void Health_and_waves_survived_are_folds_over_the_vector_and_need_no_re_simulation()
     {
-        // The whole reason the outcome is a vector: a percentile band, a
-        // placing or a retrospective computed later is arithmetic over what was
-        // stored, and nothing has to be simulated twice to get it.
+        // The whole reason the outcome is a vector: a placing or a
+        // retrospective computed later is arithmetic over what was stored, and
+        // nothing has to be simulated twice to get it.
         //
         // OBSERVED: fold the run against `_rules.HealthPoolGold * 2` in
         // Run.Folded, so that the run's own health comes off a pool the vector
@@ -471,7 +486,7 @@ public class RunTests
     }
 
     [Fact]
-    public void The_distribution_the_bands_are_measured_against_comes_out_of_the_pool()
+    public void The_distribution_a_run_is_ranked_against_comes_out_of_the_pool()
     {
         // The canned field is a parameter and not a fixture: the pool a run is
         // handed IS the population its percentile is a percentile of, so
@@ -479,11 +494,14 @@ public class RunTests
         // that one argument and nothing else. A run cannot be given a pool and a
         // distribution that disagree, because there is only the one of them.
         //
+        // NOTHING IN THIS BUILD PRICES ANYTHING OFF IT -- a wave is paid a share
+        // of what it dealt. See docs/adr/0042, which is open for a decision on
+        // whether this measurement is kept at all.
+        //
         // OBSERVED: measure nothing -- return PerformanceField.Of(new int[0])
         // from Run.MeasureField, which is the Absent a run carried before there
         // was a pool to measure. This goes red on the first assertion, IsPresent
-        // against a field of nobody, and the run goes back to paying the base
-        // alone.
+        // against a field of nobody.
         Run run = TheRun.Fresh(waves: 4, fieldSize: 4);
 
         Assert.True(run.Field.IsPresent);
@@ -515,16 +533,15 @@ public class RunTests
     {
         // A round of a run that shops moves the purse three ways: the build
         // phase takes what its wave cost out of it, the bank pays interest on
-        // whatever survived that, and the wave pays the flat base and the band
-        // its offense reached in the field. Folded here out of the stored
-        // vector, the run's own field and what each round reported spending,
-        // with no match resolved and no tick replayed -- and it has to come out
-        // at the gold the run actually holds.
+        // whatever survived that, and the wave pays the flat base and a share of
+        // what its offense got past. Folded here out of the stored vector and
+        // what each round reported spending, with no match resolved and no tick
+        // replayed -- and it has to come out at the gold the run actually holds.
         //
         // The run spends a third of its purse a round, so all three lines are
         // real numbers rather than one line and two zeroes: it buys every round,
         // it banks the rest at compound interest, and every one of its ten
-        // rounds is placed above the bottom band.
+        // rounds gets something past.
         //
         // OBSERVED: pay the wave off outcome.LeakCostTaken rather than
         // outcome.LeakCostDealt in Run.Play. The purse assertion goes red: the
@@ -534,8 +551,8 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 824 against 8399: the 4006 gold of
-        // creeps, and the interest a bank that never paid for them would have
+        // over bought nothing. It goes red at 6488 against 21605: the 9540 gold
+        // of creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
         Ruleset rules = run.Rules;
@@ -555,20 +572,19 @@ public class RunTests
             spent += rounds[round].Build.Spent;
             folded = Purse.Holding(folded.Gold - rounds[round].Build.Spent);
 
-            WavePayment paid = folded.CloseWave(
-                rules, run.Field, run.Outcome.Rounds[round].LeakCostDealt);
+            WavePayment paid = folded.CloseWave(rules, run.Outcome.Rounds[round].LeakCostDealt);
 
             bonus += paid.Bonus;
             folded = paid.Purse;
         }
 
         Assert.Equal(run.Purse.Gold, folded.Gold);
-        Assert.Equal(bonus, Purse.BonusOver(rules, run.Field, run.Outcome));
+        Assert.Equal(bonus, Purse.BonusOver(rules, run.Outcome));
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(4006, spent);
-        Assert.Equal(330, bonus);
+        Assert.Equal(9540, spent);
+        Assert.Equal(10417, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -605,11 +621,11 @@ public class RunTests
         Run one = TheRun.Fresh(waves: 3, fieldSize: 4);
         Run two = TheRun.Fresh(waves: 3, fieldSize: 4);
 
-        one.Advance(TheBuild.BuyingNothing(one.Offering));
-        two.Advance(TheBuild.BuyingNothing(two.Offering).With(mortar));
+        one.Advance(TheBuild.BuyingNothing());
+        two.Advance(TheBuild.BuyingNothing().With(mortar));
 
-        one.Advance(TheBuild.BuyingNothing(one.Offering));
-        two.Advance(TheBuild.BuyingNothing(two.Offering));
+        one.Advance(TheBuild.BuyingNothing());
+        two.Advance(TheBuild.BuyingNothing());
 
         int budget = Math.Min(one.Purse.Gold, two.Purse.Gold);
 
@@ -697,26 +713,154 @@ public class RunTests
     }
 
     [Fact]
-    public void The_canned_pool_is_one_pair_of_orders_and_a_field_is_that_pair_over_and_over()
+    public void A_round_is_fought_against_the_population_recorded_at_that_round()
+    {
+        // What a run walks into grows as the run does. The pool records a
+        // population per round, and round two is fought against round two's --
+        // so a run's incoming pressure climbs with its own wave instead of
+        // staying at whatever the opening round faced.
+        //
+        // OBSERVED: draw the field flat -- give FieldFor the whole population's
+        // size and read At(index). The second round's opponent comes back as
+        // whichever member the dice landed on, the wave assertion goes red on
+        // the total it sends, and the two rounds take the same damage on
+        // average.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 6, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        Run run = Played(new Run(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheLadder.Committed(types),
+            FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } }),
+            TheRun.Seed,
+            waves: 2,
+            fieldSize: 2,
+            deathEndsTheRun: false));
+
+        // The match a round can be asked to rebuild is against its own round's
+        // member, in both directions.
+        Assert.Equal(
+            opening.Wave.Count,
+            run.MatchAt(0, 0, attacking: false).LeakedByOrder.Count);
+        Assert.Equal(
+            later.Wave.Count,
+            run.MatchAt(1, 0, attacking: false).LeakedByOrder.Count);
+
+        // And the health it costs to stand there follows the population rather
+        // than the round number.
+        Assert.True(
+            run.Outcome.Rounds[1].LeakCostTaken > run.Outcome.Rounds[0].LeakCostTaken,
+            "A run's second round faced the population recorded at its second round, so the wave it took "
+            + "should be the longer one: " + run.Outcome.Rounds[1].LeakCostTaken + " against "
+            + run.Outcome.Rounds[0].LeakCostTaken + ".");
+    }
+
+    [Fact]
+    public void What_a_round_of_the_pool_is_worth_is_measured_over_the_whole_population()
+    {
+        // The draw grew per round and the measurement did not: what a round of
+        // the pool is worth is one number for the whole run, read off every
+        // member the population has at any round. That is the resolution #208
+        // took -- the fold ADR-0042 describes stays a fold, at the price of a
+        // measurement whose population is not the one any single round fights.
+        //
+        // OBSERVED: have MeasureField draw its members and their opponents per
+        // round, off SizeAt. The two fields stop agreeing, because a per-round
+        // measurement reads the first rounds of the population and this reads
+        // all of it.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 6, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        PerformanceField perRound =
+            Against(types, FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } })).Field;
+        PerformanceField flat = Against(types, FieldPool.Of(new[] { opening, later })).Field;
+
+        Assert.Equal(flat.Size, perRound.Size);
+        Assert.Equal(
+            Enumerable.Range(0, 400).Select(dealt => flat.PercentileOf(dealt)),
+            Enumerable.Range(0, 400).Select(dealt => perRound.PercentileOf(dealt)));
+    }
+
+    [Fact]
+    public void A_pool_holds_a_population_per_round_and_a_round_draws_from_its_own()
+    {
+        // A member is somebody's round, so it is recorded at the round it was
+        // played in and a round is fought against the members recorded at that
+        // one. Rounds past the last the pool reaches are fought against its
+        // deepest, which is what a run longer than any stored ghost does.
+        //
+        // OBSERVED: have At(round, index) ignore its round and read the flat
+        // population. The second assertion goes red -- round one's opponent is
+        // handed back for round two -- which is the field of one stored round
+        // drawn N times that this replaces.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opening = TheRun.Orders(types, 1, 1);
+        RoundOrders later = TheRun.Orders(types, 6, 6);
+
+        FieldPool pool = FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } });
+
+        Assert.Same(opening, pool.At(0, 0));
+        Assert.Same(later, pool.At(1, 0));
+        Assert.Same(later, pool.At(9, 0));
+        Assert.Equal(1, pool.SizeAt(0));
+
+        // The whole population, round structure flattened away: what a pool is
+        // worth is measured over all of it at once.
+        Assert.Equal(2, pool.Size);
+        Assert.Same(opening, pool.At(0));
+        Assert.Same(later, pool.At(1));
+
+        // A pool written as a flat population is one round's worth of members
+        // standing at every round, which is what every caller that has no
+        // rounds to record means by handing over a list.
+        FieldPool flat = FieldPool.Of(new[] { opening, later });
+
+        Assert.Equal(2, flat.SizeAt(0));
+        Assert.Same(later, flat.At(7, 1));
+    }
+
+    [Fact]
+    public void The_canned_pool_is_one_opponent_who_buys_the_same_wave_again_every_round()
     {
         // The population every run in this repository is played against, and it
         // is composed here rather than by whoever happened to read the two
-        // files: a defense and a wave are one member, and a field of any width
-        // is that member drawn as many times.
+        // files: one member a round, behind the one committed defense, sending
+        // the authored wave bought once more every round. A player accumulates
+        // a wave over a run, so a stand-in that sent the same wave in round ten
+        // as in round one is a run whose incoming pressure is flat while its
+        // own climbs.
         //
-        // OBSERVED: hand Canned the pool's own wave twice -- Of(new[] { orders,
-        // orders }) -- and the size assertion goes red at 2 against 1. A pool
-        // whose members are all the same opponent is a field that reads exactly
-        // like a wide one and is not one.
+        // OBSERVED: hand every round the authored counts -- drop the
+        // multiplication in Grown. The round-seven assertion goes red at 10
+        // against 70, and every run against this pool ends holding a purse it
+        // had no reason to spend.
         UnitTypeTable types = TheMatch.Types();
         TowerLayout defense = TheMatch.Layout(types);
         WaveScript wave = TheRun.FieldWave(types);
 
-        FieldPool canned = FieldPool.Canned(defense, wave);
+        FieldPool canned = FieldPool.Canned(defense, wave, rounds: 10);
 
-        Assert.Equal(1, canned.Size);
-        Assert.Same(defense, canned.At(0).Defense);
-        Assert.Same(wave, canned.At(0).Wave);
+        Assert.Equal(10, canned.Rounds);
+        Assert.Equal(10, canned.Size);
+        Assert.Equal(1, canned.SizeAt(6));
+
+        // The same wall in every round: what grows is what it sends.
+        Assert.Same(defense, canned.At(0, 0).Defense);
+        Assert.Same(defense, canned.At(9, 0).Defense);
+
+        // One column, deeper every round. The shape is what content/field.txt
+        // is calibrated for, so growth is a count and never a second order.
+        Assert.Equal(wave.TotalUnits, canned.At(0, 0).Wave.TotalUnits);
+        Assert.Equal(wave.Count, canned.At(6, 0).Wave.Count);
+        Assert.Equal(wave.TotalUnits * 7, canned.At(6, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.At(9, 0).Wave.TotalUnits);
+
+        // And past the last round it recorded, the deepest round stands.
+        Assert.Equal(wave.TotalUnits * 10, canned.At(40, 0).Wave.TotalUnits);
     }
 
     [Fact]
@@ -737,7 +881,7 @@ public class RunTests
                 TheMatch.Map(),
                 capped,
                 TheMatch.Types(),
-                TheSchedule.Committed(),
+                TheLadder.Committed(),
                 TheRun.Pool(),
                 TheRun.Seed,
                 Purse.RoundCapLifted,
@@ -751,7 +895,7 @@ public class RunTests
             TheMatch.Map(),
             capped,
             TheMatch.Types(),
-            TheSchedule.Committed(),
+            TheLadder.Committed(),
             TheRun.Pool(),
             TheRun.Seed,
             Purse.RoundCapLifted,
@@ -841,14 +985,14 @@ public class RunTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types) }),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
     }
@@ -872,8 +1016,8 @@ public class RunTests
         //
         // OBSERVED: assign build.Unlocks and build.Purse to the run in
         // Run.Advance before the round is played. The unlock count goes red, 1
-        // against 0, and the run carries a take and a spent purse for a wave
-        // nobody was in the run to send.
+        // against 0, and the run carries a spent purse for a wave nobody was in
+        // the run to send.
         Ruleset rules = Ruleset.Parse(
             PlantedText.Replace(TheRuleset.CommittedText(), "purse         100", "purse  2147483000"));
 
@@ -883,16 +1027,15 @@ public class RunTests
             TheMatch.Map(),
             rules,
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             TheRun.Pool(types),
             TheRun.Seed,
             waves: 2,
             fieldSize: 2);
 
-        // A take and a slot of the creep it unlocks, so the round has both a
-        // purse to leave alone and an unlock to leave untaken.
-        BuildPhase phase = TheBuild.TakeFirst(
-            run.Offering, WaveSlot.Of(run.Offering.Options[0].TypeId, 1));
+        // A slot of the roster's first creep, so the round has a purse to leave
+        // alone.
+        BuildPhase phase = TheBuild.Filling(WaveSlot.Of(TheBuild.FirstCreep(types).Id, 1));
 
         SimulationException thrown = Assert.Throws<SimulationException>(
             () => run.Advance(phase));
@@ -905,33 +1048,29 @@ public class RunTests
         Assert.Equal(0, run.Round);
         Assert.Empty(run.Sent);
         Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(0, run.Unlocks.Count);
         Assert.Equal(rules.HealthPoolGold, run.Health);
         Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
         Assert.False(run.IsOver);
     }
 
     [Fact]
-    public void A_round_whose_field_measurement_refuses_leaves_the_run_exactly_where_it_was()
+    public void A_run_plays_its_rounds_without_measuring_the_field_at_all()
     {
-        // The second of the three things a round can refuse at. What a round of
-        // the pool is worth is measured on first use, which is inside the first
-        // round of the run, and measuring plays matches of its own -- so it can
-        // refuse for the reason a round's own matches can.
+        // What the proportional bonus took off the price of a round. A wave is
+        // paid a share of what it dealt, so nothing a round does reads the
+        // distribution -- and the measurement, which plays FieldSamples rounds
+        // of the pool and cost about half a run per run, never happens.
         //
-        // The measurement is the only thing here that reaches for that refusal,
-        // and the pool is two members so that it is. Ruinously priced, the long
-        // wave costs more than a purse can hold once it leaks and the short one
-        // does not; the round is fought against the short member and the
-        // measurement draws the long one. Measured: with the Field read in
-        // Run.Play moved back down to the CloseWave call, so that the round's
-        // own matches all resolve first, this still throws -- none of them was
-        // ever over the limit.
+        // The pool is two members and both are ruinously priced: the long wave
+        // leaks more gold than a purse can hold and the short one does not. The
+        // round's own draw lands on the short member; the measurement samples
+        // both, so the measurement running at all is a refusal this round cannot
+        // otherwise reach.
         //
-        // OBSERVED: give the pool's second member the short wave too --
-        // TheRun.Orders(types, 6, 1) for both. The test goes red having caught
-        // nothing, because the round plays out: no match in it, measured or
-        // fought, leaks more gold than a purse can hold.
+        // OBSERVED: read Field in Run.Play, as it did while the bands priced the
+        // bonus. The Advance goes red on "does not fit in the 32-bit integer
+        // health and gold", which is the measurement's own matches resolving
+        // inside a round that had no use for them.
         UnitTypeTable types = TheRun.RuinouslyPricedTypes();
         Ruleset rules = TheRuleset.Committed();
 
@@ -939,26 +1078,26 @@ public class RunTests
             TheMatch.Map(),
             rules,
             types,
-            TheSchedule.Committed(types),
-            FieldPool.Of(new[] { TheRun.Orders(types, 6, 1), TheRun.Orders(types, 6, 6) }),
+            TheLadder.Committed(types),
+            FieldPool.Of(new[] { TheRun.Orders(types, 6, 6), TheRun.Orders(types, 6, 1) }),
             TheRun.Seed,
             waves: 1,
             fieldSize: 1);
 
-        SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+        run.Advance(TheBuild.BuyingNothing());
+
+        Assert.Equal(1, run.Round);
+        Assert.Single(run.Outcome.Rounds);
+
+        // And the measurement is still there for whoever asks for it, which is
+        // the capability docs/adr/0042 is open about keeping: asked, it refuses
+        // on the member the round never met.
+        SimulationException thrown = Assert.Throws<SimulationException>(() => run.Field);
 
         Assert.Contains(
             "does not fit in the 32-bit integer health and gold",
             thrown.Message,
             StringComparison.Ordinal);
-
-        Assert.Equal(0, run.Round);
-        Assert.Empty(run.Sent);
-        Assert.Empty(run.Outcome.Rounds);
-        Assert.Equal(0, run.Unlocks.Count);
-        Assert.Equal(rules.HealthPoolGold, run.Health);
-        Assert.Equal(rules.StartingPurseGold, run.Purse.Gold);
     }
 
     [Fact]
@@ -985,21 +1124,21 @@ public class RunTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Of(new[] { TheRun.Orders(types, 6, 1) }),
             TheRun.Seed,
             waves: 3,
             fieldSize: 1,
             deathEndsTheRun: false);
 
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
-        run.Advance(TheBuild.BuyingNothing(run.Offering));
+        run.Advance(TheBuild.BuyingNothing());
+        run.Advance(TheBuild.BuyingNothing());
 
         int purse = run.Purse.Gold;
         RunOutcome outcome = run.Outcome;
 
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => run.Advance(TheBuild.BuyingNothing(run.Offering)));
+            () => run.Advance(TheBuild.BuyingNothing()));
 
         Assert.Contains(
             "in leak cost taken, which does not fit in the 32-bit integer gold is counted in",
@@ -1008,7 +1147,6 @@ public class RunTests
 
         Assert.Equal(2, run.Round);
         Assert.Equal(2, run.Sent.Count);
-        Assert.Equal(2, run.Unlocks.Count);
         Assert.Equal(purse, run.Purse.Gold);
         Assert.Same(outcome, run.Outcome);
     }
@@ -1023,17 +1161,17 @@ public class RunTests
         // payment's purse is the one the run now holds.
         //
         // OBSERVED: compose the report's payment from
-        // build.Purse.CloseWaveAtBest(Rules) -- the ceiling the load walk
-        // carries -- rather than from the payment the round made. The closing
-        // assertion goes red, 192 against 212: a report of what a wave earned
-        // that says what it could have earned instead.
+        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs))
+        // -- the ceiling the load walk carries -- rather than from the payment
+        // the round made. The closing assertion goes red: a report of what a
+        // wave earned that says what it could have earned instead.
         Run run = TheBuild.Fresh(waves: 2);
 
-        Option first = run.Offering.Options[0];
+        UnitType first = TheBuild.FirstCreep(run.Types);
         int opening = run.Purse.Gold;
-        int price = run.Costs.PriceOf(Purchase.Unit(first.TypeId));
+        int price = run.Costs.PriceOf(Purchase.Unit(first.Id));
 
-        RoundReport round = run.Advance(BuildPhase.Of(first.Kind, first.Id, WaveSlot.Of(first.TypeId, 1)));
+        RoundReport round = run.Advance(BuildPhase.Of(WaveSlot.Of(first.Id, 1)));
 
         // The pair is the one on the run's own vector.
         Assert.Equal(run.Outcome.Rounds[0].LeakCostDealt, round.Outcome.LeakCostDealt);
@@ -1041,8 +1179,7 @@ public class RunTests
 
         // The build is the decision as it resolved, priced out of the run's own
         // table and leaving the purse it charged.
-        Assert.True(price > 0, "The creep on this round's menu is free, so nothing here costs anything.");
-        Assert.Equal(first.Id, round.Build.Taken.Id);
+        Assert.True(price > 0, "The roster's first creep is free, so nothing here costs anything.");
         Assert.Equal(price, round.Build.Spent);
         Assert.Equal(opening - price, round.Build.Purse.Gold);
 
@@ -1060,9 +1197,9 @@ public class RunTests
     public void A_rounds_line_counts_what_stands_after_its_own_building()
     {
         // The count is read off the board the phase left rather than off the
-        // one it was handed, because the purse walks the take, then the
-        // actions, then the slots: the board this round's incoming waves meet
-        // is the built one, so the line beside those waves has to say so.
+        // one it was handed, because the purse walks the actions, then the
+        // slots: the board this round's incoming waves meet is the built one,
+        // so the line beside those waves has to say so.
         //
         // OBSERVED: hand the board the phase was given to the Build it returns
         // -- `board` rather than `built` at the bottom of BuildPhase.Resolve.
@@ -1072,7 +1209,7 @@ public class RunTests
         int opening = run.Board.Count;
 
         RoundReport round = run.Advance(
-            TheBuild.BuyingNothing(run.Offering).With(TheCommands.PlacedOnFreeCell));
+            TheBuild.BuyingNothing().With(TheCommands.PlacedOnFreeCell));
 
         Assert.Contains(
             ", "
@@ -1119,28 +1256,308 @@ public class RunTests
         Assert.NotEqual(result.Leaked * costs.PriceOf(Purchase.Unit(1)), priced);
     }
 
+    [Fact]
+    public void A_resolved_round_hands_its_match_back_tick_for_tick()
+    {
+        // What a client has to be able to do: advance the run, then draw the
+        // fight the run just had -- and have it be the fight that produced the
+        // number, rather than one built out of the same parts by a second
+        // route that agrees today.
+        //
+        // The field is one opponent drawn from a pool of one, which is what
+        // makes both halves checkable from outside. The pairing is known --
+        // that member's defense against the wave this round sent -- so the
+        // trace can be held against a match assembled here; and the round's
+        // offense score is one match's leaks rather than an average of ten, so
+        // it can be held against what this match let past, gold for gold.
+        //
+        // OBSERVED: build MatchAt's match at Side.Defending -- one enum member
+        // away from the direction the round's offense was resolved at, and the
+        // pairing's other half rather than a stranger. The traces part at
+        // position zero, before a tick has been advanced: tick zero's hash
+        // folds how many towers stand and how many bodies walk, and the
+        // defending direction has the other one's of each.
+        //
+        // The direction is named at the call rather than pinned inside MatchAt,
+        // which is #206: the member was hardcoded to Side.Attacking, and a
+        // screen that watched what it handed back watched the player's own wave
+        // walk into a stranger's defense. Both directions are reachable now, so
+        // this asks for the one it is about, and
+        // Each_direction_of_a_pairing_is_the_other_ones_defense_and_wave is
+        // where the other one is held to the same standard.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opponent = TheRun.Orders(types, towers: 6, orders: 4);
+        Run run = OneOnOne(types, opponent);
+
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+        Match watched = run.MatchAt(0, 0, attacking: true);
+
+        // Handed back unresolved, because a match nobody has advanced is the
+        // only kind that can be watched from the beginning.
+        Assert.Equal(0, watched.Tick);
+
+        var assembled = new Match(run.Map, run.Rules, opponent.Defense, run.Sent[0].Wave, watched.Seed);
+
+        Assert.Equal(TraceOf(assembled), TraceOf(watched));
+
+        // ...and it is the round's own match rather than a fight with the same
+        // pieces in it: what it let past is what the round was scored on. This
+        // is the assertion that pins the seed, because the trace above cannot:
+        // the seed it holds the two matches to is the one the rebuilt match
+        // reported, so it can say the pieces are right and nothing about where
+        // the dice were started.
+        //
+        // OBSERVED: seed MatchAt's match at Side.Measured -- the same pieces
+        // fighting at a stream position nobody's round was resolved at. The
+        // trace assertion above stays green, exactly as described, and this
+        // goes red, 1860 gold against 1850. Which is also why the opponent
+        // above is the six-tower defense rather than the two-tower one: against
+        // two towers the wave leaks whatever the dice say, and this assertion
+        // sails through a seed that is simply wrong.
+        Assert.True(
+            report.Outcome.LeakCostDealt > 0,
+            "This round got nothing past its opponent, so the equality below is zero against zero.");
+        Assert.Equal(report.Outcome.LeakCostDealt, Priced(run, run.Sent[0].Wave, watched));
+    }
+
+    [Fact]
+    public void Each_direction_of_a_pairing_is_the_other_ones_defense_and_wave()
+    {
+        // A pairing is two matches, and the two are each other's mirror: whose
+        // towers stand and whose bodies walk swap, and nothing else about them
+        // does. Both are resolved by the round that fought them -- Play sums
+        // one direction into what the wave dealt and the other into what the
+        // defense took -- so naming a direction chooses between two fights that
+        // already happened.
+        //
+        // This is #206. MatchAt handed back the attacking direction and only
+        // that, so the screen watching it showed the player their own wave
+        // walking into a stranger's defense: their towers were not on it, and a
+        // round that composed no wave showed an empty map. The defending
+        // direction is what the core loop watches and it was never reachable.
+        //
+        // The pool is one member with a defense of six towers and a wave of
+        // four orders, and the round shops for creeps and builds nothing -- so
+        // every piece below is known from outside the run, and the two sides
+        // cannot be confused for each other by having the same thing on them.
+        //
+        // OBSERVED: hand Side.Attacking back whichever direction was asked
+        // for, which is what this looked like before. The first defending
+        // assertion goes red with the opponent's six-tower layout where this
+        // round's own -- empty -- was asked for, and the seed assertion below
+        // goes red too, because one stream cannot be two.
+        UnitTypeTable types = TheMatch.Types();
+        RoundOrders opponent = TheRun.Orders(types, towers: 6, orders: 4);
+        Run run = OneOnOne(types, opponent);
+
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+
+        Match attacking = run.MatchAt(0, 0, attacking: true);
+        Match defending = run.MatchAt(0, 0, attacking: false);
+
+        Assert.Same(opponent.Defense, attacking.Layout);
+        Assert.Same(run.Sent[0].Wave, attacking.Wave);
+
+        Assert.Same(run.Sent[0].Defense, defending.Layout);
+        Assert.Same(opponent.Wave, defending.Wave);
+
+        // Two fights and not one seen twice: the seed folds the direction as
+        // well as the pairing, so the same pieces at the same coordinates are
+        // still two streams. Without it a round would be scored both ways off
+        // one roll of the dice.
+        Assert.NotEqual(attacking.Seed, defending.Seed);
+
+        // Both come back on tick zero, because a match nobody has advanced is
+        // the only kind that can be watched from the beginning -- and asking
+        // for one direction does not resolve the other.
+        Assert.Equal(0, attacking.Tick);
+        Assert.Equal(0, defending.Tick);
+
+        // And health is spent on the defending direction, gold for gold. This
+        // is the number a header carries, so the picture and the figure are the
+        // same match only while the defending one is what is on screen.
+        Assert.True(
+            report.Outcome.LeakCostTaken > 0,
+            "Nothing got past this round's defense, so the equality below is zero against zero.");
+
+        defending.Resolve();
+
+        Assert.Equal(report.Outcome.LeakCostTaken, Priced(run, opponent.Wave, defending));
+    }
+
+    [Fact]
+    public void Every_pairing_of_a_round_is_reachable_and_together_they_are_what_it_dealt()
+    {
+        // One pairing agreeing is not the field agreeing. A round's offense
+        // score is the average over its K matches, so pricing what all ten of
+        // them let past and averaging it the way the run does arrives at the
+        // same number only if each of the ten is the match that pairing was
+        // resolved at. That pins the opponent the seed was derived from and
+        // the draw the defense came out of, neither of which the single
+        // pairing above can see.
+        //
+        // OBSERVED: hand back opponent zero's pairing whatever was asked for,
+        // which is what an off-by-one in the field index looks like. The
+        // single-pairing test above stays green -- opponent zero is the one it
+        // asks for -- and this goes red, 1939 gold averaged against the 1943
+        // the round folded.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        RoundReport report = run.Advance(TheBuild.Shopping(run));
+        long dealt = 0;
+
+        for (int opponent = 0; opponent < run.FieldSize; opponent++)
+        {
+            Match watched = run.MatchAt(0, opponent, attacking: true);
+            watched.Resolve();
+            dealt += Priced(run, run.Sent[0].Wave, watched);
+        }
+
+        Assert.True(
+            report.Outcome.LeakCostDealt > 0,
+            "This round got nothing past any of its ten, so the equality below is zero against zero.");
+        Assert.Equal(report.Outcome.LeakCostDealt, (int)(dealt / run.FieldSize));
+    }
+
+    [Fact]
+    public void Watching_a_round_moves_nothing()
+    {
+        // Advance is the only member that moves anything, and asking for a
+        // match to draw is asking rather than playing. Every match of the
+        // round is resolved here -- to completion, as a client that watched
+        // the whole round would -- against a run that is then read for every
+        // field a round does move.
+        //
+        // OBSERVED: have MatchAt commit the round it rebuilt, the way Play
+        // commits the round it played. It never reaches an assertion at all:
+        // the eleventh call throws "A run of 10 waves has 11 rounds on it",
+        // which is a run that watching its own first round played out.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        run.Advance(TheBuild.Shopping(run));
+
+        int round = run.Round;
+        int gold = run.Purse.Gold;
+        int health = run.Health;
+        int towers = run.Board.Count;
+        RunOutcome folded = run.Outcome;
+
+        for (int opponent = 0; opponent < run.FieldSize; opponent++)
+        {
+            run.MatchAt(0, opponent, attacking: true).Resolve();
+            run.MatchAt(0, opponent, attacking: false).Resolve();
+        }
+
+        Assert.Equal(round, run.Round);
+        Assert.Equal(gold, run.Purse.Gold);
+        Assert.Equal(health, run.Health);
+        Assert.Equal(towers, run.Board.Count);
+        Assert.Same(folded, run.Outcome);
+    }
+
+    /// <summary>Every way of naming a pairing this run never fought.</summary>
+    public static TheoryData<int, int> PairingsNobodyPlayed => new()
+    {
+        { -1, 0 },
+        { 1, 0 },
+        { 0, -1 },
+        { 0, Run.DefaultFieldSize },
+    };
+
+    [Theory]
+    [MemberData(nameof(PairingsNobodyPlayed))]
+    public void A_pairing_no_round_of_this_run_fought_is_refused(int round, int opponent)
+    {
+        // A match is what a round came to, so a round that has not been played
+        // has none to hand back and a pairing outside the field was never in
+        // one. Both would otherwise be answered: the round index would walk off
+        // the end of Sent, and the opponent index would derive a seed nobody
+        // ever fought at and hand back a plausible fight that never happened.
+        //
+        // OBSERVED: drop the opponent guard. Both out-of-field rows go red with
+        // an IndexOutOfRangeException off the end of the round's draw -- which
+        // is the point of the guard rather than an argument against it: the
+        // array bound is an accident of how the field is stored, and it says
+        // nothing about K to whoever asked.
+        Run run = TheRun.Wealthy(TheRun.AttackingPurse);
+        run.Advance(TheBuild.Shopping(run));
+
+        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent, attacking: true));
+        Assert.Throws<SimulationException>(() => run.MatchAt(round, opponent, attacking: false));
+    }
+
+    /// <summary>
+    /// A one-round run against a single opponent, out of a purse deep enough
+    /// that the wave it buys reaches that opponent rather than dying on the way
+    /// in -- see <see cref="TheRun.AttackingPurse"/>.
+    /// </summary>
+    /// <remarks>
+    /// A pool of one and a field of one, so the pairing a round fights is known
+    /// from outside the run: whatever the draw says, the only member it can
+    /// draw is this one, and the round's score is that single match rather than
+    /// an average.
+    /// </remarks>
+    private static Run OneOnOne(UnitTypeTable types, RoundOrders opponent)
+    {
+        Ruleset rules = Ruleset.Parse(PlantedText.Replace(
+            TheRuleset.CommittedText(),
+            "purse         100",
+            "purse       " + TheRun.AttackingPurse.ToString(CultureInfo.InvariantCulture)));
+
+        return new Run(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheLadder.Committed(types),
+            FieldPool.Of(new[] { opponent }),
+            TheRun.Seed,
+            waves: 1,
+            fieldSize: 1);
+    }
+
+    /// <summary>
+    /// A match's rolling state hash at every tick it has, tick zero included.
+    /// </summary>
+    /// <remarks>
+    /// Per tick rather than at the end, for the reason
+    /// <see cref="GoldenTraceTests"/> collects one: an end-of-match comparison
+    /// says two matches differed, and this says which tick they parted on.
+    /// </remarks>
+    private static ulong[] TraceOf(Match match)
+    {
+        var hashes = new List<ulong> { match.StateHash.Value };
+
+        while (!match.IsFinished)
+        {
+            match.Advance(1);
+            hashes.Add(match.StateHash.Value);
+        }
+
+        return hashes.ToArray();
+    }
+
+    /// <summary>What one match let past, priced the way a run prices a leak.</summary>
+    private static int Priced(Run run, WaveScript wave, Match match)
+    {
+        int cost = 0;
+
+        for (int index = 0; index < match.LeakedByOrder.Count; index++)
+        {
+            cost += run.Costs.PriceOf(Purchase.Unit(wave.Orders[index].TypeId), match.LeakedByOrder[index]);
+        }
+
+        return cost;
+    }
+
     /// <summary>A one-round run on the committed content against a population written out here.</summary>
     private static Run Against(UnitTypeTable types, FieldPool pool) =>
         new Run(
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             pool,
             TheRun.Seed,
             waves: 1,
             fieldSize: 4);
-
-    /// <summary>The same run, after every offering of it has been read.</summary>
-    private static Run Drawn(Run run)
-    {
-        for (int wave = 1; wave <= run.Waves; wave++)
-        {
-            Assert.Equal(wave, run.OfferingAt(wave).Wave);
-        }
-
-        return run;
-    }
 
     /// <summary>A run driven to its end, every round shopping behind its own board.</summary>
     private static Run Played(Run run) => Played(run, TheBuild.Shopping);

@@ -8,10 +8,10 @@
 # in MatchViewTests and the sit-down landmark table. What this is for is
 # letting a human see the match at a named tick.
 #
-# It draws through the real MatchRoot, the real floor, the real camera rig at
-# its real snaps and the real MatchView stepping the real simulation, because a
-# capture path that built its own approximation of the scene would be a picture
-# of something this project does not ship.
+# It draws through the real MatchRoot, the real floor, the real camera rig
+# pointed where -Yaw and -Distance say and the real MatchView stepping the real
+# simulation, because a capture path that built its own approximation of the
+# scene would be a picture of something this project does not ship.
 #
 # -batchmode -executeMethod, so it needs no editor session, no bridge and
 # nobody at a keyboard -- and therefore requires the editor to be CLOSED,
@@ -21,8 +21,9 @@ param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
     [string]$Ticks,
-    [int]$Snap = 0,
-    [int]$Size = 720,
+    [float]$Yaw = 0,
+    [float]$Distance = 0,
+    [int]$Width = 1280,
     [string]$LogFile = "$PSScriptRoot\..\capture-match-frames.log"
 )
 
@@ -39,8 +40,9 @@ $unityArgs = @(
     '-projectPath', "`"$project`""
     '-executeMethod', 'View.Editor.MatchFrameCapture.Run'
     '-matchFrameOut', "`"$OutDir`""
-    '-matchFrameSnap', $Snap
-    '-matchFrameSize', $Size
+    '-matchFrameYaw', $Yaw.ToString([Globalization.CultureInfo]::InvariantCulture)
+    '-matchFrameDistance', $Distance.ToString([Globalization.CultureInfo]::InvariantCulture)
+    '-matchFrameWidth', $Width
     '-logFile', "`"$LogFile`""
 )
 

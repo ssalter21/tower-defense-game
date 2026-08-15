@@ -6,6 +6,8 @@ Interpolation takes the two snapshots and an alpha, and nothing else. It is not 
 
 ## Consequences
 
-Effects age in simulation ticks, so nothing in the view runs on a clock of its own. Playback speed multiplies the one clock and nothing else.
+Effects age in simulation ticks, so nothing that draws the match runs on a clock of its own. Playback speed multiplies the one clock and nothing else.
 
-There is no clock in this client that the simulation does not drive, which is what makes a frame capture reproducible and a test able to assert on an exact tick.
+The camera is the one thing here measured in seconds — the reset takes a quarter of one, and the flight keys move the pivot at a rate per second — and it is outside this rule rather than an exception to it: it draws nothing, and it reads no clock. The ease is handed its elapsed seconds and flying is handed a step, so only `Update` turns a frame into either, and the frame capture and the tests place the camera by hand and exactly.
+
+Nothing the simulation drives runs on a clock the simulation does not, which is what makes a frame capture reproducible and a test able to assert on an exact tick.

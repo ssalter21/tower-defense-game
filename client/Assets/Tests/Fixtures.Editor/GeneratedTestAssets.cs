@@ -22,7 +22,7 @@ namespace Tests.Fixtures
     /// <list type="bullet">
     /// <item><description>
     /// <b>The art</b>, which was loaded through <see cref="AssetDatabase"/> —
-    /// which does not exist in a player. Resolved here once and written as nine
+    /// which does not exist in a player. Resolved here once and written as
     /// serialized references, which a build carries.
     /// </description></item>
     /// <item><description>
@@ -88,7 +88,7 @@ namespace Tests.Fixtures
 
             // Read back rather than trust the write. A ScriptableObject whose
             // references failed to serialize is a file that exists, loads, and
-            // hands a player nine nulls -- which reaches the drawing code as
+            // hands a player nothing but nulls -- which reaches the drawing code as
             // "nothing appeared" and says nothing about why.
             var written = AssetDatabase.LoadAssetAtPath<MatchArtAsset>(ManifestPath);
 

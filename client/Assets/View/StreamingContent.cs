@@ -49,18 +49,20 @@ namespace View
         /// <summary>Which unit follows which: the upgrade ladder.</summary>
         /// <remarks>
         /// <para>
-        /// <b>Nothing on the view side reads an edge, and this still has to
-        /// ship.</b> The ladder is folded into the unit table's content hash, and
-        /// that hash is what <see cref="Sim.ReplayBundle.Replay"/> compares the
-        /// record's stamped one against. A player without this file rebuilds the
-        /// wrong hash and the shipped record is refused at the gate — which
-        /// presents as a floor that draws and a match that never starts.
+        /// <b>It ships twice over.</b> The client reads the edges — a build phase
+        /// is refused against them, so a <see cref="Sim.Run"/> is handed a ladder
+        /// and the client has to have one; see <see cref="ReadUpgrades"/>. And
+        /// the ladder is folded into the unit table's content hash, which is what
+        /// <see cref="Sim.ReplayBundle.Replay"/> compares the record's stamped one
+        /// against. A player without this file rebuilds the wrong hash and the
+        /// shipped record is refused at the gate — which presents as a floor that
+        /// draws and a match that never starts.
         /// </para>
         /// <para>
-        /// So it is neither of the two failures the sync list is usually about.
-        /// It is not content that ships and is never read, and it is not content
-        /// that is read and does not ship. It is an honest third case: content
-        /// that ships because a hash covers it.
+        /// So a checkout missing it fails twice over, and only one of the two
+        /// looks like a missing file: the client cannot compose a round at all,
+        /// and the shipped record is refused at the gate — which presents as a
+        /// floor that draws and a match that never starts.
         /// </para>
         /// </remarks>
         public const string UpgradesFileName = "upgrades.txt";
@@ -70,6 +72,24 @@ namespace View
 
         /// <summary>The orders the match is fought against.</summary>
         public const string WaveFileName = "wave.txt";
+
+        /// <summary>
+        /// The round the field a run is scored against is drawn from.
+        /// </summary>
+        /// <remarks>
+        /// <b>This and not <see cref="WaveFileName"/>, and the difference is the
+        /// whole point.</b> A run resolves each round against K opponents drawn
+        /// from a population of other players' rounds, and until runs are stored
+        /// that population is this one pair — this wave standing behind the
+        /// committed defense. <c>wave.txt</c> is the skeleton's authored match:
+        /// forty creeps and three hundred and eighty gold of them, released over
+        /// fourteen hundred ticks, which no purse in this economy can compose.
+        /// A run scored against one is measured against an opponent no player
+        /// could be, and it dies of health in round three. The shell's run verbs
+        /// refuse a wave released over time by name; see
+        /// <c>simcli/RunContent.cs</c> and this file's own header.
+        /// </remarks>
+        public const string FieldFileName = "field.txt";
 
         /// <summary>
         /// Every number a shot resolves through: the damage matrix, the armour
@@ -121,15 +141,19 @@ namespace View
         /// playfield in a build that worked perfectly in the editor.
         /// </para>
         /// <para>
-        /// The six text files ship alongside the record even though the record
+        /// The seven text files ship alongside the record even though the record
         /// inlines three of them. <see cref="UnitsFileName"/>,
         /// <see cref="UpgradesFileName"/> and <see cref="RulesetFileName"/> have
         /// to: the type table and the ladder folded into it are what the replay
         /// gate checks the record's content hash against, and the ruleset is what
         /// every landing is resolved through. None of the three is in the bundle.
-        /// The other three are the authored originals the bundle was recorded
-        /// from, and they are what the fixtures read; the record's own gate is
-        /// what stops the match on screen being drawn from anything else.
+        /// <see cref="MapFileName"/>, <see cref="DefenseFileName"/> and
+        /// <see cref="WaveFileName"/> are the authored originals the bundle was
+        /// recorded from, and they are what the fixtures read; the record's own
+        /// gate is what stops the match on screen being drawn from anything
+        /// else. <see cref="FieldFileName"/> is in no record and never was: it
+        /// is what a run's rounds are scored against, and it ships because a run
+        /// is what the client plays.
         /// </para>
         /// </remarks>
         public static readonly string[] MatchFileNames =
@@ -140,6 +164,7 @@ namespace View
             RulesetFileName,
             DefenseFileName,
             WaveFileName,
+            FieldFileName,
             ReplayFileName,
         };
 
@@ -189,9 +214,28 @@ namespace View
         {
             UnitTypeTable types = UnitTypeTable.ParseUtf8(UnitsFileName, Read(UnitsFileName));
 
-            return types.WithLadder(
-                UpgradeLadder.ParseUtf8(UpgradesFileName, Read(UpgradesFileName), types));
+            return types.WithLadder(ReadUpgrades(types));
         }
+
+        /// <summary>
+        /// The upgrade ladder itself, parsed against
+        /// <paramref name="types"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A run is handed one because <see cref="Sim.BuildPhase.Resolve"/> asks
+        /// it which rows may be placed and which may be climbed into, so the
+        /// client needs the object and not only the hash it contributes.
+        /// </para>
+        /// <para>
+        /// It is one reading of one file either way: <see cref="ReadUnitTypes"/>
+        /// folds the result of this call into the table's content hash, so the
+        /// ladder a run enforces and the ladder the replay gate checks against
+        /// cannot be two different opinions about the same bytes.
+        /// </para>
+        /// </remarks>
+        public static UpgradeLadder ReadUpgrades(UnitTypeTable types) =>
+            UpgradeLadder.ParseUtf8(UpgradesFileName, Read(UpgradesFileName), types);
 
         /// <summary>The rules every shot in a match is resolved through.</summary>
         public static Ruleset ReadRuleset() =>
@@ -204,6 +248,13 @@ namespace View
         /// <summary>The wave, parsed against <paramref name="types"/>.</summary>
         public static WaveScript ReadWave(UnitTypeTable types) =>
             WaveScript.ParseUtf8(WaveFileName, Read(WaveFileName), types);
+
+        /// <summary>
+        /// The canned field's round, parsed against <paramref name="types"/>.
+        /// What a run is scored against — see <see cref="FieldFileName"/>.
+        /// </summary>
+        public static WaveScript ReadField(UnitTypeTable types) =>
+            WaveScript.ParseUtf8(FieldFileName, Read(FieldFileName), types);
 
         /// <summary>
         /// The recorded match, read but not yet gated: the bytes the command

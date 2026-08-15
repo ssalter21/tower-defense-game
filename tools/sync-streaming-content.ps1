@@ -57,6 +57,17 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # perfectly in the editor. See the note on upgrades.txt below for a third case
 # this list has since grown.
 #
+# field.txt joined the list when the client stopped watching a recorded match and
+# started playing a RUN. A run resolves every round against a field of K
+# opponents drawn from a population of stored rounds, and until such a population
+# exists the stand-in is this file: one build phase's output, standing behind
+# defense.txt. wave.txt is NOT that -- it is the skeleton's whole authored match,
+# three hundred and eighty gold released over fourteen hundred ticks -- and a
+# client that scored its rounds against one had a run that died of health in
+# round three while every test around it passed. The shell's run verbs refuse a
+# wave released over time by name; the client has no such refusal, so shipping
+# the right file is what stands in for one.
+#
 # match.replay joined the list when the player stopped deriving its match from
 # the four text files and started playing the RECORD. The seed is in there and
 # nowhere else on the view side, which is what makes the tick numbers in
@@ -81,6 +92,7 @@ $files = @(
     'ruleset.txt',
     'defense.txt',
     'wave.txt',
+    'field.txt',
     'match.replay'
 )
 

@@ -145,20 +145,6 @@ public static class Program
         "         looking one up. It is not what pins the geometry -- the map hash",
         "         is -- so leaving it out records a defense that does not say.",
         string.Empty,
-        "  play       --seed <number> --out <file>",
-        "             " + RunContentUsage,
-        "             " + RunShapeUsage,
-        "             [--transcript <file>]",
-        string.Empty,
-        "         Plays a run one round at a time, taking each build phase from the",
-        "         terminal, and writes the decisions to --out as a command script.",
-        "         The script it writes is the one record-run compiles, so a run",
-        "         somebody played can be replayed, committed and diffed.",
-        string.Empty,
-        "         --transcript reads the decisions from a file instead of the",
-        "         terminal, which is what a test does and what re-playing a session",
-        "         needs. The same words either way.",
-        string.Empty,
         "  play-run   --commands <file> [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
@@ -175,14 +161,6 @@ public static class Program
         "         first read the bytes back and played them to the end. Nothing is",
         "         written if it will not replay.",
         string.Empty,
-        "  offerings  --seed <number>",
-        "             " + RunContentUsage,
-        "             " + RunShapeUsage,
-        string.Empty,
-        "         Prints every wave's public menu for that seed. A take names a",
-        "         kind and an id off one of these, so this is what a command",
-        "         script is written from.",
-        string.Empty,
         "  ladder     --units <file> --upgrades <file>",
         string.Empty,
         "         Prints which unit follows which, with the price of each tier,",
@@ -196,7 +174,6 @@ public static class Program
         "  sweep      --seed <number> [--runs <number>] [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
-        "             [--ordinary-options <number>] [--game-changers <number>]",
         "             [--free-snapshots <number>] [--snapshot-price <number>]",
         "             [--most-creeps <number>]",
         string.Empty,
@@ -229,7 +206,7 @@ public static class Program
         "  The two files that hold orders, and why they are two",
         string.Empty,
         "         --field is the canned opponent, and every verb that plays a run",
-        "         takes it: play-run, record-run, offerings and sweep. It is one",
+        "         takes it: play-run, record-run and sweep. It is one",
         "         round's worth of orders standing behind --defense, drawn with",
         "         replacement to make the field of K a round is resolved against.",
         "         A build phase composes what is sent rather than when, so every",
@@ -288,7 +265,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of nine things.");
+            throw new UsageException("No verb. This program does one of seven things.");
         }
 
         switch (args[0])
@@ -314,17 +291,11 @@ public static class Program
                     1,
                     new[] { "map", "units", "upgrades", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
-            case "play":
-                return PlayAtThePrompt(RunVerb("play", args, "seed", "out", "transcript"));
-
             case "play-run":
                 return PlayRun(RunVerb("play-run", args, "commands", "out"));
 
             case "record-run":
                 return RecordRun(RunVerb("record-run", args, "script", "seed", "out"));
-
-            case "offerings":
-                return ShowOfferings(RunVerb("offerings", args, "seed"));
 
             // Two files and not a RunVerb: a ladder is read against the roster
             // and against nothing else, so asking for a map, a schedule, a
@@ -340,8 +311,6 @@ public static class Program
                     "seed",
                     "runs",
                     "out",
-                    "ordinary-options",
-                    "game-changers",
                     "free-snapshots",
                     "snapshot-price",
                     "most-creeps"));
@@ -427,53 +396,6 @@ public static class Program
     }
 
     /// <summary>
-    /// Plays a run one round at a time at a prompt, and writes the decisions
-    /// down as a command script.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <b>A verb of its own rather than a mode of <see cref="PlayRun"/>.</b>
-    /// What the two share they share by calling the same readers, so an argument
-    /// spelled on both cannot come to mean two things. Why it is a second verb
-    /// rather than a flag on that one is ADR-0050.
-    /// </para>
-    /// <para>
-    /// <b>Both arguments are read before the first frame is drawn.</b> An
-    /// absent <c>--out</c> and a <c>--transcript</c> naming a file that is not
-    /// there each refuse in front of the person, rather than after the run they
-    /// have just spent five minutes playing. What is not checked that early is
-    /// whether the <c>--out</c> path can be written to; that is one stat call
-    /// against a whole second copy of where a file is opened, and the write is
-    /// the proving step's to do.
-    /// </para>
-    /// <para>
-    /// <b>The exit code is the proving step's.</b> The session's script is
-    /// played into a fresh run on the same seed and shape and held against what
-    /// the player was shown; a disagreement writes nothing and exits non-zero.
-    /// See <see cref="ProvedSession"/>.
-    /// </para>
-    /// </remarks>
-    private static int PlayAtThePrompt(Arguments arguments)
-    {
-        RunContent content = ContentOf(arguments);
-        RunShape shape = ShapeOf(arguments);
-        ulong seed = arguments.RequiredUnsigned("seed");
-        string script = arguments.Required("out");
-        string? transcript = arguments.Optional("transcript");
-
-        TextReader reader = transcript is null
-            ? Console.In
-            : new StringReader(File.ReadAllText(transcript));
-
-        Sim.Run run = content.Fresh(seed, shape);
-        Played session = RunPrompt.Play(run, content.Ladder, reader, Console.Out);
-
-        return ProvedSession.Of(session, run, () => content.Fresh(seed, shape)).Written(script, Console.Out)
-            ? 0
-            : 1;
-    }
-
-    /// <summary>
     /// Plays a committed command file and writes down what the run came to.
     /// </summary>
     private static int PlayRun(Arguments arguments)
@@ -525,19 +447,6 @@ public static class Program
     }
 
     /// <summary>
-    /// Prints every wave's public menu, which is what a command script's takes
-    /// are written off.
-    /// </summary>
-    private static int ShowOfferings(Arguments arguments)
-    {
-        Sim.Run run = ContentOf(arguments).Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
-
-        Console.Out.Write(Offerings.ToText(run));
-
-        return 0;
-    }
-
-    /// <summary>
     /// Prints the upgrade ladder, and exits zero whatever it found.
     /// </summary>
     /// <remarks>
@@ -572,8 +481,6 @@ public static class Program
             ShapeOf(arguments),
             arguments.RequiredUnsigned("seed"),
             arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
-            Dial(arguments, "ordinary-options"),
-            Dial(arguments, "game-changers"),
             Dial(arguments, "free-snapshots"),
             Dial(arguments, "snapshot-price"),
             arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps));
@@ -633,7 +540,6 @@ public static class Program
             TextOf(arguments, RunContentFiles.Units),
             TextOf(arguments, RunContentFiles.Upgrades),
             TextOf(arguments, RunContentFiles.Rules),
-            TextOf(arguments, RunContentFiles.Schedule),
             TextOf(arguments, RunContentFiles.Defense),
             TextOf(arguments, RunContentFiles.Field));
 

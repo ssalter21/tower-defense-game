@@ -41,12 +41,11 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The canned field is the economy's stand-in and not a tool pointed at
-    /// it.</b> The percentile bands are measured against a distribution of other
-    /// players' rounds, and no such pool exists until runs are stored, so the
-    /// pool a sweep is handed <i>is</i> what the bands are computed against --
-    /// what a run earns for its offense is decided by the harness's own canned
-    /// opponent. <see cref="SweepRow.BonusGold"/> is that money, on the row,
-    /// beside the base it is a share of.
+    /// it.</b> A wave is paid a share of the leak cost it dealt, and what a wave
+    /// gets past is decided by the wall in front of it -- so the pool a sweep is
+    /// handed is what a run's offense earns its money against.
+    /// <see cref="SweepRow.BonusGold"/> is that money, on the row, beside the
+    /// base it is a share of.
     /// </para>
     /// <para>
     /// <b>What <see cref="SweepRow.DealtPerHundredGold"/> measures, and what it
@@ -128,67 +127,24 @@ namespace Sim
         /// and then one row per ingredient count that occurred.
         /// </summary>
         /// <remarks>
-        /// The runs are played before any of them is binned, because how wide
-        /// the bins have to be is a fact about what the runs did rather than
-        /// about the plan they were played under. A fold that sized itself from
-        /// the wave count would be carrying a claim about the player -- and the
-        /// player is the plan's argument, so it is a claim this cannot check.
+        /// <b>One row per creep, and there used to be more.</b> A creep's runs
+        /// were also binned by how many distinct creeps the run had ended able
+        /// to field -- its "ingredients" -- which was a real spread only because
+        /// the take gate made what a run could send vary from run to run. With
+        /// the gate gone every run can send the whole roster from wave one, so
+        /// the bin is the same number in every row and a column that never
+        /// varies separates nothing. It came out with the gate that produced it.
         /// </remarks>
         private static void Score(SweepPlan plan, UnitType creep, List<SweepRow> rows)
         {
-            var population = new List<Played>();
-            int widest = 0;
+            var whole = new Cell();
 
             for (int index = 0; index < plan.RunsPerCreep; index++)
             {
-                Played played = Play(plan, creep, plan.SeedOf(index));
-
-                population.Add(played);
-
-                if (played.Ingredients > widest)
-                {
-                    widest = played.Ingredients;
-                }
+                whole.Add(Play(plan, creep, plan.SeedOf(index)));
             }
 
-            // Bins are indexed by ingredient count and there are as many as the
-            // runs produced. Walked in ascending order below rather than kept in
-            // a keyed collection, which is a banned type here.
-            var whole = new Cell();
-            var bins = new Cell[widest + 1];
-
-            for (int index = 0; index < population.Count; index++)
-            {
-                Played played = population[index];
-
-                whole.Add(played);
-                bins[played.Ingredients] ??= new Cell();
-                bins[played.Ingredients]!.Add(played);
-            }
-
-            rows.Add(whole.Row(creep, SweepRow.AllIngredients));
-
-            for (int ingredients = 0; ingredients < bins.Length; ingredients++)
-            {
-                if (bins[ingredients] is null)
-                {
-                    continue;
-                }
-
-                if (ingredients == SweepRow.AllIngredients)
-                {
-                    throw new SimulationException(
-                        "A run of "
-                        + creep.Label
-                        + " ended holding no ingredients at all, and that is the count a row over a whole "
-                        + "population carries -- so a bin of them would be written down as that row rather "
-                        + "than beside it. Nothing decides its way here: a policy hands back a build phase, "
-                        + "a build phase takes exactly one option, and a run that resolved a round holds "
-                        + "what it took.");
-                }
-
-                rows.Add(bins[ingredients]!.Row(creep, ingredients));
-            }
+            rows.Add(whole.Row(creep));
         }
 
         /// <summary>Plays one run to its end and reads off what the row needs.</summary>
@@ -198,7 +154,7 @@ namespace Sim
                 plan.Map,
                 plan.Rules,
                 plan.Types,
-                plan.Schedule,
+                plan.Ladder,
                 plan.Field,
                 seed,
                 plan.Waves,
@@ -225,50 +181,29 @@ namespace Sim
             }
 
             // The bonus is read off the finished vector rather than added up as
-            // the rounds went by: what each round dealt is on the vector, the
-            // field is fixed for the run, and the bands are a lookup -- so what
-            // a run earned for its offense is a fold and never a second play.
+            // the rounds went by: what each round dealt is on the vector and the
+            // rate is a multiplication, so what a run earned for its offense is
+            // a fold and never a second play.
             //
             // The purse is read where the loop stopped, which is the end of the
             // run by either of the two ways one ends.
             return new Played(
                 run.Outcome,
-                Ingredients(run.Unlocks),
                 spent,
                 defense,
                 run.Purse.Gold,
                 plan.Waves,
                 run.Round,
                 (long)plan.Rules.IncomeBasePerWave * run.Round,
-                Purse.BonusOver(plan.Rules, run.Field, run.Outcome));
+                Purse.BonusOver(plan.Rules, run.Outcome));
         }
 
-        /// <summary>
-        /// How many distinct creeps a run ended able to field. Takes rather than
-        /// bodies: two game changers over one body are one ingredient, because
-        /// what a wave may carry is a set of creeps.
-        /// </summary>
-        private static int Ingredients(Unlocks unlocks)
-        {
-            var seen = new List<int>();
-
-            for (int index = 0; index < unlocks.Taken.Count; index++)
-            {
-                if (!seen.Contains(unlocks.Taken[index].TypeId))
-                {
-                    seen.Add(unlocks.Taken[index].TypeId);
-                }
-            }
-
-            return seen.Count;
-        }
 
         /// <summary>One played run, as the numbers a row is folded out of.</summary>
         private readonly struct Played
         {
             internal Played(
                 RunOutcome outcome,
-                int ingredients,
                 long spent,
                 long defense,
                 long unspent,
@@ -277,7 +212,6 @@ namespace Sim
                 long incomeBase,
                 long bonus)
             {
-                Ingredients = ingredients;
                 Spent = spent;
                 Defense = defense;
                 Unspent = unspent;
@@ -292,8 +226,6 @@ namespace Sim
                 // here re-simulates a tick to find out.
                 Won = outcome.WavesSurvived == waves && outcome.LeakCostDealt > outcome.LeakCostTaken;
             }
-
-            internal int Ingredients { get; }
 
             internal long Spent { get; }
 
@@ -356,7 +288,7 @@ namespace Sim
             /// operands are on the row beside them, so nothing downstream has to
             /// take this type's rounding on trust.
             /// </summary>
-            internal SweepRow Row(UnitType creep, int ingredients)
+            internal SweepRow Row(UnitType creep)
             {
                 if (_runs == 0)
                 {
@@ -371,7 +303,6 @@ namespace Sim
                 return new SweepRow(
                     creep.Id,
                     creep.Label,
-                    ingredients,
                     _runs,
                     _rounds,
                     _wins,

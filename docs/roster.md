@@ -50,11 +50,19 @@ signing **damage, cooldown and how many bodies it hits**.
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
-**Capstones are expected to break the rule, downward.** The intended reward curve is a shallow U: efficient at
-the bottom, dear in the middle, efficient again at the top. So a tier-3 tower should come in *under* what its
-damage implies. **This is intent, not a clause** — no capstone exists yet, and a stated exemption with no
-instance is a rule nobody can check, so `units.txt` states the rule plainly and says nothing about exceptions.
-The first capstone is where it gets written down.
+**The rule does not reach a capstone, because gold does not buy one.**
+[A gate hands the player one token](vision.md#a-capstone-is-granted-never-earned) at waves 3, 6 and 9, and the
+token is the whole price: three capstones a run, and the decision is which tower line to spend one on rather
+than what it costs. The cost column prices what gold buys, and the top of a line is not in it. That retires
+the shallow-U exemption this section used to reserve — an exemption to a gold rule, for a thing gold does not
+buy, is a clause about nothing.
+
+**What that leaves this file owing is the tiers themselves**: a capstone per tower line, none of them a strict
+upgrade on another, each strong enough that spending one of three tokens on it is a real decision — and a
+statement of how a capstone's numbers get chosen, since the damage rule no longer chooses them. **No capstone
+exists yet**, so this is intent rather than a clause: `units.txt` states the pricing rule plainly and says
+nothing about exceptions, because a stated exemption with no instance is a rule nobody can check. The first
+capstone is where it gets written down.
 
 ## The clock
 
@@ -173,7 +181,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 14 · Ranger · tier 2 · status live
 
 - **Does** — +1 hex of range.
-- **Looks** —
+- **Looks** — the Archer's model at **1.5 scale**. The rows are identical in everything but range, so size is
+  what separates the rungs on sight.
 - **Numbers** — range 4200, and every other number the Archer's: cooldown 18, damage 90–150, windup 9,
   backswing 6, hitscan, pierce, **cost 40**.
 - **Needs** — nothing. It is the only tier on this page that is purely a number.
@@ -388,15 +397,56 @@ Warrior takes the warrior, the Scout the rogue and the Necromancer the mage. The
 sharing is a **kit variation and not a shortage** — the Skeleton is that model with shield and sword, and the
 pack ships the weapons for it.
 
-> **This page said "the four skeleton models are exactly spent" until 13 August 2026, and it was an
-> undercount.** The [character roster note](research/kaykit-character-roster.md) lists six: the two not named
-> above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the publisher sells as a
-> boss. So the two shapes most obviously wanted next already have sources in a pack that is already chosen,
-> and the Necromancer is currently wearing the mage's model while its own goes unused.
+The two not named above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the
+publisher sells as a boss; the [collection inventory](research/kaykit-collection-inventory.md) counts all six.
+The Necromancer keeps **`Skeleton_Mage`**, and the dedicated Necromancer model is left unused, which is a
+choice and not an oversight.
 
-**No assignment moves on that correction**, and nothing here is settled by it: neither pack is on this machine
-— `client/Assets/Art/Characters/` holds two FBX files — so every line above is a plan rather than something
-anybody has looked at. They are assigned for real once the packs are downloaded, and **not by an agent**.
+### The assignments are signed
+
+The complete collection — 22 packs, CC0, 61 rigged characters, 159 clips — is on disk and catalogued from the
+archive itself in [the collection inventory](research/kaykit-collection-inventory.md). The assignments above
+are **adopted as written** rather than left as a plan, and they were adopted by a person.
+
+**The collection is extracted, and the assignments are on screen.** It sits at
+`~/repos/kaykit-collection/`, beside the checkout rather than inside it, and the seven character models the
+nine units need are imported into `client/Assets/Art/Characters/` — see
+[§1](research/kaykit-collection-inventory.md#1-where-it-is-and-what-it-costs-to-keep) and
+[§10](research/kaykit-collection-inventory.md#10-already-imported). Nothing in the project reads that folder;
+imports are copied out of it by hand.
+
+> ⚠️ **The one thing on the board that is not signed is the bow.** The models are per unit type; the *weapon*
+> is still per delivery, so `bow_withString` goes into the hand of whichever row is a `projectile` — and the
+> Mage is the only one. **So the Mage draws a bow rather than holding a book**, and the Archer and the Ranger,
+> being hitscan, hold nothing and stand in their bind pose.
+>
+> **This was not chosen; it is what the delivery rule already did**, showing through now that the models are
+> right. Fixing it is three decisions nobody has made and none of them is on this page: which prop the Mage
+> holds, which prop the Soldier and the two archers hold, and which clips a hitscan tower is posed by — the
+> ranged bank has bow and magic sets, the melee bank a `Melee_1H_*` set, and picking between them is an art
+> decision. Recorded here rather than guessed at.
+
+**Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it is drawn:
+
+| What | Scale | Why |
+|---|---|---|
+| Towers | **1.0** | the baseline everything else is read against |
+| Every creep | **0.5** | a creep is unmistakably smaller than the thing shooting it, at any camera angle |
+| Ranger (14) | **1.5** | the Archer's upgrade shares its model, so nothing but size separates the rungs |
+
+**Scale lives in `MatchArt` and never in `content/units.txt`.** Visual size is a view fact under
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and a column in the content tables would make every
+art tweak cost a format version and a re-record. These numbers are expected to move once somebody has looked
+at them, which is the whole reason they are stored somewhere free to change.
+
+**Measured, rather than assumed.** With those multipliers the tallest body on the board is 1.40 m and the
+shortest tower 2.45 m, so a creep is a little over half the height of the thing shooting it. An edit-mode
+test measures both off the geometry and fails if the gap closes to within a fifth, because comparing the two
+multipliers would prove nothing — a half applied to a taller model is not smaller than a one applied to a
+shorter one, and the creeps and the towers come from two different packs.
+
+**There is no plinth, and no rule about which units are people and which are buildings.** That distinction was
+considered and dropped: it is not a thing this page needs to have an opinion about.
 
 ## What this roster needs that the schema does not have
 

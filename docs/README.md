@@ -19,11 +19,10 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 50 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 51 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
-| [`archive/`](archive/README.md) | The five deep dives the vision was built on, and the row-by-row account of what it overturned in them |
+| [`archive/`](archive/README.md) | The five deep dives the vision was built on, the row-by-row account of what it overturned in them, and the specifications whose implementation is gone |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
-| [Playing a run from a shell](playing-a-run-from-a-shell.md) | The `play` verb as it was specified and built. Indexed because tests pin §2, §3 and §5 |
 
 ## Research notes
 
@@ -70,6 +69,7 @@ at its top rather than being rewritten.
 | [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? |
 | [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL, or sources inside Unity? Carries [amendments](research/unity-sim-library-integration.md#amendments) |
 | [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
+| [A player build measures no text without a PanelSettings asset](research/a-player-build-measures-no-text-without-a-panelsettings-asset.md) | A build drew none of its HUD while the editor drew all of it. What is different about a player? |
 | [The software factory, assessed against this repository](research/the-software-factory.html) *(HTML)* | What is the software-factory approach, which of it applies here, and what should change as a result? |
 
 > **One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence
@@ -79,5 +79,5 @@ at its top rather than being rewritten.
 ## The archive
 
 The five deep dives written before the vision live in [`archive/`](archive/README.md), which is also where the
-row-by-row account of what the vision overturned in them lives. **They are an input to the vision, not the
-current state of anything.**
+row-by-row account of what the vision overturned in them lives, and where a specification goes once the thing
+it specified is deleted. **They are an input to the vision, not the current state of anything.**

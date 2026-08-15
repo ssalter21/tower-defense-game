@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -7,7 +8,7 @@ using View;
 namespace Tests.Fixtures
 {
     /// <summary>
-    /// The editor adapter for the art seam: the nine assets the fixtures draw a
+    /// The editor adapter for the art seam: the assets the fixtures draw a
     /// match with, by path, out of the <see cref="AssetDatabase"/>.
     /// </summary>
     /// <remarks>
@@ -36,37 +37,159 @@ namespace Tests.Fixtures
     /// </remarks>
     public static class ChosenArt
     {
-        public const string CreepModelPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
-        public const string ProjectileTowerModelPath = "Assets/Art/Characters/Ranger.fbx";
+        public const string MinionModelPath = "Assets/Art/Characters/Skeleton_Minion.fbx";
+        public const string RogueModelPath = "Assets/Art/Characters/Skeleton_Rogue.fbx";
+        public const string SkeletonMageModelPath = "Assets/Art/Characters/Skeleton_Mage.fbx";
+        public const string WarriorModelPath = "Assets/Art/Characters/Skeleton_Warrior.fbx";
+        public const string KnightModelPath = "Assets/Art/Characters/Knight.fbx";
+        public const string RangerModelPath = "Assets/Art/Characters/Ranger.fbx";
+        public const string MageModelPath = "Assets/Art/Characters/Mage.fbx";
+
         public const string BowModelPath = "Assets/Art/Weapons/bow_withString.fbx";
-        public const string HitscanTowerModelPath = "Assets/Art/Buildings/building_tower_A_blue.fbx";
+        public const string StaffModelPath = "Assets/Art/Weapons/staff.fbx";
+        public const string SwordModelPath = "Assets/Art/Weapons/sword_1handed.fbx";
+        public const string SkeletonStaffModelPath = "Assets/Art/Weapons/Skeleton_Staff.fbx";
+        public const string SkeletonBladeModelPath = "Assets/Art/Weapons/Skeleton_Blade.fbx";
+        public const string SkeletonShieldAModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx";
+        public const string SkeletonShieldBModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
 
         public const string MovementBankPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
         public const string GeneralBankPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
         public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
+        public const string MeleeBankPath = "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx";
 
         public const string WalkClipName = "Walking_A";
         public const string DeathClipName = "Death_A";
-        public const string TowerIdleClipName = "Ranged_Bow_Idle";
-        public const string TowerWindupClipName = "Ranged_Bow_Draw";
-        public const string TowerBackswingClipName = "Ranged_Bow_Release";
+        public const string RestClipName = "Idle_A";
+        public const string BowIdleClipName = "Ranged_Bow_Idle";
+        public const string BowDrawClipName = "Ranged_Bow_Draw";
+        public const string BowReleaseClipName = "Ranged_Bow_Release";
+        public const string SpellcastClipName = "Ranged_Magic_Spellcasting";
+        public const string ChopClipName = "Melee_1H_Attack_Chop";
+
+        /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
+        public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
+
+        /// <summary>
+        /// The quarter turn a staff is hung at, which stands it on end. Nothing
+        /// about the staff is inverted -- it is horizontal. Measured on 14
+        /// August 2026 from the mesh's vertices expressed in the hand bone's own
+        /// frame: the shaft runs along the bone's local +Y with the orb at the
+        /// +Y end, and in the Mage's Idle_A that axis points forward, world
+        /// (0.263, 0, 0.965), so the shaft lies flat and the orb comes to rest
+        /// out by the feet. The bone's local +X is world (0, 1, 0) in that same
+        /// pose -- exactly up, out of the fist -- so the quarter turn about Z
+        /// that carries the shaft from local +Y onto local +X is what stands it
+        /// up.
+        /// <para>
+        /// Only exactly upright in the pose it was measured in, because a weapon
+        /// parented to a hand turns with the arm. The Necromancer's capture pose
+        /// is a quarter of the way through Walking_A and leans about 43 degrees,
+        /// head-up.
+        /// </para>
+        /// <para>
+        /// Re-derive this rather than copying it -- from the vertices and the
+        /// bone's world basis, and NOT from the [grip] bounds
+        /// tools/capture-armed-roster.ps1 logs. Those are a world AABB
+        /// re-expressed in the bone's frame, a box drawn round a box, and they
+        /// are why the first attempt at this number was a half turn: they cannot
+        /// tell a staff's orb from a sword's tip.
+        /// </para>
+        /// </summary>
+        public static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
+
+        /// <summary>
+        /// What each row in <c>content/units.txt</c> is drawn as, and how big,
+        /// as signed in <c>docs/roster.md</c>.
+        /// </summary>
+        /// <remarks>
+        /// The Minion and the Skeleton share the minion skin, and the Archer
+        /// and the Ranger share the ranger — which is what the Ranger's scale
+        /// is for, since nothing else separates the two rungs. The scale
+        /// numbers come from <see cref="MatchArt"/> rather than being typed
+        /// again here, so this table and the builder's can disagree about which
+        /// model a unit takes but never about what a half is.
+        /// </remarks>
+        public static readonly (
+            int unitId,
+            string model,
+            float scale,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt)[] UnitPaths =
+        {
+            (1, MinionModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
+            (2, RogueModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
+            (3, RangerModelPath, MatchArt.TowerScale,
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+            (4, MageModelPath, MatchArt.TowerScale,
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
+            (7, SkeletonMageModelPath, MatchArt.CreepScale,
+                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default),
+            (11, KnightModelPath, MatchArt.TowerScale,
+                SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default),
+            (12, MinionModelPath, MatchArt.CreepScale,
+                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default),
+            (13, WarriorModelPath, MatchArt.CreepScale,
+                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default),
+            (14, RangerModelPath, MatchArt.RangerScale,
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+        };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
         [InitializeOnLoadMethod]
         private static void Install() => MatchArtSource.Use(new Adapter());
 
-        /// <summary>The nine assets, loaded now.</summary>
+        /// <summary>Every asset above, loaded now.</summary>
         public static MatchArt Load() =>
             MatchArt.Of(
-                Model(CreepModelPath),
+                UnitPaths.Select(u => UnitArt.Armed(
+                    u.unitId,
+                    Model(u.model),
+                    u.scale,
+                    MaybeModel(u.rightHand),
+                    MaybeModel(u.leftHand),
+                    MaybeClip(u.idle),
+                    MaybeClip(u.windup),
+                    MaybeClip(u.backswing),
+                    u.rightTilt,
+                    u.leftTilt)),
                 Clip(MovementBankPath, WalkClipName),
-                Clip(GeneralBankPath, DeathClipName),
-                Model(ProjectileTowerModelPath),
-                Model(BowModelPath),
-                Clip(RangedBankPath, TowerIdleClipName),
-                Clip(RangedBankPath, TowerWindupClipName),
-                Clip(RangedBankPath, TowerBackswingClipName),
-                Model(HitscanTowerModelPath));
+                Clip(GeneralBankPath, DeathClipName));
+
+        private static GameObject MaybeModel(string path) => path == null ? null : Model(path);
+
+        /// <summary>
+        /// A clip by name from whichever bank holds it. The fixture searches
+        /// rather than being told the bank, because which bank a clip lives in
+        /// is the pack's business and not a choice anybody signed off.
+        /// </summary>
+        private static AnimationClip MaybeClip(string name)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+
+            foreach (string bank in new[] { MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath })
+            {
+                AnimationClip found = Clips(bank).FirstOrDefault(c => c.name == name);
+
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+
+            throw new InvalidOperationException("No clip called '" + name + "' in any of the four banks.");
+        }
+
+        /// <summary>Every model path in the table above, each named once.</summary>
+        public static IEnumerable<string> ModelPaths => UnitPaths.Select(u => u.model).Distinct();
 
         private static GameObject Model(string path)
         {
@@ -88,10 +211,7 @@ namespace Tests.Fixtures
         /// </summary>
         private static AnimationClip Clip(string bank, string name)
         {
-            AnimationClip[] clips = AssetDatabase.LoadAllAssetsAtPath(bank)
-                .OfType<AnimationClip>()
-                .Where(c => !c.name.StartsWith("__preview__", StringComparison.Ordinal))
-                .ToArray();
+            AnimationClip[] clips = Clips(bank);
 
             AnimationClip clip = clips.FirstOrDefault(c => c.name == name);
 
@@ -104,6 +224,13 @@ namespace Tests.Fixtures
 
             return clip;
         }
+
+        /// <summary>Every real clip in a bank, the preview duplicates dropped.</summary>
+        private static AnimationClip[] Clips(string bank) =>
+            AssetDatabase.LoadAllAssetsAtPath(bank)
+                .OfType<AnimationClip>()
+                .Where(c => !c.name.StartsWith("__preview__", StringComparison.Ordinal))
+                .ToArray();
 
         private sealed class Adapter : IMatchArtSource
         {

@@ -28,7 +28,7 @@ was built on.
 
 ## Getting started
 
-Three things run today, and they need nothing but the .NET SDK — no engine, no
+Two things run today, and they need nothing but the .NET SDK — no engine, no
 editor, no licence:
 
 ```
@@ -47,17 +47,18 @@ against a fresh play, which is what the build gate does; `-Regenerate` rewrites
 them after a deliberate content change.
 
 A run is authored as text. `content/commands.txt` is one `build` row per round —
-the wave, what was taken off that round's public offering, and how the wave's
-slots were filled — and `-Regenerate` compiles it into the record, having read
-the bytes back and played them to the end first. The menus a take names come
-from the run's seed, so there is a tool that prints them:
+the wave and how the wave's slots were filled — and `-Regenerate` compiles it
+into the record, having read the bytes back and played them to the end first.
+
+Every creep on the roster is sendable from wave one, so a build row is written
+against `content/units.txt` and the purse alone. The one prerequisite the game
+has is the upgrade ladder: a unit some edge of `content/upgrades.txt` points at
+may not be placed, and is reached by upgrading the rung below it. There is a
+tool that prints the edges:
 
 ```
-./tools/show-offerings.ps1
+./tools/show-ladder.ps1
 ```
-
-It prints every wave's menu for the seed the committed command stream carries;
-`-Seed` reads another run's, and every content file is an argument.
 
 The second thing is the balance harness:
 
@@ -79,19 +80,12 @@ matrix, costs a flag rather than an edit.
 the sweep placed on itself — a sampled seed count, a truncated roster — is a row
 of the file, so a partial report never reads as a complete one.
 
-The third is a run played by hand:
-
-```
-./tools/play-run-interactive.ps1
-```
-
-It draws the round in front of you — the board, this wave's menu, what a slot may
-be filled with and what everything costs — and takes a decision a word at a time,
-pricing the whole of it after each one so a refusal arrives at the word that
-caused it. Ten waves is about five minutes. What a session decided is written out
-as a `content/commands.txt` script, but only after that script has been replayed
-into a fresh run and agreed round for round with what you were shown: a session
-that disagrees writes nothing and exits non-zero.
+A run is played in the client rather than at a prompt. What a session decided is
+written out there as a `content/commands.txt` script, but only after that script
+has been replayed into a fresh run and agreed round for round with what you were
+shown — a session that disagrees writes nothing at all. `simcli record-run`
+compiles that script and `simcli play-run` plays it back headlessly, which is how
+a run somebody played is reproduced without opening the editor.
 
 ## Looking at it
 

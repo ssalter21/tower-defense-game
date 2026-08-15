@@ -148,14 +148,13 @@ public static class ContentParsers
 
     private static IReadOnlyList<ContentParser> Declare() =>
     [
-        // The seven a run is built from, each row naming its file by the
+        // The six a run is built from, each row naming its file by the
         // runner's declaration of it.
         new(RunContentFiles.Units, true, text => UnitTypeTable.Parse(text).ContentHash),
         new(RunContentFiles.Upgrades, true, text => UpgradeLadder.Parse(text, Types()).ContentHash),
         new(RunContentFiles.Field, true, text => Fold(WaveScript.Parse(text, Types()))),
         new(RunContentFiles.Defense, true, text => Fold(TowerLayout.Parse(text, Types()))),
         new(RunContentFiles.Rules, true, text => Ruleset.Parse(text).ContentHash),
-        new(RunContentFiles.Schedule, true, text => AnchorSchedule.Parse(text, Types()).ContentHash),
         new(RunContentFiles.Map, false, text => HexMap.Parse(text).MapHash),
 
         // And the three no run verb takes: the authored match 'record' is given,
@@ -198,7 +197,7 @@ public static class ContentParsers
         for (int index = 0; index < commands.Count; index++)
         {
             RecordCommand command = commands[index];
-            hash = hash.Add(command.Wave).Add((int)command.Take).Add(command.TakeId).Add(command.Slots.Count);
+            hash = hash.Add(command.Wave).Add(command.Slots.Count);
 
             for (int slot = 0; slot < command.Slots.Count; slot++)
             {

@@ -283,7 +283,7 @@ of the reversals is of this file's own companion.
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[The build order](build-order.md#the-sequence)**, on why step 5 is fifth | *Is the economy tense, is composing a wave interesting, does send order matter, is the roster varied* — "every one is answerable from a command line and a spreadsheet" | **Half of them are.** The economy and the roster answered from a shell. **Composing a wave and send order did not**, and the reason is structural rather than a gap in the verb | The CLI will never carry the visual elements — video replays, range indicators — and building them there is not worth it. What a person would learn from them there, the simulation can compute and summarise instead |
-| **[§3 — three anchors, a shape and a filling](vision.md#three-anchors-a-shape-and-a-filling)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
+| **[§3 — three anchors, a shape and a filling](vision.md#three-gates-at-waves-3-6-and-9)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
 | **§3 — one purse** | The economy is the sharp decision the game is built around | **Not tense yet, and that is accepted rather than fixed** | Attack performance is rewarded, so spending on attack is the long-term investment and nothing argues against it. The expected correction is already in the design: health falls, and the run eventually has to pivot its spending. Not worth tuning before the roster can be judged |
 | **[Open questions](open-questions.md)** — is placement worth having on this geometry | Thin until the maze lands, per [#142](https://github.com/ssalter21/tower-defense-game/issues/142), and possibly not worth the tickets | **Placement earns its place**, and is expected to get more interesting as elevation lands | Played rather than argued. This does **not** settle the separate question of whether the defending side has to be *towers* — squads on a rampart are still live |
 
@@ -404,3 +404,534 @@ shield and sword, which is a kit variation the pack ships weapons for, and `rost
 Neither pack is on this machine. `client/Assets/Art/Characters/` holds two FBX files, so every skin assignment
 on that page is a plan rather than something anyone has looked at, and they are assigned for real once the
 packs are downloaded.
+
+---
+
+## 13 August 2026, later still — the client is grilled, and the wave turns out to have been a bag
+
+Grilling [#190](https://github.com/ssalter21/tower-defense-game/issues/190) against the standing documents
+turned up one defect, reversed two recommendations that had been made against a smaller version of the ask,
+and deferred most of a page.
+
+### A wave was always a sequence, and the build phase quietly made it a set
+
+The vision says it outright, under *You choose the order they come out in*: **a wave is a sequence, not a
+bag**, and `content/wave.txt` has always been an ordered list of `(tick, type, count)`. `BuildPhase.Resolve`
+did not honour it. Every slot was given the same release tick, so a wave's columns all began together and a
+slot's position meant nothing — and the rule that filled slots must **ascend strictly by type id** existed
+precisely because the arrangement was not a decision, canonicalising it so two identical waves could not have
+two spellings.
+
+**Nothing in the vision moves.** This is the implementation catching up to it: a slot's position becomes its
+release offset, the ascending rule comes out, and the player arranges the wave by dragging. The vision's two
+stated preconditions are already met — the corridor is single file, and *a count is a column, not a pile*.
+
+What it costs is not small and is named here so nobody discovers it in the middle of the client work: the
+ordering rule is deleted from the three places [ADR-0039](adr/0039-the-command-stream-is-the-only-route-into-a-run.md)
+deliberately wrote it, the command stream goes to **format 3**, and every committed golden re-freezes —
+`run.commands`, `run-outcome.txt`, `golden-trace.txt`, `match.replay`, `sweep.csv`, and `BudgetTests`'
+calibration tick with them. Balance moves too, because waves arriving in sequence are a different defensive
+problem from waves arriving together, so the roster is priced against a game that no longer exists and the
+sweep harness is pointed at it afterwards rather than before.
+
+### The interactive verb is not what the shell is for
+
+`simcli play` was built so the build phase could be judged a fortnight before a client existed, and it did
+that. But the shell's standing purpose is **mass headless simulation** — pricing the roster by computing it —
+and `play` is the only one of eight verbs that takes human input. The balance work needs none of it.
+
+So **`play` is deleted**, and deliberately last: the proving machinery moves into `sim` first, the client is
+made to write command scripts, `play-run` is confirmed to replay one headlessly, and only then does the verb
+go. Done in that order nothing is lost, because reproducing a run without opening Unity survives in `play-run`.
+[The shell specification](archive/playing-a-run-from-a-shell.md) is archived in the same commit; its sections were
+load-bearing only while the tests that pinned them existed.
+
+Two things about the sweep harness that were assumed missing and are not: a **complete automated player
+already exists** — `EvenShareBot` and `CoverThenUpgradeBot` behind the `BuildPolicy` seam, playing full
+ten-wave runs with no human in them — and the throughput was settled on 6 August, at 2.75 ms a match. Half a
+million runs is under four hours on one core, inside the existing `--runs` ceiling, with no code change. What
+is actually missing is per-run output, parallelism, CLI access to the policy, and checkpointing; that is
+[its own ticket](https://github.com/ssalter21/tower-defense-game/issues/190) and not this effort's.
+
+### Two recommendations reversed by what the ask turned out to be
+
+Both were made when the client's interface was going to be small, and both would have been thrown away.
+
+- **Orthographic to perspective.** Zooming an orthographic camera crops; it does not take you into the scene.
+  The ask is to orbit freely, go in close and look at a fight, which orthographic cannot do. The board stops
+  being isometric-exact — under perspective the far end of the corridor converges — and `SceneFraming`,
+  `CameraRigTests` and the frame-capture entry point all move with it. The six yaw snaps are deleted; one key
+  eases back to a default angle.
+- **uGUI to UI Toolkit.** A header, a palette, a thumbnail-carrying wave bar and drag-to-rearrange is a real
+  interface, and a code-built uGUI version of it is a thing that gets rewritten. `PlaybackControls` ports
+  across in the same effort rather than leaving two UI systems in one scene.
+
+### What the first playable run does not have
+
+Health is the only number the header carries beyond wave, gold and slots. **Leaks, kills and per-tower damage
+are all out** — the first two exist inside a `Match` and are discarded by `Run`, and the third does not exist
+at all: `Damage()` is not passed the tower id, and for projectile towers the shooter is not recoverable from
+the snapshot or the events. Building that is the after-action effort, which is data-heavy, driven by the
+vision, and deliberately not smuggled into a skeleton.
+
+Also out, and additive later: the maze, roster depth, save-and-resume, and any framing of the field beyond a
+number. **No forecast, in any mode** — prevention on screen covers what the rules refuse and stops there,
+because a placement greyed out for being unwise is a computed outcome wearing the clothes of a rule.
+
+### The art packs have been on the machine since 8 August
+
+`roster.md` still said *"neither pack is on this machine"* and called every skin assignment a plan. The
+complete collection has been in `Downloads` since the 8th, catalogued from the zip itself in
+[the collection inventory](research/kaykit-collection-inventory.md) — 22 packs, CC0, 61 rigged characters,
+159 clips. The assignments are adopted as written, with the Necromancer keeping **`Skeleton_Mage`**; the
+dedicated Necromancer model the inventory found is not taken up.
+
+Two rules are added that the page did not have. **Scale is the tier signal**: towers at 1.0, all creeps at
+0.5, the Ranger at 1.5 so it does not read as its own tier-1. And **scale lives in `MatchArt` and never in
+`units.txt`** — visual size is a view fact under [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and
+putting it in the content tables would make every art tweak a format version. The numbers are expected to move
+once they have been looked at, which is the point of storing them somewhere free to change.
+
+There is no plinth and no rule about which units are people and which are buildings. Size is the whole
+differentiator.
+
+---
+
+## 13 August 2026, later still — the gates are actually out, and the ladder becomes the rule it was an annotation to
+
+Implementing [#179](https://github.com/ssalter21/tower-defense-game/issues/179). The schedule above says the
+gates come out; this is what came out with them, and the two standing claims that turned out to be false once
+they had.
+
+### One prerequisite replaced four, and it was already in the repository
+
+`AnchorSchedule`, `AnchorFilling`, `Offering` and `Unlocks` are deleted, and `ShotBonus` and `Draws` with them
+— nothing counters anything once there are no anchors, and nothing draws once there is no offering.
+`content/schedule.txt` is gone, taking twelve placeholder names with it.
+
+What is left is `content/upgrades.txt`, which was written as an annotation nobody read. It is now the rule:
+**a unit some edge points at may not be placed**, and is reached by standing the rung below it and upgrading
+into it. Refused rather than priced, because a tier that can be bought without the tier under it is not a
+tier, it is a second row at a higher price.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `content/upgrades.txt` header | *"THE SIMULATION NEVER READS THIS FILE."* Held as a property rather than a promise: the parsed ladder lived on the command line and was never handed to a run | **Overturned.** A run is handed a ladder and `BuildPhase.Resolve` asks it what may be placed. An edit to the file now retires stored records, which is why a command stream stamps a ladder hash |
+| [ADR-0046](adr/0046-an-absent-ladder-folds-nothing.md) title | *"…the content hash covers content the simulation never reads"* | **Second clause overturned; the decision stands and matters more.** Folding the ladder into `types.ContentHash` is what retires a record made under a different ladder. An empty ladder still folds nothing, so `content/golden/defense-0.replay` is still legal forever |
+
+[ADR-0036](adr/0036-the-anchor-schedule-is-a-shape-and-a-filling.md) and
+[ADR-0037](adr/0037-the-offering-is-public-because-it-is-derived.md) describe machinery that no longer exists
+and carry superseding notes. What survives from them is worth keeping: a content file's constraints belong in
+its loader, and a derived thing needs no stamp because its inputs are already stamped. Both still hold, for
+the ladder.
+
+### Types-per-wave was load-bearing and nobody had said so
+
+Wave slot widths were derived from how many anchors a run had passed — `2 2 3 3 3 4 4 4 5 5`. Deleting the
+anchors alone would have frozen every wave at two types forever, so the width came out too. **What bounds a
+wave now is the purse and nothing else**, which is the only thing a player is spending against.
+
+### Three consequences that are not corrections
+
+**The sweep's `ingredients` axis is gone.** It binned a creep's runs by how many distinct creeps the run ended
+able to field, which varied *only* because the take rationed sending. Every run can send the whole roster from
+wave one, so the axis is one value wide and separates nothing.
+
+**Health 800 makes the death flag live.** The reference player in `TheRun.TheCommittedRun` — build a wall, then
+shop — now runs out of health in its fourth round where 1500 let it survive ten. That is a better test than the
+old one rather than a worse one: the four rounds it shares with the no-death vector are identical gold for
+gold, so the flag demonstrably stops the loop without touching anything inside it.
+
+**The sweep's defense never builds a ranger.** `CoverThenUpgradeBot` cannot place one, and its upgrade half
+climbs to a strictly *dearer* row while the ranger costs exactly what the archer costs — so nothing it does
+reaches the roster's one upgrade edge, and a balance question about the ranger cannot be answered from
+`content/sweep.csv`. That is the bot's rule rather than the ladder's, and it is written down here because it is
+the kind of hole that reads as a bug in the report six weeks later.
+
+---
+
+## 13 August 2026, last of the day — a wave becomes a sequence, and the version-bump trigger turns out to have a hole in it
+
+Implementing [#191](https://github.com/ssalter21/tower-defense-game/issues/191), which the client grilling
+above turned up. The vision always said a wave is a sequence and not a bag; `BuildPhase.Resolve` gave every
+slot the same release tick, so it was a bag.
+
+### A slot's position is its release order, and the wave is one column
+
+Slot one's creeps walk out first, slot two's fall in behind them, and an order's offset is one spawn interval
+per creep ahead of it — so the whole wave is a single column at a single cadence rather than several columns
+starting together. The vision's two stated preconditions were already met: the corridor is single file, and *a
+count is a column, not a pile*.
+
+**The strict-ascending-by-type-id rule is deleted from all three places** [ADR-0039](adr/0039-the-command-stream-is-the-only-route-into-a-run.md)
+wrote it. It existed to canonicalise an arrangement that was not a decision; once position is the release
+order the arrangement *is* the decision, and asserting an order over it deletes the lever. What survives is
+the half that was never about canonical bytes: **a creep fills at most one slot of a wave**. Canonical bytes
+are not lost — every filled slot sends at least one creep, so the offsets ascend strictly and a wave's orders
+are still unique and ascending on `(tick, type)`. The ordering became a consequence of the rule instead of a
+rule of its own.
+
+Command stream to **format 3**, simulation version to **3**. The format bump carries no field: a version-3
+command is byte for byte a version-2 command, and only the stamp separates two identical byte runs describing
+two different fights. That is what a format version is for, and the alternative is a stream that replays into a
+confidently wrong result while passing every gate. `content/golden/command-2.commands` is frozen beside the
+other two, read forever and replayed never.
+
+### The behaviour fingerprint could not see this, and that was not obvious
+
+`DerivationTests` folds a fixed scenario into one number and refuses to let the simulation version move without
+it. Under the fold as it stood, this change produced `42346EF613910009` — **byte for byte version 2's**. The
+scenario hands the match a wave written out in the test file, so folding a match says nothing about how a wave
+is *composed*, and the rule that moved lives in `BuildPhase.Resolve`.
+
+A row whose evidence equals its predecessor's is not evidence. The fold gained a second half — the tick, type
+and count of every order a fixed build phase composes — and the label went `rule-fingerprint/1` →
+`rule-fingerprint/2`, which retires versions 1 and 2's recorded values as uncomputable by this build rather
+than leaving a table that quietly compares fewer things. Reverting the release rule now moves the number
+`97AE0A007D5A9AB9` → `D5B62912DBA14BFA`, which was watched rather than reasoned about.
+
+### Three consequences
+
+**The fight moved, and the committed run is the measurement.** Same script, same seed, same defense: 334 gold
+dealt over ten rounds became 261. Nothing was retuned. Creeps arriving in sequence are a different defensive
+problem from creeps arriving together, so **the roster is priced against a game that no longer exists**.
+Re-pricing is not this ticket.
+
+**The sweep cannot see this change at all, and its report says so.** `content/sweep.csv` regenerated byte for
+byte identical, because `EvenShareBot` fills one slot a round — a sweep row is about one creep, so its wave is
+one column and the only arrangement there is. That is correct for attributing a row to a creep and it is a
+hole in the report: no ordering question can be answered from it. The CSV now carries a `note` row saying so,
+beside the two it already carried.
+
+**The canned field's check got tighter rather than looser.** `RunContent.Field` refused a `--field` file whose
+orders did not all leave on tick zero, on the ground that a field member stands in for a stored round. A stored
+round is now one column at one cadence, so the check is that shape exactly: order one on tick zero, each order
+after it one release behind the whole of the order above it. Tick zero admitted any number of simultaneous
+columns; this admits exactly one arrangement per set of counts. `content/field.txt` did not move — it fills one
+slot, which is the case where the two rules agree.
+
+### Two claims [ADR-0039](adr/0039-the-command-stream-is-the-only-route-into-a-run.md) was still making from before #179
+
+Found while amending it, and corrected there. `Run`'s public surface was described as `Advance(BuildPhase)`
+**and `OfferingAt`**, which came off with the offering; a `BuildPhase`'s data surface was described as `Take`,
+`TakeId` and `Slots`, which is now `Slots` and `Actions`. The structural claim the paragraph exists to make is
+unchanged and still asserted by `CommandStreamTests` — the surface is exactly what a stored command carries.
+---
+
+## 14 August 2026 — the proving machinery moves under the client
+
+Implementing [#193](https://github.com/ssalter21/tower-defense-game/issues/193). Nothing the
+[ADR](adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) decided is repealed; one
+sentence of it stopped being true when the code moved, and it is amended there.
+
+### `ProvedSession.Written` was the one thing that touched a disk, and there is no longer such a thing
+
+It was true while the prover lived in `simcli/`. What that also meant is that the claim the ADR is about — the
+run somebody played and the record of it are one run — was reachable from a shell and from nowhere else, and
+the Unity client owes exactly the same claim: [seam 2](build-order.md#2--the-submission-barrier) asks the
+record format to transmit a turn as cleanly as it stores a ghost. So `PlayedScript`, `ProvedSession` and
+`RunSummary` are in `sim/` now, and the file did not follow them: `System.IO` is a banned namespace there and
+the IL scan reads the shipped image, so the prover cannot open a path. `simcli` adds `Written` back as an
+extension over the proved session, and a client's half is Unity's storage rather than a path at all.
+
+**The gate survived the split by moving onto the script.** A session that disagreed used to be stopped by
+`Written` refusing to write it; with the write gone to the caller, a proved session that disagreed hands back
+no script at all. A caller that never reads `Agreed` therefore has nothing to keep, which is what the refusal
+was for. It is still by construction and it is no longer in the shell.
+
+---
+
+## 14 August 2026, later — the client stops opening on the recorded match
+
+Implementing [#198](https://github.com/ssalter21/tower-defense-game/issues/198), which is
+[ADR-0051](adr/0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) built. Nothing that ADR
+decided moved; two things written down elsewhere did.
+
+### The player used to open on `content/match.replay`, and now it opens on a run
+
+That was right for the whole of the walking skeleton: the recorded match was the only thing there was to look
+at, and [the sit-down](sit-down.md) is written about it tick for tick. The client now holds a `Run` and opens on
+the first round's build phase, reaching a match only once a round has been committed — and while the build
+chrome had no modes to switch between, the recorded match went on playing underneath it, so a composed tower
+could be stood on a hex a recorded tower was already drawn on. One board drawn by two things is what the mode
+switch removes, and removing it means the recorded match is no longer what a build shows. It stays reachable
+for `tools/capture-match-frames.ps1` and for the fixtures.
+
+**What that costs is the sit-down's tick numbers.** Rows 1, 2, 3, 11 and 12 ask nothing about *which* match and
+read against any committed round. Rows 4 to 10 name a tick of a match the build no longer plays. Whether they
+are re-anchored to a round a run can reproduce, or retired onto the assertions that already carry the
+load-bearing half, is [an open question](open-questions.md); `content/landmarks.txt` and the four bindings
+`SitDownTests` holds the document to are untouched either way.
+
+### The client was scoring its rounds against `content/wave.txt`, and the file it wanted was `content/field.txt`
+
+Not a reversal — a defect, recorded because it survived two tickets unseen. `MatchRoot` built its `Run`'s field
+pool from the committed defense and `wave.txt`, which is the skeleton's whole authored match: forty creeps,
+three hundred and eighty gold of them, released over fourteen hundred ticks. The canned field is one build
+phase's output, which is `field.txt`, and the shell's run verbs refuse a wave released over time by name —
+`RunContent.Field` writes the sentence. The client had no such refusal, and nothing noticed while nobody
+advanced the run. The first run that actually did died of health in round three. `field.txt` now ships in the
+streaming copy; the refusal is still only the shell's, and what stands in for it on this side is that the right
+file ships.
+
+### A creep is bought once and attacks every round after
+
+The wave was whatever the round in front of it happened to buy: round seven could field fewer creeps than round
+six, and every round paid for its whole column again. Found on 14 August 2026 by playing it — *"the wave you
+build is supposed to accumulate over the rounds, you aren't just paying for 1 creep for 1 round."*
+
+Buying is now permanent. A build phase names the whole of its round's wave and is charged only for the increase
+over what it carries; sending fewer of a type than is carried, or leaving one off altogether, is refused where
+the decision is read. Two things were decided with it: the whole accumulated wave stays rearrangeable every
+round, which is what keeps #197's drag live for the length of a run, and there is no selling a creep back — a
+bad early purchase is a lasting commitment, which is the point.
+
+**This replaced half of what `vision.md` said about the purse.** Scarcity used to come from a bounded, growing
+set of wave slots refilled each round, with only the *unlock* permanent. No slot bound was ever implemented,
+the unlocks came out with the offering in #179, and what is left is the rule above: the purse is the only
+scarcity on the sending side, and permanence is what makes attacking compound. See
+[ADR-0052](adr/0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) for the shape and
+[#207](https://github.com/ssalter21/tower-defense-game/issues/207) for the ticket.
+
+**It is simulation version 4, and it exposed a hole in the mechanism that is supposed to catch exactly that.**
+The behaviour fingerprint came out identical to version 3's, because every composition it folded resolved a
+phase carrying nothing — and a phase carrying nothing prices as it always did. That is the second time the
+table has had a blind half. The fold gained a third one.
+
+**What it does not fix is the opponent.** The canned field is one stored round drawn ten times, so the run's
+own wave compounds while the pressure coming back stays flat: the committed run now ends holding sixteen
+hundred gold. That asymmetry is [#208](https://github.com/ssalter21/tower-defense-game/issues/208), and it is
+not a free change — it collides with ADR-0042's rule that the field is measured once and fixed for the whole
+run, which is what keeps income a fold over the outcome vector.
+---
+
+## 14 August 2026, later still — the gates come back with a different job, and a capstone is paid for out of a grant
+
+Waves 3, 6 and 9 were deleted from the played game the day before yesterday, because a menu that rations a
+four-creep roster rations nothing worth having. They come back here doing something that is not a menu: **a
+gate widens the wave, deepens what a slot may hold, and pays for a capstone.**
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **The purse and a public capacity schedule.** A wave opens carrying two slots at ten apiece, and each gate adds two slots and ten count | A purse alone lets compounding gold end every run as one enormous box of whatever is most cost-efficient, which deletes send order as a decision by leaving one thing to order |
+| **[§3 — the gate rounds](vision.md#three-gates-at-waves-3-6-and-9)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
+| **[§3 — one purse](vision.md#one-purse)**, and [6 August](#6-august-2026--six-reversals)'s settled answer | One currency; a second was priced and declined the same day | **Still one *income* currency.** A second thing exists, is granted three times a run, has no exchange rate and buys exactly one object | The 6 August rejection was of two *wallets fed by income* — the thing that makes every purchase a question about which pool to feed. A grant with a single sink is not that |
+| **[The roster](roster.md#what-things-cost)** | Capstones are expected to break the pricing rule downward, and the first one is where the exemption gets written down | **There is no exemption, because gold does not buy a capstone.** The token is the whole price | An exemption to a gold rule, for a thing gold does not buy, is a clause about nothing |
+| **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | The per-wave type limit is deleted rather than deferred, along with the forced pick, the round menu and the special rounds | **The first of the four to be redesigned.** It returns as a capacity schedule with a second dimension; the other three stay deleted | Deleting it was right and restoring it unchanged would have been wrong. It was a bound with no clock on it, and a gate is the clock |
+
+### What a gate does, in one place
+
+Waves 3, 6 and 9. At each one the wave gains **two slots**, every slot's **count cap rises by ten**, and the
+player is handed **one capstone token**, spendable only on capstoning a tower already standing.
+
+| Waves | Slots | Count cap | Capstones held |
+|---|---|---|---|
+| 1–2 | 2 | 10 | 0 |
+| 3–5 | 4 | 20 | 1 |
+| 6–8 | 6 | 30 | 2 |
+| 9–10 | 8 | 40 | 3 |
+
+The player is expected to spend a gate round on the wave, and that expectation is the mechanism rather than a
+hope: a purchase is permanent and a wave only grows, so capacity — not gold — is what an attacking purchase is
+ultimately spending. Two rounds of banking at 10% against a known round where the wave can finally take the
+money is the timing decision the purse exists to make players practise.
+
+### Why a capacity gate is not the gate that was deleted
+
+[#179 deleted the gates](#13-august-2026-later-still--the-gates-are-actually-out-and-the-ladder-becomes-the-rule-it-was-an-annotation-to)
+on one argument: *there is no point in gating before we have the depth, it just holds back the early testing
+and experience.* That argument is about **options** — a menu offering one of three out of a roster of four
+decides nothing. A capacity schedule rations **room**, and room is scarce the moment the purse can afford more
+wave than the schedule allows, which is a question about the economy rather than about how many creeps exist.
+
+**The honest half: at today's roster the two arguments do converge.** Two slots against four creep types is a
+real bind, and it is the shallow-roster complaint one round further on. That is exactly why this lands as
+design rather than as a ticket — the schedule is fitted after [seam 3](build-order.md#3--the-roster) has
+produced something worth rationing, which is the order the 13 August entry already set.
+
+### Two numbers were read rather than stated, and one thing has no name
+
+The steps were specified: two slots and ten count per gate. **The opening pair was not** — 2 slots and 10
+count is what makes the schedule 2/4/6/8 and 10/20/30/40, and it is an inference from the step rather than a
+decision anybody made. So is **one token per gate**, which is what makes it three capstones a run. **And the
+currency has no name.** All three are [open questions](open-questions.md) and all three are cheap to move
+while nothing is built.
+
+### What it will cost to build, since none of it is
+
+Written down now because the shape of the bill is the argument for settling the numbers before the ticket:
+
+- **Five ruleset rows**, in the file that already holds every number the rules are made of: the gate rounds,
+  the starting width and its step, the starting count cap and its step, and the grant.
+- **A refusal in `BuildPhase.Resolve`**, which is where a cap has to bite. A wave is carried and the phase is
+  charged the increase ([ADR-0052](adr/0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md)),
+  so the new rule is not *this wave is illegal* but *this raise is refused* — and a wave that is legal at wave
+  5 is still legal at wave 6, because capacity only ever grows and a creep can never be taken back.
+- **A simulation version bump**, because a rule that refuses compositions the previous version accepted
+  changes what a stored record means.
+- **A behaviour fingerprint that will not see it.** The fold has had a blind half twice already; a fold that
+  composes only legal waves cannot tell a capacity rule from no capacity rule, so this one needs a composition
+  that gets refused or it will produce the predecessor's number again.
+- **A second currency in the record**, which is the only piece that is not a number. A token count is run
+  state, capstoning is a placement action nobody has priced, and both cross the command stream.
+- **A question the sweep cannot currently ask**: whether a capped slot ever strands gold. `EvenShareBot`
+  fills one slot a round, so nothing in `content/sweep.csv` today touches a bound of any kind.
+
+---
+
+## 14 August 2026, last of the day — gold is paid for the damage a wave does
+
+Implementing [#209](https://github.com/ssalter21/tower-defense-game/issues/209), raised by the developer
+reading the committed run: *"what is the gold gain based on? It was supposed to be based on how much health
+damage you do with your offense creep wave."* It was not. It was based on your **rank** against the field.
+
+### What it said, and what is true now
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§3** — one purse | Income is a flat base **plus a bonus in non-linear percentile bands over two distributions**: how your wave performed and how your defense performed, each against the field | **The bonus is proportional to the leak cost your wave dealt, uncapped.** One ruleset row, `bonus 25`, and every point of health damage pays gold at that rate |
+| **§3** — one purse | The bonus is paid over **two** distributions, the wave's and the defense's | **The second half never existed and is not going in.** A defense already pays by not costing you health, and health is the run's clock. The claim came out of the vision rather than the code going in to meet it |
+| **§3** — the coupling | You are paid against the field's distribution, never a named opponent | **You are paid for what your wave dealt.** No money still moves between players, and the reason is now simpler rather than statistical |
+
+### The bands were paying a binary, and the committed run is the evidence
+
+The bands paid 0, 5, 10 or 20 percent of a 168-gold base — one of 0, 8, 16 or 33 gold. Against the canned field
+of one they [collapse to two](research/a-canned-field-of-one-collapses-the-bands.md), so in practice the wave
+was answering *did anything get through*. Four rounds of the committed run, before and after:
+
+| Round | Leak cost dealt | Bonus under the bands | Bonus at 25% |
+|---|---|---|---|
+| 4 | 36 | 33 | **9** |
+| 6 | 198 | 33 | **49** |
+| 9 | 416 | 33 | **104** |
+| 10 | 673 | 33 | **168** |
+
+Eighteen times the damage was paid identically; it is now paid about eighteen times as much. **25% is a
+starting figure and a sweep target**, exactly as the base and the creep costs are.
+
+### The ceiling got better rather than being given up
+
+The load walk folds the purse forward at the most a round could have earned, so that a stored decision refused
+at load was unaffordable however the run played
+([ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md)). An uncapped bonus reads like the end of that, and
+is not: leak cost sums price times leaked over a wave's own orders, so a round deals at most **the full price
+of the wave it sent** — computable from the stored slots without playing anything. The bound is now much
+tighter, and the test that watches it says so: the walk used to carry 772 gold into the committed fixture's
+fourth phase against a real purse of 663, and now carries 681 against 666.
+
+### The behaviour fingerprint could not see this, for the third time
+
+Simulation version to **5**, which retires every record made under 4. Under `rule-fingerprint/3` this build's
+fingerprint came out `67E9F86CA94BE2D6` — **byte for byte version 4's**. All three halves of that fold resolve
+matches and build phases and not one of them closes a wave, so the rule that moved lived somewhere the fold
+could not reach. It gained a fourth half — what a wave pays a purse, itemised, and the ceiling a walk folds
+instead — and the label went `rule-fingerprint/3` → `rule-fingerprint/4`. Reverting the payment to a flat share
+of the base now moves the number `B234D73EC659D3A7` → `80A3DB0779957EA1`, which was watched rather than
+reasoned about.
+
+**The new half is folded through a ruleset written out in the test file**, not through
+`content/ruleset.txt`. The payment is arithmetic over authored numbers, so folding the committed file would
+make a retune of the bonus rate move the fingerprint and retire every record made under rules nobody changed —
+which is the exact confusion the fingerprint exists to tell apart from a rule change.
+
+### ADR-0042 is largely superseded, and what to do about that is a human's call
+
+`PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the `run-measure/1` draw and the
+percentile lookup exist only to price the bonus, and now have no consumer. **Nothing was deleted**: deleting a
+working capability is not an agent's call, and the question is written down as an
+[open one](open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it) with what each
+answer costs. One consequence is already banked either way — a played round no longer reads `Run.Field`, so the
+**half a run per run** the ADR records as its price is not being spent.
+
+### What regenerated, and what did not need to
+
+`content/commands.txt` **did not need re-authoring**, which was the open risk: the early rounds send nothing
+and are paid nothing, and the run still plays all ten waves. The ruleset hash moved (`7E1DA52C5F85D545` →
+`D01EB9595248D3C9`), so `content/run.commands`, `content/run-outcome.txt`, `content/match.replay`, the goldens
+and the streaming copy all regenerated.
+
+**`content/sweep.csv` moved on every row, and the `bonus_gold` column stopped being a binary.** Under the bands
+four of the five creeps earned *exactly* 2,376 gold over eight runs each — the failure this ticket is about,
+sitting in the committed report where nobody read it. They now earn 9,288, 10,060, 10,901, 12,052 and 12,586
+against a flat base of 13,440, which separates them in the order their leak cost dealt already did. The rest of
+the report moved with it: leak cost dealt rose by a fifth to a third, the runs bank two and a half times as
+much unspent gold, and cost efficiency fell from 362–442 to 316–360 because the extra income buys creeps faster
+than they pay for themselves at this rate. **The win-rate column says nothing either way** — it was already
+saturated at 10000 basis points on every row before this ticket, from #207. 25% is a starting figure and the
+sweep is where it gets moved.
+
+---
+
+## 15 August 2026 — the opponent accumulates, and the run it kills is the evidence
+
+Implementing [#208](https://github.com/ssalter21/tower-defense-game/issues/208), raised by the developer after
+playing #207: *"the opponents field will need to start small and scale like the player now does."* It did not.
+The field was one stored round drawn ten times, so a round-one opponent and a round-ten opponent sent the same
+wave while the player's own wave compounded — and the committed run finished holding 1,647 gold it had no
+reason to spend.
+
+### What it said, and what is true now
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **ADR-0042** — the pool | The pool is a population, and the field is the K of it a round is resolved against | **The pool is a population per round.** Round seven draws from the members recorded at round seven, which is the shape a ghost pool has anyway: stored ghosts are accumulated rounds |
+| **ADR-0042** — the measurement | *"It is fixed for the whole run, and that is what keeps the payment a fold"* | **Still true, and now at a price that is named.** The draw grew per round and the measurement did not — it reads the whole population at once, so the pool a run fights and the distribution it is measured against describe different populations |
+| **`content/field.txt`** — the stand-in | One pair of orders, drawn with replacement | **One player, recorded once per round**, buying that column again every round: ten bodies in round one, seventy in round seven |
+
+### Resolution 2, taken by the developer, and what it cost
+
+The ticket put two resolutions up. **Resolution 1** measures the field per round — arguably more correct, and
+it multiplies the sweep by the number of rounds. **Resolution 2** grows only what a run fights and leaves the
+measurement flat, which is the alternative ADR-0042 explicitly considered and rejected on the grounds that the
+pool and the distribution would then describe different populations.
+
+Resolution 2 was taken, and most of the collision it was worried about had already evaporated: since #209
+nothing prices off the distribution at all, so the population it describes is a population nothing consumes.
+The ADR carries the amendment.
+
+### The measurement that decided the shape of the committed run
+
+**A wall kills a count, not a share.** The committed six-tower defense stops twelve bodies out of twenty, out
+of forty, out of a hundred — the kill column is flat and every creep added to a column is a creep that gets
+through. So an opponent who accumulates outruns any wall a run can afford: the ten-round committed run takes
+**5,011 gold of damage against a health pool of 800** and dies in the fourth round. The numbers are in
+[`a-wall-kills-a-count-not-a-share.md`](research/a-wall-kills-a-count-not-a-share.md).
+
+The developer's ruling was to **grow the opponent and let the run die** rather than raise the health pool or
+soften the curve: the tuning is what it is, and hiding it behind a gentle curve would have left the imbalance
+in the file where nobody reads it.
+
+### So `content/commands.txt` is four rounds long
+
+Not by choice. `record-run` plays a script to the end before it writes anything, so a fifth build row is a row
+nobody was alive to play and the file could not be recorded at all. The four rounds still demonstrate what they
+are there for — the wall going up one tower a round, and #207's accumulation, with round three naming the ten
+runners round two bought and paying for the ten it adds.
+
+**The run also stops banking.** Waiting five rounds and spending the bank in one is the play against a field
+that never grows; against one that does, the rounds a run banks through are the rounds that kill it.
+
+### What the sweep lost, and what it kept
+
+`content/sweep.csv` moved on exactly two columns. **The win rate went from 10000 basis points on every row to
+zero** — every run of every creep now loses — and taken went from 1,634 to 33,512, identical on all five rows
+because the incoming waves leak in full and the dice never touch them. Everything else is byte for byte what it
+was: dealt, spent, defense, unspent, cost efficiency, base and bonus. The report is still an instrument on the
+offense axis and is no longer one on the defensive axis, which is the honest reading of a tuning where offense
+dominates.
+
+**The sweep costs 78 seconds against 42.** Same 9,600 matches; a round-ten column is ten times as deep and its
+match runs 6,098 ticks against 1,913. Measured on the same machine, both including the build.
+
+### The behaviour fingerprint could not see this, for the fourth time
+
+Simulation version to **6**, which retires every record made under 5. Under `rule-fingerprint/4` this build's
+fingerprint came out `B234D73EC659D3A7` — **byte for byte version 5's**. Every half of that fold is *handed*
+the pairing it folds, and who a round draws is decided above all of them. It gained a fifth half that plays a
+three-round run against a population recorded per round, and the label went `rule-fingerprint/4` →
+`rule-fingerprint/5`.
+
+**The new half is folded over a roster written in the current column layout, and that is the second thing the
+half caught.** A layout-1 row carries no cost column, so every unit in the fingerprint's own roster is free —
+and a leak that costs nothing folds to zero whoever sent it. The half was written, watched passing under a
+deliberately flat draw, and only the priced roster made it able to see the rule it is there for.

@@ -57,37 +57,33 @@ namespace Sim
     }
 
     /// <summary>
-    /// One cell of the sweep: what a creep did over a population of runs, either
-    /// over all of them or over the ones that ended holding a given number of
-    /// ingredients.
+    /// One cell of the sweep: what a creep did over a population of runs.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>A row is a creep and a bin, and nothing here is a rate the caller has
-    /// to trust.</b> Every ratio arrives beside the two integers it was computed
+    /// <b>A row is a creep, and nothing here is a rate the caller has to
+    /// trust.</b> Every ratio arrives beside the two integers it was computed
     /// from, so a spreadsheet can recompute it exactly and nobody is stuck with
     /// this type's truncation.
     /// </para>
     /// <para>
-    /// <b><see cref="Ingredients"/> is the bin</b>, and
-    /// <see cref="AllIngredients"/> is the row over every run of the creep. A
-    /// run's ingredient count is how many distinct creeps it ended the run able
-    /// to field -- a build phase takes one option, so it runs from one to the
-    /// rounds the run resolved and lands where the offering's churn and the
-    /// plan's <see cref="SweepPlan.Policy"/> put it between them. Win rate down
-    /// that axis is the U-shape a meta goes wrong in: focused builds and greedy
-    /// builds winning while everything between them loses.
+    /// <b>There used to be a second axis, and it went with the take gate.</b>
+    /// Rows were also binned by a run's "ingredients" -- how many distinct
+    /// creeps it ended able to field -- and win rate down that axis was where a
+    /// meta going wrong would show as a U-shape: focused builds and greedy
+    /// builds winning while everything between them lost. That count varied only
+    /// because the gate rationed what a run could send. With the gate deleted
+    /// every run can send the whole roster from wave one, so the axis is one
+    /// value wide and separates nothing. Whatever replaces it will be measuring
+    /// a different thing and wants naming as such rather than inheriting this
+    /// column.
     /// </para>
     /// </remarks>
     public sealed class SweepRow
     {
-        /// <summary>The <see cref="Ingredients"/> of the row over every run of a creep.</summary>
-        public const int AllIngredients = 0;
-
         internal SweepRow(
             int typeId,
             string label,
-            int ingredients,
             int runs,
             int rounds,
             int wins,
@@ -103,7 +99,6 @@ namespace Sim
         {
             TypeId = typeId;
             Label = label;
-            Ingredients = ingredients;
             Runs = runs;
             Rounds = rounds;
             Wins = wins;
@@ -123,9 +118,6 @@ namespace Sim
 
         /// <summary>That creep's label, for a person reading a spreadsheet.</summary>
         public string Label { get; }
-
-        /// <summary>The bin, or <see cref="AllIngredients"/> for the creep's whole population.</summary>
-        public int Ingredients { get; }
 
         /// <summary>How many runs fell in this row.</summary>
         public int Runs { get; }
@@ -203,19 +195,17 @@ namespace Sim
         /// What these runs' waves were paid for how they did, in gold, summed.
         /// </summary>
         /// <remarks>
-        /// The performance bonus, beside the base it is a share of, so the two
-        /// integers say what attacking earned its sender and what it would have
-        /// earned by turning up. A row where this is nothing is a creep whose
-        /// runs never cleared the bottom band; a row where it is missing across
-        /// the whole report is an economy paying the base alone.
+        /// The performance bonus, beside the flat base, so the two integers say
+        /// what attacking earned its sender and what it would have earned by
+        /// turning up. A row where this is nothing is a creep whose runs never
+        /// got anything past; a row where it is missing across the whole report
+        /// is an economy paying the base alone.
         /// </remarks>
         public long BonusGold { get; }
 
         public override string ToString() =>
             Label
-            + (Ingredients == AllIngredients
-                ? " over "
-                : " at " + Ingredients.ToString(CultureInfo.InvariantCulture) + " ingredients over ")
+            + " over "
             + Runs.ToString(CultureInfo.InvariantCulture)
             + " runs: "
             + WinRateBasisPoints.ToString(CultureInfo.InvariantCulture)

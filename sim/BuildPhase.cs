@@ -9,9 +9,9 @@ namespace Sim
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Slots are the scarcity that stands in for a second wallet.</b> A slot
-    /// spent on a cheap column is a slot not spent on a heavy unit, and how many
-    /// a round has is <see cref="Offering.WaveSlots"/> and nothing else.
+    /// <b>Nothing bounds how many slots a wave carries.</b> A round sends
+    /// whatever its purse reaches; the width that once widened at an anchor is
+    /// gone with the anchors, so the wallet is the only scarcity on this side.
     /// </para>
     /// <para>
     /// <b>An empty slot is a position rather than an omission.</b> Not sending
@@ -95,16 +95,16 @@ namespace Sim
     }
 
     /// <summary>
-    /// What one build phase decided: the option taken, what it built, and how
-    /// the wave's slots were filled.
+    /// What one build phase decided: what it built, and how the wave's slots
+    /// were filled.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>This is data and not a result.</b> Nothing here has been checked
-    /// against an offering, a set of unlocks, a slot width, a board, a map or a
-    /// purse -- <see cref="Resolve"/> is where all six happen, and it is public
-    /// so that a stored command stream is validated against the same surface a
-    /// live build phase is rather than against a second copy of the rules.
+    /// against the ladder, a board, a map or a purse -- <see cref="Resolve"/> is
+    /// where all four happen, and it is public so that a stored command stream
+    /// is validated against the same surface a live build phase is rather than
+    /// against a second copy of the rules.
     /// </para>
     /// <para>
     /// <b>The actions sit beside the slots because a phase is one decision over
@@ -114,17 +114,36 @@ namespace Sim
     /// share a round.
     /// </para>
     /// <para>
-    /// <b>One take per build phase, and it is not optional.</b> Unlocking is
-    /// free, so declining would be a decision nothing rewards; a round's take is
-    /// which of the menu, never whether.
+    /// <b>Nothing is taken and nothing is unlocked.</b> The forced pick, the
+    /// menu it was drawn from and the rounds that widened it are gone; every
+    /// creep in the roster is sendable from wave one, priced and nothing else.
     /// </para>
     /// <para>
-    /// <b>The filled slots ascend strictly by type id.</b> A slot becomes one
-    /// line of a wave, and a wave's lines ascend and are unique on
-    /// <c>(tick, type)</c> -- asserted rather than sorted, for the reason
-    /// <see cref="WaveScript"/> gives: sorting would leave two identical waves
-    /// with two different sets of bytes. It is also what makes two slots on one
-    /// creep a refusal rather than a slot silently spent twice.
+    /// <b>A slot's position is its release order.</b> Slot one's creeps walk
+    /// out first, slot two's behind them, and the wave is one column in the
+    /// order the slots were filled. That is the vision's <i>you choose the
+    /// order they come out in</i>, and until #191 this class did not honour it:
+    /// every slot was given the same release tick, so the columns all began
+    /// together and a slot's position meant nothing at all.
+    /// </para>
+    /// <para>
+    /// <b>The filled slots used to ascend strictly by type id, and that rule is
+    /// gone.</b> It existed to canonicalise an arrangement that was not a
+    /// decision -- two spellings of one wave would have been two sets of bytes
+    /// for one run. Once position is the release order the arrangement <i>is</i>
+    /// the decision, and asserting an order over it would delete the lever the
+    /// vision asked for. What survives is the half that was never about
+    /// canonicalisation: <b>a creep may fill only one slot of a wave</b>, so a
+    /// repeat is still a slot spent twice on one thing.
+    /// </para>
+    /// <para>
+    /// Canonical bytes are not lost with it. The release offsets ascend
+    /// strictly across filled slots, because every filled slot sends at least
+    /// one creep and each creep takes the column for
+    /// <see cref="Match.SpawnIntervalTicks"/> -- so the wave's orders are still
+    /// unique and ascending on <c>(tick, type)</c>, which is what
+    /// <see cref="WaveScript"/> and <see cref="WaveRecord"/> assert. The
+    /// ordering became a consequence of the rule instead of a rule of its own.
     /// </para>
     /// <para>
     /// <b>The actions do not ascend by anything, and that is not an
@@ -137,12 +156,13 @@ namespace Sim
     public sealed class BuildPhase
     {
         /// <summary>
-        /// The tick every slot of a build phase's wave releases on. A build
-        /// phase composes what is sent rather than when, so the whole wave
-        /// leaves at once and the ordering a wave record asserts falls to the
-        /// type ids alone.
+        /// The tick the first creep of a build phase's wave releases on. Every
+        /// creep behind it follows one spawn interval later, whether it is the
+        /// next of its own slot or the first of the next slot -- so a wave is
+        /// one column at one cadence, and a slot's position is where in that
+        /// column its creeps stand.
         /// </summary>
-        private const int ReleaseTick = 0;
+        private const int FirstReleaseTick = 0;
 
         /// <summary>Which lane. The skeleton has one, and it is zero.</summary>
         private const int Corridor = 0;
@@ -156,19 +176,11 @@ namespace Sim
 
         private readonly BuildAction[] _actions;
 
-        private BuildPhase(OptionKind take, int takeId, WaveSlot[] slots, BuildAction[] actions)
+        private BuildPhase(WaveSlot[] slots, BuildAction[] actions)
         {
-            Take = take;
-            TakeId = takeId;
             _slots = slots;
             _actions = actions;
         }
-
-        /// <summary>Which half of the menu this round's take came off.</summary>
-        public OptionKind Take { get; }
-
-        /// <summary>Which option of that kind was taken.</summary>
-        public int TakeId { get; }
 
         /// <summary>The slots, in the order they were filled. Empty ones included.</summary>
         public IReadOnlyList<WaveSlot> Slots => _slots;
@@ -176,23 +188,12 @@ namespace Sim
         /// <summary>What this phase does to the board, in the order it was written.</summary>
         public IReadOnlyList<BuildAction> Actions => _actions;
 
-        /// <summary>What was taken, and what the wave's slots hold.</summary>
-        public static BuildPhase Of(OptionKind take, int takeId, params WaveSlot[] slots)
+        /// <summary>What the wave's slots hold.</summary>
+        public static BuildPhase Of(params WaveSlot[] slots)
         {
             if (slots is null)
             {
                 throw new ArgumentNullException(nameof(slots));
-            }
-
-            if (takeId < 1)
-            {
-                throw new SimulationException(
-                    "A build phase takes "
-                    + Option.NameOf(take)
-                    + " "
-                    + takeId.ToString(CultureInfo.InvariantCulture)
-                    + ". Every option on an offering carries an identity counted from one, so an id below "
-                    + "that is a take nothing on any menu can answer.");
             }
 
             var copied = new WaveSlot[slots.Length];
@@ -202,7 +203,7 @@ namespace Sim
                 copied[index] = slots[index];
             }
 
-            return new BuildPhase(take, takeId, copied, NoActions);
+            return new BuildPhase(copied, NoActions);
         }
 
         /// <summary>
@@ -224,7 +225,52 @@ namespace Sim
 
             grown[_actions.Length] = action;
 
-            return new BuildPhase(Take, TakeId, _slots, grown);
+            return new BuildPhase(_slots, grown);
+        }
+
+        /// <summary>
+        /// This phase sending a different wave, with the actions it already
+        /// carries left where they are.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The wave's half of <see cref="With"/>, and it replaces where that
+        /// one appends.</b> An action's position is the order it was written in
+        /// and nothing else can be done to it, so appending is the whole of that
+        /// verb. A slot's position is the release order -- so a wave is
+        /// rearranged, emptied and regrown as well as extended, and there is no
+        /// one edit an append could stand for.
+        /// </para>
+        /// <para>
+        /// <b>It exists so that a screen composing a wave does not have to know
+        /// how a phase is put together.</b> ADR-0051 has the client hold a phase
+        /// in a local and price every change by resolving a candidate; without
+        /// this the candidate had to be reassembled from
+        /// <see cref="Of"/> and a replay of <see cref="Actions"/>, which is the
+        /// view knowing this class's shape well enough to rebuild one -- and
+        /// quietly dropping anything a phase gains that those two do not carry.
+        /// </para>
+        /// <para>
+        /// Nothing is checked here, as nothing is checked in <see cref="Of"/>:
+        /// a phase is data, and <see cref="Resolve"/> is where a wave meets the
+        /// purse and the roster.
+        /// </para>
+        /// </remarks>
+        public BuildPhase Sending(params WaveSlot[] slots)
+        {
+            if (slots is null)
+            {
+                throw new ArgumentNullException(nameof(slots));
+            }
+
+            var copied = new WaveSlot[slots.Length];
+
+            for (int index = 0; index < copied.Length; index++)
+            {
+                copied[index] = slots[index];
+            }
+
+            return new BuildPhase(copied, _actions);
         }
 
         /// <summary>
@@ -233,12 +279,12 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>One walk, one way through the purse: the take, then the actions
-        /// in the order they were written, then the wave's slots.</b> That is
-        /// the order the bytes carry and the order it plays in. Pricing the
-        /// slots first would quietly reorder what the author wrote -- the wave
-        /// would be bought out of a purse the towers had not been taken out of
-        /// yet, and a phase whose towers ate its wave would resolve.
+        /// <b>One walk, one way through the purse: the actions in the order they
+        /// were written, then the wave's slots.</b> That is the order the bytes
+        /// carry and the order it plays in. Pricing the slots first would
+        /// quietly reorder what the author wrote -- the wave would be bought out
+        /// of a purse the towers had not been taken out of yet, and a phase
+        /// whose towers ate its wave would resolve.
         /// </para>
         /// <para>
         /// <b>Every failure here is a refusal and never a skip</b>, on the rule
@@ -250,41 +296,63 @@ namespace Sim
         /// ate the wave is a decision and the author's script has to add up.
         /// </para>
         /// <para>
-        /// <b>Unlocking happens before buying</b>, so the creep this round's
-        /// take just unlocked may be fielded in this round's wave. The two are
-        /// one decision over one purse.
+        /// <b>A wave carries whatever it can afford.</b> Nothing bounds how many
+        /// creep types a round may send and nothing has to be unlocked before it
+        /// is bought: the purse is the only scarcity on the sending side.
         /// </para>
         /// <para>
-        /// <b>An upgrade pays the target row's full price and may name any
-        /// placeable type.</b> No ladder is read here, so
-        /// <c>content/upgrades.txt</c>'s standing claim that the simulation
-        /// never walks one is intact.
+        /// <b>The slots are the whole of the round's wave, and only the increase
+        /// over <paramref name="carried"/> is charged.</b> A creep is bought
+        /// once and attacks every round after, so a phase names everything it
+        /// fields -- what it carries and what it is adding -- and pays for the
+        /// difference. Storing only the addition would have been fewer bytes and
+        /// was rejected: the release order is a decision the round makes over
+        /// the whole wave, including creeps it did not buy, so a record that
+        /// held only the new ones could not say what the round actually sent.
+        /// </para>
+        /// <para>
+        /// <b>Sending fewer of a type than is carried is refused.</b>
+        /// Accumulation is monotone: there is no selling a creep back and no
+        /// leaving one at home, so a bad early purchase is a lasting commitment.
+        /// That refusal and the pricing above are one rule read twice rather
+        /// than two rules -- what cannot be given up is exactly what is not
+        /// charged for again.
+        /// </para>
+        /// <para>
+        /// <b>The ladder is read here, and that is a reversal.</b>
+        /// <c>content/upgrades.txt</c> long carried a standing claim that the
+        /// simulation never walks one; it is now false by intent. A unit that is
+        /// any edge's target cannot be <c>place</c>d and has to be reached by
+        /// <c>upgrade</c> from the rung below it, which is the one prerequisite
+        /// this game has. An upgrade still pays the target row's full price.
         /// </para>
         /// </remarks>
-        /// <param name="offering">The round's public menu, and the width it carries.</param>
-        /// <param name="unlocks">What the run may field, before this round's take.</param>
+        /// <param name="wave">Which round this is, for the refusals to name.</param>
+        /// <param name="carried">What the round already fields and is not charged for again.</param>
+        /// <param name="ladder">The upgrade edges a <c>place</c> and an <c>upgrade</c> are both refused against.</param>
         /// <param name="purse">What the run has to spend.</param>
         /// <param name="costs">What everything is priced at, units and snapshots alike.</param>
         /// <param name="types">The roster an action's type id names a row of.</param>
         /// <param name="map">The map an action's cell is on, or is not.</param>
         /// <param name="board">What stands before this phase acts.</param>
         public Build Resolve(
-            Offering offering,
-            Unlocks unlocks,
+            int wave,
+            WaveScript carried,
+            UpgradeLadder ladder,
             Purse purse,
             CostTable costs,
             UnitTypeTable types,
             HexMap map,
             Board board)
         {
-            if (offering is null)
+            if (carried is null)
             {
-                throw new ArgumentNullException(nameof(offering));
+                throw new ArgumentNullException(nameof(carried));
             }
 
-            if (unlocks is null)
+            if (ladder is null)
             {
-                throw new ArgumentNullException(nameof(unlocks));
+                throw new ArgumentNullException(nameof(ladder));
             }
 
             if (purse is null)
@@ -312,29 +380,12 @@ namespace Sim
                 throw new ArgumentNullException(nameof(board));
             }
 
-            Option taken = offering.Take(Take, TakeId);
-            Unlocks after = unlocks.With(taken);
-
-            if (_slots.Length > offering.WaveSlots)
-            {
-                throw new SimulationException(
-                    "A build phase at wave "
-                    + offering.Wave.ToString(CultureInfo.InvariantCulture)
-                    + " fills "
-                    + _slots.Length.ToString(CultureInfo.InvariantCulture)
-                    + " slots where that round has "
-                    + offering.WaveSlots.ToString(CultureInfo.InvariantCulture)
-                    + ". Slot width is derived from the anchor schedule and widens only at anchors, and it "
-                    + "is the scarcity that stands in for a second wallet -- so a slot beyond the round's "
-                    + "width is refused rather than dropped, which would send a wave nobody composed.");
-            }
-
             Purse left = purse;
             Board built = board;
 
             for (int index = 0; index < _actions.Length; index++)
             {
-                (built, left) = Applied(_actions[index], offering.Wave, built, left, costs, types, map);
+                (built, left) = Applied(_actions[index], wave, built, left, costs, types, map, ladder);
             }
 
             // What the board cost, taken off the purse the actions left rather
@@ -343,7 +394,18 @@ namespace Sim
             int defense = purse.Gold - left.Gold;
             var orders = new List<UnitOrder>();
             long spent = 0;
-            int previousTypeId = 0;
+            var already = new List<int>();
+
+            // How many of each order is new, in step with orders. The purse is
+            // spent out of this and never out of the count released, which is
+            // the whole of what "bought once" costs to implement.
+            var bought = new List<int>();
+
+            // Where in the column this slot's first creep stands: behind every
+            // creep the slots above it send. An empty slot contributes nothing
+            // and costs nothing, so banking a slot closes the gap rather than
+            // leaving a hole in the wave.
+            int ahead = 0;
 
             for (int index = 0; index < _slots.Length; index++)
             {
@@ -354,48 +416,86 @@ namespace Sim
                     continue;
                 }
 
-                if (!after.Has(slot.TypeId))
+                if (already.Contains(slot.TypeId))
                 {
                     throw new SimulationException(
                         "A build phase at wave "
-                        + offering.Wave.ToString(CultureInfo.InvariantCulture)
+                        + wave.ToString(CultureInfo.InvariantCulture)
                         + " fills slot "
                         + (index + 1).ToString(CultureInfo.InvariantCulture)
                         + " with type id "
                         + slot.TypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", which this run never unlocked. It holds "
-                        + after.ToString()
-                        + ". What may be fielded is bounded by what was chosen, so a creep nobody took is "
-                        + "refused rather than bought -- an unlock gate that let one purchase through is a "
-                        + "gate nobody has.");
+                        + ", which a slot above it already sent. A creep fills at most one slot of a wave: "
+                        + "two slots on one creep is a slot spent twice on one thing, and the same wave is "
+                        + "spelled by putting the whole count in one of them. The slots may name their "
+                        + "creeps in any order -- the order is the decision -- so this is all that is left "
+                        + "of the rule that they ascend.");
                 }
 
-                if (slot.TypeId <= previousTypeId)
+                int held = carried.CountOf(slot.TypeId);
+
+                if (slot.Count < held)
                 {
                     throw new SimulationException(
                         "A build phase at wave "
-                        + offering.Wave.ToString(CultureInfo.InvariantCulture)
-                        + " fills slot "
-                        + (index + 1).ToString(CultureInfo.InvariantCulture)
-                        + " with type id "
+                        + wave.ToString(CultureInfo.InvariantCulture)
+                        + " sends "
+                        + slot.Count.ToString(CultureInfo.InvariantCulture)
+                        + " of type id "
                         + slot.TypeId.ToString(CultureInfo.InvariantCulture)
-                        + ", at or below the "
-                        + previousTypeId.ToString(CultureInfo.InvariantCulture)
-                        + " a slot above it already sent. Filled slots ascend strictly by type id, which "
-                        + "makes a repeated creep a slot spent twice on one thing and keeps two identical "
-                        + "waves from having two different sets of bytes.");
+                        + " where the round already carries "
+                        + held.ToString(CultureInfo.InvariantCulture)
+                        + ". A creep is bought once and attacks every round after, so a wave may only grow: "
+                        + "there is no selling one back and no leaving one at home, and the round is charged "
+                        + "for the increase precisely because it cannot give up what it already fields.");
                 }
 
-                previousTypeId = slot.TypeId;
-                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), slot.Count);
-                orders.Add(new UnitOrder(ReleaseTick, after.TypeOf(slot.TypeId), slot.Count, Corridor));
+                // The increase, worked out once. What is checked against the
+                // purse below and what is taken out of it are the same number
+                // by construction rather than by two subtractions agreeing --
+                // and a phase priced at one and charged at the other is a purse
+                // spent on a wave that was never affordable.
+                int adding = slot.Count - held;
+
+                already.Add(slot.TypeId);
+                bought.Add(adding);
+                spent += costs.PriceOf(Purchase.Unit(slot.TypeId), adding);
+                orders.Add(new UnitOrder(
+                    FirstReleaseTick + (ahead * Match.SpawnIntervalTicks),
+                    types.Require(slot.TypeId, UnitRole.Moving, Filling(index, wave)),
+                    slot.Count,
+                    Corridor));
+
+                ahead += slot.Count;
+            }
+
+            // A carried creep that no slot names at all is the same refusal as
+            // one a slot sends too few of, and it is checked here because a
+            // missing slot is not reachable from inside the loop above.
+            for (int index = 0; index < carried.Orders.Count; index++)
+            {
+                UnitOrder held = carried.Orders[index];
+
+                if (!already.Contains(held.TypeId))
+                {
+                    throw new SimulationException(
+                        "A build phase at wave "
+                        + wave.ToString(CultureInfo.InvariantCulture)
+                        + " sends none of type id "
+                        + held.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + " where the round already carries "
+                        + carried.CountOf(held.TypeId).ToString(CultureInfo.InvariantCulture)
+                        + ". A creep is bought once and attacks every round after, so a wave may only grow: "
+                        + "a slot left off is a creep left at home, and there is no leaving one at home. "
+                        + "A round that wants to change nothing about its wave sends the same slots again.");
+                }
             }
 
             if (spent > left.Gold)
             {
                 throw new SimulationException(
                     "A build phase at wave "
-                    + offering.Wave.ToString(CultureInfo.InvariantCulture)
+                    + wave.ToString(CultureInfo.InvariantCulture)
                     + " buys "
                     + spent.ToString(CultureInfo.InvariantCulture)
                     + " gold of creeps out of a purse holding "
@@ -409,12 +509,13 @@ namespace Sim
 
             for (int index = 0; index < orders.Count; index++)
             {
-                left = left.Spend(costs, Purchase.Unit(orders[index].TypeId), orders[index].Count);
+                if (bought[index] > 0)
+                {
+                    left = left.Spend(costs, Purchase.Unit(orders[index].TypeId), bought[index]);
+                }
             }
 
             return new Build(
-                taken,
-                after,
                 left,
                 purse.Gold - left.Gold,
                 defense,
@@ -423,15 +524,19 @@ namespace Sim
         }
 
         public override string ToString() =>
-            "take "
-            + Option.NameOf(Take)
-            + " "
-            + TakeId.ToString(CultureInfo.InvariantCulture)
-            + ", "
-            + (_actions.Length == 0
+            (_actions.Length == 0
                 ? string.Empty
                 : string.Join(", ", Array.ConvertAll(_actions, action => action.ToString())) + ", ")
             + string.Join(" | ", Array.ConvertAll(_slots, slot => slot.ToString()));
+
+        /// <summary>
+        /// What a slot is called in a refusal: the round and which slot of it.
+        /// </summary>
+        private static string Filling(int index, int wave) =>
+            "A build phase at wave "
+            + wave.ToString(CultureInfo.InvariantCulture)
+            + " fills slot "
+            + (index + 1).ToString(CultureInfo.InvariantCulture);
 
         /// <summary>
         /// One action: the board it leaves behind, and the purse it leaves
@@ -472,18 +577,57 @@ namespace Sim
             Purse left,
             CostTable costs,
             UnitTypeTable types,
-            HexMap map)
+            HexMap map,
+            UpgradeLadder ladder)
         {
             string naming = Naming(action, wave);
             UnitType type = types.Require(action.TypeId, UnitRole.Placed, naming);
 
             if (action.Kind == ActionKind.Place)
             {
+                // The one prerequisite this game has. A unit some edge points at
+                // is a rung above another, and a rung is only worth being one if
+                // the rung below has to be stood first -- so it is refused here
+                // rather than priced, and reached by upgrading into.
+                if (ladder.IsTargetOfAnEdge(action.TypeId))
+                {
+                    throw new SimulationException(
+                        naming
+                        + ". Type id "
+                        + action.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + " is the target of an upgrade edge, so it is reached by upgrading the rung below "
+                        + "it and never placed outright. A tier that can be bought without the tier under "
+                        + "it is not a tier, it is a second row at a higher price.");
+                }
+
                 Footing footing = Footing.Of(map, type, action.Column, action.Row);
 
                 if (!footing.Possible)
                 {
                     throw new SimulationException(naming + ", " + footing.Fault);
+                }
+            }
+            else if (ladder.IsTargetOfAnEdge(action.TypeId))
+            {
+                // The other half of the same prerequisite. Refusing the place
+                // only says the row cannot be bought outright; without this,
+                // every standing tower is a rung below it and the ladder ranks
+                // nothing. A cell with nothing on it is left to Board.Upgrade,
+                // which refuses it in the words that fit.
+                UnitType? beneath = built.TypeOn(action.Column, action.Row);
+
+                if (!(beneath is null) && !ladder.HasEdge(beneath.Id, action.TypeId))
+                {
+                    throw new SimulationException(
+                        naming
+                        + " into type id "
+                        + action.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + ", where "
+                        + beneath.Label
+                        + " stands. The ladder carries no edge from that row to this one, and an upgrade "
+                        + "climbs an edge or it is not an upgrade -- a tier reachable from anything "
+                        + "standing is a tier with no tier under it, which is the thing refusing the "
+                        + "place exists to prevent.");
                 }
             }
 
@@ -565,28 +709,18 @@ namespace Sim
     public sealed class Build
     {
         internal Build(
-            Option taken,
-            Unlocks unlocks,
             Purse purse,
             int spent,
             int defense,
             WaveScript wave,
             Board board)
         {
-            Taken = taken;
-            Unlocks = unlocks;
             Purse = purse;
             Spent = spent;
             Defense = defense;
             Wave = wave;
             Board = board;
         }
-
-        /// <summary>The option this build phase took off the offering.</summary>
-        public Option Taken { get; }
-
-        /// <summary>What the run may field afterwards, this round's take included.</summary>
-        public Unlocks Unlocks { get; }
 
         /// <summary>The purse after the phase built and the wave was bought.</summary>
         public Purse Purse { get; }
@@ -617,9 +751,7 @@ namespace Sim
         public Board Board { get; }
 
         public override string ToString() =>
-            "took "
-            + Taken.ToString()
-            + ", spent "
+            "spent "
             + Spent.ToString(CultureInfo.InvariantCulture)
             + " of "
             + (Purse.Gold + Spent).ToString(CultureInfo.InvariantCulture)

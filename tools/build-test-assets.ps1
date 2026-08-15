@@ -6,7 +6,7 @@
     Two things, both written because the editor-only way of getting them does
     not exist anywhere else:
 
-      Assets/Resources/MatchArt.asset   the nine models and clips, resolved
+      Assets/Resources/MatchArt.asset   the models and clips, resolved
                                         from Tests.Fixtures.ChosenArt's paths,
                                         because AssetDatabase is editor-only
 

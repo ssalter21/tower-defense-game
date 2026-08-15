@@ -54,37 +54,66 @@ public static class TheRun
     /// </para>
     /// <para>
     /// <b>This is a run that built and then shopped</b> -- see
-    /// <see cref="TheBuild.Fortifying"/>. Every round of it took the first thing
-    /// on its menu, added a tower to the wall while there was one left to add,
-    /// and spent what remained of the purse on the creep that unlocked. So the
-    /// second column falls by more than half over the six rounds the wall is
-    /// going up, the first dips while it does -- gold standing on the board is
-    /// gold the wave was not sent out of -- and the first jumps at the seventh,
-    /// which is the first round the wall is not eating the purse.
+    /// <see cref="TheBuild.Fortifying"/>. Every round of it added a tower to the
+    /// wall while there was one left to add, and spent what remained of the
+    /// purse on the roster's first creep. So the second column falls by more
+    /// than half over the rounds the wall is going up -- the wall is working --
+    /// while the first climbs every single round without exception.
     /// </para>
     /// <para>
-    /// The run finishes its last wave on <see cref="HealthLeftInTheCommittedRun"/>
-    /// of the ruleset's 1500, which is what makes the death flag inert across
-    /// the scenario theory. If a content change ever takes that below zero, the
-    /// theory's no-death row is the one that says so.
+    /// <b>That first column climbing is #207 showing up in the data.</b> A creep
+    /// is bought once and attacks every round after, so this run's wave grows
+    /// every round and what it gets past a thinning field grows with it.
+    /// <b>The monotonicity is a property of this run and not a rule.</b> What
+    /// the rules make monotone is the wave; leak cost dealt is what a match did
+    /// with it, and the committed run in <c>content/</c> has a round where a
+    /// bigger wave deals a point less. Nothing here may be read as saying that
+    /// cannot happen.
+    /// </para>
+    /// <para>
+    /// <b>This player runs out of health, and that is the point.</b> #179 moved
+    /// the pool from 1500 to 800 and this run reaches zero in its fourth round,
+    /// so the death flag is live here rather than inert. What it does is
+    /// truncate: <see cref="TheCommittedRunWithoutDeath"/> is this vector with
+    /// six more rounds after it and every shared round identical to the gold.
+    /// That is a stronger statement of what the scenario theory is for than the
+    /// old one -- the flag used to be provably not-a-second-lifecycle only
+    /// because nothing ever reached it.
     /// </para>
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(22, 239),
-        new RoundOutcome(105, 220),
-        new RoundOutcome(90, 178),
-        new RoundOutcome(59, 177),
-        new RoundOutcome(43, 144),
-        new RoundOutcome(29, 91),
-        new RoundOutcome(159, 86),
-        new RoundOutcome(135, 97),
-        new RoundOutcome(138, 87),
-        new RoundOutcome(142, 85),
+        new RoundOutcome(23, 239),
+        new RoundOutcome(136, 220),
+        new RoundOutcome(313, 178),
+        new RoundOutcome(488, 177),
     };
 
-    /// <summary>What that run had left of the pool when its last wave resolved.</summary>
-    public const int HealthLeftInTheCommittedRun = 96;
+    /// <summary>
+    /// The same player over the same content with the death flag off: the four
+    /// rounds above, unchanged, and the six the pool did not survive.
+    /// </summary>
+    /// <remarks>
+    /// Written down for the reason the vector above is, and held against it
+    /// round for round. A flag that changed a number rather than only stopping
+    /// the loop would show up as a disagreement in the first four.
+    /// </remarks>
+    public static IReadOnlyList<RoundOutcome> TheCommittedRunWithoutDeath => new[]
+    {
+        new RoundOutcome(23, 239),
+        new RoundOutcome(136, 220),
+        new RoundOutcome(313, 178),
+        new RoundOutcome(488, 177),
+        new RoundOutcome(697, 144),
+        new RoundOutcome(951, 91),
+        new RoundOutcome(1373, 86),
+        new RoundOutcome(1894, 97),
+        new RoundOutcome(2537, 87),
+        new RoundOutcome(3343, 85),
+    };
+
+    /// <summary>What that run had left of the pool when it stopped: none of it.</summary>
+    public const int HealthLeftInTheCommittedRun = 0;
 
     /// <summary>
     /// The wave the committed canned field sends: <c>content/field.txt</c>,
@@ -135,13 +164,26 @@ public static class TheRun
         Against(types, 10, pool);
 
     /// <summary>One round at a field of this many, against a population written out here.</summary>
+    /// <remarks>
+    /// The purse is the one <see cref="AttackingPurse"/> names rather than the
+    /// ruleset's opening hundred. A round has to get something past a whole
+    /// defense for its offense score to be a number worth folding, and a
+    /// hundred gold of the cheapest creep on the roster does not: it scores
+    /// zero against every field size, which is an oracle that cannot tell an
+    /// average from a maximum.
+    /// </remarks>
     public static RoundReport Against(UnitTypeTable types, int fieldSize, params RoundOrders[] pool)
     {
+        Ruleset rules = Ruleset.Parse(PlantedText.Replace(
+            TheRuleset.CommittedText(),
+            "purse         100",
+            "purse       " + AttackingPurse.ToString(CultureInfo.InvariantCulture)));
+
         var run = new Run(
             TheMatch.Map(),
-            TheRuleset.Committed(),
+            rules,
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Of(pool),
             Seed,
             waves: 1,
@@ -149,6 +191,12 @@ public static class TheRun
 
         return run.Advance(TheBuild.Shopping(run));
     }
+
+    /// <summary>
+    /// What a round of <see cref="Against"/> opens holding: enough that the
+    /// wave it buys reaches the field rather than dying on the way in.
+    /// </summary>
+    public const int AttackingPurse = 2000;
 
     /// <summary>
     /// A population of four, spread wide enough that averaging over it is not
@@ -187,7 +235,7 @@ public static class TheRun
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             Pool(types),
             seed,
             waves,
@@ -202,13 +250,12 @@ public static class TheRun
     /// <remarks>
     /// <para>
     /// The committed hundred buys five bodies, and five bodies get past nobody
-    /// in a field drawn from <see cref="Pool"/>: every round of such a run is
-    /// placed in the bottom band, so what it earned for its offense is a column
-    /// of zeroes and an assertion over that column is an assertion about
-    /// nothing. Opening on more than a wave's income is what puts a bought wave
-    /// in front of the bands the pool is measured into, so that the three lines
-    /// a purse moves on are three real numbers and a fold over them has
-    /// something to be wrong about.
+    /// in a field drawn from <see cref="Pool"/>: every round of such a run deals
+    /// nothing, so what it earned for its offense is a column of zeroes and an
+    /// assertion over that column is an assertion about nothing. Opening on more
+    /// than a wave's income is what buys a wave big enough to get something
+    /// past, so that the three lines a purse moves on are three real numbers and
+    /// a fold over them has something to be wrong about.
     /// </para>
     /// <para>
     /// Death does not end it, because it builds nothing and a run standing
@@ -231,7 +278,7 @@ public static class TheRun
             TheMatch.Map(),
             rules,
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             Pool(types),
             Seed,
             Run.DefaultWaves,
@@ -259,7 +306,7 @@ public static class TheRun
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Of(new[] { Orders(types) }),
             Seed,
             waves,

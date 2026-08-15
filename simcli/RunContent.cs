@@ -68,43 +68,45 @@ internal readonly struct RunShape
 /// </para>
 /// <para>
 /// <b>The field is canned and it stands in for a ghost pool that does not
-/// exist.</b> What that means -- one pair of orders, drawn with replacement, so
-/// a field of ten is that opponent ten times -- is composed by
-/// <see cref="FieldPool.Canned"/> and described there. It is the simulation's
+/// exist.</b> What that means -- one player, recorded once per round and drawn
+/// with replacement, buying the authored column again every round -- is composed
+/// by <see cref="FieldPool.Canned"/> and described there. It is the simulation's
 /// answer to how thin a pool may be rather than this reader's, which is why the
-/// two files meeting here does not make it this file's decision.
+/// two files meeting here does not make it this file's decision. What this file
+/// does decide is how deep to record it, because the run's wave count is here
+/// and not there -- see <see cref="Pool"/>.
 /// </para>
 /// </remarks>
 internal sealed class RunContent
 {
     /// <summary>
-    /// The tick every order of a build phase's wave releases on. A field member
-    /// stands in for a stored round, a stored round is a build phase's output,
-    /// and a build phase composes what is sent rather than when.
+    /// The tick a build phase's wave opens on. Everything behind the first
+    /// creep follows from the counts: a slot's position is its release order,
+    /// so each order stands one spawn interval per creep behind the one above
+    /// it.
     /// </summary>
-    private const int ReleaseTick = 0;
+    private const int FirstReleaseTick = 0;
 
     private readonly HexMap _map;
 
     private readonly Ruleset _rules;
 
-    private readonly AnchorSchedule _schedule;
+    private readonly TowerLayout _defense;
 
-    private readonly FieldPool _pool;
+    private readonly WaveScript _field;
 
     private RunContent(
         HexMap map,
         UnitTypeTable types,
         UpgradeLadder ladder,
         Ruleset rules,
-        AnchorSchedule schedule,
         TowerLayout defense,
         WaveScript field)
     {
         _map = map;
         _rules = rules;
-        _schedule = schedule;
-        _pool = FieldPool.Canned(defense, field);
+        _defense = defense;
+        _field = field;
         Types = types;
         Ladder = ladder;
     }
@@ -131,7 +133,6 @@ internal sealed class RunContent
         string unitsText,
         string upgradesText,
         string rulesText,
-        string scheduleText,
         string defenseText,
         string fieldText)
     {
@@ -144,7 +145,6 @@ internal sealed class RunContent
             types,
             ladder,
             Ruleset.Parse(rulesText),
-            AnchorSchedule.Parse(scheduleText, types),
             TowerLayout.Parse(defenseText, types),
             Field(fieldText, types));
     }
@@ -154,42 +154,77 @@ internal sealed class RunContent
     /// orders rather than a match's.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// An authored match wave parses here perfectly -- same keyword, same
     /// fields, same table -- and a report swept against one reads exactly like a
     /// real one while separating no creep from any other. What tells the two
-    /// apart is the release tick: <see cref="BuildPhase"/> composes what is sent
-    /// rather than when, so every order of a stored round leaves on tick zero.
+    /// apart is the release schedule. A stored round is one column at one
+    /// cadence: it opens on tick zero, and each order after it stands one
+    /// <see cref="Match.SpawnIntervalTicks"/> per creep behind the order above
+    /// it, because a slot's position is its release order. Any other spacing is
+    /// a wave nothing in this economy composes.
+    /// </para>
+    /// <para>
+    /// The check was "every order on tick zero" until #191, which is what a
+    /// stored round looked like while a build phase composed what was sent and
+    /// not when. It is tighter now rather than looser: tick zero admitted any
+    /// number of simultaneous columns, and this admits exactly one arrangement
+    /// per set of counts.
     /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
+    /// </para>
     /// </remarks>
     private static WaveScript Field(string fieldText, UnitTypeTable types)
     {
         WaveScript field = WaveScript.Parse(RunContentFiles.Field.Option, fieldText, types);
 
+        int due = FirstReleaseTick;
+
         for (int index = 0; index < field.Count; index++)
         {
             int tick = field.Orders[index].TickOffset;
 
-            if (tick == ReleaseTick)
+            if (tick != due)
             {
-                continue;
+                throw new UsageException(
+                    "--"
+                    + RunContentFiles.Field.Option
+                    + " names a wave whose order "
+                    + (index + 1).ToString(PlainText.Culture)
+                    + " releases on tick "
+                    + tick.ToString(PlainText.Culture)
+                    + " where a build phase would have released it on "
+                    + due.ToString(PlainText.Culture)
+                    + ". The canned field stands in for a population of stored rounds, and a stored "
+                    + "round is one column at one cadence: it opens on tick 0, and every order after it "
+                    + "stands one release behind the whole of the order above it, because a slot's "
+                    + "position is the order its creeps walk out in. A wave spaced any other way is a "
+                    + "whole authored match, which is what --wave means on the 'record' verb -- and "
+                    + "swept against, it outspends every opponent it faces and reports a total loss on "
+                    + "every row.");
             }
 
-            throw new UsageException(
-                "--"
-                + RunContentFiles.Field.Option
-                + " names a wave whose order "
-                + (index + 1).ToString(PlainText.Culture)
-                + " releases on tick "
-                + tick.ToString(PlainText.Culture)
-                + ". The canned field stands in for a population of stored rounds, and a stored round "
-                + "is a build phase's output: it composes what is sent rather than when, so every order "
-                + "of one leaves on tick 0. A wave released over time is a whole authored match, which "
-                + "is what --wave means on the 'record' verb -- and swept against, it outspends every "
-                + "opponent it faces and reports a total loss on every row.");
+            due += field.Orders[index].Count * Match.SpawnIntervalTicks;
         }
 
         return field;
     }
+
+    /// <summary>
+    /// The canned population, recorded as deep as the run is long.
+    /// </summary>
+    /// <remarks>
+    /// The stand-in buys its column again every round, so a pool shallower than
+    /// the run would leave the last rounds fighting the deepest one it has --
+    /// which is the flat field this replaced, arriving late. A run with no last
+    /// wave has no number to be as deep as, so it gets the default depth and the
+    /// deepest round stands from there, which is the rule
+    /// <see cref="FieldPool.OfRounds"/> carries.
+    /// </remarks>
+    private FieldPool Pool(RunShape shape) =>
+        FieldPool.Canned(
+            _defense,
+            _field,
+            shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves);
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>
     public Run Fresh(ulong seed, RunShape shape) =>
@@ -197,8 +232,8 @@ internal sealed class RunContent
             _map,
             _rules,
             Types,
-            _schedule,
-            _pool,
+            Ladder,
+            Pool(shape),
             seed,
             shape.Waves,
             shape.FieldSize,
@@ -218,8 +253,6 @@ internal sealed class RunContent
         RunShape shape,
         ulong firstSeed,
         int runsPerCreep,
-        int ordinaryOptionsPerRound,
-        int gameChangersPerAnchor,
         int freeSnapshotsPerRun,
         int snapshotPriceGold,
         int mostCreeps) =>
@@ -227,15 +260,13 @@ internal sealed class RunContent
             _map,
             _rules,
             Types,
-            _schedule,
-            _pool,
+            Ladder,
+            Pool(shape),
             firstSeed,
             runsPerCreep,
             shape.Waves,
             shape.FieldSize,
             shape.DeathEndsTheRun,
-            ordinaryOptionsPerRound,
-            gameChangersPerAnchor,
             freeSnapshotsPerRun,
             snapshotPriceGold,
             mostCreeps);

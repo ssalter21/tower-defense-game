@@ -9,25 +9,26 @@ using View;
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The camera: fixed isometric, orthographic, six snapped steps, and unable
-    /// to change what happens in the match.
+    /// The camera: perspective, freely orbited, flown anywhere, dollied close
+    /// enough to read one model, and unable to change what happens in the
+    /// match.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>"View-only" is asserted here, not intended.</b> Two independent
     /// checks, because they fail independently: a structural one that no
     /// signature on the rig so much as names a simulation type, and a
-    /// behavioural one that runs the same match six times with the camera
-    /// somewhere different each tick and requires the per-tick state hashes to
-    /// be identical. The first would miss a camera read through a static; the
+    /// behavioural one that runs the same match with the camera somewhere
+    /// different every tick and requires the per-tick state hashes to be
+    /// identical. The first would miss a camera read through a static; the
     /// second would miss a dependency that exists but has not been exercised.
     /// </para>
     /// <para>
-    /// <b>The six snaps are a real check because nothing billboards.</b> If any
-    /// part of the view turned to face the camera, yawing through all six would
-    /// look the same from everywhere and prove nothing. So one of these tests
-    /// yaws the whole rig and requires every other transform in the scene to be
-    /// bit-for-bit where it was.
+    /// <b>Orbiting is a real check because nothing billboards.</b> If any part
+    /// of the view turned to face the camera, turning the rig would look the
+    /// same from everywhere and prove nothing. So one of these tests orbits and
+    /// flies the whole rig and requires every other transform in the scene to
+    /// be bit-for-bit where it was.
     /// </para>
     /// </remarks>
     public class CameraRigTests
@@ -50,83 +51,361 @@ namespace Tests.PlayMode
             return _root.AddComponent<MatchRoot>();
         }
 
+        /// <summary>
+        /// Perspective, and framed so the whole floor is on screen at the
+        /// default view — asserted by projecting the floor's own corners rather
+        /// than by re-deriving the distance formula, which would only check
+        /// that the arithmetic agrees with itself.
+        /// </summary>
         [Test]
-        public void TheCameraIsIsometricAndOrthographic()
+        public void TheCameraIsPerspectiveAndTheWholeFloorIsInFrame()
         {
             MatchRoot root = BuildPlayfield();
-            Camera camera = root.CameraRig.Camera;
+            OrbitCameraRig rig = root.CameraRig;
+            Camera camera = rig.Camera;
 
-            Assert.That(camera.orthographic, Is.True, "A perspective camera is not this game's camera.");
-            Assert.That(camera.orthographicSize, Is.GreaterThan(0f));
-
-            // The pitch is the true isometric angle and it does not change with
-            // the snap; only the yaw does.
-            for (int snap = 0; snap < SceneFraming.CameraSnapCount; snap++)
-            {
-                root.CameraRig.SnapTo(snap);
-
-                Assert.That(
-                    camera.transform.eulerAngles.x,
-                    Is.EqualTo(SceneFraming.CameraPitchDegrees).Within(0.01f),
-                    "snap " + snap + " changed the pitch");
-            }
-
+            Assert.That(camera.orthographic, Is.False, "An orthographic camera cannot be dollied into a fight.");
             Assert.That(
-                root.Floor.WorldBounds.size.magnitude,
-                Is.GreaterThan(0f),
-                "The camera is framed on the floor, so the floor has to have a size.");
-        }
+                camera.fieldOfView,
+                Is.EqualTo(SceneFraming.CameraFieldOfViewDegrees).Within(0.01f));
 
-        [Test]
-        public void ThereAreSixSnapsAndTheyWrap()
-        {
-            MatchRoot root = BuildPlayfield();
-            IsometricCameraRig rig = root.CameraRig;
+            Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+            Assert.That(rig.FramedDistance, Is.GreaterThan(0f));
+            Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.01f));
 
-            var yaws = new List<float>();
+            Bounds floor = root.Floor.WorldBounds;
 
-            rig.SnapTo(0);
-            Quaternion first = rig.transform.rotation;
+            Assert.That(floor.size.magnitude, Is.GreaterThan(0f), "The camera is framed on the floor.");
 
-            for (int step = 0; step < SceneFraming.CameraSnapCount; step++)
+            foreach (Vector3 corner in GroundCorners(floor))
             {
-                Assert.That(rig.Snap, Is.EqualTo(step));
-                yaws.Add(rig.transform.eulerAngles.y);
-                rig.Rotate(1);
+                Vector3 viewport = camera.WorldToViewportPoint(corner);
+
+                Assert.That(viewport.z, Is.GreaterThan(0f), corner + " is behind the camera");
+                Assert.That(viewport.x, Is.InRange(0f, 1f), corner + " is off the side of the frame");
+                Assert.That(viewport.y, Is.InRange(0f, 1f), corner + " is off the top or bottom of the frame");
             }
-
-            Assert.That(rig.Snap, Is.EqualTo(0), "Six steps is all the way round.");
-            Assert.That(Quaternion.Angle(rig.transform.rotation, first), Is.LessThan(0.01f));
-
-            Assert.That(yaws.Distinct().Count(), Is.EqualTo(6), "Six snaps, six distinct headings.");
-
-            for (int step = 1; step < yaws.Count; step++)
-            {
-                float delta = Mathf.DeltaAngle(yaws[step - 1], yaws[step]);
-
-                Assert.That(
-                    Mathf.Abs(delta),
-                    Is.EqualTo(SceneFraming.CameraSnapDegrees).Within(0.01f),
-                    "step " + step + " is not a sixty-degree snap");
-            }
-
-            // Backwards, and past zero, because a negative modulus in C# is the
-            // classic way an orbit sticks at one end.
-            rig.Rotate(-1);
-            Assert.That(rig.Snap, Is.EqualTo(5));
-            rig.Rotate(-7);
-            Assert.That(rig.Snap, Is.EqualTo(4));
         }
 
         /// <summary>
-        /// No billboards, no flat cards. Yawing the camera moves the camera and
-        /// nothing else — asserted over every transform under the root.
+        /// Yaw is free rather than snapped, and pitch has no limit at all: far
+        /// enough round and the camera is underneath the floor looking up,
+        /// which is the view a clamp would have taken away.
         /// </summary>
         [Test]
-        public void YawingTheCameraMovesNothingButTheCamera()
+        public void YawIsFreeAndPitchIsNotClamped()
         {
             MatchRoot root = BuildPlayfield();
-            IsometricCameraRig rig = root.CameraRig;
+            OrbitCameraRig rig = root.CameraRig;
+
+            var yaws = new List<float>();
+
+            for (var step = 0; step < 12; step++)
+            {
+                rig.Orbit(7f, 0f);
+                yaws.Add(rig.Yaw);
+            }
+
+            Assert.That(yaws.Distinct().Count(), Is.EqualTo(12), "Twelve seven-degree turns, twelve headings.");
+            Assert.That(rig.Yaw, Is.EqualTo(84f).Within(0.01f), "The turns did not land where they were asked to.");
+
+            // All the way round and back to where it started.
+            rig.Orbit(276f, 0f);
+            Assert.That(rig.Yaw, Is.EqualTo(0f).Within(0.01f));
+
+            // Sixty degrees the wrong way from the default puts the camera
+            // below the ground plane, tilted up at the underside of the board.
+            rig.Orbit(0f, -SceneFraming.CameraDefaultPitchDegrees - 25f);
+
+            Assert.That(rig.Pitch, Is.EqualTo(335f).Within(0.01f), "The pitch was clamped on the way past zero.");
+            Assert.That(
+                rig.Camera.transform.position.y,
+                Is.LessThan(0f),
+                "The camera cannot get under the floor, so the pitch is clamped somewhere.");
+            Assert.That(
+                rig.Camera.transform.forward.y,
+                Is.GreaterThan(0f),
+                "From under the floor the camera should be looking up.");
+
+            // And the other way: over the top, past straight down, to the far
+            // side of the board with the picture inverted.
+            rig.PointAt(0f, 180f - SceneFraming.CameraDefaultPitchDegrees, rig.FramedDistance);
+
+            Assert.That(rig.Camera.transform.position.y, Is.GreaterThan(0f));
+            Assert.That(rig.Camera.transform.position.z, Is.GreaterThan(rig.Pivot.z));
+            Assert.That(
+                rig.Camera.transform.up.y,
+                Is.LessThan(0f),
+                "Past straight down the picture is upside down, and that is what unclamped means.");
+        }
+
+        /// <summary>
+        /// The dolly walks the camera in until one creep would overflow the
+        /// frame, and stops there rather than at the pivot.
+        /// </summary>
+        [Test]
+        public void DollyingGoesInCloseAndStopsShortOfThePivot()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            float framed = rig.FramedDistance;
+
+            rig.Dolly(0.5f);
+            Assert.That(rig.Distance, Is.LessThan(framed), "A positive dolly goes in.");
+
+            rig.Dolly(-0.5f);
+            Assert.That(rig.Distance, Is.EqualTo(framed).Within(0.01f), "The dolly is not symmetric.");
+
+            // Far more scrolling than anybody would do, to land on the stops.
+            rig.Dolly(100f);
+            Assert.That(rig.Distance, Is.EqualTo(SceneFraming.CameraMinDistance).Within(0.001f));
+            Assert.That(
+                rig.Distance,
+                Is.GreaterThan(SceneFraming.CameraNearClip),
+                "The closest stop is inside the near plane, so the world would vanish there.");
+
+            // A frame under two metres tall where the camera is pointed: a
+            // humanoid standing there does not fit in it.
+            float frameHeight = 2f * rig.Distance
+                * Mathf.Tan(0.5f * SceneFraming.CameraFieldOfViewDegrees * Mathf.Deg2Rad);
+
+            Assert.That(
+                frameHeight,
+                Is.LessThan(2f),
+                "The closest the camera goes still frames more than a whole creep.");
+
+            rig.Dolly(-100f);
+            Assert.That(
+                rig.Distance,
+                Is.EqualTo(framed * SceneFraming.CameraMaxDistanceFactor).Within(0.001f));
+
+            // The far plane is a typed constant with a derivation in its
+            // comment, and this is the derivation: from the outermost stop, the
+            // whole floor is still in front of it.
+            foreach (Vector3 corner in GroundCorners(root.Floor.WorldBounds))
+            {
+                Assert.That(
+                    rig.Camera.WorldToViewportPoint(corner).z,
+                    Is.LessThan(SceneFraming.CameraFarClip),
+                    "The far plane cuts " + corner + " off at the outermost dolly stop.");
+            }
+        }
+
+        /// <summary>
+        /// The pivot flies, and it flies where the camera is looking: forward
+        /// is the heading flattened into the ground plane, so a press still
+        /// goes into the picture after a half turn. Up is world up at every
+        /// heading, and nothing stops the camera leaving the board.
+        /// </summary>
+        [Test]
+        public void FlyingMovesThePivotAlongTheCurrentHeading()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            // Yaw zero looks down +Z, so forward is +Z.
+            Vector3 from = rig.Pivot;
+            float distance = rig.Distance;
+            rig.Fly(Vector3.forward);
+
+            AssertVector(rig.Pivot - from, new Vector3(0f, 0f, distance), "forward at yaw 0");
+
+            // Half a turn, and the same press goes the other way.
+            rig.PointAt(180f, rig.Pitch, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            AssertVector(rig.Pivot - from, new Vector3(0f, 0f, -distance), "forward at yaw 180");
+
+            // A quarter turn: forward is +X, and right is -Z.
+            rig.PointAt(90f, rig.Pitch, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward + Vector3.right);
+
+            AssertVector(rig.Pivot - from, new Vector3(distance, 0f, -distance), "forward and right at yaw 90");
+
+            // Up is world up however the rig is turned or tilted.
+            rig.PointAt(213f, 250f, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.up);
+
+            AssertVector(rig.Pivot - from, new Vector3(0f, distance, 0f), "up at yaw 213, pitch 250");
+
+            // Orbited over the top, the picture is upside down and the camera's
+            // own forward has turned over with it. Flying follows the heading
+            // instead, which is still the direction up the screen — so a press
+            // goes into the picture rather than out of the back of it.
+            rig.PointAt(0f, 180f - SceneFraming.CameraDefaultPitchDegrees, distance);
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            Vector3 upTheScreen = Vector3.ProjectOnPlane(rig.Camera.transform.up, Vector3.up);
+
+            Assert.That(
+                Vector3.Dot((rig.Pivot - from).normalized, upTheScreen.normalized),
+                Is.GreaterThan(0.99f),
+                "Inverted, flying forward left the picture instead of going up the screen.");
+
+            // Off the board and under it. There are no bounds on the pivot, on
+            // purpose: a limit would be a guess at which views are worth having.
+            rig.PointAt(0f, rig.Pitch, distance);
+            rig.Fly(new Vector3(0f, -4f, 20f));
+
+            Bounds floor = root.Floor.WorldBounds;
+
+            Assert.That(rig.Pivot.z, Is.GreaterThan(floor.max.z), "The camera cannot fly off the end of the board.");
+            Assert.That(rig.Pivot.y, Is.LessThan(0f), "The camera cannot fly under the board.");
+        }
+
+        /// <summary>
+        /// One press covers the same fraction of what is on screen at every
+        /// zoom, which is the same reason the dolly is exponential: a fixed
+        /// speed is glacial framed on the board and uncontrollable on a creep.
+        /// </summary>
+        [Test]
+        public void FlightSpeedScalesWithTheDolly()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            rig.PointAt(0f, rig.Pitch, rig.FramedDistance);
+
+            Vector3 from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+            float framed = Vector3.Distance(rig.Pivot, from);
+
+            Assert.That(framed, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+
+            rig.PointAt(0f, rig.Pitch, 0.5f * rig.FramedDistance);
+
+            from = rig.Pivot;
+            rig.Fly(Vector3.forward);
+
+            Assert.That(
+                Vector3.Distance(rig.Pivot, from),
+                Is.EqualTo(0.5f * framed).Within(0.001f),
+                "Dollying halfway in did not halve the step, so the flight is a speed rather than a fraction.");
+        }
+
+        /// <summary>
+        /// Reframing puts the pivot back with the angle and the distance. The
+        /// frame capture reframes against its own aspect, so anything less than
+        /// this would let a capture inherit wherever somebody had flown to.
+        /// </summary>
+        [Test]
+        public void ReframingPutsThePivotBackAsWellAsTheAngle()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            rig.PointAt(97f, 12f, 0.3f * rig.FramedDistance);
+            rig.Fly(new Vector3(3f, 2f, -5f));
+
+            rig.Reframe(root.Floor.WorldBounds);
+
+            AssertVector(rig.Pivot, rig.FramedPivot, "the reframed pivot");
+            Assert.That(rig.Yaw, Is.EqualTo(SceneFraming.CameraDefaultYawDegrees).Within(0.001f));
+            Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.001f));
+            Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+        }
+
+        /// <summary>Asserts a vector component by component.</summary>
+        private static void AssertVector(Vector3 actual, Vector3 expected, string what)
+        {
+            Assert.That(actual.x, Is.EqualTo(expected.x).Within(0.001f), what + ": x");
+            Assert.That(actual.y, Is.EqualTo(expected.y).Within(0.001f), what + ": y");
+            Assert.That(actual.z, Is.EqualTo(expected.z).Within(0.001f), what + ": z");
+        }
+
+        /// <summary>
+        /// The reset key eases rather than cuts, brings the position back along
+        /// with the angle and the distance, takes about a quarter of a second,
+        /// and gives way to a hand on the mouse.
+        /// </summary>
+        /// <remarks>
+        /// Easing the pivot is what makes the reset mean <i>the default view</i>
+        /// rather than <i>the default angle</i>. It is also the only way home
+        /// from far enough out that the board has left the frustum, which is
+        /// what an unbounded flight buys.
+        /// </remarks>
+        [Test]
+        public void TheResetEasesBackToTheDefaultViewInAQuarterOfASecond()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
+
+            rig.PointAt(140f, 8f, 0.4f * rig.FramedDistance);
+            rig.Fly(new Vector3(6f, 3f, 9f));
+
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.GreaterThan(rig.FramedDistance),
+                "The camera has not been flown far enough for the reset to be worth measuring.");
+
+            rig.ResetView();
+
+            Assert.That(rig.IsEasing, Is.True);
+
+            rig.Advance(0.1f);
+
+            Assert.That(rig.IsEasing, Is.True, "A quarter of a second is not up after a tenth of one.");
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.GreaterThan(0.01f),
+                "The pivot arrived instantly, so the position is cut rather than eased.");
+            Assert.That(
+                Mathf.DeltaAngle(rig.Yaw, SceneFraming.CameraDefaultYawDegrees),
+                Is.Not.EqualTo(0f).Within(1f),
+                "The reset arrived instantly, so it is a cut rather than an ease.");
+            Assert.That(
+                Mathf.DeltaAngle(rig.Yaw, 140f),
+                Is.Not.EqualTo(0f).Within(1f),
+                "The reset has not moved anything.");
+
+            rig.Advance(0.15f);
+
+            Assert.That(rig.IsEasing, Is.False);
+            Assert.That(rig.Yaw, Is.EqualTo(SceneFraming.CameraDefaultYawDegrees).Within(0.001f));
+            Assert.That(rig.Pitch, Is.EqualTo(SceneFraming.CameraDefaultPitchDegrees).Within(0.001f));
+            Assert.That(rig.Distance, Is.EqualTo(rig.FramedDistance).Within(0.001f));
+            Assert.That(
+                Vector3.Distance(rig.Pivot, rig.FramedPivot),
+                Is.LessThan(0.001f),
+                "The angle and the distance came home and the position stayed where it was flown to.");
+
+            Bounds floor = root.Floor.WorldBounds;
+
+            AssertVector(
+                rig.FramedPivot,
+                new Vector3(floor.center.x, 0f, floor.center.z),
+                "home is the middle of the floor, in the ground plane");
+
+            // A hand on the mouse wins: the ease stops where the drag put it
+            // rather than dragging the camera back out from underneath.
+            rig.PointAt(140f, 8f, rig.FramedDistance);
+            rig.ResetView();
+            rig.Advance(0.1f);
+            rig.Orbit(10f, 0f);
+
+            Assert.That(rig.IsEasing, Is.False, "Orbiting during a reset left the reset running.");
+
+            float held = rig.Yaw;
+            rig.Advance(1f);
+
+            Assert.That(rig.Yaw, Is.EqualTo(held).Within(0.001f));
+        }
+
+        /// <summary>
+        /// No billboards, no flat cards. Orbiting, flying and dollying move the
+        /// camera and nothing else — asserted over every transform under the
+        /// root.
+        /// </summary>
+        [Test]
+        public void MovingTheCameraMovesNothingButTheCamera()
+        {
+            MatchRoot root = BuildPlayfield();
+            OrbitCameraRig rig = root.CameraRig;
 
             Transform[] others = root.GetComponentsInChildren<Transform>(includeInactive: true)
                 .Where(t => !t.IsChildOf(rig.transform))
@@ -136,17 +415,19 @@ namespace Tests.PlayMode
 
             Matrix4x4[] before = others.Select(t => t.localToWorldMatrix).ToArray();
 
-            for (int step = 0; step < SceneFraming.CameraSnapCount; step++)
+            for (var step = 0; step < 12; step++)
             {
-                rig.Rotate(1);
+                rig.Orbit(31f, 13f);
+                rig.Dolly(0.2f);
+                rig.Fly(new Vector3(0.3f, 0.1f, 0.4f));
 
-                for (int index = 0; index < others.Length; index++)
+                for (var index = 0; index < others.Length; index++)
                 {
                     Assert.That(
                         others[index].localToWorldMatrix,
                         Is.EqualTo(before[index]),
-                        others[index].name + " moved when the camera did, at snap " + rig.Snap
-                        + ". Something is facing the camera, and the six-snap check is a formality.");
+                        others[index].name + " moved when the camera did, at yaw " + rig.Yaw
+                        + ". Something is facing the camera, and orbiting to look at it shows nothing.");
                 }
             }
         }
@@ -203,7 +484,7 @@ namespace Tests.PlayMode
             Assert.That(root.Sun.shadowStrength, Is.GreaterThan(0f));
 
             // Fixed in world space rather than parented to the camera. A light
-            // that orbits with the viewer makes all six snaps look identical.
+            // that orbits with the viewer lights every angle identically.
             Assert.That(root.Sun.transform.IsChildOf(root.CameraRig.transform), Is.False);
         }
 
@@ -227,7 +508,7 @@ namespace Tests.PlayMode
                 BindingFlags.Static | BindingFlags.Instance |
                 BindingFlags.DeclaredOnly;
 
-            foreach (MemberInfo member in typeof(IsometricCameraRig).GetMembers(Everything))
+            foreach (MemberInfo member in typeof(OrbitCameraRig).GetMembers(Everything))
             {
                 switch (member)
                 {
@@ -260,9 +541,9 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// The behavioural half: the same match, run once per snap, with the
-        /// camera moved every single tick — and every per-tick state hash
-        /// identical.
+        /// The behavioural half: the same match, run once per starting angle,
+        /// with the camera orbited, dollied and flown every single tick — and
+        /// every per-tick state hash identical.
         /// </summary>
         /// <remarks>
         /// The hash is over internal simulation state rather than over the
@@ -274,30 +555,31 @@ namespace Tests.PlayMode
         public void TheCameraIsNeverASimulationInput()
         {
             MatchRoot root = BuildPlayfield();
-            IsometricCameraRig rig = root.CameraRig;
+            OrbitCameraRig rig = root.CameraRig;
 
             ulong[] still = RunMatch(root.Map, null);
 
             Assert.That(still.Length, Is.GreaterThan(30), "A match that short is not evidence of anything.");
 
-            for (int snap = 0; snap < SceneFraming.CameraSnapCount; snap++)
+            foreach (float yaw in new[] { 0f, 47f, 113f, 250f })
             {
-                rig.SnapTo(snap);
+                rig.PointAt(yaw, SceneFraming.CameraDefaultPitchDegrees, rig.FramedDistance);
 
                 ulong[] orbiting = RunMatch(root.Map, rig);
 
                 Assert.That(
                     orbiting,
                     Is.EqualTo(still),
-                    "Running the match while orbiting from snap " + snap
+                    "Running the match while orbiting from yaw " + yaw
                     + " produced a different rolling state hash. Where somebody is looking changed "
                     + "what happened.");
             }
         }
 
         /// <summary>
-        /// Plays a whole match, yawing <paramref name="rig"/> — if there is one
-        /// — on every tick, and returns the rolling state hash per tick.
+        /// Plays a whole match, orbiting, dollying and flying
+        /// <paramref name="rig"/> — if there is one — on every tick, and
+        /// returns the rolling state hash per tick.
         /// </summary>
         /// <remarks>
         /// The content is written here rather than read from a file: two unit
@@ -305,7 +587,7 @@ namespace Tests.PlayMode
         /// and for creeps to die, and this test is about the camera rather than
         /// about the committed tuning.
         /// </remarks>
-        private static ulong[] RunMatch(HexMap map, IsometricCameraRig rig)
+        private static ulong[] RunMatch(HexMap map, OrbitCameraRig rig)
         {
             var types = UnitTypeTable.Parse(
                 "unit 1 grunt moving 200 85 0 0 0 0 0 0 none 0 12\n"
@@ -327,11 +609,22 @@ namespace Tests.PlayMode
 
                 if (rig != null)
                 {
-                    rig.Rotate(1);
+                    rig.Orbit(11f, 3f);
+                    rig.Dolly(0.05f);
+                    rig.Fly(new Vector3(0.2f, 0.05f, 0.3f));
                 }
             }
 
             return hashes.ToArray();
+        }
+
+        /// <summary>The four corners of a bounds in the ground plane.</summary>
+        private static IEnumerable<Vector3> GroundCorners(Bounds floor)
+        {
+            yield return new Vector3(floor.min.x, 0f, floor.min.z);
+            yield return new Vector3(floor.min.x, 0f, floor.max.z);
+            yield return new Vector3(floor.max.x, 0f, floor.min.z);
+            yield return new Vector3(floor.max.x, 0f, floor.max.z);
         }
     }
 }

@@ -1,5 +1,20 @@
 # 0050 — A decision is composed in a local and proved before it is written
 
+> **The verb this was decided about is deleted — [#200](https://github.com/ssalter21/tower-defense-game/issues/200), 14 August 2026.**
+> `simcli play` is gone, and with it `BuildPrompt`, `RoundFrame`, `TypedLine`, `RunPrompt` and the shell's
+> `Written` extension. Read every present tense below as the shell's, at the time.
+>
+> **What was decided stands, and the client is where it is spent.** A round is still composed in a local, still
+> priced by the call that would refuse it, still handed to the run by exactly one commit, and still proved by
+> replaying its own compiled script into a fresh run before anything is kept — which is
+> [ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md), this shape at the screen.
+> `PlayedScript` and `ProvedSession` are in `sim/`, and the file is the caller's:
+> `client/Assets/View/WrittenRun.cs` is now the only half that opens one. The guarantee that carried the whole
+> step — a session that disagreed hands back **no script at all** — is the script's own and is unweakened.
+>
+> Why the verb went is [the decision log's](../decision-log.md#the-interactive-verb-is-not-what-the-shell-is-for);
+> what it was built from is [the archived specification](../archive/playing-a-run-from-a-shell.md).
+
 The interactive verb adds no simulation surface. `play` composes a round's `BuildPhase` **in a local**, prices
 it after every typed word by calling the pure `BuildPhase.Resolve` and throwing the `Build` away, hands the run
 nothing until `done`, and at the end **replays its own compiled script into a fresh run** and writes only if
@@ -43,10 +58,25 @@ second one beside it: [ADR-0039](0039-the-command-stream-is-the-only-route-into-
 reaches the simulation through a stored command and by no other route, and a prompt that emitted rounds
 nothing could store would be that door reopened with the word *interactive* on it.
 
-**The decision to write is the prover's, not the verb's.** A script nobody played back is a record of nothing
-in particular, and a caller free to write anyway is a caller free to skip the only claim this verb makes. So
-`ProvedSession.Written` is the one thing that touches a disk, a disagreement writes nothing and exits non-zero,
-and the sentence it prints says the fault is this program's — nothing a player can type can reach one.
+**The prover is in `sim`, and the writing is the caller's.** The claim is the client's obligation as much as
+the shell's: [seam 2](../build-order.md#2--the-submission-barrier) asks that the record format transmit a turn
+as cleanly as it stores a ghost, and
+[ADR-0039](0039-the-command-stream-is-the-only-route-into-a-run.md) and
+[ADR-0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) both rest on the same
+property. So `PlayedScript` and `ProvedSession` sit in the simulation, where anything that can play a run can
+reach them. What does not follow them down is the file: `System.IO` is a banned namespace there and the IL
+scan rejects any reference to it, so the prover cannot open a path. `RunSummary` moved with them, because the
+outcome line is what the two runs are compared by and a second spelling of it would be the thing to keep
+current. The shell adds `Written` as an extension over the proved session; a client's half is Unity's storage
+and not a path at all.
+
+**The decision to keep a session is still the prover's, not the caller's.** A script nobody played back is a
+record of nothing in particular, and a caller free to write anyway is a caller free to skip the only claim
+this step makes. So a session that disagreed hands back **no script** — not the script beside the sentence
+saying not to keep it, nothing at all — and a caller that never reads `Agreed` has nothing to write down. That
+was `ProvedSession.Written`'s guarantee while `Written` was the type's only exit; splitting the file out moved
+it onto the script itself rather than losing it. The shell still prints the disagreement and exits non-zero,
+and the sentence says the fault is the program's — nothing a player can type can reach one.
 
 ## What it costs
 
@@ -86,5 +116,5 @@ sentence saying so has scrolled off the top of a terminal.
 
 **Proving by comparing the fresh run against itself** — replaying the script and holding the replay against
 the replay. It is green forever, and the interactive path drops out of the comparison entirely. The seam that
-makes the real comparison possible is that `Played` hands the rounds back as data, so a test can supply a
-session that says something the fresh run does not and watch the refusal work.
+makes the real comparison possible is that the prover is handed the decisions and the rounds as data, so a
+test can supply a session that says something the fresh run does not and watch the refusal work.

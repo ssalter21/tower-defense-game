@@ -497,14 +497,123 @@ public class GoldenRecordTests
         Assert.Equal(
             RecordCommand.Of(
                 10,
-                OptionKind.Ordinary,
-                1,
                 WaveSlot.Of(1, 5),
                 WaveSlot.Of(2, 9),
                 WaveSlot.Of(7, 1),
                 WaveSlot.Of(12, 1),
                 WaveSlot.Of(13, 1)),
             stream.Commands[stream.Count - 1]);
+    }
+
+    [Fact]
+    public void The_frozen_command_stream_at_version_1_still_reads_back_its_commands()
+    {
+        // The same claim one version up, and on the same terms: evidence about a
+        // read branch and about nothing else. These bytes are taken through the
+        // reading gate and never through the replaying one.
+        //
+        // The file is a copy of content/run.commands taken while 1 was the
+        // version the writer emitted -- the last such stream, recorded by a real
+        // run before #179 deleted the gates. Nothing can produce another.
+        //
+        // A version-1 stream carries a take off a menu that no longer exists,
+        // and the third stamp in its header is an anchor schedule hash where a
+        // reader now expects the ladder's. Neither stops it being read: the take
+        // is consumed so the cursor stays aligned and dropped, and the stamp is
+        // a replay-gate matter rather than a decoding one. That is precisely the
+        // distinction this test exists to hold.
+        string path = RepoLayout.GoldenCommandFile(1);
+
+        Assert.True(
+            File.Exists(path),
+            "There is no command stream frozen at format version 1 at "
+            + path
+            + ". It is committed forever: there is one writer and it emits the current version, so a "
+            + "stream at an older one cannot be made again and a deleted one leaves that reader branch "
+            + "with nothing exercising it.");
+
+        CommandStream stream = CommandStream.FromBytes(Path.GetFileName(path), File.ReadAllBytes(path));
+
+        Assert.Equal(1, stream.Header.FormatVersion);
+        Assert.Equal(10, stream.Count);
+
+        // Unlike version 0, this format carries what a phase built -- which is
+        // the whole of what version 1 was the bump for -- so the actions come
+        // back rather than being absent.
+        //
+        // OBSERVED: pass storesActions: false where ReadVersion1 calls the
+        // shared reader. Every action disappears, the slot counts read as the
+        // action counts that preceded them, and the file is refused on a slot
+        // naming type id 0 -- which is what a version branch reading another
+        // version's bytes looks like.
+        Assert.Contains(stream.Commands, command => command.Actions.Count > 0);
+
+        // The take the bytes carry is read past rather than kept, so nothing
+        // that comes back out of this stream mentions a menu.
+        //
+        // OBSERVED: drop the two take reads from the shared reader where
+        // storesTake is true. Every offset behind them moves by three bytes and
+        // the file is refused outright, which is the alignment this branch
+        // exists to preserve.
+        Assert.All(stream.Commands, command => Assert.True(command.Wave >= 1 && command.Wave <= 10));
+    }
+
+    [Fact]
+    public void The_frozen_command_stream_at_version_2_reads_back_and_is_not_replayed()
+    {
+        // The third of these, and the one whose bytes are indistinguishable from
+        // the current version's. A version-3 command has the same layout as a
+        // version-2 command; what #191 changed is that a slot's position became
+        // its release order, so these bytes describe a fight this build would
+        // now resolve differently.
+        //
+        // THAT IS THE WHOLE REASON THE VERSION MOVED, and the whole reason this
+        // file is frozen. A reader cannot tell a version-2 wave from a version-3
+        // wave by looking; only the stamp in the header can. Reading it is safe
+        // and replaying it is not, which is exactly the split between the two
+        // gates -- and without a committed copy, the branch that draws the split
+        // has nothing exercising it.
+        //
+        // The file is a copy of content/run.commands taken while 2 was the
+        // version the writer emitted -- the last such stream, recorded by a real
+        // run between #179 and #191. Nothing can produce another.
+        string path = RepoLayout.GoldenCommandFile(2);
+
+        Assert.True(
+            File.Exists(path),
+            "There is no command stream frozen at format version 2 at "
+            + path
+            + ". It is committed forever: there is one writer and it emits the current version, so a "
+            + "stream at an older one cannot be made again and a deleted one leaves that reader branch "
+            + "with nothing exercising it.");
+
+        CommandStream stream = CommandStream.FromBytes(Path.GetFileName(path), File.ReadAllBytes(path));
+
+        Assert.Equal(2, stream.Header.FormatVersion);
+        Assert.Equal(10, stream.Count);
+
+        // It carries no take -- version 2 is the bump that deleted it -- and it
+        // does carry what each phase built, which is what tells this branch's
+        // bytes from version 1's.
+        Assert.Contains(stream.Commands, command => command.Actions.Count > 0);
+
+        // And the reason it is only ever read here: the simulation version it
+        // was recorded under is behind this build's, so the replay gate retires
+        // it. A test that replayed it would be asserting an outcome this build
+        // no longer produces.
+        //
+        // OBSERVED: leave SimulationVersion.Current at 2 while making the
+        // format-3 change. This goes red -- the stamps are equal -- and the
+        // stream replays through every gate into a different fight than the one
+        // it recorded, which is the confidently-wrong-but-validating result the
+        // whole record format exists to prevent.
+        Assert.True(
+            stream.Header.SimVersion < SimulationVersion.Current,
+            "content/golden/command-2.commands is stamped with simulation version "
+            + stream.Header.SimVersion.ToString(CultureInfo.InvariantCulture)
+            + ", which this build still claims. #191 changed what a wave's slots resolve to, so a stream "
+            + "recorded before it replays into a different fight -- and the simulation version is the "
+            + "only gate that can say so.");
     }
 
     [Theory]

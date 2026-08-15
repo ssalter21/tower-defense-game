@@ -34,28 +34,12 @@ internal static class PlainText
 
     /// <summary>One integer, spelled in that culture and in no other.</summary>
     /// <remarks>
-    /// Here because <see cref="Culture"/> is here, and because the six files
-    /// that draw the screens and write the scripts each carried their own copy
-    /// of this line. A formatting rule with six homes is a rule that can be
-    /// changed in five of them.
+    /// Here because <see cref="Culture"/> is here, and because the files that
+    /// draw a screen each carried their own copy of this line. A formatting rule
+    /// with one home per caller is a rule that can be changed in all but one of
+    /// them.
     /// </remarks>
     public static string Number(int value) => value.ToString(Culture);
-
-    /// <summary>
-    /// One block onto a screen: whatever it is, then the line feed that ends it.
-    /// </summary>
-    /// <remarks>
-    /// Here rather than beside either prompt that calls it, because the line
-    /// feed is the same decision the rest of this file is about: a terminal
-    /// written through <see cref="TextWriter.WriteLine(string)"/> would end its
-    /// lines with whatever the platform calls one, and a canned session's output
-    /// would then be two different sets of bytes on two machines.
-    /// </remarks>
-    public static void Say(TextWriter writer, string block)
-    {
-        writer.Write(block);
-        writer.Write('\n');
-    }
 
     /// <summary>
     /// One generated file onto a disk, in the encoding above and under whatever

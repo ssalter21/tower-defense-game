@@ -1,7 +1,7 @@
 # The ruleset.
 #
 # EVERY NUMBER THE RULES ARE MADE OF, and not one of them in code. The damage
-# matrix, the armour expression, the floor, the purse, the offering and the
+# matrix, the armour expression, the floor, the purse, the health pool and the
 # scouting price all live here, so tuning any of them is an edit to this file
 # and never a compile -- and a sweep can sweep them the way it already sweeps a
 # map.
@@ -126,27 +126,34 @@ income        168
 
 purse         100
 
-#         band  percentile  percent
+#         bonus  percent
 #
-# The performance bonus, paid on top of the base in progressive percentile
-# bands measured against the field. THE BANDS ARE NEVER NEGATIVE: performing
-# below average earns a smaller bonus and never a penalty. Thresholds ascend
-# strictly, the first is zero so every wave falls in a band, and no band pays
-# less than the one below it. Nothing here moves gold between players: a wave
-# is paid against the field's distribution and never against a named opponent,
-# so it reads the same whether the field is one lobby or a population.
+# The performance bonus, as a share of what a wave got past the field. Leak cost
+# dealt is priced in gold -- a leaked creep costs its own price, one for one --
+# so this row says what one point of health damage pays. A wave that deals
+# eighteen times as much is paid eighteen times as much, which is the whole of
+# the rule: gold is earned for the damage a wave does and for nothing else.
 #
-# THESE BANDS PAY, AND WHAT THEY ARE MEASURED AGAINST IS THE POOL A RUN WAS
-# HANDED. A run prices ten of the pool's own rounds and reads its percentile off
-# that spread, so the canned opponent field.txt describes is the distribution
-# today and a stored population of real rounds is the same argument tomorrow.
-# Retuning a threshold or a percentage here is an edit to these four lines and
-# no compile.
+# IT IS NOT CAPPED, AND WHAT BOUNDS IT IS THE WAVE. Leak cost sums price times
+# leaked over a wave's own orders, so a round can deal at most the full price of
+# the wave it sent -- every creep leaking against every opponent. That number is
+# computable from a stored decision without playing anything, which is what lets
+# the load walk fold a stored stream at a real ceiling instead of admitting
+# everything.
+#
+# NOTHING HERE MOVES GOLD BETWEEN PLAYERS. A wave is paid for what it dealt and
+# never against a named opponent, so the rate reads the same whether the field
+# is one lobby or a population, and beating somebody takes nothing off them.
+#
+# HOLDING THE DEFENSE WELL PAYS NOTHING EXTRA, deliberately. A defense already
+# pays by not costing health, and health is the run's clock.
+#
+# 25 IS A STARTING FIGURE AND A SWEEP TARGET, exactly as the income base above
+# and the creep costs are. What it replaced paid one of 0, 8, 16 or 33 gold off
+# four percentile bands, so a round dealing 673 and a round dealing 36 were paid
+# the same 33 -- eighteen times the damage for identical pay.
 
-band            0        0
-band           50        5
-band           75       10
-band           90       20
+bonus          25
 
 #         health  gold
 #
@@ -154,73 +161,32 @@ band           90       20
 # equal to its cost, one for one, so the exchange rate is legible without a
 # table. Gold cannot repair it -- the pool is a clock.
 #
-# WHAT 1500 BUYS, MEASURED. A wave conceded whole costs what its sender paid for
-# it, and the canned field sends a hundred gold a round, so the pool is some
-# fifteen of those.
+# 800 IS A DECISION AND NOT A MEASUREMENT. It stood at 1500 across three
+# separate measurements, and nothing was ever touched to make a demo end more
+# comfortably; the run that produced them survived all ten waves and finished on
+# 478, which is what made the pool read as a timer rather than a resource.
+# Halving it is the deliberate move the old comment had been waiting to be
+# allowed to make.
 #
-# THE MARGIN CLOSED WHEN THE ROSTER WAS SIGNED, AND IT REOPENED WHEN THE CLOCK
-# CHANGE WAS FINISHED. The committed ten-round run in content/run-outcome.txt
-# conceded 1251 and finished on 249 before the roster was signed; with the
-# roster signed and the release cadence still at fifteen ticks it conceded the
-# whole 1500 and died on the tenth wave, because a column three times denser in
-# space saturates the towers and the canned field took about 153 a round where
-# it had taken about 125. Dilating the cadence to forty-five undid that: the run
-# now takes about 99 a round, survives all ten waves and finishes on 478.
+# WHAT THAT COMMENT WAS WAITING FOR HAD ALREADY HAPPENED. The taken column
+# across the committed run reads 100 90 65 30 33 32 32 32 31 33, which adds to
+# 478: a run opens conceding a whole wave a round on an empty board and the
+# figure falls as its own build phases put towers up. So the pool is something a
+# player manages, and a value for it could finally be chosen against that.
+# Story 20 wants it worth about three waves of average creep value, so that one
+# deliberate concession is affordable and a second is a real decision, and a
+# wave conceded whole against an empty board costs 100.
 #
-# NOTHING HERE WAS TOUCHED TO ACHIEVE ANY OF THAT. This number has been 1500
-# across all three measurements. Each time the run was committed as it played,
-# because the alternative was retuning a number nobody had decided to retune in
-# order to make a demo end more comfortably.
-#
-# WHICH LEAVES 1500 AS AN OPEN DECISION RATHER THAN A SETTLED ONE. Story 20
-# wants the pool worth about three waves of average creep value, so that one
-# deliberate concession is affordable and a second is a real decision. A wave
-# conceded whole against an empty board costs 100, which makes this fifteen of
-# them; something nearer 400 to 500 would restore the reading the story asked
-# for.
-#
-# WHAT IT WAS WAITING ON HAS HAPPENED, AND THE MEASUREMENT IT WAS WAITING FOR
-# HAS NOT. The taken column across the committed run is 100 90 65 30 33 32 32 32
-# 31 33, which adds up to 478: it opens at a whole wave a round on an empty
-# board and falls as the run's own build phases put towers up. So the pool is a
-# resource the player manages now rather than a timer, which is what a value for
-# it can finally be chosen against -- and nobody has chosen one. At 450 that run
-# would have died in its tenth round, having spent the first three conceding 255
-# while it built. This number, the opening purse and the income curve are one
-# decision rather than three, and the base above is the one of the three that
-# has now been measured against an empty opening board.
+# THE PURSE AND THE INCOME DO NOT MOVE WITH IT. This number, the opening purse
+# and the income curve are one decision rather than three, and moving one of the
+# three is how the other two get measured. 478 conceded against 800 leaves a run
+# finishing on 322 rather than comfortably clear, which is the reading story 20
+# asked for.
 
-health       1500
+health        800
 
 # ---------------------------------------------------------------------------
 # THE BUILD PHASE
-#
-#         slots  starting  per-anchor
-#
-# How many creep types a wave may carry. SLOT WIDTH IS DERIVED, NOT AUTHORED:
-# a round's width is the starting width plus the per-anchor step once for every
-# anchor at or before it. With anchors at waves 3, 6 and 9 that reads
-# 2 2 3 3 3 4 4 4 5 5 across a ten-wave run, and moving an anchor moves the
-# widths with it rather than leaving a second series behind to go stale.
-
-slots           2         1
-
-#         offering  ordinary  game-changers
-#
-# What the build phase puts in front of everybody. The same public selection
-# each round, drawn fresh; on an anchor round the game changers join that
-# round's ordinary options and one thing is taken from the merged list. The
-# ratio between the two is what decides whether the merged menu is a real
-# trade, which is why it is a number here rather than an argument.
-#
-# THE ORDINARY COUNT IS BOUNDED BY THE ROSTER. An option unlocks a creep and
-# appears on a menu once, so an offering cannot be drawn out of fewer creeps
-# than it carries options, and asking it to is refused rather than answered with
-# the same creep twice. Three of the unit table's six walkers is half the roster
-# on every menu, which leaves the draw enough room to be a draw; this rises with
-# the roster.
-
-offering        3         3
 
 #         snapshot  free  gold
 #

@@ -139,41 +139,56 @@ and nothing else** — in tension with [the attacking half being as deep as the 
 one](#depth-is-the-point), which [seam 1](build-order.md#1--the-match-format) reconciles.
 
 **A run's outcome is a vector, not a score:** per round, `(leak cost dealt, leak cost taken)`, plus how the run
-terminated. Health, waves survived and any score are folds over it; a scalar would force re-simulation to
-recover the two distributions the percentile bands read. A round's **offense** score is the average of the ten
-rather than the best, symmetric with the damage rule.
+terminated. Health, waves survived, any score and what every wave was paid are folds over it; a scalar would
+force re-simulation to recover them. A round's **offense** score is the average of the ten rather than the
+best, symmetric with the damage rule.
 
 ### One purse
 
 **One currency, called gold. Every coin of income lands as gold, and gold buys the defense and the offense
-alike.**
+alike.** The one thing it does not buy is a capstone, which is
+[granted at a gate](#a-capstone-is-granted-never-earned) rather than earned.
 
 The objection a single wallet must answer: a coin spent attacking is simply gone, making attacking a pure tempo
 loss and, at equilibrium, **dominated**. The answer is a payback, and a second currency is not the cheapest way
 to supply one.
 
-- **Attacking pays back through performance, not a second wallet.** Income is a flat base per wave **plus a
-  bonus on top**, paid in non-linear percentile bands over two distributions: how your wave performed, and how
-  your defense performed, each against the field.
-- **The offense is separated by a gate, not a budget.** Taking one of the round's options **unlocks a creep
-  permanently for the run** — free to unlock, paid to buy. What you may field is bounded by what you have
-  unlocked.
-- **Scarcity comes from wave slots.** A wave has limited slots, growing each round. A slot is one creep type
-  plus a count and may be left empty, so **a slot spent on a cheap column is a slot not spent on a heavy
-  unit** — the opportunity cost a second wallet would manufacture.
+- **Attacking pays back through damage, not a second wallet.** Income is a flat base per wave **plus a bonus
+  on top, at 25% of the leak cost your wave dealt**. Every point of health damage pays gold at that rate,
+  uncapped: a wave that deals eighteen times as much is paid eighteen times as much. **Holding your defense
+  well pays nothing extra** — a defense already pays by not costing you health, and health is the run's clock.
+- **A creep is bought once and attacks every round after.** Buying is permanent: what you paid for in round
+  three is still walking in round ten, and the round is charged only for what it *adds* to the wave. So an
+  early purchase compounds — it is a stream of leak cost for the rest of the run rather than one round's
+  worth — and a wave can only ever grow. There is no selling a creep back and no leaving one at home, which
+  makes a bad early buy a lasting mistake and is the point.
+- **The whole wave is rearranged every round.** A slot's position is its release order, and the order is a
+  decision the round makes over everything it fields, not only over what it just bought. A creep fills at most
+  one slot, so buying more of something you already send raises that box rather than opening a second one —
+  until that box is at its count cap, and then the only way up is a box you have not opened yet.
+- **Nothing is unlocked, and what is rationed is capacity.** Every creep in the roster is sendable from wave
+  one, priced and nothing else. What [the gate rounds](#three-gates-at-waves-3-6-and-9) ration is **how many
+  kinds a wave carries and how many of each**, never which kinds — so the scarcity on the sending side is the
+  purse *and* a public schedule, and the schedule is what gives a round's spending a shape.
 - **Timing comes from interest.** Unspent gold banks at **10% a wave, rounded up**, uncapped for now. Every
-  purchase is measured against compounding, and leaving a slot empty is investment rather than waste.
+  purchase is measured against compounding, and adding nothing to the wave is investment rather than waste.
 
-Each build phase therefore stays one decision over one wallet.
+Each build phase therefore stays one decision over one wallet, and the three gate rounds are the deliberate
+exception.
 
 **No money moves between players.** Denial — Legion TD 2's rule that leaking pays the attacker — is rejected.
-The coupling is **statistical**: you are paid against the field's distribution, never a named opponent, which
-reads the same whether the field is one lobby or a global population. Bands are progressive and never negative.
+You are paid for what your wave dealt, never against a named opponent, so the payment reads the same whether
+the field is one lobby or a global population and beating somebody takes nothing off them. The rate is never
+negative: a wave is never charged for attacking.
 
-Base, thresholds, slot count and growth, and creep costs are sweep targets. One consequence: **the bonus needs
-a distribution to measure against**, and until real ghosts are stored the harness's canned field supplies one —
-which cannot tell the middle bands apart, so four authored bands behave as two until a real pool exists
-([measured](research/a-canned-field-of-one-collapses-the-bands.md)).
+**The bonus is bounded by the wave and by nothing else.** Leak cost sums price times leaked over a wave's own
+orders, so a round deals at most the full price of the wave it sent — which is computable from a stored
+decision without playing anything, and is what lets a stored stream still be refused at load for a decision no
+run could have afforded.
+
+Base, rate and creep costs are sweep targets, and a permanent purchase makes the last of those the sharpest of
+them: a creep's price is paid once against every remaining round of leak cost it deals, so a small retune of
+the cost column moves a whole run.
 
 ### Depth is the point
 
@@ -274,55 +289,100 @@ cadence, which [§4](#4-what-persists) rules out and [§7](#7-what-runs-it) has 
 from a pre-generated archive is not: the archive is built once, offline, by the harness, and the schedule is
 arithmetic on a date.
 
-### Three anchors, a shape and a filling
+### Three gates, at waves 3, 6 and 9
 
-**At fixed, known waves the run injects a major variance event. The schedule is public; what each player does
-with it is not.**
+**Three fixed, known rounds where the run opens up. The schedule is public; what each player does with it is
+not.**
 
 With the player composing the whole wave there is otherwise no public constant to prepare against, so
-*preparation* has nothing to be a skill about. An anchor schedule supplies the constant without supplying the
-content: **everyone knows the flying units unlock at wave 9, and nobody knows who took them.** It is also
+*preparation* has nothing to be a skill about. A gate supplies the constant without supplying the content:
+**everyone knows the wave gets wider at wave 6, and nobody knows what they widened it with.** It is also
 progressive disclosure that resets every run, the only shape [§4](#4-what-persists) permits.
 
-**Anchors sit at waves 3, 6 and 9. At each one, three *game changer* creeps join that round's public offering,
-and the player takes one thing from the combined list.** Wave 1 is the starting state and an anchor at wave 10
-would have nothing after it, so **wave 10 is the payoff round**.
+Wave 1 is the starting state and a gate at wave 10 would have nothing after it, so **wave 10 is the payoff
+round**. A gate does three things at once — two on the attacking side, one on the defending side.
 
-- **Anchors open offense, never defense.** Preparation happens on the other side of the board: you know what
-  lands at wave 9, so you buy the answer by wave 8. An anchor that handed you a better *tower* would be a gift
-  rather than a preparation problem. One hard constraint on [seam 3](build-order.md#3--the-roster): **for every
-  anchor, its counter must already be purchasable strictly before it.**
-- **The menu is merged, not additional.** A game changer competes head-to-head with an ordinary unlock. A free
-  extra pick would end every run with every player holding all three, leaving only *when they field it*
-  unknown; merged, **who has what is unknown too.** The ratio is a sweep parameter.
-- **Anchors do not repeat, and they escalate.** A game changer appears on exactly one anchor's menu — nine
-  distinct creeps per shape — and wave 9's three are stronger than wave 3's, matching the wave widening and the
-  gold curve. A flat pool could hand someone a wave-9-grade unit at wave 3, where nothing yet answers it.
-- **Exactly one anchor per shape opens a counter, and it is wave 9.** The other two are extreme points on
-  existing axes — a very fast unit, a very tough one — answered by generally competent defense. Three counters
-  would make a run turn on a single missed buy. **The counter is a steep gradient, not a wall**: it lives on
-  `bonusVsTag` rather than a binary gate, so on the decided ruleset a prepared tower kills the wave-9 anchor in
-  nine shots and an unprepared one in thirty-six — **4.00×**. Mis-preparing is punished, not eliminated.
+| At every gate | What it does |
+|---|---|
+| **The wave gains two slots** | How many kinds of creep it may field at once: 2 to begin with, then 4, 6 and 8 |
+| **Every slot's count cap rises by ten** | How many of one kind a slot may hold: 10 to begin with, then 20, 30 and 40 |
+| **One capstone is granted** | A single defense-only token, spendable on capstoning one tower — [below](#a-capstone-is-granted-never-earned) |
 
-**The schedule has a shape and a filling, and they turn over at different rates.**
+So a ten-wave run's capacity is fixed, public and known before it starts:
+
+| Waves | Slots | Count cap per slot | Capstones held |
+|---|---|---|---|
+| 1–2 | 2 | 10 | 0 |
+| 3–5 | 4 | 20 | 1 |
+| 6–8 | 6 | 30 | 2 |
+| 9–10 | 8 | 40 | 3 |
+
+**A gate is the round the offense is worth investing in, and putting that on a clock is the point.** A
+purchase is permanent and a wave only ever grows, so what an attacking purchase really spends is capacity:
+gold buys a creep, and only a gate makes room for it. Two consequences the design is after:
+
+- **The cap forces breadth.** Without one, compounding gold ends every run as a single enormous box of
+  whichever creep is most cost-efficient — and send order stops being a decision when there is only one thing
+  to order. A slot at its cap cannot absorb another coin, so the next one goes into a *different* creep, into
+  the defense, or into the bank at 10%.
+- **A gate is an economy beat.** Two rounds of saving against a known round where the wave can finally take
+  the money is a timing decision, and timing is what the purse exists to make players practise. Arriving at a
+  gate with nothing banked is the mistake it is there to punish.
+
+**What a gate does not do is decide what is on the menu.** Every creep is purchasable from wave one, so a gate
+opens *room* rather than options, and nothing about the capacity schedule is drawn.
+
+Every integer here is a ruleset row and a sweep target: the two starting values, the two steps, the three
+rounds, and how many tokens a gate hands over.
+
+⚠️ **The variance half of a gate is designed and deliberately not built.** At each gate three **game changer**
+creeps were to join that round's [public offering](#the-offering-is-public), with the player taking one thing
+from the combined list — nine distinct creeps across the three gates, escalating, wave 9's opening a genuine
+counter as a steep gradient on `bonusVsTag` rather than a binary immunity. It waits on a roster deep enough
+for a menu to be a choice, and its one hard constraint on [seam 3](build-order.md#3--the-roster) is unchanged:
+**for every gate, its counter must already be purchasable strictly before it.** Gates open offense, never
+defense — preparation happens on the other side of the board.
+
+That half is the one with two layers, turning over at different rates:
 
 | | What it is | How long it holds |
 |---|---|---|
-| **Shape** | Anchors at 3, 6, 9; which tier each is; which one is the counter anchor | **Per [rotation](#the-map-rotates-and-it-is-generated)** — public, stable, learnable |
-| **Filling** | *Which* three creeps sit on each anchor's menu | **Per run** — drawn from that anchor's tier pool, revealed at run start |
+| **Shape** | Which gate carries which tier, and which one opens the counter | **Per [rotation](#the-map-rotates-and-it-is-generated)** — public, stable, learnable |
+| **Filling** | *Which* three creeps sit on each gate's menu | **Per run** — drawn from that gate's tier pool, revealed at run start |
 
 Preparation is a skill about the **shape**; replay value comes from the **filling**. A single-layer schedule
 cannot have both — fixed everywhere is solved by Tuesday, drawn everywhere has nothing to prepare against.
-**The anchors are the constant; the ordinary offering is the churn**, drawn per round and identical for
+**The gates are the constant; the ordinary offering is the churn**, drawn per round and identical for
 everyone, which is where most of a week's variety comes from.
 
-**Wave slots grow on the same cadence, and only there** — starting at 2 and gaining one at each anchor:
-**2, 2, 3, 3, 3, 4, 4, 4, 5, 5**. One per round would reach ten slots by wave 10 and dissolve the scarcity
-entirely.
-
 **The ghost pool does not shard.** Ghosts draw on `(map, stage)` alone, and a ghost from this rotation was
-played under the same shape, so anything it fields is from the same tier on the same axis — unfamiliar, never
-unanticipatable. That is what makes a per-run filling safe without paying for variance with a thinner pool.
+played under the same shape and the same capacity schedule, so anything it fields is from the same tier on the
+same axis — unfamiliar, never unanticipatable. That is what makes a per-run filling safe without paying for
+variance with a thinner pool.
+
+### A capstone is granted, never earned
+
+**At each gate the player is handed one unit of a second currency, and the only thing it buys is a capstone —
+the top tier of a tower line, spent on a tower already standing.** Three gates, three capstones a run.
+
+This does not reopen the two-purse question [one purse](#one-purse) settled. A second *wallet* was declined
+because income split across two pools makes every purchase a question about which pool to feed, and because a
+currency earned by attacking is how other games pay attacking back. This is neither: **it has no income, no
+exchange rate and exactly one sink.** Nothing earns it, nothing else spends it, and it converts to nothing.
+
+Three things it buys the design:
+
+- **The defending side gets a fixed reward on the clock the attacking side is already on.** A gate that only
+  widened the wave would make gate rounds pure offense. A token makes the same round a defensive decision too:
+  *which* tower is worth the top of its line, when you only ever get three.
+- **The best of your defense is rationed by something that is not money.** Gold decides how much defense you
+  have; the token decides how good the best of it is, and no amount of banking substitutes for it.
+- **It gives the roster somewhere to build toward.** A tower line that terminates in a capstone has a top, and
+  three tokens a run makes choosing *between* lines the interesting part rather than climbing one.
+
+⚠️ **The currency has no name yet, and naming it is not an implementation detail** — see
+[open questions](open-questions.md). Neither is the question of whether a token banks or must be spent on the
+round it arrives.
 
 ### How a shot resolves
 
@@ -350,10 +410,10 @@ without a cap. A coefficient of 1 makes the authored number read as its own mean
 one percent of base effective health.** Every bit of strength a larger coefficient would buy is bought instead
 by authoring a larger armour number, and the ruleset loses a constant nobody can check by eye.
 
-**Hard counters do not come from this table.** They come from `bonusVsTag`, a per-anchor integer added to the
+**Hard counters do not come from this table.** They come from `bonusVsTag`, a per-gate integer added to the
 base before typing and mitigation. That separation is why the matrix could stay narrow: *lean narrow* and *must
 express a counter* were two constraints on two different layers. Because the bonus joins the hit rather than
-bypassing it, **a high-armour anchor blunts its own counter.**
+bypassing it, **a high-armour game changer blunts its own counter.**
 
 **Every damage and health number in the game carries a ×10 scale.** At the scale the skeleton shipped, a
 9-damage bolt dealt **8 damage for eleven consecutive points of armour** — armour a player cannot feel and a
@@ -383,7 +443,7 @@ and the floor are independent of geometry. The cell values and armour numbers ar
 
 **Each build phase offers the same small set of choices to every player in the match.** Not a private random
 draw; one public offering everybody sees, **drawn fresh each round** — identical across the match, different
-between runs — and on an anchor round the three game changers are drawn into it. This is Mechabellum's
+between runs — and on a gate round the three game changers are drawn into it. This is Mechabellum's
 reinforcement system, whose players describe the consequence exactly right: the opponent sees the same choices,
 *so it becomes a mind game.*
 
@@ -484,8 +544,8 @@ Two limits, both stated plainly:
 
 ## 6. What it looks like
 
-**Stylized low-poly 3D, fixed isometric orthographic orbit with 60° yaw snapping, and no billboards, no flat
-cards, no painted-on shadows.**
+**Stylized low-poly 3D, a free perspective orbit that goes in close enough to read one model, and no
+billboards, no flat cards, no painted-on shadows.**
 
 ### Legible to a stranger
 
@@ -611,7 +671,7 @@ free or paid.
   Breach's calibration, and hiding any of it would only tax the players who do not keep a spreadsheet.
   **"Damage preview" means one shot, not one round** — showing what your *wave* does to a *field* is a
   forecast, and there is no such thing in this game.
-- **Outcome is not computed at all.** No preview, no dummy defense, no distribution, no band, no number that
+- **Outcome is not computed at all.** No preview, no dummy defense, no distribution, no rate, no number that
   predicts a result. **The offense in particular gets nothing**: a wave is composed from the rules and from
   memory, which gives the two halves genuinely different textures — the defense is engineering, the offense is
   judgement. The one pre-commit channel is [scouting incoming waves](#scouting-depends-on-the-mode).

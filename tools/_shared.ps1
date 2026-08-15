@@ -40,20 +40,14 @@ function Get-ContentArguments {
 # will not replay has already said why in its own sentence, and a PowerShell
 # stack trace on top of it buries the one line anybody needs to read.
 #
-# -Interactive hands the child the console instead of a pipe. A pipeline gives
-# a native command's output over a line at a time, and a prompt has no newline
-# after it -- so a verb that asks a question would have the question sit in the
-# pipe until whatever was typed produced one, and the round would appear only
-# after it had been decided.
+# Every verb's output goes down a pipe, because no verb asks a question. The
+# one that did was `play`, deleted with the shell specification it was built
+# from; it needed the console handed to it whole, since a pipeline gives a
+# native command's output a line at a time and a prompt has no newline after it.
 function Invoke-SimCli {
-    param([string[]]$CliArgs, [switch]$Interactive)
+    param([string[]]$CliArgs)
 
-    if ($Interactive) {
-        & dotnet $program @CliArgs
-    }
-    else {
-        & dotnet $program @CliArgs | Out-Host
-    }
+    & dotnet $program @CliArgs | Out-Host
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host ""

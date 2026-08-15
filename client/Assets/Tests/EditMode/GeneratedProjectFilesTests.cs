@@ -1,8 +1,10 @@
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using View;
 using View.Editor;
 
@@ -126,15 +128,99 @@ namespace Tests.EditMode
                     GeneratedTestAssets.ManifestPath + " names a different " + field
                     + " than ChosenArt does. Run tools/build-test-assets.ps1 and commit what it writes.");
 
-            Same(generated.CreepModel, chosen.CreepModel, nameof(chosen.CreepModel));
+            // Is.SameAs does not hold for two nulls, and two nulls are exactly
+            // what an empty hand or a creep's absent clips look like on both
+            // sides. Absent-on-one-side-only is still a failure.
+            void SameOrBothEmpty(Object inManifest, Object inChosenArt, string field)
+            {
+                if (inManifest == null && inChosenArt == null)
+                {
+                    return;
+                }
+
+                Same(inManifest, inChosenArt, field);
+            }
+
+            void SameTilt(Quaternion inManifest, Quaternion inChosenArt, string field) =>
+                Assert.That(Quaternion.Angle(inManifest, inChosenArt), Is.LessThan(0.01f),
+                    GeneratedTestAssets.ManifestPath + " turns the " + field
+                    + " differently than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+            Assert.That(
+                generated.Units.Select(u => u.UnitId),
+                Is.EqualTo(chosen.Units.Select(u => u.UnitId)),
+                GeneratedTestAssets.ManifestPath + " covers different units than ChosenArt does. "
+                + "Run tools/build-test-assets.ps1 and commit what it writes.");
+
+            foreach (UnitArt unit in chosen.Units)
+            {
+                UnitArt made = generated.ArtFor(unit.UnitId);
+
+                Same(made.Model, unit.Model, "model for unit " + unit.UnitId);
+
+                Assert.That(made.Scale, Is.EqualTo(unit.Scale),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+                // What a unit holds and the clips it holds it with are per unit
+                // and generated the same way the model is, so they drift the
+                // same way and are compared the same way. Optional, though: an
+                // empty hand and a creep's absent clips are both a legitimate
+                // null, and two nulls agree.
+                // Tilt, and this is the field that proves the comparison has to
+                // be exhaustive rather than representative. The staffs' quarter
+                // turn went into ChosenArt and into the builder on 14 August
+                // 2026 and not into the manifest, and this test stayed green
+                // over a manifest that disagreed with its own source -- so the
+                // player path, which is the manifest, went on drawing both
+                // staffs flat while every editor path drew them upright.
+                //
+                // Compared as an angle and not as Euler triples: two different
+                // triples can name the same rotation, and a failure on that
+                // difference would name a drift nobody could act on.
+                SameTilt(made.RightHandTilt, unit.RightHandTilt, "right-hand item for unit " + unit.UnitId);
+                SameTilt(made.LeftHandTilt, unit.LeftHandTilt, "left-hand item for unit " + unit.UnitId);
+
+                SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
+                SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
+                SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
+                SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
+                SameOrBothEmpty(
+                    made.BackswingClip, unit.BackswingClip, "backswing clip for unit " + unit.UnitId);
+            }
+
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));
             Same(generated.CreepDeathClip, chosen.CreepDeathClip, nameof(chosen.CreepDeathClip));
-            Same(generated.ProjectileTowerModel, chosen.ProjectileTowerModel, nameof(chosen.ProjectileTowerModel));
-            Same(generated.BowModel, chosen.BowModel, nameof(chosen.BowModel));
-            Same(generated.TowerIdleClip, chosen.TowerIdleClip, nameof(chosen.TowerIdleClip));
-            Same(generated.TowerWindupClip, chosen.TowerWindupClip, nameof(chosen.TowerWindupClip));
-            Same(generated.TowerBackswingClip, chosen.TowerBackswingClip, nameof(chosen.TowerBackswingClip));
-            Same(generated.HitscanTowerModel, chosen.HitscanTowerModel, nameof(chosen.HitscanTowerModel));
+        }
+
+        /// <summary>
+        /// The committed panel settings carry the text engine's ICU data.
+        /// </summary>
+        /// <remarks>
+        /// The editor attaches that data on its way to disk and to nothing
+        /// created at runtime, so it is the whole reason the asset is committed
+        /// and the whole reason <see cref="RuntimePanel.LoadTextData"/> loads
+        /// it. An asset written without it exists, loads, and leaves a player
+        /// build measuring every string as nothing — identical from the outside
+        /// to a working one, which is why this is asserted rather than assumed.
+        /// </remarks>
+        [Test]
+        public void TheCommittedPanelSettingsCarryICUData()
+        {
+            var committed = AssetDatabase.LoadAssetAtPath<PanelSettings>(PanelSettingsAsset.AssetPath);
+
+            Assert.That(committed, Is.Not.Null,
+                "No panel settings at " + PanelSettingsAsset.AssetPath
+                + ". Run tools/build-panel-settings.ps1.");
+
+            Assert.That(
+                new SerializedObject(committed).FindProperty(PanelSettingsAsset.ICUDataField)
+                    ?.objectReferenceValue,
+                Is.Not.Null,
+                PanelSettingsAsset.AssetPath + " carries no ICU data, which is the one thing it is "
+                + "for. Run tools/build-panel-settings.ps1 and commit what it writes.");
         }
 
         /// <summary>

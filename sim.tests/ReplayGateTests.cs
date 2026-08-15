@@ -444,7 +444,7 @@ public class ReplayGateTests
         // The other three gates are untouched, so this one is firing alone.
         Assert.Equal(SimulationVersion.Current, stream.Header.SimVersion);
         Assert.Equal(TheMatch.Types().ContentHash, stream.Header.ContentHash);
-        Assert.Equal(TheSchedule.Committed().ContentHash, stream.ScheduleHash);
+        Assert.Equal(TheLadder.Committed().ContentHash, stream.LadderHash);
 
         // Still readable, still a run somebody could be shown.
         Assert.Equal(TheCommands.Waves, stream.Count);
@@ -482,28 +482,31 @@ public class ReplayGateTests
     }
 
     [Fact]
-    public void The_schedule_hash_gate_fails_on_its_own_and_names_both_hashes()
+    public void The_ladder_hash_gate_fails_on_its_own_and_names_both_hashes()
     {
-        // The shape decides where the anchors are, which decides how wide a
-        // round's slots are and which rounds merge a game changer in. A stream
-        // replayed against a moved anchor is the same failure the ruleset gate
-        // catches, one table over.
+        // The ladder decides which rows may be placed outright, which decides
+        // what a stored decision is allowed to have done. A stream replayed
+        // against a moved edge is the same failure the ruleset gate catches,
+        // one file over.
         //
-        // OBSERVED: drop the schedule comparison from CommandStream.Replay. This
-        // goes red having caught nothing -- no exception was thrown -- and that
-        // is the whole argument for the stamp: moving the second anchor from
-        // wave six to wave five leaves waves one to four's menus and slot widths
-        // exactly where they were, so a four-round stream plays through a
-        // rotation it was never recorded against and nothing downstream can tell.
+        // This stamp replaced the anchor schedule's when #179 deleted the
+        // schedule. It is the same argument in new content: the ladder is read
+        // by the simulation now, so a record made under one ladder and replayed
+        // under another is a record whose refusals no longer hold.
+        //
+        // OBSERVED: drop the ladder comparison from CommandStream.Replay. This
+        // goes red having caught nothing -- no exception was thrown -- and a
+        // stream recorded when the ranger was unplaceable replays cleanly in a
+        // run where it is, with nothing downstream able to tell.
         CommandStream stream = CommandStream.FromBytes(TheCommands.Stream().ToBytes());
-        AnchorSchedule moved = TheSchedule.Reshaped();
+        UpgradeLadder moved = TheLadder.Reshaped();
         Run against = TheCommands.Against(TheRuleset.Committed(), moved);
 
         RetiredRecordException thrown =
             Assert.Throws<RetiredRecordException>(() => stream.Replay(against));
 
-        Assert.Equal("schedule hash", thrown.Gate);
-        Assert.Contains(TheSchedule.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
+        Assert.Equal("ladder hash", thrown.Gate);
+        Assert.Contains(TheLadder.Committed().ContentHash.ToString(), thrown.Recorded, StringComparison.Ordinal);
         Assert.Contains(moved.ContentHash.ToString(), thrown.Live, StringComparison.Ordinal);
     }
 
@@ -543,7 +546,7 @@ public class ReplayGateTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             retuned,
-            TheSchedule.Committed(retuned),
+            TheLadder.Committed(retuned),
             TheRun.Pool(retuned),
             TheRun.Seed,
             TheCommands.Waves,

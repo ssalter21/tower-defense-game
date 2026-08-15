@@ -11,9 +11,9 @@ namespace Sim
     /// <remarks>
     /// <para>
     /// <b>Three answers, handed back together, because a round settles all
-    /// three at once.</b> The pair is what got past whom. The build is what was
-    /// taken off the offering and what the wave cost to buy. The payment is what
-    /// the wave earned, itemised into the interest, the base and the band. Each
+    /// three at once.</b> The pair is what got past whom. The build is what the
+    /// round built and what the wave cost to buy. The payment is what
+    /// the wave earned, itemised into the interest, the base and the bonus. Each
     /// is worked out once, while the round is being played, so nothing holding
     /// this has to resolve a decision a second time or price a wave again to
     /// find out what a round did.
@@ -88,10 +88,10 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>The outcome is a vector and everything else is a fold over it.</b>
-    /// Health, waves survived, how the run ended and any score come out of
-    /// <see cref="RunOutcome"/> rather than being carried alongside as running
-    /// totals -- which is what lets a percentile band be computed later without
-    /// re-simulating a thing.
+    /// Health, waves survived, how the run ended, any score and what every wave
+    /// was paid come out of <see cref="RunOutcome"/> rather than being carried
+    /// alongside as running totals -- which is what lets a placing or a
+    /// retrospective be computed later without re-simulating a thing.
     /// </para>
     /// <para>
     /// <b>Every run-level draw is at a derived position.</b> The damage roll
@@ -118,10 +118,9 @@ namespace Sim
 
         /// <summary>
         /// How many of the pool's own rounds are played to measure what a round
-        /// of it is worth. Ten samples put the percentiles on the deciles, which
-        /// is the granularity four bands at 0, 50, 75 and 90 can use; it is a
-        /// number about the measurement and not about the run, so it moves with
-        /// the bands rather than with N.
+        /// of it is worth. Ten samples put the percentiles on the deciles; it is
+        /// a number about the measurement and not about the run, so it moves
+        /// with whatever reads the measurement rather than with N.
         /// </summary>
         public const int FieldSamples = 10;
 
@@ -143,19 +142,6 @@ namespace Sim
         /// </summary>
         private const string MeasureLabel = "run-measure/1";
 
-        /// <summary>
-        /// Names the derivation of this run's filling: which game changers sit
-        /// on each anchor's menu. Drawn once, at run start.
-        /// </summary>
-        private const string FillingLabel = "run-filling/1";
-
-        /// <summary>
-        /// Names the derivation of one round's public offering. Drawn fresh
-        /// every round, from the run's seed and the wave alone -- which is what
-        /// lets everybody in a match be handed the same one.
-        /// </summary>
-        private const string OfferingLabel = "run-offering/1";
-
         private readonly FieldPool _pool;
 
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
@@ -173,11 +159,12 @@ namespace Sim
         /// anything.
         /// </summary>
         /// <param name="map">The board every match in the run is fought on.</param>
-        /// <param name="rules">The health pool, the interest, the base and the bands.</param>
+        /// <param name="rules">The health pool, the interest, the base and the bonus rate.</param>
         /// <param name="types">The unit table every cost in the run is priced out of.</param>
-        /// <param name="schedule">
-        /// The shape: which waves are anchors, how wide each round's slots are,
-        /// and which tier pool each anchor's menu is filled from.
+        /// <param name="ladder">
+        /// The upgrade edges. A unit that is some edge's target cannot be
+        /// placed and has to be reached by upgrading the rung below it, which is
+        /// the one prerequisite a run enforces.
         /// </param>
         /// <param name="pool">
         /// The population a round's field of K is drawn from, and the one the
@@ -194,7 +181,7 @@ namespace Sim
             HexMap map,
             Ruleset rules,
             UnitTypeTable types,
-            AnchorSchedule schedule,
+            UpgradeLadder ladder,
             FieldPool pool,
             ulong seed,
             int waves = DefaultWaves,
@@ -206,7 +193,7 @@ namespace Sim
             Board = Board.Empty;
             Rules = rules ?? throw new ArgumentNullException(nameof(rules));
             Types = types ?? throw new ArgumentNullException(nameof(types));
-            Schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+            Ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
 
             // Before a wave resolves rather than at the first overflow: a run
             // that has already produced numbers is a run whose numbers somebody
@@ -237,11 +224,6 @@ namespace Sim
             DeathEndsTheRun = deathEndsTheRun;
             Costs = CostTable.From(rules, types);
             Purse = Purse.Holding(rules.StartingPurseGold);
-            Unlocks = Unlocks.None;
-
-            // Revealed at run start: the shape was public all week and the
-            // filling is what this run drew onto it.
-            Filling = schedule.Fill(rules.GameChangersPerAnchor, Derived(FillingLabel, 0, 0, 0));
 
             _outcome = Folded(_rounds);
         }
@@ -265,7 +247,7 @@ namespace Sim
         public Board Board { get; private set; }
 
         /// <summary>
-        /// The health pool, the interest, the base, the bands and the damage
+        /// The health pool, the interest, the base, the bonus rate and the damage
         /// matrix every round of this run is resolved under. Held rather than
         /// only consumed, so that whatever checks a stored record against this
         /// run reads the tables the run is actually playing.
@@ -276,28 +258,32 @@ namespace Sim
         public UnitTypeTable Types { get; }
 
         /// <summary>
-        /// The distribution every wave of this run is paid against: what a round
-        /// of the pool is worth, in leak cost dealt.
+        /// What a round of the pool is worth, in leak cost dealt: the spread of
+        /// the opponents this run is scored against.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>It comes out of the pool, so swapping the canned stand-in for a
-        /// real ghost pool is the pool argument and nothing else.</b> The pool is
-        /// the population the bands are measured against, and measuring it is
-        /// <see cref="MeasureField"/> -- a run cannot be handed a pool and a
-        /// distribution that disagree, because there is only the one of them.
+        /// <b>Nothing in this build prices anything off it.</b> A wave is paid a
+        /// share of what it dealt, so the payment reads no distribution and no
+        /// rank; this is a measurement of the pool that no consumer currently
+        /// asks for. See
+        /// <c>docs/adr/0042-the-field-is-measured-off-the-pool.md</c>, which the
+        /// proportional bonus largely supersedes and which is open for a
+        /// decision on whether the measurement is kept.
         /// </para>
         /// <para>
-        /// <b>Fixed for the whole run.</b> Every round of the run is placed
-        /// against the same spread, which is what makes what a round paid
-        /// arithmetic over the outcome vector -- see
-        /// <see cref="Purse.BonusOver"/>.
+        /// <b>It comes out of the pool, so swapping the canned stand-in for a
+        /// real ghost pool is the pool argument and nothing else.</b> Measuring
+        /// it is <see cref="MeasureField"/> -- a run cannot be handed a pool and
+        /// a distribution that disagree, because there is only the one of them.
         /// </para>
         /// <para>
         /// Measured on first use rather than in the constructor: measuring plays
-        /// matches, and a caller that only wants to read this run's offerings
-        /// should not pay for them. What it measures depends on the seed, the
-        /// pool and K alone, so when it happens cannot change what it says.
+        /// matches, and a caller that never asks what this run's field can do
+        /// should not pay for the answer -- which, with nothing pricing off it,
+        /// is every caller a played run has. What it measures depends on the
+        /// seed, the pool and K alone, so when it happens cannot change what it
+        /// says.
         /// </para>
         /// </remarks>
         public PerformanceField Field => _field ??= MeasureField();
@@ -315,40 +301,21 @@ namespace Sim
         public CostTable Costs { get; }
 
         /// <summary>
-        /// The shape this run is played against: where the anchors are, what
-        /// answers each, and how wide a round's slots are.
+        /// The upgrade edges this run's build phases are checked against. A unit
+        /// that is some edge's target is refused to <c>place</c> and reached by
+        /// <c>upgrade</c> instead.
         /// </summary>
-        public AnchorSchedule Schedule { get; }
-
-        /// <summary>
-        /// What this run drew onto each anchor's menu, at a position derived from
-        /// the seed and revealed here at run start.
-        /// </summary>
-        public AnchorFilling Filling { get; }
+        public UpgradeLadder Ladder { get; }
 
         /// <summary>
         /// The one wallet. Every wave pays it interest on what was banked, the
-        /// flat base, and the band its result reached in the <see cref="Field"/>
-        /// on top of that.
+        /// flat base, and a share of the leak cost the wave dealt on top of
+        /// that.
         /// </summary>
         public Purse Purse { get; private set; }
 
-        /// <summary>
-        /// What this run may field. Every build phase takes one thing off the
-        /// offering and it is held for the rest of the run, free to unlock and
-        /// paid to buy.
-        /// </summary>
-        public Unlocks Unlocks { get; private set; }
-
         /// <summary>How many rounds have resolved.</summary>
         public int Round => _rounds.Count;
-
-        /// <summary>
-        /// The offering standing in front of the round about to be played.
-        /// Waves are counted from one, so it is the round after the ones that
-        /// have resolved.
-        /// </summary>
-        public Offering Offering => OfferingAt(Round + 1);
 
         /// <summary>
         /// What this run stood and sent, round by round. Stored unconditionally,
@@ -357,6 +324,28 @@ namespace Sim
         /// rather than within a round.
         /// </summary>
         public IReadOnlyList<RoundOrders> Sent => _sent;
+
+        /// <summary>
+        /// The creeps the next round already fields, and does not pay for again.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A creep is bought once and attacks every round after.</b> A build
+        /// phase composes the whole of its round's wave -- what it carries and
+        /// what it is adding, in whatever release order it wants -- and is
+        /// charged only for the increase over this. So a wave that sends fewer
+        /// of a type than this holds is refused rather than discounted: there is
+        /// no selling a creep back, and a purchase is a lasting commitment.
+        /// </para>
+        /// <para>
+        /// It is the last round's wave and not a running total kept beside it,
+        /// because the last round's wave <i>is</i> the running total -- every
+        /// round already sends everything the ones before it bought. A second
+        /// tally would be free to disagree with the record.
+        /// </para>
+        /// </remarks>
+        public WaveScript Carrying =>
+            _sent.Count == 0 ? WaveScript.Nothing : _sent[_sent.Count - 1].Wave;
 
         /// <summary>The vector, and the folds over it. Rebuilt after every round.</summary>
         public RunOutcome Outcome => _outcome;
@@ -383,10 +372,9 @@ namespace Sim
         /// down.
         /// </para>
         /// <para>
-        /// The decision is checked against this round's offering, this run's
-        /// unlocks, this round's slot width, this run's board and map, and this
-        /// run's purse -- by
-        /// <see cref="BuildPhase.Resolve(Offering, Unlocks, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
+        /// The decision is checked against this run's upgrade ladder, this run's
+        /// board and map, and this run's purse -- by
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
@@ -409,15 +397,15 @@ namespace Sim
         /// </para>
         /// <para>
         /// <b>Everything that can refuse this round refuses before a coin
-        /// moves</b> -- the decision against the offering, the orders against
+        /// moves</b> -- the decision against the ladder, the orders against
         /// the defense, the run against being over, and then everything the
         /// round itself can refuse at. The whole round is worked out into
         /// locals -- see <see cref="Play"/> -- and reaches the run through
         /// <see cref="Commit"/>, which writes everything a round moves,
         /// together, and is the only place any of it is written. What the
-        /// decision unlocked and what it left in the purse travel into
+        /// decision built and what it left in the purse travel into
         /// <see cref="Play"/> as arguments rather than being written first, so
-        /// a purse spent and an unlock taken for a wave nobody was in the run
+        /// a purse spent and a tower standing for a wave nobody was in the run
         /// to send is a state that cannot be reached rather than an ordering to
         /// get right.
         /// </para>
@@ -437,27 +425,117 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Offering, Unlocks, Purse, Costs, Types, Map, Board);
+            Build build = phase.Resolve(Round + 1, Carrying, Ladder, Purse, Costs, Types, Map, Board);
             RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();
 
             (RoundOutcome outcome, WavePayment payment) = Play(
-                orders, build.Unlocks, build.Purse, build.Board);
+                orders, build.Purse, build.Board);
 
             return new RoundReport(outcome, build, payment);
         }
 
         /// <summary>
-        /// The public offering that stood in front of a wave of this run.
+        /// The match one pairing of a resolved round came to, built again rather
+        /// than kept, and advanced by nobody.
         /// </summary>
         /// <remarks>
-        /// Derived rather than remembered, so any wave's offering can be drawn
-        /// at any time -- which is what a stored command stream needs to be
-        /// validated against without the run in front of it having been played.
+        /// <para>
+        /// <b>This is the route by which a round is watched.</b>
+        /// <see cref="Advance"/> resolves the wave against every member of the
+        /// field in locals and lets them go, which is right: a run that kept its
+        /// matches would hold N times K of them by the end, and a sweep that
+        /// plays a hundred thousand runs overnight would carry a match for every
+        /// pairing in every one of them and draw not one. A client needs exactly
+        /// one, so it asks for the one it means to show. See
+        /// <c>docs/adr/0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>Asking twice is cheaper than remembering because the answer cannot
+        /// differ.</b> A pairing's match is this map, this ruleset, the defense
+        /// that stood, the wave that walked and a seed derived from the run's
+        /// seed and the pairing -- every one of them settled before the round was
+        /// played, and none of them moved by playing it. What comes back is
+        /// therefore the match that was resolved, tick for tick and hash for
+        /// hash, rather than a re-enactment of it. It is built by the same
+        /// assembly the round's own matches were built by -- see
+        /// <see cref="MatchFor"/> -- and not by a second one somebody would have
+        /// to keep in step.
+        /// </para>
+        /// <para>
+        /// <b>Nothing here moves the run.</b> The match comes back on tick zero,
+        /// unresolved, for the caller to advance at whatever rate it draws at;
+        /// advancing it is advancing a local of the caller's and reaches nothing
+        /// in here. <see cref="Advance"/> remains the only member that moves
+        /// anything.
+        /// </para>
+        /// <para>
+        /// <b>Both directions of a pairing, and the caller names which.</b> A
+        /// round is resolved twice against every opponent -- see
+        /// <see cref="Play"/>, which sums what the wave dealt over one direction
+        /// and what the defense took over the other -- so both matches are
+        /// already scored by the time anybody asks for one. Naming the direction
+        /// therefore chooses between two fights that happened rather than
+        /// starting a third; <see cref="Advance"/> is still the only member that
+        /// moves anything, and switching between them costs a rebuild and
+        /// nothing else.
+        /// </para>
+        /// <para>
+        /// <b>A bool and not the side enum</b>, which is ADR-0039's surface pin:
+        /// every public member of this type other than <see cref="Advance"/>
+        /// takes primitives, so that nothing a caller composes can reach a run
+        /// except through a stored command. It buys a second thing here that an
+        /// enum would have cost -- <see cref="Side"/> has a third member,
+        /// <see cref="Side.Measured"/>, which is the stream the field is
+        /// measured on and is not a fight anybody watched. Two watchable
+        /// directions are two values, so the unwatchable one is unreachable by
+        /// construction rather than by a guard somebody has to write.
+        /// </para>
         /// </remarks>
-        public Offering OfferingAt(int wave) =>
-            Sim.Offering.Draw(Rules, Types, Schedule, Filling, wave, Derived(OfferingLabel, wave, 0, 0));
+        /// <param name="round">
+        /// Which round, indexed as <see cref="Sent"/> is -- zero is the first
+        /// round the run resolved. A round that has not been played has no match
+        /// to hand back.
+        /// </param>
+        /// <param name="opponent">Which of the round's K pairings, counted from zero.</param>
+        /// <param name="attacking">
+        /// True for this round's wave against that opponent's defense -- the
+        /// direction that scores. False for that opponent's wave against this
+        /// round's defense, which is the direction health is spent on.
+        /// </param>
+        public Match MatchAt(int round, int opponent, bool attacking)
+        {
+            if (round < 0 || round >= _sent.Count)
+            {
+                throw new SimulationException(
+                    "This run was asked for the match of round "
+                    + round.ToString(CultureInfo.InvariantCulture)
+                    + ", and "
+                    + _sent.Count.ToString(CultureInfo.InvariantCulture)
+                    + " rounds have resolved. A match is what a round came to, so there is one to rebuild "
+                    + "only for a round that has already been played -- rounds are indexed as Sent is, from "
+                    + "zero.");
+            }
+
+            if (opponent < 0 || opponent >= FieldSize)
+            {
+                throw new SimulationException(
+                    "This run was asked for the match against opponent "
+                    + opponent.ToString(CultureInfo.InvariantCulture)
+                    + " of a field of "
+                    + FieldSize.ToString(CultureInfo.InvariantCulture)
+                    + ". A round is resolved against K opponents and against nobody else, so this is a "
+                    + "pairing the round never fought.");
+            }
+
+            return MatchFor(
+                _sent[round],
+                _pool.At(round, FieldFor(round)[opponent]),
+                round,
+                opponent,
+                attacking ? Side.Attacking : Side.Defending);
+        }
 
         /// <summary>
         /// Works one round out in full, commits it, and hands back the pair it
@@ -465,12 +543,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The unlocks, the purse and the board arrive as arguments.</b> A
-        /// build phase's decision governs the round it was made in -- the creep
-        /// it just unlocked is fielded in this round's wave, the wave is bought
-        /// out of this round's purse, and what it built stands against this
-        /// round's opponents -- and passing them is what lets that happen
-        /// without any of the three having been written to the run first.
+        /// <b>The purse and the board arrive as arguments.</b> A build phase's
+        /// decision governs the round it was made in -- the wave is bought out
+        /// of this round's purse, and what it built stands against this round's
+        /// opponents -- and passing them is what lets that happen without
+        /// either having been written to the run first.
         /// </para>
         /// <para>
         /// <b>Nothing above the commit moves the run.</b> Measuring the field,
@@ -483,21 +560,13 @@ namespace Sim
         /// </para>
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
-        /// <param name="unlocks">What the run may field this round, this round's take included.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
         /// <param name="board">What stands after whatever the round built.</param>
         private (RoundOutcome Outcome, WavePayment Payment) Play(
             RoundOrders orders,
-            Unlocks unlocks,
             Purse purse,
             Board board)
         {
-            // Measured ahead of the round's own matches: what a round of the
-            // pool is worth depends on the seed, the pool and K, so the round
-            // being played cannot move it, and a measurement that refuses
-            // refuses before a single match of this round is resolved.
-            PerformanceField field = Field;
-
             int round = _rounds.Count;
             int[] drawn = FieldFor(round);
             long dealt = 0;
@@ -505,10 +574,10 @@ namespace Sim
 
             for (int index = 0; index < drawn.Length; index++)
             {
-                RoundOrders against = _pool.At(drawn[index]);
+                RoundOrders against = _pool.At(round, drawn[index]);
 
-                dealt += LeakCost(orders.Wave, against.Defense, unlocks, round, index, Side.Attacking);
-                taken += LeakCost(against.Wave, orders.Defense, unlocks, round, index, Side.Defending);
+                dealt += LeakCost(orders, against, round, index, Side.Attacking);
+                taken += LeakCost(orders, against, round, index, Side.Defending);
             }
 
             // The average rather than the sum, on both sides. Summed, one round
@@ -516,13 +585,13 @@ namespace Sim
             // a field would be a punishment for being in one.
             var outcome = new RoundOutcome((int)(dealt / drawn.Length), (int)(taken / drawn.Length));
 
-            // Interest, the flat base, and the band this round's offense reached
-            // in the field on top. Nothing is taken off anybody to pay it: the
-            // wave is placed against the spread of what a round of the pool is
-            // worth, not against whichever opponent it was drawn against.
-            WavePayment payment = purse.CloseWave(Rules, field, outcome.LeakCostDealt);
+            // Interest, the flat base, and a share of what this round's offense
+            // got past on top. Nothing is taken off anybody to pay it: the wave
+            // is paid for the damage it dealt and not against whichever opponent
+            // it was drawn against.
+            WavePayment payment = purse.CloseWave(Rules, outcome.LeakCostDealt);
 
-            Commit(orders, outcome, unlocks, payment.Purse, board, FoldedWith(outcome));
+            Commit(orders, outcome, payment.Purse, board, FoldedWith(outcome));
 
             return (outcome, payment);
         }
@@ -540,14 +609,12 @@ namespace Sim
         private void Commit(
             RoundOrders orders,
             RoundOutcome outcome,
-            Unlocks unlocks,
             Purse purse,
             Board board,
             RunOutcome folded)
         {
             _rounds.Add(outcome);
             _sent.Add(orders);
-            Unlocks = unlocks;
             Purse = purse;
             Board = board;
             _outcome = folded;
@@ -565,14 +632,23 @@ namespace Sim
         /// of any kind happens inside a match, so a match's stream position stays
         /// a running count of the shots fired in it.
         /// </remarks>
-        private int[] FieldFor(int round)
+        private int[] FieldFor(int round) => FieldOf(round, _pool.SizeAt(round));
+
+        /// <summary>
+        /// One field draw: K members out of a population this many wide, off the
+        /// stream that round's position starts. The width is an argument because
+        /// a round draws from the members recorded at its own round and the
+        /// measurement draws from the whole population -- one draw shape, two
+        /// populations, rather than two loops that have to stay the same.
+        /// </summary>
+        private int[] FieldOf(int round, int size)
         {
             var dice = new Pcg32(FieldSeed(round));
             var drawn = new int[FieldSize];
 
             for (int index = 0; index < drawn.Length; index++)
             {
-                drawn[index] = (int)dice.NextBelow((uint)_pool.Size);
+                drawn[index] = (int)dice.NextBelow((uint)size);
             }
 
             return drawn;
@@ -589,24 +665,29 @@ namespace Sim
         /// score is.</b> A percentile compares one number against a spread of
         /// numbers, so the two sides have to be the same measurement: scoring an
         /// averaged round against single matches would widen the field's tails
-        /// and pin every honest run to the middle band.
+        /// and pin every honest run to the middle of it.
         /// </para>
         /// <para>
-        /// <b>Only the offense is resolved.</b> What the bands are measured
-        /// against is leak cost dealt, so what the pool's rounds would have taken
-        /// back is never played -- the measurement costs half of what a round
-        /// costs rather than all of it. What it sends carries no game changer,
+        /// <b>Only the offense is resolved.</b> What is measured is leak cost
+        /// dealt, so what the pool's rounds would have taken back is never
+        /// played -- the measurement costs half of what a round costs rather
+        /// than all of it. What it sends carries no game changer,
         /// for the reason the defending direction's does not: the pool is stored
         /// orders rather than stored runs, and nothing in it says which of its
         /// bodies was one.
         /// </para>
         /// <para>
-        /// <b>Both the member being measured and the field it meets are drawn.</b>
-        /// A walk down the pool would sample a population wider than
-        /// <see cref="FieldSamples"/> by truncating it at its first members. The
-        /// field a sample meets is the field the round of the same index meets,
-        /// which is what makes the spread this comes back with the spread of the
-        /// opponents this run will actually be scored against.
+        /// <b>Both the member being measured and the field it meets are drawn,
+        /// and both are drawn over the whole population.</b> A walk down the
+        /// pool would sample a population wider than <see cref="FieldSamples"/>
+        /// by truncating it at its first members. The draw is round-blind where
+        /// a round's own is not: a pool records a population per round and this
+        /// reads all of them at once, so what it comes back with is one spread
+        /// for the run rather than one per round -- which is what keeps the
+        /// payment a fold. The price is that the population measured is not the
+        /// population any single round fights, which is the resolution
+        /// <c>docs/adr/0042-the-field-is-measured-off-the-pool.md</c> records
+        /// under its amendment.
         /// </para>
         /// <para>
         /// A pool thinner than K is not a thin measurement. The draw is with
@@ -623,18 +704,12 @@ namespace Sim
             for (int sample = 0; sample < worth.Length; sample++)
             {
                 RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
-                int[] field = FieldFor(sample);
+                int[] field = FieldOf(sample, _pool.Size);
                 long dealt = 0;
 
                 for (int index = 0; index < field.Length; index++)
                 {
-                    dealt += LeakCost(
-                        member.Wave,
-                        _pool.At(field[index]).Defense,
-                        Unlocks.None,
-                        sample,
-                        index,
-                        Side.Measured);
+                    dealt += LeakCost(member, _pool.At(field[index]), sample, index, Side.Measured);
                 }
 
                 worth[sample] = (int)(dealt / field.Length);
@@ -648,25 +723,12 @@ namespace Sim
         /// to send, one for one, so what got past is the wave's own orders read
         /// off the cost table.
         /// </summary>
-        private int LeakCost(
-            WaveScript wave,
-            TowerLayout defense,
-            Unlocks unlocks,
-            int round,
-            int opponent,
-            Side side)
+        private int LeakCost(RoundOrders sent, RoundOrders against, int round, int opponent, Side side)
         {
-            // Only this run's own wave can carry a game changer anybody here
-            // knows about: what is fielded is a fact about the sender's
-            // unlocks, and the pool is stored orders rather than stored runs,
-            // so nothing coming the other way says which of its bodies was one.
-            ShotBonus bonuses = side == Side.Attacking
-                ? ShotBonus.Fielded(wave, defense, unlocks, Schedule)
-                : ShotBonus.None;
-
-            var match = new Match(Map, Rules, defense, wave, MatchSeed(round, opponent, side), bonuses);
+            Match match = MatchFor(sent, against, round, opponent, side);
             match.Resolve();
 
+            WaveScript wave = Walking(sent, against, side);
             IReadOnlyList<int> leaked = match.LeakedByOrder;
             long cost = 0;
 
@@ -719,6 +781,39 @@ namespace Sim
             Derived(MatchLabel, round, opponent, (int)side);
 
         /// <summary>
+        /// The one place a pairing becomes a match.
+        /// </summary>
+        /// <remarks>
+        /// Both routes to a match come through here -- the round resolving its
+        /// field, and <see cref="MatchAt"/> handing one back to be watched -- so
+        /// there is one statement of what a pairing's match is made of rather
+        /// than two that have to agree. Nothing is resolved: what comes back is
+        /// on tick zero, and what the caller does with it is the difference
+        /// between scoring a round and drawing one.
+        /// </remarks>
+        private Match MatchFor(RoundOrders sent, RoundOrders against, int round, int opponent, Side side) =>
+            new Match(
+                Map,
+                Rules,
+                Standing(sent, against, side),
+                Walking(sent, against, side),
+                MatchSeed(round, opponent, side));
+
+        /// <summary>
+        /// Whose wave walks in one side of a pairing. <paramref name="sent"/> is
+        /// always what this run's round composed -- or, while the field is being
+        /// measured, what the pool member being measured sent -- and
+        /// <paramref name="against"/> is always the opponent's, so which of the
+        /// two walks is the side and nothing else.
+        /// </summary>
+        private static WaveScript Walking(RoundOrders sent, RoundOrders against, Side side) =>
+            side == Side.Defending ? against.Wave : sent.Wave;
+
+        /// <summary>Whose defense stands in one side of a pairing: the other one's.</summary>
+        private static TowerLayout Standing(RoundOrders sent, RoundOrders against, Side side) =>
+            side == Side.Defending ? sent.Defense : against.Defense;
+
+        /// <summary>
         /// A stream position derived from the run's seed and from where in the
         /// run it is wanted, rather than taken from wherever the previous draw
         /// happened to leave a stream. The label names the purpose, so two draws
@@ -763,7 +858,7 @@ namespace Sim
             /// <summary>
             /// One of the pool's own waves against the pool. Neither direction of
             /// this run's round: it is what a round of the field is worth, which
-            /// is the spread the bands are read off.
+            /// is the spread <see cref="Field"/> reports.
             /// </summary>
             Measured = 2,
         }

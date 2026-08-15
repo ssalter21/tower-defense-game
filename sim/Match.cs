@@ -136,9 +136,6 @@ namespace Sim
         /// <summary>The matrix, the armour expression and the floor every hit goes through.</summary>
         private readonly Ruleset _rules;
 
-        /// <summary>What a prepared shooter adds against a fielded game changer.</summary>
-        private readonly ShotBonus _bonuses;
-
         private readonly TowerCoverage _coverage;
 
         private readonly Pcg32 _dice;
@@ -227,17 +224,12 @@ namespace Sim
         /// <param name="layout">The towers that stand.</param>
         /// <param name="wave">The orders that walk.</param>
         /// <param name="seed">What the one dice stream is started from.</param>
-        /// <param name="bonuses">
-        /// What a prepared shooter adds against a game changer this wave fields.
-        /// Nothing countered unless the caller says otherwise.
-        /// </param>
         public Match(
             HexMap map,
             Ruleset rules,
             TowerLayout layout,
             WaveScript wave,
-            ulong seed,
-            ShotBonus? bonuses = null)
+            ulong seed)
         {
             if (map is null)
             {
@@ -245,12 +237,12 @@ namespace Sim
             }
 
             _rules = rules ?? throw new ArgumentNullException(nameof(rules));
-            _bonuses = bonuses ?? ShotBonus.None;
             _layout = layout ?? throw new ArgumentNullException(nameof(layout));
             _wave = wave ?? throw new ArgumentNullException(nameof(wave));
 
             _coverage = TowerCoverage.For(map, layout);
             _dice = new Pcg32(seed);
+            Map = map;
             Seed = seed;
             _routeLength = _coverage.RouteLength;
 
@@ -320,6 +312,35 @@ namespace Sim
 
         /// <summary>The seed the dice were started from.</summary>
         public ulong Seed { get; }
+
+        /// <summary>The board this match is fought on.</summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The four things a match is made of, readable off the match.</b>
+        /// A match already holds every one of them; what these add is the
+        /// ability for something handed a match to build the same match again,
+        /// which is what a view that seeks by re-simulating has to do. See
+        /// <see cref="Run.MatchAt"/>, which hands one back for exactly that,
+        /// and <c>client/Assets/View/MatchView.cs</c>, whose whole memory of a
+        /// match is these and <see cref="Seed"/>.
+        /// </para>
+        /// <para>
+        /// <b>They are readers and nothing more.</b> None of them is settable
+        /// and none of the four types is mutable, so nothing reached through
+        /// here can move a match -- <see cref="Advance"/> remains the only
+        /// thing that does.
+        /// </para>
+        /// </remarks>
+        public HexMap Map { get; }
+
+        /// <summary>The matrix, the armour expression and the floor every hit goes through.</summary>
+        public Ruleset Rules => _rules;
+
+        /// <summary>The towers that stand for the whole of it.</summary>
+        public TowerLayout Layout => _layout;
+
+        /// <summary>The orders that walk.</summary>
+        public WaveScript Wave => _wave;
 
         /// <summary>Which tick the match is on. Zero before it has been advanced.</summary>
         public int Tick { get; private set; }
@@ -973,10 +994,14 @@ namespace Sim
                     + "never checked against each other.");
             }
 
+            // Nothing counters anything: the anchor schedule that named a
+            // shooter as some threat's answer is gone, and the roster has no
+            // other route to a counter yet. The term stays in the damage model
+            // because the model is what it belongs to -- see DamageModel.Dealt.
             return DamageModel.Dealt(
                 _rules,
                 roll,
-                _bonuses.Against(shooter.Id, target.OrderIndex),
+                0,
                 shooter.AttackType,
                 armour,
                 target.Type.Armour);

@@ -91,6 +91,14 @@ namespace Tests.PlayMode
         /// Every bound here is taken off the match this run actually played, so
         /// a content change that moves where the busiest moment falls does not
         /// redden a claim about pooling.
+        ///
+        /// <b>The busiest moment is counted per unit type, because that is what
+        /// the pool holds.</b> A creep view is built around its type's model, so
+        /// an idle Skeleton cannot be lent to a Minion and the two settle at
+        /// their own steady states independently. Counting the wave as one
+        /// population would assert a bound the pool never promised, and it
+        /// would be a bound that tightens every time a wave sends one more kind
+        /// of body.
         /// </remarks>
         [Test]
         public void ObjectsArePooledAcrossTheWholeMatch()
@@ -99,10 +107,26 @@ namespace Tests.PlayMode
             int mostAtOnce = 0;
             int created = 0;
             int lastBuiltOnTick = 0;
+            var mostAtOnceOfType = new Dictionary<int, int>();
+            var onThisTick = new Dictionary<int, int>();
 
             RunUntil(view, () =>
             {
                 mostAtOnce = Mathf.Max(mostAtOnce, view.Creeps.LiveCount);
+
+                onThisTick.Clear();
+
+                foreach (CreepSnapshot creep in view.Current.Creeps)
+                {
+                    onThisTick.TryGetValue(creep.TypeId, out int alive);
+                    onThisTick[creep.TypeId] = alive + 1;
+                }
+
+                foreach (KeyValuePair<int, int> alive in onThisTick)
+                {
+                    mostAtOnceOfType.TryGetValue(alive.Key, out int most);
+                    mostAtOnceOfType[alive.Key] = Mathf.Max(most, alive.Value);
+                }
 
                 // WHEN the pool last grew, rather than what it had grown to by
                 // some named tick. The named tick was 1000, which stopped being
@@ -125,7 +149,11 @@ namespace Tests.PlayMode
 
             Assert.That(mostAtOnce, Is.GreaterThan(1), "the match never had two creeps on it at once");
 
-            Assert.That(view.Creeps.EverCreated, Is.LessThanOrEqualTo(mostAtOnce + 1),
+            // One steady state per unit type, each of them the type's own
+            // busiest moment plus the one object a claim-before-release costs.
+            int ceiling = mostAtOnceOfType.Values.Sum() + mostAtOnceOfType.Count;
+
+            Assert.That(view.Creeps.EverCreated, Is.LessThanOrEqualTo(ceiling),
                 "more objects were built than were ever alive at once, so something is not being reused");
 
             Assert.That(view.Creeps.EverCreated, Is.LessThan(total),
@@ -359,17 +387,14 @@ namespace Tests.PlayMode
 
             foreach (TowerView tower in view.Towers.Values)
             {
-                AssertAuthoredRotation(tower.Model, AuthoredModelOf(art, tower));
+                AssertAuthoredRotation(tower.Model, art.ModelFor(tower.Type.Id));
             }
 
-            CreepView creep = view.Creeps.Live.Values.First();
-            AssertAuthoredRotation(creep.Model, art.CreepModel);
+            foreach (CreepSnapshot creep in view.Current.Creeps)
+            {
+                AssertAuthoredRotation(view.Creeps.Live[creep.Id].Model, art.ModelFor(creep.TypeId));
+            }
         }
-
-        private static GameObject AuthoredModelOf(MatchArt art, TowerView tower) =>
-            tower.Type.Delivery == Delivery.Projectile
-                ? art.ProjectileTowerModel
-                : art.HitscanTowerModel;
 
         /// <summary>
         /// The instantiated model carries the same local rotation the imported
@@ -388,32 +413,83 @@ namespace Tests.PlayMode
                 + "lies on its side and nothing else in this suite notices");
         }
 
+        /// <summary>
+        /// Every tower holds what its own art says it holds, and is posed with
+        /// its own clips.
+        /// </summary>
+        /// <remarks>
+        /// This used to assert the opposite and pass: towers split on
+        /// <c>Delivery</c>, so the mage — the only projectile row — was the one
+        /// animated and holding a weapon, and the archer and the ranger stood
+        /// still with empty hands. The weapon and the clips are per unit now, so
+        /// the question is no longer "which kind of tower is this" but "what did
+        /// its art say", and the answer is checked against the art rather than
+        /// against a rule about damage.
+        /// </remarks>
         [Test]
-        public void TheTwoKindsOfTowerAreBuiltDifferently()
+        public void EveryTowerHoldsWhatItsArtSaysAndIsPosedWithItsOwnClips()
         {
             MatchView view = Begin();
+            MatchArt art = TheMatchOnScreen.Art();
 
             Assert.That(view.Towers.Count, Is.EqualTo(6), "the defense has six towers");
 
             foreach (TowerView tower in view.Towers.Values)
             {
-                if (tower.Type.Delivery == Delivery.Projectile)
-                {
-                    Assert.That(tower.IsAnimated, Is.True, "the projectile tower is a skinned character");
-                    Assert.That(tower.Weapon, Is.Not.Null, "it draws a bow, so it has to be holding one");
-                    Assert.That(
-                        tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                        Is.Not.Empty);
-                }
-                else
-                {
-                    Assert.That(tower.IsAnimated, Is.False, "the hitscan tower is a static building");
-                    Assert.That(
-                        tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
-                        Is.Empty,
-                        "the building arrived skinned, so both halves of the pipeline are the same half");
-                }
+                UnitArt expected = art.ArtFor(tower.Type.Id);
+
+                Assert.That(tower.IsAnimated, Is.EqualTo(expected.IsPosed),
+                    tower.Type.Label + " is posed when its art carries no clips, or the other way round");
+
+                Assert.That(
+                    tower.RightHand == null, Is.EqualTo(expected.RightHand == null),
+                    tower.Type.Label + "'s right hand disagrees with its art");
+
+                Assert.That(
+                    tower.LeftHand == null, Is.EqualTo(expected.LeftHand == null),
+                    tower.Type.Label + "'s left hand disagrees with its art");
+
+                Assert.That(
+                    tower.Model.GetComponentsInChildren<SkinnedMeshRenderer>(true),
+                    Is.Not.Empty,
+                    tower.Type.Label + " is not a skinned character");
             }
+        }
+
+        /// <summary>
+        /// The mage does not draw a bow, and the archer and the ranger do.
+        /// </summary>
+        /// <remarks>
+        /// Named units on purpose. The test above proves the view agrees with
+        /// the art table; this one proves the art table itself is not the thing
+        /// that is wrong, which is exactly how the original defect survived —
+        /// every layer faithfully carried out an assignment nobody had checked.
+        /// </remarks>
+        [Test]
+        public void TheBowIsHeldByTheArchersAndNotByTheMage()
+        {
+            MatchArt art = TheMatchOnScreen.Art();
+
+            const int Archer = 3;
+            const int Mage = 4;
+            const int Soldier = 11;
+            const int Ranger = 14;
+
+            foreach (int id in new[] { Archer, Ranger })
+            {
+                Assert.That(art.ArtFor(id).LeftHand, Is.Not.Null, "unit " + id + " draws no bow");
+                Assert.That(art.ArtFor(id).LeftHand.name, Does.Contain("bow").IgnoreCase,
+                    "unit " + id + " holds '" + art.ArtFor(id).LeftHand.name + "' rather than a bow");
+            }
+
+            Assert.That(art.ArtFor(Mage).RightHand, Is.Not.Null, "the mage holds nothing");
+            Assert.That(art.ArtFor(Mage).RightHand.name, Does.Contain("staff").IgnoreCase,
+                "the mage holds '" + art.ArtFor(Mage).RightHand.name + "' rather than a staff");
+            Assert.That(art.ArtFor(Mage).LeftHand, Is.Null, "the mage still carries something off-hand");
+
+            Assert.That(art.ArtFor(Soldier).RightHand, Is.Not.Null, "the soldier holds nothing");
+            Assert.That(art.ArtFor(Soldier).RightHand.name, Does.Contain("sword").IgnoreCase,
+                "the soldier holds '" + art.ArtFor(Soldier).RightHand.name + "' rather than a sword");
         }
 
         /// <summary>
@@ -715,8 +791,8 @@ namespace Tests.PlayMode
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// Nothing in the match turns to face the camera, so yawing through all
-        /// six snaps is a real check rather than a formality.
+        /// Nothing in the match turns to face the camera, so orbiting to look
+        /// at a thing from another side is a real check rather than a formality.
         /// </summary>
         /// <remarks>
         /// Checked by type rather than by looking, because the components that

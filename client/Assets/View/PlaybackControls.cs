@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 namespace View
 {
@@ -30,7 +28,7 @@ namespace View
     /// <para>
     /// <b>Built in code, from constants, like the camera and the light.</b> The
     /// scene holds one empty root object and this is not authored into it: a
-    /// canvas dragged in would work, would look right, and would put the one
+    /// panel dragged in would work, would look right, and would put the one
     /// piece of chrome this project has into serialized YAML that no diff can
     /// be read. The numbers below are chrome rather than playfield, which is
     /// why they are here rather than in <see cref="SceneFraming"/> or
@@ -38,11 +36,18 @@ namespace View
     /// match nor the playfield looks any different.
     /// </para>
     /// <para>
-    /// <b>uGUI with the Input System's UI module, and not IMGUI.</b> That is
-    /// forced rather than preferred: this project is set to the new input
-    /// system alone, and the Input System cannot generate input for IMGUI at
-    /// all. An <c>OnGUI</c> bar would compile, draw, and never respond to a
-    /// click.
+    /// <b>UI Toolkit, and the scene runs no other UI system.</b> A runtime
+    /// panel takes its pointer input from the Input System package directly, so
+    /// there is no event system, no raycaster and no canvas anywhere in the
+    /// scene — which is what keeps this project's one HUD on one set of
+    /// controls, layout rules and hit-testing rules as it grows a header, a
+    /// tower palette and a wave bar.
+    /// </para>
+    /// <para>
+    /// <b>The panel has no target texture</b>, so it draws over everything
+    /// after the cameras have finished. That is what keeps the committed match
+    /// frames free of chrome without the capture tool having to know this class
+    /// exists.
     /// </para>
     /// </remarks>
     [DisallowMultipleComponent]
@@ -55,18 +60,18 @@ namespace View
         /// </summary>
         public static readonly float[] Speeds = { 1f, 2f, 4f, 8f };
 
-        /// <summary>The resolution the bar is laid out at, and scaled from.</summary>
-        private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
-
+        /// <summary>
+        /// How tall the bar is. Private, and it stays private: this bar is the
+        /// whole of watch mode's chrome and nothing is stacked on it. Build
+        /// mode's bars are never on screen beside it, so anything over there
+        /// anchored to this number would be holding space for a bar that is not
+        /// there.
+        /// </summary>
         private const float BarHeight = 88f;
-
-        private const float Margin = 24f;
 
         private const float ButtonWidth = 132f;
 
         private const float ButtonHeight = 48f;
-
-        private const float ButtonGap = 12f;
 
         private const float ReadoutWidth = 320f;
 
@@ -74,33 +79,35 @@ namespace View
 
         private const int LabelSize = 22;
 
-        private static readonly Color BarColor = new Color(0.06f, 0.07f, 0.09f, 0.86f);
-
-        private static readonly Color ButtonColor = new Color(0.22f, 0.25f, 0.3f, 1f);
-
         private static readonly Color TrackColor = new Color(0.16f, 0.18f, 0.22f, 1f);
 
         private static readonly Color PlayedColor = new Color(0.45f, 0.68f, 0.85f, 1f);
 
         private static readonly Color HandleColor = new Color(0.92f, 0.94f, 0.97f, 1f);
 
-        private static readonly Color LabelColor = new Color(0.9f, 0.92f, 0.95f, 1f);
-
         private readonly List<Button> _buttons = new List<Button>();
 
         private PlaybackController _playback;
 
-        private Text _pauseLabel;
+        private PanelSettings _panel;
 
-        private Text _speedLabel;
+        private Button _pauseButton;
+
+        private Button _speedButton;
+
+        /// <summary>The stretch of scrub bar behind the handle.</summary>
+        private VisualElement _played;
 
         private int _speedIndex;
 
         /// <summary>The scrub bar. Dragging it seeks.</summary>
-        public Slider Scrubber { get; private set; }
+        public SliderInt Scrubber { get; private set; }
 
         /// <summary>Which tick is on screen, in words.</summary>
-        public Text Readout { get; private set; }
+        public Label Readout { get; private set; }
+
+        /// <summary>The panel the bar is drawn on.</summary>
+        public UIDocument Document { get; private set; }
 
         /// <summary>Every button on the bar, in the order they are laid out.</summary>
         public IReadOnlyList<Button> Buttons => _buttons;
@@ -114,24 +121,11 @@ namespace View
             if (parent == null) throw new ArgumentNullException(nameof(parent));
             if (playback == null) throw new ArgumentNullException(nameof(playback));
 
-            var host = new GameObject("PlaybackControls", typeof(RectTransform));
+            var host = new GameObject("PlaybackControls");
             host.transform.SetParent(parent, worldPositionStays: false);
 
-            var canvas = host.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-            // Overlay, so the bar never lands in a camera's render texture --
-            // which is what keeps the committed match frames free of chrome
-            // without the capture tool having to know this class exists.
-            var scaler = host.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = ReferenceResolution;
-            scaler.matchWidthOrHeight = 1f;
-
-            host.AddComponent<GraphicRaycaster>();
-
             var controls = host.AddComponent<PlaybackControls>();
-            controls.Assemble(playback);
+            controls.Assemble(host.AddComponent<UIDocument>(), playback);
 
             return controls;
         }
@@ -150,6 +144,9 @@ namespace View
         {
             Scrubber.SetValueWithoutNotify(_playback.Tick);
 
+            _played.style.width = Length.Percent(
+                _playback.FinalTick > 0 ? 100f * _playback.Tick / _playback.FinalTick : 0f);
+
             Readout.text = string.Format(
                 CultureInfo.InvariantCulture,
                 "tick {0} / {1}{2}",
@@ -164,102 +161,83 @@ namespace View
             Follow();
         }
 
+        /// <summary>
+        /// The settings object is made here rather than loaded, so it is
+        /// destroyed here too — nothing else holds it and an orphaned one
+        /// outlives the play session that made it.
+        /// </summary>
+        private void OnDestroy()
+        {
+            if (_panel != null) Destroy(_panel);
+        }
+
         // ---------------------------------------------------------------
         // Building
         // ---------------------------------------------------------------
 
-        private void Assemble(PlaybackController playback)
+        private void Assemble(UIDocument document, PlaybackController playback)
         {
             _playback = playback;
+            _panel = RuntimePanel.Settings("Playback panel");
 
-            EnsureEventSystem();
+            Document = document;
+            document.panelSettings = _panel;
 
-            RectTransform bar = Bar();
+            // The bar picks; the rest of the screen does not, so a pointer
+            // anywhere else reaches whatever is behind the panel.
+            document.rootVisualElement.pickingMode = PickingMode.Ignore;
 
-            float x = Margin;
-            x = AddButton(bar, "Pause", x, out _pauseLabel, TogglePause);
-            x = AddButton(bar, SpeedLabel(1f), x, out _speedLabel, CycleSpeed);
-            x = AddButton(bar, "To the end", x, out _, JumpToTheEnd);
+            VisualElement bar = Bar();
+            document.rootVisualElement.Add(bar);
 
+            _pauseButton = AddButton(bar, "Pause", TogglePause);
+            _speedButton = AddButton(bar, SpeedLabel(1f), CycleSpeed);
+            AddButton(bar, "To the end", JumpToTheEnd);
+
+            Scrubber = AddScrubber(bar);
             Readout = AddReadout(bar);
-            Scrubber = AddScrubber(bar, x, Margin + ReadoutWidth + ButtonGap);
 
             Follow();
         }
 
         /// <summary>
-        /// The one event system. Built here rather than authored, and only if
-        /// the scene has none — a second one logs a warning and swallows every
-        /// click between them.
+        /// The bar itself: a row across the bottom of the screen, opaque, so a
+        /// click on it stops at it rather than falling through onto the
+        /// playfield behind.
         /// </summary>
-        /// <remarks>
-        /// The module assigns itself the Input System package's default UI
-        /// actions when it is enabled, so there is no actions asset to author,
-        /// import or keep in step with anything.
-        /// </remarks>
-        private void EnsureEventSystem()
+        private static VisualElement Bar()
         {
-            if (EventSystem.current != null)
-            {
-                return;
-            }
+            var bar = new VisualElement { name = "Bar" };
 
-            var host = new GameObject("EventSystem");
-            host.transform.SetParent(transform, worldPositionStays: false);
-            host.AddComponent<EventSystem>();
-            host.AddComponent<InputSystemUIInputModule>();
-        }
-
-        private RectTransform Bar()
-        {
-            RectTransform bar = Child("Bar", transform);
-            bar.anchorMin = new Vector2(0f, 0f);
-            bar.anchorMax = new Vector2(1f, 0f);
-            bar.pivot = new Vector2(0.5f, 0f);
-            bar.offsetMin = Vector2.zero;
-            bar.offsetMax = new Vector2(0f, BarHeight);
-
-            // Opaque to the raycaster, so a click on the bar stops at the bar
-            // rather than falling through onto the playfield behind it.
-            Paint(bar, BarColor);
+            bar.style.position = Position.Absolute;
+            bar.style.left = 0f;
+            bar.style.right = 0f;
+            bar.style.bottom = 0f;
+            bar.style.height = BarHeight;
+            bar.style.paddingLeft = RuntimePanel.Margin;
+            bar.style.paddingRight = RuntimePanel.Margin;
+            bar.style.flexDirection = FlexDirection.Row;
+            bar.style.alignItems = Align.Center;
+            bar.style.backgroundColor = RuntimePanel.BarColor;
 
             return bar;
         }
 
-        /// <summary>
-        /// One button at <paramref name="x"/> from the left, returning where
-        /// the next one starts.
-        /// </summary>
-        private float AddButton(RectTransform bar, string label, float x, out Text text, Action pressed)
+        private Button AddButton(VisualElement bar, string label, Action pressed)
         {
-            RectTransform host = Child("Button " + label, bar);
-            host.anchorMin = new Vector2(0f, 0.5f);
-            host.anchorMax = new Vector2(0f, 0.5f);
-            host.pivot = new Vector2(0f, 0.5f);
-            host.anchoredPosition = new Vector2(x, 0f);
-            host.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
+            var button = new Button(pressed) { text = label };
 
-            var button = host.gameObject.AddComponent<Button>();
-            button.targetGraphic = Paint(host, ButtonColor);
-            button.onClick.AddListener(() => pressed());
+            button.style.width = ButtonWidth;
+            button.style.height = ButtonHeight;
+            button.style.flexShrink = 0f;
+            button.style.backgroundColor = RuntimePanel.ControlColor;
+            GapAfter(button);
+            Lettering(button);
 
-            text = Label(host, label, TextAnchor.MiddleCenter);
-
+            bar.Add(button);
             _buttons.Add(button);
 
-            return x + ButtonWidth + ButtonGap;
-        }
-
-        private Text AddReadout(RectTransform bar)
-        {
-            RectTransform host = Child("Readout", bar);
-            host.anchorMin = new Vector2(1f, 0.5f);
-            host.anchorMax = new Vector2(1f, 0.5f);
-            host.pivot = new Vector2(1f, 0.5f);
-            host.anchoredPosition = new Vector2(-Margin, 0f);
-            host.sizeDelta = new Vector2(ReadoutWidth, ButtonHeight);
-
-            return Label(host, string.Empty, TextAnchor.MiddleRight);
+            return button;
         }
 
         /// <summary>
@@ -272,39 +250,112 @@ namespace View
         /// how often a drag seeks: one re-simulation per tick crossed, at most
         /// one a frame.
         /// </remarks>
-        private Slider AddScrubber(RectTransform bar, float left, float right)
+        private SliderInt AddScrubber(VisualElement bar)
         {
-            RectTransform host = Child("Scrubber", bar);
-            host.anchorMin = new Vector2(0f, 0.5f);
-            host.anchorMax = new Vector2(1f, 0.5f);
-            host.pivot = new Vector2(0.5f, 0.5f);
-            host.offsetMin = new Vector2(left, -ScrubberHeight * 0.5f);
-            host.offsetMax = new Vector2(-right, ScrubberHeight * 0.5f);
+            var slider = new SliderInt(0, _playback.FinalTick) { name = "Scrubber" };
 
-            Paint(host, TrackColor);
+            slider.style.flexGrow = 1f;
+            slider.style.height = ScrubberHeight;
+            GapAfter(slider);
 
-            RectTransform fillArea = Stretch(Child("Fill Area", host), ScrubberHeight * 0.5f);
-            RectTransform fill = Child("Fill", fillArea);
-            fill.sizeDelta = Vector2.zero;
-            Paint(fill, PlayedColor);
+            VisualElement track = PartOf(slider, BaseSlider<int>.trackerUssClassName);
+            track.style.backgroundColor = TrackColor;
 
-            RectTransform handleArea = Stretch(Child("Handle Slide Area", host), ScrubberHeight * 0.5f);
-            RectTransform handle = Child("Handle", handleArea);
-            handle.sizeDelta = new Vector2(ScrubberHeight, 0f);
-            Image handleImage = Paint(handle, HandleColor);
+            VisualElement handle = PartOf(slider, BaseSlider<int>.draggerUssClassName);
+            handle.style.backgroundColor = HandleColor;
+            handle.style.width = ScrubberHeight;
 
-            var slider = host.gameObject.AddComponent<Slider>();
-            slider.fillRect = fill;
-            slider.handleRect = handle;
-            slider.targetGraphic = handleImage;
-            slider.direction = Slider.Direction.LeftToRight;
-            slider.wholeNumbers = true;
-            slider.minValue = 0f;
-            slider.maxValue = _playback.FinalTick;
+            // What the handle's centre can actually reach: it stops half its
+            // own width short of each end of the track. Measuring the played
+            // stretch inside this rather than across the whole track is what
+            // keeps the colour's edge under the handle at every tick.
+            var travel = new VisualElement { name = "Travel", pickingMode = PickingMode.Ignore };
+            travel.style.position = Position.Absolute;
+            travel.style.left = ScrubberHeight * 0.5f;
+            travel.style.right = ScrubberHeight * 0.5f;
+            travel.style.top = 0f;
+            travel.style.bottom = 0f;
+            track.Add(travel);
+
+            // Behind the handle rather than in front of it, and picking
+            // nothing, so the stretch already played is a colour on the track
+            // and not a second thing a pointer can land on.
+            _played = new VisualElement { name = "Played", pickingMode = PickingMode.Ignore };
+            _played.style.position = Position.Absolute;
+            _played.style.left = 0f;
+            _played.style.top = 0f;
+            _played.style.bottom = 0f;
+            _played.style.backgroundColor = PlayedColor;
+            travel.Add(_played);
+
             slider.SetValueWithoutNotify(_playback.Tick);
-            slider.onValueChanged.AddListener(Scrub);
+            slider.RegisterValueChangedCallback(changed => Scrub(changed.newValue));
+
+            bar.Add(slider);
 
             return slider;
+        }
+
+        private static Label AddReadout(VisualElement bar)
+        {
+            var readout = new Label { name = "Readout" };
+
+            readout.style.width = ReadoutWidth;
+            readout.style.flexShrink = 0f;
+            readout.style.unityTextAlign = TextAnchor.MiddleRight;
+            Lettering(readout);
+
+            bar.Add(readout);
+
+            return readout;
+        }
+
+        /// <summary>
+        /// The gap after a control, and no margin anywhere else on it.
+        /// </summary>
+        /// <remarks>
+        /// The theme gives its controls margins of their own. Clearing them is
+        /// what makes the spacing along this row one number in this file rather
+        /// than that number plus whatever the theme thought.
+        /// </remarks>
+        private static void GapAfter(VisualElement element)
+        {
+            element.style.marginLeft = 0f;
+            element.style.marginTop = 0f;
+            element.style.marginBottom = 0f;
+            element.style.marginRight = RuntimePanel.ControlGap;
+        }
+
+        /// <summary>The one text colour and size on the bar.</summary>
+        private static void Lettering(VisualElement element)
+        {
+            element.style.color = RuntimePanel.LabelColor;
+            element.style.fontSize = LabelSize;
+        }
+
+        /// <summary>
+        /// One of the slider's own parts, by the class name the theme lays it
+        /// out under.
+        /// </summary>
+        /// <remarks>
+        /// Named rather than left alone, because the parts are the theme's and
+        /// not this file's: a theme that stopped producing one would otherwise
+        /// surface as a <c>NullReferenceException</c> from a style assignment,
+        /// which says nothing about where to look.
+        /// </remarks>
+        private static VisualElement PartOf(SliderInt slider, string ussClassName)
+        {
+            VisualElement part = slider.Q(className: ussClassName);
+
+            if (part == null)
+            {
+                throw new InvalidOperationException(
+                    "The scrub bar has no part classed " + ussClassName + ", so Resources/"
+                    + RuntimePanel.ThemeResourcePath
+                    + " is not the theme this bar is coloured against.");
+            }
+
+            return part;
         }
 
         // ---------------------------------------------------------------
@@ -319,16 +370,16 @@ namespace View
         /// <remarks>
         /// <b>Dragging pauses.</b> Without it the drag and the clock fight over
         /// the same frame — the seek puts the match on the tick under the
-        /// pointer, <see cref="Advance"/> immediately walks it forward again,
+        /// pointer, <see cref="Update"/> immediately walks it forward again,
         /// and which of the two the slider ends up showing depends on an update
         /// order nobody controls. Pausing removes the fight rather than
         /// arbitrating it, and it is what anybody who has dragged a video
         /// scrubber already expects.
         /// </remarks>
-        private void Scrub(float value)
+        private void Scrub(int tick)
         {
             Pause(true);
-            _playback.SeekTo(Mathf.RoundToInt(value));
+            _playback.SeekTo(tick);
         }
 
         private void TogglePause() => Pause(!_playback.IsPaused);
@@ -336,14 +387,14 @@ namespace View
         private void Pause(bool paused)
         {
             _playback.IsPaused = paused;
-            _pauseLabel.text = paused ? "Play" : "Pause";
+            _pauseButton.text = paused ? "Play" : "Pause";
         }
 
         private void CycleSpeed()
         {
             _speedIndex = (_speedIndex + 1) % Speeds.Length;
             _playback.Speed = Speeds[_speedIndex];
-            _speedLabel.text = SpeedLabel(Speeds[_speedIndex]);
+            _speedButton.text = SpeedLabel(Speeds[_speedIndex]);
         }
 
         /// <summary>
@@ -359,57 +410,5 @@ namespace View
 
         private static string SpeedLabel(float speed) =>
             speed.ToString("0.##", CultureInfo.InvariantCulture) + "x speed";
-
-        // ---------------------------------------------------------------
-        // Plumbing
-        // ---------------------------------------------------------------
-
-        private static RectTransform Child(string name, Transform parent)
-        {
-            var host = new GameObject(name, typeof(RectTransform));
-            host.transform.SetParent(parent, worldPositionStays: false);
-
-            return (RectTransform)host.transform;
-        }
-
-        /// <summary>Stretches a rect over its parent, inset vertically.</summary>
-        private static RectTransform Stretch(RectTransform rect, float horizontalInset)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(horizontalInset, 0f);
-            rect.offsetMax = new Vector2(-horizontalInset, 0f);
-
-            return rect;
-        }
-
-        private static Image Paint(RectTransform rect, Color color)
-        {
-            var image = rect.gameObject.AddComponent<Image>();
-            image.color = color;
-
-            return image;
-        }
-
-        /// <summary>
-        /// A label filling its host. The font is the engine's built-in one —
-        /// the same one uGUI reaches for itself — so there is no font asset to
-        /// import and none to be missing from a build.
-        /// </summary>
-        private static Text Label(RectTransform parent, string content, TextAnchor alignment)
-        {
-            RectTransform rect = Stretch(Child("Label", parent), 0f);
-
-            var text = rect.gameObject.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = LabelSize;
-            text.color = LabelColor;
-            text.alignment = alignment;
-            text.horizontalOverflow = HorizontalWrapMode.Overflow;
-            text.raycastTarget = false;
-            text.text = content;
-
-            return text;
-        }
     }
 }

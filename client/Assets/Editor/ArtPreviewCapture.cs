@@ -16,9 +16,9 @@ namespace View.Editor
     /// <b>This exists so that no art gets picked from a name.</b> "Idle_A" and
     /// "Skeletons_Idle" are indistinguishable as strings and completely
     /// different as poses; "building_tower_A" and "building_tower_catapult" are
-    /// two different silhouettes at the only six camera angles this game ever
-    /// shows. The choosing is the developer's, and this is the thing put in
-    /// front of him to choose from.
+    /// two different silhouettes from every angle a player can orbit to. The
+    /// choosing is the developer's, and this is the thing put in front of him to
+    /// choose from.
     /// </para>
     /// <para>
     /// Two kinds of sheet, one per kind of question:
@@ -31,10 +31,10 @@ namespace View.Editor
     /// the editor's own preview window would do.
     /// </description></item>
     /// <item><description>
-    /// <b>Models</b> become a six-frame turntable at the six snapped camera
-    /// angles from <see cref="SceneFraming"/>, lit by the same sun. A model that
-    /// reads well from one side and vanishes from another is a fact about this
-    /// game's camera, and it only shows up if the preview uses that camera.
+    /// <b>Models</b> become a six-frame turntable, evenly spaced round the
+    /// subject and lit by the same sun the match uses. A model that reads well
+    /// from one side and vanishes from another is a fact a player can find by
+    /// orbiting, and it only shows up if the sheet turns too.
     /// </description></item>
     /// </list>
     /// <para>
@@ -59,13 +59,36 @@ namespace View.Editor
         public const string SpecArgument = "-artPreviewSpec";
 
         /// <summary>
-        /// How far the rig is turned about Y for a clip strip. The match camera
-        /// looks down <c>+Z</c> at snap zero, so a rig left at identity faces
-        /// away from it; this is a three-quarter view instead, which is where an
-        /// arm swing and a leg swing are both legible. A framing choice about
-        /// the contact sheet, not about the game.
+        /// How far the rig is turned about Y for a clip strip. The preview
+        /// camera looks down <c>+Z</c>, so a rig left at identity faces away
+        /// from it; this is a three-quarter view instead, which is where an arm
+        /// swing and a leg swing are both legible. A framing choice about the
+        /// contact sheet, not about the game.
         /// </summary>
         private const float ClipRigYawDegrees = 205f;
+
+        /// <summary>
+        /// How many angles a turntable walks through, evenly spaced round the
+        /// subject. Six, because six tiles is a contact-sheet row wide enough
+        /// to compare silhouettes on and narrow enough to read at a glance.
+        /// </summary>
+        private const int TurntableFrames = 6;
+
+        /// <summary>
+        /// How far back the preview camera sits. It is orthographic — a contact
+        /// sheet compares sizes, and a lens that made the nearer candidate
+        /// bigger would be comparing framing instead — so this only has to be
+        /// far enough that nothing crosses the near plane.
+        /// </summary>
+        private const float PreviewCameraDistance = 60f;
+
+        /// <summary>
+        /// The preview camera's far plane. Its own, rather than the match
+        /// camera's, whose value is set by how far the match's dolly pulls out
+        /// — a distance nothing on a contact sheet ever travels. Twice the
+        /// distance the camera sits at clears any subject that fits the frame.
+        /// </summary>
+        private const float PreviewCameraFarClip = 2f * PreviewCameraDistance;
 
         /// <summary>
         /// Fill light, so the side the sun does not reach is dark rather than
@@ -602,7 +625,7 @@ namespace View.Editor
             SimDrivenAnimator sampler, Spec spec, Vector3 pivot, float orthographicSize)
         {
             var tiles = new List<Texture2D>();
-            GameObject camera = BuildCamera(pivot, orthographicSize, SceneFraming.CameraRotation(0));
+            GameObject camera = BuildCamera(pivot, orthographicSize, TurntableRotation(0));
 
             try
             {
@@ -621,18 +644,18 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// One frame per snapped camera angle. The sun stays put in world space
-        /// exactly as it does in the match, because a light that orbits with the
-        /// viewer would make all six frames look identical and turn the whole
-        /// sheet into a formality.
+        /// One frame per angle round the subject. The sun stays put in world
+        /// space exactly as it does in the match, because a light that orbited
+        /// with the viewer would make all six frames look identical and turn
+        /// the whole sheet into a formality.
         /// </summary>
         private static Texture2D CaptureTurntable(Spec spec, Vector3 pivot, float orthographicSize)
         {
             var tiles = new List<Texture2D>();
 
-            for (var snap = 0; snap < SceneFraming.CameraSnapCount; snap++)
+            for (var frame = 0; frame < TurntableFrames; frame++)
             {
-                GameObject camera = BuildCamera(pivot, orthographicSize, SceneFraming.CameraRotation(snap));
+                GameObject camera = BuildCamera(pivot, orthographicSize, TurntableRotation(frame));
 
                 try
                 {
@@ -647,6 +670,11 @@ namespace View.Editor
             return Stitch(tiles, spec.frameSize);
         }
 
+        /// <summary>Where the camera looks from on turntable frame <paramref name="frame"/>.</summary>
+        private static Quaternion TurntableRotation(int frame) =>
+            SceneFraming.CameraRotation(
+                frame * (360f / TurntableFrames), SceneFraming.CameraDefaultPitchDegrees);
+
         private static GameObject BuildCamera(Vector3 pivot, float orthographicSize, Quaternion rotation)
         {
             var go = new GameObject("PreviewCamera");
@@ -657,10 +685,10 @@ namespace View.Editor
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.backgroundColor = SceneFraming.BackgroundColor;
             camera.nearClipPlane = SceneFraming.CameraNearClip;
-            camera.farClipPlane = SceneFraming.CameraFarClip;
+            camera.farClipPlane = PreviewCameraFarClip;
 
             go.transform.rotation = rotation;
-            go.transform.position = pivot - (go.transform.forward * SceneFraming.CameraDistance);
+            go.transform.position = pivot - (go.transform.forward * PreviewCameraDistance);
 
             return go;
         }

@@ -62,16 +62,17 @@ public class RecordFormatTests
         Assert.False(RecordFormat.IsKnown(RecordKind.Command, RecordFormat.CommandVersion + 1));
 
         // And now they are not constants that happen to be equal. The defense
-        // carries the map handle, the bundle carries the ruleset stamp and the
-        // command stream carries what each build phase built, and each of those
-        // is a version 1; the wave's bytes have never moved, so a version 1 of
-        // one is a version that has never existed. Three kinds at 1 and one at
-        // 0 is what per-kind counting looks like once the counters have
-        // diverged.
+        // carries the map handle and the bundle carries the ruleset stamp, so
+        // each is a version 1; the command stream is at 3, having gained what a
+        // build phase built, then lost the take, then given a slot's position
+        // its release order; and the wave's bytes have never moved, so a
+        // version 1 of one is a version that has never existed. Four counters
+        // at three different numbers is what per-kind counting looks like once
+        // they have diverged.
         Assert.Equal(1, RecordFormat.GhostVersion);
         Assert.Equal(0, RecordFormat.WaveVersion);
         Assert.Equal(1, RecordFormat.ReplayVersion);
-        Assert.Equal(1, RecordFormat.CommandVersion);
+        Assert.Equal(3, RecordFormat.CommandVersion);
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, 1));
 
         // The three that did move keep every version they have ever had. A
@@ -79,6 +80,8 @@ public class RecordFormatTests
         Assert.True(RecordFormat.IsKnown(RecordKind.Ghost, 0));
         Assert.True(RecordFormat.IsKnown(RecordKind.Replay, 0));
         Assert.True(RecordFormat.IsKnown(RecordKind.Command, 0));
+        Assert.True(RecordFormat.IsKnown(RecordKind.Command, 1));
+        Assert.True(RecordFormat.IsKnown(RecordKind.Command, 2));
     }
 
     [Fact]

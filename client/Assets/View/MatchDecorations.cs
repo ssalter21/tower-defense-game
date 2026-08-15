@@ -39,8 +39,8 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Real geometry only.</b> A tracer is a thin stretched box and a spark
-    /// is a small sphere, because the camera yaws through six snapped positions
-    /// and the standing art rule is that nothing may turn to face it. Unity's
+    /// is a small sphere, because the camera orbits freely and the standing art
+    /// rule is that nothing may turn to face it. Unity's
     /// line renderers and default particles both billboard, so neither is used
     /// here — which is a constraint that showed up as a choice of primitive
     /// rather than as a problem.
@@ -250,6 +250,27 @@ namespace View
             _active.Clear();
             TracersDrawn = 0;
             SparksDrawn = 0;
+        }
+
+        /// <summary>
+        /// Destroys the three materials this made. What the view calls when it
+        /// is destroyed.
+        /// </summary>
+        /// <remarks>
+        /// <b>Whoever made it destroys it.</b> A material is an asset instance
+        /// and destroying the object that draws with it does not destroy it, so
+        /// these outlive the match unless somebody says otherwise. It never
+        /// showed while one match was the whole session and three orphans were a
+        /// constant; a run begins a match a round, and thirty over ten waves is
+        /// a leak with a shape. Same rule and the same reasoning as
+        /// <see cref="PlaybackControls"/>'s panel settings and
+        /// <see cref="BuildBoard"/>'s hex light.
+        /// </remarks>
+        public void DestroyMaterials()
+        {
+            UnityEngine.Object.Destroy(_tracerMaterial);
+            UnityEngine.Object.Destroy(_muzzleMaterial);
+            UnityEngine.Object.Destroy(_sparkMaterial);
         }
 
         private void Tracer(Vector3 from, Vector3 to)

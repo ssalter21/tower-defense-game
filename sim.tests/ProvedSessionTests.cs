@@ -1,23 +1,25 @@
-using System.Globalization;
-using Sim.Cli;
-
 namespace Sim.Tests;
 
 /// <summary>
-/// A session held up against a fresh run of the script it wrote, and the file
-/// that is only written where the two agreed.
+/// A session held up against a fresh run of the script it wrote, and the script
+/// that only comes back where the two agreed.
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Both halves of the claim are here, and one of them needs a lie to
-/// reach.</b> Played through the program, the session and the fresh run are the
-/// same run by construction, so the refusal could never be watched working --
-/// which is the one thing <c>docs/playing-a-run-from-a-shell.md</c> §4 asks for
-/// by name. The seam is that what the player was shown arrives as data:
-/// <see cref="Played"/> carries the rounds, so a test can hand over a session
-/// that says something the fresh run does not and see what happens. Nothing
-/// about the verb is loosened to allow it -- the verb hands over the rounds it
-/// was shown, and there is no other way in.
+/// <b>The refusal needs a lie to reach.</b> Played through any real caller, the
+/// session and the fresh run are the same run by construction, so the refusal
+/// could never be watched working. The seam is that what the player was shown
+/// arrives as data: the prover is handed the decisions and the rounds, so a
+/// test can hand over a session that says something the fresh run does not and
+/// see what happens. Nothing about a caller is loosened to allow it -- a caller
+/// hands over the rounds it was shown, and there is no other way in.
+/// </para>
+/// <para>
+/// <b>Nothing here opens a file, because the prover cannot.</b> The write is the
+/// caller's half -- <c>client/Assets/View/WrittenRun.cs</c> -- and that a
+/// session which disagreed has no script to write is asserted here, over the
+/// script itself. That the prover could not open a file even if it wanted to is
+/// asserted where it can be, over the shipped image, by <c>IlScanTests</c>.
 /// </para>
 /// <para>
 /// <b>Each assertion was watched failing under a deliberately wrong prover</b>,
@@ -35,98 +37,87 @@ public class ProvedSessionTests
 
     private const string Replayed = "    replayed  ";
 
-    /// <summary>Where the committed run's own decisions, played at a prompt, come to rest.</summary>
+    /// <summary>Where the committed run's own decisions, played a round at a time, come to rest.</summary>
     private static readonly Lazy<Session> Committed = new(() =>
-        Play(AgainstTheCannedField(TheMatch.Types()), TheCommands.TypedAtAPrompt()));
+        Play(AgainstTheCannedField(TheMatch.Types()), TheCommands.Committed()));
 
     [Fact]
-    public void A_session_that_replays_as_it_played_writes_one_file_and_it_is_the_script_it_proved()
+    public void A_session_that_replays_as_it_played_hands_back_the_script_it_proved()
     {
-        // The whole claim, end to end: ten rounds typed at a prompt, compiled
-        // into a script, that script played into a run built fresh on the same
-        // seed and shape, and every round and the outcome the same on both
-        // sides. Only then does anything reach a disk, and what reaches it is
-        // the script that was proved rather than a second rendering of it.
+        // The whole claim, end to end: the committed run's rounds played one
+        // at a time, compiled into a script, that script played into a run built
+        // fresh on the same seed and shape, and every round and the outcome the
+        // same on both sides. Only then is there a script to keep, and what
+        // comes back is the decisions that were proved rather than text that
+        // merely parses.
         //
         // OBSERVED: compare the fresh run's rounds against themselves --
         // replay them, then hold the replay against the replay. Everything here
-        // stays green, which is the whole problem: the interactive path drops
-        // out of the comparison entirely and the verb proves that a record
-        // equals itself.
+        // stays green, which is the whole problem: the played path drops out of
+        // the comparison entirely and the prover proves that a record equals
+        // itself.
         Session played = Committed.Value;
 
-        ProvedSession proved = ProvedSession.Of(played.Result, played.Run, Fresh);
+        ProvedSession proved = ProvedSession.Of(
+            played.Decisions, played.Rounds, played.Run, Fresh);
 
         Assert.True(proved.Agreed, proved.Disagreement);
         Assert.Null(proved.Disagreement);
-        Assert.Equal(Run.DefaultWaves, played.Result.Decisions.Count);
+        Assert.Equal(TheCommands.Committed().Count, played.Decisions.Count);
+        Assert.Equal(played.Decisions.Count, proved.RoundsProved);
 
-        string scratch = TheCommandLine.Scratch("proved-session-agrees");
-        string path = Path.Combine(scratch, "run.commands.txt");
-        var writer = new StringWriter();
-
-        Assert.True(proved.Written(path, writer));
-
-        // Exactly one file, at the path it was given, holding the script and
-        // nothing else.
-        Assert.Equal(new[] { path }, Directory.GetFiles(scratch, "*", SearchOption.AllDirectories));
-        Assert.Equal(proved.Script, File.ReadAllText(path));
-        Assert.Contains("wrote      " + path, writer.ToString(), StringComparison.Ordinal);
+        Assert.Equal(
+            played.Decisions.Select((decision, index) => RecordCommand.Of(index + 1, decision)),
+            CommandScript.Parse("the proved script", proved.Script));
     }
 
     [Fact]
-    public void A_round_the_fresh_run_plays_differently_is_named_with_both_sides_and_nothing_is_written()
+    public void A_round_the_fresh_run_plays_differently_is_named_with_both_sides_and_no_script_comes_back()
     {
-        // The refusal. The session hands over its own ten rounds with the
-        // fourth and fifth swapped, so the script is the real one and the fresh
-        // run plays it exactly as it was played -- and the two lists differ
-        // first at wave four. Both sides of that round are printed, because a
-        // person reading this has to be able to see which of the two is wrong.
+        // The refusal. The session hands over its own rounds with the last two
+        // swapped, so the script is the real one and the fresh run plays it
+        // exactly as it was played -- and the two lists differ first at wave
+        // three. Both sides of that round are printed, because a person reading
+        // this has to be able to see which of the two is wrong.
         //
         // OBSERVED: compare the outcome alone, on the argument that a run whose
-        // rounds differ ends differently. It does not: these are the same ten
+        // rounds differ ends differently. It does not: these are the same
         // rounds in a different order, every fold over them is identical, and
-        // a verb that checked only the ending would write the file and call the
-        // session proved.
+        // a caller that checked only the ending would keep the script and call
+        // the session proved.
         Session played = Committed.Value;
 
-        RoundReport[] lying = played.Result.Rounds.ToArray();
-        (lying[3], lying[4]) = (lying[4], lying[3]);
+        RoundReport[] lying = played.Rounds.ToArray();
+        (lying[2], lying[3]) = (lying[3], lying[2]);
 
-        ProvedSession proved = ProvedSession.Of(
-            new Played(played.Result.Decisions, lying, played.Result.Ending),
-            played.Run,
-            Fresh);
+        ProvedSession proved = ProvedSession.Of(played.Decisions, lying, played.Run, Fresh);
 
         Assert.False(proved.Agreed);
 
         string disagreement = proved.Disagreement!;
 
-        Assert.Contains("wave 4:", disagreement, StringComparison.Ordinal);
+        Assert.Contains("wave 3:", disagreement, StringComparison.Ordinal);
         Assert.Contains(
-            Shown + played.Result.Rounds[4] + "\n" + Replayed + played.Result.Rounds[3],
+            Shown + played.Rounds[3] + "\n" + Replayed + played.Rounds[2],
             disagreement,
             StringComparison.Ordinal);
 
-        // And it is this verb's fault, said in those words, because nothing a
-        // player can type reaches here.
+        // And it is the playing loop's fault, said in those words, because
+        // nothing a player can do reaches here.
         Assert.Contains(
-            "a bug in playing a run at a prompt rather than a decision anybody made badly",
+            "a bug in playing a run a round at a time rather than a decision anybody made badly",
             disagreement,
             StringComparison.Ordinal);
 
-        // OBSERVED: write the script and report the disagreement beside it, on
-        // the argument that a session is worth keeping either way. The file
-        // lands, the next thing to read it replays a run nobody played, and the
-        // one sentence saying so has scrolled off.
-        string scratch = TheCommandLine.Scratch("proved-session-round");
-        string path = Path.Combine(scratch, "run.commands.txt");
-        var writer = new StringWriter();
-
-        Assert.False(proved.Written(path, writer));
-        Assert.Empty(Directory.GetFiles(scratch, "*", SearchOption.AllDirectories));
-        Assert.Contains("Nothing was written to " + path + ".", writer.ToString(), StringComparison.Ordinal);
-        Assert.Contains(disagreement, writer.ToString(), StringComparison.Ordinal);
+        // And there is no script to hand anybody, which is what keeps that
+        // refusal the prover's now that the file is somebody else's.
+        //
+        // OBSERVED: hand the script back beside the disagreement, on the
+        // argument that a session is worth keeping either way. A caller that
+        // reads Script without reading Agreed writes down a run nobody played,
+        // and the one sentence saying so has scrolled off.
+        Assert.Equal(string.Empty, proved.Script);
+        Assert.Equal(0, proved.RoundsProved);
     }
 
     [Fact]
@@ -138,23 +129,25 @@ public class ProvedSessionTests
         // printed, because which of the two is short is the whole of what is
         // wrong.
         //
-        // OBSERVED: walk the session's rounds and stop. The nine that were
-        // shown all match the first nine the script replays, the tenth is never
-        // looked at, and a session whose last round vanished somewhere writes a
-        // ten-round script and calls it proved.
+        // OBSERVED: walk the session's rounds and stop. The ones that were shown
+        // all match the same number the script replays, the last is never looked
+        // at, and a session whose last round vanished somewhere writes a whole
+        // script and calls it proved.
         Session played = Committed.Value;
+        int shown = played.Rounds.Count - 1;
 
         ProvedSession proved = ProvedSession.Of(
-            new Played(
-                played.Result.Decisions,
-                played.Result.Rounds.Take(Run.DefaultWaves - 1).ToArray(),
-                played.Result.Ending),
+            played.Decisions,
+            played.Rounds.Take(shown).ToArray(),
             played.Run,
             Fresh);
 
         Assert.False(proved.Agreed);
         Assert.Contains("how many rounds:", proved.Disagreement, StringComparison.Ordinal);
-        Assert.Contains(Shown + "9\n" + Replayed + "10", proved.Disagreement, StringComparison.Ordinal);
+        Assert.Contains(
+            Shown + shown + "\n" + Replayed + played.Rounds.Count,
+            proved.Disagreement,
+            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -172,10 +165,11 @@ public class ProvedSessionTests
         // health and leave the other unfinished, and the comparison waves it
         // through.
         Run dying = TheRun.Unstoppable(fieldSize: 1);
-        Session played = Play(dying, TakingTheFirstOption(dying));
+        Session played = Play(dying, DoingNothing(dying));
 
         ProvedSession proved = ProvedSession.Of(
-            played.Result,
+            played.Decisions,
+            played.Rounds,
             played.Run,
             () => TheRun.Unstoppable(deathEndsTheRun: false, fieldSize: 1));
 
@@ -197,36 +191,40 @@ public class ProvedSessionTests
     public void A_decision_the_record_cannot_store_is_the_same_refusal_and_says_whose_fault_it_is()
     {
         // A script that will not compile never reaches a fresh run, and it is
-        // the same failure wearing a different sentence: the prompt composed
+        // the same failure wearing a different sentence: the caller composed
         // something the record cannot carry. The record's own words are carried
         // through, because they say which decision and which slot.
         //
-        // OBSERVED: let it throw. The verb dies on "fills slot 2 with type id
-        // 2, at or below the 5 a slot above it already sent" -- which is true,
-        // which is unactionable, and which reads to whoever typed the session
-        // as though they had sent the creeps in the wrong order.
+        // The decision used to be a descending pair, which #191 made legal: a
+        // slot's position is its release order, so an arrangement is a decision
+        // rather than a spelling. What the record still cannot carry is one
+        // creep in two slots of one wave.
+        //
+        // OBSERVED: let it throw. The caller dies on "fills slot 2 with type id
+        // 5, which a slot above it already sent" -- which is true, which is
+        // unactionable, and which reads to whoever played the session as though
+        // the fault were theirs.
         Run run = AgainstTheCannedField(TheMatch.Types());
 
-        var unstorable = new Played(
-            new[] { BuildPhase.Of(OptionKind.Ordinary, 1, WaveSlot.Of(5, 1), WaveSlot.Of(2, 1)) },
-            Array.Empty<RoundReport>(),
-            Ended.Quit);
+        BuildPhase[] unstorable = { BuildPhase.Of(WaveSlot.Of(5, 1), WaveSlot.Of(5, 1)) };
 
-        ProvedSession proved = ProvedSession.Of(unstorable, run, Fresh);
+        ProvedSession proved = ProvedSession.Of(
+            unstorable, Array.Empty<RoundReport>(), run, Fresh);
 
         Assert.False(proved.Agreed);
-        Assert.Contains("Filled slots ascend strictly by type id", proved.Disagreement, StringComparison.Ordinal);
-        Assert.Contains("a bug in playing a run at a prompt", proved.Disagreement, StringComparison.Ordinal);
-
-        string scratch = TheCommandLine.Scratch("proved-session-unstorable");
-        var writer = new StringWriter();
-
-        Assert.False(proved.Written(Path.Combine(scratch, "run.commands.txt"), writer));
-        Assert.Empty(Directory.GetFiles(scratch, "*", SearchOption.AllDirectories));
+        Assert.Contains(
+            "A creep fills at most one slot of a wave",
+            proved.Disagreement,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "a bug in playing a run a round at a time",
+            proved.Disagreement,
+            StringComparison.Ordinal);
+        Assert.Equal(string.Empty, proved.Script);
     }
 
     [Fact]
-    public void A_session_that_committed_no_round_writes_nothing_and_plays_no_second_run()
+    public void A_session_that_committed_no_round_hands_back_nothing_and_plays_no_second_run()
     {
         // Which is what quitting at wave one leaves behind. There is no row in
         // this grammar for a run nobody played, so there is no script, nothing
@@ -235,12 +233,13 @@ public class ProvedSessionTests
         //
         // OBSERVED: prove it anyway. CommandScript.Parse refuses the empty
         // script by name -- "decides nothing at all" -- so a player who quit
-        // before their first round is told the verb has a bug in it.
+        // before their first round is told the caller has a bug in it.
         Run run = AgainstTheCannedField(TheMatch.Types());
         bool builtOne = false;
 
         ProvedSession proved = ProvedSession.Of(
-            new Played(Array.Empty<BuildPhase>(), Array.Empty<RoundReport>(), Ended.Quit),
+            Array.Empty<BuildPhase>(),
+            Array.Empty<RoundReport>(),
             run,
             () =>
             {
@@ -251,60 +250,116 @@ public class ProvedSessionTests
 
         Assert.True(proved.Agreed);
         Assert.Equal(string.Empty, proved.Script);
+        Assert.Equal(0, proved.RoundsProved);
         Assert.False(builtOne);
-
-        string scratch = TheCommandLine.Scratch("proved-session-nothing");
-        string path = Path.Combine(scratch, "run.commands.txt");
-        var writer = new StringWriter();
-
-        Assert.True(proved.Written(path, writer));
-        Assert.Empty(Directory.GetFiles(scratch, "*", SearchOption.AllDirectories));
-        Assert.Contains("No round was played", writer.ToString(), StringComparison.Ordinal);
     }
 
-    /// <summary>What one canned session came to: the run it moved and the decisions.</summary>
+    [Fact]
+    public void A_run_a_build_policy_played_is_proved_the_same_way_and_names_no_content_file()
+    {
+        // The same claim over decisions nothing authored: a run advanced a round
+        // at a time by a policy, on tables this suite builds, with no committed
+        // script anywhere in it. So the prover is being asked about the shape of
+        // a session rather than about the ten rounds content/commands.txt
+        // happens to hold, and the case above is not the only run it has ever
+        // seen.
+        //
+        // OBSERVED: hand the prover the fresh run's own rounds rather than the
+        // ones this loop collected. Green, and green under any prover at all,
+        // which is the shape a self-comparison takes.
+        Run played = TheRun.Fresh(deathEndsTheRun: false);
+        var decisions = new List<BuildPhase>();
+        var shown = new List<RoundReport>();
+
+        while (!played.IsOver && played.Round < played.Waves)
+        {
+            BuildPhase decision = TheBuild.Fortifying(played);
+
+            decisions.Add(decision);
+            shown.Add(played.Advance(decision));
+        }
+
+        ProvedSession proved = ProvedSession.Of(
+            decisions,
+            shown,
+            played,
+            () => TheRun.Fresh(deathEndsTheRun: false));
+
+        Assert.True(proved.Agreed, proved.Disagreement);
+        Assert.Equal(Run.DefaultWaves, proved.RoundsProved);
+
+        // And what it comes back holding is those decisions rather than text
+        // that merely parses.
+        Assert.Equal(
+            decisions.Select((decision, index) => RecordCommand.Of(index + 1, decision)),
+            CommandScript.Parse("the proved script", proved.Script));
+    }
+
+    /// <summary>What one session came to: the run it moved, its decisions and the rounds it was shown.</summary>
     private sealed class Session
     {
-        public Session(Run run, Played result)
+        public Session(Run run, IReadOnlyList<BuildPhase> decisions, IReadOnlyList<RoundReport> rounds)
         {
             Run = run;
-            Result = result;
+            Decisions = decisions;
+            Rounds = rounds;
         }
 
         /// <summary>The run the session played, as it stands afterwards.</summary>
         public Run Run { get; }
 
-        /// <summary>What the loop handed back.</summary>
-        public Played Result { get; }
+        /// <summary>The phase each played round was played from, in wave order.</summary>
+        public IReadOnlyList<BuildPhase> Decisions { get; }
+
+        /// <summary>What each of those rounds came to, as the player was told it.</summary>
+        public IReadOnlyList<RoundReport> Rounds { get; }
     }
 
-    /// <summary>Plays these lines into this run, with the screen thrown away.</summary>
-    private static Session Play(Run run, params string[] typed) =>
-        new Session(
-            run,
-            RunPrompt.Play(
-                run,
-                TheMatch.Ladder(run.Types),
-                new StringReader(string.Join('\n', typed)),
-                new StringWriter()));
+    /// <summary>
+    /// Plays these decisions into this run a round at a time, keeping what each
+    /// round reported.
+    /// </summary>
+    /// <remarks>
+    /// The shape every caller of the prover has: advance, keep what came back,
+    /// stop where the run stops. It is deliberately not a second implementation
+    /// of anything -- the run does the playing, and all this holds on to is the
+    /// pair the prover is handed.
+    /// </remarks>
+    private static Session Play(Run run, IReadOnlyList<RecordCommand> decisions)
+    {
+        var made = new List<BuildPhase>();
+        var shown = new List<RoundReport>();
+
+        foreach (RecordCommand command in decisions)
+        {
+            if (run.IsOver)
+            {
+                break;
+            }
+
+            BuildPhase phase = command.ToPhase();
+
+            made.Add(phase);
+            shown.Add(run.Advance(phase));
+        }
+
+        return new Session(run, made, shown);
+    }
 
     /// <summary>
-    /// A transcript that takes the first thing on every round's menu and does
-    /// nothing else, for as many rounds as a run can have.
+    /// A decision per round that buys nothing at all, for as many rounds as a
+    /// run can have.
     /// </summary>
-    private static string[] TakingTheFirstOption(Run run)
+    private static IReadOnlyList<RecordCommand> DoingNothing(Run run)
     {
-        var typed = new List<string>();
+        var decisions = new List<RecordCommand>();
 
         for (int wave = 1; wave <= run.Waves; wave++)
         {
-            Option first = run.OfferingAt(wave).Options[0];
-
-            typed.Add("take " + CommandScript.WordFor(first.Kind) + " " + Number(first.Id));
-            typed.Add("done");
+            decisions.Add(RecordCommand.Of(wave, TheBuild.BuyingNothing()));
         }
 
-        return typed.ToArray();
+        return decisions;
     }
 
     /// <summary>The fresh run the committed session is proved against: the same seed and the same shape.</summary>
@@ -319,11 +374,9 @@ public class ProvedSessionTests
             TheMatch.Map(),
             TheRuleset.Committed(),
             types,
-            TheSchedule.Committed(types),
+            TheLadder.Committed(types),
             FieldPool.Canned(TheMatch.Layout(types), TheRun.FieldWave(types)),
             TheRun.Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);
-
-    private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
 }

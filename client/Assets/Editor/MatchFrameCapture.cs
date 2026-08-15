@@ -25,10 +25,10 @@ namespace View.Editor
     /// </para>
     /// <para>
     /// It draws through the real thing: the real <see cref="MatchRoot"/>, the
-    /// real floor, the real <see cref="IsometricCameraRig"/> at its real snaps,
-    /// and the real <see cref="MatchView"/> stepping the real simulation. A
-    /// capture path that built its own approximation of the scene would be a
-    /// picture of something this project does not ship.
+    /// real floor, the real <see cref="OrbitCameraRig"/> pointed where the
+    /// arguments say, and the real <see cref="MatchView"/> stepping the real
+    /// simulation. A capture path that built its own approximation of the scene
+    /// would be a picture of something this project does not ship.
     /// </para>
     /// <para>
     /// Runs headless, from a shell, with no editor session and nobody at a
@@ -43,11 +43,25 @@ namespace View.Editor
         /// <summary>Which ticks to grab, comma separated.</summary>
         public const string TicksArgument = "-matchFrameTicks";
 
-        /// <summary>Which camera snap to grab from.</summary>
-        public const string SnapArgument = "-matchFrameSnap";
+        /// <summary>Which heading to grab from, in degrees of yaw.</summary>
+        public const string YawArgument = "-matchFrameYaw";
 
-        /// <summary>How big each frame is, in pixels.</summary>
-        public const string SizeArgument = "-matchFrameSize";
+        /// <summary>
+        /// How far the camera sits from the middle of the floor, in metres.
+        /// Zero, the default, means the distance the whole floor fits at.
+        /// </summary>
+        public const string DistanceArgument = "-matchFrameDistance";
+
+        /// <summary>How wide each frame is, in pixels.</summary>
+        public const string WidthArgument = "-matchFrameWidth";
+
+        /// <summary>
+        /// The shape of a frame. Sixteen by nine, the same shape the playback
+        /// bar lays itself out for, because these are pictures of what a player
+        /// sees. A square frame fits the same 47-hex corridor across its width
+        /// and then leaves half its height empty.
+        /// </summary>
+        private const float FrameAspect = 16f / 9f;
 
         /// <summary>
         /// The ticks worth looking at, if none are named.
@@ -70,8 +84,10 @@ namespace View.Editor
                 ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "docs", "frames"));
 
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
-            int snap = ParseInt(BatchArguments.Value(SnapArgument), 0);
-            int size = ParseInt(BatchArguments.Value(SizeArgument), 720);
+            float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
+            float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
+            int width = ParseInt(BatchArguments.Value(WidthArgument), 1280);
+            int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
 
             Directory.CreateDirectory(outDir);
 
@@ -100,7 +116,18 @@ namespace View.Editor
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
-                root.CameraRig.SnapTo(snap);
+
+                // A camera built against whatever aspect a headless editor
+                // reports would be framed for a window that is never rendered.
+                // Fixing the aspect to the frame's own and re-framing against it
+                // is what puts both ends of the corridor in the picture.
+                camera.aspect = FrameAspect;
+                root.CameraRig.Reframe(root.Floor.WorldBounds);
+
+                root.CameraRig.PointAt(
+                    yaw,
+                    SceneFraming.CameraDefaultPitchDegrees,
+                    distance > 0f ? distance : root.CameraRig.FramedDistance);
 
                 // A warm-up render, thrown away. The first render in a fresh
                 // batchmode editor happens before shaders and textures have
@@ -109,7 +136,7 @@ namespace View.Editor
                 // here: the first captured frame was a rainbow checkerboard and
                 // every later one was correct. Rendering once and discarding it
                 // is the whole fix, and it costs one frame.
-                UnityEngine.Object.DestroyImmediate(Grab(camera, 32));
+                UnityEngine.Object.DestroyImmediate(Grab(camera, 32, 32));
 
                 int[] wanted = ticks.OrderBy(t => t).ToArray();
                 int next = 0;
@@ -129,7 +156,7 @@ namespace View.Editor
                         outDir,
                         "match-tick-" + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture) + ".png");
 
-                    File.WriteAllBytes(path, Grab(camera, size).EncodeToPNG());
+                    File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
                     written.Add(path);
 
                     Debug.Log(
@@ -157,69 +184,23 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The art, from the same paths the scene builder wires. Loaded rather
-        /// than read off a scene so the capture works on a project whose scene
-        /// has not been regenerated yet.
+        /// The art, from the scene builder's own tables rather than off the
+        /// generated scene, so the capture works on a checkout whose scene has
+        /// not been rebuilt yet.
         /// </summary>
-        private static MatchArt LoadArt() =>
-            MatchArt.Of(
-                LoadModel("Assets/Art/Characters/Skeleton_Warrior.fbx"),
-                LoadClip("Walking_A"),
-                LoadClip("Death_A"),
-                LoadModel("Assets/Art/Characters/Ranger.fbx"),
-                LoadModel("Assets/Art/Weapons/bow_withString.fbx"),
-                LoadClip("Ranged_Bow_Idle"),
-                LoadClip("Ranged_Bow_Draw"),
-                LoadClip("Ranged_Bow_Release"),
-                LoadModel("Assets/Art/Buildings/building_tower_A_blue.fbx"));
+        private static MatchArt LoadArt() => MatchSceneBuilder.Art();
 
-        private static GameObject LoadModel(string path)
+        private static Texture2D Grab(Camera camera, int width, int height)
         {
-            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-
-            if (model == null)
-            {
-                throw new IOException("Nothing imported at " + path + ".");
-            }
-
-            return model;
-        }
-
-        private static AnimationClip LoadClip(string name)
-        {
-            string[] banks =
-            {
-                "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
-                "Assets/Art/Animations/Rig_Medium_General.fbx",
-                "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
-            };
-
-            foreach (string bank in banks)
-            {
-                AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(bank)
-                    .OfType<AnimationClip>()
-                    .FirstOrDefault(c => c.name == name && !c.name.StartsWith("__preview__"));
-
-                if (clip != null)
-                {
-                    return clip;
-                }
-            }
-
-            throw new IOException("No clip called '" + name + "' in any of the three banks.");
-        }
-
-        private static Texture2D Grab(Camera camera, int size)
-        {
-            var target = new RenderTexture(size, size, 24);
+            var target = new RenderTexture(width, height, 24);
             camera.targetTexture = target;
             camera.Render();
 
             RenderTexture previous = RenderTexture.active;
             RenderTexture.active = target;
 
-            var frame = new Texture2D(size, size, TextureFormat.RGB24, false);
-            frame.ReadPixels(new Rect(0, 0, size, size), 0, 0);
+            var frame = new Texture2D(width, height, TextureFormat.RGB24, false);
+            frame.ReadPixels(new Rect(0, 0, width, height), 0, 0);
             frame.Apply();
 
             RenderTexture.active = previous;
@@ -249,5 +230,9 @@ namespace View.Editor
                 ? fallback
                 : int.Parse(value, CultureInfo.InvariantCulture);
 
+        private static float ParseFloat(string value, float fallback) =>
+            string.IsNullOrWhiteSpace(value)
+                ? fallback
+                : float.Parse(value, CultureInfo.InvariantCulture);
     }
 }

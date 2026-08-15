@@ -73,7 +73,70 @@ public class DerivationTests
         // change that content could not reach. Nothing in any content file moved
         // to earn this row, which is the case this table exists to tell apart
         // from a retune.
+        //
+        // Both rows above were taken under the fold labelled
+        // rule-fingerprint/1, which folded a match and nothing else. They are
+        // history and cannot be recomputed by this build: see the label's
+        // remarks on RuleFingerprint.
         (2u, 0x42346EF613910009UL),
+
+        // Version 3 is #191 -- a wave slot's position became its release order,
+        // so a round's slots leave one behind the other instead of all at once.
+        // It is a release rule exactly as version 2's was, and every stored
+        // record replays to a different outcome under it.
+        //
+        // IT IS ALSO THE ROW THAT CAUGHT A HOLE IN THIS FILE. Under
+        // rule-fingerprint/1 this build's fingerprint came out
+        // 42346EF613910009 -- byte for byte version 2's -- because the scenario
+        // hands the match a wave written out above and a build phase never
+        // composes one. The rule that moved lives in BuildPhase.Resolve, which
+        // the fold could not see. A row whose evidence equals its predecessor's
+        // is not evidence, so the fold gained a second half and the label went
+        // to rule-fingerprint/2.
+        (3u, 0x97AE0A007D5A9AB9UL),
+
+        // Version 4 is #207 -- a creep is bought once and attacks every round
+        // after, so a build phase names the whole of its round's wave and is
+        // charged only for the increase over what it carries. Every stored run
+        // replays to a different outcome under it, because every round after
+        // the first now sends more than it did and pays less for it.
+        //
+        // IT CAUGHT THE SAME HOLE A SECOND TIME. Under rule-fingerprint/2 this
+        // build's fingerprint came out 97AE0A007D5A9AB9 -- byte for byte
+        // version 3's -- because both halves of that fold resolve a phase that
+        // carries nothing, and a phase carrying nothing prices exactly as it did
+        // before. The fold gained a third half that resolves against a carried
+        // wave and folds what it cost, and the label went to
+        // rule-fingerprint/3.
+        (4u, 0x67E9F86CA94BE2D6UL),
+
+        // Version 5 is #209 -- gold is paid for the health damage a wave does.
+        // The bonus was one of four percentile bands worth at most a fifth of
+        // the flat base; it is now a share of the leak cost the wave dealt, so
+        // every stored run replays to a different purse from its first round
+        // that gets anything past.
+        //
+        // IT CAUGHT THE SAME HOLE A THIRD TIME. Under rule-fingerprint/3 this
+        // build's fingerprint came out 67E9F86CA94BE2D6 -- byte for byte
+        // version 4's -- because all three halves of that fold resolve matches
+        // and build phases and not one of them closes a wave. The rule that
+        // moved lives in Purse, which the fold could not see. The fold gained a
+        // fourth half that pays a purse off, and the label went to
+        // rule-fingerprint/4.
+        (5u, 0xB234D73EC659D3A7UL),
+
+        // Version 6 is #208 -- a pool records a population per round and a round
+        // is fought against the members recorded at that round. Every stored run
+        // replays to a different outcome under it, because the opponent a round
+        // walks into is no longer the one round one walked into.
+        //
+        // IT CAUGHT THE SAME HOLE A FOURTH TIME. Under rule-fingerprint/4 this
+        // build's fingerprint came out B234D73EC659D3A7 -- byte for byte version
+        // five's -- because every half of that fold is handed the pairing it
+        // folds, and who a round draws is decided above all of them. The fold
+        // gained a fifth half that plays a run against a population recorded per
+        // round, and the label went to rule-fingerprint/5.
+        (6u, 0x388DFE8C6880ED85UL),
     };
 
     /// <summary>
@@ -94,7 +157,91 @@ public class DerivationTests
 
     private const string FingerprintDefense = "tower  3  2  1";
 
+    /// <summary>
+    /// The rules the payment half is folded through. Written out here rather
+    /// than read off <c>content/ruleset.txt</c>, because the payment is
+    /// arithmetic over authored numbers: folded against the committed file, a
+    /// retune of the bonus rate or the income base would move this fingerprint
+    /// and retire every record made under rules nobody changed.
+    /// </summary>
+    private const string FingerprintRules = """
+        matrix pierce 140 70 100
+        matrix impact 70 100 140
+        matrix magic 100 140 70
+        armour 1 100
+        floor 1
+        interest 10 0
+        income 168
+        purse 100
+        bonus 25
+        health 800
+        snapshot 10 25
+        """;
+
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The deeper of the two waves the field half is fought against. Four times
+    /// the thin one, so a round that faced the wrong member of the population
+    /// folds a different number rather than the same one to within a leak.
+    /// </summary>
+    private const string FingerprintFatField = "order  0  1  12  0";
+
+    /// <summary>
+    /// The roster the field half is fought over: the same two rows as
+    /// <see cref="FingerprintUnits"/>, written in the current layout so that they
+    /// carry a price.
+    /// </summary>
+    /// <remarks>
+    /// A layout-1 row has no cost column, so every unit in it is free -- and a
+    /// leak that costs nothing folds to zero whoever sent it, which is a half of
+    /// the fingerprint that cannot see the rule it is here for. What this half
+    /// measures is priced in gold from end to end: leak cost dealt, leak cost
+    /// taken, the share of the first that a wave is paid, and what the purse
+    /// closed on.
+    /// </remarks>
+    private const string FingerprintFieldUnits = """
+        layout 2
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0
+        unit  3  turret  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0
+        """;
+
+    /// <summary>
+    /// The roster the composition half of the fingerprint composes out of: three
+    /// moving rows, so that a wave can be arranged more than one way, and one
+    /// placed row because a cost table prices both halves of a roster.
+    /// </summary>
+    private const string FingerprintComposedUnits = """
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4
+        unit  2  runner  moving  60   40  0     0  0  0  0  0  none     0  4
+        unit  3  turret  placed  0    0   2000  5  2  1  4  9  hitscan  0  0
+        unit  4  brute   moving  240  18  0     0  0  0  0  0  none     0  4
+        """;
+
+    /// <summary>
+    /// A ladder with no edges in it, which is legal and is the point: what is
+    /// being folded is the release schedule, and an edge would only add a
+    /// refusal the composition half has no business asserting.
+    /// </summary>
+    private const string FingerprintComposedLadder = "layout 1";
+
+    /// <summary>
+    /// A purse the composed wave comfortably fits inside. It is deliberately not
+    /// tight: what is being folded is the schedule the slots resolve to, and a
+    /// purse that only just covered them would turn a price retune into a
+    /// simulation-version bump.
+    /// </summary>
+    private const int FingerprintComposedGold = 100000;
+
+    /// <summary>What the purse the payment half is folded through carries in.</summary>
+    private const int FingerprintBank = 4321;
+
+    /// <summary>
+    /// The whole price of the wave the payment half's ceiling is taken against.
+    /// A number rather than a wave, because what the ceiling is a ceiling on is
+    /// a leak cost and this half is not composing one.
+    /// </summary>
+    private const int FingerprintWavePrice = 1300;
 
     private const ulong FingerprintSeed = 20260802UL;
 
@@ -155,10 +302,9 @@ public class DerivationTests
         string original = TheRuleset.CommittedText();
         Hash64 hash = Ruleset.Parse(original).ContentHash;
 
-        // The two row-shaped rules moved. Every other number the file holds is
+        // The one row-shaped rule moved. Every other number the file holds is
         // covered one at a time by the theory below, which is derived off the
-        // file rather than listed; these two are here because neither of them
-        // is a column.
+        // file rather than listed; this one is here because it is not a column.
         //
         // The matrix, twice: once widened and once permuted. A single cell
         // cannot move on its own without the square stopping being a Latin
@@ -167,13 +313,6 @@ public class DerivationTests
         // folded rather than the multiset of nine numbers.
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, "150    70       100", "70   100       150", "100   150        70")).ContentHash);
         Assert.NotEqual(hash, Ruleset.Parse(WithMatrix(original, " 70   100       140", "100   140        70", "140    70       100")).ContentHash);
-
-        // A band's bonus, which the band folds rather than a column.
-        // OBSERVED: delete the band loop from Ruleset.FoldBands, leaving the
-        // count. This goes red with a top band paying 20 and one paying 21 both
-        // hashing 41DA8EEE80D8B334, and every record pinned to one performance
-        // curve would replay against another.
-        Assert.NotEqual(hash, Retuned(original, "band           90       20", "band           90       21"));
 
         // Nothing that is not a number moved. Each of these changes the file
         // and none of them changes a rule.
@@ -187,8 +326,8 @@ public class DerivationTests
     [MemberData(nameof(TheRuleset.EveryNumber), MemberType = typeof(TheRuleset))]
     public void Moving_any_one_number_of_the_ruleset_moves_its_content_hash(string keyword, int column)
     {
-        // One case per number the committed file holds outside the matrix and
-        // the bands, taken off the file rather than written down here. The
+        // One case per number the committed file holds outside the matrix,
+        // taken off the file rather than written down here. The
         // simulation declares a ruleset field once, on the row that carries it,
         // and refuses a file with a row missing or a row carrying the wrong
         // number of columns -- so the columns of the committed file ARE the
@@ -211,55 +350,39 @@ public class DerivationTests
     }
 
     [Fact]
-    public void Editing_the_schedule_moves_its_content_hash_and_reformatting_it_does_not()
+    public void Editing_the_ladder_moves_its_content_hash_and_reformatting_it_does_not()
     {
-        // The same pair again, for the file that holds the shape. The second
-        // half is what separates a hash over the parsed integers from a hash
-        // over the file, and it matters more here than anywhere: the shape is
-        // the thing a rotation publishes, so "somebody touched schedule.txt" is
-        // a signal every player would learn to ignore.
+        // The same pair again, for the file that holds the one prerequisite the
+        // game has. It matters here for a reason it did not before #179: the
+        // simulation reads this file now. An edge decides what `place` refuses,
+        // so a ladder that was edited under a stored record is a stored record
+        // whose refusals no longer hold -- which is what the stamp exists to
+        // catch, and the stamp is only as good as this fold.
         //
-        // OBSERVED: fold the characters of the text in AnchorSchedule.Parse
-        // instead of the parsed fields. Every retune assertion still passes,
+        // OBSERVED: fold the characters of the text in UpgradeLadder.Parse
+        // instead of the parsed fields. Every edit assertion still passes,
         // because a changed number is also changed bytes. Every formatting
-        // assertion goes red -- the first of them E29E570DEDD45072 against
-        // 6546745EC46DCEE5 -- at which point renaming a game changer retires
-        // every run recorded against the shape.
+        // assertion goes red, at which point re-wrapping a comment retires every
+        // run recorded against the ladder.
         UnitTypeTable types = TheMatch.Types();
-        string original = TheSchedule.CommittedText();
-        Hash64 hash = AnchorSchedule.Parse(original, types).ContentHash;
+        string original = TheLadder.CommittedText();
+        Hash64 hash = UpgradeLadder.Parse(original, types).ContentHash;
 
-        // A number moved, once per column the shape is made of. Each retires
-        // every run pinned to the old shape, which is exactly right.
-        Assert.NotEqual(hash, Reshaped(original, "anchor        3     1", "anchor        2     1"));
-        Assert.NotEqual(hash, Reshaped(original, "plain        3     1\nanchor        6", "plain        4     1\nanchor        6"));
-        Assert.NotEqual(hash, Reshaped(original, "steep        4     8", "steep        4     7"));
-        Assert.NotEqual(hash, Reshaped(original, "changer   12  thermal-riser", "changer   13  thermal-riser"));
-        Assert.NotEqual(hash, Reshaped(original, "swift-column     1     2", "swift-column     1     1"));
+        // A number moved, once per column an edge is made of. Each retires every
+        // run pinned to the old ladder, which is exactly right: the run that
+        // could not place a Ranger is not the run that can.
+        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    4  14"));
+        Assert.NotEqual(hash, Relinked(original, "upgrade    3  14", "upgrade    3   4"));
 
-        // The bonus, which is parsed and could be parsed and dropped.
-        // OBSERVED: delete .Add(BonusVsTag) from GameChanger.Fold. This line
-        // goes red with the 825 and the 830 shapes both hashing
-        // 9738D9F811E8A4B1, and a run pinned to one would replay against the
-        // other with the steep counter retuned underneath it.
-        Assert.NotEqual(hash, Reshaped(original, "thermal-riser    3     1    825", "thermal-riser    3     1    830"));
 
         // Nothing that is not a number moved. Each of these changes the file
-        // and none of them changes the shape.
-        Assert.Equal(hash, AnchorSchedule.Parse(WithCommentsRewritten(original), types).ContentHash);
-        Assert.Equal(hash, AnchorSchedule.Parse(WithColumnsRespaced(original), types).ContentHash);
+        // and none of them changes the ladder.
+        Assert.Equal(hash, UpgradeLadder.Parse(WithCommentsRewritten(original), types).ContentHash);
+        Assert.Equal(hash, UpgradeLadder.Parse(WithColumnsRespaced(original), types).ContentHash);
         Assert.Equal(
             hash,
-            AnchorSchedule.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal), types).ContentHash);
-        Assert.Equal(hash, AnchorSchedule.Parse(original + "\n\n\n", types).ContentHash);
-
-        // And a label, which is for people. The simulation branches on nothing
-        // in it, so renaming a game changer is not a shape change either.
-        Assert.Equal(
-            hash,
-            AnchorSchedule.Parse(
-                original.Replace("thermal-riser", "updraft", StringComparison.Ordinal),
-                types).ContentHash);
+            UpgradeLadder.Parse(original.Replace("\n", "\r\n", StringComparison.Ordinal), types).ContentHash);
+        Assert.Equal(hash, UpgradeLadder.Parse(original + "\n\n\n", types).ContentHash);
     }
 
     [Fact]
@@ -424,13 +547,41 @@ public class DerivationTests
 
     /// <summary>
     /// One number for what this build's rules do: a fold over the state hash of
-    /// every tick of a fixed scenario.
+    /// every tick of a fixed scenario, and then over the wave a fixed build
+    /// phase composes.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The scenario is deliberately small and deliberately local. Every rule
     /// worth calling one reaches it -- the tick order, the release cadence, the
     /// targeting tiebreak, the dice, and the rounding under both the movement
     /// step and the lateral offsets -- and nothing in <c>content/</c> does.
+    /// </para>
+    /// <para>
+    /// <b>The second half is here because the first half missed one.</b> A match
+    /// is handed a wave, so folding a match says nothing about how a wave is
+    /// composed -- and #191 changed exactly that, giving a slot's position its
+    /// release order. Under the fold as it stood, a change that alters what
+    /// every stored record replays to produced a fingerprint identical to the
+    /// version before it. So a build phase's resolved wave is folded too: the
+    /// tick, the type and the count of every order it composes, which is the
+    /// whole of what a slot arrangement decides.
+    /// </para>
+    /// <para>
+    /// <b>The label carries the shape of the fold, and bumping it retires the
+    /// rows taken under the old one.</b> <c>rule-fingerprint/1</c> folded a
+    /// match alone; <c>rule-fingerprint/2</c> folded a match and a composition;
+    /// <c>rule-fingerprint/3</c> folds a match, a composition, and a second
+    /// composition against a wave the round carries -- which is the only half
+    /// that can see what a wave costs; <c>rule-fingerprint/4</c> folds a wave's
+    /// payment too, which is the only half that can see what a wave earns;
+    /// <c>rule-fingerprint/5</c> folds the rounds of a run against a population
+    /// recorded per round, which is the only half that can see who a round
+    /// fights. Versions 1 to 5 are recorded under earlier labels and cannot be
+    /// recomputed here, which is a loss stated out loud rather than a table that quietly
+    /// compares fewer things -- the same rule <see cref="Match"/> applies to its
+    /// own state-hash label.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -440,7 +591,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/1").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/5").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -450,10 +601,215 @@ public class DerivationTests
 
         MatchResult result = match.Result();
 
-        return fingerprint
+        fingerprint = fingerprint
             .Add(result.Leaked, result.Total)
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
+
+        return FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)));
+    }
+
+    /// <summary>
+    /// The fifth half of the fold: what three rounds of a run walked into,
+    /// against a population recorded round by round.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the four above it missed one.</b> They
+    /// resolve matches, build phases and payments, and every one of them is
+    /// handed the pairing it folds -- so #208, which made a round draw from the
+    /// members recorded at that round rather than from the whole population and
+    /// moves what every stored run replays to, produced a fingerprint identical
+    /// to the version before it. The fourth time this file has had that hole.
+    /// </para>
+    /// <para>
+    /// The population is one member in the first round, two in the second and
+    /// one again in the third, and the two waves are far enough apart that
+    /// facing the wrong one is a different number. That shape folds all three
+    /// halves of the rule at once: which round's members are drawn from, how
+    /// many of them there are to draw from, and which of them the draw landed
+    /// on.
+    /// </para>
+    /// <para>
+    /// Death does not end it, because what this folds is what each round faced
+    /// and a run that stops early folds fewer rounds than the version before it
+    /// -- which would say the rule moved for a reason that is really the health
+    /// pool.
+    /// </para>
+    /// </remarks>
+    private static Hash64 FoughtIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint field units", FingerprintFieldUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+        Ruleset rules = Ruleset.Parse("fingerprint rules", FingerprintRules);
+        TowerLayout defense = TowerLayout.Parse("fingerprint defense", FingerprintDefense, types);
+        RoundOrders thin = RoundOrders.Of(
+            defense,
+            WaveScript.Parse("fingerprint thin field", FingerprintWave, types));
+        RoundOrders fat = RoundOrders.Of(
+            defense,
+            WaveScript.Parse("fingerprint fat field", FingerprintFatField, types));
+
+        var run = new Run(
+            map,
+            rules,
+            types,
+            UpgradeLadder.Parse("fingerprint ladder", FingerprintComposedLadder, types),
+            FieldPool.OfRounds(new[]
+            {
+                new[] { thin },
+                new[] { thin, fat },
+                new[] { fat },
+            }),
+            FingerprintSeed,
+            waves: 3,
+            fieldSize: 2,
+            deathEndsTheRun: false);
+
+        // OBSERVED: draw every round from the whole population -- FieldFor over
+        // Size and At(index). The fingerprint moves off the version-6 row and
+        // names both numbers, which is what it could not do before the fold had
+        // this half in it.
+        for (int round = 0; round < 3; round++)
+        {
+            RoundReport report = run.Advance(BuildPhase.Of(WaveSlot.Of(1, round + 1)));
+
+            fingerprint = fingerprint
+                .Add(report.Outcome.LeakCostDealt, report.Outcome.LeakCostTaken)
+                .Add(report.Payment.Bonus, report.Payment.Purse.Gold);
+        }
+
+        return fingerprint;
+    }
+
+    /// <summary>
+    /// The fourth half of the fold: what a wave pays a purse, itemised, and the
+    /// ceiling a walk over a stored stream folds instead.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the three above it missed one.</b> They
+    /// resolve matches and build phases, and not one of them closes a wave -- so
+    /// #209, which changed the bonus from a percentile band into a share of what
+    /// a wave dealt and moves what every stored run replays to, produced a
+    /// fingerprint identical to the version before it. The third time this file
+    /// has had that hole.
+    /// </para>
+    /// <para>
+    /// Three leak costs, an order of magnitude apart, because a bonus that
+    /// ignores what a wave dealt folds all three the same -- which is exactly
+    /// the shape the band lookup had.
+    /// </para>
+    /// </remarks>
+    private static Hash64 PaidIntoFingerprint(Hash64 fingerprint)
+    {
+        Ruleset rules = Ruleset.Parse("fingerprint rules", FingerprintRules);
+        Purse purse = Purse.Holding(FingerprintBank);
+        int[] dealt = { 0, 37, 673 };
+
+        // OBSERVED: pay a flat share of the income base -- the shape the four
+        // bands had -- rather than a share of what the wave dealt. The
+        // fingerprint goes B234D73EC659D3A7 to 80A3DB0779957EA1 and the
+        // version-5 row goes red naming both numbers, which is what it could not
+        // do before the fold had this half in it.
+        for (int index = 0; index < dealt.Length; index++)
+        {
+            WavePayment paid = purse.CloseWave(rules, dealt[index]);
+
+            fingerprint = fingerprint
+                .Add(paid.Interest, paid.IncomeBase)
+                .Add(paid.Bonus, paid.Purse.Gold);
+        }
+
+        // And the ceiling, which is the other thing a rule change to the payment
+        // moves: a walk over a stored stream folds this instead of the payment,
+        // and a ceiling that stops being one admits decisions no run could
+        // afford.
+        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice);
+
+        return fingerprint.Add(ceiling.Bonus, ceiling.Purse.Gold);
+    }
+
+    /// <summary>
+    /// The second half of the fold: the wave a fixed build phase composes, order
+    /// by order.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Three filled slots and an empty one between two of them, because the
+    /// empty slot is the case with a rule in it -- it takes no place in the
+    /// column, so banking a slot closes the gap rather than leaving a hole. Two
+    /// slots of unequal count, because equal counts would fold the same under a
+    /// schedule that spaced slots by position instead of by the creeps ahead of
+    /// them.
+    /// </para>
+    /// <para>
+    /// OBSERVED: give every order the same release tick, which is what
+    /// BuildPhase did before #191. The fingerprint goes 97AE0A007D5A9AB9 to
+    /// D5B62912DBA14BFA and the version-3 row goes red naming both numbers,
+    /// which is what it could not do before the fold had this half in it: the
+    /// same edit under rule-fingerprint/1 was invisible.
+    /// </para>
+    /// </remarks>
+    private static Hash64 ComposedIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint composed units", FingerprintComposedUnits);
+        UpgradeLadder ladder = UpgradeLadder.Parse("fingerprint ladder", FingerprintComposedLadder, types);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+        Ruleset rules = TheRuleset.Committed();
+
+        Build composed = BuildPhase
+            .Of(
+                WaveSlot.Of(2, 3),
+                WaveSlot.Empty,
+                WaveSlot.Of(1, 1),
+                WaveSlot.Of(4, 2))
+            .Resolve(
+                1,
+                WaveScript.Nothing,
+                ladder,
+                Purse.Holding(FingerprintComposedGold),
+                CostTable.From(rules, types),
+                types,
+                map,
+                Board.Empty);
+
+        fingerprint = fingerprint.Add(composed.Wave.Count, composed.Wave.TotalUnits);
+
+        for (int index = 0; index < composed.Wave.Count; index++)
+        {
+            UnitOrder order = composed.Wave.Orders[index];
+            fingerprint = fingerprint.Add(order.TickOffset, order.TypeId).Add(order.Count);
+        }
+
+        // The same phase again, against a round that already carries part of
+        // what it sends. What this half sees that the one above cannot is what a
+        // wave COSTS: a creep is bought once and attacks every round after, so
+        // the price is the increase over what is carried and nothing else in
+        // this file resolves a phase that carries anything.
+        //
+        // OBSERVED: price the slots at their full count -- charge slot.Count
+        // rather than slot.Count minus what is held. The fingerprint goes back
+        // to 97AE0A007D5A9AB9, byte for byte version 3's, and the version-4 row
+        // goes red naming both numbers. Under rule-fingerprint/2 the same edit
+        // was invisible, which is the hole this half closes and the second time
+        // this file has had one.
+        Build carried = BuildPhase
+            .Of(
+                WaveSlot.Of(2, 5),
+                WaveSlot.Of(1, 1),
+                WaveSlot.Of(4, 2))
+            .Resolve(
+                2,
+                composed.Wave,
+                ladder,
+                Purse.Holding(FingerprintComposedGold),
+                CostTable.From(rules, types),
+                types,
+                map,
+                Board.Empty);
+
+        return fingerprint.Add(carried.Spent, carried.Wave.TotalUnits);
     }
 
     private static (uint Version, ulong Fingerprint) Row(uint version)
@@ -525,16 +881,16 @@ public class DerivationTests
     }
 
     /// <summary>
-    /// The committed schedule with one number moved, and the hash of what that
+    /// The committed ladder with one number moved, and the hash of what that
     /// parses to. The substitution is asserted to have happened, because a
     /// replacement that matched nothing would compare the file against itself
     /// and agree.
     /// </summary>
-    private static Hash64 Reshaped(string original, string authored, string planted)
+    private static Hash64 Relinked(string original, string authored, string planted)
     {
         Assert.Contains(authored, original, StringComparison.Ordinal);
 
-        return AnchorSchedule.Parse(
+        return UpgradeLadder.Parse(
             original.Replace(authored, planted, StringComparison.Ordinal),
             TheMatch.Types()).ContentHash;
     }

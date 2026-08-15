@@ -16,6 +16,15 @@ archer squad standing on them — all of them shooting, all of them upgradable �
 > **O(projectiles × creeps)**, and N identical shooters are behaviourally identical to one shooter firing N
 > arrows unless the bodies can die independently. Where the text says pathfinding is permanently out, it is not.
 
+> ⚠️ **The camera moved on 13 August 2026.**
+> §4 argues from "a fixed isometric orthographic camera with 60° yaw snapping and six snaps", and the rampart's
+> value there is partly that "it survives every yaw snap identically". There are no snaps: the rig is a free
+> perspective orbit with unclamped pitch and a dolly ([#195](https://github.com/ssalter21/tower-defense-game/issues/195),
+> and the 13 August entry in [the decision log](../decision-log.md)). The finding that a continuous rail separates
+> corridor from not-corridor better than a change of floor tile does not depend on the projection and stands; the
+> claim that it reads identically from every angle no longer means anything, because there is no longer a fixed
+> set of angles.
+
 > **This note decides nothing.** Two branches were closed by the developer while it was being written — walls are
 > a placement surface, not a blocker, and squads are static — and both are recorded below rather than argued,
 > so nobody re-raises them. What is left is one live question with real cost in it: **projectile volume**.

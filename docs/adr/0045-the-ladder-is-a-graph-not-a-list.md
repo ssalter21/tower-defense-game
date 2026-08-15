@@ -1,5 +1,13 @@
 # 0045 — The ladder is a graph, not a list
 
+> **Amended by [#179](https://github.com/ssalter21/tower-defense-game/issues/179), 13 August 2026.**
+> Everything below stands. What changed is who reads the file: this ADR was written while the ladder was an
+> annotation the command line held, and the simulation now reads it. `BuildPhase.Resolve` refuses `place` for
+> any unit some edge points at, so an edge decides what a decision may do — and a stored record carries a
+> ladder hash that retires it if the file moves underneath it. The shape, the arity and the ordering rules are
+> untouched.
+
+
 `content/upgrades.txt` is an edge set: one `upgrade <from> <to>` row per edge, and two rows where two roads
 reach one tower. The Mage's tier 3 has two predecessors, so neither a "next tier" field nor a "previous tier"
 field can hold the shape, and the file that holds it is a graph written down one edge at a time.
