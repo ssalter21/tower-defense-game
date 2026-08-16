@@ -962,3 +962,72 @@ round is worth, which no single report can.
 `content/sweep.csv` is regenerated for the new `seed` column and the `policy` row. **Every number in it is
 unchanged**, which is the point: the report gained a way to be asked new questions without any old answer
 moving.
+
+## 16 August 2026, later — one format version, and the map it is for
+
+[#213](https://github.com/ssalter21/tower-defense-game/issues/213) put five decisions in front of
+[seam 9](build-order.md#9--the-board) while there was still no ghost pool to retire, on the argument that each
+one acquires a migration cost the day [step 6](build-order.md#the-sequence) writes the first stored ghost. Six
+things moved. The largest is that **pathfinding leaves the design permanently**, which is a partial reversal of
+[6 August](#6-august-2026--six-reversals): the maze stays, the search does not.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **§3** — the board is a maze | Pathfinding enters the simulation, and that is a determinism obligation | **Out, permanently, and line of sight with it.** A map may be as complex as it likes and always has exactly one path; `HexMap`'s load-time trace is the whole of it | A search is owed only when the map branches or the player alters the route by building, and neither is wanted. It was the seam's highest-risk item — one RNG stream, canonical order asserted, IL-scanned, in the hottest loop — and cutting it removes that from the critical path without costing one benefit the fold was wanted for |
+| **§3** — elevation grants range | *+1 range per level*, the common shipped form | **A signed difference, at half that.** `baseRange + (towerLevel − targetLevel) × 500`, with radii reading as spheres where height only ever costs | A flat bonus makes a tower on a cliff better at everything, including shooting the creep standing above it. Height is a relationship, not a property. At 1000 an Archer swung between 1.2 and 5.2 hexes across three tiers; 500 keeps the fold's shape mattering more than its height map |
+| **§3** — the record | `TowerLayout` and the hex map gain a level | **Only the map gains one.** A tower stands on a hex and the hex carries the level | A derivable coordinate is not a stored one. `PlacedTower` is unchanged, `RecordFormat.TowerBytes` stays at 6, and `GhostRecord`'s format survives untouched |
+| **§3** — the map is generated | Maps are generated rather than authored | **The first map is hand-authored and generation waits behind it** | Selection pressure needs a fitness function, and a fitness function needs one map that is demonstrably good to calibrate against. The sweep already takes its map as a parameter, so scoring a candidate costs a flag — which is worth nothing without a reference |
+| **[roster](roster.md#what-this-roster-needs-that-the-schema-does-not-have)** — five levers | Five levers, none to become a column without a research finding behind it | **Nine columns, fixed as a list**, with three of the five collapsing into one mechanic | A sweep, a blast and an aura are one shape — a bubble that emits something — so the column count is identical either way and only the divergence grows |
+| **[roster](roster.md#11--soldier--tier-1--status-live)** — the Soldier | A corridor unit, and seam 9 takes his board away | **Kept, with a self-centred bubble** | A tower that strikes every creep touching it is the one tower whose whole value is positional, which is what a fold is for. Retiring him would have thrown that away |
+
+### What "no pathfinder" buys, and what it forecloses
+
+`sim/HexMap.cs` already traces the corridor at load and asserts it: every corridor cell has one or two corridor
+neighbours, exactly two have one, those two are the entrance and the exit, and the walk from one to the other
+visits every corridor cell. **Folding that corridor into a switchback changes none of it.**
+
+The rule that a corridor cell may not have three corridor neighbours is **kept**, which means two legs of a
+path may never be adjacent: every fold costs a row of ground between the legs, and a longer path comes from a
+bigger board rather than a tighter one. That is what keeps the route derivable from the grid, and it is what
+keeps a map a seed. Gap-row serpentines and spirals are still authorable, and at two-hex leg spacing an Archer
+at 3200 already reaches across three legs.
+
+**What is foreclosed is branching mazes and player-built routes.** Both are real designs, both are now out by
+decision rather than by omission, and reversing either costs a search in the hot loop under `sim/`'s standards
+against a live ghost pool.
+
+### The bill, corrected
+
+The ticket priced this as one format version. It is **four**, and the one it was most sure of turns out to be
+free.
+
+- `hex-map/1` → `hex-map/2`, for the level layer.
+- `ReplayVersion`, because the bundle writes map cells and a level plane is new bytes.
+- `content/units.txt` `layout 2` → `layout 3`, for the nine columns.
+- `match-state/1` → `match-state/2` — **the large one, and it was not in the ticket at all.** There is no
+  per-unit effect machinery in `sim/` today; every stat is read straight off the shared `UnitType` at use time.
+  Timed effects are new per-creep state, and the Necromancer's aura measured in hex distance puts creep
+  *positions* back into the tick loop, which is precisely the property
+  [`TowerCoverage`](../sim/TowerCoverage.cs) was written to keep out of it. Every golden trace retires.
+
+**What is free is the ghost record.** `TowerLayout` does not gain a level, so `RecordFormat.TowerBytes` stays
+at 6 and `GhostRecord` is untouched.
+
+### The map is text, and it is drawn by hand
+
+`content/map.txt` gains a **second grid block** for levels, written in letters — `a`, `b`, `c` for the three
+tiers — because the parser refuses digits on purpose and says so in its own error message. Odd rows are
+indented in the file so what is typed matches the half-cell offset it produces. `MapHash` folds the levels,
+which keeps the anti-cheat property and the a-map-is-a-seed property intact for free.
+
+The authoring loop is a sketch, transcribed once, and edited directly thereafter against a render command —
+chosen over a map editor because there is one map to draw and the file is the artefact that ships.
+
+### The stat is called shield, and arcane stays where it was
+
+The absorbing pool was going to be called *arcane* until it turned out `ArmourType` already has an `Arcane`
+member, with a real meaning in `content/ruleset.txt`: impact does 140 against it, pierce 100, magic 70. Two
+different things spelled the same way in the same row was the whole of the objection. **The pool is `shield`**,
+the armour type keeps its name, and the roster's [expectation of an "arcane
+shield"](roster.md#open-questions) is satisfied by the pool plus the Necromancer's aura granting it — which is
+what that entry always described.

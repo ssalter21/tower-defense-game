@@ -136,3 +136,23 @@ the purse — the sweep reporting where a run sat is the cheap one.
 **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** **Current assumption:
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send
 someone who does not have the game is a different artefact from one you watch in the client.
+
+**What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and a
+bodies-under-a-splash multiplier; the walking rule prices health and armour points. It prices **neither range,
+nor bubble radius, nor shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made range worth substantially
+more by tying it to elevation. One correction is owed rather than open: `bodies` currently guesses 3 from
+`Delivery == Projectile` and should read the `targets` column instead, so a Marksman is priced on arrival. The
+rest is deliberately left silent until the map has been measured, because a coefficient guessed against the
+corridor is a coefficient priced against geometry that is going away. **The silence is not a judgement that
+these levers are free.**
+
+**Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
+makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing
+ever fully stops. Taking the floor out later is one comparison and no format version, but it puts back a hang
+that any authored combination can reach, so it would want a stall cap of its own to replace what the floor was
+doing.
+
+**Whether effects need diminishing returns.** Effects are strongest-wins with the timer refreshed, so enough
+uptime holds a creep at the floor indefinitely. With the floor in place that is a balance problem rather than a
+correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
+per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
