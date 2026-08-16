@@ -43,6 +43,11 @@ cover.
 alone gives a zero-range unit two tiers up an effective range of a whole hex. A radius of zero encloses
 nothing and a range of zero shoots nothing, stated once in `Reach` rather than left to every future caller.
 
+That withdraws one thing flat arithmetic used to grant: a zero-range unit no longer reaches **the hex it
+stands on**, where `0 × 1000 ≤ 0` held before. Nothing has ever asked — a tower may not stand in the corridor,
+so the route walk never asks at no distance at all — and *reaches nothing* is a whole answer where *reaches
+only itself* is a special case waiting to be found by whoever writes the first self-centred bubble.
+
 **Creeps do not slow going uphill.** Considered and rejected: it is too strong a natural incentive, and it
 would put the ground under a creep into the movement step, which is the tick loop.
 

@@ -103,6 +103,13 @@ public class ReachTests
 
     private const string ThreeWalkers = "order 0 1 3 0";
 
+    /// <summary>
+    /// How long the ridge match is watched for. Short of the tick the three
+    /// walkers reach the exit on, so the loop that watches the coverage is
+    /// bounded by the count rather than by the match ending under it.
+    /// </summary>
+    private const int TicksTheMatchOutlasts = 200;
+
     private static readonly Hex Origin = new Hex(0, 0);
 
     [Fact]
@@ -134,8 +141,9 @@ public class ReachTests
     {
         // Two hexes exactly: the target two hexes away is in range on the flat
         // and the half hex charged for shooting up one tier is what takes it
-        // out. Two tiers up takes the tower's reach down to one hex, and it
-        // still has that one because the floor is under it.
+        // out. Two tiers up charges a whole hex, which leaves this tower
+        // reaching one -- and the last line is the arithmetic saying so rather
+        // than the floor, which is under it either way.
         const int TwoHexes = 2000;
 
         Assert.True(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 0));
@@ -165,12 +173,20 @@ public class ReachTests
     public void Any_reach_at_all_reaches_the_six_hexes_touching_it_whatever_the_tiers_do()
     {
         // The floor, over every neighbour and every pair of tiers there is. One
-        // thousandth of a hex is the smallest range that is a range at all, and
-        // an adjacent hex two tiers up costs a whole hex more than that -- so
-        // every one of these answers is the floor answering and nothing else.
+        // thousandth of a hex is the smallest range that is a range at all, so
+        // every one of these but the downhill shots is the floor answering: on
+        // the arithmetic alone a hex level with this one already costs a
+        // thousand times the range, and each tier climbed costs half that
+        // again.
+        //
+        // The second hex out is what says the floor is the hexes touching it
+        // and not a rule that swallowed the range column. It is out at every
+        // pair of tiers, downhill included, because two tiers refund one hex and
+        // it is two hexes away.
         for (int direction = 0; direction < Hex.DirectionCount; direction++)
         {
             Hex neighbour = Origin.Neighbour(direction);
+            Hex beyond = neighbour.Neighbour(direction);
 
             for (int standing = 0; standing < HexMap.LevelCount; standing++)
             {
@@ -179,6 +195,9 @@ public class ReachTests
                     Assert.True(Reach.Shoots(Origin, standing, 1, neighbour, target));
                     Assert.True(Reach.Encloses(Origin, standing, 1, neighbour, target));
 
+                    Assert.False(Reach.Shoots(Origin, standing, 1, beyond, target));
+                    Assert.False(Reach.Encloses(Origin, standing, 1, beyond, target));
+
                     // No range is not a short range. A creep carries zero in the
                     // range column and reaching its neighbours would make every
                     // walking row a tower.
@@ -186,6 +205,11 @@ public class ReachTests
                     Assert.False(Reach.Encloses(Origin, standing, 0, neighbour, target));
                 }
             }
+
+            // And zero reaches nothing at all rather than reaching only itself,
+            // which the flat arithmetic used to grant it.
+            Assert.False(Reach.Shoots(Origin, 0, 0, Origin, 0));
+            Assert.False(Reach.Encloses(Origin, 0, 0, Origin, 0));
         }
     }
 
@@ -260,7 +284,7 @@ public class ReachTests
 
         string[] atLoad = Spelling(match.Coverage);
 
-        for (int tick = 0; tick < 400 && !match.IsFinished; tick++)
+        for (int tick = 0; tick < TicksTheMatchOutlasts && !match.IsFinished; tick++)
         {
             match.Advance(1);
 
@@ -268,6 +292,11 @@ public class ReachTests
             Assert.False(match.Coverage.Covers(0, Fix64.FromInt(4)));
         }
 
+        // The loop is bounded by the match ending as well as by the count, so
+        // this is what says the whole of it actually ran. A match that finished
+        // early would leave the assertions above unreached and the test green,
+        // which is the shape of a coverage test that stopped covering.
+        Assert.False(match.IsFinished);
         Assert.Equal(2, match.Coverage.IntervalCount(0));
     }
 

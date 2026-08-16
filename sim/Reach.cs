@@ -40,6 +40,15 @@ namespace Sim
     /// neither means anything without the other.
     /// </para>
     /// <para>
+    /// <b>A hex and the level it stands at travel as two arguments and not as
+    /// a type.</b> The thing that pairs them is a map -- a hex has no height of
+    /// its own, and <see cref="HexMap.LevelAt(Hex)"/> is what knows it -- so a
+    /// pair type here would be a second place for a hex to be married to the
+    /// wrong level. <see cref="Footing.Reaches"/> takes the map and does the
+    /// pairing once, which is why nothing outside it calls these directly with
+    /// levels it worked out itself.
+    /// </para>
+    /// <para>
     /// <b>Nothing here runs in the tick loop.</b> A route cell's level is fixed
     /// and the route is fixed, so <see cref="TowerCoverage"/> evaluates this
     /// per route cell at load exactly as it evaluated flat range before, and
@@ -51,7 +60,7 @@ namespace Sim
     public static class Reach
     {
         /// <summary>Thousandths of a hex per hex. Ranges are authored in milli-hexes.</summary>
-        public const int MilliHexPerHex = 1000;
+        private const int MilliHexPerHex = 1000;
 
         /// <summary>
         /// What one tier of height is worth, in milli-hexes: half a hex.
@@ -62,7 +71,7 @@ namespace Sim
         /// swings between 1.2 and 5.2 hexes across the three tiers, which makes
         /// the height of a placement dominate every other thing about it.
         /// </remarks>
-        public const int MilliHexPerLevel = 500;
+        private const int MilliHexPerLevel = 500;
 
         /// <summary>
         /// Whether a thing standing on one hex, with a range, can shoot a
@@ -77,8 +86,12 @@ namespace Sim
         /// This is the rule for every radius there is -- a sweep, a blast, an
         /// aura -- measured from whichever point the bubble is centred on.
         /// </summary>
-        public static bool Encloses(Hex centre, int centreLevel, int radiusMilliHex, Hex cell, int cellLevel) =>
-            Within(centre.DistanceTo(cell), radiusMilliHex, Magnitude(cellLevel - centreLevel));
+        public static bool Encloses(Hex centre, int centreLevel, int radiusMilliHex, Hex cell, int cellLevel)
+        {
+            int climb = cellLevel - centreLevel;
+
+            return Within(centre.DistanceTo(cell), radiusMilliHex, climb < 0 ? -climb : climb);
+        }
 
         /// <summary>
         /// The one comparison both rules are. The caller supplies the level
@@ -92,13 +105,15 @@ namespace Sim
         /// creep would reach the hexes touching it for no reason but the height
         /// of the ground under it. Nothing asks this about a creep today, which
         /// is exactly why it is settled here rather than by every future caller
-        /// remembering to.
+        /// remembering to. It withdraws the hex a zero-range thing stands on as
+        /// well, which flat arithmetic used to grant it: nothing has ever asked
+        /// -- a tower may not stand in the corridor, so the route walk never
+        /// asks at no distance at all -- and "reaches nothing" is a whole answer
+        /// where "reaches only itself" is a special case waiting to be found.
         /// </remarks>
         private static bool Within(int hexes, int radiusMilliHex, int levels) =>
             radiusMilliHex > 0
             && (hexes <= 1
                 || (hexes * MilliHexPerHex) + (levels * MilliHexPerLevel) <= radiusMilliHex);
-
-        private static int Magnitude(int value) => value < 0 ? -value : value;
     }
 }
