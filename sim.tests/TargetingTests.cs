@@ -166,6 +166,107 @@ public class TargetingTests
         Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
     }
 
+    [Fact]
+    public void Asked_for_several_it_answers_with_the_head_of_the_same_order()
+    {
+        // The top-N rule is the single-target rule taken further along and not
+        // a second rule: the first answer of the many is the answer of the one,
+        // whatever else it takes.
+        //
+        // OBSERVED: order the head by ascending distance instead. The single
+        // assertion in The_creep_closest_to_the_exit_is_the_one_that_gets_shot
+        // goes red with it, which is what says the two are one rule.
+        WalkingTarget[] reachable = { At(5, 1), At(6, 9), At(7, 4), At(8, 6) };
+
+        Assert.Equal(new[] { 6, 8, 7 }, ChosenIds(reachable, 3, out int ties));
+        Assert.Equal(0, ties);
+
+        Assert.Equal(new[] { 6 }, ChosenIds(reachable, 1, out _));
+        Assert.Equal(new[] { 6, 8, 7, 5 }, ChosenIds(reachable, 4, out _));
+    }
+
+    [Fact]
+    public void Asked_for_more_than_there_are_it_answers_with_what_there_is()
+    {
+        // A three-shot row in front of two creeps fires two shots, not three at
+        // two creeps and not three with one wasted. The count comes back so the
+        // caller knows which half of its slice is worth reading.
+        Assert.Equal(new[] { 6, 5 }, ChosenIds(new[] { At(5, 1), At(6, 9) }, 3, out _));
+        Assert.Empty(ChosenIds(Array.Empty<WalkingTarget>(), 3, out int ties));
+        Assert.Equal(0, ties);
+    }
+
+    [Fact]
+    public void The_lower_id_settles_a_tie_at_every_place_in_the_order()
+    {
+        // Four abreast, and the whole order is by id because the distances
+        // cannot separate them. A rule that only broke the tie at the front
+        // would answer 5 and then whatever the span order gave it.
+        //
+        // OBSERVED: drop the id clause out of Beats. The first entry is still 5
+        // -- the scan happens to see it first -- and the rest come back in span
+        // order, so this goes red on the second place and not on the first.
+        // That is the case a single-target test cannot reach at all.
+        WalkingTarget[] column = { At(8, 3), At(6, 3), At(7, 3), At(5, 3) };
+
+        Assert.Equal(new[] { 5, 6, 7, 8 }, ChosenIds(column, 4, out int ties));
+        Assert.Equal(3, ties);
+    }
+
+    [Fact]
+    public void The_tie_count_does_not_depend_on_how_many_shots_asked()
+    {
+        // It is counted against the best seen so far and against nothing else,
+        // so it says how many level pairs the rule had to settle rather than
+        // how wide the row firing was. It feeds the state hash, and a count
+        // that moved with the shot count would mean a Marksman and an Archer
+        // standing in the same crowd folded different numbers for the same
+        // crowd.
+        WalkingTarget[] column = { At(5, 3), At(6, 3), At(7, 3), At(8, 1) };
+
+        for (int shots = 1; shots <= 4; shots++)
+        {
+            ChosenIds(column, shots, out int ties);
+            Assert.Equal(2, ties);
+        }
+    }
+
+    [Fact]
+    public void Asking_for_several_allocates_nothing_either()
+    {
+        // The single-target overload's claim, for the shape that has a span to
+        // fill. The caller owns the destination -- the match hands over a slice
+        // of an array it sized once -- so the rule itself has nothing to
+        // allocate.
+        WalkingTarget[] reachable = { At(5, 3), At(6, 3), At(7, 1) };
+        var chosen = new int[3];
+
+        for (int warm = 0; warm < 100; warm++)
+        {
+            Targeting.Chosen(reachable, chosen, out _);
+        }
+
+        long before = GC.GetAllocatedBytesForCurrentThread();
+
+        for (int run = 0; run < 1000; run++)
+        {
+            Targeting.Chosen(reachable, chosen, out _);
+        }
+
+        Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+    }
+
+    [Fact]
+    public void Asking_for_no_targets_at_all_is_a_caller_fault()
+    {
+        // A row fires at least one shot an attack -- the column is refused
+        // below one where it is read -- so a caller with nothing to fill is a
+        // caller that should not have asked. Answering "none" would let a tower
+        // that never shoots look like a tower that found nothing.
+        Assert.Throws<ArgumentException>(
+            () => Targeting.Chosen(new[] { At(5, 3) }, Array.Empty<int>(), out _));
+    }
+
     /// <summary>A candidate at a whole number of hexes along the route.</summary>
     private static WalkingTarget At(int id, int distanceAlongRoute) =>
         new WalkingTarget(id, Fix64.FromInt(distanceAlongRoute));
@@ -178,5 +279,24 @@ public class TargetingTests
     {
         int chosen = Targeting.Chosen(reachable, out tiebreaksBroken);
         return chosen < 0 ? 0 : reachable[chosen].Id;
+    }
+
+    /// <summary>
+    /// The ids of the candidates a row firing that many shots takes, in the
+    /// order the rule puts them in -- which is the projection the match makes
+    /// off the indices it gets back.
+    /// </summary>
+    private static int[] ChosenIds(WalkingTarget[] reachable, int shots, out int tiebreaksBroken)
+    {
+        var chosen = new int[shots];
+        int found = Targeting.Chosen(reachable, chosen, out tiebreaksBroken);
+        var ids = new int[found];
+
+        for (int index = 0; index < found; index++)
+        {
+            ids[index] = reachable[chosen[index]].Id;
+        }
+
+        return ids;
     }
 }

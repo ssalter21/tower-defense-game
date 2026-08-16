@@ -124,8 +124,10 @@ Three lines, three tiers each, and **one attack type per line** — Soldier impa
 It is what makes the three-way cycle readable off the board: you know what a tower does to a body by knowing
 which line it came from, and it costs nothing, because attack type is a column that already exists.
 
-**Only the three tier-1 towers and the Ranger are authorable.** Every other tier needs a lever the schema
-lacks; see [what the schema does not have](#what-this-roster-needs-that-the-schema-does-not-have).
+**Every tier on this page is authorable as of layout 3**, and three of them are not playable until #217 builds
+the timed effect behind them; see [the column
+list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is a name and a set of
+signed numbers.
 
 ## The Soldier line — impact
 
@@ -136,8 +138,10 @@ lacks; see [what the schema does not have](#what-this-roster-needs-that-the-sche
 - **Looks** — knight, full helm down, short sword.
 - **Numbers** — range 1000, cooldown 15 (two swings a second), damage 60–90, windup 7, backswing 5, hitscan,
   impact, **cost 30**.
-- **Needs** — `bubbleRadius` and `bubbleOrigin`, from layout 3. The numbers below are authorable today; the
-  sweep is not.
+- **Needs** — nothing. `bubbleRadius` and `bubbleOrigin` landed with layout 3, so the sweep is a bubble on
+  himself with no period: radius 1000, origin `self`, affects `enemy`, payload `damage`. **It is not authored
+  in `content/units.txt`** — the row there still fires one shot at one creep, because giving the Soldier his
+  sweep is a design decision and a balance change rather than a schema one.
 - **Answered** — he was the unit seam 9 was expected to retire, and he is kept instead. A tower that strikes
   everything touching it is the one tower whose whole value is positional, which is exactly what a fold is
   for.
@@ -152,8 +156,10 @@ lacks; see [what the schema does not have](#what-this-roster-needs-that-the-sche
   2 hexes.
 - **Looks** — adds a shield, visor open, particle effect while the aura is up.
 - **Numbers** — radius 2000. Period, duration and magnitude `_`.
-- **Needs** — **a periodic aura**: a radius, a period, a duration, and a modifier applied to another unit's
-  cooldown. The schema has none of these, and none of them is a unit stat — an aura is a thing a unit *emits*.
+- **Needs** — **the schema, no; the engine, yes.** Layout 3 authors this row today: origin `self`, affects
+  `friend`, payload `cooldown`, a negative magnitude, a period and a duration. What is not built is the timed
+  per-creep effect state behind it (#217), so a match built out of such a row is refused by name rather than
+  standing on the board emitting nothing.
 - **Open** — does "first engagement" mean the tower's first shot or the wave's first contact? Deterministic
   either way, but they are different rules. **And the period and duration are in seconds here** — at 30 ticks a
   second, write them as ticks when they are signed.
@@ -163,8 +169,9 @@ lacks; see [what the schema does not have](#what-this-roster-needs-that-the-sche
 - **Does** — attacks sweep 360°, hitting everything in range rather than one target.
 - **Looks** — helm off, two-handed greatsword.
 - **Numbers** — `_`
-- **Needs** — **a shot that resolves against every body in a radius.** The Mage's splash is the nearest
-  existing thing; whether this is "splash with radius = range" or a distinct shot shape is a design call.
+- **Needs** — nothing. A shot that resolves against every body in a radius is a bubble with origin `self` and
+  payload `damage`, which is the Soldier's sweep at a bigger radius — and the tick loop resolves that shape
+  today. Whether the radius equals the range is still a design call.
 - **Open** — it was the natural answer to the swarm, and [there is no swarm](#what-is-deliberately-absent). So
   what is it the answer to now?
 
@@ -208,10 +215,11 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   tuning lives.**
 - **Looks** — fades slightly while shooting, to read as speed.
 - **Numbers** — targets 3. Range and damage `_`.
-- **Needs** — **a target count.** Target selection currently picks one body; this makes it pick *n*, and the
-  tiebreak rule has to extend to an ordered *n*.
-- **Open** — three shots at one damage each, or one shot split three ways? **Note the cost rule reads "times
-  the bodies a shot hits", so the answer changes the price directly.**
+- **Needs** — nothing. `targets` landed with layout 3 and target selection answers an ordered *n* under the
+  same total order it always answered one under.
+- **Answered** — three shots at one damage each. `targets` of *n* fires *n* shots at *n* creeps and draws *n*
+  damage rolls; one shot split *n* ways is the other shape, and it is a bubble. **The cost rule's bodies term
+  reads this column**, so a Marksman is priced on arrival rather than at a single-target Archer's price.
 
 ## The Mage line — magic
 
@@ -221,9 +229,13 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Looks** — the mage, book in hand.
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
-- **Needs** — nothing.
-- **Open** — the cost assumes **three bodies under a splash**. That is a placeholder, not a measurement, and it
-  is the single assumption the Mage's whole price rests on.
+- **Needs** — nothing. The splash is authorable as of layout 3: origin `target`, radius 1000, payload `damage`.
+- **Open, and now visible in a test.** The cost rule's bodies term used to guess three from the delivery
+  column; since #216 it reads `targets`, and the Mage's row fires one shot at one creep. **So the rule prices
+  this row at 30 gold and it costs 92** — the difference is three bodies under a splash the simulation has
+  never had. #216 authored no bubble here and moved no price, because either is a decision about what a Mage
+  is; `ContentTests` pins both numbers so the question stands rather than being silently answered. Author the
+  splash and accept an unpriced radius, reprice the row, or make it genuinely fire three shots.
 
 ### Pyromancer · tier 2a · status proposed
 
@@ -238,10 +250,13 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — the frost branch. Adds a slow to the splash area.
 - **Looks** — blue palette, frost particles.
 - **Numbers** — slow magnitude `_`, duration `_`.
-- **Needs** — **a speed modifier with a duration.** Speed is a constant on the row today. A slow is the first
-  thing in the game that changes a creep's stats mid-walk, and it has to be deterministic and order-independent
-  when two of them land on the same tick.
-- **Open** — does a slow stack, refresh, or take the strongest?
+- **Needs** — **the schema, no; the engine, yes.** She is a bubble of radius 0, origin `target`, affects
+  `enemy`, payload `speed`, a negative magnitude and a positive duration — no dedicated slow columns exist and
+  none are coming. What is not built is the timed per-creep effect state (#217): a slow is still the first
+  thing in the game that changes a creep's stats mid-walk, and a match built out of such a row is refused by
+  name until it is.
+- **Open** — does a slow stack, refresh, or take the strongest? (Strongest-wins with the timer refreshed is
+  the intended answer; it is #217's to make true.)
 
 ### Frostfire Archmage · tier 3 · status proposed
 
@@ -331,14 +346,17 @@ would re-baseline every measurement in the sweep.
 - **Does** — walks. **The aura is not signed** — see below.
 - **Looks** — the mage skeleton, staff, casting continuously. A large arcane bubble showing the radius.
 - **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19.
-- **Needs** — nothing *for the body*. The aura needs two levers the schema lacks.
+- **Needs** — nothing *for the body*, and nothing *from the schema* for the aura either: origin `self`,
+  affects `friend`, payload `shield`, a period and a duration, measured in hex distance so it reaches the
+  neighbouring leg of a fold. The engine ask is what is left — timed per-creep effect state, #217.
 - **Open** — does the shield regenerate, decay, or persist until spent? And does it move with the Necromancer,
   so killing it strips every body around it?
 
-> **The row lands; the mechanic does not.** What is in `units.txt` is a walking arcane body. The aura granting
-> surrounding creeps arcane hit points spent before their health needs **an aura** and **a second health pool
-> that absorbs first**, which is the largest engine ask on this page. Until then the Necromancer is a creep
-> that looks like it should do something and does not, and that is worth knowing when it appears on a menu.
+> **The row lands; the mechanic does not.** What is in `units.txt` is a walking arcane body. The second health
+> pool arrived with layout 3 — `shield`, absorbing first and raw — and so did the columns that describe the
+> aura. What is still missing is the machinery that grants one unit's pool from another unit's bubble over a
+> duration, which is #217. Until then the Necromancer is a creep that looks like it should do something and
+> does not, and that is worth knowing when it appears on a menu.
 
 ---
 
@@ -453,9 +471,13 @@ considered and dropped: it is not a thing this page needs to have an opinion abo
 
 ## What this roster needs that the schema does not have
 
-**Decided, and fixed as a list** — [#213](https://github.com/ssalter21/tower-defense-game/issues/213). The five levers become **nine columns** on
-`content/units.txt` layout 3, and three of the five collapse into one mechanic, because a sweep, a blast and an
-aura are all the same shape: a bubble that emits something.
+**Decided, fixed as a list, and built.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)
+fixed the list; [#216](https://github.com/ssalter21/tower-defense-game/issues/216) landed it, and
+`content/units.txt` is layout 3 as of 16 August 2026. **The schema does not lack these any more** — the
+section title is kept because the table below is what every block above points at. The five levers became
+**nine columns**, and three of the five collapsed into one mechanic, because a sweep, a blast and an aura are
+all the same shape: a bubble that emits something. The reasoning is
+[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md).
 
 | Column | Meaning |
 |---|---|
@@ -481,6 +503,13 @@ reapplication, applied in canonical order. A creep never drops below **10% of it
 binding every effect at once, which is what makes a match that cannot end unreachable by arithmetic rather than
 by careful authoring.
 
+**The columns landed ahead of the machinery, deliberately.** #216 built the three columns the tick loop can
+read on its own — `shield`, `targets`, and a damage bubble that fires with the attack and lands instantly —
+and left timed per-creep effect state to #217. A row authoring anything else (a period, or a payload that is
+not damage) **parses, folds and stores, and refuses by name the moment a match is built out of it**. Five of
+the six proposed towers are therefore *authorable* today and none of them is *playable* yet, which is a
+different sentence from the one this section used to carry.
+
 A new unit is still a row, and a new column is still a format version with every stored record made under the
 old one retired. **This is the last widening the roster asks for before the map has been measured.**
 
@@ -503,10 +532,11 @@ open.
 
 ## Open questions
 
-1. **Five of the six proposed towers are blocked until layout 3 lands.** The column list is
-   [fixed](#what-this-roster-needs-that-the-schema-does-not-have) and the implementation is ticketed, so this
-   is now a queue rather than a question. Only the Pyromancer is authorable before it, and only if "extra
-   damage" turns out to be a bigger damage roll. The ladder itself is built.
+1. **Layout 3 has landed, and the queue is now a design queue rather than a schema one.** Every one of the six
+   proposed towers is *authorable* — the columns exist and
+   [the fixtures prove each shape parses](../sim.tests/ContentTests.cs) — and the three that need a timed
+   effect are not *playable* until #217. What is left is what was always left: naming them and signing their
+   numbers. The ladder itself is built.
 2. **Towers get nine states and creeps get five flat rows** — and the answer, from
    [13 August](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster),
    is that **creeps deepen by being upgraded rather than by being replaced**: stat and speed upgrades on the
@@ -521,6 +551,10 @@ open.
    so his swing strikes every creep touching him rather than one of them. A corner placement inside a fold
    reaches two legs at once — a positional value the flat corridor could not offer, and the reason he was kept
    rather than retired.
-4. **The Mage's price rests on an unmeasured three.** Bodies-under-a-splash is the only number in the cost
-   rule that was guessed, and it is a multiplier rather than a term.
+4. **The Mage's price rests on a splash nobody has authored, and the guess propping it up is gone.** The cost
+   rule's bodies term read three off the delivery column until
+   [#216](https://github.com/ssalter21/tower-defense-game/issues/216); it reads `targets` now, and the Mage's
+   row fires one shot at one creep. **The rule prices it at 30 gold and it costs 92.** Author the splash as a
+   bubble and accept that a radius is unpriced, reprice the row, or make it genuinely fire three shots — three
+   different towers, and picking one is a signature rather than a fix.
 5. **The three absent shapes need models**, and art is not chosen unattended.

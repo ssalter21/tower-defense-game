@@ -34,11 +34,29 @@
 #
 # A NEW UNIT IS A ROW AND NEVER A COLUMN. That is what the layout row costs: a
 # column is a format version, a hash label and every record made under the old
-# one retired, and a row is a line. It is also the constraint the roster was
-# signed under, and it is what several units in docs/roster.md are waiting on
-# -- a target count, a radial shot, a timed slow, an aura and a second health
-# pool are all levers these columns do not have, so the units that need them
-# are written down there and are not authored here.
+# one retired, and a row is a line. Layout 3 paid that price once, deliberately
+# and for the last time before the map is measured: the five levers the roster
+# was blocked on -- a target count, a radial shot, a timed slow, an aura and a
+# second health pool -- are the nine columns below, and every unit in
+# docs/roster.md that was waiting on one of them is now a row somebody has to
+# write rather than a schema somebody has to widen.
+#
+# THREE OF THOSE FIVE TURNED OUT TO BE ONE MECHANIC. A radial shot, a timed
+# modifier and a periodic aura are all a bubble that emits something,
+# distinguished only by where it centres, how often it fires and what it
+# carries -- so they are six columns between them rather than six each. The
+# column count is identical either way; what collapsing them saved is three
+# sets of rules with nothing holding them together. A Soldier's sweep is a
+# bubble on himself with no period, a mortar's blast is one on what it hit, a
+# Cryomancer's slow is one carrying speed with a duration, and a Captain's aura
+# is the same thing with a period.
+#
+# THE TWO SHOT SHAPES ARE DISTINCT AND A ROW IS ONE OF THEM. A target count of
+# n fires n shots at the n creeps nearest the exit and draws n damage rolls; a
+# damage bubble is ONE shot drawing ONE roll, applied whole to everything it
+# encloses -- no falloff, no friendly fire. How many numbers an attack takes
+# off the dice stream is part of what every stored record replays through, so a
+# row claiming both is refused at load rather than reconciled at the landing.
 #
 # WHICH UNIT FOLLOWS WHICH IS NOT IN THIS FILE. An upgrade edge is a row in
 # content/upgrades.txt, which names two ids out of this table, and it is an
@@ -79,15 +97,35 @@
 # creep rule charges for, which is what lets one purse buy both. Signing a
 # tower is therefore signing damage, cooldown and how many bodies it hits.
 #
+#   THE BODIES TERM IS THE TARGETS COLUMN, and until layout 3 it was a guess:
+#   the rule read three bodies off anything delivering by projectile and one
+#   off everything else, because no column said how many bodies a shot hit. Now
+#   one does, so a row that fires three shots is priced on three and a row that
+#   fires one is priced on one.
+#
+#   THE MAGE IS THE ROW THAT GUESS WAS PROPPING UP. It costs 92 gold, which is
+#   three bodies' worth, and it fires one projectile at one creep -- its splash
+#   has been a design statement in docs/roster.md and never a thing the
+#   simulation did. Layout 3 is the first schema that could carry that splash
+#   (a bubble on the target, radius 1000, payload damage) and this ticket
+#   deliberately authored no such bubble and moved no price: what to do about a
+#   row priced for three bodies that hits one is a design decision, and it is
+#   written down here and asserted in ContentTests rather than tuned away.
+#
 #   THE TOWER CONSTANT IS TIED TO THE TICK RATE. "Five damage a second" is a
 #   number about seconds, and cooldowns here are in ticks at thirty ticks a
 #   second. The clock has already moved once. If it moves again, re-derive the
 #   constant or every tower silently stops being based.
 #
-#   THE RULE DOES NOT PRICE RANGE. A one-hex tower and an eight-hex tower with
-#   the same damage cost the same. That is a known gap and not an oversight:
-#   the retired sniper is the row that missed the rule worst, and it missed
-#   precisely because it was the longest-ranged thing in the game.
+#   THE RULE PRICES NEITHER RANGE, NOR BUBBLE RADIUS, NOR SHIELD, NOR DURATION.
+#   A one-hex tower and an eight-hex tower with the same damage cost the same,
+#   and so do a blast that covers a hex and one that covers the board. That is
+#   a known gap and not an oversight: the retired sniper is the row that missed
+#   the rule worst, and it missed precisely because it was the longest-ranged
+#   thing in the game. The silence is deliberate rather than forgotten -- see
+#   docs/open-questions.md -- because a coefficient guessed against the
+#   one-hex corridor is a coefficient priced against geometry that is going
+#   away.
 #
 # THAT SAMENESS IS THE EXCHANGE RATE AND NOT A COINCIDENCE. A leak charging
 # what the creep cost means the health gold buys is the leak rate and
@@ -150,7 +188,7 @@
 # leak count is a number a person can watch, and the golden trace beside these
 # files is the run that produced it.
 #
-#      id  label             role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue
+#      id  label             role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue  shield  targets  bubbleRadius  bubbleOrigin  bubbleAffects  bubblePeriod  bubblePayload  bubbleMagnitude  bubbleDuration
 #
 # role     : moving (walks the corridor) | placed (stands where it was put)
 # maxHp    : zero means the unit has no health pool and cannot be damaged
@@ -162,15 +200,48 @@
 # attack   : pierce | impact | magic, and none for a unit that never attacks
 # armour   : swift | armoured | arcane, and none for a unit with no health pool
 # armourValue : percent of base effective health added per point; none carries zero
+#
+# The nine columns layout 3 added:
+#
+# shield   : a pool that absorbs first and RAW -- armour and the type chart do
+#            not touch it, overkill carries through to health, and it does not
+#            regenerate. Zero is none, and a unit with no health pool may not
+#            carry one
+# targets  : shots per attack, each with its own damage roll, taken
+#            nearest-to-exit first. 1 is an ordinary single shot
+# bubbleRadius : thousandths of a hex, read as a SPHERE -- height only ever
+#            costs a radius, which is what stops a bubble on a cliff blanketing
+#            the board. 0 is the centre alone; none is no bubble at all, and
+#            then the five columns after it carry none and zero
+# bubbleOrigin : self (a sweep, centred on the emitter) | target (a blast,
+#            centred on what the shot hit)
+# bubbleAffects : friend | enemy
+# bubblePeriod : ticks. 0 fires with the attack; a positive value pulses on its
+#            own, which is the whole of what makes a bubble an aura
+# bubblePayload : damage, or one of speed, cooldown, armour, shield. RANGE IS
+#            NOT A LEGAL PAYLOAD and is refused by name: coverage is
+#            intersected with the route once, at load, and a payload that moved
+#            a range would drag that back into the tick loop
+# bubbleMagnitude : a percentage, for every payload that is not damage. A
+#            damage bubble carries the attack's own roll, so it authors zero
+#            here, and a slow is a negative speed percentage
+# bubbleDuration : ticks the payload lasts. 0 is instant, which is what damage
+#            always is
+#
+# WHAT THE TICK LOOP RESOLVES TODAY IS ONE BUBBLE SHAPE: damage, against the
+# enemy, fired with the attack, landing instantly. A period or any other
+# payload is a per-creep timed effect, which is not built -- such a row parses,
+# folds and stores, and a match built out of it refuses by name rather than
+# standing on the board emitting nothing.
 
-layout 2
+layout 3
 
-unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0
-unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0
-unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0
-unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0
-unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25
-unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0
-unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20
-unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45
-unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0
+unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0  0       1        none          none          none           0             none           0                0
+unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0  0       1        none          none          none           0             none           0                0
+unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        none          none          none           0             none           0                0
+unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25  0       1        none          none          none           0             none           0                0
+unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20  0       1        none          none          none           0             none           0                0
+unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45  0       1        none          none          none           0             none           0                0
+unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0

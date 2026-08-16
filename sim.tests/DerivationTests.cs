@@ -174,6 +174,29 @@ public class DerivationTests
         // replaces, nothing else touched -- the fingerprint is
         // 12BD5CDF6025ECD9, and with the rule in it is the value below.
         (8u, 0xF3D0032E948518D4UL),
+
+        // Version 9 is #216 -- the nine columns of units.txt layout 3, and the
+        // three of them the tick loop reads. A shield absorbs before armour is
+        // consulted and overkill carries through to health; a target count
+        // fires n shots at n creeps and draws n rolls off the one stream; and a
+        // damage bubble is one shot and one roll applied to everything a sphere
+        // encloses. The state hash's own layout moved with them -- match-state/2
+        // folds a creep's shield and every target a tower is holding -- so
+        // every stored record's rolling hash stops reproducing.
+        //
+        // IT CAUGHT THE HOLE A SIXTH TIME, and in the roster rather than in the
+        // map. Every half below is fought over a layout-1 or layout-2 roster,
+        // and no such row can carry a shield, a shot count above one or a
+        // bubble at all: the rules moved where those five halves cannot look.
+        // What the fold gained is a sixth half whose roster is layout 3 and
+        // whose two towers are the two shot shapes, and the label went to
+        // rule-fingerprint/7.
+        //
+        // OBSERVED, both ways round, on this build. With Match.Absorbed's body
+        // replaced by `return roll` -- the shield spent by nothing, every other
+        // line untouched -- the fingerprint is F8B857E6175940A5, and with the
+        // rule in it is the value below.
+        (9u, 0x1BAEAF1DA57D7D8EUL),
     };
 
     /// <summary>
@@ -231,6 +254,35 @@ public class DerivationTests
         """;
 
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The roster the shot-shape half is fought over: a walking row carrying a
+    /// shield, a turret that fires two shots, and a turret whose one shot is a
+    /// bubble.
+    /// </summary>
+    /// <remarks>
+    /// <b>Layout 3, because no earlier layout can say any of this.</b> That is
+    /// the whole reason this half exists: the five above it are fought over
+    /// layout-1 and layout-2 rosters, where a shield is not a column, a shot
+    /// count is not a column and a bubble is not a column -- so #216's rules
+    /// run in every one of them and are visible in none.
+    /// </remarks>
+    private const string FingerprintShotUnits = """
+        layout 3
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none  none  0  none  0  0
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none  none  0  none  0  0
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self  enemy 0  damage 0  0
+        """;
+
+    /// <summary>
+    /// One of each shape, side by side. Both stand where the single turret of
+    /// <see cref="FingerprintDefense"/> does or beside it, so both reach the
+    /// route on the folded map.
+    /// </summary>
+    private const string FingerprintShotDefense = """
+        tower  3  2  1
+        tower  4  3  1
+        """;
 
     /// <summary>
     /// The deeper of the two waves the field half is fought against. Four times
@@ -695,7 +747,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/6").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/7").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -710,7 +762,60 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)));
+        return ShapedIntoFingerprint(
+            FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint))));
+    }
+
+    /// <summary>
+    /// The sixth half of the fold: a match fought over a roster that authors a
+    /// shield, a shot count and a bubble.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the five above it missed one.</b> Every one
+    /// of them is fought over a layout-1 or layout-2 roster, and no such row
+    /// can say any of the three things #216 taught the tick loop to read -- so
+    /// the rules run in all five and are visible in none of them. The fifth
+    /// time this file has had that hole and the second time the fix was the
+    /// scenario rather than the shape of the fold.
+    /// </para>
+    /// <para>
+    /// <b>Both shot shapes and the shield are in one match on purpose.</b> They
+    /// share the one dice stream, so a draw added or skipped by either shape
+    /// moves the other's rolls too, and a shield that stopped absorbing changes
+    /// which body dies on which tick and therefore what everything after it
+    /// shoots at. One match folds all three interactions; three matches would
+    /// fold three isolated ones.
+    /// </para>
+    /// <para>
+    /// The map is the folded one every other half uses, so the sphere is
+    /// measured across a real height difference rather than over flat ground.
+    /// </para>
+    /// </remarks>
+    private static Hash64 ShapedIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint shot units", FingerprintShotUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+
+        var match = new Match(
+            map,
+            TheRuleset.Committed(),
+            TowerLayout.Parse("fingerprint shot defense", FingerprintShotDefense, types),
+            WaveScript.Parse("fingerprint wave", FingerprintWave, types),
+            FingerprintSeed);
+
+        for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
+        {
+            match.Advance(1);
+            fingerprint = fingerprint.Add(unchecked((long)match.StateHash.Value));
+        }
+
+        MatchResult result = match.Result();
+
+        return fingerprint
+            .Add(result.Leaked, result.Total)
+            .Add(result.FinalTick)
+            .Add(unchecked((long)result.RollingStateHash.Value));
     }
 
     /// <summary>

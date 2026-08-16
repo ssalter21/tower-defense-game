@@ -28,7 +28,7 @@ public class ContentTests
         """;
 
     /// <summary>The same three rows in column layout 2, with the four columns it adds.</summary>
-    private const string ThreeCurrentRows = """
+    private const string ThreeTypedRows = """
         layout 2
         unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0
         unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0
@@ -36,10 +36,29 @@ public class ContentTests
         """;
 
     /// <summary>
+    /// The same three rows again in column layout 3, carrying nothing in any of
+    /// the nine columns it adds -- which is what every committed row carries and
+    /// is not the same thing as a row that has no such columns.
+    /// </summary>
+    private const string ThreeCurrentRows = """
+        layout 3
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
+        """;
+
+    /// <summary>
     /// What the unit table pinned beside the version-0 golden bundle hashes to,
     /// and what its bundle's header carries.
     /// </summary>
     private const ulong LayoutOneHashOfTheOldestPin = 0x39B848CEFDDCC9CFUL;
+
+    /// <summary>
+    /// The Mage's id. Named because two tests below single the row out -- it is
+    /// the one placed row the cost rule does not price, and why is a claim of
+    /// its own.
+    /// </summary>
+    private const int Mage = 4;
 
     [Fact]
     public void The_committed_unit_table_parses()
@@ -253,21 +272,25 @@ public class ContentTests
         // clock has moved once already, and if it moves again every tower
         // silently stops being based until the constant is re-derived.
         //
-        // Splash is counted as three bodies, which is what makes the Mage dear
-        // rather than the Archer's equal. Nothing in the schema says how many
-        // bodies a shot hits -- that is a design fact about the row and it
-        // lives here and in docs/roster.md until a column can carry it.
+        // THE BODIES TERM IS THE TARGETS COLUMN, and until layout 3 it was a
+        // guess: three bodies for anything delivering by projectile and one for
+        // everything else, because no column said how many bodies a shot hit.
+        // One does now, so the rule reads the row instead of guessing at it.
         //
-        // OBSERVED: halve the Mage's cost, 92 to 46, in content/units.txt. This
-        // goes red naming it -- "mage costs 46 gold, which is 5 damage a second
-        // per gold against the 9 it actually deals" -- which is what the splash
+        // What that exposed is the Mage, and it is asserted below rather than
+        // tuned away: see The_mage_is_priced_for_a_splash_nobody_has_authored.
+        // Every other placed row is priced on the shots it actually fires.
+        //
+        // OBSERVED: halve the Archer's cost, 40 to 20, in content/units.txt.
+        // This goes red naming it -- "archer costs 20 gold, which is 5 damage a
+        // second per gold against the 40 it actually deals" -- which is what a
         // tower being twice the deal of everything else looks like before
         // anybody plays a round of it.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        foreach (UnitType tower in table.Types.Where(row => row.Role == UnitRole.Placed))
+        foreach (UnitType tower in table.Types.Where(row => row.Role == UnitRole.Placed && row.Id != Mage))
         {
-            int bodies = tower.Delivery == Delivery.Projectile ? 3 : 1;
+            int bodies = tower.Targets;
             int average = (tower.DamageMin + tower.DamageMax) / 2;
 
             // Damage a second, times bodies, at thirty ticks a second. Held as
@@ -283,6 +306,73 @@ public class ContentTests
                 + (perSecondTimesBodies / 5)
                 + " it actually deals. Every placed row is within two percent of the rule.");
         }
+    }
+
+    [Fact]
+    public void A_multi_target_row_is_priced_on_every_shot_it_fires()
+    {
+        // The other half of the correction, and the half no committed row can
+        // show: the rule's bodies term now reads a column, so a row that fires
+        // three shots prices at three times a row that fires one and is
+        // otherwise identical. A Marksman is priced on arrival rather than at
+        // the price of a single-target Archer -- which is the whole of what the
+        // guess it replaced got wrong.
+        //
+        // A fixture rather than a row in content/units.txt, deliberately:
+        // naming and statting a tower is a design decision and this ticket took
+        // none. What is checked here is the arithmetic.
+        //
+        // OBSERVED: put the bodies term back to Delivery == Projectile ? 3 : 1.
+        // Both of these go red -- the hitscan trio prices at a third of what it
+        // costs and the projectile pair at three times -- which is exactly the
+        // pair of errors the column removes.
+        UnitTypeTable table = UnitTypeTable.Parse("""
+            layout 3
+            unit 1 one   placed 0 0 3200 18 9 6 90 150 hitscan    0  0 40  pierce none 0 0 1 none none none 0 none 0 0
+            unit 2 three placed 0 0 3200 18 9 6 90 150 hitscan    0  0 120 pierce none 0 0 3 none none none 0 none 0 0
+            unit 3 lob   placed 0 0 3200 18 9 6 90 150 projectile 20 0 40  pierce none 0 0 1 none none none 0 none 0 0
+            """);
+
+        foreach (UnitType tower in table.Types)
+        {
+            int perSecondTimesBodies =
+                (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
+
+            Assert.True(
+                Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
+                tower.Label + " prices at " + (perSecondTimesBodies / 5) + " against the " + tower.Cost + " it carries.");
+        }
+    }
+
+    [Fact]
+    public void The_mage_is_priced_for_a_splash_nobody_has_authored()
+    {
+        // THE FINDING, PINNED RATHER THAN TUNED AWAY. The Mage costs 92 gold,
+        // which is three bodies' worth of the cost rule, and it fires one
+        // projectile at one creep: its splash has been a design statement in
+        // docs/roster.md -- "splash of one additional hex", radius 1000 -- and
+        // never a thing the simulation did. The old bodies term guessed three
+        // from the delivery column and hid that; the targets column does not.
+        //
+        // Layout 3 is the first schema that could carry the splash, as a bubble
+        // on the target with a radius and a damage payload. Authoring it, or
+        // repricing the row to what it does, is a design decision, and #216
+        // took neither: this is the standing question in the artefact rather
+        // than a number quietly moved to make an assertion green.
+        //
+        // OBSERVED: it goes red both ways. Author the Mage a bubble and the
+        // ratio stops being three; reprice it to 30 and the same. Either edit
+        // is somebody deciding what a Mage is, and either edit is meant to
+        // arrive here.
+        UnitType mage = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile)).ById(Mage);
+
+        Assert.Equal(1, mage.Targets);
+        Assert.False(mage.Bubble.Present);
+
+        int perSecond = (mage.DamageMin + mage.DamageMax) / 2 * Match.TicksPerSecond / mage.CooldownTicks;
+
+        Assert.Equal(30, perSecond / 5);
+        Assert.Equal(92, mage.Cost);
     }
 
     [Fact]
@@ -378,22 +468,62 @@ public class ContentTests
     }
 
     [Fact]
-    public void The_two_layouts_hash_differently_even_where_every_shared_number_agrees()
+    public void Every_layout_hashes_differently_even_where_every_shared_number_agrees()
     {
-        // Both tables hold the same thirteen numbers per row. They fold under
-        // different labels, so a record pinned to one is retired by the other
-        // rather than being reinterpreted against shifted fields.
+        // Three tables holding the same thirteen numbers per row, and layouts 2
+        // and 3 agreeing about the four columns after them as well. They fold
+        // under different labels, so a record pinned to one is retired by the
+        // others rather than being reinterpreted against shifted fields.
         //
-        // OBSERVED: return the same label from both branches of HashLabelOf.
-        // This goes red, and a layout-1 record and a layout-2 record whose
-        // shared columns agree become indistinguishable at the replay gate.
+        // OBSERVED: return the same label from two branches of HashLabelOf.
+        // This goes red, and two records whose shared columns agree become
+        // indistinguishable at the replay gate.
+        //
+        // The layout-2 row is the load-bearing one now that it is neither the
+        // oldest nor the current: nine of the nine columns layout 3 adds carry
+        // nothing in the fixture below, so if the widening had folded the
+        // absent ones as zeroes under the old label, this pair would be equal.
         UnitTypeTable one = UnitTypeTable.Parse(ThreeGoodRows);
-        UnitTypeTable two = UnitTypeTable.Parse(ThreeCurrentRows);
+        UnitTypeTable two = UnitTypeTable.Parse(ThreeTypedRows);
+        UnitTypeTable three = UnitTypeTable.Parse(ThreeCurrentRows);
 
         Assert.Equal(UnitTypeTable.DefaultLayout, one.Layout);
-        Assert.Equal(UnitTypeTable.CurrentLayout, two.Layout);
+        Assert.Equal(2, two.Layout);
+        Assert.Equal(UnitTypeTable.CurrentLayout, three.Layout);
+
         Assert.Equal(one.ById(1).MaxHp, two.ById(1).MaxHp);
+        Assert.Equal(two.ById(1).MaxHp, three.ById(1).MaxHp);
+        Assert.Equal(two.ById(7).Cost, three.ById(7).Cost);
+        Assert.Equal(two.ById(7).AttackType, three.ById(7).AttackType);
+
         Assert.NotEqual(one.ContentHash, two.ContentHash);
+        Assert.NotEqual(two.ContentHash, three.ContentHash);
+        Assert.NotEqual(one.ContentHash, three.ContentHash);
+    }
+
+    [Fact]
+    public void A_layout_two_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time: the older
+        // branch is not touched by the newer one. A layout-2 file is what
+        // content/units.txt was an hour ago and what content/golden/ will hold
+        // forever, so a widening that quietly changed how one reads would
+        // retire records nobody edited.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeTypedRows);
+
+        Assert.Equal(2, table.Layout);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Equal(ArmourType.Armoured, table.ById(1).ArmourType);
+        Assert.Equal(AttackType.Pierce, table.ById(7).AttackType);
+
+        // And what such a row carries in the columns it does not have: no
+        // second pool, one shot an attack, and nothing radial. None of those is
+        // a default standing in for a value the table stated -- they are what a
+        // layout-2 row IS.
+        Assert.Equal(0, table.ById(1).Shield);
+        Assert.Equal(1, table.ById(7).Targets);
+        Assert.False(table.ById(7).Bubble.Present);
     }
 
     [Fact]
@@ -426,16 +556,16 @@ public class ContentTests
     [Fact]
     public void A_row_with_the_current_layouts_columns_and_no_layout_row_refuses_by_name()
     {
-        // The mistake a designer makes: four columns added and the layout row
+        // The mistake a designer makes: columns added and the layout row
         // forgotten. It is refused rather than read against layout 1's field
         // order, and the message names both counts and the row that fixes it.
         //
         // OBSERVED: infer the layout from the field count instead of reading a
         // declaration. This goes red having caught nothing, and a file whose
-        // columns were added in the wrong order parses as layout 2 with its
-        // fields transposed.
+        // columns were added in the wrong order parses as the current layout
+        // with its fields transposed.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 2", "# the layout row, forgotten")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "# the layout row, forgotten")));
 
         Assert.Contains("column layout 1 has 15", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("'layout' row", thrown.Message, StringComparison.Ordinal);
@@ -451,18 +581,40 @@ public class ContentTests
     }
 
     [Fact]
+    public void A_row_with_layout_twos_columns_under_a_layout_three_declaration_refuses_by_name()
+    {
+        // The widening's own version of the test above, and the acceptance
+        // criterion in as many words: a layout-3 row with the wrong field count
+        // is refused rather than read against shifted fields. Nine columns is a
+        // lot to leave off, and leaving off any of them would otherwise slide a
+        // bubble magnitude into a duration.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeTypedRows.Replace("layout 2", "layout 3")));
+
+        Assert.Contains("column layout 3 has 28", thrown.Message, StringComparison.Ordinal);
+
+        // And one column short of the twenty-eight, which is the shape a real
+        // mistake takes: a row that lost a field rather than nine of them.
+        ContentException short_ = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("none 0 none 0 0", "none 0 none 0")));
+
+        Assert.Contains("column layout 3 has 28", short_.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_layout_this_reader_has_no_branch_for_refuses_by_name()
     {
         // Spelled out one layout at a time, so a layout that was skipped or a
         // branch somebody deleted arrives here rather than passing an
         // inequality and falling through a switch.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 2", "layout 3")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "layout 4")));
 
-        Assert.Contains("declares column layout 3", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declares column layout 4", thrown.Message, StringComparison.Ordinal);
         Assert.False(UnitTypeTable.IsKnownLayout(0));
-        Assert.False(UnitTypeTable.IsKnownLayout(3));
+        Assert.False(UnitTypeTable.IsKnownLayout(4));
         Assert.True(UnitTypeTable.IsKnownLayout(1));
+        Assert.True(UnitTypeTable.IsKnownLayout(2));
         Assert.True(UnitTypeTable.IsKnownLayout(UnitTypeTable.CurrentLayout));
     }
 
@@ -560,6 +712,297 @@ public class ContentTests
         Assert.Throws<ContentException>(
             () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("0 12 10 none armoured", "0 12 -10 none armoured")));
     }
+
+    [Fact]
+    public void All_nine_of_the_columns_layout_three_added_parse_and_arrive_on_the_row()
+    {
+        // Every one of the nine, read off a row that authors something in all
+        // of them. The five units the roster has been blocked on are each a
+        // shape of this row and nothing more -- see
+        // The_five_blocked_units_are_all_authorable_as_rows below.
+        UnitType captain = UnitTypeTable.Parse("""
+            layout 3
+            unit 1 body    moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 150 1 none none none 0 none 0 0
+            unit 2 emitter placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 2 2500 self friend 30 cooldown -25 90
+            """).ById(2);
+
+        Assert.Equal(0, captain.Shield);
+        Assert.Equal(2, captain.Targets);
+        Assert.True(captain.Bubble.Present);
+        Assert.Equal(2500, captain.Bubble.RadiusMilliHex);
+        Assert.Equal(BubbleOrigin.Self, captain.Bubble.Origin);
+        Assert.Equal(BubbleAffects.Friend, captain.Bubble.Affects);
+        Assert.Equal(30, captain.Bubble.PeriodTicks);
+        Assert.Equal(BubblePayload.Cooldown, captain.Bubble.Payload);
+        Assert.Equal(-25, captain.Bubble.Magnitude);
+        Assert.Equal(90, captain.Bubble.DurationTicks);
+
+        // And the shield column on the row that carries one, because a creep is
+        // where a shield goes.
+        UnitType body = UnitTypeTable.Parse("""
+            layout 3
+            unit 1 body moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 150 1 none none none 0 none 0 0
+            """).ById(1);
+
+        Assert.Equal(150, body.Shield);
+        Assert.False(body.Bubble.Present);
+    }
+
+    [Fact]
+    public void A_bubble_payload_of_range_is_refused_with_the_reason()
+    {
+        // Not "range is not on the list" -- WHY it is not. Coverage is
+        // intersected with the route once, at load, and handed to the tick loop
+        // as intervals of distance; a payload that moved a range would drag
+        // that back inside the tick, which is the one thing the whole
+        // arrangement exists to avoid.
+        //
+        // OBSERVED: delete ReadPayload's first clause. The row is still
+        // refused -- 'range' is not one of the six words -- and the refusal
+        // says "which is not one of: none, damage, speed, cooldown, armour,
+        // shield", which tells a designer that range is missing and not that it
+        // is impossible. They then ask for it to be added.
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse("""
+            layout 3
+            unit 1 haste placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 1000 self friend 30 range 25 90
+            """));
+
+        Assert.Contains("payload of 'range'", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("intersected", thrown.Message, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A layout-3 row up to its bubble, so the six columns that describe one
+    /// can be varied against everything else holding still.
+    /// </summary>
+    private const string UpToTheBubble =
+        "layout 3\nunit 1 thing placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 ";
+
+    [Theory]
+    [InlineData("none self none 0 none 0 0")]
+    [InlineData("none none enemy 0 none 0 0")]
+    [InlineData("none none none 12 none 0 0")]
+    [InlineData("none none none 0 none 5 0")]
+    [InlineData("none none none 0 none 0 7")]
+    [InlineData("1000 none enemy 0 damage 0 0")]
+    [InlineData("1000 target none 0 damage 0 0")]
+    [InlineData("1000 target enemy 0 none 0 0")]
+    [InlineData("1000 target enemy 0 damage 40 0")]
+    [InlineData("1000 target enemy 0 damage 0 60")]
+    [InlineData("1000 target enemy 30 speed 0 60")]
+    public void A_half_authored_bubble_refuses_to_load(string bubble)
+    {
+        // Every way six columns that describe one thing can disagree, one case
+        // each: no radius but an origin, an affects, a period, a magnitude or a
+        // duration anyway; a radius with the origin, the affects or the payload
+        // left off; a damage bubble carrying a second damage number or a
+        // duration; and a stat bubble that modifies nothing.
+        //
+        // The control is the test below, which parses the absent spelling and
+        // the authored one -- so a case that is green because the fixture never
+        // reached the parser is impossible.
+        //
+        // OBSERVED: delete RequireBubble's body. All eleven go red at once,
+        // which is what says they are pointed at the rule rather than at eleven
+        // typos.
+        Assert.Throws<ContentException>(() => UnitTypeTable.Parse(UpToTheBubble + bubble));
+    }
+
+    [Theory]
+    [InlineData("none none none 0 none 0 0")]
+    [InlineData("0 target enemy 0 damage 0 0")]
+    [InlineData("1000 self enemy 0 damage 0 0")]
+    [InlineData("2500 self friend 45 cooldown -20 60")]
+    public void A_bubble_whose_six_columns_agree_loads(string bubble)
+    {
+        // The other side of the theory above, and the reason it is a test
+        // rather than a comment: a refusal that fired on everything would pass
+        // all eleven cases up there and author nothing at all.
+        Assert.Equal(1, UnitTypeTable.Parse(UpToTheBubble + bubble).Count);
+    }
+
+    [Fact]
+    public void The_two_shot_shapes_may_not_be_claimed_by_one_row()
+    {
+        // n targets is n shots drawing n rolls; a damage bubble is one shot
+        // drawing one roll that lands on everything it encloses. A row claiming
+        // both would draw one of them per body of the other, and how many
+        // numbers an attack takes off the dice stream is part of what every
+        // stored record replays through.
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse("""
+            layout 3
+            unit 1 both placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 3 1000 target enemy 0 damage 0 0
+            """));
+
+        Assert.Contains("two shot shapes", thrown.Message, StringComparison.Ordinal);
+
+        // Either one alone is fine, which is what makes the refusal about the
+        // pair rather than about either column.
+        Assert.Equal(
+            1,
+            UnitTypeTable.Parse("""
+                layout 3
+                unit 1 volley placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 3 none none none 0 none 0 0
+                """).Count);
+
+        Assert.Equal(
+            1,
+            UnitTypeTable.Parse("""
+                layout 3
+                unit 1 sweep placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 1000 self enemy 0 damage 0 0
+                """).Count);
+    }
+
+    [Fact]
+    public void A_shield_on_a_unit_with_no_health_pool_refuses_to_load()
+    {
+        // A shield absorbs first and overkill carries through to health, so a
+        // shield on a thing nothing can damage is a pool nothing can ever
+        // spend -- and it would still move the content hash.
+        ContentException thrown = Assert.Throws<ContentException>(() => UnitTypeTable.Parse("""
+            layout 3
+            unit 1 tower placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 200 1 none none none 0 none 0 0
+            """));
+
+        Assert.Contains("no health pool underneath it", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_that_never_attacks_may_not_author_shots_or_a_bubble_on_one()
+    {
+        // Both halves of "a column nobody reads is a number that still moves
+        // the content hash", for the two columns a walking row has no use for.
+        Assert.Throws<ContentException>(() => UnitTypeTable.Parse("""
+            layout 3
+            unit 1 walker moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 3 none none none 0 none 0 0
+            """));
+
+        Assert.Throws<ContentException>(() => UnitTypeTable.Parse("""
+            layout 3
+            unit 1 walker moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 1000 self enemy 0 damage 0 0
+            """));
+
+        // An aura on a walking row is legal, because an aura has a clock of its
+        // own and needs no attack to hang off. The Necromancer is that row.
+        Assert.Equal(
+            1,
+            UnitTypeTable.Parse("""
+                layout 3
+                unit 1 walker moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 2000 self friend 60 shield 200 300
+                """).Count);
+    }
+
+    [Fact]
+    public void The_five_blocked_units_are_all_authorable_as_rows()
+    {
+        // THE ACCEPTANCE CRITERION, as the five rows docs/roster.md has been
+        // waiting on. They are fixtures and not content: naming and statting a
+        // tower is a design decision and #216 took none, so what is proved here
+        // is that the schema carries each shape -- the numbers below are
+        // stand-ins and no id, label or price among them means anything.
+        //
+        // The Cryomancer needs no dedicated slow columns: she is a bubble of
+        // radius zero carrying a negative speed percentage for a while. The
+        // Marksman is the targets column alone. A mortar is a blast on what it
+        // hit. The Captain is an aura on itself over its friends. The
+        // Necromancer grants shield in HEX distance rather than along the
+        // marching column, which is what lets it reach the neighbouring leg of
+        // a fold. And a tower that pulses over the whole board is one row with
+        // a big radius in it.
+        UnitTypeTable roster = UnitTypeTable.Parse("""
+            layout 3
+            unit 1 cryo    placed 0 0 4000 40 10 8 100 200 hitscan    0  0 50 magic  none 0 0 1 0     target enemy 0  speed    -40 120
+            unit 2 marks   placed 0 0 5000 30 10 8 100 200 hitscan    0  0 90 pierce none 0 0 3 none  none   none  0  none       0   0
+            unit 3 mortar  placed 0 0 4000 60 20 10 200 300 projectile 40 0 60 impact none 0 0 1 1500 target enemy 0  damage     0   0
+            unit 4 captain placed 0 0 1000 30 5 5 50 60 hitscan       0  0 40 impact none 0 0 1 3000 self   friend 45 cooldown -20 60
+            unit 5 necro   moving 2400 33 0 0 0 0 0 0 none 0 36 19 none arcane 25 0 1 2000 self friend 90 shield 300 240
+            unit 6 pulse   placed 0 0 1000 90 10 10 300 400 hitscan   0  0 80 magic  none 0 0 1 60000 self enemy 0 damage 0 0
+            """);
+
+        Assert.Equal(6, roster.Count);
+
+        Assert.Equal(BubblePayload.Speed, roster.ById(1).Bubble.Payload);
+        Assert.Equal(0, roster.ById(1).Bubble.RadiusMilliHex);
+        Assert.True(roster.ById(1).Bubble.Present, "A radius of zero is the target alone, not the absence of a bubble.");
+        Assert.Equal(-40, roster.ById(1).Bubble.Magnitude);
+
+        Assert.Equal(3, roster.ById(2).Targets);
+        Assert.False(roster.ById(2).Bubble.Present);
+
+        Assert.Equal(BubbleOrigin.Target, roster.ById(3).Bubble.Origin);
+        Assert.True(roster.ById(3).Bubble.IsAnInstantBlast);
+
+        Assert.True(roster.ById(4).Bubble.IsAnAura);
+        Assert.Equal(BubbleAffects.Friend, roster.ById(4).Bubble.Affects);
+
+        Assert.Equal(BubblePayload.Shield, roster.ById(5).Bubble.Payload);
+        Assert.Equal(UnitRole.Moving, roster.ById(5).Role);
+
+        Assert.Equal(60000, roster.ById(6).Bubble.RadiusMilliHex);
+        Assert.True(roster.ById(6).Bubble.IsAnInstantBlast);
+    }
+
+    [Fact]
+    public void The_nine_columns_layout_three_added_all_fold()
+    {
+        // A column that is declared and not folded is silent: retune it and the
+        // content hash does not move, so every stored record stamped against
+        // the old value passes the gate against the new one. One case per
+        // column, and the pair that cannot both be zero is spelled as two rows.
+        //
+        // OBSERVED: fold a constant in place of the bubble in UnitType.Fold's
+        // layout-3 branch. The seven bubble cases all come out equal and go
+        // red, which is a bubble that can be retuned without retiring anything
+        // pinned to the old shape.
+        //
+        // A placed row for eight of the nine and a walking one for the shield,
+        // because the two columns belong to opposite halves of the loop: a
+        // tower cannot carry a shield and a creep cannot fire a shot.
+        Hash64 tower = UnitTypeTable.Parse(UpToTheBubbleOf(1, "none none none 0 none 0 0")).ContentHash;
+
+        foreach (string moved in new[]
+        {
+            "1000 self enemy 0 damage 0 0",
+            "1000 target enemy 0 damage 0 0",
+            "1000 self friend 0 damage 0 0",
+            "1000 self enemy 30 damage 0 0",
+            "2000 self enemy 0 damage 0 0",
+            "1000 self enemy 0 speed -40 60",
+            "1000 self enemy 0 speed -50 60",
+            "1000 self enemy 0 speed -40 90",
+        })
+        {
+            Assert.NotEqual(tower, UnitTypeTable.Parse(UpToTheBubbleOf(1, moved)).ContentHash);
+        }
+
+        // The targets column, on the same row.
+        Assert.NotEqual(tower, UnitTypeTable.Parse(UpToTheBubbleOf(3, "none none none 0 none 0 0")).ContentHash);
+
+        // And the shield, on a row that can carry one.
+        const string Walker =
+            "layout 3\nunit 1 body moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 ";
+
+        Assert.NotEqual(
+            UnitTypeTable.Parse(Walker + "0 1 none none none 0 none 0 0").ContentHash,
+            UnitTypeTable.Parse(Walker + "150 1 none none none 0 none 0 0").ContentHash);
+
+        // And the one pair the fold has to keep apart that is not a number: a
+        // bubble of no radius is the centre alone, and no bubble is no bubble.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(UpToTheBubbleOf(1, "0 self enemy 0 damage 0 0")).ContentHash,
+            UnitTypeTable.Parse(UpToTheBubbleOf(1, "none none none 0 none 0 0")).ContentHash);
+    }
+
+    /// <summary>
+    /// The fixture row with a shot count and a bubble written into it. The row
+    /// is a tower, because eight of the nine columns belong to something that
+    /// shoots.
+    /// </summary>
+    private static string UpToTheBubbleOf(int targets, string bubble) =>
+        "layout 3\nunit 1 thing placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 "
+        + targets.ToString(System.Globalization.CultureInfo.InvariantCulture)
+        + " "
+        + bubble;
 
     [Fact]
     public void An_empty_ladder_folds_nothing_and_hands_back_the_table_it_was_given()

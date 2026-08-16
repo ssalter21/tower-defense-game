@@ -1069,3 +1069,51 @@ different things spelled the same way in the same row was the whole of the objec
 the armour type keeps its name, and the roster's [expectation of an "arcane
 shield"](roster.md#open-questions) is satisfied by the pool plus the Necromancer's aura granting it — which is
 what that entry always described.
+
+## 16 August 2026, later still — nine columns land, and one guess in the cost rule stops being one
+
+**`content/units.txt` goes `layout 2` → `layout 3`**, gaining the nine columns
+[#213](https://github.com/ssalter21/tower-defense-game/issues/213) fixed as a list, built in
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216). The reasoning is
+[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md). Two lines of the bill above are paid at
+once — the layout and `match-state/1` → `match-state/2` — and `SimulationVersion` goes **8 → 9** with them.
+
+| | Before | After | Why |
+|---|---|---|---|
+| **the `bodies` term** of the placed-unit cost rule | Hardcoded `Delivery == Projectile ? 3 : 1` | **The `targets` column** | It was a guess standing in for a column that did not exist. A Marksman would otherwise be priced at a single-target Archer's price |
+| **what a bubble may carry** | — | Damage, or one of speed, cooldown, armour, shield. **Not range**, refused by name with the reason attached | Coverage is intersected with the route once, at load. A payload that moved a range drags the two dimensions back into the tick loop |
+| **a row claiming both shot shapes** | — | **Refused at load** | *n* targets draws *n* rolls and a damage bubble draws one. A row claiming both draws one of them per body of the other, and the draw count is part of what every stored record replays through |
+| **a bubble the tick loop cannot resolve** | — | **Refused when a match is built from it**, by name | The alternative is a Cryomancer standing on the board, firing, and slowing nothing, with a column that parsed perfectly and nothing anywhere saying so |
+
+### What moved in the artefacts, and what did not
+
+**Nothing about the committed match moved.** Every row authors one shot, no shield and no bubble, so the same
+wave leaks the same twelve creeps on the same tick 5283, the four landmark ticks are unchanged, the committed
+run still dies in round four having dealt 229, and `content/sweep.csv` is byte for byte what it was —
+regenerated and unmoved, which is the honest result and not a tuned one. What moved is the hashes: the roster's
+under `unit-types/3`, the match's under `match-state/2`, and every artefact that carries one of them.
+
+**The rule fingerprint could not see it, and for the second time running the fix was the scenario.** Every half
+of that fold is fought over a layout-1 or layout-2 roster, and no such row can carry a shield, a shot count
+above one or a bubble at all — so #216's rules run in all five halves and are visible in none. The fold gained
+a sixth half whose roster is layout 3 and whose two towers are the two shot shapes, the label went to
+`rule-fingerprint/7`, and the row is `(9u, 0x1BAEAF1DA57D7D8EUL)`. With `Match.Absorbed`'s body struck out —
+the shield spent by nothing, every other line untouched — the same scenario folds `0xF8B857E6175940A5`, which
+is what makes the row evidence rather than a number somebody wrote down.
+
+### The Mage is priced for a splash nobody has authored
+
+| | The rule prices | The row costs |
+|---|---|---|
+| **Mage** | **30 gold** — 275 average damage, a 54-tick cooldown, one body | **92 gold** — three bodies' worth |
+
+**This is a finding rather than a decision.** The old `bodies` guess read three off the delivery column, so the
+Mage's price looked derived; what it was doing was propping up a splash the simulation has never had.
+[The roster](roster.md#4--mage--tier-1--status-live) signs "splash of one additional hex", radius 1000, and
+layout 3 is the first schema that could carry it — as a bubble on the target with a damage payload.
+
+**#216 authored no bubble on the Mage and moved no price**, because either edit is somebody deciding what a
+Mage is. What it did instead is pin the gap in `ContentTests` with both numbers in it, so the question stands
+in the artefact rather than being silently answered. Three ways out, and none of them is a ticket's to take:
+author the splash and accept that a radius is unpriced; reprice the row to 30 and accept a Mage at a third of
+its old price; or make it genuinely fire three shots, which is a different tower.

@@ -137,14 +137,23 @@ the purse — the sweep reporting where a run sat is the cheap one.
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send
 someone who does not have the game is a different artefact from one you watch in the client.
 
-**What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and a
-bodies-under-a-splash multiplier; the walking rule prices health and armour points. It prices **neither range,
-nor bubble radius, nor shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made range worth substantially
-more by tying it to elevation. One correction is owed rather than open: `bodies` currently guesses 3 from
-`Delivery == Projectile` and should read the `targets` column instead, so a Marksman is priced on arrival. The
-rest is deliberately left silent until the map has been measured, because a coefficient guessed against the
-corridor is a coefficient priced against geometry that is going away. **The silence is not a judgement that
-these levers are free.**
+**What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and the bodies a
+shot hits; the walking rule prices health and armour points. It prices **neither range, nor bubble radius, nor
+shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made
+range worth substantially more by tying it to elevation. That silence is deliberate and stays until the map
+has been measured, because a coefficient guessed against the one-hex corridor is a coefficient priced against
+geometry that is going away. **The silence is not a judgement that these levers are free.**
+
+**The correction that was owed is paid, and it left a row exposed.**
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216) made `bodies` read the `targets` column
+instead of guessing 3 from `Delivery == Projectile`, so a Marksman is priced on arrival. What the guess had
+been doing besides that is holding up the **Mage**: the rule prices it at **30 gold** and the row costs **92**,
+because 92 is three bodies' worth of a splash the simulation has never had. `docs/roster.md` signs the splash —
+one additional hex, radius 1000 — and `units.txt` layout 3 is the first schema that could carry it, as a bubble
+on the target with a damage payload. **#216 authored no such bubble and moved no price**, because either is a
+decision about what a Mage is; the gap is pinned in `ContentTests` with both numbers in it. Three ways out:
+author the splash and accept an unpriced radius, reprice the row to what it does, or make it genuinely fire
+three shots — which is a different tower.
 
 **Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
 makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing

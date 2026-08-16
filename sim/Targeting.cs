@@ -74,33 +74,127 @@ namespace Sim
         /// <returns>The index into <paramref name="reachable"/>, or -1 when it is empty.</returns>
         public static int Chosen(ReadOnlySpan<WalkingTarget> reachable, out int tiebreaksBroken)
         {
+            Span<int> one = stackalloc int[1];
+
+            return Chosen(reachable, one, out tiebreaksBroken) == 0 ? -1 : one[0];
+        }
+
+        /// <summary>
+        /// The same rule, asked for as many creeps as a shot has shots: the
+        /// first <paramref name="chosen"/>.Length of them in the order the rule
+        /// puts them in, nearest the exit first.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It is the same total order taken further along, not a second
+        /// rule.</b> One shot is this with room for one answer, which is what
+        /// the overload above is -- so a Marksman firing three and an Archer
+        /// firing one acquire by one comparison, and the day the rule moves,
+        /// both move.
+        /// </para>
+        /// <para>
+        /// <b><paramref name="tiebreaksBroken"/> is counted against the best
+        /// seen so far and against nothing else.</b> It is span-order-dependent
+        /// by design and it feeds the state hash, which is the whole of its
+        /// job: it is the field that moves when two runs disagree about unit
+        /// ordering and agree about everything a view can see. Counting a tie
+        /// per place in the order instead would have made the count depend on
+        /// how many shots the row fires, so a Marksman and an Archer standing in
+        /// the same crowd would fold different numbers for the same crowd. What
+        /// is counted is how many level pairs the rule had to settle, which is a
+        /// fact about the creeps rather than about who is looking at them.
+        /// </para>
+        /// <para>
+        /// <b>The insertion walks a handful of places and allocates nothing.</b>
+        /// A shot count is a small integer -- three, for the row that named this
+        /// column -- so ordering the whole span to take the head of it would be
+        /// the expensive way round, and this is the tick loop.
+        /// </para>
+        /// </remarks>
+        /// <param name="reachable">The walking creeps in range, in ascending id order.</param>
+        /// <param name="chosen">
+        /// Where the indices go, best first. Its length is how many are wanted;
+        /// only the returned count of entries is written.
+        /// </param>
+        /// <param name="tiebreaksBroken">
+        /// How many candidates were level with the best at the moment they were
+        /// looked at.
+        /// </param>
+        /// <returns>How many of <paramref name="chosen"/> were filled.</returns>
+        public static int Chosen(
+            ReadOnlySpan<WalkingTarget> reachable,
+            Span<int> chosen,
+            out int tiebreaksBroken)
+        {
             tiebreaksBroken = 0;
 
-            if (reachable.Length == 0)
+            if (chosen.Length == 0)
             {
-                return -1;
+                throw new ArgumentException(
+                    "A shot asked target selection for no targets at all. A row fires at least one shot "
+                    + "an attack, and a caller with nothing to fill is a caller that should not have "
+                    + "asked.",
+                    nameof(chosen));
             }
 
-            int best = 0;
+            int found = 0;
 
-            for (int index = 1; index < reachable.Length; index++)
+            for (int index = 0; index < reachable.Length; index++)
             {
-                if (reachable[index].DistanceAlongRoute > reachable[best].DistanceAlongRoute)
-                {
-                    best = index;
-                }
-                else if (reachable[index].DistanceAlongRoute == reachable[best].DistanceAlongRoute)
+                // The tie is counted against the best of everything looked at so
+                // far, which is chosen[0] before this candidate joins the order.
+                if (found > 0 && reachable[index].DistanceAlongRoute == reachable[chosen[0]].DistanceAlongRoute)
                 {
                     tiebreaksBroken++;
-
-                    if (reachable[index].Id < reachable[best].Id)
-                    {
-                        best = index;
-                    }
                 }
+
+                found = Insert(reachable, chosen, found, index);
             }
 
-            return best;
+            return found;
         }
+
+        /// <summary>
+        /// Puts a candidate in its place in the ordered head, dropping whatever
+        /// falls off the end.
+        /// </summary>
+        private static int Insert(
+            ReadOnlySpan<WalkingTarget> reachable,
+            Span<int> chosen,
+            int found,
+            int candidate)
+        {
+            int place = found;
+
+            while (place > 0 && Beats(reachable[candidate], reachable[chosen[place - 1]]))
+            {
+                place--;
+            }
+
+            if (place >= chosen.Length)
+            {
+                return found;
+            }
+
+            int last = found < chosen.Length ? found : chosen.Length - 1;
+
+            for (int index = last; index > place; index--)
+            {
+                chosen[index] = chosen[index - 1];
+            }
+
+            chosen[place] = candidate;
+
+            return found < chosen.Length ? found + 1 : found;
+        }
+
+        /// <summary>
+        /// The order itself: furthest along the corridor, and the lower id where
+        /// two are level. Written once, so the single-target answer and the
+        /// n-target one cannot come apart.
+        /// </summary>
+        private static bool Beats(WalkingTarget candidate, WalkingTarget standing) =>
+            candidate.DistanceAlongRoute > standing.DistanceAlongRoute
+            || (candidate.DistanceAlongRoute == standing.DistanceAlongRoute && candidate.Id < standing.Id);
     }
 }
