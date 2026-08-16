@@ -58,12 +58,22 @@ namespace Sim
     /// diverges the state hash on the tick it happened.
     /// </para>
     /// <para>
-    /// <b>The order of work inside a tick is part of the rules.</b> Creeps move,
-    /// then dying creeps age, then projectiles fly and land, then towers act,
-    /// then the dead are cleared away, then the tick number advances and the
-    /// wave releases whatever is due. Changing that order changes replays even
+    /// <b>The order of work inside a tick is part of the rules.</b> Whatever has
+    /// run out expires, then creeps move, then dying creeps age, then
+    /// projectiles fly and land, then towers act, then auras pulse, then the
+    /// dead are cleared away, then the tick number advances and the wave
+    /// releases whatever is due. Changing that order changes replays even
     /// though no number in any file moved, which is exactly what the simulation
     /// version exists to say.
+    /// </para>
+    /// <para>
+    /// <b>Expiry opens the tick and emission closes it, and that is what makes
+    /// a duration mean one thing.</b> An effect landing on tick <c>t</c> is in
+    /// force for ticks <c>t + 1</c> through <c>t + duration</c> whichever phase
+    /// emitted it -- a bubble that fires with an attack lands in the middle of
+    /// a tick and one that pulses lands at the end of one, and neither is worth
+    /// a different sentence. See <see cref="Effects"/>, which is where a
+    /// modifier is held and where that arithmetic lives.
     /// </para>
     /// </remarks>
     public sealed class Match
@@ -103,7 +113,16 @@ namespace Sim
         /// hashed changes, which retires every golden trace pinned to the old
         /// set loudly rather than leaving them silently comparing fewer things.
         /// </summary>
-        private const string HashLabel = "match-state/1";
+        /// <remarks>
+        /// <c>match-state/3</c> is the layout that folds what every unit is
+        /// carrying -- the magnitude and the expiry of each timed effect on it,
+        /// the pool a shield bubble granted it, and how long until its own aura
+        /// pulses next. All of it is state a view never sees, which is exactly
+        /// the kind of field this fold exists to watch: two runs that disagree
+        /// about when a slow ends look identical for as long as it lasts and are
+        /// already different matches.
+        /// </remarks>
+        private const string HashLabel = "match-state/3";
 
         /// <summary>
         /// A match that has not ended by here is a match that is never going to,
@@ -144,7 +163,20 @@ namespace Sim
 
         private readonly Fix64[] _lateralOffsets;
 
-        /// <summary>One entry per wave order: how far its units move each tick.</summary>
+        /// <summary>
+        /// One entry per wave order: how far its units move each tick with
+        /// nothing on them.
+        /// </summary>
+        /// <remarks>
+        /// <b>What a creep walks at is on the creep, and this is where it
+        /// starts.</b> A modifier is per unit rather than per order -- two
+        /// Minions in one column are not slowed together -- so the tick loop
+        /// reads <see cref="Creep.Step"/> and this is read once, when one
+        /// spawns. It stays a field because it is also the one place the
+        /// truncated remainder that the state hash exists to watch is created
+        /// for an unmodified creep, and because the wave's speeds are what the
+        /// termination invariant below is proved against.
+        /// </remarks>
         private readonly Fix64[] _stepPerTick;
 
         /// <summary>One entry per wave order: how many of its units have been released.</summary>
@@ -175,6 +207,29 @@ namespace Sim
         /// </remarks>
         private readonly WalkingTarget[] _reachable;
 
+        /// <summary>
+        /// Every tower's acquired targets, laid end to end: tower <c>t</c> owns
+        /// the <see cref="_targetsPerTower"/> entries starting at
+        /// <c>t * _targetsPerTower</c>, and holds
+        /// <see cref="Tower.TargetCount"/> of them.
+        /// </summary>
+        /// <remarks>
+        /// One flat array rather than an array per tower, for the reason
+        /// <see cref="_reachable"/> is a field: seeking re-simulates, so
+        /// anything the tick path allocates is a cost every scrub of the slider
+        /// pays. The width is the widest row in this defense, so a board of
+        /// single-target towers is exactly the one integer per tower it always
+        /// was.
+        /// </remarks>
+        private readonly int[] _towerTargets;
+
+        /// <summary>
+        /// How many shots the widest row standing in this defense fires. Every
+        /// tower's slice is this wide, so the arithmetic finding a tower's
+        /// targets is a multiply rather than a walk.
+        /// </summary>
+        private readonly int _targetsPerTower;
+
         private Projectile[] _projectiles;
 
         private int _creepCount;
@@ -192,6 +247,20 @@ namespace Sim
         private int _killed;
 
         private int _shotsFired;
+
+        /// <summary>
+        /// Whether any tower standing here pulses on a clock of its own, and
+        /// whether anything the wave sends does.
+        /// </summary>
+        /// <remarks>
+        /// Read once, at construction, from rows that cannot change afterwards.
+        /// A match whose content authors no aura -- which is every match the
+        /// committed roster can produce -- then pays two comparisons a tick for
+        /// the whole phase rather than a walk over everything on the board.
+        /// </remarks>
+        private readonly bool _towersPulse;
+
+        private readonly bool _walkersPulse;
 
         /// <summary>
         /// How many times a target-selection tie has been broken. Internal, and
@@ -257,9 +326,12 @@ namespace Sim
             _released = new int[wave.Count];
             _leakedByOrder = new int[wave.Count];
 
+            bool walkersPulse = false;
+
             for (int index = 0; index < wave.Count; index++)
             {
-                UnitType type = wave.Orders[index].Type;
+                UnitOrder order = wave.Orders[index];
+                UnitType type = order.Type;
 
                 if (type.SpeedMilliHexPerTick <= 0)
                 {
@@ -270,13 +342,41 @@ namespace Sim
                         + "reaches the exit and never dies, so the match it is in cannot end.");
                 }
 
+                RequireResolvable(type);
+                RequireItArrives(order);
+
+                walkersPulse = walkersPulse || type.Bubble.IsAnAura;
+
                 // Once, here, rather than in the tick loop: this is a division,
                 // and it is also the one place the truncated remainder that the
                 // state hash exists to watch is created.
                 _stepPerTick[index] = Fix64.FromRatio(type.SpeedMilliHexPerTick, MilliHexPerHex);
             }
 
+            _walkersPulse = walkersPulse;
+
             _towers = new Tower[layout.Count];
+            _targetsPerTower = 1;
+
+            bool towersPulse = false;
+
+            for (int index = 0; index < layout.Count; index++)
+            {
+                UnitType standing = layout.Towers[index].Type;
+
+                RequireResolvable(standing);
+
+                towersPulse = towersPulse || standing.Bubble.IsAnAura;
+
+                if (standing.Targets > _targetsPerTower)
+                {
+                    _targetsPerTower = standing.Targets;
+                }
+            }
+
+            _towersPulse = towersPulse;
+
+            _towerTargets = new int[layout.Count * _targetsPerTower];
 
             for (int index = 0; index < layout.Count; index++)
             {
@@ -308,6 +408,110 @@ namespace Sim
 
             Release(0);
             Fold();
+        }
+
+        /// <summary>
+        /// A row this tick loop can actually resolve, or a refusal naming what
+        /// about it is not.
+        /// </summary>
+        /// <remarks>
+        /// <b>What used to be here was the whole of the bubble.</b> Between
+        /// #216 and #217 a row whose bubble carried a period or a payload that
+        /// was not damage was refused right here, because the columns had
+        /// landed and the machinery behind them had not -- and a Cryomancer
+        /// standing on the board firing and slowing nothing, with nothing
+        /// anywhere saying so, is the failure that refusal existed to prevent.
+        /// <see cref="Effects"/> is that machinery, so the refusal is gone and
+        /// the rows play. What is left is the one shape no schema check can
+        /// catch, because it is about this loop rather than about the row.
+        /// </remarks>
+        private static void RequireResolvable(UnitType type)
+        {
+            // Nothing that walks attacks in this loop, so a shot count on a
+            // walking row is a column read by nothing -- the same failure a
+            // bubble nobody emits would be, and refused in the same place.
+            if (type.Role == UnitRole.Moving && type.Targets > 1)
+            {
+                throw new SimulationException(
+                    type.ToString()
+                    + " walks and fires at "
+                    + type.Targets.ToString(CultureInfo.InvariantCulture)
+                    + " targets. Nothing that walks the corridor attacks anything in this simulation, so "
+                    + "the count would be read by nothing at all.");
+            }
+        }
+
+        /// <summary>
+        /// That an order of this wave reaches the exit inside
+        /// <see cref="TickCeiling"/> even walking at the slowest speed any
+        /// combination of effects can leave it at.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the termination invariant, and it is arithmetic rather
+        /// than care.</b> The constructor refuses a unit with no speed because
+        /// a unit that walks a corridor at nothing per tick never reaches the
+        /// exit and never dies, so the match it is in cannot end. A runtime
+        /// modifier bypasses that guard entirely -- a slow of a hundred percent
+        /// is a legal authoring of a legal column -- and what the match does
+        /// instead of hanging is run to the ceiling and throw, thousands of
+        /// ticks after the mistake.
+        /// </para>
+        /// <para>
+        /// <b>So the floor is what makes a hung match unreachable, and this is
+        /// the proof of it for this map and this wave.</b>
+        /// <see cref="Effects.FloorSpeed"/> is the slowest a creep can ever be
+        /// made to walk; the worst case is the last unit of the order leaking
+        /// at that speed; and if that arrives before the ceiling then no
+        /// arrangement of effects can produce a match that does not end. It is
+        /// checked here rather than asserted in prose because the numbers it is
+        /// true of are the map's route length and the wave's cadence, and both
+        /// are arguments.
+        /// </para>
+        /// </remarks>
+        private void RequireItArrives(UnitOrder order)
+        {
+            UnitType type = order.Type;
+            int floor = Effects.FloorSpeed(type.SpeedMilliHexPerTick);
+
+            // The step the creep would actually take, and not the milli-hexes
+            // it was worked out from. Those are two different numbers -- the
+            // conversion into Q32.32 truncates -- and the difference is in the
+            // direction that flatters the answer, so the bound has to be taken
+            // against the smaller of the two. The route length is taken raw
+            // for the same reason: a whole-hex count discards up to a hex of
+            // corridor, which is hundreds of ticks at a floored speed.
+            long step = Fix64.FromRatio(floor, MilliHexPerHex).Raw;
+
+            // Ceiling division, so a remainder is a whole extra tick of walking
+            // rather than a rounding that flatters it again. The leak test is
+            // "at or past the route length", so this is exactly the number of
+            // steps that reaches it.
+            long crossing = ((_routeLength.Raw + step) - 1) / step;
+            long latest = order.TickOffset
+                + ((long)SpawnIntervalTicks * (order.Count - 1))
+                + crossing
+                + type.DyingTicks;
+
+            if (latest < TickCeiling)
+            {
+                return;
+            }
+
+            throw new SimulationException(
+                "The wave sends "
+                + order.Count.ToString(CultureInfo.InvariantCulture)
+                + " of "
+                + type.ToString()
+                + ", whose slowest possible walk -- "
+                + floor.ToString(CultureInfo.InvariantCulture)
+                + " thousandths of a hex a tick, which is the floor under every effect at once -- puts the "
+                + "last of them at the exit on tick "
+                + latest.ToString(CultureInfo.InvariantCulture)
+                + ", at or past the ceiling of "
+                + TickCeiling.ToString(CultureInfo.InvariantCulture)
+                + ". The floor is what makes a match that cannot end unreachable by arithmetic, and a "
+                + "route this long against a speed this small is where the arithmetic stops holding.");
         }
 
         /// <summary>The seed the dice were started from.</summary>
@@ -501,11 +705,13 @@ namespace Sim
         /// <summary>One tick. The order of these phases is part of the rules.</summary>
         private void Step(IMatchEvents? events)
         {
+            ExpireEffects();
             MoveCreeps(events);
             ReportPasses(events);
             AgeDyingCreeps();
             FlyProjectiles(events);
             RunTowers(events);
+            PulseAuras();
             ClearAwayTheGone();
 
             Tick++;
@@ -564,6 +770,19 @@ namespace Sim
             creep.Distance = Fix64.Zero;
             creep.Lateral = _lateralOffsets[_spawnOrdinal % _lateralOffsets.Length];
             creep.Hp = type.MaxHp;
+
+            // What it walks at, from what its order walks at. Nothing is on it
+            // yet, so this is the authored step exactly -- and every later value
+            // of it is one fused expression evaluated where the modifier moved,
+            // never the truncated number here multiplied a second time.
+            creep.Step = _stepPerTick[orderIndex];
+            creep.Effects = default;
+            creep.PulseIn = 0;
+
+            // The pool a row authored, and the whole of where one comes from
+            // today: nothing grants a shield yet, and nothing regenerates one,
+            // so a creep spawns with what its row says and spends it.
+            creep.Shield = type.Shield;
             creep.Phase = CreepPhase.Walking;
             creep.TicksInState = 0;
 
@@ -588,7 +807,7 @@ namespace Sim
                     continue;
                 }
 
-                creep.Distance += _stepPerTick[creep.OrderIndex];
+                creep.Distance += creep.Step;
                 creep.TicksInState++;
 
                 if (creep.Distance >= _routeLength)
@@ -670,8 +889,145 @@ namespace Sim
         }
 
         /// <summary>How far a creep moved on the tick just run. Nothing if it is not walking.</summary>
-        private Fix64 StepThisTick(ref Creep creep) =>
-            creep.Phase == CreepPhase.Walking ? _stepPerTick[creep.OrderIndex] : Fix64.Zero;
+        /// <remarks>
+        /// <b>The creep's own step and not its order's.</b> A modifier is per
+        /// unit, so two creeps released by one order can be walking at
+        /// different speeds -- and this is where "where it was a tick ago" is
+        /// worked out, so reading the order's step would silently mis-report
+        /// every overtake involving a creep anything had landed on. Nothing
+        /// between <see cref="MoveCreeps"/> and here moves a step: expiry opens
+        /// the tick and every emitter runs after both.
+        /// </remarks>
+        private static Fix64 StepThisTick(ref Creep creep) =>
+            creep.Phase == CreepPhase.Walking ? creep.Step : Fix64.Zero;
+
+        /// <summary>
+        /// Clears every modifier that has run out, and puts whatever it was on
+        /// back where the row it came from says it should be.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It opens the tick, which is what makes a duration mean one
+        /// thing.</b> An effect is stored with the last tick it is in force on
+        /// rather than with a countdown, so one that landed on tick <c>t</c>
+        /// with a duration of <c>n</c> is cleared at the top of tick
+        /// <c>t + n + 1</c> and has therefore been on for exactly <c>n</c>
+        /// ticks of walking, shooting and being shot -- whichever phase of tick
+        /// <c>t</c> emitted it.
+        /// </para>
+        /// <para>
+        /// <b>The step is recomputed here and only here, and only when the
+        /// speed slot actually moved.</b> That is the other half of truncating
+        /// once: the conversion into Q32.32 is a division, and doing it per
+        /// tick would be spending the re-simulation budget re-deriving a number
+        /// that changes a handful of times in a match.
+        /// </para>
+        /// </remarks>
+        private void ExpireEffects()
+        {
+            for (int index = 0; index < _creepCount; index++)
+            {
+                ref Creep creep = ref _creeps[index];
+
+                if (creep.Effects.Any && creep.Effects.Expire(Tick))
+                {
+                    creep.Step = StepUnder(creep.Type, creep.Effects.SpeedMagnitude);
+                }
+            }
+
+            for (int index = 0; index < _towers.Length; index++)
+            {
+                ref Tower tower = ref _towers[index];
+
+                if (tower.Effects.Any)
+                {
+                    tower.Effects.Expire(Tick);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Fires every bubble that is due to pulse on its own clock.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>An aura is a bubble with a period and nothing else</b>, so this
+        /// phase emits exactly what a shot emits and differs only in what set
+        /// the clock. The counter is per emitter and counts down, so a tower
+        /// that has stood since tick zero pulses on ticks 0, <c>period</c>,
+        /// <c>2 * period</c> and so on, and a creep pulses on the same cadence
+        /// measured from the tick it spawned -- which is a fact about the unit
+        /// rather than about the wall clock, and is therefore the same in every
+        /// replay of the same record.
+        /// </para>
+        /// <para>
+        /// <b>It runs after the towers, so an aura never acts on the tick it
+        /// landed.</b> Together with expiry opening the tick, that is what
+        /// makes a duration mean exactly the ticks after the one it was emitted
+        /// on.
+        /// </para>
+        /// <para>
+        /// <b>This is where creep positions come back into the tick loop, and
+        /// it is paid for knowingly.</b> A radius is measured in hexes so that
+        /// it reaches the neighbouring leg of a fold rather than only the
+        /// creeps behind it in the column -- route distance was the free
+        /// alternative and was not taken -- so a pulse turns the one dimension
+        /// the loop keeps back into two. It is a table lookup per body rather
+        /// than a search, and it is amortised against the period: a tower
+        /// pulsing every second costs it once in thirty ticks and never on the
+        /// other twenty-nine. <see cref="TowerCoverage"/> is untouched, and
+        /// range is still intersected with the route at load.
+        /// </para>
+        /// </remarks>
+        private void PulseAuras()
+        {
+            if (_towersPulse)
+            {
+                for (int index = 0; index < _towers.Length; index++)
+                {
+                    ref Tower tower = ref _towers[index];
+                    UnitType type = _layout.Towers[index].Type;
+
+                    if (!type.Bubble.IsAnAura)
+                    {
+                        continue;
+                    }
+
+                    if (tower.PulseIn > 0)
+                    {
+                        tower.PulseIn--;
+                        continue;
+                    }
+
+                    tower.PulseIn = type.Bubble.PeriodTicks - 1;
+                    Spread(type, _layout.Towers[index].Hex, roll: 0, events: null);
+                }
+            }
+
+            if (!_walkersPulse)
+            {
+                return;
+            }
+
+            for (int index = 0; index < _creepCount; index++)
+            {
+                ref Creep creep = ref _creeps[index];
+
+                if (creep.Phase != CreepPhase.Walking || !creep.Type.Bubble.IsAnAura)
+                {
+                    continue;
+                }
+
+                if (creep.PulseIn > 0)
+                {
+                    creep.PulseIn--;
+                    continue;
+                }
+
+                creep.PulseIn = creep.Type.Bubble.PeriodTicks - 1;
+                Spread(creep.Type, CellUnder(creep.Distance), roll: 0, events: null);
+            }
+        }
 
         private void AgeDyingCreeps()
         {
@@ -723,7 +1079,11 @@ namespace Sim
 
                 if (projectile.TicksInFlight >= projectile.FlightDurationTicks)
                 {
-                    Damage(target, projectile.Damage, projectile.Type, events);
+                    // The creep the lookup above already found, handed on rather
+                    // than looked up a second time: an arriving projectile has a
+                    // live target by construction, because one without is
+                    // orphaned three lines up.
+                    Land(projectile.Type, projectile.Origin, target, projectile.Damage, events);
                     projectile.Gone = true;
                 }
             }
@@ -747,20 +1107,21 @@ namespace Sim
                             break;
                         }
 
-                        int target = Acquire(index);
+                        int acquired = Acquire(index, type);
 
-                        if (target == 0)
+                        if (acquired == 0)
                         {
                             break;
                         }
 
-                        tower.TargetId = target;
+                        tower.TargetCount = acquired;
+                        tower.TargetId = TargetOf(index, 0);
                         tower.State = TowerState.Windup;
                         tower.TicksInState = 0;
 
                         if (type.WindupTicks == 0)
                         {
-                            Fire(ref tower, type, events);
+                            Fire(index, ref tower, type, events);
                         }
 
                         break;
@@ -770,7 +1131,7 @@ namespace Sim
 
                         if (tower.TicksInState >= type.WindupTicks)
                         {
-                            Fire(ref tower, type, events);
+                            Fire(index, ref tower, type, events);
                         }
 
                         break;
@@ -789,17 +1150,20 @@ namespace Sim
         }
 
         /// <summary>
-        /// What a tower shoots at, as the id of a creep, or zero when nothing
-        /// it can reach is walking.
+        /// What a tower shoots at: its shots' worth of creeps, written into its
+        /// own slice of <see cref="_towerTargets"/> nearest the exit first, and
+        /// how many it found.
         /// </summary>
         /// <remarks>
-        /// The rule is <see cref="Targeting.Chosen"/> and none of it is spelled
-        /// here. This is the projection onto it: walk the creeps once, keep the
-        /// walking ones this tower's coverage reaches, hand them over in the
-        /// order the array is kept in -- which is ascending id -- and add the
-        /// ties it broke to the running count the state hash folds.
+        /// The rule is <see cref="Targeting.Chosen(ReadOnlySpan{WalkingTarget}, Span{int}, out int)"/>
+        /// and none of it is spelled here. This is the projection onto it: walk
+        /// the creeps once, keep the walking ones this tower's coverage reaches,
+        /// hand them over in the order the array is kept in -- which is
+        /// ascending id -- and add the ties it broke to the running count the
+        /// state hash folds. A row firing one shot asks for one answer, which is
+        /// the same call with a narrower span.
         /// </remarks>
-        private int Acquire(int tower)
+        private int Acquire(int tower, UnitType type)
         {
             int reachable = 0;
 
@@ -816,36 +1180,82 @@ namespace Sim
                 reachable++;
             }
 
-            int chosen = Targeting.Chosen(
+            var chosen = new Span<int>(_towerTargets, tower * _targetsPerTower, type.Targets);
+
+            int found = Targeting.Chosen(
                 new ReadOnlySpan<WalkingTarget>(_reachable, 0, reachable),
+                chosen,
                 out int tiebreaks);
 
             _tiebreaksBroken += tiebreaks;
 
-            return chosen < 0 ? 0 : _reachable[chosen].Id;
+            // The slice holds indices into the candidate span; what a tower
+            // keeps is entity ids, because a candidate's position in a span is
+            // gone by the time the shot is released.
+            for (int index = 0; index < found; index++)
+            {
+                chosen[index] = _reachable[chosen[index]].Id;
+            }
+
+            return found;
         }
 
+        /// <summary>One of a tower's acquired targets, by entity id.</summary>
+        private int TargetOf(int tower, int shot) => _towerTargets[(tower * _targetsPerTower) + shot];
+
         /// <summary>
-        /// Releases the shot a tower committed to when it started winding up.
+        /// Releases the shots a tower committed to when it started winding up:
+        /// one per target it acquired, each with its own draw.
         /// </summary>
         /// <remarks>
-        /// <b>The shot happens whatever became of the target.</b> A tower that
+        /// <para>
+        /// <b>The shots happen whatever became of the targets.</b> A tower that
         /// commits and then finds its target dead still fires, still rolls, and
         /// still wastes the shot -- which is what makes overkill real: two towers
         /// covering one stretch of corridor can both commit to the same creep,
         /// and the second one's damage lands on something already dying and is
-        /// discarded. Re-checking the target here would quietly make that
+        /// discarded. Re-checking the targets here would quietly make that
         /// impossible, and with it the whole reason the ranges were made to
         /// overlap.
+        /// </para>
+        /// <para>
+        /// <b>n targets is n draws, in acquisition order.</b> That is the half
+        /// of the determinism contract this loop keeps: the dice stream's
+        /// position is folded every tick, so how many numbers an attack takes
+        /// off it and in what order is part of what every stored record replays
+        /// through. The other half is the bubble, which is one shot and one draw
+        /// however many bodies it lands on -- and a row cannot be both, which is
+        /// settled where the columns are read.
+        /// </para>
         /// </remarks>
-        private void Fire(ref Tower tower, UnitType type, IMatchEvents? events)
+        private void Fire(int tower, ref Tower state, UnitType type, IMatchEvents? events)
+        {
+            for (int shot = 0; shot < state.TargetCount; shot++)
+            {
+                ReleaseShot(tower, type, TargetOf(tower, shot), events);
+            }
+
+            state.State = TowerState.Backswing;
+            state.TicksInState = 0;
+
+            if (type.BackswingTicks == 0)
+            {
+                GoIdle(ref state, type);
+            }
+        }
+
+        /// <summary>
+        /// One shot of one attack: one draw, delivered the way this row delivers
+        /// damage.
+        /// </summary>
+        private void ReleaseShot(int tower, UnitType type, int targetId, IMatchEvents? events)
         {
             // The one and only draw. Once per shot, on the one stream, whether
             // or not the shot is going to land on anything.
             int damage = _dice.NextInRange(type.DamageMin, type.DamageMax + 1);
             _shotsFired++;
 
-            events?.TowerFired(tower.Id, tower.TargetId);
+            events?.TowerFired(_towers[tower].Id, targetId);
 
             switch (type.Delivery)
             {
@@ -853,41 +1263,310 @@ namespace Sim
                     // No snapshot entity of any kind: a hitscan shot exists as an
                     // event and as whatever the view draws and forgets, and
                     // nothing else.
-                    Damage(FindWalkingCreep(TargetRef.Creep(tower.TargetId)), damage, type, events);
+                    Land(
+                        type,
+                        _layout.Towers[tower].Hex,
+                        FindWalkingCreep(TargetRef.Creep(targetId)),
+                        damage,
+                        events);
                     break;
 
                 case Delivery.Projectile:
-                    Launch(type, tower.TargetId, damage);
+                    Launch(type, _layout.Towers[tower].Hex, targetId, damage);
                     break;
 
                 case Delivery.None:
                     throw new SimulationException(
                         "Tower "
-                        + tower.Id.ToString(CultureInfo.InvariantCulture)
+                        + _towers[tower].Id.ToString(CultureInfo.InvariantCulture)
                         + " is "
                         + type.ToString()
                         + ", which delivers no damage, and it has fired. A unit that cannot attack should "
                         + "never have acquired a target.");
             }
+        }
 
-            tower.State = TowerState.Backswing;
-            tower.TicksInState = 0;
+        /// <summary>
+        /// Where a shot's damage actually goes: onto the creep it was aimed at,
+        /// or -- where the row carries a bubble -- onto everything the bubble
+        /// encloses, at the same roll.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One roll, applied whole to every body, with no falloff and no
+        /// friendly fire.</b> The roll was drawn once when the shot was
+        /// released; a bubble spreads it rather than re-rolling it, which is
+        /// exactly what makes a sweep a different shape from a volley and not a
+        /// cheaper spelling of one.
+        /// </para>
+        /// <para>
+        /// <b>A blast centred on a target that is no longer there lands on
+        /// nothing.</b> That is the same rule a single shot at a dead creep
+        /// follows and it is not a special case: the centre of the bubble is a
+        /// fact about where the shot arrived, and a shot that arrived nowhere
+        /// has none. A sweep centred on the tower has one whatever happened to
+        /// the creep that provoked it, because a tower is still standing where
+        /// it stands.
+        /// </para>
+        /// <para>
+        /// <b>A bubble of no radius is the target alone</b>, and that is
+        /// answered here rather than by the sphere. A radius column spells its
+        /// absence as the word <c>none</c>, so zero in it is an authoring --
+        /// the Cryomancer's single-target slow -- where zero in a range column
+        /// is no reach at all. <see cref="Reach.Encloses"/> answers the range
+        /// column's question and would say this bubble reaches nothing
+        /// whatever, which is why <see cref="Bubble.ReachesOnlyItsCentre"/> is
+        /// asked first.
+        /// </para>
+        /// </remarks>
+        /// <param name="target">Where the creep it was aimed at is in the live array, or -1 for nothing.</param>
+        private void Land(UnitType type, Hex origin, int target, int roll, IMatchEvents? events)
+        {
+            Bubble bubble = type.Bubble;
 
-            if (type.BackswingTicks == 0)
+            // A damage bubble fired with the attack is the one shape that
+            // replaces the single landing, because it IS the roll spread over
+            // everything it encloses. Every other row lands its shot where it
+            // was aimed exactly as an unadorned shot does -- a row with no
+            // bubble, a bubble carrying a stat, and a bubble on a clock of its
+            // own, which is not part of this shot at all.
+            if (!bubble.FiresWithTheAttack || bubble.Payload != BubblePayload.Damage)
             {
-                GoIdle(ref tower, type);
+                Damage(target, roll, type, events);
+            }
+
+            if (!bubble.FiresWithTheAttack)
+            {
+                return;
+            }
+
+            // A bubble of no radius is the one body the shot landed on, and
+            // that is what makes it different from a sphere of no size: two
+            // creeps can stand on the same hex, so "the cell the shot arrived
+            // at" would reach both of them. The sphere is never asked -- it
+            // answers false at no radius, deliberately and for the range
+            // column's sake.
+            if (bubble.ReachesOnlyItsCentre)
+            {
+                if (bubble.Payload == BubblePayload.Damage)
+                {
+                    Damage(target, roll, type, events);
+                }
+                else if (target >= 0)
+                {
+                    Afflict(target, bubble);
+                }
+
+                return;
+            }
+
+            // A bubble centred on a body that is no longer there lands on
+            // nothing -- the same rule a single shot at a dead creep follows,
+            // and not a special case: the centre is a fact about where the shot
+            // arrived, and a shot that arrived nowhere has none. A self-centred
+            // bubble always has one, because a tower is still standing where it
+            // stands.
+            if (bubble.Origin == BubbleOrigin.Target && target < 0)
+            {
+                return;
+            }
+
+            Spread(type, CentreOf(bubble, origin, target), roll, events);
+        }
+
+        /// <summary>
+        /// Where a bubble fired with an attack is centred: on the shooter, or
+        /// on the cell the shot arrived at.
+        /// </summary>
+        /// <remarks>
+        /// A blast centred on a target that is no longer there has no centre at
+        /// all, and the caller settles that before asking -- so a target-centred
+        /// bubble reaching here has a live one. A self-centred bubble always
+        /// does, because a tower is still standing where it stands.
+        /// </remarks>
+        private Hex CentreOf(Bubble bubble, Hex origin, int target) =>
+            bubble.Origin == BubbleOrigin.Self ? origin : CellUnder(_creeps[target].Distance);
+
+        /// <summary>
+        /// Puts what a bubble carries on everything of the right side that its
+        /// sphere encloses: a damage roll, or a timed modifier.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One walk, whichever clock fired it and whatever it carries.</b> A
+        /// bubble that goes off with an attack, one that pulses on a period,
+        /// one spreading a roll and one putting a magnitude on a stat are the
+        /// same mechanic and differ only in what set them off and what they
+        /// hand over -- so they all spread through this and there is no second
+        /// copy of "who is inside" to disagree with the first.
+        /// </para>
+        /// <para>
+        /// <b>Which side it reaches is a relationship</b>, exactly as a height
+        /// is: a tower's enemy is what walks and a walker's enemy is what
+        /// stands. <see cref="Bubble.ReachesInto"/> answers it from the
+        /// emitter's own role rather than from an argument beside it, so a
+        /// caller cannot hand it a side the row disagrees with -- and the same
+        /// call is made at load, where a payload the other side has no use for
+        /// is refused.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is said out loud.</b> A modifier is not one of the six
+        /// things a match reports and a seventh would be a view contract rather
+        /// than a rule -- see
+        /// <c>docs/adr/0008-match-events-are-decorative.md</c>. What a slow does
+        /// is in the state hash, where a run that drifts in it is caught.
+        /// </para>
+        /// </remarks>
+        /// <param name="roll">What the dice gave the shot that fired it, and nothing to a pulse.</param>
+        private void Spread(UnitType emitter, Hex centre, int roll, IMatchEvents? events)
+        {
+            Bubble bubble = emitter.Bubble;
+            bool spreadsTheRoll = bubble.Payload == BubblePayload.Damage;
+            int level = Map.LevelAt(centre);
+            int radius = bubble.RadiusMilliHex;
+
+            if (bubble.ReachesInto(emitter.Role) == UnitRole.Placed)
+            {
+                // Nothing in this loop damages a tower, so a roll pointed at
+                // the standing side lands on nothing at all. That is the same
+                // silence a pool or an armour granted to one meets, and it is a
+                // fact about the rows in content/units.txt -- every placed one
+                // of which authors no health pool -- rather than about what a
+                // placed unit is.
+                if (spreadsTheRoll)
+                {
+                    return;
+                }
+
+                for (int tower = 0; tower < _towers.Length; tower++)
+                {
+                    Hex hex = _layout.Towers[tower].Hex;
+
+                    if (Reach.Encloses(centre, level, radius, hex, Map.LevelAt(hex)))
+                    {
+                        _towers[tower].Effects.Land(bubble, Tick, _layout.Towers[tower].Type.MaxHp);
+                    }
+                }
+
+                return;
+            }
+
+            for (int creep = 0; creep < _creepCount; creep++)
+            {
+                if (_creeps[creep].Phase != CreepPhase.Walking)
+                {
+                    continue;
+                }
+
+                Hex cell = CellUnder(_creeps[creep].Distance);
+
+                if (!Reach.Encloses(centre, level, radius, cell, Map.LevelAt(cell)))
+                {
+                    continue;
+                }
+
+                if (spreadsTheRoll)
+                {
+                    Damage(creep, roll, emitter, events);
+                }
+                else
+                {
+                    Afflict(creep, bubble);
+                }
             }
         }
 
-        private void GoIdle(ref Tower tower, UnitType type)
+        /// <summary>
+        /// Lands one bubble's payload on one walking creep, and puts its step
+        /// back together if that moved its speed.
+        /// </summary>
+        private void Afflict(int creep, Bubble bubble)
+        {
+            ref Creep body = ref _creeps[creep];
+
+            if (body.Phase != CreepPhase.Walking)
+            {
+                return;
+            }
+
+            bool speedMoved = body.Effects.Land(bubble, Tick, body.Type.MaxHp);
+
+            if (speedMoved)
+            {
+                body.Step = StepUnder(body.Type, body.Effects.SpeedMagnitude);
+            }
+        }
+
+        /// <summary>
+        /// How far a unit of this row walks in a tick with that modifier on it.
+        /// </summary>
+        /// <remarks>
+        /// <b>One truncation, not two.</b> The percentage is applied to the
+        /// authored milli-hexes as one integer expression and the result is
+        /// converted into Q32.32 once -- which is a different function from
+        /// multiplying the already-truncated step by a fixed-point percentage,
+        /// and the same hazard <see cref="DamageModel"/>'s remarks name for a
+        /// stat pipeline. It is evaluated where the modifier moved rather than
+        /// per tick, so the division happens a handful of times in a match
+        /// instead of once per creep per tick.
+        /// </remarks>
+        private static Fix64 StepUnder(UnitType type, int magnitude) =>
+            Fix64.FromRatio(
+                Effects.ModifiedSpeed(type.SpeedMilliHexPerTick, magnitude),
+                MilliHexPerHex);
+
+        /// <summary>
+        /// The route cell a creep is standing on, which is what a bubble
+        /// measures its sphere against.
+        /// </summary>
+        /// <remarks>
+        /// Distance along the route is the only position a creep has, and a hex
+        /// is what a radius is measured in -- so this is where the one dimension
+        /// the tick loop keeps is turned back into two, at the moment a bubble
+        /// goes off and nowhere else. <see cref="TowerCoverage"/> is still where
+        /// range lives, and it is still evaluated at load: a bubble costs a
+        /// walk over the creeps that are actually on the map, on the ticks a
+        /// bubble actually fires.
+        /// </remarks>
+        private Hex CellUnder(Fix64 distance)
+        {
+            int step = distance.ToIntFloor();
+
+            if (step < 0 || step >= Map.Route.Count)
+            {
+                throw new SimulationException(
+                    "A walking creep is "
+                    + distance.ToString()
+                    + " hexes along a route of "
+                    + Map.Route.Count.ToString(CultureInfo.InvariantCulture)
+                    + " cells. A creep past the end of the route has left the map and is not walking.");
+            }
+
+            return Map.Route[step];
+        }
+
+        /// <summary>
+        /// Puts a tower back to idle and starts its wait. The wait is the one
+        /// authored on the row, displaced by whatever is on the tower.
+        /// </summary>
+        /// <remarks>
+        /// <b>Read where the counter is set rather than where it is spent.</b> A
+        /// rally that lands halfway through a wait does not shorten the wait it
+        /// is already in; it shortens the next one. That is the same rule the
+        /// windup and the backswing follow -- a tower commits to a timing when
+        /// it enters a state -- and it is the reason a cooldown modifier needs
+        /// no cached value the way a walking speed does.
+        /// </remarks>
+        private static void GoIdle(ref Tower tower, UnitType type)
         {
             tower.State = TowerState.Idle;
             tower.TicksInState = 0;
             tower.TargetId = 0;
-            tower.Cooldown = type.CooldownTicks;
+            tower.TargetCount = 0;
+            tower.Cooldown = Effects.Modified(type.CooldownTicks, tower.Effects.CooldownMagnitude);
         }
 
-        private void Launch(UnitType type, int targetId, int damage)
+        private void Launch(UnitType type, Hex origin, int targetId, int damage)
         {
             if (_projectileCount == _projectiles.Length)
             {
@@ -898,6 +1577,13 @@ namespace Sim
 
             projectile.Id = _nextEntityId++;
             projectile.Type = type;
+
+            // Where it was fired from, which a bubble centred on the shooter
+            // needs when the shot lands a second and a bit later. Not a position
+            // the projectile has and not one anything draws: a tower does not
+            // move, so this is the same fact as the tower's own hex, carried the
+            // way the row that fired it is carried.
+            projectile.Origin = origin;
 
             // A reference and a countdown. No position, now or ever: where it
             // appears to be is a question the view answers from where its target
@@ -935,7 +1621,14 @@ namespace Sim
                 return;
             }
 
-            int amount = Resolved(shooter, roll, ref target);
+            int past = Absorbed(ref target, roll);
+
+            if (past == 0)
+            {
+                return;
+            }
+
+            int amount = Resolved(shooter, past, ref target);
 
             events?.CreepDamaged(target.Id, amount);
             target.Hp -= amount;
@@ -950,6 +1643,62 @@ namespace Sim
             target.TicksInState = 0;
             _killed++;
             events?.CreepDied(target.Id);
+        }
+
+        /// <summary>
+        /// Spends a creep's shield against a roll and hands back what is left of
+        /// the roll.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It absorbs first and it absorbs raw.</b> This runs before
+        /// <see cref="Resolved"/> and therefore before the matrix cell and the
+        /// armour denominator are looked at at all, which is the whole of what
+        /// makes a shield a different lever from health rather than a second
+        /// copy of it: a point of shield is worth exactly one point against
+        /// every attack type there is, where a point of health is worth a cell
+        /// and a multiplier. A shield mitigated like health would just be a
+        /// bigger pool.
+        /// </para>
+        /// <para>
+        /// <b>Overkill carries through.</b> What the shield could not eat goes
+        /// on to health and is typed there, so a shield delays a body by exactly
+        /// its own size and never by a whole shot -- and a hit that empties a
+        /// shield is not a hit that was wasted on it.
+        /// </para>
+        /// <para>
+        /// <b>A roll the shield swallowed whole deals nothing, floor and
+        /// all.</b> The damage floor is a guarantee that a hit resolved through
+        /// the matrix is never rounded away to nothing; a hit that never reached
+        /// the matrix has nothing to guarantee, and running it through the floor
+        /// would leak a point of health past a pool that stopped it.
+        /// </para>
+        /// </remarks>
+        private static int Absorbed(ref Creep target, int roll)
+        {
+            // A granted pool goes first, because it is the one that can be
+            // taken away: a pool with a clock on it is worth less than a pool
+            // without one, so spending it first is the arrangement in which
+            // nothing is wasted. Both are spent raw and both carry overkill
+            // through, so which one a point came off changes nothing about
+            // what the next point meets.
+            roll = target.Effects.Spend(roll);
+
+            if (roll == 0 || target.Shield <= 0)
+            {
+                return roll;
+            }
+
+            if (target.Shield >= roll)
+            {
+                target.Shield -= roll;
+                return 0;
+            }
+
+            roll -= target.Shield;
+            target.Shield = 0;
+
+            return roll;
         }
 
         /// <summary>
@@ -998,13 +1747,17 @@ namespace Sim
             // shooter as some threat's answer is gone, and the roster has no
             // other route to a counter yet. The term stays in the damage model
             // because the model is what it belongs to -- see DamageModel.Dealt.
+            // The armour it is carrying rather than the armour it was authored
+            // with. One fused expression, evaluated here rather than cached,
+            // because it is read once per landing and a landing is already the
+            // rarest thing in the tick.
             return DamageModel.Dealt(
                 _rules,
                 roll,
                 0,
                 shooter.AttackType,
                 armour,
-                target.Type.Armour);
+                Effects.Modified(target.Type.Armour, target.Effects.ArmourMagnitude));
         }
 
         /// <summary>
@@ -1111,20 +1864,32 @@ namespace Sim
             {
                 ref Creep creep = ref _creeps[index];
 
-                hash = hash
-                    .Add(creep.Distance.Raw)
-                    .Add(creep.Id, creep.Hp)
-                    .Add((int)creep.Phase, creep.TicksInState);
+                hash = creep.Effects.Fold(
+                    hash
+                        .Add(creep.Distance.Raw)
+                        .Add(creep.Id, creep.Hp)
+                        .Add(creep.Shield, (int)creep.Phase)
+                        .Add(creep.TicksInState, creep.PulseIn));
             }
 
             for (int index = 0; index < _towers.Length; index++)
             {
                 ref Tower tower = ref _towers[index];
 
-                hash = hash
-                    .Add(tower.Id, tower.TargetId)
-                    .Add((int)tower.State, tower.TicksInState)
-                    .Add(tower.Cooldown);
+                hash = tower.Effects.Fold(
+                    hash
+                        .Add(tower.Id, tower.TargetCount)
+                        .Add((int)tower.State, tower.TicksInState)
+                        .Add(tower.Cooldown, tower.PulseIn));
+
+                // Every target it is holding, not the first of them. A row that
+                // fires three shots commits to three creeps at once, and a fold
+                // that watched only the first would be blind to two thirds of
+                // what an acquisition decided.
+                for (int shot = 0; shot < tower.TargetCount; shot++)
+                {
+                    hash = hash.Add(TargetOf(index, shot));
+                }
             }
 
             for (int index = 0; index < _projectileCount; index++)
@@ -1171,8 +1936,24 @@ namespace Sim
 
             internal UnitType Type;
 
-            /// <summary>Which wave order released it, which is how its speed is found.</summary>
+            /// <summary>Which wave order released it, which is how it is priced when it leaks.</summary>
             internal int OrderIndex;
+
+            /// <summary>
+            /// How far it walks in a tick, as this creep rather than as its
+            /// order.
+            /// </summary>
+            /// <remarks>
+            /// <b>Per creep because a modifier is per creep.</b> Two Minions
+            /// released by one order are not slowed together, so an array
+            /// indexed by the order would be a slow that reached everything
+            /// the Cryomancer never pointed at -- and
+            /// <see cref="StepThisTick"/> reads the same number, so it would
+            /// also have mis-reported every overtake. It is a converted value
+            /// rather than a speed because the conversion is a division: it is
+            /// re-derived where the modifier moves and nowhere else.
+            /// </remarks>
+            internal Fix64 Step;
 
             internal Fix64 Distance;
 
@@ -1180,9 +1961,26 @@ namespace Sim
 
             internal int Hp;
 
+            /// <summary>
+            /// What is left of the pool that absorbs first and raw. Internal,
+            /// and in the state hash: no snapshot carries it yet, so it is
+            /// exactly the sort of field a run could drift in while looking
+            /// identical on screen.
+            /// </summary>
+            internal int Shield;
+
             internal CreepPhase Phase;
 
             internal int TicksInState;
+
+            /// <summary>What is on it, and for how much longer.</summary>
+            internal Effects Effects;
+
+            /// <summary>
+            /// Ticks until its own bubble pulses, for a row that carries an
+            /// aura. Zero on every other row and read by nothing there.
+            /// </summary>
+            internal int PulseIn;
         }
 
         private struct Tower
@@ -1193,7 +1991,20 @@ namespace Sim
 
             internal int TicksInState;
 
+            /// <summary>
+            /// The first creep it is shooting at, which is the one a snapshot
+            /// carries. A row firing one shot has this and nothing else; the
+            /// rest of them live in <see cref="_towerTargets"/>, because a
+            /// snapshot field is a view contract and the view draws one line.
+            /// </summary>
             internal int TargetId;
+
+            /// <summary>
+            /// How many of its shots found a creep. Zero while idle, and the
+            /// width of this tower's slice of <see cref="_towerTargets"/> that
+            /// is worth reading.
+            /// </summary>
+            internal int TargetCount;
 
             /// <summary>
             /// Ticks left before it may attack again. Internal: a tower between
@@ -1202,6 +2013,23 @@ namespace Sim
             /// nothing else would ever notice it drifting.
             /// </summary>
             internal int Cooldown;
+
+            /// <summary>What is on it, and for how much longer.</summary>
+            /// <remarks>
+            /// A tower carries the same four slots a creep does and can only
+            /// ever be handed one of them: nothing that stands walks, has a
+            /// health pool or can be damaged here, so a bubble reaching towers
+            /// with any payload but a cooldown is refused where the columns are
+            /// read. One type rather than two, because the rule that resolves a
+            /// slot is the same rule whichever side is holding it.
+            /// </remarks>
+            internal Effects Effects;
+
+            /// <summary>
+            /// Ticks until its own bubble pulses, for a row that carries an
+            /// aura. Zero on every other row and read by nothing there.
+            /// </summary>
+            internal int PulseIn;
         }
 
         private struct Projectile
@@ -1214,6 +2042,15 @@ namespace Sim
             /// the damage matrix it lands through.
             /// </summary>
             internal UnitType Type;
+
+            /// <summary>
+            /// The hex it was fired from, which a bubble centred on the shooter
+            /// is measured from when it lands. Not a position the projectile
+            /// has and not one anything draws -- a tower does not move, so this
+            /// is the shooter's own cell, carried for the same reason its row
+            /// is.
+            /// </summary>
+            internal Hex Origin;
 
             internal TargetRef Target;
 

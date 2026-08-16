@@ -51,6 +51,15 @@ namespace Sim
 
         private readonly byte[] _waveBytes;
 
+        /// <summary>
+        /// Which map hash layout the defense inside this bundle stamped its
+        /// geometry under. Carried rather than derived at the gate, because the
+        /// branch that read the bytes is the one that knows: a bundle written
+        /// before the level plane existed pinned the terrain alone, under
+        /// <c>hex-map/1</c>. See <see cref="HexMap.MapHashUnder"/>.
+        /// </summary>
+        private readonly int _mapHashLayout;
+
         private ReplayBundle(
             RecordHeader header,
             Hash64? rulesetHash,
@@ -59,8 +68,10 @@ namespace Sim
             GhostRecord ghost,
             WaveRecord wave,
             byte[] ghostBytes,
-            byte[] waveBytes)
+            byte[] waveBytes,
+            int mapHashLayout)
         {
+            _mapHashLayout = mapHashLayout;
             Header = header;
             RulesetHash = rulesetHash;
             Seed = seed;
@@ -160,7 +171,8 @@ namespace Sim
                 ghost,
                 waveRecord,
                 ghost.ToBytes(),
-                waveRecord.ToBytes());
+                waveRecord.ToBytes(),
+                HexMap.HashLayout);
         }
 
         /// <summary>Reads a bundle from bytes. The read gate, and nothing else.</summary>
@@ -180,6 +192,9 @@ namespace Sim
                 case 1:
                     return ReadVersion1(cursor, header);
 
+                case 2:
+                    return ReadVersion2(cursor, header);
+
                 default:
                     throw cursor.Fault(
                         "is replay format version "
@@ -190,6 +205,7 @@ namespace Sim
 
         /// <summary>The bytes. Always the current format version -- there is one writer.</summary>
         /// <remarks>
+        /// <para>
         /// A bundle read at version 0 cannot be written back out, and refuses
         /// here rather than filling the ruleset field in with something. There
         /// is one writer and it emits the current format, which carries a stamp
@@ -197,6 +213,18 @@ namespace Sim
         /// loaded, would turn "this match was played under numbers nobody
         /// wrote down" into a bundle claiming numbers it can pass a gate
         /// against.
+        /// </para>
+        /// <para>
+        /// <b>Nor can a bundle read at any other retired version, and the
+        /// refusal is on the header rather than on one missing field.</b> The
+        /// first sentence above is the whole contract -- one writer, current
+        /// format -- and it was true of version 1 only by accident, because a
+        /// version-1 body happened to be the current body. The level plane
+        /// ended that: writing a version-1 bundle out would emit the header it
+        /// was read with over a body carrying a plane that version has no
+        /// bytes for, and the reader would walk the levels as a defense. A
+        /// guard per absent field cannot see that; a guard on the version can.
+        /// </para>
         /// </remarks>
         public byte[] ToBytes()
         {
@@ -210,10 +238,32 @@ namespace Sim
                     + "restaged; it cannot be rewritten.");
             }
 
+            if (Header.FormatVersion != RecordFormat.ReplayVersion)
+            {
+                throw new SimulationException(
+                    "A replay bundle read at format version "
+                    + Header.FormatVersion.ToString(CultureInfo.InvariantCulture)
+                    + " was asked for its bytes. The writer emits the current format version and only "
+                    + "that, and the current one carries a level for every hex against a defense whose "
+                    + "map hash is folded under hex-map/"
+                    + HexMap.HashLayout.ToString(CultureInfo.InvariantCulture)
+                    + ". This record's defense pinned its geometry under an earlier layout, and that "
+                    + "stamp cannot be brought forward: a record's id is the hash of its own bytes, so "
+                    + "rewriting the stamp would make it a different defense and orphan every replay "
+                    + "pointing at this one. Such a bundle can be read, listed, drawn and restaged; it "
+                    + "cannot be rewritten.");
+            }
+
             byte[] cells = Map.ToCellBytes();
+            byte[] levels = Map.ToLevelBytes();
 
             var writer = new ByteWriter(
-                RecordFormat.HeaderBytes + 20 + cells.Length + _ghostBytes.Length + _waveBytes.Length);
+                RecordFormat.HeaderBytes
+                + 20
+                + cells.Length
+                + levels.Length
+                + _ghostBytes.Length
+                + _waveBytes.Length);
 
             Header.Write(writer);
             writer.U64(RulesetHash.Value.Value);
@@ -221,6 +271,7 @@ namespace Sim
             writer.U16("map width", Map.Width);
             writer.U16("map height", Map.Height);
             writer.Raw(cells);
+            writer.Raw(levels);
             writer.Raw(_ghostBytes);
             writer.Raw(_waveBytes);
 
@@ -238,6 +289,17 @@ namespace Sim
         /// hash the defense recorded against the map actually inlined here.
         /// They are independent, so a record can fail exactly one of them; a
         /// record that fails several is named by the first declared.
+        /// </para>
+        /// <para>
+        /// <b>The map hash is folded under the layout this record stamped it
+        /// at, which is not always this build's.</b> A bundle written before
+        /// the level plane existed pinned its geometry under <c>hex-map/1</c>,
+        /// which covered the terrain alone; comparing that stamp against
+        /// today's fold would report a layout bump as a record that contradicts
+        /// itself. The comparison stays exact either way -- see
+        /// <see cref="HexMap.MapHashUnder"/> -- because a bundle carries its
+        /// stamp and its grid in the same bytes under a format version that
+        /// says which layout they were written at.
         /// </para>
         /// <para>
         /// <b>The ruleset is compared because a landing resolves through it.</b>
@@ -279,7 +341,7 @@ namespace Sim
                 Stamp.Of("simulation version", Header.SimVersion, SimulationVersion.Current),
                 Stamp.Of("content", Header.ContentHash, types.ContentHash),
                 Stamp.Of("ruleset", RulesetHash, rules.ContentHash),
-                Stamp.Of("map", Ghost.MapHash, Map.MapHash));
+                Stamp.Of("map", Ghost.MapHash, Map.MapHashUnder(_mapHashLayout)));
 
             return ToMatch(types, rules);
         }
@@ -326,7 +388,7 @@ namespace Sim
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            ReplayGate.Require(Stamp.Of("map", Ghost.MapHash, Map.MapHash));
+            ReplayGate.Require(Stamp.Of("map", Ghost.MapHash, Map.MapHashUnder(_mapHashLayout)));
 
             return new Restaging(
                 ToMatch(types, rules),
@@ -362,7 +424,7 @@ namespace Sim
         /// aside.
         /// </remarks>
         private static ReplayBundle ReadVersion0(ByteCursor cursor, RecordHeader header) =>
-            ReadBody(cursor, header, rulesetHash: null);
+            ReadBody(cursor, header, rulesetHash: null, levelsInline: false, mapHashLayout: 1);
 
         /// <summary>
         /// Version 1: the version-0 fields with a <c>u64 ruleset_hash</c> in
@@ -378,7 +440,30 @@ namespace Sim
         {
             ulong rulesetHash = cursor.U64("the ruleset hash");
 
-            return ReadBody(cursor, header, Hash64.FromValue(rulesetHash));
+            return ReadBody(
+                cursor, header, Hash64.FromValue(rulesetHash), levelsInline: false, mapHashLayout: 1);
+        }
+
+        /// <summary>
+        /// Version 2: the version-1 fields with a second plane of map bytes
+        /// after the cells, one level per cell in the same row-major order.
+        /// </summary>
+        /// <remarks>
+        /// The plane sits behind the cells rather than interleaved with them so
+        /// that the terrain a hexdump shows is the terrain the older versions
+        /// show, in the same place, and reading either version is the same walk
+        /// up to the point where the levels either are or are not.
+        /// </remarks>
+        private static ReplayBundle ReadVersion2(ByteCursor cursor, RecordHeader header)
+        {
+            ulong rulesetHash = cursor.U64("the ruleset hash");
+
+            return ReadBody(
+                cursor,
+                header,
+                Hash64.FromValue(rulesetHash),
+                levelsInline: true,
+                mapHashLayout: HexMap.HashLayout);
         }
 
         /// <summary>
@@ -388,14 +473,23 @@ namespace Sim
         /// the branch that lost one would go on reading bundles the other
         /// refuses.
         /// </summary>
-        private static ReplayBundle ReadBody(ByteCursor cursor, RecordHeader header, Hash64? rulesetHash)
+        private static ReplayBundle ReadBody(
+            ByteCursor cursor,
+            RecordHeader header,
+            Hash64? rulesetHash,
+            bool levelsInline,
+            int mapHashLayout)
         {
             ulong seed = cursor.U64("the seed");
             int width = cursor.U16("the map width");
             int height = cursor.U16("the map height");
             long cellCount = (long)width * height;
 
-            if (cellCount > cursor.Remaining)
+            // A version-2 bundle carries two planes of that many bytes: the
+            // terrain, then the levels.
+            long planeBytes = levelsInline ? cellCount * 2 : cellCount;
+
+            if (planeBytes > cursor.Remaining)
             {
                 throw cursor.Fault(
                     "says its map is "
@@ -403,17 +497,24 @@ namespace Sim
                     + " by "
                     + height.ToString(CultureInfo.InvariantCulture)
                     + ", which is "
-                    + cellCount.ToString(CultureInfo.InvariantCulture)
-                    + " cells, and only "
+                    + planeBytes.ToString(CultureInfo.InvariantCulture)
+                    + " bytes of grid, and only "
                     + cursor.Remaining.ToString(CultureInfo.InvariantCulture)
                     + " bytes are left.");
             }
 
             byte[] cells = cursor.Raw("the map cells", (int)cellCount);
 
+            // Every map written before the level plane existed was flat, and
+            // this is that height rather than a value invented for a field the
+            // record left open. See RecordFormat.ReplayVersion.
+            byte[] levels = levelsInline
+                ? cursor.Raw("the map levels", (int)cellCount)
+                : new byte[cellCount];
+
             // The same corridor assertion the text parser runs, on the same
             // code, so a replay cannot carry geometry that a map file could not.
-            HexMap map = HexMap.FromCells(cursor.Record + " map", width, height, cells);
+            HexMap map = HexMap.FromCells(cursor.Record + " map", width, height, cells, levels);
 
             int ghostStart = cursor.Position;
             GhostRecord ghost = GhostRecord.ReadFrom(cursor);
@@ -436,7 +537,8 @@ namespace Sim
                 ghost,
                 wave,
                 cursor.Slice(ghostStart, ghostLength),
-                cursor.Slice(waveStart, waveLength));
+                cursor.Slice(waveStart, waveLength),
+                mapHashLayout);
         }
 
         /// <summary>

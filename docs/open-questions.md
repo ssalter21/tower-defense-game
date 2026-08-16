@@ -137,14 +137,23 @@ the purse — the sweep reporting where a run sat is the cheap one.
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send
 someone who does not have the game is a different artefact from one you watch in the client.
 
-**What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and a
-bodies-under-a-splash multiplier; the walking rule prices health and armour points. It prices **neither range,
-nor bubble radius, nor shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made range worth substantially
-more by tying it to elevation. One correction is owed rather than open: `bodies` currently guesses 3 from
-`Delivery == Projectile` and should read the `targets` column instead, so a Marksman is priced on arrival. The
-rest is deliberately left silent until the map has been measured, because a coefficient guessed against the
-corridor is a coefficient priced against geometry that is going away. **The silence is not a judgement that
-these levers are free.**
+**What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and the bodies a
+shot hits; the walking rule prices health and armour points. It prices **neither range, nor bubble radius, nor
+shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made
+range worth substantially more by tying it to elevation. That silence is deliberate and stays until the map
+has been measured, because a coefficient guessed against the one-hex corridor is a coefficient priced against
+geometry that is going away. **The silence is not a judgement that these levers are free.**
+
+**The correction that was owed is paid, and it left a row exposed.**
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216) made `bodies` read the `targets` column
+instead of guessing 3 from `Delivery == Projectile`, so a Marksman is priced on arrival. What the guess had
+been doing besides that is holding up the **Mage**: the rule prices it at **30 gold** and the row costs **92**,
+because 92 is three bodies' worth of a splash the simulation has never had. `docs/roster.md` signs the splash —
+one additional hex, radius 1000 — and `units.txt` layout 3 is the first schema that could carry it, as a bubble
+on the target with a damage payload. **#216 authored no such bubble and moved no price**, because either is a
+decision about what a Mage is; the gap is pinned in `ContentTests` with both numbers in it. Three ways out:
+author the splash and accept an unpriced radius, reprice the row to what it does, or make it genuinely fire
+three shots — which is a different tower.
 
 **Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
 makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing
@@ -156,3 +165,45 @@ doing.
 uptime holds a creep at the floor indefinitely. With the floor in place that is a balance problem rather than a
 correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
 per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
+
+**Nothing a view can see says a creep is slowed.** Timed effects landed in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state: they are folded into the
+rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field and in no
+match event. That is deliberate — events are decorative by
+[ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
+about rules. It is a real gap all the same: the day a Cryomancer is signed is the day somebody has to draw a
+slowed creep, and a creep that is walking at four tenths of its speed for no visible reason is the sort of
+thing a playtest reports as a bug. The cheap answer is a field on `CreepSnapshot`; the question is which
+field, because "is it slowed" and "what is on it" are different contracts.
+
+**Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
+the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads
+"`bubbleMagnitude` | A damage amount, or a percentage" and names five modifiable stats including damage.
+Neither half of *damage* survived contact with the code, for a good reason each time and by a different ticket.
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216) declared a bubble one shot drawing one roll,
+so a flat amount beside a `damage` payload would be a second damage source with a draw of its own
+([ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md)).
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) found the keyword already taken — `damage`
+means "the attack's own roll, spread" — so a damage *modifier* has no name left to be authored under
+([ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md)).
+
+Said plainly, so nobody has to reconstruct it from two ADRs: an author **can** spread the attack's own roll
+over a sphere, apply a percentage to speed, cooldown or armour, and grant a shield. An author **cannot** write
+a bubble dealing a flat amount, and cannot write a damage buff or debuff of any kind — including the "+x%
+damage to nearby towers" shape the Captain is described by in the same table that authorised the columns.
+
+Each ticket recorded its own half in its own ADR; the sum was never put in front of anybody. The way out is
+cheap and costs no format version, because it is a keyword rather than a column: a sixth payload value
+distinguishing "the roll this attack made" from "the damage stat", at which point both halves come back. **What
+it is not is an agent's to name** — a payload keyword is roster vocabulary. Until it is named, `roster.md`'s
+column table says the schema is narrower than the decision rather than quietly restating the decision as the
+narrowing.
+
+**Whether an aura may carry damage.** #217 refuses `bubblePeriod > 0` beside a `damage` payload at load, on the
+argument that a pulse drawing dice outside a shot breaks the single-stream guarantee. The argument is sound and
+the refusal may well be right. It is here because #213 permits a positive period beside any payload and says "A
+whole-board pulse tower is one row", off Sam's own remark that a whole-board sweep "would, I guess, behave like
+a pulse" — so the refusal closes a shape the decision opened. That shape survives as a period of 0, which fires
+with the attack instead of pulsing. Striking the refusal is one line if a pulsing damage aura is wanted; what
+it would then need is a stated rule for where its dice come from.

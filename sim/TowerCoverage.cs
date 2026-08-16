@@ -28,6 +28,17 @@ namespace Sim
     /// couple of comparisons.
     /// </para>
     /// <para>
+    /// <b>Elevation costs this nothing, and that is why it is here.</b> A route
+    /// cell's level is as fixed as its position, so the signed level term of
+    /// <see cref="Reach.Shoots"/> is evaluated per route cell in the walk
+    /// below, at load, exactly as flat range was. What height changes is how
+    /// often the list has more than one entry in it: a ridge crossing the
+    /// corridor carves a hole in a tower's reach where flat ground would not,
+    /// and a hole in a run of route cells is the second interval this type
+    /// already returns. Nothing about the tick loop moves, which is the whole
+    /// of what a third dimension was priced at.
+    /// </para>
+    /// <para>
     /// Distance is measured in route steps: the entrance is 0, the exit is
     /// <see cref="RouteLength"/>, and one whole unit of distance is one hex of
     /// corridor. An interval covering route cells <c>a</c> through <c>b</c> is
@@ -265,7 +276,9 @@ namespace Sim
         /// Walks the route once, in order, collecting the runs of consecutive
         /// cells the tower is within range of. The range test is
         /// <see cref="Footing.Reaches"/> -- the same one that answered whether
-        /// there are any runs at all, so the two cannot come apart.
+        /// there are any runs at all, so the two cannot come apart, and the
+        /// same one that folds in how far the tower is shooting up or down to
+        /// reach each cell.
         /// </summary>
         private static int Intersect(HexMap map, PlacedTower tower, List<long> start, List<long> end)
         {
@@ -275,7 +288,7 @@ namespace Sim
 
             for (int step = 0; step < map.Route.Count; step++)
             {
-                bool inRange = Footing.Reaches(tower.Hex, range, map.Route[step]);
+                bool inRange = Footing.Reaches(map, tower.Hex, range, map.Route[step]);
 
                 if (inRange && runStart < 0)
                 {

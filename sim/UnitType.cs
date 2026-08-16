@@ -55,12 +55,18 @@ namespace Sim
             int cost,
             AttackType attackType,
             ArmourType armourType,
-            int armour)
+            int armour,
+            int shield,
+            int targets,
+            Bubble bubble)
         {
             Cost = cost;
             AttackType = attackType;
             ArmourType = armourType;
             Armour = armour;
+            Shield = shield;
+            Targets = targets;
+            Bubble = bubble;
             Id = id;
             Label = label;
             Role = role;
@@ -138,6 +144,51 @@ namespace Sim
         /// </summary>
         public int Armour { get; }
 
+        /// <summary>
+        /// A pool that absorbs before health does, and absorbs raw. Zero is
+        /// none, which is what every row of every layout before 3 carries.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Armour does not apply to it and neither does the type chart.</b>
+        /// That is what makes it a different lever from health rather than a
+        /// second copy of it: a shield is worth exactly its number against every
+        /// attack type there is, where a health pool is worth its number times a
+        /// matrix cell and an armour multiplier. Overkill carries through to
+        /// health, so a shield delays a body rather than granting it a free
+        /// shot's worth of immunity.
+        /// </para>
+        /// <para>
+        /// <b>It does not regenerate and there is nothing to carry over.</b>
+        /// Creeps do not persist between rounds, so a shield is spent within the
+        /// match that spawned it and the pool has no clock of its own.
+        /// <see cref="Sim.ArmourType.Arcane"/> is unrelated and keeps its name.
+        /// </para>
+        /// </remarks>
+        public int Shield { get; }
+
+        /// <summary>
+        /// How many shots one attack fires, each at its own creep and each with
+        /// its own damage roll. One is an ordinary single shot, and every row of
+        /// every layout before 3 is one.
+        /// </summary>
+        /// <remarks>
+        /// The targets are taken nearest-to-exit first, by
+        /// <see cref="Targeting.Chosen(System.ReadOnlySpan{WalkingTarget}, System.Span{int}, out int)"/>,
+        /// which is the same total order a single shot is acquired by. <b>n
+        /// shots draw exactly n rolls</b>, which is the half of the determinism
+        /// contract this column is on the hook for -- a bubble is the other
+        /// shape, and it is one shot and one roll however many bodies it lands
+        /// on.
+        /// </remarks>
+        public int Targets { get; }
+
+        /// <summary>
+        /// The radial thing this row emits, or <see cref="Sim.Bubble.Absent"/>.
+        /// A sweep, a blast and an aura are one mechanic; see <see cref="Sim.Bubble"/>.
+        /// </summary>
+        public Bubble Bubble { get; }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
@@ -169,11 +220,10 @@ namespace Sim
                     return hash;
 
                 case 2:
-                    return hash
-                        .Add(Cost)
-                        .Add((int)AttackType)
-                        .Add((int)ArmourType)
-                        .Add(Armour);
+                    return TypedFold(hash);
+
+                case 3:
+                    return Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -183,5 +233,17 @@ namespace Sim
                         + " has no fold in this row.");
             }
         }
+
+        /// <summary>
+        /// The four columns layout 2 added, in file order. Layout 3 folds them
+        /// in the same places -- a widening moves no column that was already
+        /// there -- so the two branches share this rather than each spelling it.
+        /// </summary>
+        private Hash64 TypedFold(Hash64 hash) =>
+            hash
+                .Add(Cost)
+                .Add((int)AttackType)
+                .Add((int)ArmourType)
+                .Add(Armour);
     }
 }

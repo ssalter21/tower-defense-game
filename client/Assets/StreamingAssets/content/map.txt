@@ -1,29 +1,56 @@
-// The playfield: one hex corridor, exactly one hex wide, never branching.
+// The playfield: one hex corridor, exactly one hex wide, never branching, and
+// the tier every hex of it stands at.
 //
 // '.' ground   '#' corridor   'S' the entrance   'E' the exit
+// 'a' the ground tier   'b' the tier above it   'c' the one above that
 //
 // A comment here starts with '//' rather than '#', because '#' is a corridor
 // cell and sharing the marker would make a corridor beginning at column one
 // vanish into a comment on some maps and not others.
 //
+// TWO BLOCKS AND NOT ONE. The first is the terrain, the second is the level of
+// every hex of it, and they are the same shape or the file is refused -- a hex
+// whose height nothing states is a hex the loader would have to invent one for.
+// Levels are letters because this file holds no numbers at all, which is how it
+// stays outside the decimal-point rule the numeric data files carry; a digit
+// anywhere in either block is a load error.
+//
 // One row per line, one character per cell, so the map is diffable and an
 // agent can write it. Rows are odd-r offset: ODD-NUMBERED ROWS ARE THE ONES
 // SHIFTED HALF A CELL RIGHT, which is why the corridor's turns look like they
-// step sideways. The simulation converts that to axial (q, r) on load and
-// never stores a cube coordinate; how any of it is drawn is a view question
-// and does not reach here.
+// step sideways, and why the odd rows are indented here -- the indent is
+// decoration the loader strips, so that what is typed looks like the board it
+// produces. The simulation converts the grid to axial (q, r) on load and never
+// stores a cube coordinate; how any of it is drawn is a view question and does
+// not reach here.
 //
 // The loader asserts the corridor is well formed rather than trusting this
 // comment: every corridor cell has one or two corridor neighbours, exactly
 // two have one, those two are S and E, and the walk from S to E visits all
 // forty-seven of them.
+//
+// Every hex is on the ground tier, which is the flat corridor this skeleton has
+// always been. The folded map with real elevation is drawn by hand, once, and
+// it is not this file yet.
+//
+// Draw it: ./tools/render-map.ps1
 
 ...............
-.S##########...
+ .S##########...
 ............#..
-..##########...
+ ..##########...
 ..#............
-..###########..
+ ..###########..
 .............#.
-.E###########..
+ .E###########..
 ...............
+
+aaaaaaaaaaaaaaa
+ aaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaa
+ aaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaa
+ aaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaa
+ aaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaa

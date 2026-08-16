@@ -174,6 +174,17 @@ public static class Program
         "         It always exits zero, faults included. What fails a build on a",
         "         fault is a test; this reads a roster and enforces nothing.",
         string.Empty,
+        "  draw-map   --map <file> --out <file>",
+        string.Empty,
+        "         Draws the map as a picture -- one hexagon per cell at the",
+        "         offsets the odd-r grid puts them, tinted and lettered by tier",
+        "         -- and writes it as scalable vector graphics, which a browser",
+        "         opens and a diff can be read. It prints the shape, the",
+        "         corridor and how many hexes stand at each tier.",
+        string.Empty,
+        "         The picture is of the PARSED map, so a file that will not load",
+        "         produces the refusal and no picture at all.",
+        string.Empty,
         "  sweep      --seed <number> [--runs <number>] [--out <file>]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
@@ -279,7 +290,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of seven things.");
+            throw new UsageException("No verb. This program does one of eight things.");
         }
 
         switch (args[0])
@@ -317,6 +328,13 @@ public static class Program
             // answer depends on.
             case "ladder":
                 return ShowLadder(Arguments.Parse("ladder", args, 1, new[] { "units", "upgrades" }));
+
+            // One file in and one file out, for the same reason the ladder
+            // takes two: a map is read against nothing at all, so asking for a
+            // roster and a ruleset to draw one would be five arguments nobody's
+            // picture depends on.
+            case "draw-map":
+                return DrawMap(Arguments.Parse("draw-map", args, 1, new[] { "map", "out" }));
 
             case "sweep":
                 return RunSweep(RunVerb(
@@ -478,6 +496,27 @@ public static class Program
             types);
 
         Console.Out.Write(Ladder.ToText(types, ladder));
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Draws a map file as a picture, and says what the loader made of it.
+    /// </summary>
+    /// <remarks>
+    /// <b>The picture is of the parsed map, so a file that will not load
+    /// produces the refusal instead of a drawing.</b> That is the whole value
+    /// of routing this through the program rather than colouring the characters
+    /// in place: what comes out is what the simulation read, corridor assertion
+    /// and all, and a second reader would eventually disagree with the first
+    /// about exactly the maps somebody is in the middle of editing.
+    /// </remarks>
+    private static int DrawMap(Arguments arguments)
+    {
+        HexMap map = HexMap.Parse("map", File.ReadAllText(arguments.Required("map")));
+
+        Console.Out.Write(MapPicture.Summary(map));
+        Write(arguments.Required("out"), MapPicture.ToSvg(map));
 
         return 0;
     }

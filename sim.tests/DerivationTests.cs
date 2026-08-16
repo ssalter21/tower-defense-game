@@ -137,17 +137,116 @@ public class DerivationTests
         // gained a fifth half that plays a run against a population recorded per
         // round, and the label went to rule-fingerprint/5.
         (6u, 0x388DFE8C6880ED85UL),
+
+        // Version 7 is #214 -- the map gained a level layer, so the map hash
+        // moved from hex-map/1 to hex-map/2 and every match's state hash opens
+        // on a different number.
+        //
+        // IT IS THE FIRST ROW HERE THAT IS NOT A RULE CHANGE, and it is a row
+        // anyway. Nothing about the tick loop moved: the same wave leaks the
+        // same twelve creeps on the same tick as it did under version 6. What
+        // moved is what the state hash is over -- Match opens its fold with the
+        // map hash, and the map hash now covers the height of every hex as well
+        // as its terrain -- so every stored record's rolling hash stops
+        // reproducing while its outcome does not. That is exactly the condition
+        // this constant exists to retire records for, and the alternative is a
+        // golden trace that changed under a version claiming nothing had.
+        (7u, 0xF7A080A6691EA488UL),
+
+        // Version 8 is #215 -- a level is a term in the range test. A shot
+        // reaches baseRange + (towerLevel - targetLevel) * 500, a radius reads
+        // as a sphere where height only ever costs, and a floor guarantees
+        // adjacency on both. Every tower on a map with a fold in it covers a
+        // different stretch of route under it, so every record made on one
+        // replays to a different outcome.
+        //
+        // IT CAUGHT THE SAME HOLE A FIFTH TIME, AND IN THE SCENARIO RATHER THAN
+        // IN THE SHAPE OF THE FOLD. Every half below resolves a match on
+        // FingerprintMap, which is the code path the rule moved in -- and that
+        // map was written on the flat, where the signed difference is
+        // identically zero. This build's fingerprint under it came out
+        // F7A080A6691EA488, byte for byte version 7's, for a change that alters
+        // what a tower covers. So the map gained a fold rather than the fold
+        // gaining a half, and the label went to rule-fingerprint/6.
+        //
+        // OBSERVED, both ways round, on this build. Under the folded map with
+        // the level term struck out of Reach.Within -- the flat rule this
+        // replaces, nothing else touched -- the fingerprint is
+        // 12BD5CDF6025ECD9, and with the rule in it is the value below.
+        (8u, 0xF3D0032E948518D4UL),
+
+        // Version 9 is #216 -- the nine columns of units.txt layout 3, and the
+        // three of them the tick loop reads. A shield absorbs before armour is
+        // consulted and overkill carries through to health; a target count
+        // fires n shots at n creeps and draws n rolls off the one stream; and a
+        // damage bubble is one shot and one roll applied to everything a sphere
+        // encloses. The state hash's own layout moved with them -- match-state/2
+        // folds a creep's shield and every target a tower is holding -- so
+        // every stored record's rolling hash stops reproducing.
+        //
+        // IT CAUGHT THE HOLE A SIXTH TIME, and in the roster rather than in the
+        // map. Every half below is fought over a layout-1 or layout-2 roster,
+        // and no such row can carry a shield, a shot count above one or a
+        // bubble at all: the rules moved where those five halves cannot look.
+        // What the fold gained is a sixth half whose roster is layout 3 and
+        // whose two towers are the two shot shapes, and the label went to
+        // rule-fingerprint/7.
+        //
+        // OBSERVED, both ways round, on this build. With Match.Absorbed's body
+        // replaced by `return roll` -- the shield spent by nothing, every other
+        // line untouched -- the fingerprint is F8B857E6175940A5, and with the
+        // rule in it is the value below.
+        (9u, 0x1BAEAF1DA57D7D8EUL),
+
+        // Version 10 is #217 -- per-unit timed effects. A bubble carrying a
+        // stat puts a magnitude on whatever it encloses for a duration and
+        // takes it off again when the duration ends; a bubble with a period
+        // does it on a clock of its own; two of them on one stat resolve
+        // strongest-wins with the timer refreshed; and a creep never drops
+        // below a tenth of its authored speed however they combine. The tick
+        // order gained two phases, a creep's step became a fact about the creep
+        // rather than about its wave order, and match-state/2 went to
+        // match-state/3 -- so every stored record's rolling hash stops
+        // reproducing whether or not its content authors an effect.
+        //
+        // IT CAUGHT THE HOLE A SEVENTH TIME, and in the roster again. A timed
+        // effect is emitted by a bubble carrying a stat and by nothing else,
+        // and every bubble in the sixth half carried damage: the rules ran and
+        // nothing folded them. So the shot-shape roster gained a turret whose
+        // shot slows what it hits and a walker whose aura grants a pool to
+        // whatever walks beside it, and the label went to rule-fingerprint/8.
+        //
+        // OBSERVED, both ways round, on this build. With Effects.ModifiedSpeed
+        // returning the authored speed -- the slow landing, expiring and
+        // changing no step, every other line untouched -- the fingerprint is
+        // 4B15804EC1BEDE48, and with the rule in it is the value below.
+        (10u, 0x13EB7A4673B75F21UL),
     };
 
     /// <summary>
     /// The scenario the fingerprint is taken over: one corridor, one tower, one
-    /// order of three walkers. Written out here on purpose -- a fingerprint over
-    /// the committed files would move every time somebody retuned a number, and
-    /// would then be a content hash wearing a simulation version's name.
+    /// order of three walkers, on ground that is not flat. Written out here on
+    /// purpose -- a fingerprint over the committed files would move every time
+    /// somebody retuned a number, and would then be a content hash wearing a
+    /// simulation version's name.
     /// </summary>
+    /// <remarks>
+    /// <b>The fold in it is load bearing and is the whole of why the map is two
+    /// blocks here.</b> The turret stands on the top tier at column 2 and
+    /// reaches two hexes on the flat, which is route cells 1 to 4. Cell 5 is
+    /// three hexes away and two tiers below, so shooting down buys the half hex
+    /// twice over and it comes into range; cell 0 is the same three hexes away
+    /// and on the turret's own tier, so it stays out. A flat bonus for standing
+    /// high would have brought both in, which is the rule this one was chosen
+    /// over -- and on ground that is all one tier neither is in and the
+    /// scenario cannot tell the two rules apart at all.
+    /// </remarks>
     private const string FingerprintMap = """
         S####E
         ......
+
+        ccaaaa
+        aacaaa
         """;
 
     private const string FingerprintUnits = """
@@ -179,6 +278,64 @@ public class DerivationTests
         """;
 
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The roster the shot-shape half is fought over: a walking row carrying a
+    /// shield, one carrying an aura that grants a pool to whatever walks beside
+    /// it, a turret that fires two shots, a turret whose one shot is a bubble,
+    /// and a turret whose one shot slows what it hits.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Layout 3, because no earlier layout can say any of this.</b> That is
+    /// the whole reason this half exists: the five above it are fought over
+    /// layout-1 and layout-2 rosters, where a shield is not a column, a shot
+    /// count is not a column and a bubble is not a column -- so #216's rules
+    /// run in every one of them and are visible in none.
+    /// </para>
+    /// <para>
+    /// <b>The slow and the aura are #217's, and they are on this roster for the
+    /// same reason.</b> A timed effect is emitted by a bubble carrying a stat
+    /// and by nothing else, so a scenario whose every bubble carries damage
+    /// runs the whole of the effect machinery and sees none of it -- which is
+    /// the shape of hole this table has had six times.
+    /// </para>
+    /// </remarks>
+    private const string FingerprintShotUnits = """
+        layout 3
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0
+        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0
+        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60
+        """;
+
+    /// <summary>
+    /// One of each shape, side by side. All three stand where the single turret
+    /// of <see cref="FingerprintDefense"/> does or beside it, so all three
+    /// reach the route on the folded map.
+    /// </summary>
+    private const string FingerprintShotDefense = """
+        tower  3  2  1
+        tower  4  3  1
+        tower  5  4  1
+        """;
+
+    /// <summary>
+    /// The wave the shot-shape half walks into: the same three walkers every
+    /// other half sends, and two wardens behind them.
+    /// </summary>
+    /// <remarks>
+    /// A wave of its own rather than <see cref="FingerprintWave"/>, because an
+    /// aura has to be emitted by something and nothing that stands emits this
+    /// one. The two of them pulse on the same period out of step with each
+    /// other, which is what puts two landings of one effect on one creep and
+    /// makes the strongest-wins rule visible rather than merely present.
+    /// </remarks>
+    private const string FingerprintShotWave = """
+        order  0  1  3  0
+        order  0  2  2  0
+        """;
 
     /// <summary>
     /// The deeper of the two waves the field half is fought against. Four times
@@ -245,8 +402,19 @@ public class DerivationTests
 
     private const ulong FingerprintSeed = 20260802UL;
 
-    /// <summary>How many ticks of it are folded in. Enough for three spawns, every shot and every death.</summary>
-    private const int FingerprintTicks = 400;
+    /// <summary>
+    /// How many ticks of it are folded in. Enough for every spawn, every shot,
+    /// every death and every walk to the exit -- including one taken at a
+    /// slowed pace, which is what raised it from four hundred.
+    /// </summary>
+    /// <remarks>
+    /// It is a ceiling rather than a length: each half stops at whichever comes
+    /// first, this or the end of the match, and every one of them ends first.
+    /// Raising it therefore changes no half that already finished, which is why
+    /// it could move without retiring the halves it did not touch -- though the
+    /// label moved anyway, for the roster below it.
+    /// </remarks>
+    private const int FingerprintTicks = 900;
 
     [Fact]
     public void Editing_a_type_table_moves_the_content_hash_and_editing_a_comment_does_not()
@@ -470,17 +638,17 @@ public class DerivationTests
         // entrance and a dead end, which between them cover every one-character
         // change there is. The corridor gaining a hex is the smallest edit to
         // the playfield that exists.
-        HexMap shorter = HexMap.Parse("""
+        HexMap shorter = HexMap.Parse(TheGrid.OnTheFlat("""
             .....
             .S#E.
             .....
-            """);
+            """));
 
-        HexMap longer = HexMap.Parse("""
+        HexMap longer = HexMap.Parse(TheGrid.OnTheFlat("""
             .....
             .S##E
             .....
-            """);
+            """));
 
         Assert.NotEqual(shorter.MapHash, longer.MapHash);
 
@@ -488,11 +656,11 @@ public class DerivationTests
         // corridor changed except which hexes it is made of.
         Assert.NotEqual(
             shorter.MapHash,
-            HexMap.Parse("""
+            HexMap.Parse(TheGrid.OnTheFlat("""
                 .....
                 .....
                 .S#E.
-                """).MapHash);
+                """)).MapHash);
 
         // And the file around it, rewritten. The map's comment marker, its line
         // endings and its trailing blank lines are not the playfield, and a hash
@@ -512,8 +680,10 @@ public class DerivationTests
         // of the other three kinds, and every one of them either refused by the
         // corridor assertion or landing on a different map hash. Nothing is
         // allowed to load quietly with the hash it had.
-        byte[] cells = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile)).ToCellBytes();
-        HexMap original = HexMap.FromCells("map", 15, 9, cells);
+        HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
+        byte[] cells = committed.ToCellBytes();
+        byte[] levels = committed.ToLevelBytes();
+        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
         int refused = 0;
         int rehashed = 0;
 
@@ -531,7 +701,9 @@ public class DerivationTests
 
                 try
                 {
-                    Assert.NotEqual(original.MapHash, HexMap.FromCells("edited", 15, 9, edited).MapHash);
+                    Assert.NotEqual(
+                        original.MapHash,
+                        HexMap.FromCells("edited", 15, 9, edited, levels).MapHash);
                     rehashed++;
                 }
                 catch (ContentException)
@@ -543,6 +715,43 @@ public class DerivationTests
 
         Assert.Equal(cells.Length * 3, refused + rehashed);
         Assert.True(refused > 0, "The corridor assertion caught none of them, which cannot be right.");
+    }
+
+    [Fact]
+    public void No_single_hex_of_the_committed_map_can_be_raised_without_the_hash_noticing()
+    {
+        // The level plane's half of the claim above, and it needs its own loop
+        // because raising a hex is never refused: every tier is legal on every
+        // cell, so the hash is the only thing that can notice. A fold that
+        // covered the terrain alone would pass the whole test above and every
+        // gate in the negative suite, and a defense recorded on a fold would
+        // replay on the flat.
+        HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
+        byte[] cells = committed.ToCellBytes();
+        byte[] levels = committed.ToLevelBytes();
+        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
+        int moved = 0;
+
+        for (int index = 0; index < levels.Length; index++)
+        {
+            for (byte tier = 0; tier < HexMap.LevelCount; tier++)
+            {
+                if (levels[index] == tier)
+                {
+                    continue;
+                }
+
+                byte[] edited = (byte[])levels.Clone();
+                edited[index] = tier;
+
+                Assert.NotEqual(
+                    original.MapHash,
+                    HexMap.FromCells("edited", 15, 9, cells, edited).MapHash);
+                moved++;
+            }
+        }
+
+        Assert.Equal(levels.Length * (HexMap.LevelCount - 1), moved);
     }
 
     /// <summary>
@@ -577,10 +786,31 @@ public class DerivationTests
     /// payment too, which is the only half that can see what a wave earns;
     /// <c>rule-fingerprint/5</c> folds the rounds of a run against a population
     /// recorded per round, which is the only half that can see who a round
-    /// fights. Versions 1 to 5 are recorded under earlier labels and cannot be
+    /// fights. Versions 1 to 7 are recorded under earlier labels and cannot be
     /// recomputed here, which is a loss stated out loud rather than a table that quietly
     /// compares fewer things -- the same rule <see cref="Match"/> applies to its
     /// own state-hash label.
+    /// </para>
+    /// <para>
+    /// <b>The label carries the scenario as well as the shape, and
+    /// <c>rule-fingerprint/6</c> is the first bump taken for the scenario
+    /// alone.</b> Every half of the fold already resolved a match against a
+    /// tower and a route, so the elevation rule of #215 runs through all of
+    /// them -- and produced version 7's number exactly, because
+    /// <see cref="FingerprintMap"/> was written on the flat and a signed height
+    /// difference over flat ground is zero. A fold that runs the rule and
+    /// cannot see it is the same failure as a fold that never runs it, so what
+    /// changed is the ground the scenario stands on.
+    /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/7</c> added the sixth half, whose roster is layout 3
+    /// and whose towers are the two shot shapes; <c>rule-fingerprint/8</c> is
+    /// the second bump taken for the scenario alone, and it is that same half's
+    /// roster again. #217's rules are reached only by a bubble carrying a stat,
+    /// and every bubble on that roster carried damage -- so the effect
+    /// machinery ran in the sixth half and was visible in none of the six. What
+    /// changed is the rows: a turret whose shot slows what it hits, and a
+    /// walker whose aura grants a pool to whatever walks beside it.
     /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
@@ -591,7 +821,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/5").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/8").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -606,7 +836,71 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)));
+        return ShapedIntoFingerprint(
+            FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint))));
+    }
+
+    /// <summary>
+    /// The sixth half of the fold: a match fought over a roster that authors a
+    /// shield, a shot count and a bubble.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because the five above it missed one.</b> Every one
+    /// of them is fought over a layout-1 or layout-2 roster, and no such row
+    /// can say any of the three things #216 taught the tick loop to read -- so
+    /// the rules run in all five and are visible in none of them. The sixth
+    /// time this file has had that hole and the second time the fix was the
+    /// scenario rather than the shape of the fold.
+    /// </para>
+    /// <para>
+    /// <b>And the roster is what moved again for #217.</b> A timed effect is
+    /// emitted by a bubble carrying a stat and by nothing else, and this half's
+    /// two bubbles both carried damage, so the seventh time the hole was in the
+    /// same half that had just been added to close the sixth. What it has now
+    /// is a bubble of each kind: one that spreads a roll, one that puts a
+    /// magnitude on what it hits for a duration, and one that pulses on a clock
+    /// of its own.
+    /// </para>
+    /// <para>
+    /// <b>Both shot shapes, the shield, the slow and the aura are in one match
+    /// on purpose.</b> They share the one dice stream, so a draw added or
+    /// skipped by any of them moves the others' rolls too; a shield that
+    /// stopped absorbing changes which body dies on which tick and therefore
+    /// what everything after it shoots at; and a slow changes which body is
+    /// nearest the exit and therefore which one every tower acquires. One match
+    /// folds all of those interactions; five matches would fold five isolated
+    /// ones.
+    /// </para>
+    /// <para>
+    /// The map is the folded one every other half uses, so the sphere is
+    /// measured across a real height difference rather than over flat ground.
+    /// </para>
+    /// </remarks>
+    private static Hash64 ShapedIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint shot units", FingerprintShotUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+
+        var match = new Match(
+            map,
+            TheRuleset.Committed(),
+            TowerLayout.Parse("fingerprint shot defense", FingerprintShotDefense, types),
+            WaveScript.Parse("fingerprint shot wave", FingerprintShotWave, types),
+            FingerprintSeed);
+
+        for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
+        {
+            match.Advance(1);
+            fingerprint = fingerprint.Add(unchecked((long)match.StateHash.Value));
+        }
+
+        MatchResult result = match.Result();
+
+        return fingerprint
+            .Add(result.Leaked, result.Total)
+            .Add(result.FinalTick)
+            .Add(unchecked((long)result.RollingStateHash.Value));
     }
 
     /// <summary>
@@ -916,11 +1210,35 @@ public class DerivationTests
                         line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "  "));
 
     /// <summary>The map's grid, with its legend stripped off.</summary>
-    private static string WithoutMapComments(string original) =>
-        string.Join(
-            "\n",
-            original
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
-                .Where(line => line.Trim().Length > 0));
+    /// <summary>
+    /// The committed map with its legend taken off, and the blank line between
+    /// its two grids left exactly where it is.
+    /// </summary>
+    /// <remarks>
+    /// A map file is two blocks -- the terrain, then the level of every hex of
+    /// it -- so the blank line between them is structure and not spacing.
+    /// Dropping every blank, which is what this did while the file held one
+    /// grid, welds the two into an eighteen-row block that is refused. The
+    /// blanks that are spacing are the ones at either end, and those still go.
+    /// </remarks>
+    private static string WithoutMapComments(string original)
+    {
+        List<string> kept = original
+            .Split('\n')
+            .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
+            .Select(line => line.TrimEnd())
+            .ToList();
+
+        while (kept.Count > 0 && kept[0].Length == 0)
+        {
+            kept.RemoveAt(0);
+        }
+
+        while (kept.Count > 0 && kept[kept.Count - 1].Length == 0)
+        {
+            kept.RemoveAt(kept.Count - 1);
+        }
+
+        return string.Join("\n", kept);
+    }
 }

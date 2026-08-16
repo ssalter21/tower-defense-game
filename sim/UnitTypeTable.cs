@@ -46,7 +46,7 @@ namespace Sim
         public const int DefaultLayout = 1;
 
         /// <summary>The layout the columns documented on <see cref="UnitType"/> describe.</summary>
-        public const int CurrentLayout = 2;
+        public const int CurrentLayout = 3;
 
         private const string Keyword = "unit";
 
@@ -66,6 +66,38 @@ namespace Sim
 
         /// <summary>The word a unit outside the damage matrix carries in either type column.</summary>
         private const string NoTypeWord = "none";
+
+        /// <summary>
+        /// The word the bubble radius column carries where there is no bubble,
+        /// which is the one column of the seven that says so. A radius of zero
+        /// is a bubble on the centre alone and means something else entirely.
+        /// </summary>
+        /// <remarks>
+        /// The same word as <see cref="NoTypeWord"/>, and written as that word
+        /// rather than beside it: this file has one spelling of "nothing" and a
+        /// second literal is a second thing to change.
+        /// </remarks>
+        private const string AbsentWord = NoTypeWord;
+
+        /// <summary>
+        /// The payload a bubble may not carry, spelled out so the refusal can
+        /// say why rather than listing five words that do not include it.
+        /// </summary>
+        private const string RefusedPayloadWord = "range";
+
+        /// <summary>
+        /// Where a bubble centres. The index of each word is its
+        /// <see cref="BubbleOrigin"/>, and absence comes first because a bubble
+        /// nobody authored is <c>default</c>.
+        /// </summary>
+        private static readonly string[] OriginWords = { AbsentWord, "self", "target" };
+
+        /// <summary>Which side it reaches into. Index is its <see cref="BubbleAffects"/>.</summary>
+        private static readonly string[] AffectsWords = { AbsentWord, "friend", "enemy" };
+
+        /// <summary>What it carries. Index is its <see cref="BubblePayload"/>.</summary>
+        private static readonly string[] PayloadWords =
+            { AbsentWord, "damage", "speed", "cooldown", "armour", "shield" };
 
         /// <summary>
         /// The three attack types, then the word a unit that never attacks
@@ -247,7 +279,7 @@ namespace Sim
         /// </remarks>
         public static bool IsKnownLayout(int layout)
         {
-            return layout == 1 || layout == 2;
+            return layout == 1 || layout == 2 || layout == 3;
         }
 
         /// <summary>Fields per row, keyword included, in that layout.</summary>
@@ -260,6 +292,9 @@ namespace Sim
 
                 case 2:
                     return 19;
+
+                case 3:
+                    return 28;
 
                 default:
                     throw NoSuchLayout(layout);
@@ -280,6 +315,9 @@ namespace Sim
 
                 case 2:
                     return "unit-types/2";
+
+                case 3:
+                    return "unit-types/3";
 
                 default:
                     throw NoSuchLayout(layout);
@@ -425,7 +463,7 @@ namespace Sim
                     line,
                     "declares column layout "
                     + layout.ToString(CultureInfo.InvariantCulture)
-                    + ", and this reader has branches for 1 and "
+                    + ", and this reader has branches for 1 through "
                     + CurrentLayout.ToString(CultureInfo.InvariantCulture)
                     + ". A layout that was skipped, or a branch somebody deleted, is refused here rather "
                     + "than read against whichever field order happened to be nearest.");
@@ -532,7 +570,7 @@ namespace Sim
             var armour = ArmourType.None;
             int armourPoints = 0;
 
-            if (layout == CurrentLayout)
+            if (layout >= 2)
             {
                 cost = DataText.IntegerInRange(source, line, "the cost", fields[15], 0, int.MaxValue);
                 attack = (AttackType)DataText.Keyword(source, line, "the attack type", fields[16], AttackWords);
@@ -540,6 +578,22 @@ namespace Sim
                 armourPoints = DataText.IntegerInRange(source, line, "the armour", fields[18], 0, int.MaxValue);
 
                 RequireTyping(source, line, delivery, attack, maxHp, armour, armourPoints);
+            }
+
+            // And what a row before layout 3 carries: no second pool, one shot
+            // an attack, and nothing radial. None of those is a default standing
+            // in for a value the table stated -- they are what such a row is.
+            int shield = 0;
+            int targets = 1;
+            Bubble bubble = Bubble.Absent;
+
+            if (layout >= 3)
+            {
+                shield = DataText.IntegerInRange(source, line, "the shield", fields[19], 0, int.MaxValue);
+                targets = DataText.IntegerInRange(source, line, "the target count", fields[20], 1, int.MaxValue);
+                bubble = ReadBubble(source, line, fields);
+
+                RequireShotShapes(source, line, role, delivery, maxHp, shield, targets, bubble);
             }
 
             return new UnitType(
@@ -560,7 +614,83 @@ namespace Sim
                 cost,
                 attack,
                 armour,
-                armourPoints);
+                armourPoints,
+                shield,
+                targets,
+                bubble);
+        }
+
+        /// <summary>
+        /// The seven bubble columns, read as one thing because they are one
+        /// thing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The radius column is the one that says whether there is a bubble
+        /// at all</b>, because it is the column whose absence has a meaning
+        /// distinct from every value it can hold: zero is the centre alone.
+        /// <c>none</c> there is a row with nothing radial about it, and the six
+        /// columns after it are then required to say the same -- a magnitude
+        /// nobody reads would still move the content hash, which is the rule
+        /// every other unread column in this file is refused by.
+        /// </para>
+        /// <para>
+        /// <b>What is checked is the value rather than the seven fields it was
+        /// built from.</b> Seven positional arguments of three types are seven
+        /// chances to hand a checker the wrong one, and the thing they describe
+        /// is a <see cref="Bubble"/> -- so one is built and that is what the
+        /// rules are asked about. An absent bubble is built too, carrying
+        /// whatever the row wrote in the six columns it should not have written
+        /// in, because those values are exactly what the refusal is about.
+        /// </para>
+        /// </remarks>
+        private static Bubble ReadBubble(string source, int line, string[] fields)
+        {
+            bool absent = string.Equals(fields[21], AbsentWord, StringComparison.Ordinal);
+
+            int radius = absent
+                ? 0
+                : DataText.IntegerInRange(source, line, "the bubble radius", fields[21], 0, int.MaxValue);
+
+            var origin = (BubbleOrigin)DataText.Keyword(source, line, "the bubble origin", fields[22], OriginWords);
+            var affects = (BubbleAffects)DataText.Keyword(source, line, "what the bubble affects", fields[23], AffectsWords);
+            int period = DataText.IntegerInRange(source, line, "the bubble period", fields[24], 0, int.MaxValue);
+            var payload = ReadPayload(source, line, fields[25]);
+
+            // Signed on purpose, and the Cryomancer is why: a slow is a speed
+            // payload with a negative percentage, and no dedicated slow columns
+            // exist for it to be authored in instead.
+            int magnitude = DataText.Integer(source, line, "the bubble magnitude", fields[26]);
+            int duration = DataText.IntegerInRange(source, line, "the bubble duration", fields[27], 0, int.MaxValue);
+
+            Bubble authored = Bubble.Of(radius, origin, affects, period, payload, magnitude, duration);
+
+            RequireBubble(source, line, absent, authored);
+
+            return absent ? Bubble.Absent : authored;
+        }
+
+        /// <summary>
+        /// The payload column, with the one word that is refused for a reason
+        /// rather than for not being on a list.
+        /// </summary>
+        private static BubblePayload ReadPayload(string source, int line, string field)
+        {
+            if (string.Equals(field, RefusedPayloadWord, StringComparison.Ordinal))
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble payload of '"
+                    + RefusedPayloadWord
+                    + "'. Range is the one stat a bubble may not modify: a tower's coverage is intersected "
+                    + "with the route once, at load, and handed to the tick loop as intervals of distance, "
+                    + "so a payload that moved a range would have to rebuild those intervals inside the "
+                    + "tick -- which is exactly what keeping the two dimensions out of the tick loop was "
+                    + "for. Author a bigger range on the row instead.");
+            }
+
+            return (BubblePayload)DataText.Keyword(source, line, "the bubble payload", field, PayloadWords);
         }
 
         /// <summary>
@@ -623,6 +753,344 @@ namespace Sim
                     + armourPoints.ToString(CultureInfo.InvariantCulture)
                     + " points of armour with no armour type to apply them through, so the number would "
                     + "be read by nothing and would still move the content hash.");
+            }
+        }
+
+        /// <summary>
+        /// The seven bubble columns agree with each other: either all seven
+        /// describe a bubble or all seven say there is none, and a bubble says
+        /// what it carries in the units that payload is measured in.
+        /// </summary>
+        private static void RequireBubble(string source, int line, bool absent, Bubble bubble)
+        {
+            if (absent)
+            {
+                if (bubble.Origin != BubbleOrigin.None
+                    || bubble.Affects != BubbleAffects.None
+                    || bubble.Payload != BubblePayload.None
+                    || bubble.PeriodTicks != 0
+                    || bubble.Magnitude != 0
+                    || bubble.DurationTicks != 0)
+                {
+                    throw new ContentException(
+                        source,
+                        line,
+                        "authors no bubble radius and then says something about the bubble anyway. The "
+                        + "radius column is what says whether there is one -- zero is a bubble on the "
+                        + "centre alone, and '"
+                        + AbsentWord
+                        + "' is no bubble -- so the six columns after it carry '"
+                        + AbsentWord
+                        + "' and zero, or the numbers would be read by nothing and would still move the "
+                        + "content hash.");
+                }
+
+                return;
+            }
+
+            if (bubble.Origin == BubbleOrigin.None
+                || bubble.Affects == BubbleAffects.None
+                || bubble.Payload == BubblePayload.None)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "authors a bubble radius and then leaves the bubble half-described. A radius on its "
+                    + "own says how far something reaches without saying where it is centred, whom it "
+                    + "reaches or what it carries, and there is no value for any of those a reader could "
+                    + "supply that the row ever stated.");
+            }
+
+            // A radius of zero is the centre alone, and the emitter's own hex is
+            // the one place nothing that walks can ever be.
+            if (bubble.ReachesOnlyItsCentre && bubble.Origin == BubbleOrigin.Self)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "authors a bubble of no radius centred on the emitter, which reaches the emitter and "
+                    + "nothing else. A tower may not stand in the corridor, so nothing that walks is ever "
+                    + "on that hex: zero is the target alone and it wants an origin of '"
+                    + OriginWords[(int)BubbleOrigin.Target]
+                    + "'.");
+            }
+
+            if (bubble.Payload == BubblePayload.Damage)
+            {
+                RequireDamageBubble(source, line, bubble);
+                return;
+            }
+
+            if (bubble.Magnitude == 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble that modifies "
+                    + PayloadWords[(int)bubble.Payload]
+                    + " by nothing at all. A magnitude of zero is a bubble that is emitted, enclosed and "
+                    + "applied every time it fires and changes no number when it lands.");
+            }
+
+            // A pool is granted and spent; a modifier lasts and expires. So a
+            // shield may say nothing about how long it lasts -- how long it
+            // lasts is how long it takes to be spent -- and the three that
+            // modify a stat may not, because a stat put back the tick it moved
+            // is a stat that never moved.
+            if (bubble.Payload != BubblePayload.Shield && bubble.DurationTicks == 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble that modifies "
+                    + PayloadWords[(int)bubble.Payload]
+                    + " for no ticks at all. A modifier is a magnitude and a duration together: applied "
+                    + "and expired inside one tick, it changes nothing and would still move the content "
+                    + "hash.");
+            }
+
+            // A pool is granted, never taken. Draining one is a mechanic
+            // nobody has designed, and a negative share of a health pool is a
+            // number this reader would have to decide the meaning of.
+            if (bubble.Payload == BubblePayload.Shield && bubble.Magnitude < 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble granting "
+                    + bubble.Magnitude.ToString(CultureInfo.InvariantCulture)
+                    + " percent of a shield. A shield payload grants a pool, as a share of the health it "
+                    + "stands in front of, and a negative share is a pool taken away -- which is a "
+                    + "mechanic nobody has authored and which no reader here applies.");
+            }
+        }
+
+        /// <summary>
+        /// The two things a damage bubble may not also say. Both are the same
+        /// rule -- damage comes from the attack's own roll and lands once -- and
+        /// they are here rather than inline so the clause above stays a list of
+        /// one-line refusals.
+        /// </summary>
+        private static void RequireDamageBubble(string source, int line, Bubble bubble)
+        {
+            if (bubble.Magnitude != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble magnitude of "
+                    + bubble.Magnitude.ToString(CultureInfo.InvariantCulture)
+                    + " beside a damage payload. A damage bubble is one shot and one roll -- it carries "
+                    + "the attack's own damage to everything it encloses, at full damage and with no "
+                    + "falloff -- so a second damage number would be read by nothing and would still "
+                    + "move the content hash. The amount is the roll; a column holding a second one "
+                    + "would be a second damage source with a draw of its own.");
+            }
+
+            if (bubble.DurationTicks != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble duration of "
+                    + bubble.DurationTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks beside a damage payload. Damage lands and is done; a duration on it would "
+                    + "be damage over time, which is a mechanic nobody has authored and which no reader "
+                    + "here applies.");
+            }
+        }
+
+        /// <summary>
+        /// The three columns layout 3 added agree with the row they were added
+        /// to: a thing that cannot be damaged carries no shield, a thing that
+        /// never attacks fires one shot, and the two shot shapes stay apart.
+        /// </summary>
+        /// <remarks>
+        /// <b>The last of those is the determinism contract, spelled as a
+        /// refusal.</b> <c>targets</c> fires n shots and draws n rolls; a damage
+        /// bubble is one shot and draws one roll applied to everything it
+        /// encloses. A row claiming both would draw n rolls and blanket the
+        /// board n times, which is not a shape anybody designed -- and the
+        /// number of draws per attack is folded into the state hash every tick,
+        /// so it is settled here rather than found later as a replay that will
+        /// not reproduce.
+        /// </remarks>
+        private static void RequireShotShapes(
+            string source,
+            int line,
+            UnitRole role,
+            Delivery delivery,
+            int maxHp,
+            int shield,
+            int targets,
+            Bubble bubble)
+        {
+            if (maxHp == 0 && shield > 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a shield of "
+                    + shield.ToString(CultureInfo.InvariantCulture)
+                    + " with no health pool underneath it. A shield absorbs first and overkill carries "
+                    + "through to health, so a shield on a unit nothing can damage is a pool nothing can "
+                    + "ever spend.");
+            }
+
+            if (delivery == Delivery.None && targets != 1)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "fires at "
+                    + targets.ToString(CultureInfo.InvariantCulture)
+                    + " targets and delivers no damage. A target count is shots per attack, so a row that "
+                    + "never attacks has one of them the way it has one of everything else it never does.");
+            }
+
+            if (delivery == Delivery.None && bubble.Present && bubble.FiresWithTheAttack)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble that fires with an attack it never makes. A period of zero is what "
+                    + "says the bubble goes off as part of a shot; a bubble on a row that never shoots is "
+                    + "an aura, and an aura has a period.");
+            }
+
+            if (targets != 1 && bubble.Payload == BubblePayload.Damage && bubble.FiresWithTheAttack)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "fires at "
+                    + targets.ToString(CultureInfo.InvariantCulture)
+                    + " targets and carries a damage bubble on the same attack. Those are the two shot "
+                    + "shapes and a row is one of them: n targets is n shots drawing n rolls, and a "
+                    + "damage bubble is one shot drawing one roll that lands on everything it encloses. "
+                    + "A row claiming both would draw one of them per body of the other, and the number "
+                    + "of draws an attack makes is part of what every stored record replays through.");
+            }
+
+            RequireLandable(source, line, role, bubble);
+        }
+
+        /// <summary>
+        /// A bubble carries something the side it reaches into actually has.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Which side that is depends on the emitter, and two payloads
+        /// cannot mean anything on the side they would reach.</b> Nothing that
+        /// stands walks and nothing that walks attacks -- both are permanent
+        /// facts about the two roles rather than about any row -- so a speed
+        /// reaching towers and a cooldown reaching creeps are columns that
+        /// would parse perfectly and then change no number anywhere. That is
+        /// the same failure a bubble nobody emits would be and it is refused in
+        /// the same place: at load, by name, with the column to change in the
+        /// message.
+        /// </para>
+        /// <para>
+        /// <b>What is deliberately not refused is a pool or an armour reaching
+        /// a tower.</b> Nothing shoots a tower in this loop, so such a bubble
+        /// grants something nothing can spend today -- but that is a fact about
+        /// the rows in <c>content/units.txt</c>, every one of which authors a
+        /// placed unit with no health pool, and not a fact about what a placed
+        /// unit is. Refusing it would also make <c>bubbleAffects</c> derivable
+        /// from the payload and the role in every case, which is a column
+        /// carrying nothing -- and a redundant column is a worse failure than
+        /// an inert one, because the fixed list of nine is what #213 bought.
+        /// </para>
+        /// <para>
+        /// <b>And a damage payload may not pulse.</b> The dice are rolled
+        /// exactly once per shot, for damage, and nowhere else -- which is what
+        /// makes the stream's position a running count of the shots fired so
+        /// far and is
+        /// <c>docs/adr/0003-dice-rolled-once-per-shot.md</c>'s whole claim. An
+        /// aura has no shot and no target, so a damage aura would have to draw
+        /// outside one and the count would stop meaning anything. A tower that
+        /// wants to damage on a clock has a cooldown.
+        /// </para>
+        /// </remarks>
+        private static void RequireLandable(string source, int line, UnitRole role, Bubble bubble)
+        {
+            if (!bubble.Present)
+            {
+                return;
+            }
+
+            if (bubble.IsAnAura && bubble.Payload == BubblePayload.Damage)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a damage bubble with a period of "
+                    + bubble.PeriodTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks, which is an aura that deals damage. The dice are rolled once per shot and "
+                    + "nowhere else, so the stream's position is a running count of the shots fired -- and "
+                    + "a pulse has no shot to be counted as. Author the period as a cooldown, or carry a "
+                    + "payload that is not damage.");
+            }
+
+            // A pulse has nothing it landed on, so there is no target for it to
+            // centre itself on. An aura is centred on whatever is emitting it,
+            // and that is the whole of where a bubble with a clock can be.
+            if (bubble.IsAnAura && bubble.Origin == BubbleOrigin.Target)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble with a period of "
+                    + bubble.PeriodTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks centred on '"
+                    + OriginWords[(int)BubbleOrigin.Target]
+                    + "'. A period is what makes a bubble pulse on a clock of its own rather than with a "
+                    + "shot, and a pulse has nothing it landed on: an aura is centred on '"
+                    + OriginWords[(int)BubbleOrigin.Self]
+                    + "'.");
+            }
+
+            UnitRole lands = bubble.ReachesInto(role);
+
+            if (lands == UnitRole.Placed && bubble.Payload == BubblePayload.Speed)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble of "
+                    + PayloadWords[(int)BubblePayload.Speed]
+                    + " that reaches "
+                    + RoleWords[(int)UnitRole.Placed]
+                    + " units. Nothing that stands walks anywhere in this simulation, so a speed on one "
+                    + "is a number read by nothing: change the payload, or change which side the bubble "
+                    + "reaches.");
+            }
+
+            if (lands == UnitRole.Moving && bubble.Payload == BubblePayload.Cooldown)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble of "
+                    + PayloadWords[(int)BubblePayload.Cooldown]
+                    + " that reaches "
+                    + RoleWords[(int)UnitRole.Moving]
+                    + " units. Nothing that walks the corridor attacks anything in this simulation, so a "
+                    + "cooldown on one is a number read by nothing: change the payload, or change which "
+                    + "side the bubble reaches.");
+            }
+
+            // A bubble of no radius is the one body the shot landed on, and
+            // what a shot lands on walks.
+            if (bubble.ReachesOnlyItsCentre && lands == UnitRole.Placed)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "authors a bubble of no radius that reaches "
+                    + RoleWords[(int)UnitRole.Placed]
+                    + " units. Zero is the target alone, and the target of a shot is something that "
+                    + "walks: a bubble reaching the other side wants a radius that encloses it.");
             }
         }
     }

@@ -99,30 +99,84 @@ public static class RecordBytes
         CommandsOffset
         + (index * (RecordFormat.CommandBytes + (TheCommands.SlotsPerCommand * RecordFormat.SlotBytes)));
 
-    /// <summary>Where the defense inside a bundle starts.</summary>
-    public static int GhostIn(ReplayBundle bundle) =>
+    /// <summary>Where a bundle's inlined map levels start: the plane after the cells.</summary>
+    public static int LevelsIn(ReplayBundle bundle) =>
         BundleCellsOffset + (bundle.Map.Width * bundle.Map.Height);
+
+    /// <summary>Where the defense inside a bundle starts: after both planes of the grid.</summary>
+    public static int GhostIn(ReplayBundle bundle) =>
+        LevelsIn(bundle) + (bundle.Map.Width * bundle.Map.Height);
 
     /// <summary>Where the wave inside a bundle starts.</summary>
     public static int WaveIn(ReplayBundle bundle) => GhostIn(bundle) + bundle.Ghost.ToBytes().Length;
 
     /// <summary>
-    /// A bundle as the version-0 bytes it would have been: the format version
-    /// turned back to zero and the ruleset stamp cut out.
+    /// A bundle as the version-1 bytes it would have been: the format version
+    /// turned back to one, the level plane cut out, and the defense's map hash
+    /// folded under the layout of that era.
     /// </summary>
     /// <remarks>
-    /// The writer emits the current version and only that, so a fresh version-0
-    /// bundle is not something this repository can make. The one that exists,
+    /// <para>
+    /// The writer emits the current version and only that, so no retired
+    /// version of a bundle is something this repository can make any more. The
+    /// one version-0 bundle that exists,
     /// <c>content/golden/defense-0.replay</c>, is stamped at a retired
-    /// simulation version and is refused at that gate long before the ruleset
-    /// one is reached -- so manufacturing the bytes here is what lets a test
-    /// watch a missing stamp refuse on its own.
+    /// simulation version and is refused at that gate long before the later
+    /// ones are reached, and no version-1 bundle survives at all -- the golden
+    /// pool is keyed on the defense's format version, and that one did not
+    /// move. Manufacturing the bytes here is what lets a test watch a retired
+    /// reader branch actually read.
+    /// </para>
+    /// <para>
+    /// <b>All three edits are one fact: this is a record from before the level
+    /// plane.</b> A reader at that version takes one plane of map bytes and
+    /// then the defense, so a plane left in would be walked as a defense; and
+    /// that defense pinned the terrain alone, under <c>hex-map/1</c>. A record
+    /// carrying today's fold under yesterday's version is a contradiction no
+    /// real one has, and it fails the map gate rather than whichever gate the
+    /// test was built to watch.
+    /// </para>
     /// </remarks>
-    public static byte[] WithoutTheRulesetStamp(byte[] bundle)
+    public static byte[] AtVersionOne(ReplayBundle good)
     {
-        byte[] older = WithU16(bundle, FormatVersionOffset, 0);
+        byte[] older = WithU16(good.ToBytes(), FormatVersionOffset, 1);
+        int levels = LevelsIn(good);
+        int cells = good.Map.Width * good.Map.Height;
+
+        byte[] cut = older[..levels].Concat(older[(levels + cells)..]).ToArray();
+
+        return WithU64(cut, GhostIn(good) - cells + GhostMapHashOffset, good.Map.MapHashUnder(1).Value);
+    }
+
+    /// <summary>
+    /// A bundle as the version-0 bytes it would have been: the version-1 bytes
+    /// above with the ruleset stamp cut out too.
+    /// </summary>
+    /// <remarks>
+    /// Built on the version before it rather than beside it, because that is
+    /// what the format's history actually is: version 1 is version 0 with a
+    /// ruleset stamp in front of the seed. Two independent manufacturers would
+    /// be two places for the older layout to be described, and the one that
+    /// went stale would go on producing bytes no reader ever saw.
+    /// </remarks>
+    public static byte[] WithoutTheRulesetStamp(ReplayBundle good)
+    {
+        byte[] older = WithU16(AtVersionOne(good), FormatVersionOffset, 0);
 
         return older[..BundleRulesetHashOffset].Concat(older[BundleSeedOffset..]).ToArray();
+    }
+
+    /// <summary>The same bytes with a little-endian u64 replaced.</summary>
+    public static byte[] WithU64(byte[] bytes, int offset, ulong value)
+    {
+        byte[] copy = (byte[])bytes.Clone();
+
+        for (int shift = 0; shift < 64; shift += 8)
+        {
+            copy[offset + (shift / 8)] = (byte)(value >> shift);
+        }
+
+        return copy;
     }
 
     /// <summary>The same bytes with one of them replaced.</summary>

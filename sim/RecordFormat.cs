@@ -150,10 +150,37 @@ namespace Sim
         public const int WaveVersion = 0;
 
         /// <summary>
-        /// The replay bundle layout, version 1: the version-0 fields with a
-        /// <c>u64 ruleset_hash</c> in front of the seed.
+        /// The replay bundle layout, version 2: the version-1 fields with a
+        /// second plane of map bytes -- one level per cell, row-major -- after
+        /// the cells.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// <b>Version 2 is the bump the level layer cost.</b> A bundle inlines
+        /// its map, and a map is now two planes rather than one, so the bytes
+        /// after <c>u16 height</c> are twice as many. Nothing about that is
+        /// optional: the level of a hex is what a tower's reach across a fold
+        /// is measured against, so a bundle that carried only the terrain would
+        /// be a record of a board nobody played on.
+        /// </para>
+        /// <para>
+        /// <b>A version-0 or version-1 bundle reads back on the flat, and that
+        /// is what those bytes say rather than a value invented for them.</b>
+        /// Every map that existed before this version was flat -- there was no
+        /// second tier to stand on and no notation for one -- so the level
+        /// plane a legacy branch supplies is the height that record was
+        /// actually played at. It is the case <see cref="GhostVersion"/> draws
+        /// the line around from the other side: the reader is not choosing a
+        /// value for a field the record left open, it is stating the only
+        /// height the world had.
+        /// </para>
+        /// <para>
+        /// <b>Their map hashes are compared under the layout they were stamped
+        /// at.</b> <c>hex-map/1</c> folded the terrain alone and
+        /// <c>hex-map/2</c> folds the terrain and the levels, so the two are
+        /// answers to different questions rather than two answers to one. See
+        /// <see cref="HexMap.MapHashUnder"/>.
+        /// </para>
         /// <para>
         /// <b>Version 0 carries no ruleset stamp, and version 1 is the bump
         /// that adds one.</b> Every landing reads the matrix cell, the armour
@@ -174,7 +201,7 @@ namespace Sim
         /// <c>docs/adr/0047-a-bundle-stamps-its-ruleset.md</c>.
         /// </para>
         /// </remarks>
-        public const int ReplayVersion = 1;
+        public const int ReplayVersion = 2;
 
         /// <summary>
         /// The command stream layout, version 3: a build phase is
@@ -356,7 +383,12 @@ namespace Sim
                     // branch stays for as long as any version-0 bytes exist.
                     // That it can no longer pass the replay gate is a decision
                     // about the ruleset field and not about reading the bytes.
-                    return formatVersion == 0 || formatVersion == 1;
+                    //
+                    // Version 1 is here on the same terms, and version 2 is the
+                    // one the writer emits: the level plane. Both older
+                    // branches read a map on the flat, which is the height
+                    // every board had before the plane existed.
+                    return formatVersion == 0 || formatVersion == 1 || formatVersion == 2;
 
                 case RecordKind.Command:
                     // Version 0 is here on the terms the defense's and the

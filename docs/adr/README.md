@@ -22,6 +22,8 @@ These were extracted from the source comments when the project moved to a commen
 | [0038](0038-a-shot-resolves-where-it-lands.md) | A shot resolves where it lands, and the ruleset is a match's argument |
 | [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling — **largely superseded by #209: the bands are gone and nothing prices off the field, so whether the measurement is kept at all is an [open question](../open-questions.md), which #208 waits on** |
 | [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
+| [0054](0054-height-is-a-relationship-and-a-radius-is-a-sphere.md) | Height is a relationship, a radius is a sphere, and a floor is under both |
+| [0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) | An effect is a stat, a magnitude and a duration, and a creep never drops below a tenth of its speed |
 
 ## The simulation/view boundary
 
@@ -58,6 +60,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
 | [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written — **the verb it was decided about is deleted by #200; the shape stands and is spent at the screen in 0051** |
 | [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command — **amended by #206: the watched round is the Offence and Defence Results Screen, two views of one resolved pairing, opening on the defence** |
+| [0055](0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md) | A sweep, a blast and an aura are one bubble, and n shots are not one |
 
 ## Drawing the match
 

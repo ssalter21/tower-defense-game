@@ -1013,6 +1013,41 @@ free.
 **What is free is the ghost record.** `TowerLayout` does not gain a level, so `RecordFormat.TowerBytes` stays
 at 6 and `GhostRecord` is untouched.
 
+**Corrected again on 16 August, by building the first half of it.** It is **five**, and the fifth is
+`SimulationVersion` **6 → 7**, taken in
+[#214](https://github.com/ssalter21/tower-defense-game/issues/214). Nothing about the tick loop moved — the
+committed match still leaks the same twelve creeps on the same tick 5283 — but `Match` opens its rolling state
+hash by folding the map hash, and the map hash now covers the height of every hex as well as its terrain. So
+every stored record's rolling hash stops reproducing while its outcome does not, which is exactly the condition
+the simulation version exists to retire records for. The rule-fingerprint table refused to let the number move
+without it, which is what that table is for; the row it wanted is `(7u, 0xF7A080A6691EA488UL)`.
+
+**Corrected a third time, by building the second half of it.** It is **six**, and the sixth is
+`SimulationVersion` **7 → 8**, taken in [#215](https://github.com/ssalter21/tower-defense-game/issues/215) —
+the signed difference, the sphere and the floor, in
+[`sim/Reach.cs`](../sim/Reach.cs) and asked by the one range test there is. This one *is* a rule change, and
+it is one whose retirement is invisible on the committed content: that map is entirely on the ground tier, so
+the signed difference over it is identically zero, the golden trace does not move a byte and
+`content/sweep.csv` does not move a number. What retires is every record made on a map with a fold in it —
+loadable since the level layer landed an hour earlier, and replaying to a different outcome under this.
+
+**The rule fingerprint could not see it, and the fix was the scenario rather than the fold.** Four times
+before, a rule moved that `DerivationTests` was structurally blind to and the fold gained a half. Not this
+time: every half of that fold already resolves a match against a tower and a route, which is exactly the code
+path the rule moved in — and it produced version 7's number byte for byte, because the scenario's map was
+written on the flat. So the map in it gained a fold, the label went to `rule-fingerprint/6`, and the row is
+`(8u, 0xF3D0032E948518D4UL)`. The same scenario under the flat rule folds `0x12BD5CDF6025ECD9`, which is what
+makes the row evidence rather than a number somebody wrote down.
+
+**And the map hash is compared under the layout a record stamped it at.** `hex-map/1` folded the terrain alone
+and `hex-map/2` folds the terrain and the levels, so the two are answers to different questions rather than two
+answers to one. A replay bundle carries its stamp and its grid in the same bytes under a format version that
+says which layout they were written at, so the older ones are still checked exactly — against the terrain,
+which is all they ever pinned. Without that, `content/golden/defense-0.replay` — the one bundle nobody can make
+again — would have failed the map gate on a layout bump, which is precisely the loss the restaging verb exists
+to prevent. What the bump does retire is a stamp arriving without its record: a stored defense matched against
+a map loaded today, folded under two layouts with nothing to say which.
+
 ### The map is text, and it is drawn by hand
 
 `content/map.txt` gains a **second grid block** for levels, written in letters — `a`, `b`, `c` for the three
@@ -1021,7 +1056,10 @@ indented in the file so what is typed matches the half-cell offset it produces. 
 which keeps the anti-cheat property and the a-map-is-a-seed property intact for free.
 
 The authoring loop is a sketch, transcribed once, and edited directly thereafter against a render command —
-chosen over a map editor because there is one map to draw and the file is the artefact that ships.
+chosen over a map editor because there is one map to draw and the file is the artefact that ships. That command
+is [`tools/render-map.ps1`](../tools/render-map.ps1), and it draws the **parsed** map: a file that will not
+load produces the loader's own refusal and no picture at all, so "is this a map yet" is answered by the same
+corridor assertion the simulation runs rather than by a second reader that would eventually disagree with it.
 
 ### The stat is called shield, and arcane stays where it was
 
@@ -1031,3 +1069,125 @@ different things spelled the same way in the same row was the whole of the objec
 the armour type keeps its name, and the roster's [expectation of an "arcane
 shield"](roster.md#open-questions) is satisfied by the pool plus the Necromancer's aura granting it — which is
 what that entry always described.
+
+## 16 August 2026, later still — nine columns land, and one guess in the cost rule stops being one
+
+**`content/units.txt` goes `layout 2` → `layout 3`**, gaining the nine columns
+[#213](https://github.com/ssalter21/tower-defense-game/issues/213) fixed as a list, built in
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216). The reasoning is
+[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md). Two lines of the bill above are paid at
+once — the layout and `match-state/1` → `match-state/2` — and `SimulationVersion` goes **8 → 9** with them.
+
+| | Before | After | Why |
+|---|---|---|---|
+| **the `bodies` term** of the placed-unit cost rule | Hardcoded `Delivery == Projectile ? 3 : 1` | **The `targets` column** | It was a guess standing in for a column that did not exist. A Marksman would otherwise be priced at a single-target Archer's price |
+| **what a bubble may carry** | — | Damage, or one of speed, cooldown, armour, shield. **Not range**, refused by name with the reason attached | Coverage is intersected with the route once, at load. A payload that moved a range drags the two dimensions back into the tick loop |
+| **a row claiming both shot shapes** | — | **Refused at load** | *n* targets draws *n* rolls and a damage bubble draws one. A row claiming both draws one of them per body of the other, and the draw count is part of what every stored record replays through |
+| **a bubble the tick loop cannot resolve** | — | **Refused when a match is built from it**, by name | The alternative is a Cryomancer standing on the board, firing, and slowing nothing, with a column that parsed perfectly and nothing anywhere saying so |
+
+### What moved in the artefacts, and what did not
+
+**Nothing about the committed match moved.** Every row authors one shot, no shield and no bubble, so the same
+wave leaks the same twelve creeps on the same tick 5283, the four landmark ticks are unchanged, the committed
+run still dies in round four having dealt 229, and `content/sweep.csv` is byte for byte what it was —
+regenerated and unmoved, which is the honest result and not a tuned one. What moved is the hashes: the roster's
+under `unit-types/3`, the match's under `match-state/2`, and every artefact that carries one of them.
+
+**The rule fingerprint could not see it, and for the second time running the fix was the scenario.** Every half
+of that fold is fought over a layout-1 or layout-2 roster, and no such row can carry a shield, a shot count
+above one or a bubble at all — so #216's rules run in all five halves and are visible in none. The fold gained
+a sixth half whose roster is layout 3 and whose two towers are the two shot shapes, the label went to
+`rule-fingerprint/7`, and the row is `(9u, 0x1BAEAF1DA57D7D8EUL)`. With `Match.Absorbed`'s body struck out —
+the shield spent by nothing, every other line untouched — the same scenario folds `0xF8B857E6175940A5`, which
+is what makes the row evidence rather than a number somebody wrote down.
+
+### The Mage is priced for a splash nobody has authored
+
+| | The rule prices | The row costs |
+|---|---|---|
+| **Mage** | **30 gold** — 275 average damage, a 54-tick cooldown, one body | **92 gold** — three bodies' worth |
+
+**This is a finding rather than a decision.** The old `bodies` guess read three off the delivery column, so the
+Mage's price looked derived; what it was doing was propping up a splash the simulation has never had.
+[The roster](roster.md#4--mage--tier-1--status-live) signs "splash of one additional hex", radius 1000, and
+layout 3 is the first schema that could carry it — as a bubble on the target with a damage payload.
+
+**#216 authored no bubble on the Mage and moved no price**, because either edit is somebody deciding what a
+Mage is. What it did instead is pin the gap in `ContentTests` with both numbers in it, so the question stands
+in the artefact rather than being silently answered. Three ways out, and none of them is a ticket's to take:
+author the splash and accept that a radius is unpriced; reprice the row to 30 and accept a Mage at a third of
+its old price; or make it genuinely fire three shots, which is a different tower.
+
+## 16 August 2026, last — a stat can move while a match is running, and a floor stops that ending it
+
+**`sim/` gains its first per-unit timed effects**, built in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) and decided in
+[#213](https://github.com/ssalter21/tower-defense-game/issues/213). The reasoning is
+[ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md). `SimulationVersion` goes **9 → 10**,
+the state hash's label `match-state/2` → `match-state/3`, and the rule fingerprint's `rule-fingerprint/7` →
+`rule-fingerprint/8`.
+
+Before this, every stat was read straight off the shared `UnitType` at use time and a creep carried
+`Id, Type, OrderIndex, Distance, Lateral, Hp, Shield, Phase, TicksInState` and nothing else. There was no
+effect machinery in the simulation at all.
+
+| | Before | After | Why |
+|---|---|---|---|
+| **an effect** | — | **A stat, a magnitude and a duration.** One model: speed, cooldown, armour and a granted shield pool | A slow, a rally, a curse and a pool are the same four fields with different numbers, exactly as a sweep, a blast and an aura were one bubble |
+| **two of them on one stat** | — | **Strongest-wins, with the timer refreshed** | It is the only rule with a ceiling that does not depend on how many copies of a tower somebody could afford |
+| **two of equal size and opposite sign** | — | **The lower one**, so the order is total | Otherwise a curse and a blessing resolve by whichever landed last, and two runs that differed only in build order fold different numbers |
+| **when an effect stops** | — | **Exactly its duration of ticks after the one it landed on**, whichever phase emitted it | Expiry opens the tick and emission closes it, so a shot and a pulse mean the same thing by "duration" |
+| **a creep's walking speed** | `_stepPerTick[orderIndex]` | **`Creep.Step`, per creep** | A modifier is per unit. An array indexed by the order would also have mis-reported every overtake involving a slowed creep, because `StepThisTick` reads the same number |
+| **the slowest a creep can walk** | Nothing said | **A tenth of its authored speed, and never less than one milli-hex** | A safety rail. The constructor's "no speed" refusal is at construction only, and a runtime modifier walks straight past it |
+| **a wave that could not cross at that floor** | — | **Refused when the match is built**, naming the tick it would have arrived on | The floor makes a hung match unreachable by arithmetic, and this is where that is proved for the map and wave in hand |
+| **a bubble the tick loop could not resolve** | Refused when a match was built from it | **It plays.** #216's guard is deleted | That guard existed only because this machinery did not |
+| **a damage bubble with a period** | Authorable | **Refused at load** | A pulse has no shot, and ADR-0003 is that the dice are rolled once per shot and nowhere else |
+| **an aura centred on `target`** | Authorable | **Refused at load** | A pulse has nothing it landed on |
+| **a speed reaching towers, a cooldown reaching creeps** | Authorable | **Refused at load** | Nothing that stands walks and nothing that walks attacks. A pool or an armour reaching a tower is *not* refused — that is a fact about the rows, not about the role, and refusing it would make `bubbleAffects` derivable and therefore empty |
+
+### The two things somebody had to decide, decided here rather than in silence — and one of them wants a signature
+
+**A shield payload's magnitude is a share of the health it stands in front of.** A shield is a pool rather
+than a rate, so there is no authored number of its own for a percentage to be a percentage of — and the
+consistent-looking alternative, a share of the recipient's own `shield` column, is inert on every row the
+mechanic exists for: the roster's walking rows author no shield at all. The same choice settles how the pool
+behaves: it **persists until spent or until its duration ends**, whichever comes first, a duration of zero
+means until spent, and killing the emitter stops the pulses rather than stripping what is already granted.
+
+**All of that is provisional.** #213's column table says "a percentage" and stops, so something had to be
+chosen for the column to mean anything at all — but what a Necromancer's pool is worth, how long it lasts and
+whether killing her takes it back are shapes of a creep rather than shapes of the simulation, and that is
+Sam's by standing rule. It is written here and in ADR-0056 as the implementer's reading, it stays an open
+question in [the roster](roster.md#7--necromancer--status-live), and moving any of it costs no format
+version.
+
+**A damage modifier is unauthorable, and the word is the reason.** #217's model names five modifiable stats
+including damage, and `bubblePayload` has five values including `damage` — but that word already means *the
+attack's own roll, spread*, which is what #216 built. The two readings cannot share a keyword, the list of
+five is fixed, and a sixth would be widening the schema #213 closed. Four stats are modifiable and the fifth
+name is taken.
+
+### What moved in the artefacts, and what did not
+
+**Nothing about the committed match moved, again.** No row of `content/units.txt` authors a bubble at all, so
+the same wave leaks the same twelve creeps on the same tick 5283, the four landmark ticks are unchanged, the
+run still dies in round four having dealt 229, and `content/sweep.csv` is byte for byte what it was —
+regenerated and unmoved, which is the honest result and not a tuned one. What moved is the hashes.
+
+**The rule fingerprint could not see it, for the seventh time and in the roster again.** The sixth half of
+that fold is the one #216 added precisely because the five above it were fought over rosters that could not
+say what it changed — and both of *its* bubbles carry damage, while a timed effect is emitted by a bubble
+carrying a stat and by nothing else. So the rules ran in that half and were visible in none of the six. What
+changed is the rows: a turret whose shot slows what it hits and a walker whose aura grants a pool to whatever
+walks beside it. The label went to `rule-fingerprint/8` and the row is `(10u, 0x13EB7A4673B75F21UL)`. With
+`Effects.ModifiedSpeed` returning the authored speed — the slow landing, expiring and changing no step, every
+other line untouched — the same scenario folds `0x4B15804EC1BEDE48`, which is what makes the row evidence
+rather than a number somebody wrote down.
+
+### What a view still cannot see
+
+**No snapshot field and no event says a creep is slowed.** Events are decorative by
+[ADR-0008](adr/0008-match-events-are-decorative.md) and there are six of them; the snapshot is the view's only
+input by [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md). Adding either is a view contract taken in a
+ticket about rules, so neither was taken — and it goes to [open questions](open-questions.md) rather than
+being assumed, because the day a Cryomancer is signed is the day somebody has to draw one.
