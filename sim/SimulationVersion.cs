@@ -9,6 +9,6 @@ namespace Sim
     /// </summary>
     public static class SimulationVersion
     {
-        public const uint Current = 7;
+        public const uint Current = 8;
     }
 }

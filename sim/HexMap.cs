@@ -424,6 +424,23 @@ namespace Sim
         }
 
         /// <summary>
+        /// The same tier, asked about the hex rather than about the cell it is
+        /// written in.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Route"/> is a list of hexes, so every caller that walks
+        /// the corridor asking how high each cell stands would otherwise
+        /// convert back to an offset column and row itself. One conversion, in
+        /// the type that holds both planes.
+        /// </remarks>
+        public int LevelAt(Hex hex)
+        {
+            Hex.ToOddRowOffset(hex, out int column, out int row);
+
+            return LevelAt(column, row);
+        }
+
+        /// <summary>
         /// The grid as one byte per cell, row-major -- exactly the bytes the
         /// replay record carries, and exactly what <see cref="MapHash"/> covers
         /// after the width and the height.

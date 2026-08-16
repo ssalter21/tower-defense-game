@@ -45,9 +45,6 @@ namespace Sim
     /// </remarks>
     public readonly struct Footing
     {
-        /// <summary>Thousandths of a hex per hex. Ranges are authored in milli-hexes.</summary>
-        private const int MilliHexPerHex = 1000;
-
         private readonly string? _fault;
 
         private Footing(bool possible, bool reachesRoute, string? fault)
@@ -125,7 +122,7 @@ namespace Sim
 
             for (int step = 0; step < map.Route.Count; step++)
             {
-                if (Reaches(hex, type.RangeMilliHex, map.Route[step]))
+                if (Reaches(map, hex, type.RangeMilliHex, map.Route[step]))
                 {
                     return new Footing(true, true, null);
                 }
@@ -136,25 +133,32 @@ namespace Sim
                 false,
                 "which cannot reach any part of the route: its range is "
                 + type.RangeMilliHex.ToString(CultureInfo.InvariantCulture)
-                + " thousandths of a hex and the nearest corridor cell is further than that. A "
-                + "tower that can never fire is what a mistyped coordinate looks like, and it "
-                + "would otherwise present as a balance problem.");
+                + " thousandths of a hex, and no corridor cell is that close once the climb to it "
+                + "is counted. A tower that can never fire is what a mistyped coordinate looks "
+                + "like, and it would otherwise present as a balance problem.");
         }
 
         /// <summary>
-        /// Whether one cell is within a range of another. This is the range
-        /// test, and there is one of it.
+        /// Whether a tower standing on one cell of a map can shoot another.
+        /// This is the range test, and there is one of it.
         /// </summary>
         /// <remarks>
-        /// Whole-hex integer arithmetic on cube coordinates, scaled to
-        /// milli-hexes to compare against the authored range -- so no division
-        /// and no rounding rule is involved, and the answer cannot depend on how
-        /// anything is drawn. <see cref="TowerCoverage"/> walks the route with
-        /// this to collect the runs of cells a tower covers; the walk above uses
-        /// it to answer whether there are any.
+        /// <para>
+        /// The map is an argument rather than a pair of levels, because both
+        /// levels are facts the map already holds and a caller that passed them
+        /// in could pass the wrong ones. <see cref="TowerCoverage"/> walks the
+        /// route with this to collect the runs of cells a tower covers; the
+        /// walk above uses it to answer whether there are any.
+        /// </para>
+        /// <para>
+        /// The arithmetic is <see cref="Reach.Shoots"/> -- whole-hex integer
+        /// arithmetic on cube coordinates with a signed level term, so no
+        /// division and no rounding rule is involved, and the answer cannot
+        /// depend on how anything is drawn.
+        /// </para>
         /// </remarks>
-        internal static bool Reaches(Hex from, int rangeMilliHex, Hex cell) =>
-            from.DistanceTo(cell) * MilliHexPerHex <= rangeMilliHex;
+        internal static bool Reaches(HexMap map, Hex from, int rangeMilliHex, Hex cell) =>
+            Reach.Shoots(from, map.LevelAt(from), rangeMilliHex, cell, map.LevelAt(cell));
 
         public override string ToString() => Sound ? "stands and reaches the route" : Fault;
     }

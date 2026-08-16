@@ -376,7 +376,7 @@ namespace Sim
 
             for (int step = 0; step < map.Route.Count; step++)
             {
-                if (!covered[step] && Footing.Reaches(hex, type.RangeMilliHex, map.Route[step]))
+                if (!covered[step] && Footing.Reaches(map, hex, type.RangeMilliHex, map.Route[step]))
                 {
                     gained++;
                 }
@@ -392,7 +392,7 @@ namespace Sim
 
             for (int step = 0; step < map.Route.Count; step++)
             {
-                covered[step] = covered[step] || Footing.Reaches(hex, type.RangeMilliHex, map.Route[step]);
+                covered[step] = covered[step] || Footing.Reaches(map, hex, type.RangeMilliHex, map.Route[step]);
             }
         }
     }

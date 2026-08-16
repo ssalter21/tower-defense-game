@@ -1022,6 +1022,23 @@ every stored record's rolling hash stops reproducing while its outcome does not,
 the simulation version exists to retire records for. The rule-fingerprint table refused to let the number move
 without it, which is what that table is for; the row it wanted is `(7u, 0xF7A080A6691EA488UL)`.
 
+**Corrected a third time, by building the second half of it.** It is **six**, and the sixth is
+`SimulationVersion` **7 → 8**, taken in [#215](https://github.com/ssalter21/tower-defense-game/issues/215) —
+the signed difference, the sphere and the floor, in
+[`sim/Reach.cs`](../sim/Reach.cs) and asked by the one range test there is. This one *is* a rule change, and
+it is one whose retirement is invisible on the committed content: that map is entirely on the ground tier, so
+the signed difference over it is identically zero, the golden trace does not move a byte and
+`content/sweep.csv` does not move a number. What retires is every record made on a map with a fold in it —
+loadable since the level layer landed an hour earlier, and replaying to a different outcome under this.
+
+**The rule fingerprint could not see it, and the fix was the scenario rather than the fold.** Four times
+before, a rule moved that `DerivationTests` was structurally blind to and the fold gained a half. Not this
+time: every half of that fold already resolves a match against a tower and a route, which is exactly the code
+path the rule moved in — and it produced version 7's number byte for byte, because the scenario's map was
+written on the flat. So the map in it gained a fold, the label went to `rule-fingerprint/6`, and the row is
+`(8u, 0xF3D0032E948518D4UL)`. The same scenario under the flat rule folds `0x12BD5CDF6025ECD9`, which is what
+makes the row evidence rather than a number somebody wrote down.
+
 **And the map hash is compared under the layout a record stamped it at.** `hex-map/1` folded the terrain alone
 and `hex-map/2` folds the terrain and the levels, so the two are answers to different questions rather than two
 answers to one. A replay bundle carries its stamp and its grid in the same bytes under a format version that

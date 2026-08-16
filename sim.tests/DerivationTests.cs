@@ -152,20 +152,54 @@ public class DerivationTests
         // this constant exists to retire records for, and the alternative is a
         // golden trace that changed under a version claiming nothing had.
         (7u, 0xF7A080A6691EA488UL),
+
+        // Version 8 is #215 -- a level is a term in the range test. A shot
+        // reaches baseRange + (towerLevel - targetLevel) * 500, a radius reads
+        // as a sphere where height only ever costs, and a floor guarantees
+        // adjacency on both. Every tower on a map with a fold in it covers a
+        // different stretch of route under it, so every record made on one
+        // replays to a different outcome.
+        //
+        // IT CAUGHT THE SAME HOLE A FIFTH TIME, AND IN THE SCENARIO RATHER THAN
+        // IN THE SHAPE OF THE FOLD. Every half below resolves a match on
+        // FingerprintMap, which is the code path the rule moved in -- and that
+        // map was written on the flat, where the signed difference is
+        // identically zero. This build's fingerprint under it came out
+        // F7A080A6691EA488, byte for byte version 7's, for a change that alters
+        // what a tower covers. So the map gained a fold rather than the fold
+        // gaining a half, and the label went to rule-fingerprint/6.
+        //
+        // OBSERVED, both ways round, on this build. Under the folded map with
+        // the level term struck out of Reach.Within -- the flat rule this
+        // replaces, nothing else touched -- the fingerprint is
+        // 12BD5CDF6025ECD9, and with the rule in it is the value below.
+        (8u, 0xF3D0032E948518D4UL),
     };
 
     /// <summary>
     /// The scenario the fingerprint is taken over: one corridor, one tower, one
-    /// order of three walkers. Written out here on purpose -- a fingerprint over
-    /// the committed files would move every time somebody retuned a number, and
-    /// would then be a content hash wearing a simulation version's name.
+    /// order of three walkers, on ground that is not flat. Written out here on
+    /// purpose -- a fingerprint over the committed files would move every time
+    /// somebody retuned a number, and would then be a content hash wearing a
+    /// simulation version's name.
     /// </summary>
+    /// <remarks>
+    /// <b>The fold in it is load bearing and is the whole of why the map is two
+    /// blocks here.</b> The turret stands on the top tier at column 2 and
+    /// reaches two hexes on the flat, which is route cells 1 to 4. Cell 5 is
+    /// three hexes away and two tiers below, so shooting down buys the half hex
+    /// twice over and it comes into range; cell 0 is the same three hexes away
+    /// and on the turret's own tier, so it stays out. A flat bonus for standing
+    /// high would have brought both in, which is the rule this one was chosen
+    /// over -- and on ground that is all one tier neither is in and the
+    /// scenario cannot tell the two rules apart at all.
+    /// </remarks>
     private const string FingerprintMap = """
         S####E
         ......
 
-        aaaaaa
-        aaaaaa
+        ccaaaa
+        aacaaa
         """;
 
     private const string FingerprintUnits = """
@@ -636,10 +670,21 @@ public class DerivationTests
     /// payment too, which is the only half that can see what a wave earns;
     /// <c>rule-fingerprint/5</c> folds the rounds of a run against a population
     /// recorded per round, which is the only half that can see who a round
-    /// fights. Versions 1 to 5 are recorded under earlier labels and cannot be
+    /// fights. Versions 1 to 7 are recorded under earlier labels and cannot be
     /// recomputed here, which is a loss stated out loud rather than a table that quietly
     /// compares fewer things -- the same rule <see cref="Match"/> applies to its
     /// own state-hash label.
+    /// </para>
+    /// <para>
+    /// <b>The label carries the scenario as well as the shape, and
+    /// <c>rule-fingerprint/6</c> is the first bump taken for the scenario
+    /// alone.</b> Every half of the fold already resolved a match against a
+    /// tower and a route, so the elevation rule of #215 runs through all of
+    /// them -- and produced version 7's number exactly, because
+    /// <see cref="FingerprintMap"/> was written on the flat and a signed height
+    /// difference over flat ground is zero. A fold that runs the rule and
+    /// cannot see it is the same failure as a fold that never runs it, so what
+    /// changed is the ground the scenario stands on.
     /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
@@ -650,7 +695,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/5").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/6").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
