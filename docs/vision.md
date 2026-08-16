@@ -233,23 +233,33 @@ first paid for inside the simulation rather than chosen from a menu.
 
 ### The board is a maze
 
-**The geometry is a maze, and the goal is one that is far less solvable. Placements sit at several elevation
-levels, and elevation grants range** — the common shipped form is *+1 range per level*, which makes **where**
-and **what** one decision instead of two.
+**The geometry is a maze, and the goal is one that is far less solvable. Placements sit at three elevation
+levels, and elevation changes range by the difference in height** — not by the height itself — which makes
+**where** and **what** one decision instead of two.
 
-Four consequences, none optional:
+**A map folds; it never branches.** There is always exactly one path from entrance to exit, and the player
+never alters the route by building. That is a standing rule rather than a deferral, and it is what keeps a
+search out of the simulation — see [the decision log](decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for).
+
+Five consequences, none optional:
 
 - **It is the genre's strongest skill axis.** A creep crossing a board in a straight line spends about two
   seconds under fire; the same board folded into a switchback, twelve — a sixfold damage multiplier bought with
   no gold at all.
-- **Pathfinding enters the simulation, and that is a determinism obligation.** An integer pathfinder with a
-  *fixed, asserted* tie-break, held to `sim/`'s existing standards, in the hottest loop.
-- **Elevation is a third coordinate, and coordinates are in the record.** `TowerLayout` and the hex map gain a
-  level: a format version, a hash-layout bump and a retired ghost pool. Cheap now, expensive later.
+- **No pathfinder, and no line of sight.** `HexMap` already traces the single corridor at load and asserts it
+  never branches; folding it changes none of that. Both were priced as determinism obligations in the hottest
+  loop, and both are out permanently.
+- **Range is a signed difference.** `baseRange + (towerLevel − targetLevel) × 500`, in milli-hex: shooting down
+  a tier buys half a hex, shooting up one costs half a hex. Anything with a radius instead reads as a sphere —
+  `hexDistance × 1000 + |levelDifference| × 500 ≤ radius` — where height only ever costs, so a tower on a cliff
+  cannot blanket the board. A floor guarantees any tower reaches the hexes touching it.
+- **Elevation is a third coordinate, and the map carries it.** The hex map gains a level layer: a format
+  version and a hash-layout bump. `TowerLayout` does *not* — a tower stands on a hex and the hex knows its
+  level — so the ghost record's format survives untouched. Cheap now, expensive later.
 - **"Far less solvable" is a measurable target**, not a feeling — [§9](#9-the-planning-phase-is-the-game).
 
-⚠️ **The bill it presents is ordering.** A branching map dilutes send order, so the map must be designed to
-keep the column rather than merely to be interesting.
+⚠️ **The bill it presents is ordering.** The single path is what preserves the send column; a map is designed
+to keep that order rather than merely to be interesting.
 
 ⚠️ **Until the maze lands, the board is a 47-hex corridor one cell wide, and every number priced against it is
 provisional by construction.** On one-wide geometry many placements are equivalent, so the build phase will
@@ -259,6 +269,11 @@ feel thin — a fact about *this* corridor, not about the mechanism.
 
 **The round-robin runs on one map at a time and that map turns over on a schedule. Maps are generated rather
 than authored, and a map is identified by a seed rather than stored as a file.**
+
+⚠️ **The first map is hand-authored, and generation and rotation are deferred behind it.** Selection pressure
+needs a fitness function, and a fitness function needs one map that is demonstrably good to calibrate against.
+The sweep already takes its map as a parameter, so scoring a candidate costs a flag — which is the half of
+generated rotation that is paid for in advance, and which is worth nothing without a known-good reference.
 
 A hard map buys time against solving; a map nobody has seen buys it permanently. The maze makes each map deep,
 rotation makes the depth renewable — which matters more here than elsewhere because [§4](#4-what-persists) has

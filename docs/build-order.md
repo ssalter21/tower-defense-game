@@ -110,7 +110,7 @@ Each is the subject of its own wayfinder map — its own destination, decision t
 | 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5 |
 | 7 | **The interface** | Reading twenty boards, an economy and a build menu at once | Step 5 is its single-board half |
 | 8 | **The presentation** | The art pipeline, and what makes it look composed | Independent, whenever there is appetite |
-| 9 | **The board** | The maze, elevation, pathfinding, generation and rotation | Nothing before step 5 needs it; everything after is shaped by it |
+| 9 | **The board** | The maze and elevation. No pathfinder, ever; generation and rotation deferred behind the first authored map | Nothing before step 5 needs it; everything after is shaped by it |
 
 ### 1 · The match format
 
@@ -279,21 +279,29 @@ elevation legibility a veto rather than a nicety.
 
 ### 9 · The board
 
-**The maze, elevation, pathfinding, generation and rotation.** None of the other eight is the right home: seam
-1 owns the rules of a match, seam 3 the units, seam 4 the measuring tool, seam 5 the storage. Its destination
-is a board that is generated, verifiable, deterministic and demonstrably worth playing.
+**The maze and elevation.** None of the other eight is the right home: seam 1 owns the rules of a match, seam
+3 the units, seam 4 the measuring tool, seam 5 the storage. Its destination is a board that is verifiable,
+deterministic and demonstrably worth playing. **Pathfinding is no longer in it and never will be, and
+generation and rotation are deferred behind the first hand-authored map** — [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
+[the decision log](decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for).
 
-- **The maze and elevation** — what the geometry is, how many tiers, what range a tier grants, whether branches
-  converge or diverge, and how the map preserves the send column
-  [ordering](vision.md#depth-is-the-point) needs. A design question with a legibility veto on it.
-- **Pathfinding** — an integer pathfinder with a fixed, asserted tie-break, held to `sim/`'s standards: one RNG
-  stream, canonical order asserted rather than restored, IL-scanned, no floating point. The highest-risk item,
-  because it lands in the hottest loop and touches the one guarantee everything rests on.
-- **The record** — elevation is a third coordinate, so `TowerLayout` and the hex map gain a level: a format
-  version, a hash-layout bump and a retired ghost pool. Cheap now, expensive later, and the reason this seam
-  wants charting before step 5.
-- **Generation and rotation** — seed-to-map as a pure function, a `simcli` mode to invoke it, the sweep-scored
-  archive, and the schedule that draws from it. Surveyed in
+- **The maze and elevation** — **three tiers**, a tier worth **500 milli-hex**, applied as the signed
+  difference `baseRange + (towerLevel − targetLevel) × 500` rather than as a bonus for standing high. Radii
+  read as spheres, `hexDistance × 1000 + |levelDifference| × 500 ≤ radius`, so height only ever costs them, and
+  a floor guarantees any tower reaches the hexes touching it. How the map preserves the send column
+  [ordering](vision.md#depth-is-the-point) needs is still a design question, with a legibility veto on it.
+- **The single path** — a map folds but never branches, and the player never alters the route by building, so
+  `HexMap`'s existing load-time trace is the whole of it: still one hex wide, still asserted, still no search
+  in the hot loop. The rule that a corridor cell may not have three corridor neighbours is **kept**, so two
+  legs of a fold are never adjacent and a longer path comes from a bigger board rather than a tighter one.
+  **No pathfinder and no line of sight**, both permanently.
+- **The record** — elevation is a third coordinate and the **map** carries it; `TowerLayout` does not, because
+  a tower stands on a hex and the hex knows its level. A format version and a hash-layout bump for the map,
+  while `RecordFormat.TowerBytes` and `GhostRecord` are untouched. Cheap now, expensive later, and the reason
+  this seam wants charting before step 5.
+- **The first map is hand-authored**, and **generation and rotation wait behind it** — seed-to-map as a pure
+  function, a `simcli` mode to invoke it, the sweep-scored archive, and the schedule that draws from it, all
+  downstream of one map that is demonstrably good to score candidates against. Surveyed in
   [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html).
 
 **Nothing before step 5 needs it, and everything after step 5 is shaped by it.** Steps 1–4 run against the

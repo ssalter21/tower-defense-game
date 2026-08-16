@@ -131,13 +131,16 @@ lacks; see [what the schema does not have](#what-this-roster-needs-that-the-sche
 
 ### 11 · Soldier · tier 1 · status live
 
-- **Does** — one hex of range, single target, fast. Height does not change it.
+- **Does** — one hex of range, striking every creep touching him, fast. The adjacency floor means height never
+  takes his neighbours away from him.
 - **Looks** — knight, full helm down, short sword.
 - **Numbers** — range 1000, cooldown 15 (two swings a second), damage 60–90, windup 7, backswing 5, hitscan,
   impact, **cost 30**.
-- **Needs** — nothing. Authorable today.
-- **Open** — a one-hex tower is a corridor-geometry unit, and the one-hex corridor goes away at seam 9. What is
-  a melee tower once the board is a maze with width?
+- **Needs** — `bubbleRadius` and `bubbleOrigin`, from layout 3. The numbers below are authorable today; the
+  sweep is not.
+- **Answered** — he was the unit seam 9 was expected to retire, and he is kept instead. A tower that strikes
+  everything touching it is the one tower whose whole value is positional, which is exactly what a fold is
+  for.
 
 > **Why it is the cheapest thing on the board.** 150 damage a second against the Archer's 200, at 30 gold
 > against 40 — identical value per gold, with a third of the reach. You buy Soldiers because they are cheap,
@@ -450,16 +453,36 @@ considered and dropped: it is not a thing this page needs to have an opinion abo
 
 ## What this roster needs that the schema does not have
 
-Five levers, in rough order of cost. Each is a research finding and a schema decision before it is a column,
-and **none of them should become a column without that.** A new unit is a row; a new column is a format version
-and every stored record made under the old one retired.
+**Decided, and fixed as a list** — [#213](https://github.com/ssalter21/tower-defense-game/issues/213). The five levers become **nine columns** on
+`content/units.txt` layout 3, and three of the five collapse into one mechanic, because a sweep, a blast and an
+aura are all the same shape: a bubble that emits something.
 
-1. **A target count**, for the Marksman.
-2. **A radial shot**, for the Hero.
-3. **A timed speed modifier**, for the Cryomancer — the first thing that changes a creep mid-walk.
-4. **A periodic aura** — radius, period, duration, modifier — for the Captain and the Necromancer. An aura is
-   emitted rather than possessed, so it is not a unit stat.
-5. **A second health pool that absorbs first**, for the Necromancer's shield.
+| Column | Meaning |
+|---|---|
+| `shield` | A pool that absorbs first and raw. Armour does not apply to it, overkill carries through to health, and it does not regenerate. 0 = none |
+| `targets` | Shots per attack, each its own damage roll, targets taken nearest-to-exit first. 1 = an ordinary single shot |
+| `bubbleRadius` | Milli-hex, read as a sphere. 0 = the target alone; absent = no bubble |
+| `bubbleOrigin` | `self` or `target`. The Soldier's sweep centres on the tower; a mortar's blast centres on what it hit |
+| `bubbleAffects` | `friend` or `enemy` |
+| `bubblePeriod` | Ticks. 0 = fires with the attack; positive = pulses on its own, which is what makes it an aura |
+| `bubblePayload` | `damage`, or one of the five modifiable stats — speed, damage, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop |
+| `bubbleMagnitude` | A damage amount, or a percentage |
+| `bubbleDuration` | Ticks. 0 = instant |
+
+**What that authors.** The Cryomancer needs no dedicated slow columns at all: she is a bubble of radius 0,
+origin `target`, payload `speed`, negative magnitude, positive duration. The Captain is the same mechanic with
+a period and origin `self`. A mortar is origin `target` with a real radius and payload `damage`. The
+Necromancer grants shield to the creeps around it — origin `self`, affects `friend`, payload `shield` —
+measured in hex distance rather than along the marching column, so it reaches the neighbouring leg of a fold. A
+tower that pulses over the whole board is one row.
+
+**Effects are one model**: a stat, a magnitude and a duration. Strongest-wins with the timer refreshed on
+reapplication, applied in canonical order. A creep never drops below **10% of its authored speed** — a floor
+binding every effect at once, which is what makes a match that cannot end unreachable by arithmetic rather than
+by careful authoring.
+
+A new unit is still a row, and a new column is still a format version with every stored record made under the
+old one retired. **This is the last widening the roster asks for before the map has been measured.**
 
 **The upgrade edge is not on this list.** It is [`content/upgrades.txt`](../content/upgrades.txt), a file of its
 own rather than a column, and the reasoning is in
@@ -480,9 +503,10 @@ open.
 
 ## Open questions
 
-1. **Five of the six proposed towers are blocked on a lever the schema lacks** — the five above. Only the
-   Pyromancer is authorable today, and only if "extra damage" turns out to be a bigger damage roll. The ladder
-   itself is built.
+1. **Five of the six proposed towers are blocked until layout 3 lands.** The column list is
+   [fixed](#what-this-roster-needs-that-the-schema-does-not-have) and the implementation is ticketed, so this
+   is now a queue rather than a question. Only the Pyromancer is authorable before it, and only if "extra
+   damage" turns out to be a bigger damage roll. The ladder itself is built.
 2. **Towers get nine states and creeps get five flat rows** — and the answer, from
    [13 August](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster),
    is that **creeps deepen by being upgraded rather than by being replaced**: stat and speed upgrades on the
@@ -493,8 +517,10 @@ open.
    systems](research/creep-wave-variety-and-creep-upgrade-systems.md). **Creeps get no prerequisite chain** —
    the gating came out precisely because it held back testing, and a chain on the sending side puts a version
    of it straight back.
-3. **The Soldier is a corridor unit.** One hex of range is a shape the one-hex board makes sensible, and seam 9
-   takes that board away.
+3. **The Soldier keeps his hex.** Answered by [#213](https://github.com/ssalter21/tower-defense-game/issues/213): one hex of range, plus a self-centred bubble,
+   so his swing strikes every creep touching him rather than one of them. A corner placement inside a fold
+   reaches two legs at once — a positional value the flat corridor could not offer, and the reason he was kept
+   rather than retired.
 4. **The Mage's price rests on an unmeasured three.** Bodies-under-a-splash is the only number in the cost
    rule that was guessed, and it is a multiplier rather than a term.
 5. **The three absent shapes need models**, and art is not chosen unattended.
