@@ -61,7 +61,7 @@ namespace Sim
     }
 
     /// <summary>
-    /// The six columns a sweep, a blast and an aura all turned out to be: a
+    /// The seven columns a sweep, a blast and an aura all turned out to be: a
     /// bubble that emits something, distinguished only by where it centres, how
     /// often it fires and what it carries.
     /// </summary>
@@ -72,8 +72,8 @@ namespace Sim
     /// fires with the attack; a blast is one centred on what the shot hit; a
     /// timed slow is one carrying a stat and a duration; an aura is one with a
     /// period, which is the whole of what makes it pulse on its own. Authored as
-    /// three mechanics they would have cost the same nine columns and left three
-    /// sets of rules to diverge. See
+    /// three mechanics they would have cost the same seven columns each and left
+    /// three sets of rules to diverge. See
     /// <c>docs/adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md</c>.
     /// </para>
     /// <para>
@@ -95,10 +95,20 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b><see cref="Absent"/> is <c>default</c>.</b> A row that carries no
-    /// bubble writes <c>none</c> in its radius column and the five columns after
+    /// bubble writes <c>none</c> in its radius column and the six columns after
     /// it have to agree, because a number nobody reads would still move the
     /// content hash. So every enum here spells its absence first and a bubble
     /// nobody authored is the zero value rather than a flag beside one.
+    /// </para>
+    /// <para>
+    /// <b>Absence is spelled in the radius column, which is why a radius of
+    /// zero is a real authoring.</b> A range column spells "no reach" as zero
+    /// and <see cref="Reach"/> answers accordingly -- nothing with zero range
+    /// reaches anything, including the hex it stands on. A bubble spells "no
+    /// bubble" as the word <c>none</c>, so its zero is free to mean something,
+    /// and what it means is the centre alone. The two zeros are different
+    /// questions and <see cref="ReachesOnlyItsCentre"/> is where this one is
+    /// answered, rather than by softening the rule a range depends on.
     /// </para>
     /// </remarks>
     public readonly struct Bubble
@@ -131,7 +141,7 @@ namespace Sim
         /// <summary>No bubble at all, which is what every committed row carries.</summary>
         public static Bubble Absent => default;
 
-        /// <summary>A bubble, from the six columns that describe one.</summary>
+        /// <summary>A bubble, from the seven columns that describe one.</summary>
         public static Bubble Of(
             int radiusMilliHex,
             BubbleOrigin origin,
@@ -183,6 +193,26 @@ namespace Sim
         public bool IsAnAura => Present && PeriodTicks > 0;
 
         /// <summary>
+        /// Whether this bubble reaches the one thing it is centred on and
+        /// nothing else. A radius of zero is the target alone -- the
+        /// Cryomancer's single-target slow -- and it is an authoring rather
+        /// than an absence, because a bubble spells absence as the word
+        /// <c>none</c> in the same column.
+        /// </summary>
+        /// <remarks>
+        /// <b>It is asked instead of <see cref="Reach.Encloses"/> and never
+        /// beside it.</b> That rule answers false at a radius of zero, on
+        /// purpose and for the range column's sake: nothing with no reach
+        /// reaches anything, including the hex it stands on. Softening it here
+        /// would hand every walking row a hex of reach for no reason but the
+        /// ground under it, which is exactly what
+        /// <c>docs/adr/0054-height-is-a-relationship-and-a-radius-is-a-sphere.md</c>
+        /// settled. So the zero a bubble authors is answered before the sphere
+        /// is asked, and the sphere keeps the one meaning it has.
+        /// </remarks>
+        public bool ReachesOnlyItsCentre => Present && RadiusMilliHex == 0;
+
+        /// <summary>
         /// Whether this is the one shape the tick loop resolves today: a damage
         /// bubble that goes off with the attack, instantly, against the other
         /// side.
@@ -208,7 +238,7 @@ namespace Sim
                 : "no bubble";
 
         /// <summary>
-        /// Folds the six columns in file order. Called from
+        /// Folds the seven columns in file order. Called from
         /// <see cref="UnitType.Fold"/>'s layout-3 branch and from nowhere else.
         /// </summary>
         internal Hash64 Fold(Hash64 hash) =>

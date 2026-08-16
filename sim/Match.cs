@@ -382,6 +382,19 @@ namespace Sim
         /// </remarks>
         private static void RequireResolvable(UnitType type)
         {
+            // Nothing that walks attacks in this loop, so a shot count on a
+            // walking row is a column read by nothing -- the same failure a
+            // bubble nobody emits would be, and refused in the same place.
+            if (type.Role == UnitRole.Moving && type.Targets > 1)
+            {
+                throw new SimulationException(
+                    type.ToString()
+                    + " walks and fires at "
+                    + type.Targets.ToString(CultureInfo.InvariantCulture)
+                    + " targets. Nothing that walks the corridor attacks anything in this simulation, so "
+                    + "the count would be read by nothing at all.");
+            }
+
             if (!type.Bubble.Present || type.Bubble.IsAnInstantBlast)
             {
                 return;
@@ -395,7 +408,7 @@ namespace Sim
                 + "fired with the attack and landing instantly. A period makes it an aura and a payload "
                 + "that is not damage makes it a timed effect, and per-creep effect state is not built. "
                 + "The row parses, hashes and stores; it does not play, and it says so here rather than "
-                + "standing on the board emitting nothing.");
+                + "standing on the board emitting nothing. #217 is what deletes this refusal.");
         }
 
         /// <summary>The seed the dice were started from.</summary>
@@ -816,13 +829,11 @@ namespace Sim
 
                 if (projectile.TicksInFlight >= projectile.FlightDurationTicks)
                 {
-                    Land(
-                        projectile.Type,
-                        projectile.Origin,
-                        projectile.Target.Id,
-                        projectile.Damage,
-                        events);
-
+                    // The creep the lookup above already found, handed on rather
+                    // than looked up a second time: an arriving projectile has a
+                    // live target by construction, because one without is
+                    // orphaned three lines up.
+                    Land(projectile.Type, projectile.Origin, target, projectile.Damage, events);
                     projectile.Gone = true;
                 }
             }
@@ -967,19 +978,19 @@ namespace Sim
         /// settled where the columns are read.
         /// </para>
         /// </remarks>
-        private void Fire(int index, ref Tower tower, UnitType type, IMatchEvents? events)
+        private void Fire(int tower, ref Tower state, UnitType type, IMatchEvents? events)
         {
-            for (int shot = 0; shot < tower.TargetCount; shot++)
+            for (int shot = 0; shot < state.TargetCount; shot++)
             {
-                ReleaseShot(index, tower.Id, type, TargetOf(index, shot), events);
+                ReleaseShot(tower, type, TargetOf(tower, shot), events);
             }
 
-            tower.State = TowerState.Backswing;
-            tower.TicksInState = 0;
+            state.State = TowerState.Backswing;
+            state.TicksInState = 0;
 
             if (type.BackswingTicks == 0)
             {
-                GoIdle(ref tower, type);
+                GoIdle(ref state, type);
             }
         }
 
@@ -987,14 +998,14 @@ namespace Sim
         /// One shot of one attack: one draw, delivered the way this row delivers
         /// damage.
         /// </summary>
-        private void ReleaseShot(int index, int towerId, UnitType type, int targetId, IMatchEvents? events)
+        private void ReleaseShot(int tower, UnitType type, int targetId, IMatchEvents? events)
         {
             // The one and only draw. Once per shot, on the one stream, whether
             // or not the shot is going to land on anything.
             int damage = _dice.NextInRange(type.DamageMin, type.DamageMax + 1);
             _shotsFired++;
 
-            events?.TowerFired(towerId, targetId);
+            events?.TowerFired(_towers[tower].Id, targetId);
 
             switch (type.Delivery)
             {
@@ -1002,17 +1013,22 @@ namespace Sim
                     // No snapshot entity of any kind: a hitscan shot exists as an
                     // event and as whatever the view draws and forgets, and
                     // nothing else.
-                    Land(type, _layout.Towers[index].Hex, targetId, damage, events);
+                    Land(
+                        type,
+                        _layout.Towers[tower].Hex,
+                        FindWalkingCreep(TargetRef.Creep(targetId)),
+                        damage,
+                        events);
                     break;
 
                 case Delivery.Projectile:
-                    Launch(type, _layout.Towers[index].Hex, targetId, damage);
+                    Launch(type, _layout.Towers[tower].Hex, targetId, damage);
                     break;
 
                 case Delivery.None:
                     throw new SimulationException(
                         "Tower "
-                        + towerId.ToString(CultureInfo.InvariantCulture)
+                        + _towers[tower].Id.ToString(CultureInfo.InvariantCulture)
                         + " is "
                         + type.ToString()
                         + ", which delivers no damage, and it has fired. A unit that cannot attack should "
@@ -1042,12 +1058,21 @@ namespace Sim
         /// the creep that provoked it, because a tower is still standing where
         /// it stands.
         /// </para>
+        /// <para>
+        /// <b>A bubble of no radius is the target alone</b>, and that is
+        /// answered here rather than by the sphere. A radius column spells its
+        /// absence as the word <c>none</c>, so zero in it is an authoring --
+        /// the Cryomancer's single-target slow -- where zero in a range column
+        /// is no reach at all. <see cref="Reach.Encloses"/> answers the range
+        /// column's question and would say this bubble reaches nothing
+        /// whatever, which is why <see cref="Bubble.ReachesOnlyItsCentre"/> is
+        /// asked first.
+        /// </para>
         /// </remarks>
-        private void Land(UnitType type, Hex origin, int targetId, int roll, IMatchEvents? events)
+        /// <param name="target">Where the creep it was aimed at is in the live array, or -1 for nothing.</param>
+        private void Land(UnitType type, Hex origin, int target, int roll, IMatchEvents? events)
         {
-            int target = FindWalkingCreep(TargetRef.Creep(targetId));
-
-            if (!type.Bubble.Present)
+            if (!type.Bubble.Present || type.Bubble.ReachesOnlyItsCentre)
             {
                 Damage(target, roll, type, events);
                 return;
@@ -1180,14 +1205,14 @@ namespace Sim
                 return;
             }
 
-            roll = Absorbed(ref target, roll);
+            int past = Absorbed(ref target, roll);
 
-            if (roll == 0)
+            if (past == 0)
             {
                 return;
             }
 
-            int amount = Resolved(shooter, roll, ref target);
+            int amount = Resolved(shooter, past, ref target);
 
             events?.CreepDamaged(target.Id, amount);
             target.Hp -= amount;

@@ -8,7 +8,7 @@ sets of rules with nothing holding them together.
 |---|---|
 | `shield` | A pool that absorbs first and raw. Armour does not apply, overkill carries through to health, it does not regenerate. 0 = none |
 | `targets` | Shots per attack, each its own damage roll, taken nearest-to-exit first. 1 = an ordinary single shot |
-| `bubbleRadius` | Milli-hex, read as a sphere. 0 = the centre alone; `none` = no bubble |
+| `bubbleRadius` | Milli-hex, read as a sphere. 0 = the target alone; `none` = no bubble |
 | `bubbleOrigin` | `self` — a sweep, on the emitter — or `target` — a blast, on what the shot hit |
 | `bubbleAffects` | `friend` or `enemy` |
 | `bubblePeriod` | Ticks. 0 fires with the attack; positive pulses on its own, which is what makes it an aura |
@@ -86,14 +86,27 @@ reach uphill?" and "does a blast reach uphill?" have two answers, one of them is
 where the corridor doubles back: a Necromancer would shield the creeps behind it and not the ones standing a
 hex away on the next leg of the fold, which is the case the mechanic exists for.
 
-**A second damage number on a damage bubble.** `bubbleMagnitude` is refused as non-zero beside a `damage`
-payload. The bubble carries the attack's own roll, and a magnitude beside it would be a number read by nothing
-that still moved the content hash — or, worse, a second damage source with its own draw.
+**A second damage number on a damage bubble, and this one is a deviation from #213's column table.** That
+table reads `bubbleMagnitude` as "a damage amount, **or** a percentage"; here it is a percentage and nothing
+else, refused as non-zero beside a `damage` payload. The two clauses of the ticket collide: a bubble is
+declared to be one shot drawing one roll, so the damage it carries is that roll, and a column holding a second
+amount would be a second damage source with a draw of its own — which is precisely the determinism contract
+the same ticket says to get right the first time. The column is kept (it is not dropped, and the list is
+fixed); what narrowed is the set of values it may hold beside one payload.
 
-**Splitting "absent" from "zero" with a flag column.** `bubbleRadius` carries the word `none`, and the five
-columns after it are then required to say the same. A radius of zero means the centre alone and is a real
+**Splitting "absent" from "zero" with a flag column.** `bubbleRadius` carries the word `none`, and the six
+columns after it are then required to say the same. A radius of zero means the target alone and is a real
 authoring — the Cryomancer's — so the two cannot share a spelling. Absence folds as `-1`, which is not a
 radius any row can author, so "no bubble" and "a bubble of no radius" cannot hash equal.
+
+**And that is why a bubble's zero is answered before [`Reach.Encloses`](../../sim/Reach.cs) is asked.** That
+rule answers *false* at a radius of zero, deliberately and for the range column's sake:
+[ADR-0054](0054-height-is-a-relationship-and-a-radius-is-a-sphere.md) settled that no reach is not a short
+reach, because every walking row authors zero in `range` and the signed term alone would otherwise hand a
+creep two tiers up a whole hex of reach. A range column has no other spelling for "none"; a bubble does. So
+`Bubble.ReachesOnlyItsCentre` takes the degenerate case and the sphere keeps the one meaning it has —
+softening the shared comparison to suit a bubble would have reopened a decision that has nothing to do with
+bubbles.
 
 **Pricing any of it.** The placed-unit cost rule's `bodies` term now reads `targets` — it guessed 3 from
 `Delivery == Projectile` before, so a Marksman would have been priced at a single-target Archer's price.

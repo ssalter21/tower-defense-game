@@ -69,10 +69,15 @@ namespace Sim
 
         /// <summary>
         /// The word the bubble radius column carries where there is no bubble,
-        /// which is the one column of the six that says so. A radius of zero is
-        /// a bubble on the centre alone and means something else entirely.
+        /// which is the one column of the seven that says so. A radius of zero
+        /// is a bubble on the centre alone and means something else entirely.
         /// </summary>
-        private const string AbsentWord = "none";
+        /// <remarks>
+        /// The same word as <see cref="NoTypeWord"/>, and written as that word
+        /// rather than beside it: this file has one spelling of "nothing" and a
+        /// second literal is a second thing to change.
+        /// </remarks>
+        private const string AbsentWord = NoTypeWord;
 
         /// <summary>
         /// The payload a bubble may not carry, spelled out so the refusal can
@@ -616,16 +621,28 @@ namespace Sim
         }
 
         /// <summary>
-        /// The six bubble columns, read as one thing because they are one thing.
+        /// The seven bubble columns, read as one thing because they are one
+        /// thing.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// <b>The radius column is the one that says whether there is a bubble
         /// at all</b>, because it is the column whose absence has a meaning
         /// distinct from every value it can hold: zero is the centre alone.
-        /// <c>none</c> there is a row with nothing radial about it, and the five
+        /// <c>none</c> there is a row with nothing radial about it, and the six
         /// columns after it are then required to say the same -- a magnitude
         /// nobody reads would still move the content hash, which is the rule
         /// every other unread column in this file is refused by.
+        /// </para>
+        /// <para>
+        /// <b>What is checked is the value rather than the seven fields it was
+        /// built from.</b> Seven positional arguments of three types are seven
+        /// chances to hand a checker the wrong one, and the thing they describe
+        /// is a <see cref="Bubble"/> -- so one is built and that is what the
+        /// rules are asked about. An absent bubble is built too, carrying
+        /// whatever the row wrote in the six columns it should not have written
+        /// in, because those values are exactly what the refusal is about.
+        /// </para>
         /// </remarks>
         private static Bubble ReadBubble(string source, int line, string[] fields)
         {
@@ -646,11 +663,11 @@ namespace Sim
             int magnitude = DataText.Integer(source, line, "the bubble magnitude", fields[26]);
             int duration = DataText.IntegerInRange(source, line, "the bubble duration", fields[27], 0, int.MaxValue);
 
-            RequireBubble(source, line, absent, origin, affects, period, payload, magnitude, duration);
+            Bubble authored = Bubble.Of(radius, origin, affects, period, payload, magnitude, duration);
 
-            return absent
-                ? Bubble.Absent
-                : Bubble.Of(radius, origin, affects, period, payload, magnitude, duration);
+            RequireBubble(source, line, absent, authored);
+
+            return absent ? Bubble.Absent : authored;
         }
 
         /// <summary>
@@ -740,29 +757,20 @@ namespace Sim
         }
 
         /// <summary>
-        /// The six bubble columns agree with each other: either all six describe
-        /// a bubble or all six say there is none, and a bubble says what it
-        /// carries in the units that payload is measured in.
+        /// The seven bubble columns agree with each other: either all seven
+        /// describe a bubble or all seven say there is none, and a bubble says
+        /// what it carries in the units that payload is measured in.
         /// </summary>
-        private static void RequireBubble(
-            string source,
-            int line,
-            bool absent,
-            BubbleOrigin origin,
-            BubbleAffects affects,
-            int period,
-            BubblePayload payload,
-            int magnitude,
-            int duration)
+        private static void RequireBubble(string source, int line, bool absent, Bubble bubble)
         {
             if (absent)
             {
-                if (origin != BubbleOrigin.None
-                    || affects != BubbleAffects.None
-                    || payload != BubblePayload.None
-                    || period != 0
-                    || magnitude != 0
-                    || duration != 0)
+                if (bubble.Origin != BubbleOrigin.None
+                    || bubble.Affects != BubbleAffects.None
+                    || bubble.Payload != BubblePayload.None
+                    || bubble.PeriodTicks != 0
+                    || bubble.Magnitude != 0
+                    || bubble.DurationTicks != 0)
                 {
                     throw new ContentException(
                         source,
@@ -771,7 +779,7 @@ namespace Sim
                         + "radius column is what says whether there is one -- zero is a bubble on the "
                         + "centre alone, and '"
                         + AbsentWord
-                        + "' is no bubble -- so the five columns after it carry '"
+                        + "' is no bubble -- so the six columns after it carry '"
                         + AbsentWord
                         + "' and zero, or the numbers would be read by nothing and would still move the "
                         + "content hash.");
@@ -780,7 +788,9 @@ namespace Sim
                 return;
             }
 
-            if (origin == BubbleOrigin.None || affects == BubbleAffects.None || payload == BubblePayload.None)
+            if (bubble.Origin == BubbleOrigin.None
+                || bubble.Affects == BubbleAffects.None
+                || bubble.Payload == BubblePayload.None)
             {
                 throw new ContentException(
                     source,
@@ -791,45 +801,88 @@ namespace Sim
                     + "supply that the row ever stated.");
             }
 
-            if (payload == BubblePayload.Damage)
+            // A radius of zero is the centre alone, and the emitter's own hex is
+            // the one place nothing that walks can ever be.
+            if (bubble.ReachesOnlyItsCentre && bubble.Origin == BubbleOrigin.Self)
             {
-                if (magnitude != 0)
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "carries a bubble magnitude of "
-                        + magnitude.ToString(CultureInfo.InvariantCulture)
-                        + " beside a damage payload. A damage bubble is one shot and one roll -- it "
-                        + "carries the attack's own damage to everything it encloses, at full damage and "
-                        + "with no falloff -- so a second damage number would be read by nothing and "
-                        + "would still move the content hash.");
-                }
+                throw new ContentException(
+                    source,
+                    line,
+                    "authors a bubble of no radius centred on the emitter, which reaches the emitter and "
+                    + "nothing else. A tower may not stand in the corridor, so nothing that walks is ever "
+                    + "on that hex: zero is the target alone and it wants an origin of '"
+                    + OriginWords[(int)BubbleOrigin.Target]
+                    + "'.");
+            }
 
-                if (duration != 0)
-                {
-                    throw new ContentException(
-                        source,
-                        line,
-                        "carries a bubble duration of "
-                        + duration.ToString(CultureInfo.InvariantCulture)
-                        + " ticks beside a damage payload. Damage lands and is done; a duration on it "
-                        + "would be damage over time, which is a mechanic nobody has authored and which "
-                        + "no reader here applies.");
-                }
-
+            if (bubble.Payload == BubblePayload.Damage)
+            {
+                RequireDamageBubble(source, line, bubble);
                 return;
             }
 
-            if (magnitude == 0)
+            if (bubble.Magnitude == 0)
             {
                 throw new ContentException(
                     source,
                     line,
                     "carries a bubble that modifies "
-                    + PayloadWords[(int)payload]
+                    + PayloadWords[(int)bubble.Payload]
                     + " by nothing at all. A magnitude of zero is a bubble that is emitted, enclosed and "
                     + "applied every time it fires and changes no number when it lands.");
+            }
+
+            // A pool is granted and spent; a modifier lasts and expires. So a
+            // shield may say nothing about how long it lasts -- how long it
+            // lasts is how long it takes to be spent -- and the three that
+            // modify a stat may not, because a stat put back the tick it moved
+            // is a stat that never moved.
+            if (bubble.Payload != BubblePayload.Shield && bubble.DurationTicks == 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble that modifies "
+                    + PayloadWords[(int)bubble.Payload]
+                    + " for no ticks at all. A modifier is a magnitude and a duration together: applied "
+                    + "and expired inside one tick, it changes nothing and would still move the content "
+                    + "hash.");
+            }
+        }
+
+        /// <summary>
+        /// The two things a damage bubble may not also say. Both are the same
+        /// rule -- damage comes from the attack's own roll and lands once -- and
+        /// they are here rather than inline so the clause above stays a list of
+        /// one-line refusals.
+        /// </summary>
+        private static void RequireDamageBubble(string source, int line, Bubble bubble)
+        {
+            if (bubble.Magnitude != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble magnitude of "
+                    + bubble.Magnitude.ToString(CultureInfo.InvariantCulture)
+                    + " beside a damage payload. A damage bubble is one shot and one roll -- it carries "
+                    + "the attack's own damage to everything it encloses, at full damage and with no "
+                    + "falloff -- so a second damage number would be read by nothing and would still "
+                    + "move the content hash. #216 took this over the column table's 'a damage amount, "
+                    + "or a percentage': the amount is the roll, and a column holding a second one would "
+                    + "be a second damage source with a draw of its own.");
+            }
+
+            if (bubble.DurationTicks != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble duration of "
+                    + bubble.DurationTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks beside a damage payload. Damage lands and is done; a duration on it would "
+                    + "be damage over time, which is a mechanic nobody has authored and which no reader "
+                    + "here applies.");
             }
         }
 

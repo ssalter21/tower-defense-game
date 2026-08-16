@@ -44,8 +44,8 @@
 # THREE OF THOSE FIVE TURNED OUT TO BE ONE MECHANIC. A radial shot, a timed
 # modifier and a periodic aura are all a bubble that emits something,
 # distinguished only by where it centres, how often it fires and what it
-# carries -- so they are six columns between them rather than six each. The
-# column count is identical either way; what collapsing them saved is three
+# carries -- so they are seven columns between them rather than seven each.
+# The column count is identical either way; what collapsing them saved is three
 # sets of rules with nothing holding them together. A Soldier's sweep is a
 # bubble on himself with no period, a mortar's blast is one on what it hit, a
 # Cryomancer's slow is one carrying speed with a duration, and a Captain's aura
@@ -211,10 +211,15 @@
 #            nearest-to-exit first. 1 is an ordinary single shot
 # bubbleRadius : thousandths of a hex, read as a SPHERE -- height only ever
 #            costs a radius, which is what stops a bubble on a cliff blanketing
-#            the board. 0 is the centre alone; none is no bubble at all, and
-#            then the five columns after it carry none and zero
+#            the board. 0 is the target alone; none is no bubble at all, and
+#            then the six columns after it carry none and zero. THE TWO ZEROS
+#            IN THIS FILE ARE DIFFERENT: a range of 0 is no reach at all,
+#            because the range column has no other way to say so, and a bubble
+#            says so with a word instead -- which is what frees its zero to
+#            mean something
 # bubbleOrigin : self (a sweep, centred on the emitter) | target (a blast,
-#            centred on what the shot hit)
+#            centred on what the shot hit). A radius of 0 wants target: the
+#            emitter's own hex is the one place nothing that walks can stand
 # bubbleAffects : friend | enemy
 # bubblePeriod : ticks. 0 fires with the attack; a positive value pulses on its
 #            own, which is the whole of what makes a bubble an aura
@@ -226,7 +231,9 @@
 #            damage bubble carries the attack's own roll, so it authors zero
 #            here, and a slow is a negative speed percentage
 # bubbleDuration : ticks the payload lasts. 0 is instant, which is what damage
-#            always is
+#            always is -- and what a shield may be, because a pool is spent
+#            rather than timed. Speed, cooldown and armour may not author 0: a
+#            stat put back the tick it moved is a stat that never moved
 #
 # WHAT THE TICK LOOP RESOLVES TODAY IS ONE BUBBLE SHAPE: damage, against the
 # enemy, fired with the attack, landing instantly. A period or any other

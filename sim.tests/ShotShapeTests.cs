@@ -66,6 +66,10 @@ public class ShotShapeTests
         unit 14 flat    placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
         unit 15 frost   placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 0 target enemy 0 speed -40 120
         unit 16 banner  placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 self friend 45 cooldown -20 60
+        unit 17 pin     placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 0 target enemy 0 damage 0 0
+        unit 18 slowfast moving 5000 2000 0 0 0 0 0 0 none 0 4 30 none armoured 0 0 1 none none none 0 none 0 0
+        unit 19 lateswp placed 0 0 4000 30 3 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 self enemy 0 damage 0 0
+        unit 20 lateblt placed 0 0 4000 30 3 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 target enemy 0 damage 0 0
         """;
 
     /// <summary>Three bodies released on tick zero, one per order.</summary>
@@ -165,6 +169,67 @@ public class ShotShapeTests
 
         Assert.Equal(amounts[0], amounts[1]);
         Assert.Equal(amounts[0], amounts[2]);
+    }
+
+    [Fact]
+    public void A_bubble_of_no_radius_is_the_target_alone_and_still_lands_on_it()
+    {
+        // THE ONE THE SPHERE GETS WRONG ON ITS OWN, and the Cryomancer's exact
+        // shape. Reach.Encloses answers false at a radius of zero -- on
+        // purpose, because a range column spells "no reach" as zero and every
+        // walking row authors it -- so a bubble that asked the sphere would fire
+        // into a void and damage nobody at all. A bubble spells its absence as
+        // the word `none`, so its zero is an authoring and means the target
+        // alone.
+        //
+        // OBSERVED: delete the ReachesOnlyItsCentre clause from Match.Land and
+        // let the sphere answer. The fired count stays at one and the damaged
+        // count goes from one to zero -- a tower that fires, hits nothing, and
+        // looks entirely healthy from every other angle.
+        TheMatch.EventLog pin = Played(17, ThreeAbreast);
+
+        Assert.Equal(1, pin.CountOf("fired"));
+        Assert.Equal(1, pin.CountOf("damaged"));
+
+        // The target alone, against the same shot at a radius that reaches the
+        // other two. Same roll, same three creeps, and the only difference is
+        // the number in the radius column.
+        Assert.Equal(3, Played(12, ThreeAbreast).CountOf("damaged"));
+
+        // And it lands the same amount a row with no bubble at all lands, which
+        // is what "the target alone" means: no spread, and no arithmetic either.
+        Assert.Equal(Amounts(Played(10, ThreeAbreast)), Amounts(pin));
+    }
+
+    [Fact]
+    public void A_sweep_fires_where_it_stands_when_its_target_has_gone_and_a_blast_does_not()
+    {
+        // The two origins told apart by the case that separates them. A fast
+        // body is acquired, leaks during the windup, and the shot is released at
+        // something that is no longer on the map -- while a slow body is still
+        // standing next to the tower.
+        //
+        // A sweep is centred on the tower, which is still where it was, so it
+        // strikes the slow body. A blast is centred on where the shot arrived,
+        // and it arrived nowhere, so it lands on nothing. The shot is fired and
+        // the roll is drawn either way, because a tower that commits and finds
+        // its target dead still wastes the shot.
+        const string FastAndSlow = """
+            order 0 1 1 0
+            order 0 18 1 0
+            """;
+
+        TheMatch.EventLog sweep = Played(19, FastAndSlow, ticks: 6);
+
+        Assert.Equal(1, sweep.CountOf("fired"));
+        Assert.Equal(1, sweep.CountOf("leaked"));
+        Assert.Equal(1, sweep.CountOf("damaged"));
+
+        TheMatch.EventLog blast = Played(20, FastAndSlow, ticks: 6);
+
+        Assert.Equal(1, blast.CountOf("fired"));
+        Assert.Equal(1, blast.CountOf("leaked"));
+        Assert.Equal(0, blast.CountOf("damaged"));
     }
 
     [Fact]

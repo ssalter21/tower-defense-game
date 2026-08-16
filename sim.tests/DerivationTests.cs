@@ -775,7 +775,7 @@ public class DerivationTests
     /// <b>This half is here because the five above it missed one.</b> Every one
     /// of them is fought over a layout-1 or layout-2 roster, and no such row
     /// can say any of the three things #216 taught the tick loop to read -- so
-    /// the rules run in all five and are visible in none of them. The fifth
+    /// the rules run in all five and are visible in none of them. The sixth
     /// time this file has had that hole and the second time the fix was the
     /// scenario rather than the shape of the fold.
     /// </para>

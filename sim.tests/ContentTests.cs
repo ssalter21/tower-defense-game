@@ -54,6 +54,18 @@ public class ContentTests
     private const ulong LayoutOneHashOfTheOldestPin = 0x39B848CEFDDCC9CFUL;
 
     /// <summary>
+    /// What <see cref="ThreeTypedRows"/> hashed to before layout 3 existed, and
+    /// what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Layout 1's stability is pinned by a golden bundle that cannot be recorded
+    /// again. Layout 2's is pinned by nothing at all now that the current
+    /// version's golden has been re-recorded at layout 3, so it is pinned here
+    /// instead -- one literal, in the one place a widening would move it.
+    /// </remarks>
+    private const ulong LayoutTwoHashOfThreeRows = 0x0EEC991C9FDDAF07UL;
+
+    /// <summary>
     /// The Mage's id. Named because two tests below single the row out -- it is
     /// the one placed row the cost rule does not price, and why is a claim of
     /// its own.
@@ -506,12 +518,24 @@ public class ContentTests
     {
         // The half of a widening that has to be checked every time: the older
         // branch is not touched by the newer one. A layout-2 file is what
-        // content/units.txt was an hour ago and what content/golden/ will hold
-        // forever, so a widening that quietly changed how one reads would
-        // retire records nobody edited.
+        // content/units.txt was an hour ago, so a widening that quietly changed
+        // how one reads would retire records nobody edited.
+        //
+        // THE HASH IS A LITERAL FOR THE REASON LAYOUT ONE'S IS. No golden pins a
+        // layout-2 table any more -- content/golden/defense-1.units was
+        // re-recorded at layout 3 with the bundle beside it -- so nothing else
+        // in this repository would notice layout 2's fold moving, and the next
+        // widening is exactly when that would happen. The number was read off
+        // this build; what makes it evidence is that it is the number a
+        // layout-2 record stamped before layout 3 existed.
+        //
+        // OBSERVED: fold Shield and Targets in UnitType.Fold's layout-2 branch
+        // as well. This goes red, 8FE6E2B1D7D01FB4 against the literal, and
+        // nothing else in the suite notices.
         UnitTypeTable table = UnitTypeTable.Parse(ThreeTypedRows);
 
         Assert.Equal(2, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutTwoHashOfThreeRows), table.ContentHash);
         Assert.Equal(3, table.Count);
         Assert.Equal(10, table.ById(1).Cost);
         Assert.Equal(ArmourType.Armoured, table.ById(1).ArmourType);
@@ -772,7 +796,7 @@ public class ContentTests
     }
 
     /// <summary>
-    /// A layout-3 row up to its bubble, so the six columns that describe one
+    /// A layout-3 row up to its bubble, so the seven columns that describe one
     /// can be varied against everything else holding still.
     /// </summary>
     private const string UpToTheBubble =
@@ -790,20 +814,22 @@ public class ContentTests
     [InlineData("1000 target enemy 0 damage 40 0")]
     [InlineData("1000 target enemy 0 damage 0 60")]
     [InlineData("1000 target enemy 30 speed 0 60")]
+    [InlineData("1000 target enemy 30 speed -25 0")]
     public void A_half_authored_bubble_refuses_to_load(string bubble)
     {
-        // Every way six columns that describe one thing can disagree, one case
-        // each: no radius but an origin, an affects, a period, a magnitude or a
-        // duration anyway; a radius with the origin, the affects or the payload
-        // left off; a damage bubble carrying a second damage number or a
-        // duration; and a stat bubble that modifies nothing.
+        // Every way seven columns that describe one thing can disagree, one
+        // case each: no radius but an origin, an affects, a period, a magnitude
+        // or a duration anyway; a radius with the origin, the affects or the
+        // payload left off; a damage bubble carrying a second damage number or
+        // a duration; and a stat bubble that modifies nothing, or that modifies
+        // something for no time at all.
         //
         // The control is the test below, which parses the absent spelling and
         // the authored one -- so a case that is green because the fixture never
         // reached the parser is impossible.
         //
-        // OBSERVED: delete RequireBubble's body. All eleven go red at once,
-        // which is what says they are pointed at the rule rather than at eleven
+        // OBSERVED: delete RequireBubble's body. All twelve go red at once,
+        // which is what says they are pointed at the rule rather than at twelve
         // typos.
         Assert.Throws<ContentException>(() => UnitTypeTable.Parse(UpToTheBubble + bubble));
     }
@@ -813,12 +839,46 @@ public class ContentTests
     [InlineData("0 target enemy 0 damage 0 0")]
     [InlineData("1000 self enemy 0 damage 0 0")]
     [InlineData("2500 self friend 45 cooldown -20 60")]
-    public void A_bubble_whose_six_columns_agree_loads(string bubble)
+    [InlineData("2000 self friend 90 shield 300 0")]
+    public void A_bubble_whose_seven_columns_agree_loads(string bubble)
     {
         // The other side of the theory above, and the reason it is a test
         // rather than a comment: a refusal that fired on everything would pass
-        // all eleven cases up there and author nothing at all.
+        // all twelve cases up there and author nothing at all.
+        //
+        // The last row is the one duration rule that is not symmetrical: a
+        // shield is a POOL, granted and then spent, so it may say nothing about
+        // how long it lasts. The three that modify a stat may not.
         Assert.Equal(1, UnitTypeTable.Parse(UpToTheBubble + bubble).Count);
+    }
+
+    [Fact]
+    public void A_bubble_of_no_radius_centred_on_the_emitter_refuses_to_load()
+    {
+        // Zero is the target alone, and the emitter's own hex is the one place
+        // nothing that walks can ever be -- a tower may not stand in the
+        // corridor. So the pair is a bubble that reaches nothing whatever it is
+        // pointed at, and the refusal says which column to change.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(UpToTheBubble + "0 self enemy 0 damage 0 0"));
+
+        Assert.Contains("reaches the emitter and nothing else", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("target", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_stat_bubble_that_lasts_no_ticks_refuses_to_load()
+    {
+        // A modifier is a magnitude AND a duration: applied and expired inside
+        // one tick, it changes nothing and would still move the content hash.
+        // That is the same rule the zero magnitude beside it is refused by.
+        foreach (string stat in new[] { "speed", "cooldown", "armour" })
+        {
+            ContentException thrown = Assert.Throws<ContentException>(
+                () => UnitTypeTable.Parse(UpToTheBubble + "1000 target enemy 0 " + stat + " -25 0"));
+
+            Assert.Contains("for no ticks at all", thrown.Message, StringComparison.Ordinal);
+        }
     }
 
     [Fact]
@@ -987,9 +1047,10 @@ public class ContentTests
             UnitTypeTable.Parse(Walker + "150 1 none none none 0 none 0 0").ContentHash);
 
         // And the one pair the fold has to keep apart that is not a number: a
-        // bubble of no radius is the centre alone, and no bubble is no bubble.
+        // bubble of no radius is the target alone, and no bubble is no bubble.
+        // They fold as 0 and as -1, which is a radius no row can author.
         Assert.NotEqual(
-            UnitTypeTable.Parse(UpToTheBubbleOf(1, "0 self enemy 0 damage 0 0")).ContentHash,
+            UnitTypeTable.Parse(UpToTheBubbleOf(1, "0 target enemy 0 damage 0 0")).ContentHash,
             UnitTypeTable.Parse(UpToTheBubbleOf(1, "none none none 0 none 0 0")).ContentHash);
     }
 
