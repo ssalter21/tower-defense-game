@@ -60,6 +60,9 @@ public static class Program
     /// <summary>The most rows of a roster a sweep may be bounded to. The unit table is a u16 id space.</summary>
     private const int MaximumCreeps = 65535;
 
+    /// <summary>What <see cref="AllInBot"/> is called on the command line.</summary>
+    private const string AllIn = "all-in";
+
     /// <summary>
     /// The directory a run's content is taken out of where a file is not named
     /// outright. Every file of <see cref="RunContentFiles"/> is looked for in it
@@ -101,7 +104,7 @@ public static class Program
     /// here rather than beside each verb, because a switch that is a pair on one
     /// verb and a switch on another is an argument nobody can spell twice.
     /// </summary>
-    private static readonly string[] Switches = { "no-death" };
+    private static readonly string[] Switches = { "no-death", "per-run" };
 
     /// <summary>
     /// The content every run verb takes, as an invocation writes it: a directory
@@ -313,7 +316,9 @@ public static class Program
                     "out",
                     "free-snapshots",
                     "snapshot-price",
-                    "most-creeps"));
+                    "most-creeps",
+                    "policy",
+                    "per-run"));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
@@ -477,13 +482,18 @@ public static class Program
     /// </remarks>
     private static int RunSweep(Arguments arguments)
     {
+        string name = arguments.Optional("policy") ?? SweepPlan.EvenShare;
+
         SweepPlan plan = ContentOf(arguments).Sweep(
             ShapeOf(arguments),
             arguments.RequiredUnsigned("seed"),
             arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
             Dial(arguments, "free-snapshots"),
             Dial(arguments, "snapshot-price"),
-            arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps));
+            arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps),
+            PolicyOf(name),
+            name,
+            arguments.Given("per-run"));
 
         SweepReport report = Sim.Sweep.Of(plan);
         string csv = SweepCsv.Of(report);
@@ -506,6 +516,27 @@ public static class Program
 
         return 0;
     }
+
+    /// <summary>
+    /// The scripted player a name asks for, or a refusal naming the ones this
+    /// program has.
+    /// </summary>
+    /// <remarks>
+    /// <b>An unrecognised name is refused rather than defaulted.</b> Falling
+    /// back would produce a complete and correct-looking report about a player
+    /// nobody asked for, and a misspelling is exactly how somebody comparing two
+    /// strategies ends up comparing one against itself.
+    /// </remarks>
+    private static BuildPolicy PolicyOf(string name) =>
+        name switch
+        {
+            SweepPlan.EvenShare => EvenShareBot.Decide,
+            AllIn => AllInBot.Decide,
+            _ => throw new UsageException(
+                $"'{name}' is not a player this program has. It sweeps under "
+                + $"{SweepPlan.EvenShare}, which spends half of every purse on the board and half on the "
+                + $"wave, or {AllIn}, which builds nothing and sends the lot."),
+        };
 
     /// <summary>
     /// One of the ruleset's retunable numbers, or the value that says the

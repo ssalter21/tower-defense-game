@@ -249,13 +249,21 @@ internal sealed class RunContent
     /// line was not told otherwise, so an unmentioned dial is the ruleset's own
     /// number rather than one this program chose.
     /// </remarks>
+    /// <remarks>
+    /// The player is handed over here rather than defaulted here: the plan has
+    /// always taken one, and this parameter is what makes comparing two
+    /// strategies an argument to the verb instead of an edit to C#.
+    /// </remarks>
     public SweepPlan Sweep(
         RunShape shape,
         ulong firstSeed,
         int runsPerCreep,
         int freeSnapshotsPerRun,
         int snapshotPriceGold,
-        int mostCreeps) =>
+        int mostCreeps,
+        BuildPolicy policy,
+        string policyName,
+        bool keepsEveryRun) =>
         new SweepPlan(
             _map,
             _rules,
@@ -269,5 +277,8 @@ internal sealed class RunContent
             shape.DeathEndsTheRun,
             freeSnapshotsPerRun,
             snapshotPriceGold,
-            mostCreeps);
+            mostCreeps,
+            policy,
+            keepsEveryRun,
+            policyName);
 }

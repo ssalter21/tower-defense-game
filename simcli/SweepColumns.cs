@@ -23,9 +23,17 @@ internal static class SweepColumns
 {
     /// <summary>
     /// The columns, in order. <c>value</c>, <c>of</c> and <c>bounded</c> are the
-    /// three the parameter and coverage rows use; every other column belongs to
-    /// a creep row.
+    /// three the parameter and coverage rows use, <c>seed</c> is the one only a
+    /// run row fills, and every other column belongs to a creep row and to the
+    /// runs it was folded from.
     /// </summary>
+    /// <remarks>
+    /// <b>The two columns a run row leaves blank are the two rates.</b> A win
+    /// rate over one run is a bit rather than a rate, and both of the integers
+    /// either rate is computed from are on the row already -- so what a run row
+    /// declines to fill in is a division somebody else can do, not a number it
+    /// does not know.
+    /// </remarks>
     private static readonly string[] Declared =
     {
         "kind",
@@ -45,6 +53,7 @@ internal static class SweepColumns
         "value",
         "of",
         "bounded",
+        "seed",
     };
 
     /// <summary>How many columns a row of the report has.</summary>

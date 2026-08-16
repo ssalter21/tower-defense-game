@@ -47,6 +47,19 @@ namespace Sim
         /// <summary>The argument that says "whatever the ruleset already says" for a retunable number.</summary>
         public const int AsAuthored = -1;
 
+        /// <summary>What <see cref="EvenShareBot"/> is called on a report it played.</summary>
+        public const string EvenShare = "even-share";
+
+        /// <summary>What a policy supplied without a name is called.</summary>
+        /// <remarks>
+        /// A report says who played it, and for a delegate handed in from a call
+        /// site the honest answer is that nobody gave it a name. That is a
+        /// different statement from naming the default, and the difference is a
+        /// reader deciding whether these numbers are comparable with the
+        /// committed ones.
+        /// </remarks>
+        public const string Unnamed = "unnamed";
+
         /// <summary>
         /// How many seeds each creep is played on unless the caller says
         /// otherwise. A sample this size separates the roster and answers while
@@ -91,6 +104,15 @@ namespace Sim
         /// The scripted player every build phase of every run comes from, or
         /// nothing for <see cref="EvenShareBot"/>.
         /// </param>
+        /// <param name="keepsEveryRun">
+        /// Whether the report keeps a row for each run behind the fold as well
+        /// as the fold itself.
+        /// </param>
+        /// <param name="policyName">
+        /// What to call <paramref name="policy"/> on the report, or nothing for
+        /// <see cref="EvenShare"/> where the default plays and
+        /// <see cref="Unnamed"/> where it does not.
+        /// </param>
         public SweepPlan(
             HexMap map,
             Ruleset rules,
@@ -105,7 +127,9 @@ namespace Sim
             int freeSnapshotsPerRun = AsAuthored,
             int snapshotPriceGold = AsAuthored,
             int mostCreeps = WholeRoster,
-            BuildPolicy? policy = null)
+            BuildPolicy? policy = null,
+            bool keepsEveryRun = false,
+            string? policyName = null)
         {
             Map = map ?? throw new ArgumentNullException(nameof(map));
             Types = types ?? throw new ArgumentNullException(nameof(types));
@@ -141,7 +165,9 @@ namespace Sim
             FieldSize = fieldSize;
             DeathEndsTheRun = deathEndsTheRun;
             MostCreeps = mostCreeps;
+            KeepsEveryRun = keepsEveryRun;
             Policy = policy ?? EvenShareBot.Decide;
+            PolicyName = policyName ?? (policy is null ? EvenShare : Unnamed);
             _creeps = Scored(types, mostCreeps);
             Roster = Walkers(types);
         }
@@ -183,10 +209,32 @@ namespace Sim
         public int Roster { get; }
 
         /// <summary>
+        /// Whether the report keeps a row per run as well as the fold over
+        /// them.
+        /// </summary>
+        /// <remarks>
+        /// Off by default, because a row a run at the ceiling this harness
+        /// allows is millions of them held at once, and a sweep that wanted the
+        /// fold alone should not pay for that. What it buys where it is on is
+        /// every question a distribution answers and a sum does not.
+        /// </remarks>
+        public bool KeepsEveryRun { get; }
+
+        /// <summary>
         /// Who plays the runs: the scripted player every build phase of this
         /// sweep is decided by.
         /// </summary>
         public BuildPolicy Policy { get; }
+
+        /// <summary>
+        /// What that player is called, for the report to write down.
+        /// </summary>
+        /// <remarks>
+        /// A name rather than something read off the delegate: a delegate
+        /// carries the name of its method, and what belongs in a report is the
+        /// name the person who asked for the sweep would recognise.
+        /// </remarks>
+        public string PolicyName { get; }
 
         /// <summary>The creeps this sweep actually scores, in table order.</summary>
         public IReadOnlyList<UnitType> Creeps => _creeps;

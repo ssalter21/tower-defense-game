@@ -16,8 +16,8 @@ namespace Sim.Cli;
 /// in the shell.
 /// </para>
 /// <para>
-/// <b>One table, three kinds of row, and the kind is the first column.</b> A
-/// spreadsheet filters on it and gets three clean tables; a reader that ignores
+/// <b>One table, four kinds of row, and the kind is the first column.</b> A
+/// spreadsheet filters on it and gets four clean tables; a reader that ignores
 /// it still sees every number.
 /// </para>
 /// <list type="bullet">
@@ -32,6 +32,9 @@ namespace Sim.Cli;
 /// sweep that said nothing would read exactly like a complete one.</item>
 /// <item><c>creep</c> -- the rows. One a creep over its whole population, then
 /// one a creep per ingredient count that occurred.</item>
+/// <item><c>run</c> -- the population itself, one row a run, present only where
+/// the sweep was asked for it. Same headings as the creep row it belongs to, so
+/// grouping these lands on that one.</item>
 /// </list>
 /// <para>
 /// <b>Rows are assembled by naming their columns.</b> The order lives in
@@ -72,6 +75,14 @@ internal static class SweepCsv
         for (int index = 0; index < report.Rows.Count; index++)
         {
             Creep(text, report.Rows[index]);
+        }
+
+        // The runs go under the rows they were folded into rather than
+        // interleaved with them, so a reader who wants the folded table alone
+        // has it whole before the long tail starts.
+        for (int index = 0; index < report.EveryRun.Count; index++)
+        {
+            Played(text, report.EveryRun[index]);
         }
 
         return text.ToString();
@@ -145,6 +156,9 @@ internal static class SweepCsv
     /// no record and neither is a retuned dial: two sweeps that differ only in
     /// their offering ratio produce two files that look identical until this
     /// row, which is the whole reason a stored row needs the shape beside it.
+    /// The player is on it for the same reason and it is the strongest case of
+    /// all -- two reports played by different strategies share every other
+    /// parameter, and every number below them differs.
     /// </remarks>
     private static void Parameters(StringBuilder text, SweepPlan plan)
     {
@@ -155,6 +169,7 @@ internal static class SweepCsv
         Parameter(text, "snapshot_price", Number(plan.Rules.SnapshotPriceGold));
         Parameter(text, "first_seed", plan.FirstSeed.ToString(PlainText.Culture));
         Parameter(text, "runs_per_creep", Number(plan.RunsPerCreep));
+        Parameter(text, "policy", plan.PolicyName);
         Parameter(text, "ruleset_hash", plan.Rules.ContentHash.ToString());
     }
 
@@ -203,6 +218,35 @@ internal static class SweepCsv
                 .With("defense_gold", Number(row.DefenseGold))
                 .With("unspent_gold", Number(row.UnspentGold))
                 .With("cost_efficiency_dealt_per_100_gold", Number(row.DealtPerHundredGold))
+                .With("income_base_gold", Number(row.IncomeBaseGold))
+                .With("bonus_gold", Number(row.BonusGold)));
+
+    /// <summary>
+    /// One run, under the same headings as the row it was folded into.
+    /// </summary>
+    /// <remarks>
+    /// <b>The columns are the creep row's on purpose.</b> A run is a population
+    /// of one, so it reports one run and either one win or none, and a
+    /// spreadsheet that groups these rows itself lands on exactly the creep row
+    /// above them. The two rate columns are left blank -- see
+    /// <see cref="SweepColumns"/> -- and the seed is the column only this kind
+    /// of row fills.
+    /// </remarks>
+    private static void Played(StringBuilder text, SweepRunRow row) =>
+        Row(
+            text,
+            new CsvRow()
+                .With("kind", "run")
+                .With("subject", row.Label)
+                .With("seed", row.Seed.ToString(PlainText.Culture))
+                .With("runs", Number(1))
+                .With("rounds", Number(row.Rounds))
+                .With("wins", Number(row.Won ? 1 : 0))
+                .With("dealt_gold", Number(row.LeakCostDealt))
+                .With("taken_gold", Number(row.LeakCostTaken))
+                .With("spent_gold", Number(row.GoldSpent))
+                .With("defense_gold", Number(row.DefenseGold))
+                .With("unspent_gold", Number(row.UnspentGold))
                 .With("income_base_gold", Number(row.IncomeBaseGold))
                 .With("bonus_gold", Number(row.BonusGold)));
 
