@@ -813,8 +813,8 @@ public class ContentTests
     [InlineData("1000 target enemy 0 none 0 0")]
     [InlineData("1000 target enemy 0 damage 40 0")]
     [InlineData("1000 target enemy 0 damage 0 60")]
-    [InlineData("1000 target enemy 30 speed 0 60")]
-    [InlineData("1000 target enemy 30 speed -25 0")]
+    [InlineData("1000 self enemy 30 speed 0 60")]
+    [InlineData("1000 self enemy 30 speed -25 0")]
     public void A_half_authored_bubble_refuses_to_load(string bubble)
     {
         // Every way seven columns that describe one thing can disagree, one
@@ -1025,7 +1025,7 @@ public class ContentTests
             "1000 self enemy 0 damage 0 0",
             "1000 target enemy 0 damage 0 0",
             "1000 self friend 0 damage 0 0",
-            "1000 self enemy 30 damage 0 0",
+            "1000 self enemy 30 speed -40 60",
             "2000 self enemy 0 damage 0 0",
             "1000 self enemy 0 speed -40 60",
             "1000 self enemy 0 speed -50 60",

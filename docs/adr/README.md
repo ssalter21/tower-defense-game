@@ -23,6 +23,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0042](0042-the-field-is-measured-off-the-pool.md) | The distribution the bands are read off is measured from the pool, and a walk folds a ceiling — **largely superseded by #209: the bands are gone and nothing prices off the field, so whether the measurement is kept at all is an [open question](../open-questions.md), which #208 waits on** |
 | [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
 | [0054](0054-height-is-a-relationship-and-a-radius-is-a-sphere.md) | Height is a relationship, a radius is a sphere, and a floor is under both |
+| [0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) | An effect is a stat, a magnitude and a duration, and a creep never drops below a tenth of its speed |
 
 ## The simulation/view boundary
 

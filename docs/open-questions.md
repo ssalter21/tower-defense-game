@@ -165,3 +165,14 @@ doing.
 uptime holds a creep at the floor indefinitely. With the floor in place that is a balance problem rather than a
 correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
 per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
+
+**Nothing a view can see says a creep is slowed.** Timed effects landed in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state: they are folded into the
+rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field and in no
+match event. That is deliberate — events are decorative by
+[ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
+about rules. It is a real gap all the same: the day a Cryomancer is signed is the day somebody has to draw a
+slowed creep, and a creep that is walking at four tenths of its speed for no visible reason is the sort of
+thing a playtest reports as a bug. The cheap answer is a field on `CreepSnapshot`; the question is which
+field, because "is it slowed" and "what is on it" are different contracts.

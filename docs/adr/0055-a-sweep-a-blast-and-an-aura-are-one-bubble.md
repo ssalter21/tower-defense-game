@@ -64,18 +64,24 @@ rather than a per-tick cost. Precomputing an enclosure table per route cell was 
 nothing — the centre of a blast is a creep's cell and moves every tick, so the table would be indexed by the
 thing that varies.
 
-## What the tick loop does not do yet
+## What the tick loop did not do yet, and now does
 
-**Only one bubble shape resolves: damage, against the enemy, fired with the attack, landing instantly.**
-Everything else — a period, or any payload that is not damage — is a per-creep timed effect: a modifier that
-lasts a duration and expires, strongest-wins with the timer refreshed. That is #217's and half-building it
-here would mean building it twice.
+**Between #216 and #217 only one bubble shape resolved: damage, against the enemy, fired with the attack,
+landing instantly.** Everything else — a period, or any payload that is not damage — is a per-creep timed
+effect: a modifier that lasts a duration and expires, strongest-wins with the timer refreshed. That was #217's
+and half-building it here would have meant building it twice.
 
-**A row authoring one is refused when a match is built from it, by name.** Not at the landing, and not
-silently: `Match` walks its layout and its wave at construction and refuses a row whose bubble it cannot
-resolve. The failure being engineered out is the quiet one — a Cryomancer standing on the board, firing, and
-slowing nothing, with a column that parsed perfectly and nothing anywhere saying so. Such a row is authorable,
-hashable and storable; it does not play, and it says which of those it is.
+**A row authoring one was refused when a match was built from it, by name.** Not at the landing, and not
+silently: `Match` walked its layout and its wave at construction and refused a row whose bubble it could not
+resolve. The failure being engineered out was the quiet one — a Cryomancer standing on the board, firing, and
+slowing nothing, with a column that parsed perfectly and nothing anywhere saying so. Such a row was
+authorable, hashable and storable; it did not play, and it said which of those it was.
+
+**[#217](https://github.com/ssalter21/tower-defense-game/issues/217) built the machinery and deleted that
+refusal**, so every shape these nine columns can author now plays. The model, the strongest-wins rule and the
+speed floor under all of it are
+[ADR-0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md); what stayed here is the bubble, which is
+still one mechanic and still measures its sphere with `Reach.Encloses`.
 
 ## What was rejected
 

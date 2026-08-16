@@ -213,16 +213,40 @@ namespace Sim
         public bool ReachesOnlyItsCentre => Present && RadiusMilliHex == 0;
 
         /// <summary>
-        /// Whether this is the one shape the tick loop resolves today: a damage
-        /// bubble that goes off with the attack, instantly, against the other
-        /// side.
+        /// Which half of the board this bubble reaches into, given the role of
+        /// whatever emitted it.
         /// </summary>
         /// <remarks>
-        /// Everything else -- a period, a stat, a duration -- is a timed
-        /// per-creep effect, which belongs to #217 and is deliberately not
-        /// half-built here. What a row like that gets is a refusal naming it at
-        /// the moment a match is built out of it, rather than a column that
-        /// parses and then quietly does nothing.
+        /// <para>
+        /// <b>A side is a relationship and never a property</b>, exactly as a
+        /// height is -- see <see cref="Reach"/>. The column says <c>friend</c>
+        /// or <c>enemy</c>, and which units that is depends entirely on what is
+        /// emitting: a tower's enemy is what walks, and a walking unit's enemy
+        /// is what stands. One expression, asked at load where a payload is
+        /// checked against the side it lands on, and again in the tick loop
+        /// where the bubble is spread, so the two cannot come apart.
+        /// </para>
+        /// <para>
+        /// It answers for an absent bubble too, and the answer is the emitter's
+        /// own role -- which nothing reads, because nothing spreads a bubble
+        /// that is not there.
+        /// </para>
+        /// </remarks>
+        public UnitRole ReachesInto(UnitRole emitter) =>
+            Affects == BubbleAffects.Enemy
+                ? (emitter == UnitRole.Placed ? UnitRole.Moving : UnitRole.Placed)
+                : emitter;
+
+        /// <summary>
+        /// Whether this is the plainest shape there is: a damage bubble that
+        /// goes off with the attack, instantly, against the other side.
+        /// </summary>
+        /// <remarks>
+        /// It was the only shape the tick loop resolved between #216 and #217,
+        /// and it is now one of several -- a bubble carrying a stat lasts a
+        /// duration and expires, and one with a period pulses on its own clock.
+        /// What it still names is the shape that needs no per-unit state at
+        /// all: rolled, spread and finished inside the tick it fired on.
         /// </remarks>
         public bool IsAnInstantBlast =>
             Present

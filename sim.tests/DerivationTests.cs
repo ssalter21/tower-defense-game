@@ -197,6 +197,30 @@ public class DerivationTests
         // line untouched -- the fingerprint is F8B857E6175940A5, and with the
         // rule in it is the value below.
         (9u, 0x1BAEAF1DA57D7D8EUL),
+
+        // Version 10 is #217 -- per-unit timed effects. A bubble carrying a
+        // stat puts a magnitude on whatever it encloses for a duration and
+        // takes it off again when the duration ends; a bubble with a period
+        // does it on a clock of its own; two of them on one stat resolve
+        // strongest-wins with the timer refreshed; and a creep never drops
+        // below a tenth of its authored speed however they combine. The tick
+        // order gained two phases, a creep's step became a fact about the creep
+        // rather than about its wave order, and match-state/2 went to
+        // match-state/3 -- so every stored record's rolling hash stops
+        // reproducing whether or not its content authors an effect.
+        //
+        // IT CAUGHT THE HOLE A SEVENTH TIME, and in the roster again. A timed
+        // effect is emitted by a bubble carrying a stat and by nothing else,
+        // and every bubble in the sixth half carried damage: the rules ran and
+        // nothing folded them. So the shot-shape roster gained a turret whose
+        // shot slows what it hits and a walker whose aura grants a pool to
+        // whatever walks beside it, and the label went to rule-fingerprint/8.
+        //
+        // OBSERVED, both ways round, on this build. With Effects.ModifiedSpeed
+        // returning the authored speed -- the slow landing, expiring and
+        // changing no step, every other line untouched -- the fingerprint is
+        // 4B15804EC1BEDE48, and with the rule in it is the value below.
+        (10u, 0x13EB7A4673B75F21UL),
     };
 
     /// <summary>
@@ -257,31 +281,60 @@ public class DerivationTests
 
     /// <summary>
     /// The roster the shot-shape half is fought over: a walking row carrying a
-    /// shield, a turret that fires two shots, and a turret whose one shot is a
-    /// bubble.
+    /// shield, one carrying an aura that grants a pool to whatever walks beside
+    /// it, a turret that fires two shots, a turret whose one shot is a bubble,
+    /// and a turret whose one shot slows what it hits.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// <b>Layout 3, because no earlier layout can say any of this.</b> That is
     /// the whole reason this half exists: the five above it are fought over
     /// layout-1 and layout-2 rosters, where a shield is not a column, a shot
     /// count is not a column and a bubble is not a column -- so #216's rules
     /// run in every one of them and are visible in none.
+    /// </para>
+    /// <para>
+    /// <b>The slow and the aura are #217's, and they are on this roster for the
+    /// same reason.</b> A timed effect is emitted by a bubble carrying a stat
+    /// and by nothing else, so a scenario whose every bubble carries damage
+    /// runs the whole of the effect machinery and sees none of it -- which is
+    /// the shape of hole this table has had six times.
+    /// </para>
     /// </remarks>
     private const string FingerprintShotUnits = """
         layout 3
-        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none  none  0  none  0  0
-        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none  none  0  none  0  0
-        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self  enemy 0  damage 0  0
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0
+        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0
+        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60
         """;
 
     /// <summary>
-    /// One of each shape, side by side. Both stand where the single turret of
-    /// <see cref="FingerprintDefense"/> does or beside it, so both reach the
-    /// route on the folded map.
+    /// One of each shape, side by side. All three stand where the single turret
+    /// of <see cref="FingerprintDefense"/> does or beside it, so all three
+    /// reach the route on the folded map.
     /// </summary>
     private const string FingerprintShotDefense = """
         tower  3  2  1
         tower  4  3  1
+        tower  5  4  1
+        """;
+
+    /// <summary>
+    /// The wave the shot-shape half walks into: the same three walkers every
+    /// other half sends, and two wardens behind them.
+    /// </summary>
+    /// <remarks>
+    /// A wave of its own rather than <see cref="FingerprintWave"/>, because an
+    /// aura has to be emitted by something and nothing that stands emits this
+    /// one. The two of them pulse on the same period out of step with each
+    /// other, which is what puts two landings of one effect on one creep and
+    /// makes the strongest-wins rule visible rather than merely present.
+    /// </remarks>
+    private const string FingerprintShotWave = """
+        order  0  1  3  0
+        order  0  2  2  0
         """;
 
     /// <summary>
@@ -349,8 +402,19 @@ public class DerivationTests
 
     private const ulong FingerprintSeed = 20260802UL;
 
-    /// <summary>How many ticks of it are folded in. Enough for three spawns, every shot and every death.</summary>
-    private const int FingerprintTicks = 400;
+    /// <summary>
+    /// How many ticks of it are folded in. Enough for every spawn, every shot,
+    /// every death and every walk to the exit -- including one taken at a
+    /// slowed pace, which is what raised it from four hundred.
+    /// </summary>
+    /// <remarks>
+    /// It is a ceiling rather than a length: each half stops at whichever comes
+    /// first, this or the end of the match, and every one of them ends first.
+    /// Raising it therefore changes no half that already finished, which is why
+    /// it could move without retiring the halves it did not touch -- though the
+    /// label moved anyway, for the roster below it.
+    /// </remarks>
+    private const int FingerprintTicks = 900;
 
     [Fact]
     public void Editing_a_type_table_moves_the_content_hash_and_editing_a_comment_does_not()
@@ -738,6 +802,16 @@ public class DerivationTests
     /// cannot see it is the same failure as a fold that never runs it, so what
     /// changed is the ground the scenario stands on.
     /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/7</c> added the sixth half, whose roster is layout 3
+    /// and whose towers are the two shot shapes; <c>rule-fingerprint/8</c> is
+    /// the second bump taken for the scenario alone, and it is that same half's
+    /// roster again. #217's rules are reached only by a bubble carrying a stat,
+    /// and every bubble on that roster carried damage -- so the effect
+    /// machinery ran in the sixth half and was visible in none of the six. What
+    /// changed is the rows: a turret whose shot slows what it hits, and a
+    /// walker whose aura grants a pool to whatever walks beside it.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -747,7 +821,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/7").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/8").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -780,12 +854,23 @@ public class DerivationTests
     /// scenario rather than the shape of the fold.
     /// </para>
     /// <para>
-    /// <b>Both shot shapes and the shield are in one match on purpose.</b> They
-    /// share the one dice stream, so a draw added or skipped by either shape
-    /// moves the other's rolls too, and a shield that stopped absorbing changes
-    /// which body dies on which tick and therefore what everything after it
-    /// shoots at. One match folds all three interactions; three matches would
-    /// fold three isolated ones.
+    /// <b>And the roster is what moved again for #217.</b> A timed effect is
+    /// emitted by a bubble carrying a stat and by nothing else, and this half's
+    /// two bubbles both carried damage, so the seventh time the hole was in the
+    /// same half that had just been added to close the sixth. What it has now
+    /// is a bubble of each kind: one that spreads a roll, one that puts a
+    /// magnitude on what it hits for a duration, and one that pulses on a clock
+    /// of its own.
+    /// </para>
+    /// <para>
+    /// <b>Both shot shapes, the shield, the slow and the aura are in one match
+    /// on purpose.</b> They share the one dice stream, so a draw added or
+    /// skipped by any of them moves the others' rolls too; a shield that
+    /// stopped absorbing changes which body dies on which tick and therefore
+    /// what everything after it shoots at; and a slow changes which body is
+    /// nearest the exit and therefore which one every tower acquires. One match
+    /// folds all of those interactions; five matches would fold five isolated
+    /// ones.
     /// </para>
     /// <para>
     /// The map is the folded one every other half uses, so the sphere is
@@ -801,7 +886,7 @@ public class DerivationTests
             map,
             TheRuleset.Committed(),
             TowerLayout.Parse("fingerprint shot defense", FingerprintShotDefense, types),
-            WaveScript.Parse("fingerprint wave", FingerprintWave, types),
+            WaveScript.Parse("fingerprint shot wave", FingerprintShotWave, types),
             FingerprintSeed);
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)

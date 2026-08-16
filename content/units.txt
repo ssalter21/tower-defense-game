@@ -220,26 +220,44 @@
 # bubbleOrigin : self (a sweep, centred on the emitter) | target (a blast,
 #            centred on what the shot hit). A radius of 0 wants target: the
 #            emitter's own hex is the one place nothing that walks can stand
-# bubbleAffects : friend | enemy
+# bubbleAffects : friend | enemy -- and WHICH UNITS THAT IS DEPENDS ON WHAT IS
+#            EMITTING, because a side is a relationship rather than a property.
+#            A tower's enemy is what walks and a walker's enemy is what stands.
+#            A speed reaching towers and a cooldown reaching creeps are refused
+#            by name: nothing that stands walks and nothing that walks attacks
 # bubblePeriod : ticks. 0 fires with the attack; a positive value pulses on its
-#            own, which is the whole of what makes a bubble an aura
+#            own, which is the whole of what makes a bubble an aura. An aura is
+#            centred on 'self' -- a pulse has nothing it landed on -- and may
+#            not carry damage, because the dice are rolled once per shot and
+#            nowhere else and a pulse has no shot to be counted as
 # bubblePayload : damage, or one of speed, cooldown, armour, shield. RANGE IS
 #            NOT A LEGAL PAYLOAD and is refused by name: coverage is
 #            intersected with the route once, at load, and a payload that moved
 #            a range would drag that back into the tick loop
 # bubbleMagnitude : a percentage, for every payload that is not damage. A
 #            damage bubble carries the attack's own roll, so it authors zero
-#            here, and a slow is a negative speed percentage
+#            here, and a slow is a negative speed percentage. A SHIELD IS A
+#            SHARE OF THE HEALTH IT STANDS IN FRONT OF -- a pool has no rate of
+#            its own for a percentage to be a percentage of -- and it may not be
+#            negative, because a pool is granted and never taken
 # bubbleDuration : ticks the payload lasts. 0 is instant, which is what damage
 #            always is -- and what a shield may be, because a pool is spent
 #            rather than timed. Speed, cooldown and armour may not author 0: a
 #            stat put back the tick it moved is a stat that never moved
 #
-# WHAT THE TICK LOOP RESOLVES TODAY IS ONE BUBBLE SHAPE: damage, against the
-# enemy, fired with the attack, landing instantly. A period or any other
-# payload is a per-creep timed effect, which is not built -- such a row parses,
-# folds and stores, and a match built out of it refuses by name rather than
-# standing on the board emitting nothing.
+# A MODIFIER LASTS EXACTLY ITS DURATION AND THEN THE NUMBER ON THIS ROW IS BACK.
+# An effect landing on a tick is in force for the ticks after it, up to the
+# duration, whether it was fired with a shot or pulsed on a clock. TWO OF THEM
+# ON ONE STAT RESOLVE STRONGEST-WINS WITH THE TIMER REFRESHED: a second copy of
+# the same tower makes a slow last longer and never makes it deeper, which is
+# the only rule that cannot run away when a player can build any number of them.
+#
+# AND A CREEP NEVER DROPS BELOW A TENTH OF THE SPEED IN ITS COLUMN. That is a
+# safety rail rather than a balance number: a unit with no speed is refused when
+# a match is built, because it never reaches the exit and never dies, and a
+# runtime modifier would walk straight past that guard. The floor makes a match
+# that cannot end unreachable by arithmetic instead of by careful authoring, so
+# a slow of a hundred percent is a legal number with a bounded consequence.
 
 layout 3
 

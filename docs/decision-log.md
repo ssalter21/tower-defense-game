@@ -1117,3 +1117,70 @@ Mage is. What it did instead is pin the gap in `ContentTests` with both numbers 
 in the artefact rather than being silently answered. Three ways out, and none of them is a ticket's to take:
 author the splash and accept that a radius is unpriced; reprice the row to 30 and accept a Mage at a third of
 its old price; or make it genuinely fire three shots, which is a different tower.
+
+## 16 August 2026, last — a stat can move while a match is running, and a floor stops that ending it
+
+**`sim/` gains its first per-unit timed effects**, built in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) and decided in
+[#213](https://github.com/ssalter21/tower-defense-game/issues/213). The reasoning is
+[ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md). `SimulationVersion` goes **9 → 10**,
+the state hash's label `match-state/2` → `match-state/3`, and the rule fingerprint's `rule-fingerprint/7` →
+`rule-fingerprint/8`.
+
+Before this, every stat was read straight off the shared `UnitType` at use time and a creep carried
+`Id, Type, OrderIndex, Distance, Lateral, Hp, Shield, Phase, TicksInState` and nothing else. There was no
+effect machinery in the simulation at all.
+
+| | Before | After | Why |
+|---|---|---|---|
+| **an effect** | — | **A stat, a magnitude and a duration.** One model: speed, cooldown, armour and a granted shield pool | A slow, a rally, a curse and a pool are the same four fields with different numbers, exactly as a sweep, a blast and an aura were one bubble |
+| **two of them on one stat** | — | **Strongest-wins, with the timer refreshed** | It is the only rule with a ceiling that does not depend on how many copies of a tower somebody could afford |
+| **two of equal size and opposite sign** | — | **The lower one**, so the order is total | Otherwise a curse and a blessing resolve by whichever landed last, and two runs that differed only in build order fold different numbers |
+| **when an effect stops** | — | **Exactly its duration of ticks after the one it landed on**, whichever phase emitted it | Expiry opens the tick and emission closes it, so a shot and a pulse mean the same thing by "duration" |
+| **a creep's walking speed** | `_stepPerTick[orderIndex]` | **`Creep.Step`, per creep** | A modifier is per unit. An array indexed by the order would also have mis-reported every overtake involving a slowed creep, because `StepThisTick` reads the same number |
+| **the slowest a creep can walk** | Nothing said | **A tenth of its authored speed, and never less than one milli-hex** | A safety rail. The constructor's "no speed" refusal is at construction only, and a runtime modifier walks straight past it |
+| **a wave that could not cross at that floor** | — | **Refused when the match is built**, naming the tick it would have arrived on | The floor makes a hung match unreachable by arithmetic, and this is where that is proved for the map and wave in hand |
+| **a bubble the tick loop could not resolve** | Refused when a match was built from it | **It plays.** #216's guard is deleted | That guard existed only because this machinery did not |
+| **a damage bubble with a period** | Authorable | **Refused at load** | A pulse has no shot, and ADR-0003 is that the dice are rolled once per shot and nowhere else |
+| **an aura centred on `target`** | Authorable | **Refused at load** | A pulse has nothing it landed on |
+| **a speed reaching towers, a cooldown reaching creeps** | Authorable | **Refused at load** | Nothing that stands walks and nothing that walks attacks. A pool or an armour reaching a tower is *not* refused — that is a fact about the rows, not about the role, and refusing it would make `bubbleAffects` derivable and therefore empty |
+
+### The two things somebody had to decide, decided here rather than in silence
+
+**A shield payload's magnitude is a share of the health it stands in front of.** A shield is a pool rather
+than a rate, so there is no authored number of its own for a percentage to be a percentage of — and the
+consistent-looking alternative, a share of the recipient's own `shield` column, is inert on every row the
+mechanic exists for: the roster's walking rows author no shield at all. It answers the roster's standing
+question about the Necromancer's pool too: it **persists until spent or until its duration ends**, whichever
+comes first, and a duration of zero means until spent.
+
+**A damage modifier is unauthorable, and the word is the reason.** #217's model names five modifiable stats
+including damage, and `bubblePayload` has five values including `damage` — but that word already means *the
+attack's own roll, spread*, which is what #216 built. The two readings cannot share a keyword, the list of
+five is fixed, and a sixth would be widening the schema #213 closed. Four stats are modifiable and the fifth
+name is taken.
+
+### What moved in the artefacts, and what did not
+
+**Nothing about the committed match moved, again.** No row of `content/units.txt` authors a bubble at all, so
+the same wave leaks the same twelve creeps on the same tick 5283, the four landmark ticks are unchanged, the
+run still dies in round four having dealt 229, and `content/sweep.csv` is byte for byte what it was —
+regenerated and unmoved, which is the honest result and not a tuned one. What moved is the hashes.
+
+**The rule fingerprint could not see it, for the seventh time and in the roster again.** The sixth half of
+that fold is the one #216 added precisely because the five above it were fought over rosters that could not
+say what it changed — and both of *its* bubbles carry damage, while a timed effect is emitted by a bubble
+carrying a stat and by nothing else. So the rules ran in that half and were visible in none of the six. What
+changed is the rows: a turret whose shot slows what it hits and a walker whose aura grants a pool to whatever
+walks beside it. The label went to `rule-fingerprint/8` and the row is `(10u, 0x13EB7A4673B75F21UL)`. With
+`Effects.ModifiedSpeed` returning the authored speed — the slow landing, expiring and changing no step, every
+other line untouched — the same scenario folds `0x4B15804EC1BEDE48`, which is what makes the row evidence
+rather than a number somebody wrote down.
+
+### What a view still cannot see
+
+**No snapshot field and no event says a creep is slowed.** Events are decorative by
+[ADR-0008](adr/0008-match-events-are-decorative.md) and there are six of them; the snapshot is the view's only
+input by [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md). Adding either is a view contract taken in a
+ticket about rules, so neither was taken — and it goes to [open questions](open-questions.md) rather than
+being assumed, because the day a Cryomancer is signed is the day somebody has to draw one.

@@ -64,8 +64,6 @@ public class ShotShapeTests
         unit 12 sweep   placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 self enemy 0 damage 0 0
         unit 13 mortar  placed 0 0 4000 30 0 0 90 150 projectile 5 0 40 pierce none 0 0 1 3000 target enemy 0 damage 0 0
         unit 14 flat    placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
-        unit 15 frost   placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 0 target enemy 0 speed -40 120
-        unit 16 banner  placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 self friend 45 cooldown -20 60
         unit 17 pin     placed 0 0 4000 30 0 0 90 150 hitscan 0 0 40 pierce none 0 0 1 0 target enemy 0 damage 0 0
         unit 18 slowfast moving 5000 2000 0 0 0 0 0 0 none 0 4 30 none armoured 0 0 1 none none none 0 none 0 0
         unit 19 lateswp placed 0 0 4000 30 3 0 90 150 hitscan 0 0 40 pierce none 0 0 1 3000 self enemy 0 damage 0 0
@@ -278,30 +276,6 @@ public class ShotShapeTests
         Assert.Equal(3, log.CountOf("fired"));
         Assert.Equal(1, log.CountOf("damaged"));
         Assert.Equal(70, Amounts(log)[0]);
-    }
-
-    [Theory]
-    [InlineData(15)]
-    [InlineData(16)]
-    public void A_bubble_this_build_does_not_resolve_refuses_when_a_match_is_built_from_it(int typeId)
-    {
-        // A slow and an aura: both author perfectly, both fold into the content
-        // hash, and neither plays. The refusal is at construction and by name,
-        // because the alternative is a Cryomancer standing on the board firing
-        // and slowing nothing with nothing anywhere saying so.
-        //
-        // This is the line #216 drew and #217 rubs out: the columns parse and
-        // carry, and per-creep timed effect state is not half-built here.
-        UnitTypeTable types = UnitTypeTable.Parse("shot shapes", TheFixtures);
-
-        SimulationException thrown = Assert.Throws<SimulationException>(() => new Match(
-            HexMap.Parse("shot shapes map", AShortCorridor),
-            TheRuleset.Committed(),
-            TowerLayout.Parse("shot shapes defense", "tower " + typeId + " 2 1", types),
-            WaveScript.Parse("shot shapes wave", ThreeAbreast, types),
-            Seed));
-
-        Assert.Contains("one bubble shape", thrown.Message, StringComparison.Ordinal);
     }
 
     /// <summary>

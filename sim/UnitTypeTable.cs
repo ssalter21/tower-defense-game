@@ -593,7 +593,7 @@ namespace Sim
                 targets = DataText.IntegerInRange(source, line, "the target count", fields[20], 1, int.MaxValue);
                 bubble = ReadBubble(source, line, fields);
 
-                RequireShotShapes(source, line, delivery, maxHp, shield, targets, bubble);
+                RequireShotShapes(source, line, role, delivery, maxHp, shield, targets, bubble);
             }
 
             return new UnitType(
@@ -848,6 +848,21 @@ namespace Sim
                     + "and expired inside one tick, it changes nothing and would still move the content "
                     + "hash.");
             }
+
+            // A pool is granted, never taken. Draining one is a mechanic
+            // nobody has designed, and a negative share of a health pool is a
+            // number this reader would have to decide the meaning of.
+            if (bubble.Payload == BubblePayload.Shield && bubble.Magnitude < 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble granting "
+                    + bubble.Magnitude.ToString(CultureInfo.InvariantCulture)
+                    + " percent of a shield. A shield payload grants a pool, as a share of the health it "
+                    + "stands in front of, and a negative share is a pool taken away -- which is a "
+                    + "mechanic nobody has authored and which no reader here applies.");
+            }
         }
 
         /// <summary>
@@ -904,6 +919,7 @@ namespace Sim
         private static void RequireShotShapes(
             string source,
             int line,
+            UnitRole role,
             Delivery delivery,
             int maxHp,
             int shield,
@@ -955,6 +971,127 @@ namespace Sim
                     + "damage bubble is one shot drawing one roll that lands on everything it encloses. "
                     + "A row claiming both would draw one of them per body of the other, and the number "
                     + "of draws an attack makes is part of what every stored record replays through.");
+            }
+
+            RequireLandable(source, line, role, bubble);
+        }
+
+        /// <summary>
+        /// A bubble carries something the side it reaches into actually has.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Which side that is depends on the emitter, and two payloads
+        /// cannot mean anything on the side they would reach.</b> Nothing that
+        /// stands walks and nothing that walks attacks -- both are permanent
+        /// facts about the two roles rather than about any row -- so a speed
+        /// reaching towers and a cooldown reaching creeps are columns that
+        /// would parse perfectly and then change no number anywhere. That is
+        /// the same failure a bubble nobody emits would be and it is refused in
+        /// the same place: at load, by name, with the column to change in the
+        /// message.
+        /// </para>
+        /// <para>
+        /// <b>What is deliberately not refused is a pool or an armour reaching
+        /// a tower.</b> Nothing shoots a tower in this loop, so such a bubble
+        /// grants something nothing can spend today -- but that is a fact about
+        /// the rows in <c>content/units.txt</c>, every one of which authors a
+        /// placed unit with no health pool, and not a fact about what a placed
+        /// unit is. Refusing it would also make <c>bubbleAffects</c> derivable
+        /// from the payload and the role in every case, which is a column
+        /// carrying nothing -- and a redundant column is a worse failure than
+        /// an inert one, because the fixed list of nine is what #213 bought.
+        /// </para>
+        /// <para>
+        /// <b>And a damage payload may not pulse.</b> The dice are rolled
+        /// exactly once per shot, for damage, and nowhere else -- which is what
+        /// makes the stream's position a running count of the shots fired so
+        /// far and is
+        /// <c>docs/adr/0003-dice-rolled-once-per-shot.md</c>'s whole claim. An
+        /// aura has no shot and no target, so a damage aura would have to draw
+        /// outside one and the count would stop meaning anything. A tower that
+        /// wants to damage on a clock has a cooldown.
+        /// </para>
+        /// </remarks>
+        private static void RequireLandable(string source, int line, UnitRole role, Bubble bubble)
+        {
+            if (!bubble.Present)
+            {
+                return;
+            }
+
+            if (bubble.IsAnAura && bubble.Payload == BubblePayload.Damage)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a damage bubble with a period of "
+                    + bubble.PeriodTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks, which is an aura that deals damage. The dice are rolled once per shot and "
+                    + "nowhere else, so the stream's position is a running count of the shots fired -- and "
+                    + "a pulse has no shot to be counted as. Author the period as a cooldown, or carry a "
+                    + "payload that is not damage.");
+            }
+
+            // A pulse has nothing it landed on, so there is no target for it to
+            // centre itself on. An aura is centred on whatever is emitting it,
+            // and that is the whole of where a bubble with a clock can be.
+            if (bubble.IsAnAura && bubble.Origin == BubbleOrigin.Target)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble with a period of "
+                    + bubble.PeriodTicks.ToString(CultureInfo.InvariantCulture)
+                    + " ticks centred on '"
+                    + OriginWords[(int)BubbleOrigin.Target]
+                    + "'. A period is what makes a bubble pulse on a clock of its own rather than with a "
+                    + "shot, and a pulse has nothing it landed on: an aura is centred on '"
+                    + OriginWords[(int)BubbleOrigin.Self]
+                    + "'.");
+            }
+
+            UnitRole lands = bubble.ReachesInto(role);
+
+            if (lands == UnitRole.Placed && bubble.Payload == BubblePayload.Speed)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble of "
+                    + PayloadWords[(int)BubblePayload.Speed]
+                    + " that reaches "
+                    + RoleWords[(int)UnitRole.Placed]
+                    + " units. Nothing that stands walks anywhere in this simulation, so a speed on one "
+                    + "is a number read by nothing: change the payload, or change which side the bubble "
+                    + "reaches.");
+            }
+
+            if (lands == UnitRole.Moving && bubble.Payload == BubblePayload.Cooldown)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "carries a bubble of "
+                    + PayloadWords[(int)BubblePayload.Cooldown]
+                    + " that reaches "
+                    + RoleWords[(int)UnitRole.Moving]
+                    + " units. Nothing that walks the corridor attacks anything in this simulation, so a "
+                    + "cooldown on one is a number read by nothing: change the payload, or change which "
+                    + "side the bubble reaches.");
+            }
+
+            // A bubble of no radius is the one body the shot landed on, and
+            // what a shot lands on walks.
+            if (bubble.ReachesOnlyItsCentre && lands == UnitRole.Placed)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "authors a bubble of no radius that reaches "
+                    + RoleWords[(int)UnitRole.Placed]
+                    + " units. Zero is the target alone, and the target of a shot is something that "
+                    + "walks: a bubble reaching the other side wants a radius that encloses it.");
             }
         }
     }

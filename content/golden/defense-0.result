@@ -1,9 +1,9 @@
-restaged   Restaged, not replayed: recorded under simulation version 1, content 39B848CEFDDCC9CF and no ruleset stamp, run under simulation version 9, content 39B848CEFDDCC9CF and ruleset D01EB9595248D3C9. The outcome is what this defense and this wave do today, and it is not this record's result.
+restaged   Restaged, not replayed: recorded under simulation version 1, content 39B848CEFDDCC9CF and no ruleset stamp, run under simulation version 10, content 39B848CEFDDCC9CF and ruleset D01EB9595248D3C9. The outcome is what this defense and this wave do today, and it is not this record's result.
 replay bundle format 0, simulation version 1, content 39B848CEFDDCC9CF
 seed       20260801
 defense    7A59F7466CBECD7F, read at defense record format 0
 wave       44C52C885C1A75C2
-result     0 of 40 leaked, tick 1819 (60 seconds at 30 ticks a second), state E757C044BE919598
+result     0 of 40 leaked, tick 1819 (60 seconds at 30 ticks a second), state DCF4D664C632EA87
 landmark  first-overtake            276     20     18
 landmark  projectile-orphaned       277     22      0
 landmark  first-leak            never happened

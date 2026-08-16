@@ -124,8 +124,8 @@ Three lines, three tiers each, and **one attack type per line** — Soldier impa
 It is what makes the three-way cycle readable off the board: you know what a tower does to a body by knowing
 which line it came from, and it costs nothing, because attack type is a column that already exists.
 
-**Every tier on this page is authorable as of layout 3**, and three of them are not playable until #217 builds
-the timed effect behind them; see [the column
+**Every tier on this page is authorable as of layout 3 and playable as of #217**, which built the timed
+effect three of them rest on; see [the column
 list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is a name and a set of
 signed numbers.
 
@@ -156,10 +156,10 @@ signed numbers.
   2 hexes.
 - **Looks** — adds a shield, visor open, particle effect while the aura is up.
 - **Numbers** — radius 2000. Period, duration and magnitude `_`.
-- **Needs** — **the schema, no; the engine, yes.** Layout 3 authors this row today: origin `self`, affects
-  `friend`, payload `cooldown`, a negative magnitude, a period and a duration. What is not built is the timed
-  per-creep effect state behind it (#217), so a match built out of such a row is refused by name rather than
-  standing on the board emitting nothing.
+- **Needs** — **nothing but numbers.** Layout 3 authors this row and #217 plays it: origin `self`, affects
+  `friend`, payload `cooldown`, a negative magnitude, a period and a duration. Two Captains in range of one
+  tower do not stack — the stronger magnitude wins and the timer refreshes — so the aura is a floor on attack
+  speed rather than a multiplier on the count of them.
 - **Open** — does "first engagement" mean the tower's first shot or the wave's first contact? Deterministic
   either way, but they are different rules. **And the period and duration are in seconds here** — at 30 ticks a
   second, write them as ticks when they are signed.
@@ -250,13 +250,13 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — the frost branch. Adds a slow to the splash area.
 - **Looks** — blue palette, frost particles.
 - **Numbers** — slow magnitude `_`, duration `_`.
-- **Needs** — **the schema, no; the engine, yes.** She is a bubble of radius 0, origin `target`, affects
-  `enemy`, payload `speed`, a negative magnitude and a positive duration — no dedicated slow columns exist and
-  none are coming. What is not built is the timed per-creep effect state (#217): a slow is still the first
-  thing in the game that changes a creep's stats mid-walk, and a match built out of such a row is refused by
-  name until it is.
-- **Open** — does a slow stack, refresh, or take the strongest? (Strongest-wins with the timer refreshed is
-  the intended answer; it is #217's to make true.)
+- **Needs** — **nothing but numbers.** She is a bubble of radius 0, origin `target`, affects `enemy`, payload
+  `speed`, a negative magnitude and a positive duration — no dedicated slow columns exist and none are coming.
+  #217 built the timed effect behind it, so the row plays.
+- **Open** — none about the mechanic. A slow does not stack: strongest-wins with the timer refreshed, which is
+  what [#217](decision-log.md#16-august-2026-last--a-stat-can-move-while-a-match-is-running-and-a-floor-stops-that-ending-it)
+  made true. **A creep never drops below a tenth of its authored speed**, so a magnitude past -90 buys nothing
+  and the deepest useful slow is bounded by a rule rather than by taste.
 
 ### Frostfire Archmage · tier 3 · status proposed
 
@@ -346,17 +346,20 @@ would re-baseline every measurement in the sweep.
 - **Does** — walks. **The aura is not signed** — see below.
 - **Looks** — the mage skeleton, staff, casting continuously. A large arcane bubble showing the radius.
 - **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19.
-- **Needs** — nothing *for the body*, and nothing *from the schema* for the aura either: origin `self`,
-  affects `friend`, payload `shield`, a period and a duration, measured in hex distance so it reaches the
-  neighbouring leg of a fold. The engine ask is what is left — timed per-creep effect state, #217.
-- **Open** — does the shield regenerate, decay, or persist until spent? And does it move with the Necromancer,
-  so killing it strips every body around it?
+- **Needs** — nothing but numbers. Origin `self`, affects `friend`, payload `shield`, a period and a
+  duration, measured in hex distance so it reaches the neighbouring leg of a fold. #217 built the effect state
+  behind it.
+- **Open** — the magnitude and the period. The two questions that were open are answered: the granted pool
+  **persists until spent or until its duration ends**, whichever comes first, and a duration of zero means
+  until spent; and it does **not** move with the Necromancer — killing it stops the pulses, so what is already
+  granted is spent or times out rather than vanishing. The magnitude is **a share of the health it stands in
+  front of**, because a pool has no rate of its own for a percentage to be a percentage of.
 
-> **The row lands; the mechanic does not.** What is in `units.txt` is a walking arcane body. The second health
-> pool arrived with layout 3 — `shield`, absorbing first and raw — and so did the columns that describe the
-> aura. What is still missing is the machinery that grants one unit's pool from another unit's bubble over a
-> duration, which is #217. Until then the Necromancer is a creep that looks like it should do something and
-> does not, and that is worth knowing when it appears on a menu.
+> **The row lands and the mechanic is built; what is missing is the numbers.** What is in `units.txt` is a
+> walking arcane body with no bubble on it. The second health pool arrived with layout 3 — `shield`, absorbing
+> first and raw — the columns that describe the aura came with it, and #217 built the machinery that grants
+> one unit's pool from another unit's bubble over a duration. Signing the radius, the period, the magnitude
+> and the duration is a gameplay decision and nobody has taken it.
 
 ---
 
@@ -485,11 +488,11 @@ all the same shape: a bubble that emits something. The reasoning is
 | `targets` | Shots per attack, each its own damage roll, targets taken nearest-to-exit first. 1 = an ordinary single shot |
 | `bubbleRadius` | Milli-hex, read as a sphere. 0 = the target alone; absent = no bubble |
 | `bubbleOrigin` | `self` or `target`. The Soldier's sweep centres on the tower; a mortar's blast centres on what it hit |
-| `bubbleAffects` | `friend` or `enemy` |
-| `bubblePeriod` | Ticks. 0 = fires with the attack; positive = pulses on its own, which is what makes it an aura |
-| `bubblePayload` | `damage`, or one of the five modifiable stats — speed, damage, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop |
-| `bubbleMagnitude` | A damage amount, or a percentage |
-| `bubbleDuration` | Ticks. 0 = instant |
+| `bubbleAffects` | `friend` or `enemy` — and which units that is depends on the emitter's role, because a tower's enemy is what walks and a walker's enemy is what stands |
+| `bubblePeriod` | Ticks. 0 = fires with the attack; positive = pulses on its own, which is what makes it an aura. An aura is centred on `self` and may not carry `damage` |
+| `bubblePayload` | `damage`, or one of the modifiable stats — speed, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop. **Neither is damage**: that word is taken by the roll a damage bubble spreads |
+| `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative |
+| `bubbleDuration` | Ticks. 0 = instant, and for a shield it means "until spent" |
 
 **What that authors.** The Cryomancer needs no dedicated slow columns at all: she is a bubble of radius 0,
 origin `target`, payload `speed`, negative magnitude, positive duration. The Captain is the same mechanic with
@@ -499,16 +502,17 @@ measured in hex distance rather than along the marching column, so it reaches th
 tower that pulses over the whole board is one row.
 
 **Effects are one model**: a stat, a magnitude and a duration. Strongest-wins with the timer refreshed on
-reapplication, applied in canonical order. A creep never drops below **10% of its authored speed** — a floor
-binding every effect at once, which is what makes a match that cannot end unreachable by arithmetic rather than
-by careful authoring.
+reapplication, resolved by a strict total order so that two effects landing in either order reach the same
+state. An effect is in force for exactly its duration of ticks after the one it landed on. A creep never drops
+below **10% of its authored speed** — a floor binding every effect at once, which is what makes a match that
+cannot end unreachable by arithmetic rather than by careful authoring. Built in #217; the reasoning is
+[ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md).
 
-**The columns landed ahead of the machinery, deliberately.** #216 built the three columns the tick loop can
-read on its own — `shield`, `targets`, and a damage bubble that fires with the attack and lands instantly —
-and left timed per-creep effect state to #217. A row authoring anything else (a period, or a payload that is
-not damage) **parses, folds and stores, and refuses by name the moment a match is built out of it**. Five of
-the six proposed towers are therefore *authorable* today and none of them is *playable* yet, which is a
-different sentence from the one this section used to carry.
+**The columns landed one ticket ahead of the machinery, deliberately.** #216 built the three columns the tick
+loop could read on its own — `shield`, `targets`, and a damage bubble that fires with the attack and lands
+instantly — and a row authoring anything else parsed, folded, stored and refused by name the moment a match
+was built out of it. #217 built the rest and deleted that refusal, so **every shape these nine columns can
+author now plays**. What is left for all six proposed towers is a name and a set of signed numbers.
 
 A new unit is still a row, and a new column is still a format version with every stored record made under the
 old one retired. **This is the last widening the roster asks for before the map has been measured.**
@@ -532,11 +536,10 @@ open.
 
 ## Open questions
 
-1. **Layout 3 has landed, and the queue is now a design queue rather than a schema one.** Every one of the six
-   proposed towers is *authorable* — the columns exist and
-   [the fixtures prove each shape parses](../sim.tests/ContentTests.cs) — and the three that need a timed
-   effect are not *playable* until #217. What is left is what was always left: naming them and signing their
-   numbers. The ladder itself is built.
+1. **Layout 3 and its machinery have both landed, and the queue is now a design queue rather than a schema
+   one.** Every one of the six proposed towers is *authorable* and *playable* — the columns exist, the
+   fixtures prove each shape [parses](../sim.tests/ContentTests.cs) and [plays](../sim.tests/EffectTests.cs).
+   What is left is what was always left: naming them and signing their numbers. The ladder itself is built.
 2. **Towers get nine states and creeps get five flat rows** — and the answer, from
    [13 August](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster),
    is that **creeps deepen by being upgraded rather than by being replaced**: stat and speed upgrades on the
