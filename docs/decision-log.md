@@ -935,3 +935,30 @@ three-round run against a population recorded per round, and the label went `rul
 half caught.** A layout-1 row carries no cost column, so every unit in the fingerprint's own roster is free —
 and a leak that costs nothing folds to zero whoever sent it. The half was written, watched passing under a
 deliberately flat draw, and only the priced roster made it able to see the rule it is there for.
+
+## 16 August 2026 — the sweep's owed columns become queries
+
+[Step 4](build-order.md#4--the-balance-harness) owed three further columns: the both-columns check, outcome
+spread, and win rate binned by ingredient count. **Two of the three stop being columns.** `simcli sweep
+--per-run` keeps a row for every run under the folded ones — the creep row's own headings, plus the seed that
+produced it — so a spreadsheet groups them and gets the distribution the fold is a summary of. Outcome spread
+is a fold over those rows, and the ingredient bin comes back as a grouping if the take gate returns. Neither is
+an edit to the harness any more, and only the both-columns check is still owed.
+
+**The reason it is a mode rather than the default.** A row per run at the runner's ceiling of 100,000 runs a
+creep is millions of rows held in memory and written as one string, so the sweep that wanted the fold alone
+should not carry it. That ceiling is also where the argument for dropping parallelism was made
+([#202](https://github.com/ssalter21/tower-defense-game/issues/202)), which is worth remembering together: the
+workload that issue defends as four hours of single-core compute is, with `--per-run` on, bounded by memory
+rather than by time. Streaming the rows out belongs with the scale work that was deferred, not with this.
+
+**Which player swept is now written down.** The plan has always carried a `BuildPolicy` and the command line
+never passed one, so every committed number was `EvenShareBot`'s with nothing on the file saying so. `--policy`
+takes `even-share` or `all-in`, the name is a parameter row, and an unrecognised name is refused rather than
+defaulted — a fallback produces a complete, correct-looking report about a player nobody asked for. `all-in`
+was added because one legal value is not a choice; it is the bracket that answers what the defensive half of a
+round is worth, which no single report can.
+
+`content/sweep.csv` is regenerated for the new `seed` column and the `policy` row. **Every number in it is
+unchanged**, which is the point: the report gained a way to be asked new questions without any old answer
+moving.

@@ -178,13 +178,24 @@ public static class Program
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
         "             [--free-snapshots <number>] [--snapshot-price <number>]",
-        "             [--most-creeps <number>]",
+        "             [--most-creeps <number>] [--policy <name>] [--per-run]",
         string.Empty,
         "         Plays a population of runs per creep and writes the balance",
         "         report as a comma-separated file -- to --out, or to standard",
         "         output where there is no --out. --runs is how many seeds each",
         "         creep is played on and --most-creeps bounds the roster; both",
         "         bounds are reported in the file's own coverage rows.",
+        string.Empty,
+        "         --policy names the scripted player: " + SweepPlan.EvenShare + ", which",
+        "         spends half of every purse on the board and half on the wave,",
+        "         or " + AllIn + ", which builds nothing and sends the lot. Two reports",
+        "         under the two of them are what says what the defensive half of",
+        "         a round is worth. The name is a row of the file.",
+        string.Empty,
+        "         --per-run writes a row for every run under the folded ones,",
+        "         each naming the seed it was played on -- the distribution the",
+        "         fold is a summary of. It is off by default because the row",
+        "         count is the roster times the sample.",
         string.Empty,
         "         The four dials retune the ruleset for the sweep alone. Left",
         "         out, each is whatever --rules already says.",
@@ -492,8 +503,8 @@ public static class Program
             Dial(arguments, "snapshot-price"),
             arguments.Optional("most-creeps", SweepPlan.WholeRoster, SweepPlan.WholeRoster, MaximumCreeps),
             PolicyOf(name),
-            name,
-            arguments.Given("per-run"));
+            arguments.Given("per-run"),
+            name);
 
         SweepReport report = Sim.Sweep.Of(plan);
         string csv = SweepCsv.Of(report);

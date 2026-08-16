@@ -82,7 +82,7 @@ internal static class SweepCsv
         // has it whole before the long tail starts.
         for (int index = 0; index < report.EveryRun.Count; index++)
         {
-            Played(text, report.EveryRun[index]);
+            RunRow(text, report.EveryRun[index]);
         }
 
         return text.ToString();
@@ -202,53 +202,89 @@ internal static class SweepCsv
         Row(text, row);
     }
 
+    /// <summary>
+    /// The columns a population fills whatever its depth, filled in.
+    /// </summary>
+    /// <remarks>
+    /// <b>One writer for both kinds of row, because they are one population
+    /// counted twice.</b> A creep row is the fold and a run row is a population
+    /// of one, so the file's promise is that grouping the second lands on the
+    /// first -- and two copies of this list are two chances for one of them to
+    /// gain a column the other does not have. What each kind adds on top of
+    /// these is its own: the two rates for a fold, the seed for a run.
+    /// </remarks>
+    private static CsvRow Population(
+        string kind,
+        string label,
+        long runs,
+        long rounds,
+        long wins,
+        long dealt,
+        long taken,
+        long spent,
+        long defense,
+        long unspent,
+        long incomeBase,
+        long bonus) =>
+        new CsvRow()
+            .With("kind", kind)
+            .With("subject", label)
+            .With("runs", Number(runs))
+            .With("rounds", Number(rounds))
+            .With("wins", Number(wins))
+            .With("dealt_gold", Number(dealt))
+            .With("taken_gold", Number(taken))
+            .With("spent_gold", Number(spent))
+            .With("defense_gold", Number(defense))
+            .With("unspent_gold", Number(unspent))
+            .With("income_base_gold", Number(incomeBase))
+            .With("bonus_gold", Number(bonus));
+
+    /// <summary>One creep over its whole population of runs, and the two rates that fold gives.</summary>
     private static void Creep(StringBuilder text, SweepRow row) =>
         Row(
             text,
-            new CsvRow()
-                .With("kind", "creep")
-                .With("subject", row.Label)
-                .With("runs", Number(row.Runs))
-                .With("rounds", Number(row.Rounds))
-                .With("wins", Number(row.Wins))
+            Population(
+                "creep",
+                row.Label,
+                runs: row.Runs,
+                rounds: row.Rounds,
+                wins: row.Wins,
+                dealt: row.LeakCostDealt,
+                taken: row.LeakCostTaken,
+                spent: row.GoldSpent,
+                defense: row.DefenseGold,
+                unspent: row.UnspentGold,
+                incomeBase: row.IncomeBaseGold,
+                bonus: row.BonusGold)
                 .With("win_rate_bp", Number(row.WinRateBasisPoints))
-                .With("dealt_gold", Number(row.LeakCostDealt))
-                .With("taken_gold", Number(row.LeakCostTaken))
-                .With("spent_gold", Number(row.GoldSpent))
-                .With("defense_gold", Number(row.DefenseGold))
-                .With("unspent_gold", Number(row.UnspentGold))
-                .With("cost_efficiency_dealt_per_100_gold", Number(row.DealtPerHundredGold))
-                .With("income_base_gold", Number(row.IncomeBaseGold))
-                .With("bonus_gold", Number(row.BonusGold)));
+                .With("cost_efficiency_dealt_per_100_gold", Number(row.DealtPerHundredGold)));
 
     /// <summary>
     /// One run, under the same headings as the row it was folded into.
     /// </summary>
     /// <remarks>
-    /// <b>The columns are the creep row's on purpose.</b> A run is a population
-    /// of one, so it reports one run and either one win or none, and a
-    /// spreadsheet that groups these rows itself lands on exactly the creep row
-    /// above them. The two rate columns are left blank -- see
-    /// <see cref="SweepColumns"/> -- and the seed is the column only this kind
-    /// of row fills.
+    /// A population of one: it reports one run and either one win or none. The
+    /// two rate columns stay blank -- see <see cref="SweepColumns"/> -- and the
+    /// seed is the column only this kind of row fills.
     /// </remarks>
-    private static void Played(StringBuilder text, SweepRunRow row) =>
+    private static void RunRow(StringBuilder text, SweepRunRow row) =>
         Row(
             text,
-            new CsvRow()
-                .With("kind", "run")
-                .With("subject", row.Label)
-                .With("seed", row.Seed.ToString(PlainText.Culture))
-                .With("runs", Number(1))
-                .With("rounds", Number(row.Rounds))
-                .With("wins", Number(row.Won ? 1 : 0))
-                .With("dealt_gold", Number(row.LeakCostDealt))
-                .With("taken_gold", Number(row.LeakCostTaken))
-                .With("spent_gold", Number(row.GoldSpent))
-                .With("defense_gold", Number(row.DefenseGold))
-                .With("unspent_gold", Number(row.UnspentGold))
-                .With("income_base_gold", Number(row.IncomeBaseGold))
-                .With("bonus_gold", Number(row.BonusGold)));
+            Population(
+                "run",
+                row.Label,
+                runs: 1,
+                rounds: row.Rounds,
+                wins: row.Won ? 1 : 0,
+                dealt: row.LeakCostDealt,
+                taken: row.LeakCostTaken,
+                spent: row.GoldSpent,
+                defense: row.DefenseGold,
+                unspent: row.UnspentGold,
+                incomeBase: row.IncomeBaseGold,
+                bonus: row.BonusGold)
+                .With("seed", row.Seed.ToString(PlainText.Culture)));
 
     private static string Number(long value) => value.ToString(PlainText.Culture);
 

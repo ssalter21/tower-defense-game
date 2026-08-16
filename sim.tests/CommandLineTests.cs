@@ -409,7 +409,7 @@ public class CommandLineTests
     public void The_sweep_verb_plays_the_policy_it_was_named_and_writes_down_which()
     {
         // Comparing two strategies is what the plan's policy parameter exists
-        // for, and until the verb took one it was a parameter reachable only by
+        // for, and a verb that took no name would leave it reachable only by
         // editing C#. The all-in player spends its whole purse on the wave, so
         // what separates the two reports is the defense column: one builds and
         // the other does not.

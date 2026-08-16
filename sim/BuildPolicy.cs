@@ -107,9 +107,9 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>It is not a good player and is not meant to be.</b> A run that builds
-    /// nothing concedes every leak the field sends, so under a ruleset where
-    /// death ends a run this is the shortest row the harness can produce. That
-    /// is the measurement, not a flaw in it.
+    /// nothing concedes every leak the field sends, so what it takes is bounded
+    /// by the health pool alone and its rows report a defense column of nothing.
+    /// That is the measurement rather than a flaw in it.
     /// </para>
     /// </remarks>
     public static class AllInBot
