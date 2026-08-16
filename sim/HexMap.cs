@@ -46,12 +46,15 @@ namespace Sim
     /// tiers, none of which anybody could read.
     /// </para>
     /// <para>
-    /// <b>Leading whitespace on a row is decoration and is stripped.</b> Odd
-    /// rows are the shifted ones in odd-r offset, so the committed file indents
-    /// them and what is typed then looks like the board it produces. Nothing
-    /// about that indent is data -- the hash is over the parsed grid, so
-    /// indenting a row moves nothing at all -- and requiring it would be a
-    /// parser refusing a grid it had already read correctly.
+    /// <b>A row is trimmed at both ends, and the whitespace that goes is
+    /// decoration.</b> Odd rows are the shifted ones in odd-r offset, so the
+    /// committed file indents them and what is typed then looks like the board
+    /// it produces. Nothing about that indent is data -- the hash is over the
+    /// parsed grid, so indenting a row moves nothing at all -- and requiring it
+    /// would be a parser refusing a grid it had already read correctly. The
+    /// trailing end goes for the opposite reason: a space after the last cell
+    /// is invisible, and a refusal naming a character nobody can see is a fault
+    /// nobody can find.
     /// </para>
     /// <para>
     /// <b>The corridor is asserted well-formed at load: exactly one hex wide,
@@ -469,6 +472,15 @@ namespace Sim
         /// </summary>
         private sealed class Grid
         {
+            /// <summary>Why a terrain row of the wrong width is refused rather than padded.</summary>
+            private const string RaggedGrid =
+                "A ragged grid has no unambiguous reading, so it is refused rather than padded.";
+
+            /// <summary>Why the level block has to be the shape of the terrain block.</summary>
+            private const string OneBoardTwice =
+                "The two blocks are one board seen twice, so a level grid of another shape leaves a hex "
+                + "whose height nothing states.";
+
             private readonly string _source;
 
             private readonly int _firstLine;
@@ -490,20 +502,7 @@ namespace Sim
 
                 for (int row = 0; row < Height; row++)
                 {
-                    string line = terrain.Rows[row];
-
-                    if (line.Length != Width)
-                    {
-                        throw new ContentException(
-                            source,
-                            terrain.FirstLine + row,
-                            "is "
-                            + line.Length.ToString(CultureInfo.InvariantCulture)
-                            + " characters wide where the first row is "
-                            + Width.ToString(CultureInfo.InvariantCulture)
-                            + ". A ragged grid has no unambiguous reading, so it is refused rather than "
-                            + "padded.");
-                    }
+                    string line = Row(source, terrain, row, Width, "the first row", RaggedGrid);
 
                     for (int column = 0; column < Width; column++)
                     {
@@ -521,26 +520,13 @@ namespace Sim
                         + levels.Rows.Count.ToString(CultureInfo.InvariantCulture)
                         + " rows deep where the terrain grid above it is "
                         + Height.ToString(CultureInfo.InvariantCulture)
-                        + ". The two blocks are one board seen twice, so a level grid of another shape "
-                        + "leaves a hex whose height nothing states.");
+                        + ". "
+                        + OneBoardTwice);
                 }
 
                 for (int row = 0; row < Height; row++)
                 {
-                    string line = levels.Rows[row];
-
-                    if (line.Length != Width)
-                    {
-                        throw new ContentException(
-                            source,
-                            levels.FirstLine + row,
-                            "is "
-                            + line.Length.ToString(CultureInfo.InvariantCulture)
-                            + " characters wide where the terrain grid is "
-                            + Width.ToString(CultureInfo.InvariantCulture)
-                            + ". The two blocks are one board seen twice, so a level grid of another "
-                            + "shape leaves a hex whose height nothing states.");
-                    }
+                    string line = Row(source, levels, row, Width, "the terrain grid", OneBoardTwice);
 
                     for (int column = 0; column < Width; column++)
                     {
@@ -690,6 +676,43 @@ namespace Sim
             /// to invent a height for, which is the one thing a reader may
             /// never do.
             /// </remarks>
+            /// <summary>
+            /// One row of a block, as wide as the grid says or a fault naming
+            /// the reader's own line.
+            /// </summary>
+            /// <remarks>
+            /// Both blocks come through here because both are checked the same
+            /// way and only the sentence differs. Two copies of a width check
+            /// are two chances for one of them to start padding.
+            /// </remarks>
+            private static string Row(
+                string source,
+                Block block,
+                int row,
+                int width,
+                string against,
+                string because)
+            {
+                string line = block.Rows[row];
+
+                if (line.Length != width)
+                {
+                    throw new ContentException(
+                        source,
+                        block.FirstLine + row,
+                        "is "
+                        + line.Length.ToString(CultureInfo.InvariantCulture)
+                        + " characters wide where "
+                        + against
+                        + " is "
+                        + width.ToString(CultureInfo.InvariantCulture)
+                        + ". "
+                        + because);
+                }
+
+                return line;
+            }
+
             private static List<Block> Blocks(string source, string[] lines)
             {
                 var blocks = new List<Block>();
@@ -745,8 +768,9 @@ namespace Sim
                         source,
                         blocks[2].FirstLine,
                         "opens a third block of rows. A map holds two -- the terrain and the levels -- so "
-                        + "anything after them is either a stray edit or a second map that nothing will "
-                        + "ever read.");
+                        + "anything after them is either a stray edit, a second map that nothing will "
+                        + "ever read, or a comment line between two rows of one grid, which splits it "
+                        + "into two the same way a blank line would.");
                 }
 
                 return blocks;

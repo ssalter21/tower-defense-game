@@ -145,7 +145,7 @@ internal static class MapPicture
         for (int tier = 0; tier < census.Length; tier++)
         {
             text.Append("tier ")
-                .Append((char)(FirstTier + tier))
+                .Append(TierLetter(tier))
                 .Append("     ")
                 .Append(PlainText.Number(census[tier]))
                 .Append(census[tier] == 1 ? " hex\n" : " hexes\n");
@@ -226,16 +226,6 @@ internal static class MapPicture
     private static void Caption(StringBuilder svg, HexMap map, double height)
     {
         double baseline = height - CaptionHeight + 34;
-        int[] census = Census(map);
-        var tiers = new StringBuilder();
-
-        for (int tier = 0; tier < census.Length; tier++)
-        {
-            tiers.Append(tier == 0 ? string.Empty : "   ")
-                .Append(TierLetter(tier))
-                .Append(' ')
-                .Append(PlainText.Number(census[tier]));
-        }
 
         Left(
             svg,
@@ -250,7 +240,7 @@ internal static class MapPicture
             15,
             Ink);
 
-        Left(svg, Margin, baseline + 24, "hexes per tier   " + tiers, 15, Ink);
+        Left(svg, Margin, baseline + 24, "hexes per tier   " + TierListing(map), 15, Ink);
         Left(
             svg,
             Margin,
@@ -258,6 +248,23 @@ internal static class MapPicture
             "drawn from the parsed map, so this is what the loader read",
             13,
             "#7c776c");
+    }
+
+    /// <summary>The tier census on one line: each letter and how many hexes carry it.</summary>
+    private static string TierListing(HexMap map)
+    {
+        int[] census = Census(map);
+        var listing = new StringBuilder();
+
+        for (int tier = 0; tier < census.Length; tier++)
+        {
+            listing.Append(tier == 0 ? string.Empty : "   ")
+                .Append(TierLetter(tier))
+                .Append(' ')
+                .Append(PlainText.Number(census[tier]));
+        }
+
+        return listing.ToString();
     }
 
     private static string TierLetter(int level) => ((char)(FirstTier + level)).ToString();

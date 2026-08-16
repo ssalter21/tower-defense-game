@@ -205,6 +205,7 @@ namespace Sim
 
         /// <summary>The bytes. Always the current format version -- there is one writer.</summary>
         /// <remarks>
+        /// <para>
         /// A bundle read at version 0 cannot be written back out, and refuses
         /// here rather than filling the ruleset field in with something. There
         /// is one writer and it emits the current format, which carries a stamp
@@ -212,6 +213,18 @@ namespace Sim
         /// loaded, would turn "this match was played under numbers nobody
         /// wrote down" into a bundle claiming numbers it can pass a gate
         /// against.
+        /// </para>
+        /// <para>
+        /// <b>Nor can a bundle read at any other retired version, and the
+        /// refusal is on the header rather than on one missing field.</b> The
+        /// first sentence above is the whole contract -- one writer, current
+        /// format -- and it was true of version 1 only by accident, because a
+        /// version-1 body happened to be the current body. The level plane
+        /// ended that: writing a version-1 bundle out would emit the header it
+        /// was read with over a body carrying a plane that version has no
+        /// bytes for, and the reader would walk the levels as a defense. A
+        /// guard per absent field cannot see that; a guard on the version can.
+        /// </para>
         /// </remarks>
         public byte[] ToBytes()
         {
@@ -223,6 +236,22 @@ namespace Sim
                     + "the match was played under -- which a version-0 record does not carry and which "
                     + "nothing may supply on its behalf. Such a bundle can be read, listed, drawn and "
                     + "restaged; it cannot be rewritten.");
+            }
+
+            if (Header.FormatVersion != RecordFormat.ReplayVersion)
+            {
+                throw new SimulationException(
+                    "A replay bundle read at format version "
+                    + Header.FormatVersion.ToString(CultureInfo.InvariantCulture)
+                    + " was asked for its bytes. The writer emits the current format version and only "
+                    + "that, and the current one carries a level for every hex against a defense whose "
+                    + "map hash is folded under hex-map/"
+                    + HexMap.HashLayout.ToString(CultureInfo.InvariantCulture)
+                    + ". This record's defense pinned its geometry under an earlier layout, and that "
+                    + "stamp cannot be brought forward: a record's id is the hash of its own bytes, so "
+                    + "rewriting the stamp would make it a different defense and orphan every replay "
+                    + "pointing at this one. Such a bundle can be read, listed, drawn and restaged; it "
+                    + "cannot be rewritten.");
             }
 
             byte[] cells = Map.ToCellBytes();

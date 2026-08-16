@@ -429,6 +429,37 @@ public class HexMapTests
     }
 
     [Fact]
+    public void The_committed_map_indents_its_odd_rows_and_only_those()
+    {
+        // The parser strips the indent, so nothing in the loader can hold the
+        // file to it -- and the file is the drawing surface a fold gets drawn
+        // on, where an odd row flush with an even one reads as a column it is
+        // not in. This is the only thing that keeps the convention true, and it
+        // covers both blocks because both are drawn.
+        var rows = new List<string>();
+
+        foreach (string line in File.ReadAllLines(RepoLayout.MapFile))
+        {
+            if (line.Trim().Length > 0 && !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
+            {
+                rows.Add(line);
+            }
+        }
+
+        Assert.Equal(18, rows.Count);
+
+        for (int index = 0; index < rows.Count; index++)
+        {
+            // Two blocks of nine, so the row within its own block is what the
+            // offset is about.
+            bool odd = (index % 9) % 2 == 1;
+
+            Assert.Equal(odd, rows[index].StartsWith(" ", StringComparison.Ordinal));
+            Assert.Equal(rows[index].TrimStart().Length, odd ? rows[index].Length - 1 : rows[index].Length);
+        }
+    }
+
+    [Fact]
     public void Indenting_a_row_moves_nothing()
     {
         // Odd rows are indented in the committed file so that what is typed

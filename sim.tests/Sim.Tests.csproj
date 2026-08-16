@@ -69,6 +69,13 @@
     already drawn, the other formats every number under the one culture
     everything this runner writes uses.
 
+    simcli/MapPicture.cs is here on exactly BoardMap's terms and for exactly the
+    same reason: it is a pure function from a map to a drawing, and where its
+    hexes are is the thing about it that can be wrong. What MapPictureTests can
+    assert that a whole-text comparison cannot is the half-cell step of an odd
+    row, which is the one number in it that is a claim about the grid rather
+    than about taste.
+
     A source link rather than a project reference, because the runner is
     exercised here as a PROCESS and not as a library: what its verbs are made of
     is argument parsing, file IO and an exit code, none of which exist when
@@ -79,6 +86,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/ContentFiles.cs" Link="ContentFiles.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/SweepColumns.cs" Link="SweepColumns.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/BoardMap.cs" Link="BoardMap.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../simcli/MapPicture.cs" Link="MapPicture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/TextPanel.cs" Link="TextPanel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../simcli/PlainText.cs" Link="PlainText.cs" />
   </ItemGroup>

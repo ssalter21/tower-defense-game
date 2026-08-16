@@ -235,4 +235,56 @@ public class ReplayBundleTests
         Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
         Assert.NotEqual(old.Ghost.MapHash, old.Map.MapHash);
     }
+
+    [Fact]
+    public void The_version_one_branch_reads_a_bundle_from_before_the_level_plane()
+    {
+        // NOTHING ELSE EXERCISES THIS BRANCH. content/golden/ is keyed on the
+        // DEFENSE's format version and that one did not move, so re-recording
+        // took the only version-1 bundle in the repository up to version 2 and
+        // left its reader with no bytes at all. A branch nobody calls is a
+        // branch that stops working quietly, which is the whole reason the
+        // golden pool exists -- so the bytes are manufactured instead.
+        ReplayBundle old = ReplayBundle.FromBytes(RecordBytes.AtVersionOne(TheMatch.Bundle()));
+
+        Assert.Equal(1, old.Header.FormatVersion);
+        Assert.Equal(TheRuleset.Committed().ContentHash, old.RulesetHash);
+        Assert.Equal(TheMatch.Seed, old.Seed);
+        Assert.Equal(6, old.Ghost.Count);
+        Assert.Equal(6, old.Wave.Count);
+
+        for (int row = 0; row < old.Map.Height; row++)
+        {
+            for (int column = 0; column < old.Map.Width; column++)
+            {
+                Assert.Equal(0, old.Map.LevelAt(column, row));
+            }
+        }
+
+        // It reads, and it replays: this one names a ruleset, its stamps are
+        // this build's, and its map hash checks out under the layout it was
+        // taken at. Reading and replaying are separate gates and a retired
+        // LAYOUT is not a retired record.
+        Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
+        Assert.Equal(
+            TheMatch.LeakedInTheCommittedRun,
+            old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked);
+    }
+
+    [Fact]
+    public void A_bundle_read_at_a_retired_version_cannot_be_written_back_out()
+    {
+        // OBSERVED, and it is the bug this assertion was written for. Delete
+        // the version guard in ToBytes and these bytes come back with a header
+        // stamped 1 over a body carrying the level plane -- which reads back
+        // through the version-1 branch, which walks the levels as a defense.
+        // The version-0 guard could not catch it: a version-1 bundle names a
+        // ruleset, so the field it asks about is there.
+        ReplayBundle old = ReplayBundle.FromBytes(RecordBytes.AtVersionOne(TheMatch.Bundle()));
+
+        SimulationException thrown = Assert.Throws<SimulationException>(() => old.ToBytes());
+
+        Assert.Contains("format version 1", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("cannot be rewritten", thrown.Message, StringComparison.Ordinal);
+    }
 }

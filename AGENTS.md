@@ -30,7 +30,7 @@ nobody ever sees the total, so nobody ever fixes it.
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
 `run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`,
+`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
 `check-project-settings.ps1`.
 
