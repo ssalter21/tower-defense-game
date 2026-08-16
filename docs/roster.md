@@ -493,8 +493,8 @@ all the same shape: a bubble that emits something. The reasoning is
 | `bubbleOrigin` | `self` or `target`. The Soldier's sweep centres on the tower; a mortar's blast centres on what it hit |
 | `bubbleAffects` | `friend` or `enemy` — and which units that is depends on the emitter's role, because a tower's enemy is what walks and a walker's enemy is what stands |
 | `bubblePeriod` | Ticks. 0 = fires with the attack; positive = pulses on its own, which is what makes it an aura. An aura is centred on `self` and may not carry `damage` |
-| `bubblePayload` | `damage`, or one of the modifiable stats — speed, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop. **Neither is damage**: that word is taken by the roll a damage bubble spreads |
-| `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative |
+| `bubblePayload` | `damage`, or one of the modifiable stats — speed, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop. Damage is not modifiable *today* either, because the keyword is taken by the roll a damage bubble spreads — a narrowing of the signed column list, and [an open question](open-questions.md) rather than a decision |
+| `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative. The signed table also allowed **a flat damage amount**, which nothing implements — same open question |
 | `bubbleDuration` | Ticks. 0 = instant, and for a shield it means "until spent" |
 
 **What that authors.** The Cryomancer needs no dedicated slow columns at all: she is a bubble of radius 0,

@@ -176,3 +176,34 @@ about rules. It is a real gap all the same: the day a Cryomancer is signed is th
 slowed creep, and a creep that is walking at four tenths of its speed for no visible reason is the sort of
 thing a playtest reports as a bug. The cheap answer is a field on `CreepSnapshot`; the question is which
 field, because "is it slowed" and "what is on it" are different contracts.
+
+**Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
+the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads
+"`bubbleMagnitude` | A damage amount, or a percentage" and names five modifiable stats including damage.
+Neither half of *damage* survived contact with the code, for a good reason each time and by a different ticket.
+[#216](https://github.com/ssalter21/tower-defense-game/issues/216) declared a bubble one shot drawing one roll,
+so a flat amount beside a `damage` payload would be a second damage source with a draw of its own
+([ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md)).
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) found the keyword already taken — `damage`
+means "the attack's own roll, spread" — so a damage *modifier* has no name left to be authored under
+([ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md)).
+
+Said plainly, so nobody has to reconstruct it from two ADRs: an author **can** spread the attack's own roll
+over a sphere, apply a percentage to speed, cooldown or armour, and grant a shield. An author **cannot** write
+a bubble dealing a flat amount, and cannot write a damage buff or debuff of any kind — including the "+x%
+damage to nearby towers" shape the Captain is described by in the same table that authorised the columns.
+
+Each ticket recorded its own half in its own ADR; the sum was never put in front of anybody. The way out is
+cheap and costs no format version, because it is a keyword rather than a column: a sixth payload value
+distinguishing "the roll this attack made" from "the damage stat", at which point both halves come back. **What
+it is not is an agent's to name** — a payload keyword is roster vocabulary. Until it is named, `roster.md`'s
+column table says the schema is narrower than the decision rather than quietly restating the decision as the
+narrowing.
+
+**Whether an aura may carry damage.** #217 refuses `bubblePeriod > 0` beside a `damage` payload at load, on the
+argument that a pulse drawing dice outside a shot breaks the single-stream guarantee. The argument is sound and
+the refusal may well be right. It is here because #213 permits a positive period beside any payload and says "A
+whole-board pulse tower is one row", off Sam's own remark that a whole-board sweep "would, I guess, behave like
+a pulse" — so the refusal closes a shape the decision opened. That shape survives as a period of 0, which fires
+with the attack instead of pulsing. Striking the refusal is one line if a pulsing damage aura is wanted; what
+it would then need is a stated rule for where its dice come from.

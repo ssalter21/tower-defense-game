@@ -16,9 +16,10 @@ sets of rules with nothing holding them together.
 | `bubbleMagnitude` | A percentage, for every payload that is not damage |
 | `bubbleDuration` | Ticks. 0 is instant, which is what damage always is |
 
-The list was decided in [#213](https://github.com/ssalter21/tower-defense-game/issues/213) and is fixed. Built
-in #216. `SimulationVersion` 8 → 9, the table's hash label `unit-types/2` → `unit-types/3`, and the match's
-state-hash label `match-state/1` → `match-state/2`.
+The list was decided in [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
+[the decision log](../decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for), and is
+fixed. Built in #216. `SimulationVersion` 8 → 9, the table's hash label `unit-types/2` → `unit-types/3`, and
+the match's state-hash label `match-state/1` → `match-state/2`.
 
 ## What was decided
 

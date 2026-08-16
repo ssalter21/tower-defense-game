@@ -242,11 +242,19 @@ namespace Sim
         /// goes off with the attack, instantly, against the other side.
         /// </summary>
         /// <remarks>
-        /// It was the only shape the tick loop resolved between #216 and #217,
-        /// and it is now one of several -- a bubble carrying a stat lasts a
-        /// duration and expires, and one with a period pulses on its own clock.
-        /// What it still names is the shape that needs no per-unit state at
-        /// all: rolled, spread and finished inside the tick it fired on.
+        /// What it names is the shape that needs no per-unit state at all:
+        /// rolled, spread and finished inside the tick it fired on, against a
+        /// bubble carrying a stat, which lasts a duration and expires, or one
+        /// with a period, which pulses on its own clock.
+        /// <para>
+        /// Nothing under <c>sim/</c> asks it -- the tick loop resolves every
+        /// shape now and so has no reason to single this one out. It is kept
+        /// for the same reason <see cref="Reach.Encloses"/> is, and stated here
+        /// rather than left to be guessed at: it is the predicate the roster
+        /// tests read a row's shape through, and a named property is the
+        /// difference between asserting what a row <i>is</i> and asserting five
+        /// columns and hoping the reader recombines them.
+        /// </para>
         /// </remarks>
         public bool IsAnInstantBlast =>
             Present

@@ -53,7 +53,6 @@ These were extracted from the source comments when the project moved to a commen
 | [0040](0040-a-run-is-authored-as-text-and-compiled-to-a-record.md) | A run is authored as text and compiled to a record |
 | [0043](0043-a-tier-is-its-own-id-and-its-own-row.md) | A tier is its own id and its own row |
 | [0044](0044-a-new-unit-is-a-row-never-a-column.md) | A new unit is a row, never a column |
-| [0055](0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md) | A sweep, a blast and an aura are one bubble, and n shots are not one |
 | [0045](0045-the-ladder-is-a-graph-not-a-list.md) | The ladder is a graph, not a list |
 | [0046](0046-an-absent-ladder-folds-nothing.md) | An absent ladder folds nothing — **the second clause is overturned by #179; the simulation reads the ladder** |
 | [0047](0047-a-bundle-stamps-its-ruleset.md) | A replay bundle stamps its ruleset, and a bundle that names none is retired |
@@ -61,6 +60,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0049](0049-a-placement-identity-is-derived.md) | A placement's identity is derived from the stream, and an action names a cell |
 | [0050](0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md) | A decision is composed in a local and proved before it is written — **the verb it was decided about is deleted by #200; the shape stands and is spent at the screen in 0051** |
 | [0051](0051-a-round-is-composed-on-screen-and-arrives-as-a-stored-command.md) | A round is composed on screen, and arrives as a stored command — **amended by #206: the watched round is the Offence and Defence Results Screen, two views of one resolved pairing, opening on the defence** |
+| [0055](0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md) | A sweep, a blast and an aura are one bubble, and n shots are not one |
 
 ## Drawing the match
 

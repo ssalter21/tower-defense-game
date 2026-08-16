@@ -257,20 +257,6 @@ namespace Sim
         }
 
         /// <summary>
-        /// Lands one effect on this unit, and says whether the walking speed
-        /// moved -- which is the one stat with a value cached off it.
-        /// </summary>
-        /// <param name="payload">Which stat it displaces.</param>
-        /// <param name="magnitude">By how many percent.</param>
-        /// <param name="durationTicks">For how long. Zero is a pool with no clock.</param>
-        /// <param name="tick">The tick it landed on.</param>
-        /// <param name="grant">The pool a shield payload grants; ignored by every other payload.</param>
-        public bool Land(BubblePayload payload, int magnitude, int durationTicks, int tick, int grant)
-        {
-            return Landed(payload, magnitude, durationTicks, tick, grant);
-        }
-
-        /// <summary>
         /// Lands what a bubble carries on a unit whose health pool is
         /// <paramref name="maxHp"/>, and says whether the walking speed moved.
         /// </summary>

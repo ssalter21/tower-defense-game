@@ -883,9 +883,8 @@ namespace Sim
                     + " beside a damage payload. A damage bubble is one shot and one roll -- it carries "
                     + "the attack's own damage to everything it encloses, at full damage and with no "
                     + "falloff -- so a second damage number would be read by nothing and would still "
-                    + "move the content hash. #216 took this over the column table's 'a damage amount, "
-                    + "or a percentage': the amount is the roll, and a column holding a second one would "
-                    + "be a second damage source with a draw of its own.");
+                    + "move the content hash. The amount is the roll; a column holding a second one "
+                    + "would be a second damage source with a draw of its own.");
             }
 
             if (bubble.DurationTicks != 0)

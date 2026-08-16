@@ -87,10 +87,10 @@ public class EffectTests
         // timer.
         var effects = default(Effects);
 
-        effects.Land(BubblePayload.Speed, -40, 60, tick: 0, grant: 0);
+        effects.Land(Slow(-40, 60), tick: 0, maxHp: 0);
         Assert.Equal(-40, effects.SpeedMagnitude);
 
-        effects.Land(BubblePayload.Speed, -40, 60, tick: 30, grant: 0);
+        effects.Land(Slow(-40, 60), tick: 30, maxHp: 0);
         Assert.Equal(-40, effects.SpeedMagnitude);
 
         // The first landing alone would have run out at tick 60. The second
@@ -129,8 +129,8 @@ public class EffectTests
         // two go red at -30 against 80, because a haste would then lose to any
         // slow at all.
         var landed = default(Effects);
-        landed.Land(BubblePayload.Speed, first, 60, tick: 0, grant: 0);
-        landed.Land(BubblePayload.Speed, second, 60, tick: 0, grant: 0);
+        landed.Land(Slow(first, 60), tick: 0, maxHp: 0);
+        landed.Land(Slow(second, 60), tick: 0, maxHp: 0);
 
         Assert.Equal(expected, landed.SpeedMagnitude);
     }
@@ -156,12 +156,12 @@ public class EffectTests
             foreach (int second in magnitudes)
             {
                 var forwards = default(Effects);
-                forwards.Land(BubblePayload.Speed, first, 60, tick: 0, grant: 0);
-                forwards.Land(BubblePayload.Speed, second, 90, tick: 0, grant: 0);
+                forwards.Land(Slow(first, 60), tick: 0, maxHp: 0);
+                forwards.Land(Slow(second, 90), tick: 0, maxHp: 0);
 
                 var backwards = default(Effects);
-                backwards.Land(BubblePayload.Speed, second, 90, tick: 0, grant: 0);
-                backwards.Land(BubblePayload.Speed, first, 60, tick: 0, grant: 0);
+                backwards.Land(Slow(second, 90), tick: 0, maxHp: 0);
+                backwards.Land(Slow(first, 60), tick: 0, maxHp: 0);
 
                 Assert.Equal(forwards.SpeedMagnitude, backwards.SpeedMagnitude);
 
@@ -242,8 +242,8 @@ public class EffectTests
         // spends displaced would grow with the number of sources.
         var effects = default(Effects);
 
-        effects.Land(BubblePayload.Speed, -70, 20, tick: 0, grant: 0);
-        effects.Land(BubblePayload.Speed, -20, 500, tick: 0, grant: 0);
+        effects.Land(Slow(-70, 20), tick: 0, maxHp: 0);
+        effects.Land(Slow(-20, 500), tick: 0, maxHp: 0);
 
         Assert.Equal(-70, effects.SpeedMagnitude);
         Assert.False(effects.Expire(20));
@@ -604,7 +604,7 @@ public class EffectTests
         // every other duration here is a number a person would write.
         var effects = default(Effects);
 
-        effects.Land(BubblePayload.Speed, -40, int.MaxValue, tick: 5, grant: 0);
+        effects.Land(Slow(-40, int.MaxValue), tick: 5, maxHp: 0);
 
         Assert.False(effects.Expire(6));
         Assert.Equal(-40, effects.SpeedMagnitude);
@@ -678,4 +678,20 @@ public class EffectTests
 
         return match.PullSnapshot().Creeps[0].Hp;
     }
+
+    // A bubble carrying a slow, which is what most of the tests above land.
+    // These go through Bubble rather than through a loose parameter list for
+    // the reason Effects.Land's own remarks give: handing a checker the
+    // columns one at a time is a chance to pass the wrong one, and a test that
+    // can reach a shape no row can author is testing something the simulation
+    // will never be asked to do.
+    private static Bubble Slow(int magnitude, int durationTicks) =>
+        Bubble.Of(
+            0,
+            BubbleOrigin.Target,
+            BubbleAffects.Enemy,
+            0,
+            BubblePayload.Speed,
+            magnitude,
+            durationTicks);
 }

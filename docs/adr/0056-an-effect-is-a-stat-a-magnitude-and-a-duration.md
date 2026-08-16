@@ -5,7 +5,8 @@ while a match is running. One model, not one per mechanic: a slow, a rally, a cu
 same four fields with different numbers in them, exactly as a sweep, a blast and an aura turned out to be one
 [`Bubble`](../../sim/Bubble.cs) in [ADR-0055](0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md).
 
-Decided in [#213](https://github.com/ssalter21/tower-defense-game/issues/213), built in
+Decided in [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
+[the decision log](../decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for), built in
 [#217](https://github.com/ssalter21/tower-defense-game/issues/217). `SimulationVersion` 9 → 10, the match's
 state-hash label `match-state/2` → `match-state/3`, and the rule fingerprint's label `rule-fingerprint/7` →
 `rule-fingerprint/8`.
