@@ -56,6 +56,8 @@ public class EffectTests
         unit 12 plain    placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
         unit 13 banner   placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 3000 self friend 45 cooldown -50 90
         unit 14 curse    placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 0 target enemy 0 armour -100 600
+        unit 15 inward   placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 3000 self friend 0 damage 0 0
+        unit 16 outward  placed 0 0 4000 30 0 0 100 100 hitscan 0 0 40 pierce none 0 0 1 3000 self enemy 0 damage 0 0
         """;
 
     /// <summary>The walker the fixtures are authored around, in milli-hexes a tick.</summary>
@@ -131,6 +133,102 @@ public class EffectTests
         landed.Land(BubblePayload.Speed, second, 60, tick: 0, grant: 0);
 
         Assert.Equal(expected, landed.SpeedMagnitude);
+    }
+
+    [Fact]
+    public void Landing_any_two_magnitudes_in_either_order_reaches_the_same_state()
+    {
+        // The whole of what "ordering is asserted canonical, not restored and
+        // not incidental" buys here, asserted over a grid rather than over the
+        // handful of pairs a match happens to produce. `Stronger` is a strict
+        // total order on the integers and the surviving timer is a maximum, so
+        // landing two effects is commutative -- which is the property replays
+        // need, because two runs can differ in which of two towers fired first
+        // without differing in anything a player could see.
+        //
+        // OBSERVED: drop the sign tiebreak from Stronger, so two magnitudes
+        // equally far from zero compare equal. The pairs {-n, n} go red on the
+        // first assertion, because the slot then keeps whichever landed first.
+        int[] magnitudes = { -1000, -100, -75, -40, -25, -1, 1, 25, 40, 75, 100, 1000 };
+
+        foreach (int first in magnitudes)
+        {
+            foreach (int second in magnitudes)
+            {
+                var forwards = default(Effects);
+                forwards.Land(BubblePayload.Speed, first, 60, tick: 0, grant: 0);
+                forwards.Land(BubblePayload.Speed, second, 90, tick: 0, grant: 0);
+
+                var backwards = default(Effects);
+                backwards.Land(BubblePayload.Speed, second, 90, tick: 0, grant: 0);
+                backwards.Land(BubblePayload.Speed, first, 60, tick: 0, grant: 0);
+
+                Assert.Equal(forwards.SpeedMagnitude, backwards.SpeedMagnitude);
+
+                // And it is one of the two rather than some third number, which
+                // is what separates strongest-wins from an average or a sum.
+                Assert.Contains(forwards.SpeedMagnitude, new[] { first, second });
+
+                // The timers agree too, which is what the maximum is for: a
+                // slot that took "the last one wins" would pass the line above
+                // and expire on different ticks for the two orders.
+                foreach (int tick in new[] { 60, 90, 91 })
+                {
+                    Effects one = forwards;
+                    Effects other = backwards;
+                    one.Expire(tick);
+                    other.Expire(tick);
+
+                    Assert.Equal(one.SpeedMagnitude, other.SpeedMagnitude);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void A_granted_pool_is_spent_raw_restored_by_the_next_pulse_and_never_stacked()
+    {
+        // The one payload that grants rather than displaces. Its magnitude is a
+        // share of the health it stands in front of -- a pool has no rate of
+        // its own for a percentage to be a percentage of -- so half of a
+        // thousand-point body is five hundred points of pool.
+        var effects = default(Effects);
+        Bubble granting = Bubble.Of(
+            2000,
+            BubbleOrigin.Self,
+            BubbleAffects.Friend,
+            30,
+            BubblePayload.Shield,
+            50,
+            90);
+
+        effects.Land(granting, tick: 0, maxHp: 1000);
+        Assert.Equal(500, effects.GrantedShield);
+
+        // Spent raw, with overkill carrying through: a granted point is worth
+        // exactly one point against every attack type there is, which is what
+        // makes it a different lever from health rather than a bigger pool.
+        Assert.Equal(0, effects.Spend(200));
+        Assert.Equal(300, effects.GrantedShield);
+        Assert.Equal(100, effects.Spend(400));
+        Assert.Equal(0, effects.GrantedShield);
+
+        // The next pulse restores it to what the effect grants and never past
+        // it. A pulse that added to what was left would be a stack with extra
+        // steps, and an aura is exactly the shape a player can build many of.
+        effects.Land(granting, tick: 30, maxHp: 1000);
+        Assert.Equal(500, effects.GrantedShield);
+
+        effects.Land(granting, tick: 30, maxHp: 1000);
+        Assert.Equal(500, effects.GrantedShield);
+
+        // And what is left of it goes when the duration does, measured from the
+        // pulse that last restored it.
+        Assert.False(effects.Expire(120));
+        Assert.Equal(500, effects.GrantedShield);
+
+        Assert.False(effects.Expire(121));
+        Assert.Equal(0, effects.GrantedShield);
     }
 
     [Fact]
@@ -246,6 +344,12 @@ public class EffectTests
 
         Assert.True(floor >= 1, $"A speed of {authored} floors at {floor}, which is a creep that cannot move.");
         Assert.True(floor <= authored);
+
+        // And it is the share the rule names rather than a number this file
+        // agreed with once, so moving the constant moves what is asserted.
+        Assert.Equal(
+            Math.Max(1, (int)(((long)authored * Effects.SpeedFloorPercent) / 100)),
+            floor);
 
         foreach (int magnitude in new[]
         {
@@ -483,6 +587,55 @@ public class EffectTests
             Fix64.FromRatio(WalkerSpeed, 1000).Raw
             + Fix64.FromRatio(Effects.ModifiedSpeed(WalkerSpeed, FrostMagnitude), 1000).Raw,
             Walked(match));
+    }
+
+    [Fact]
+    public void A_duration_no_arithmetic_can_reach_does_not_wrap_into_an_effect_that_never_landed()
+    {
+        // A duration is bounded only by the range of the column it is authored
+        // in, so tick + duration can leave an int -- and a wrapped sum comes
+        // back negative, which reads as an effect that ran out before it
+        // landed. The magnitude would then be on the creep for no ticks at all,
+        // which is silently the opposite of what the number asked for.
+        //
+        // OBSERVED: take the saturating clause out of Effects.Land. The first
+        // assertion below goes red immediately -- the slow is gone on the tick
+        // after it landed -- and nothing else in this file notices, because
+        // every other duration here is a number a person would write.
+        var effects = default(Effects);
+
+        effects.Land(BubblePayload.Speed, -40, int.MaxValue, tick: 5, grant: 0);
+
+        Assert.False(effects.Expire(6));
+        Assert.Equal(-40, effects.SpeedMagnitude);
+
+        Assert.False(effects.Expire(int.MaxValue));
+        Assert.Equal(-40, effects.SpeedMagnitude);
+    }
+
+    [Fact]
+    public void A_damage_bubble_pointed_at_the_emitters_own_side_lands_on_nothing()
+    {
+        // Which side a bubble reaches is a column, and a damage bubble is not
+        // exempt from it. The two rows below differ in that column and in
+        // nothing else: one spreads its roll over what walks, and the other
+        // over what stands -- which in this loop is nothing that can be
+        // damaged, so the roll goes nowhere.
+        //
+        // OBSERVED: delete the ReachesInto guard from Match.Land. The inward
+        // tower damages creeps exactly as the outward one does, which is a
+        // bubble landing on the side its own column says it does not reach.
+        TheMatch.EventLog inward = Fought("tower 15 2 1", "order 0 1 1 0", ticks: 100);
+        TheMatch.EventLog outward = Fought("tower 16 2 1", "order 0 1 1 0", ticks: 100);
+
+        // Both fire, and the draw is taken either way: a shot that reaches
+        // nothing still costs the stream a number, which is what makes the
+        // stream's position a count of the shots fired.
+        Assert.Equal(outward.CountOf("fired"), inward.CountOf("fired"));
+        Assert.True(inward.CountOf("fired") > 0);
+
+        Assert.Equal(0, inward.CountOf("damaged"));
+        Assert.True(outward.CountOf("damaged") > 0);
     }
 
     /// <summary>That defense and that wave, on the ten-hex corridor.</summary>

@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace Sim
 {
     /// <summary>
@@ -121,23 +119,35 @@ namespace Sim
         private int _shieldPool;
 
         /// <summary>Whether this unit is carrying anything at all.</summary>
-        public bool Any =>
+        /// <remarks>
+        /// <b>The pool is in it as well as the four magnitudes</b>, and that is
+        /// not belt and braces: this predicate decides whether
+        /// <see cref="Fold"/> folds its second half, so anything it misses is a
+        /// field that could differ between two runs with the fold saying
+        /// nothing. A pool standing beside a magnitude of zero cannot be
+        /// authored -- <c>UnitTypeTable</c> refuses a bubble that modifies
+        /// nothing -- but this type is reachable without going through that
+        /// refusal, and a fold's completeness should not rest on a check in
+        /// another file.
+        /// </remarks>
+        public readonly bool Any =>
             _speedMagnitude != 0
             || _cooldownMagnitude != 0
             || _armourMagnitude != 0
-            || _shieldMagnitude != 0;
+            || _shieldMagnitude != 0
+            || _shieldPool != 0;
 
         /// <summary>The percentage its walking speed is displaced by. Zero is unmodified.</summary>
-        public int SpeedMagnitude => _speedMagnitude;
+        public readonly int SpeedMagnitude => _speedMagnitude;
 
         /// <summary>The percentage its cooldown is displaced by. Zero is unmodified.</summary>
-        public int CooldownMagnitude => _cooldownMagnitude;
+        public readonly int CooldownMagnitude => _cooldownMagnitude;
 
         /// <summary>The percentage its armour is displaced by. Zero is unmodified.</summary>
-        public int ArmourMagnitude => _armourMagnitude;
+        public readonly int ArmourMagnitude => _armourMagnitude;
 
         /// <summary>What is left of the pool a shield payload granted.</summary>
-        public int GrantedShield => _shieldPool;
+        public readonly int GrantedShield => _shieldPool;
 
         /// <summary>
         /// What a stat authored at <paramref name="authored"/> is worth while a
@@ -257,7 +267,42 @@ namespace Sim
         /// <param name="grant">The pool a shield payload grants; ignored by every other payload.</param>
         public bool Land(BubblePayload payload, int magnitude, int durationTicks, int tick, int grant)
         {
-            int expiry = durationTicks == 0 ? NeverExpires : tick + durationTicks;
+            return Landed(payload, magnitude, durationTicks, tick, grant);
+        }
+
+        /// <summary>
+        /// Lands what a bubble carries on a unit whose health pool is
+        /// <paramref name="maxHp"/>, and says whether the walking speed moved.
+        /// </summary>
+        /// <remarks>
+        /// <b>The bubble rather than four of its columns.</b> Everything this
+        /// needs is on one value, and handing a checker three of its fields
+        /// plus a number computed from a fourth is three chances to pass the
+        /// wrong one -- the same reason <c>UnitTypeTable</c> builds a
+        /// <see cref="Bubble"/> before asking anything about it. The grant is
+        /// worked out here rather than by every caller, and only for the one
+        /// payload that has any use for it.
+        /// </remarks>
+        public bool Land(Bubble bubble, int tick, int maxHp) =>
+            Landed(
+                bubble.Payload,
+                bubble.Magnitude,
+                bubble.DurationTicks,
+                tick,
+                bubble.Payload == BubblePayload.Shield ? Granted(maxHp, bubble.Magnitude) : 0);
+
+        private bool Landed(BubblePayload payload, int magnitude, int durationTicks, int tick, int grant)
+        {
+            // Saturating rather than wrapping. A duration is bounded only by
+            // the range of the column it is authored in, so tick + duration can
+            // leave an int -- and a wrapped sum comes back negative, which
+            // reads as an effect that ran out before it landed. A duration
+            // nothing can reach and a duration that never ends are the same
+            // thing to a match with a tick ceiling, and this is the one of the
+            // two that cannot be mistaken for its opposite.
+            int expiry = durationTicks == 0 || durationTicks > int.MaxValue - tick
+                ? NeverExpires
+                : tick + durationTicks;
 
             switch (payload)
             {
@@ -385,7 +430,7 @@ namespace Sim
         /// identical for as long as it lasts and are already different matches.
         /// </para>
         /// </remarks>
-        internal Hash64 Fold(Hash64 hash)
+        internal readonly Hash64 Fold(Hash64 hash)
         {
             hash = hash
                 .Add(_speedMagnitude, _cooldownMagnitude)
@@ -401,18 +446,6 @@ namespace Sim
                 .Add(_armourExpiry, _shieldExpiry)
                 .Add(_shieldPool);
         }
-
-        public override string ToString() =>
-            Any
-                ? "speed "
-                    + _speedMagnitude.ToString(CultureInfo.InvariantCulture)
-                    + "%, cooldown "
-                    + _cooldownMagnitude.ToString(CultureInfo.InvariantCulture)
-                    + "%, armour "
-                    + _armourMagnitude.ToString(CultureInfo.InvariantCulture)
-                    + "%, shield pool "
-                    + _shieldPool.ToString(CultureInfo.InvariantCulture)
-                : "no effects";
 
         /// <summary>
         /// One slot, resolved: the stronger magnitude wins, an equal one

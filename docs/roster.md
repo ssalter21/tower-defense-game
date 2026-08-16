@@ -349,11 +349,14 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing but numbers. Origin `self`, affects `friend`, payload `shield`, a period and a
   duration, measured in hex distance so it reaches the neighbouring leg of a fold. #217 built the effect state
   behind it.
-- **Open** — the magnitude and the period. The two questions that were open are answered: the granted pool
-  **persists until spent or until its duration ends**, whichever comes first, and a duration of zero means
-  until spent; and it does **not** move with the Necromancer — killing it stops the pulses, so what is already
-  granted is spent or times out rather than vanishing. The magnitude is **a share of the health it stands in
-  front of**, because a pool has no rate of its own for a percentage to be a percentage of.
+- **Open** — the magnitude and the period, and a signature on three rules #217 had to pick to build anything
+  at all. What it built: the granted pool **persists until spent or until its duration ends**, whichever
+  comes first, with a duration of zero meaning until spent; it does **not** move with the Necromancer, so
+  killing one stops the pulses and what is already granted is spent or times out rather than vanishing; and
+  the magnitude is **a share of the health it stands in front of**, because a pool has no rate of its own for
+  a percentage to be a percentage of. All three are the implementer's reading rather than a decision — an
+  implementation cannot leave a column blank — and any of them can be moved without another format version.
+  See [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md).
 
 > **The row lands and the mechanic is built; what is missing is the numbers.** What is in `units.txt` is a
 > walking arcane body with no bubble on it. The second health pool arrived with layout 3 — `shield`, absorbing

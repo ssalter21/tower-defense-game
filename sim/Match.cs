@@ -474,10 +474,20 @@ namespace Sim
             UnitType type = order.Type;
             int floor = Effects.FloorSpeed(type.SpeedMilliHexPerTick);
 
+            // The step the creep would actually take, and not the milli-hexes
+            // it was worked out from. Those are two different numbers -- the
+            // conversion into Q32.32 truncates -- and the difference is in the
+            // direction that flatters the answer, so the bound has to be taken
+            // against the smaller of the two. The route length is taken raw
+            // for the same reason: a whole-hex count discards up to a hex of
+            // corridor, which is hundreds of ticks at a floored speed.
+            long step = Fix64.FromRatio(floor, MilliHexPerHex).Raw;
+
             // Ceiling division, so a remainder is a whole extra tick of walking
-            // rather than a rounding that flatters the answer.
-            long hexes = _routeLength.ToIntFloor();
-            long crossing = (((hexes * MilliHexPerHex) + floor) - 1) / floor;
+            // rather than a rounding that flatters it again. The leak test is
+            // "at or past the route length", so this is exactly the number of
+            // steps that reaches it.
+            long crossing = ((_routeLength.Raw + step) - 1) / step;
             long latest = order.TickOffset
                 + ((long)SpawnIntervalTicks * (order.Count - 1))
                 + crossing
@@ -990,7 +1000,7 @@ namespace Sim
                     }
 
                     tower.PulseIn = type.Bubble.PeriodTicks - 1;
-                    Spread(type, UnitRole.Placed, _layout.Towers[index].Hex);
+                    Spread(type, _layout.Towers[index].Hex, roll: 0, events: null);
                 }
             }
 
@@ -1015,7 +1025,7 @@ namespace Sim
                 }
 
                 creep.PulseIn = creep.Type.Bubble.PeriodTicks - 1;
-                Spread(creep.Type, UnitRole.Moving, CellUnder(creep.Distance));
+                Spread(creep.Type, CellUnder(creep.Distance), roll: 0, events: null);
             }
         }
 
@@ -1314,54 +1324,54 @@ namespace Sim
         {
             Bubble bubble = type.Bubble;
 
-            // A bubble that pulses on a clock of its own is not part of this
-            // shot at all, so a row carrying one still fires an ordinary shot.
+            // A damage bubble fired with the attack is the one shape that
+            // replaces the single landing, because it IS the roll spread over
+            // everything it encloses. Every other row lands its shot where it
+            // was aimed exactly as an unadorned shot does -- a row with no
+            // bubble, a bubble carrying a stat, and a bubble on a clock of its
+            // own, which is not part of this shot at all.
+            if (!bubble.FiresWithTheAttack || bubble.Payload != BubblePayload.Damage)
+            {
+                Damage(target, roll, type, events);
+            }
+
             if (!bubble.FiresWithTheAttack)
             {
-                Damage(target, roll, type, events);
                 return;
             }
 
-            // A bubble carrying a modifier does not carry the damage: the shot
-            // lands where it was aimed exactly as an unadorned shot does, and
-            // the bubble is a second thing that happens beside it. Only a
-            // damage bubble replaces the single landing with a spread one,
-            // because only a damage bubble is made of the roll.
-            if (bubble.Payload != BubblePayload.Damage)
-            {
-                Damage(target, roll, type, events);
-                Modify(type, origin, target);
-                return;
-            }
-
+            // A bubble of no radius is the one body the shot landed on, and
+            // that is what makes it different from a sphere of no size: two
+            // creeps can stand on the same hex, so "the cell the shot arrived
+            // at" would reach both of them. The sphere is never asked -- it
+            // answers false at no radius, deliberately and for the range
+            // column's sake.
             if (bubble.ReachesOnlyItsCentre)
             {
-                Damage(target, roll, type, events);
+                if (bubble.Payload == BubblePayload.Damage)
+                {
+                    Damage(target, roll, type, events);
+                }
+                else if (target >= 0)
+                {
+                    Afflict(target, bubble);
+                }
+
                 return;
             }
 
+            // A bubble centred on a body that is no longer there lands on
+            // nothing -- the same rule a single shot at a dead creep follows,
+            // and not a special case: the centre is a fact about where the shot
+            // arrived, and a shot that arrived nowhere has none. A self-centred
+            // bubble always has one, because a tower is still standing where it
+            // stands.
             if (bubble.Origin == BubbleOrigin.Target && target < 0)
             {
                 return;
             }
 
-            Hex centre = CentreOf(bubble, origin, target);
-            int level = Map.LevelAt(centre);
-
-            for (int creep = 0; creep < _creepCount; creep++)
-            {
-                if (_creeps[creep].Phase != CreepPhase.Walking)
-                {
-                    continue;
-                }
-
-                Hex cell = CellUnder(_creeps[creep].Distance);
-
-                if (Reach.Encloses(centre, level, bubble.RadiusMilliHex, cell, Map.LevelAt(cell)))
-                {
-                    Damage(creep, roll, type, events);
-                }
-            }
+            Spread(type, CentreOf(bubble, origin, target), roll, events);
         }
 
         /// <summary>
@@ -1370,68 +1380,32 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// A blast centred on a target that is no longer there has no centre at
-        /// all, and the caller settles that before asking -- a self-centred
-        /// bubble always has one, because a tower is still standing where it
-        /// stands. The shooter's own hex stands in for a target that has gone
-        /// nowhere else: this is only reached for an origin the caller has
-        /// already checked.
+        /// all, and the caller settles that before asking -- so a target-centred
+        /// bubble reaching here has a live one. A self-centred bubble always
+        /// does, because a tower is still standing where it stands.
         /// </remarks>
         private Hex CentreOf(Bubble bubble, Hex origin, int target) =>
-            bubble.Origin == BubbleOrigin.Self || target < 0 ? origin : CellUnder(_creeps[target].Distance);
+            bubble.Origin == BubbleOrigin.Self ? origin : CellUnder(_creeps[target].Distance);
 
         /// <summary>
-        /// The modifier half of a shot that carries one.
-        /// </summary>
-        /// <remarks>
-        /// <b>A bubble of no radius is the one body the shot landed on, and
-        /// that is what makes it different from a sphere of no size.</b> Two
-        /// creeps can stand on the same hex, so "the cell the shot arrived at"
-        /// would slow both of them; what a zero radius means is the target
-        /// itself, which is a reference the shot is still holding. The sphere
-        /// is never asked -- it answers false at no radius, deliberately and
-        /// for the range column's sake -- which is the same arrangement
-        /// <see cref="Land"/> uses for a damage bubble of no radius.
-        /// </remarks>
-        private void Modify(UnitType type, Hex origin, int target)
-        {
-            Bubble bubble = type.Bubble;
-
-            if (bubble.ReachesOnlyItsCentre)
-            {
-                if (target >= 0)
-                {
-                    Afflict(target, bubble);
-                }
-
-                return;
-            }
-
-            // A blast centred on a body that is no longer there lands on
-            // nothing, exactly as a damage bubble does.
-            if (bubble.Origin == BubbleOrigin.Target && target < 0)
-            {
-                return;
-            }
-
-            Spread(type, type.Role, CentreOf(bubble, origin, target));
-        }
-
-        /// <summary>
-        /// Puts a bubble's modifier on everything of the right side that its
-        /// sphere encloses.
+        /// Puts what a bubble carries on everything of the right side that its
+        /// sphere encloses: a damage roll, or a timed modifier.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>One walk, whichever clock fired it.</b> A bubble that goes off
-        /// with an attack and one that pulses on a period are the same mechanic
-        /// and differ only in what set them off, so they spread through this and
-        /// there is no second copy of "who is inside" to disagree with the
-        /// first.
+        /// <b>One walk, whichever clock fired it and whatever it carries.</b> A
+        /// bubble that goes off with an attack, one that pulses on a period,
+        /// one spreading a roll and one putting a magnitude on a stat are the
+        /// same mechanic and differ only in what set them off and what they
+        /// hand over -- so they all spread through this and there is no second
+        /// copy of "who is inside" to disagree with the first.
         /// </para>
         /// <para>
         /// <b>Which side it reaches is a relationship</b>, exactly as a height
         /// is: a tower's enemy is what walks and a walker's enemy is what
-        /// stands. <see cref="Bubble.ReachesInto"/> answers it, and the same
+        /// stands. <see cref="Bubble.ReachesInto"/> answers it from the
+        /// emitter's own role rather than from an argument beside it, so a
+        /// caller cannot hand it a side the row disagrees with -- and the same
         /// call is made at load, where a payload the other side has no use for
         /// is refused.
         /// </para>
@@ -1443,26 +1417,34 @@ namespace Sim
         /// is in the state hash, where a run that drifts in it is caught.
         /// </para>
         /// </remarks>
-        private void Spread(UnitType emitter, UnitRole side, Hex centre)
+        /// <param name="roll">What the dice gave the shot that fired it, and nothing to a pulse.</param>
+        private void Spread(UnitType emitter, Hex centre, int roll, IMatchEvents? events)
         {
             Bubble bubble = emitter.Bubble;
+            bool spreadsTheRoll = bubble.Payload == BubblePayload.Damage;
             int level = Map.LevelAt(centre);
             int radius = bubble.RadiusMilliHex;
 
-            if (bubble.ReachesInto(side) == UnitRole.Placed)
+            if (bubble.ReachesInto(emitter.Role) == UnitRole.Placed)
             {
+                // Nothing in this loop damages a tower, so a roll pointed at
+                // the standing side lands on nothing at all. That is the same
+                // silence a pool or an armour granted to one meets, and it is a
+                // fact about the rows in content/units.txt -- every placed one
+                // of which authors no health pool -- rather than about what a
+                // placed unit is.
+                if (spreadsTheRoll)
+                {
+                    return;
+                }
+
                 for (int tower = 0; tower < _towers.Length; tower++)
                 {
                     Hex hex = _layout.Towers[tower].Hex;
 
                     if (Reach.Encloses(centre, level, radius, hex, Map.LevelAt(hex)))
                     {
-                        _towers[tower].Effects.Land(
-                            bubble.Payload,
-                            bubble.Magnitude,
-                            bubble.DurationTicks,
-                            Tick,
-                            Effects.Granted(_layout.Towers[tower].Type.MaxHp, bubble.Magnitude));
+                        _towers[tower].Effects.Land(bubble, Tick, _layout.Towers[tower].Type.MaxHp);
                     }
                 }
 
@@ -1478,7 +1460,16 @@ namespace Sim
 
                 Hex cell = CellUnder(_creeps[creep].Distance);
 
-                if (Reach.Encloses(centre, level, radius, cell, Map.LevelAt(cell)))
+                if (!Reach.Encloses(centre, level, radius, cell, Map.LevelAt(cell)))
+                {
+                    continue;
+                }
+
+                if (spreadsTheRoll)
+                {
+                    Damage(creep, roll, emitter, events);
+                }
+                else
                 {
                     Afflict(creep, bubble);
                 }
@@ -1498,12 +1489,7 @@ namespace Sim
                 return;
             }
 
-            bool speedMoved = body.Effects.Land(
-                bubble.Payload,
-                bubble.Magnitude,
-                bubble.DurationTicks,
-                Tick,
-                Effects.Granted(body.Type.MaxHp, bubble.Magnitude));
+            bool speedMoved = body.Effects.Land(bubble, Tick, body.Type.MaxHp);
 
             if (speedMoved)
             {

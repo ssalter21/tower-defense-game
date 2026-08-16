@@ -66,7 +66,10 @@ that true rather than nearly true:
 - **And the wave is checked against the map at construction.** `Match.RequireItArrives` computes, per order,
   the tick the last unit of it would reach the exit on walking at its floor speed, and refuses the match if
   that is at or past the ceiling. So the guarantee is proved for the map and the wave in hand rather than
-  asserted in prose about a corridor whose length is an argument.
+  asserted in prose about a corridor whose length is an argument. It is taken against the **raw** route
+  length and against the **converted** step rather than the milli-hexes it came from, because both
+  conversions round in the direction that flatters the answer — a bound that is nearly right is a bound that
+  passes the wave it exists to refuse.
 
 ## The arithmetic trap, and where it was avoided
 
@@ -125,9 +128,21 @@ wants to damage on a clock has a cooldown.
 payloads and inert on every row the mechanic was designed for: the roster's walking rows author no shield at
 all, so an aura granting a share of it would grant nothing to everybody. A shield is a pool rather than a rate
 and has no authored number of its own to scale, so the only quantity a percentage of it can mean is the pool
-it stands in front of. This is a deviation from nothing #213 wrote down — the ticket's column table says
-"a percentage" and stops — but it is a rule somebody had to choose, so it is chosen here rather than in a
-line of code nobody reads.
+it stands in front of.
+
+> **This one is provisional and wants a signature.** #213's column table says "a percentage" and stops, so
+> something had to be chosen for the column to mean anything at all — and what it grants, how long it lasts
+> and whether killing the emitter strips it are shapes of the Necromancer rather than shapes of the
+> simulation. What is written above is the implementer's reading, taken because an implementation cannot
+> leave it blank; it is Sam's to confirm or move, and [the roster](../roster.md#7--necromancer--status-live)
+> carries it as an open question rather than a closed one.
+
+**A floor under the cooldown modifier.** The speed floor exists because a speed of zero is a *termination*
+hazard — nothing else in the simulation has one. A cooldown of zero is an ordinary authoring that the column
+already permits, so a rally of a hundred percent produces a tower that fires every tick, which is a balance
+problem and not a hang. `Effects.Modified` clamps at zero so the number can never go negative, and there is
+deliberately nothing else: a floor invented for symmetry would be a balance number wearing a safety rail's
+clothes, which is exactly what the speed floor is careful not to be.
 
 **Refusing every payload the side it reaches has no use for.** Two are refused — a speed reaching towers and a
 cooldown reaching creeps — because nothing that stands walks and nothing that walks attacks, and both are

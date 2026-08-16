@@ -1145,14 +1145,21 @@ effect machinery in the simulation at all.
 | **an aura centred on `target`** | Authorable | **Refused at load** | A pulse has nothing it landed on |
 | **a speed reaching towers, a cooldown reaching creeps** | Authorable | **Refused at load** | Nothing that stands walks and nothing that walks attacks. A pool or an armour reaching a tower is *not* refused — that is a fact about the rows, not about the role, and refusing it would make `bubbleAffects` derivable and therefore empty |
 
-### The two things somebody had to decide, decided here rather than in silence
+### The two things somebody had to decide, decided here rather than in silence — and one of them wants a signature
 
 **A shield payload's magnitude is a share of the health it stands in front of.** A shield is a pool rather
 than a rate, so there is no authored number of its own for a percentage to be a percentage of — and the
 consistent-looking alternative, a share of the recipient's own `shield` column, is inert on every row the
-mechanic exists for: the roster's walking rows author no shield at all. It answers the roster's standing
-question about the Necromancer's pool too: it **persists until spent or until its duration ends**, whichever
-comes first, and a duration of zero means until spent.
+mechanic exists for: the roster's walking rows author no shield at all. The same choice settles how the pool
+behaves: it **persists until spent or until its duration ends**, whichever comes first, a duration of zero
+means until spent, and killing the emitter stops the pulses rather than stripping what is already granted.
+
+**All of that is provisional.** #213's column table says "a percentage" and stops, so something had to be
+chosen for the column to mean anything at all — but what a Necromancer's pool is worth, how long it lasts and
+whether killing her takes it back are shapes of a creep rather than shapes of the simulation, and that is
+Sam's by standing rule. It is written here and in ADR-0056 as the implementer's reading, it stays an open
+question in [the roster](roster.md#7--necromancer--status-live), and moving any of it costs no format
+version.
 
 **A damage modifier is unauthorable, and the word is the reason.** #217's model names five modifiable stats
 including damage, and `bubblePayload` has five values including `damage` — but that word already means *the
