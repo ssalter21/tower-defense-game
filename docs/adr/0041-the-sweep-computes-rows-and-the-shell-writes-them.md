@@ -33,6 +33,18 @@ other input rather than an edit inside the harness. The fold underneath it knows
 ingredient bins are sized from what the runs it just played came back holding, not from the wave count, because
 a bin width derived from N is a claim about the player that a policy-blind fold cannot check.
 
+> **Amended by [#202](https://github.com/ssalter21/tower-defense-game/issues/202), 16 August 2026.** The
+> parameter was reachable only from C#: `RunContent.Sweep` passed no policy, so every sweep a shell could ask
+> for was played by `EvenShareBot`. It is `--policy` now, over `even-share` and `all-in`, and an unrecognised
+> name is refused rather than defaulted — a fallback would produce a complete, correct-looking report about a
+> player nobody asked for. The name is written into the file as a parameter row, because two reports played by
+> different strategies share every other parameter and differ in every number.
+>
+> The same issue gives the report a fourth kind of row. `--per-run` keeps a row per run under the folded ones,
+> filling the creep row's own headings plus the seed it was played on, so grouping them lands on the fold
+> exactly. That does not move this decision: the harness still computes the rows and the shell still only
+> writes them.
+
 **A rate is basis points, beside the two integers it came from.** There is no floating point in the simulation
 and the gate scans for it, so a ratio has to be an integer. Basis points rather than per-mille because a sweep
 of a few hundred runs a cell distinguishes cells the coarser scale rounds together, and rather than `Fix64`

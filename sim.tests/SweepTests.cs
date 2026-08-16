@@ -554,6 +554,135 @@ public class SweepTests
         Assert.Contains("waves", refused.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Every_run_is_a_row_of_its_own_where_the_plan_asks_for_them()
+    {
+        // What a folded row cannot answer is a distribution. A row saying six
+        // runs and three wins is the same row whether the three losses were
+        // near misses or routs, and which of those it was is the question a
+        // retune actually asks -- so the runs behind a row are kept as rows
+        // where the plan asks, and folded either way.
+        //
+        // They are kept rather than played again later, because a second play
+        // of the same plan is the whole sweep over again and the numbers are
+        // already in hand as the fold consumes them.
+        //
+        // OBSERVED: file every run row under the plan's first seed -- pass
+        // plan.SeedOf(0) to Played.Row in Sweep.Score. This goes red on the
+        // second run of the first creep, which now reports the seed of the
+        // first: a distribution whose tail names a run nobody can replay.
+        SweepPlan plan = TheSweep.Plan(keepsEveryRun: true);
+        SweepReport report = Sweep.Of(plan);
+
+        Assert.Equal(plan.Creeps.Count * plan.RunsPerCreep, report.EveryRun.Count);
+
+        // The first creep's runs are the first block of them, in the order the
+        // plan derives their seeds. A run row names the seed it was played on,
+        // which is what makes a row out on the tail of a distribution a run
+        // somebody can sit down and replay rather than a number to squint at.
+        for (int index = 0; index < plan.RunsPerCreep; index++)
+        {
+            SweepRunRow run = report.EveryRun[index];
+
+            Assert.Equal(plan.Creeps[0].Label, run.Label);
+            Assert.Equal(plan.SeedOf(index), run.Seed);
+        }
+
+        // And a plan that did not ask keeps none of them, so the memory the
+        // mode costs is paid by the sweep that wanted it.
+        Assert.Empty(Sweep.Of(TheSweep.Plan()).EveryRun);
+    }
+
+    [Fact]
+    public void A_creep_row_is_what_its_own_runs_add_up_to()
+    {
+        // The two kinds of row are one population counted twice, and the folded
+        // one has to be what the kept ones come to. That is what lets a
+        // spreadsheet group the runs itself and land on the harness's own
+        // number rather than on a near miss it then has to explain.
+        //
+        // The rates are not in the sum, because a ratio is not additive: the
+        // win rate and the cost-efficiency column live on the folded row alone,
+        // each beside the two integers it came from -- and those integers are
+        // exactly what is summed here.
+        //
+        // OBSERVED: fold each run in twice -- call whole.Add(played) a second
+        // time in Sweep.Score's loop. The folded runs count goes to twice the
+        // rows kept and this goes red on it, which is what a report whose two
+        // tables disagree looks like from the outside.
+        SweepPlan plan = TheSweep.Plan(keepsEveryRun: true);
+        SweepReport report = Sweep.Of(plan);
+
+        for (int index = 0; index < report.Rows.Count; index++)
+        {
+            SweepRow folded = report.Rows[index];
+            int runs = 0;
+            int rounds = 0;
+            int wins = 0;
+            long dealt = 0;
+            long taken = 0;
+            long spent = 0;
+            long defense = 0;
+            long unspent = 0;
+            long incomeBase = 0;
+            long bonus = 0;
+
+            for (int run = 0; run < report.EveryRun.Count; run++)
+            {
+                SweepRunRow played = report.EveryRun[run];
+
+                if (played.TypeId != folded.TypeId)
+                {
+                    continue;
+                }
+
+                runs++;
+                rounds += played.Rounds;
+                wins += played.Won ? 1 : 0;
+                dealt += played.LeakCostDealt;
+                taken += played.LeakCostTaken;
+                spent += played.GoldSpent;
+                defense += played.DefenseGold;
+                unspent += played.UnspentGold;
+                incomeBase += played.IncomeBaseGold;
+                bonus += played.BonusGold;
+            }
+
+            Assert.Equal(folded.Runs, runs);
+            Assert.Equal(folded.Rounds, rounds);
+            Assert.Equal(folded.Wins, wins);
+            Assert.Equal(folded.LeakCostDealt, dealt);
+            Assert.Equal(folded.LeakCostTaken, taken);
+            Assert.Equal(folded.GoldSpent, spent);
+            Assert.Equal(folded.DefenseGold, defense);
+            Assert.Equal(folded.UnspentGold, unspent);
+            Assert.Equal(folded.IncomeBaseGold, incomeBase);
+            Assert.Equal(folded.BonusGold, bonus);
+        }
+
+        Assert.True(report.EveryRun.Count > 0, "The plan asked for its runs and the report kept none of them.");
+    }
+
+    [Fact]
+    public void A_plan_names_the_player_its_runs_were_decided_by()
+    {
+        // Two sweeps that differ only in who played them are two reports that
+        // look identical until this name, so it travels on the plan beside the
+        // delegate rather than being worked out from it -- a delegate knows the
+        // name of its method and never the one a person typed.
+        //
+        // OBSERVED: name every plan for the default -- drop the policy test out
+        // of the fallback in SweepPlan and take policyName ?? EvenShare. The
+        // banking policy below reports itself as the even-share bot, which is a
+        // report naming a player that did not play it.
+        Assert.Equal(SweepPlan.EvenShare, TheSweep.Plan().PolicyName);
+        Assert.Equal("all-in", TheSweep.Plan(policy: AllInBot.Decide, policyName: "all-in").PolicyName);
+
+        // A policy handed over without a name says so, rather than inheriting
+        // the name of the one it replaced.
+        Assert.Equal(SweepPlan.Unnamed, TheSweep.Plan(policy: TheSweep.Banks).PolicyName);
+    }
+
     /// <summary>
     /// How many creeps the report carries a row for.
     /// </summary>

@@ -245,9 +245,16 @@ internal sealed class RunContent
     /// harness's own bounds on top.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The dials arrive as <see cref="SweepPlan.AsAuthored"/> where the command
     /// line was not told otherwise, so an unmentioned dial is the ruleset's own
     /// number rather than one this program chose.
+    /// </para>
+    /// <para>
+    /// The player is passed through rather than chosen here, which is what makes
+    /// comparing two strategies an argument to the verb rather than an edit to
+    /// C#.
+    /// </para>
     /// </remarks>
     public SweepPlan Sweep(
         RunShape shape,
@@ -255,7 +262,10 @@ internal sealed class RunContent
         int runsPerCreep,
         int freeSnapshotsPerRun,
         int snapshotPriceGold,
-        int mostCreeps) =>
+        int mostCreeps,
+        BuildPolicy policy,
+        bool keepsEveryRun,
+        string policyName) =>
         new SweepPlan(
             _map,
             _rules,
@@ -269,5 +279,8 @@ internal sealed class RunContent
             shape.DeathEndsTheRun,
             freeSnapshotsPerRun,
             snapshotPriceGold,
-            mostCreeps);
+            mostCreeps,
+            policy,
+            keepsEveryRun,
+            policyName);
 }

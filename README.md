@@ -80,6 +80,16 @@ matrix, costs a flag rather than an edit.
 the sweep placed on itself — a sampled seed count, a truncated roster — is a row
 of the file, so a partial report never reads as a complete one.
 
+Two arguments change what a sweep *is* rather than where it points. `-Policy`
+names the scripted player: `even-share` splits every purse between the board and
+the wave, `all-in` builds nothing and sends the lot, and two reports under the
+two of them are what says what the defensive half of a round is worth. `-PerRun`
+keeps a row for every run under the folded ones — the distribution the fold is a
+summary of, each row naming the seed that produced it, so an outlier is a run
+somebody can replay. The player's name is a row of the file like every other
+parameter, which is what stops two reports that differ only in it being mistaken
+for each other.
+
 A run is played in the client rather than at a prompt. What a session decided is
 written out there as a `content/commands.txt` script, but only after that script
 has been replayed into a fresh run and agreed round for round with what you were

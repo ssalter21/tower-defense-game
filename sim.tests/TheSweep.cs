@@ -70,7 +70,9 @@ public static class TheSweep
         int freeSnapshotsPerRun = SweepPlan.AsAuthored,
         int snapshotPriceGold = SweepPlan.AsAuthored,
         int mostCreeps = Creeps,
-        BuildPolicy? policy = null)
+        BuildPolicy? policy = null,
+        bool keepsEveryRun = false,
+        string? policyName = null)
     {
         UnitTypeTable table = types ?? TheMatch.Types();
 
@@ -88,7 +90,9 @@ public static class TheSweep
             freeSnapshotsPerRun,
             snapshotPriceGold,
             mostCreeps,
-            policy);
+            policy,
+            keepsEveryRun,
+            policyName);
     }
 
     /// <summary>

@@ -81,22 +81,7 @@ namespace Sim
             IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
             int wave = run.Purse.Gold - CoverThenUpgradeBot.BudgetOf(run.Purse);
 
-            // What the round already fields, plus whatever this round's share
-            // adds to it. A creep is bought once and attacks every round after,
-            // so a bot that sent only what it could afford this round would be
-            // asking to send fewer than it carries -- which is refused, and
-            // rightly. A sweep row therefore measures a creep accumulating,
-            // which is what a run of it now actually is.
-            int held = run.Carrying.CountOf(preferred);
-            int count = held + (wave / PriceOf(run.Costs, preferred));
-
-            // The record stores a slot's count as a u16, so a purse that could
-            // buy more bodies than that fills the slot to its ceiling.
-            WaveSlot slot = count == 0
-                ? WaveSlot.Empty
-                : WaveSlot.Of(preferred, count > WaveSlot.Largest ? WaveSlot.Largest : count);
-
-            BuildPhase phase = BuildPhase.Of(slot);
+            BuildPhase phase = BuildPhase.Of(WaveBudget.SlotOf(run, preferred, wave));
 
             for (int index = 0; index < built.Count; index++)
             {
@@ -105,13 +90,80 @@ namespace Sim
 
             return phase;
         }
+    }
+
+    /// <summary>
+    /// A second scripted player: the whole purse goes at the wave and nothing
+    /// is built.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>It is the even-share bot's other extreme, and that is what it is
+    /// for.</b> One splits the purse down the middle and the other refuses to
+    /// split it, so a sweep played twice says what the defensive half of a
+    /// round is worth -- in rounds survived, in what a run took, and in what it
+    /// therefore got paid. That question has no answer from one report however
+    /// many seeds it is played over, because the share is not a column.
+    /// </para>
+    /// <para>
+    /// <b>It is not a good player and is not meant to be.</b> A run that builds
+    /// nothing concedes every leak the field sends, so what it takes is bounded
+    /// by the health pool alone and its rows report a defense column of nothing.
+    /// That is the measurement rather than a flaw in it.
+    /// </para>
+    /// </remarks>
+    public static class AllInBot
+    {
+        /// <summary>One build phase: the wave the whole purse buys, and no tower.</summary>
+        public static BuildPhase Decide(Run run, int preferred)
+        {
+            if (run is null)
+            {
+                throw new ArgumentNullException(nameof(run));
+            }
+
+            return BuildPhase.Of(WaveBudget.SlotOf(run, preferred, run.Purse.Gold));
+        }
+    }
+
+    /// <summary>
+    /// The slot a share of a purse buys: the one piece of arithmetic every
+    /// scripted player above does the same way.
+    /// </summary>
+    /// <remarks>
+    /// It is shared rather than repeated because the players differ in what
+    /// share the wave gets and in nothing else. Two copies of the accumulation
+    /// rule and the u16 ceiling would be two chances to move one of them, and a
+    /// row played under a bot that counts its bodies differently is not
+    /// comparable with the row beside it.
+    /// </remarks>
+    internal static class WaveBudget
+    {
+        /// <summary>What <paramref name="gold"/> adds to what the run already carries.</summary>
+        internal static WaveSlot SlotOf(Run run, int preferred, int gold)
+        {
+            // What the round already fields, plus whatever this round's share
+            // adds to it. A creep is bought once and attacks every round after,
+            // so a bot that sent only what it could afford this round would be
+            // asking to send fewer than it carries -- which is refused, and
+            // rightly. A sweep row therefore measures a creep accumulating,
+            // which is what a run of it now actually is.
+            int held = run.Carrying.CountOf(preferred);
+            int count = held + (gold / PriceOf(run.Costs, preferred));
+
+            // The record stores a slot's count as a u16, so a purse that could
+            // buy more bodies than that fills the slot to its ceiling.
+            return count == 0
+                ? WaveSlot.Empty
+                : WaveSlot.Of(preferred, count > WaveSlot.Largest ? WaveSlot.Largest : count);
+        }
 
         /// <summary>
         /// What one of that creep costs, refused where it costs nothing.
         /// </summary>
         /// <remarks>
-        /// This bot budgets a slot by dividing a share of the purse by a price,
-        /// and there is no dividing by nothing. A creep that costs zero is also a
+        /// A slot is budgeted by dividing a share of the purse by a price, and
+        /// there is no dividing by nothing. A creep that costs zero is also a
         /// creep whose leak charges zero health, so it is outside the exchange
         /// rate the whole economy is denominated in rather than merely cheap.
         /// </remarks>

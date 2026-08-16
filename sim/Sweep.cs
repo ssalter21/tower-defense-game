@@ -107,10 +107,11 @@ namespace Sim
             }
 
             var rows = new List<SweepRow>();
+            var everyRun = new List<SweepRunRow>();
 
             for (int index = 0; index < plan.Creeps.Count; index++)
             {
-                Score(plan, plan.Creeps[index], rows);
+                Score(plan, plan.Creeps[index], rows, everyRun);
             }
 
             var coverage = new[]
@@ -119,7 +120,7 @@ namespace Sim
                 new CoverageBound(SeedAxis, plan.RunsPerCreep, CoverageBound.Unbounded),
             };
 
-            return new SweepReport(plan, rows.ToArray(), coverage);
+            return new SweepReport(plan, rows.ToArray(), everyRun.ToArray(), coverage);
         }
 
         /// <summary>
@@ -135,13 +136,31 @@ namespace Sim
         /// the bin is the same number in every row and a column that never
         /// varies separates nothing. It came out with the gate that produced it.
         /// </remarks>
-        private static void Score(SweepPlan plan, UnitType creep, List<SweepRow> rows)
+        private static void Score(
+            SweepPlan plan,
+            UnitType creep,
+            List<SweepRow> rows,
+            List<SweepRunRow> everyRun)
         {
             var whole = new Cell();
 
             for (int index = 0; index < plan.RunsPerCreep; index++)
             {
-                whole.Add(Play(plan, creep, plan.SeedOf(index)));
+                ulong seed = plan.SeedOf(index);
+                Played played = Play(plan, creep, seed);
+
+                whole.Add(played);
+
+                // A run is kept here or nowhere: the fold takes what it came to
+                // and holds only sums, so recovering one afterwards means
+                // playing the whole sweep again. What the plan is asked is
+                // therefore whether to keep them rather than whether to compute
+                // them, and the answer is off by default because the ceiling
+                // this harness allows is millions of rows.
+                if (plan.KeepsEveryRun)
+                {
+                    everyRun.Add(played.Row(creep, seed));
+                }
             }
 
             rows.Add(whole.Row(creep));
@@ -244,6 +263,30 @@ namespace Sim
             internal int Taken { get; }
 
             internal bool Won { get; }
+
+            /// <summary>
+            /// This one run as a row of the report, under the creep it favoured
+            /// and the seed it was played on.
+            /// </summary>
+            /// <remarks>
+            /// Every number on it is one the fold sums, and neither ratio is:
+            /// a rate over a single run is a bit, and both of the integers one
+            /// would be computed from are on the row already.
+            /// </remarks>
+            internal SweepRunRow Row(UnitType creep, ulong seed) =>
+                new SweepRunRow(
+                    creep.Id,
+                    creep.Label,
+                    seed,
+                    Rounds,
+                    Won,
+                    Dealt,
+                    Taken,
+                    Spent,
+                    Defense,
+                    Unspent,
+                    IncomeBase,
+                    Bonus);
         }
 
         /// <summary>A row part-folded: the running sums, before they become ratios.</summary>

@@ -65,6 +65,13 @@
     deliberate content or rules change.
 
 .EXAMPLE
+    ./tools/run-sweep.ps1 -Policy all-in -PerRun -Out artefacts/all-in.csv
+    The same roster under the player that builds nothing, with a row for every
+    run behind the folded ones. Two of these under the two players are what
+    answers a question no single report can: what the defensive half of a round
+    is worth.
+
+.EXAMPLE
     ./tools/run-sweep.ps1 -ContentFile @{ map = 'maps/second.txt' } -Runs 64 -Out artefacts/second.csv
     Score another board. Any of the seven content files can be pointed somewhere
     else by the option the runner declares for it, so this is an argument rather
@@ -98,13 +105,33 @@ param(
     # One or more of the seven somewhere else: @{ map = 'maps/second.txt' }.
     # Keyed by the runner's own option names, so scoring another board costs an
     # argument here rather than a retrofit across every call site.
-    [hashtable]$ContentFile = @{}
+    [hashtable]$ContentFile = @{},
+
+    # Which scripted player builds and sends. 'even-share' splits every purse
+    # between the board and the wave, and 'all-in' builds nothing and sends the
+    # lot; the two reports side by side are what says what the defensive half of
+    # a round is worth. The name is printed into the file as a parameter row, so
+    # two reports that differ only in this cannot be mistaken for each other.
+    [string]$Policy,
+
+    # Keep a row for every run under the folded rows, which is the distribution
+    # the fold is a summary of. Off by default because the row count is the
+    # roster times the sample, and a sweep that wanted the fold alone should not
+    # carry that.
+    [switch]$PerRun
 )
 
 $ErrorActionPreference = 'Stop'
 
 if ($Verify -and $Regenerate) {
     throw "-Verify and -Regenerate are opposites: one checks the committed file, the other rewrites it."
+}
+
+# The committed artefact is one shape: the folded report, under the default
+# player. Either of these would rewrite it into a file -Verify then reads as a
+# difference in the content, which is a red gate about the wrong thing.
+if (($PerRun -or $Policy) -and ($Verify -or $Regenerate)) {
+    throw "-PerRun and -Policy describe a sweep of your own, and content/sweep.csv is the committed one. Write it somewhere else with -Out."
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -146,6 +173,17 @@ $sweepArguments = @('sweep') + (Get-ContentArguments $Content $ContentFile) + @(
 # is the library's and there is no second copy of it here to drift.
 if ($Runs -gt 0) {
     $sweepArguments += @('--runs', $Runs.ToString($number))
+}
+
+# Both are left off entirely where nobody asked, for the same reason --runs is:
+# the default player and the folded report are the runner's answers, and a
+# second copy of either here is a second place for them to drift.
+if ($Policy) {
+    $sweepArguments += @('--policy', $Policy)
+}
+
+if ($PerRun) {
+    $sweepArguments += '--per-run'
 }
 
 if ($Regenerate) {

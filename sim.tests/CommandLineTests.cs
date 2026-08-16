@@ -339,6 +339,182 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void The_sweep_verb_writes_a_row_for_every_run_where_it_is_asked_to()
+    {
+        // The other table the file can carry: one row a run, under a kind of
+        // its own, so a spreadsheet filters on the first column and gets the
+        // distribution behind the fold. The numbers are the harness's and are
+        // tested in SweepTests; what is only true out here is that the flag
+        // reaches the plan and the rows reach the file.
+        //
+        // OBSERVED: hand SweepPlan a keepsEveryRun of false in RunContent.Sweep
+        // and ignore the argument. The run rows go to none and this goes red on
+        // the count, which is the shape a flag that parses and does nothing
+        // takes -- the file is well-formed and the mode is simply absent.
+        string scratch = TheCommandLine.Scratch("sweep-per-run");
+        string report = Path.Combine(scratch, "sweep.csv");
+
+        TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "3",
+                "--waves", "3",
+                "--field-size", "2",
+                "--most-creeps", "2",
+                "--no-death",
+                "--per-run",
+                "--out", report,
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        string[] rows = File.ReadAllText(report).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        // Two creeps over three seeds, so six runs and the two folded rows they
+        // add up to. Both tables are in one file because the alternative is two
+        // files that can be separated from each other.
+        Assert.Equal(6, rows.Count(row => row.StartsWith("run,", StringComparison.Ordinal)));
+        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
+
+        // Every one of them names the seed it was played on, which is what
+        // makes a row out on the tail something to replay rather than to
+        // squint at.
+        int seed = SweepColumns.IndexOf("seed");
+
+        foreach (string row in rows.Where(row => row.StartsWith("run,", StringComparison.Ordinal)))
+        {
+            Assert.NotEqual(string.Empty, row.Split(',')[seed]);
+        }
+
+        // And the flag is what produces them: the same sweep without it writes
+        // the folded table alone.
+        CommandLineResult folded = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "3",
+                "--waves", "3",
+                "--field-size", "2",
+                "--most-creeps", "2",
+                "--no-death",
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.DoesNotContain("\nrun,", folded.Output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_sweep_verb_plays_the_policy_it_was_named_and_writes_down_which()
+    {
+        // Comparing two strategies is what the plan's policy parameter exists
+        // for, and a verb that took no name would leave it reachable only by
+        // editing C#. The all-in player spends its whole purse on the wave, so
+        // what separates the two reports is the defense column: one builds and
+        // the other does not.
+        //
+        // OBSERVED: resolve every name to EvenShareBot.Decide in Program's
+        // policy lookup. The parameter row still reads all-in -- the shell
+        // knows what it was asked for -- and the defense assertion goes red
+        // with a board built under a player that builds nothing, which is a
+        // report naming a strategy it was not played under.
+        string scratch = TheCommandLine.Scratch("sweep-policy");
+        string report = Path.Combine(scratch, "sweep.csv");
+
+        TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "2",
+                "--waves", "3",
+                "--field-size", "2",
+                "--most-creeps", "2",
+                "--no-death",
+                "--policy", "all-in",
+                "--out", report,
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        string[] rows = File.ReadAllText(report).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        Assert.Contains(
+            new CsvRow()
+                .With("kind", "parameter")
+                .With("subject", "policy")
+                .With("value", "all-in")
+                .Line,
+            rows,
+            StringComparer.Ordinal);
+
+        int defense = SweepColumns.IndexOf("defense_gold");
+        string[] creeps = rows.Where(row => row.StartsWith("creep,", StringComparison.Ordinal)).ToArray();
+
+        Assert.NotEmpty(creeps);
+
+        foreach (string row in creeps)
+        {
+            Assert.Equal("0", row.Split(',')[defense]);
+        }
+
+        // And the default player is the even-share bot, which does build --
+        // so the column above is about the policy that was named rather than
+        // about a number this shape of sweep never moves.
+        CommandLineResult shared = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "2",
+                "--waves", "3",
+                "--field-size", "2",
+                "--most-creeps", "2",
+                "--no-death",
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Contains(
+            new CsvRow()
+                .With("kind", "parameter")
+                .With("subject", "policy")
+                .With("value", "even-share")
+                .Line,
+            shared.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries),
+            StringComparer.Ordinal);
+
+        Assert.Contains(
+            shared.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                .Where(row => row.StartsWith("creep,", StringComparison.Ordinal)),
+            row => row.Split(',')[defense] != "0");
+    }
+
+    [Fact]
+    public void A_sweep_asked_for_a_player_this_program_does_not_have_is_refused_by_name()
+    {
+        // A misspelled policy is the quiet failure this closes: falling back to
+        // the default would produce a complete, correct-looking report about a
+        // player nobody asked for, and the name is not on any row the reader
+        // would think to check.
+        //
+        // OBSERVED: fall back to EvenShareBot.Decide for an unrecognised name.
+        // The exit code goes to 0 and this goes red on it, having swept the
+        // whole roster under the wrong player without a word.
+        CommandLineResult refused = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--policy", "greedy",
+            }.Concat(TheCommandLine.RunContent));
+
+        Assert.NotEqual(0, refused.ExitCode);
+        Assert.Contains("greedy", refused.Error, StringComparison.Ordinal);
+        Assert.Contains("even-share", refused.Error, StringComparison.Ordinal);
+        Assert.Contains("all-in", refused.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_sweep_handed_the_match_wave_as_its_field_is_refused_by_name()
     {
         // The mistake this closes is the silent one, and it is the mistake three

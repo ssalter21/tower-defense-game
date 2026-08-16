@@ -214,16 +214,120 @@ namespace Sim
             + " dealt per 100 gold";
     }
 
+    /// <summary>
+    /// One run of the sweep, unfolded: what a single play of a single seed came
+    /// to.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The columns are the folded row's, one population deep.</b> Every
+    /// number here is what <see cref="SweepRow"/> sums, so a creep's rows add
+    /// up to its fold exactly and a spreadsheet grouping them itself lands on
+    /// the harness's own number. What is missing is the two ratios: a rate over
+    /// one run is a bit rather than a rate, and both operands of it are here to
+    /// be divided by whoever wants one.
+    /// </para>
+    /// <para>
+    /// <b>The seed is what makes a row actionable.</b> A fold says a creep lost
+    /// three of six; this says which three, and the seed beside each is the
+    /// argument that plays that exact run again through any verb that takes
+    /// one. Without it an outlier is a number nobody can get back to.
+    /// </para>
+    /// </remarks>
+    public sealed class SweepRunRow
+    {
+        internal SweepRunRow(
+            int typeId,
+            string label,
+            ulong seed,
+            int rounds,
+            bool won,
+            long leakCostDealt,
+            long leakCostTaken,
+            long goldSpent,
+            long defenseGold,
+            long unspentGold,
+            long incomeBaseGold,
+            long bonusGold)
+        {
+            TypeId = typeId;
+            Label = label;
+            Seed = seed;
+            Rounds = rounds;
+            Won = won;
+            LeakCostDealt = leakCostDealt;
+            LeakCostTaken = leakCostTaken;
+            GoldSpent = goldSpent;
+            DefenseGold = defenseGold;
+            UnspentGold = unspentGold;
+            IncomeBaseGold = incomeBaseGold;
+            BonusGold = bonusGold;
+        }
+
+        /// <summary>Which creep this run favoured.</summary>
+        public int TypeId { get; }
+
+        /// <summary>That creep's label, for a person reading a spreadsheet.</summary>
+        public string Label { get; }
+
+        /// <summary>The seed this run was played on.</summary>
+        public ulong Seed { get; }
+
+        /// <summary>How many rounds it resolved before it ended.</summary>
+        public int Rounds { get; }
+
+        /// <summary>Whether it won. See <see cref="Sweep"/> for what winning is.</summary>
+        public bool Won { get; }
+
+        /// <summary>What its waves got past the field, in gold.</summary>
+        public long LeakCostDealt { get; }
+
+        /// <summary>What the field's waves got past it, in gold.</summary>
+        public long LeakCostTaken { get; }
+
+        /// <summary>What it bought creeps with, in gold.</summary>
+        public long GoldSpent { get; }
+
+        /// <summary>What it put on the board, in gold.</summary>
+        public long DefenseGold { get; }
+
+        /// <summary>What it was still holding when it ended, in gold.</summary>
+        public long UnspentGold { get; }
+
+        /// <summary>What its waves were paid for happening, in gold.</summary>
+        public long IncomeBaseGold { get; }
+
+        /// <summary>What its waves were paid for how they did, in gold.</summary>
+        public long BonusGold { get; }
+
+        public override string ToString() =>
+            Label
+            + " on seed "
+            + Seed.ToString(CultureInfo.InvariantCulture)
+            + ": "
+            + (Won ? "won" : "lost")
+            + " over "
+            + Rounds.ToString(CultureInfo.InvariantCulture)
+            + " rounds";
+    }
+
     /// <summary>What one sweep came to: the rows, and how far it reached.</summary>
     public sealed class SweepReport
     {
         private readonly SweepRow[] _rows;
 
+        private readonly SweepRunRow[] _everyRun;
+
         private readonly CoverageBound[] _coverage;
 
-        internal SweepReport(SweepPlan plan, SweepRow[] rows, CoverageBound[] coverage)
+        internal SweepReport(
+            SweepPlan plan,
+            SweepRow[] rows,
+            SweepRunRow[] everyRun,
+            CoverageBound[] coverage)
         {
             Plan = plan;
+            _everyRun = everyRun;
             _rows = rows;
             _coverage = coverage;
         }
@@ -233,6 +337,17 @@ namespace Sim
 
         /// <summary>The rows, in roster order, each creep's whole population first and then its bins ascending.</summary>
         public IReadOnlyList<SweepRow> Rows => _rows;
+
+        /// <summary>
+        /// Every run behind those rows, in the order they were played, or
+        /// nothing where the plan did not ask for them.
+        /// </summary>
+        /// <remarks>
+        /// Empty is what a plan with <see cref="SweepPlan.KeepsEveryRun"/> off
+        /// comes to, and it is not the same as a sweep that played nothing:
+        /// <see cref="Rows"/> is what says how many runs there were either way.
+        /// </remarks>
+        public IReadOnlyList<SweepRunRow> EveryRun => _everyRun;
 
         /// <summary>Every axis this sweep could have bounded, and what it covered on each.</summary>
         public IReadOnlyList<CoverageBound> Coverage => _coverage;

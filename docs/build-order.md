@@ -212,12 +212,14 @@ harness is still what a run's damage is dealt *to* — but nothing about the pay
 
 **It waits for no other seam.** At 2.75 ms a match it is a `simcli` mode and a CSV. If the generative direction
 is ever adopted, its documented failure mode — a U-shaped meta where the widest and narrowest builds dominate —
-is caught by win rate **binned by number of ingredients taken**, a column rather than a tool.
+is caught by win rate **binned by number of ingredients taken**, a grouping rather than a tool.
 
 **Pointed at maps it scores them**, which is what makes
 [generated rotation](vision.md#the-map-rotates-and-it-is-generated) a filter rather than a hope. **The sweep
-must take its map as a parameter, not as a fixed input.** Three further columns are owed: the both-columns
-check, outcome spread, and win rate binned by ingredient count.
+must take its map as a parameter, not as a fixed input.** One further column is owed: the both-columns check.
+Outcome spread and the ingredient bin are no longer columns — `--per-run` writes a row per run, so both are a
+query over a file the sweep already produced rather than an edit to the harness. See
+[the 16 August entry](decision-log.md#16-august-2026--the-sweeps-owed-columns-become-queries).
 
 ### 5 · The service
 
