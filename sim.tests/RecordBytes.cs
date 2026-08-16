@@ -99,9 +99,13 @@ public static class RecordBytes
         CommandsOffset
         + (index * (RecordFormat.CommandBytes + (TheCommands.SlotsPerCommand * RecordFormat.SlotBytes)));
 
-    /// <summary>Where the defense inside a bundle starts.</summary>
-    public static int GhostIn(ReplayBundle bundle) =>
+    /// <summary>Where a bundle's inlined map levels start: the plane after the cells.</summary>
+    public static int LevelsIn(ReplayBundle bundle) =>
         BundleCellsOffset + (bundle.Map.Width * bundle.Map.Height);
+
+    /// <summary>Where the defense inside a bundle starts: after both planes of the grid.</summary>
+    public static int GhostIn(ReplayBundle bundle) =>
+        LevelsIn(bundle) + (bundle.Map.Width * bundle.Map.Height);
 
     /// <summary>Where the wave inside a bundle starts.</summary>
     public static int WaveIn(ReplayBundle bundle) => GhostIn(bundle) + bundle.Ghost.ToBytes().Length;
@@ -111,18 +115,54 @@ public static class RecordBytes
     /// turned back to zero and the ruleset stamp cut out.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The writer emits the current version and only that, so a fresh version-0
     /// bundle is not something this repository can make. The one that exists,
     /// <c>content/golden/defense-0.replay</c>, is stamped at a retired
     /// simulation version and is refused at that gate long before the ruleset
     /// one is reached -- so manufacturing the bytes here is what lets a test
     /// watch a missing stamp refuse on its own.
+    /// </para>
+    /// <para>
+    /// <b>The level plane comes out with the stamp, and the defense's map hash
+    /// goes back to the layout of that era.</b> A version-0 bundle has neither
+    /// a ruleset stamp nor a second plane: a reader at that version takes one
+    /// plane of map bytes and then the defense, so bytes left in would be read
+    /// as a defense that is a row of levels. And its defense pinned the terrain
+    /// alone, under <c>hex-map/1</c> -- a record carrying today's fold under
+    /// yesterday's version is a contradiction no real version-0 bundle has, and
+    /// one that fails the map gate rather than the gate a test built on this
+    /// was watching.
+    /// </para>
     /// </remarks>
-    public static byte[] WithoutTheRulesetStamp(byte[] bundle)
+    public static byte[] WithoutTheRulesetStamp(ReplayBundle good, byte[] bundle)
     {
         byte[] older = WithU16(bundle, FormatVersionOffset, 0);
+        int levels = LevelsIn(good);
+        int cells = good.Map.Width * good.Map.Height;
 
-        return older[..BundleRulesetHashOffset].Concat(older[BundleSeedOffset..]).ToArray();
+        byte[] cut = older[..BundleRulesetHashOffset]
+            .Concat(older[BundleSeedOffset..levels])
+            .Concat(older[(levels + cells)..])
+            .ToArray();
+
+        return WithU64(
+            cut,
+            GhostIn(good) - 8 - cells + GhostMapHashOffset,
+            good.Map.MapHashUnder(1).Value);
+    }
+
+    /// <summary>The same bytes with a little-endian u64 replaced.</summary>
+    public static byte[] WithU64(byte[] bytes, int offset, ulong value)
+    {
+        byte[] copy = (byte[])bytes.Clone();
+
+        for (int shift = 0; shift < 64; shift += 8)
+        {
+            copy[offset + (shift / 8)] = (byte)(value >> shift);
+        }
+
+        return copy;
     }
 
     /// <summary>The same bytes with one of them replaced.</summary>

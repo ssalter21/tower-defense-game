@@ -171,19 +171,48 @@ public class BoardMapTests
     }
 
     /// <summary>
-    /// The committed map's grid, one string per row, with the comment block it
-    /// opens with taken off.
+    /// The committed map's terrain grid, one string per row, with the comment
+    /// block it opens with taken off and the level grid under it left where it
+    /// is.
     /// </summary>
+    /// <remarks>
+    /// <b>The first block and only the first.</b> A map file is two grids -- the
+    /// terrain and the tier every hex of it stands at -- and what this drawing
+    /// puts on a cell is the terrain character. The level block is a second
+    /// block of the same shape, so a reader that took every row would find
+    /// twice as many as the drawing has and fail counting rather than
+    /// comparing.
+    ///
+    /// The rows are trimmed because the file indents its odd rows: odd-r offset
+    /// shifts them half a cell, the file says so in whitespace so that what is
+    /// typed looks like the board, and the drawing says so with
+    /// <c>BoardMap.OddRowIndent</c>. Both are decoration over the same columns,
+    /// which is exactly what this comparison is about.
+    /// </remarks>
     private static string[] MapRows()
     {
         var rows = new List<string>();
 
         foreach (string line in File.ReadAllLines(RepoLayout.MapFile))
         {
-            if (line.Length > 0 && !line.StartsWith("//", StringComparison.Ordinal))
+            string row = line.Trim();
+
+            if (row.StartsWith("//", StringComparison.Ordinal))
             {
-                rows.Add(line);
+                continue;
             }
+
+            if (row.Length == 0)
+            {
+                if (rows.Count > 0)
+                {
+                    break;
+                }
+
+                continue;
+            }
+
+            rows.Add(row);
         }
 
         return rows.ToArray();

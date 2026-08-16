@@ -137,6 +137,21 @@ public class DerivationTests
         // gained a fifth half that plays a run against a population recorded per
         // round, and the label went to rule-fingerprint/5.
         (6u, 0x388DFE8C6880ED85UL),
+
+        // Version 7 is #214 -- the map gained a level layer, so the map hash
+        // moved from hex-map/1 to hex-map/2 and every match's state hash opens
+        // on a different number.
+        //
+        // IT IS THE FIRST ROW HERE THAT IS NOT A RULE CHANGE, and it is a row
+        // anyway. Nothing about the tick loop moved: the same wave leaks the
+        // same twelve creeps on the same tick as it did under version 6. What
+        // moved is what the state hash is over -- Match opens its fold with the
+        // map hash, and the map hash now covers the height of every hex as well
+        // as its terrain -- so every stored record's rolling hash stops
+        // reproducing while its outcome does not. That is exactly the condition
+        // this constant exists to retire records for, and the alternative is a
+        // golden trace that changed under a version claiming nothing had.
+        (7u, 0xF7A080A6691EA488UL),
     };
 
     /// <summary>
@@ -148,6 +163,9 @@ public class DerivationTests
     private const string FingerprintMap = """
         S####E
         ......
+
+        aaaaaa
+        aaaaaa
         """;
 
     private const string FingerprintUnits = """
@@ -470,17 +488,17 @@ public class DerivationTests
         // entrance and a dead end, which between them cover every one-character
         // change there is. The corridor gaining a hex is the smallest edit to
         // the playfield that exists.
-        HexMap shorter = HexMap.Parse("""
+        HexMap shorter = HexMap.Parse(TheGrid.OnTheFlat("""
             .....
             .S#E.
             .....
-            """);
+            """));
 
-        HexMap longer = HexMap.Parse("""
+        HexMap longer = HexMap.Parse(TheGrid.OnTheFlat("""
             .....
             .S##E
             .....
-            """);
+            """));
 
         Assert.NotEqual(shorter.MapHash, longer.MapHash);
 
@@ -488,11 +506,11 @@ public class DerivationTests
         // corridor changed except which hexes it is made of.
         Assert.NotEqual(
             shorter.MapHash,
-            HexMap.Parse("""
+            HexMap.Parse(TheGrid.OnTheFlat("""
                 .....
                 .....
                 .S#E.
-                """).MapHash);
+                """)).MapHash);
 
         // And the file around it, rewritten. The map's comment marker, its line
         // endings and its trailing blank lines are not the playfield, and a hash
@@ -512,8 +530,10 @@ public class DerivationTests
         // of the other three kinds, and every one of them either refused by the
         // corridor assertion or landing on a different map hash. Nothing is
         // allowed to load quietly with the hash it had.
-        byte[] cells = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile)).ToCellBytes();
-        HexMap original = HexMap.FromCells("map", 15, 9, cells);
+        HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
+        byte[] cells = committed.ToCellBytes();
+        byte[] levels = committed.ToLevelBytes();
+        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
         int refused = 0;
         int rehashed = 0;
 
@@ -531,7 +551,9 @@ public class DerivationTests
 
                 try
                 {
-                    Assert.NotEqual(original.MapHash, HexMap.FromCells("edited", 15, 9, edited).MapHash);
+                    Assert.NotEqual(
+                        original.MapHash,
+                        HexMap.FromCells("edited", 15, 9, edited, levels).MapHash);
                     rehashed++;
                 }
                 catch (ContentException)
@@ -543,6 +565,43 @@ public class DerivationTests
 
         Assert.Equal(cells.Length * 3, refused + rehashed);
         Assert.True(refused > 0, "The corridor assertion caught none of them, which cannot be right.");
+    }
+
+    [Fact]
+    public void No_single_hex_of_the_committed_map_can_be_raised_without_the_hash_noticing()
+    {
+        // The level plane's half of the claim above, and it needs its own loop
+        // because raising a hex is never refused: every tier is legal on every
+        // cell, so the hash is the only thing that can notice. A fold that
+        // covered the terrain alone would pass the whole test above and every
+        // gate in the negative suite, and a defense recorded on a fold would
+        // replay on the flat.
+        HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
+        byte[] cells = committed.ToCellBytes();
+        byte[] levels = committed.ToLevelBytes();
+        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
+        int moved = 0;
+
+        for (int index = 0; index < levels.Length; index++)
+        {
+            for (byte tier = 0; tier < HexMap.LevelCount; tier++)
+            {
+                if (levels[index] == tier)
+                {
+                    continue;
+                }
+
+                byte[] edited = (byte[])levels.Clone();
+                edited[index] = tier;
+
+                Assert.NotEqual(
+                    original.MapHash,
+                    HexMap.FromCells("edited", 15, 9, cells, edited).MapHash);
+                moved++;
+            }
+        }
+
+        Assert.Equal(levels.Length * (HexMap.LevelCount - 1), moved);
     }
 
     /// <summary>
@@ -916,11 +975,35 @@ public class DerivationTests
                         line.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)) + "  "));
 
     /// <summary>The map's grid, with its legend stripped off.</summary>
-    private static string WithoutMapComments(string original) =>
-        string.Join(
-            "\n",
-            original
-                .Split('\n')
-                .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
-                .Where(line => line.Trim().Length > 0));
+    /// <summary>
+    /// The committed map with its legend taken off, and the blank line between
+    /// its two grids left exactly where it is.
+    /// </summary>
+    /// <remarks>
+    /// A map file is two blocks -- the terrain, then the level of every hex of
+    /// it -- so the blank line between them is structure and not spacing.
+    /// Dropping every blank, which is what this did while the file held one
+    /// grid, welds the two into an eighteen-row block that is refused. The
+    /// blanks that are spacing are the ones at either end, and those still go.
+    /// </remarks>
+    private static string WithoutMapComments(string original)
+    {
+        List<string> kept = original
+            .Split('\n')
+            .Where(line => !line.TrimStart().StartsWith("//", StringComparison.Ordinal))
+            .Select(line => line.TrimEnd())
+            .ToList();
+
+        while (kept.Count > 0 && kept[0].Length == 0)
+        {
+            kept.RemoveAt(0);
+        }
+
+        while (kept.Count > 0 && kept[kept.Count - 1].Length == 0)
+        {
+            kept.RemoveAt(kept.Count - 1);
+        }
+
+        return string.Join("\n", kept);
+    }
 }

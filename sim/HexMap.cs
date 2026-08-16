@@ -34,6 +34,26 @@ namespace Sim
     /// numeric data files carry.
     /// </para>
     /// <para>
+    /// <b>A map is two blocks and not one: the terrain grid, a blank line, and
+    /// a level grid of the same shape.</b> A level is <c>a</c>, <c>b</c> or
+    /// <c>c</c> -- the three tiers, counted from the ground up -- and it is a
+    /// letter for the same reason the terrain is: this file holds no numbers,
+    /// so a digit is refused wherever it appears and the decimal-point question
+    /// never has to be asked here. The second plane is why a level is a second
+    /// block rather than a wider alphabet in the first: the terrain a hex is
+    /// and the height it stands at are two facts, and folding them into one
+    /// character would need twelve characters to spell four kinds at three
+    /// tiers, none of which anybody could read.
+    /// </para>
+    /// <para>
+    /// <b>Leading whitespace on a row is decoration and is stripped.</b> Odd
+    /// rows are the shifted ones in odd-r offset, so the committed file indents
+    /// them and what is typed then looks like the board it produces. Nothing
+    /// about that indent is data -- the hash is over the parsed grid, so
+    /// indenting a row moves nothing at all -- and requiring it would be a
+    /// parser refusing a grid it had already read correctly.
+    /// </para>
+    /// <para>
     /// <b>The corridor is asserted well-formed at load: exactly one hex wide,
     /// never branching.</b> Every corridor cell has one or two corridor
     /// neighbours, exactly two of them have one, those two are the entrance and
@@ -45,10 +65,12 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b><see cref="MapHash"/> is over the parsed grid alone</b> -- width,
-    /// height and the cell kinds in row-major order -- and not over the file.
-    /// So nudging one hex under a stored record fails loudly whether the map
-    /// was typed by hand, generated, or downloaded from somebody else, and
-    /// rewrapping the comment above it does nothing at all.
+    /// height, the cell kinds in row-major order and then the levels in the
+    /// same order -- and not over the file. So nudging one hex under a stored
+    /// record fails loudly whether the map was typed by hand, generated, or
+    /// downloaded from somebody else, and rewrapping the comment above it does
+    /// nothing at all. Raising one hex a tier is such a nudge: two maps with
+    /// the same corridor at different heights are two maps.
     /// </para>
     /// <para>
     /// Adjacency is computed in axial coordinates, through
@@ -60,11 +82,33 @@ namespace Sim
     public sealed class HexMap
     {
         /// <summary>
-        /// Names this grid's layout inside the hash. The digit is the layout
-        /// version: change what a cell byte means and it bumps, retiring every
-        /// record pinned to the old meaning.
+        /// The layout this build folds a map hash under. Change what the fold
+        /// covers and it bumps, retiring every record pinned to the old
+        /// meaning; layout 2 is the one that added the levels.
         /// </summary>
-        private const string HashLabel = "hex-map/1";
+        /// <remarks>
+        /// It is public because a reader that knows which layout a stored stamp
+        /// was taken under is the only reader that can compare like with like.
+        /// See <see cref="MapHashUnder"/>.
+        /// </remarks>
+        public const int HashLayout = 2;
+
+        /// <summary>How many tiers there are. The letters are <c>a</c> to this many.</summary>
+        public const int LevelCount = 3;
+
+        /// <summary>
+        /// Names this grid's layout inside the hash. The digit is
+        /// <see cref="HashLayout"/>.
+        /// </summary>
+        private const string HashLabel = "hex-map/2";
+
+        /// <summary>
+        /// The label layout 1 folded under: width, height and the cell kinds,
+        /// with no levels because there were none. Kept for as long as any
+        /// record stamped under it exists, which is the same terms every
+        /// retired reader branch is kept on.
+        /// </summary>
+        private const string LevellessHashLabel = "hex-map/1";
 
         private const char GroundCharacter = '.';
 
@@ -74,15 +118,21 @@ namespace Sim
 
         private const char ExitCharacter = 'E';
 
+        /// <summary>The letter the lowest tier is written with; the rest follow it.</summary>
+        private const char FirstLevelCharacter = 'a';
+
         private readonly MapCell[] _cells;
+
+        private readonly byte[] _levels;
 
         private readonly Hex[] _route;
 
-        private HexMap(int width, int height, MapCell[] cells, Hex[] route, Hash64 mapHash)
+        private HexMap(int width, int height, MapCell[] cells, byte[] levels, Hex[] route, Hash64 mapHash)
         {
             Width = width;
             Height = height;
             _cells = cells;
+            _levels = levels;
             _route = route;
             MapHash = mapHash;
         }
@@ -108,6 +158,54 @@ namespace Sim
         /// <summary>The hash over the parsed grid. See the remarks on <see cref="HexMap"/>.</summary>
         public Hash64 MapHash { get; }
 
+        /// <summary>
+        /// The same grid folded under a named hash layout, for comparing a
+        /// stamp against the layout it was taken under.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A digest under one layout and a digest under another are not two
+        /// answers to one question.</b> They are answers to different
+        /// questions: layout 1 asked what terrain this grid is, and layout 2
+        /// asks what terrain it is and how high each hex of it stands. A reader
+        /// holding a stamp from before the levels existed can still check that
+        /// stamp exactly -- against the terrain, which is all that stamp ever
+        /// covered -- and a reader that compared it against the current fold
+        /// would be reporting a layout bump as a corrupted record.
+        /// </para>
+        /// <para>
+        /// <b>This weakens nothing.</b> The comparison stays exact under
+        /// whichever layout is named, so a hex nudged in an old record is
+        /// refused by the old fold just as loudly as it always was. What is
+        /// retired by the bump is a stamp that arrives without its record --
+        /// a stored defense pinned to a map hash, matched against a map loaded
+        /// today -- because those two are now folded under different layouts
+        /// with nothing to say which. A replay bundle is not in that position:
+        /// its stamp and its grid travel in the same bytes, under a format
+        /// version that says which layout they were written at.
+        /// </para>
+        /// </remarks>
+        public Hash64 MapHashUnder(int layout)
+        {
+            switch (layout)
+            {
+                case 1:
+                    return Fold(LevellessHashLabel, Width, Height, _cells, levels: null);
+
+                case HashLayout:
+                    return MapHash;
+
+                default:
+                    throw new ArgumentOutOfRangeException(
+                        nameof(layout),
+                        layout.ToString(CultureInfo.InvariantCulture)
+                        + " is not a map hash layout this build has ever folded under. The layouts are 1, "
+                        + "which covered the terrain alone, and "
+                        + HashLayout.ToString(CultureInfo.InvariantCulture)
+                        + ", which covers the terrain and the levels.");
+            }
+        }
+
         /// <summary>Parses a map from text. Not from a path -- see <see cref="DataText"/>.</summary>
         public static HexMap Parse(string text) => Parse("map", text);
 
@@ -130,9 +228,10 @@ namespace Sim
         }
 
         /// <summary>
-        /// Builds a map from the parsed grid itself -- width, height and one
-        /// byte per cell, row-major -- which is exactly what a replay bundle
-        /// inlines and exactly what <see cref="MapHash"/> covers.
+        /// Builds a map from the parsed grid itself -- width, height, one byte
+        /// per cell row-major and then one byte per level in the same order --
+        /// which is exactly what a replay bundle inlines and exactly what
+        /// <see cref="MapHash"/> covers.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -149,7 +248,7 @@ namespace Sim
         /// where it came from.
         /// </para>
         /// </remarks>
-        public static HexMap FromCells(string source, int width, int height, byte[] cells)
+        public static HexMap FromCells(string source, int width, int height, byte[] cells, byte[] levels)
         {
             if (source is null)
             {
@@ -159,6 +258,11 @@ namespace Sim
             if (cells is null)
             {
                 throw new ArgumentNullException(nameof(cells));
+            }
+
+            if (levels is null)
+            {
+                throw new ArgumentNullException(nameof(levels));
             }
 
             if (width < 1 || height < 1)
@@ -187,14 +291,29 @@ namespace Sim
                     + " cells. A grid whose shape and contents disagree has no unambiguous reading.");
             }
 
+            if (levels.Length != cells.Length)
+            {
+                throw new ContentException(
+                    source,
+                    0,
+                    "carries "
+                    + cells.Length.ToString(CultureInfo.InvariantCulture)
+                    + " cells and "
+                    + levels.Length.ToString(CultureInfo.InvariantCulture)
+                    + " levels. Every hex stands at a height, so the two planes are the same length or "
+                    + "there is a hex whose height nothing states.");
+            }
+
             var parsed = new MapCell[cells.Length];
+            var heights = new byte[levels.Length];
 
             for (int index = 0; index < cells.Length; index++)
             {
                 parsed[index] = ReadCellByte(source, width, index, cells[index]);
+                heights[index] = ReadLevelByte(source, width, index, levels[index]);
             }
 
-            return FromGrid(new Grid(source, width, height, parsed));
+            return FromGrid(new Grid(source, width, height, parsed, heights));
         }
 
         private static MapCell ReadCellByte(string source, int width, int index, byte value)
@@ -215,37 +334,90 @@ namespace Sim
             return (MapCell)value;
         }
 
-        private static HexMap FromGrid(Grid grid)
+        /// <summary>
+        /// One byte of the level plane. The terrain plane's validation above is
+        /// untouched by the levels arriving, which is the whole reason they
+        /// arrive as a second plane rather than as a widened cell encoding.
+        /// </summary>
+        private static byte ReadLevelByte(string source, int width, int index, byte value)
         {
-            Hash64 hash = Hash64.Start(HashLabel).Add(grid.Width).Add(grid.Height);
-
-            for (int index = 0; index < grid.Cells.Length; index++)
+            if (value >= LevelCount)
             {
-                hash = hash.Add((int)grid.Cells[index]);
+                throw new ContentException(
+                    source,
+                    (index / width) + 1,
+                    "has level "
+                    + value.ToString(CultureInfo.InvariantCulture)
+                    + " at column "
+                    + ((index % width) + 1).ToString(CultureInfo.InvariantCulture)
+                    + ". There are "
+                    + LevelCount.ToString(CultureInfo.InvariantCulture)
+                    + " tiers, counted from the ground up, so a level byte is 0, 1 or 2 -- and one "
+                    + "outside that range is refused rather than flattened onto the tier below it.");
             }
 
-            return new HexMap(grid.Width, grid.Height, grid.Cells, grid.TraceCorridor(), hash);
+            return value;
+        }
+
+        private static HexMap FromGrid(Grid grid)
+        {
+            return new HexMap(
+                grid.Width,
+                grid.Height,
+                grid.Cells,
+                grid.Levels,
+                grid.TraceCorridor(),
+                Fold(HashLabel, grid.Width, grid.Height, grid.Cells, grid.Levels));
+        }
+
+        /// <summary>
+        /// The grid folded under one layout's label: the shape, then the
+        /// terrain plane, then the level plane where that layout has one.
+        /// </summary>
+        private static Hash64 Fold(string label, int width, int height, MapCell[] cells, byte[]? levels)
+        {
+            Hash64 hash = Hash64.Start(label).Add(width).Add(height);
+
+            for (int index = 0; index < cells.Length; index++)
+            {
+                hash = hash.Add((int)cells[index]);
+            }
+
+            if (levels is null)
+            {
+                return hash;
+            }
+
+            for (int index = 0; index < levels.Length; index++)
+            {
+                hash = hash.Add(levels[index]);
+            }
+
+            return hash;
         }
 
         /// <summary>The cell at an offset column and row.</summary>
         public MapCell CellAt(int column, int row)
         {
-            if (column < 0 || column >= Width || row < 0 || row >= Height)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(column),
-                    "("
-                    + column.ToString(CultureInfo.InvariantCulture)
-                    + ", "
-                    + row.ToString(CultureInfo.InvariantCulture)
-                    + ") is off a "
-                    + Width.ToString(CultureInfo.InvariantCulture)
-                    + " by "
-                    + Height.ToString(CultureInfo.InvariantCulture)
-                    + " grid.");
-            }
+            RequireOnTheGrid(column, row);
 
             return _cells[(row * Width) + column];
+        }
+
+        /// <summary>
+        /// The tier the hex at an offset column and row stands at: zero for the
+        /// ground, up to <see cref="LevelCount"/> minus one.
+        /// </summary>
+        /// <remarks>
+        /// The level belongs to the hex and not to whatever stands on it, which
+        /// is why a tower carries no level of its own: it stands on a hex, and
+        /// the hex is asked.
+        /// </remarks>
+        public int LevelAt(int column, int row)
+        {
+            RequireOnTheGrid(column, row);
+
+            return _levels[(row * Width) + column];
         }
 
         /// <summary>
@@ -266,6 +438,31 @@ namespace Sim
         }
 
         /// <summary>
+        /// The level plane as one byte per cell, row-major -- the second run of
+        /// bytes a replay record carries, and what <see cref="MapHash"/> covers
+        /// after the terrain.
+        /// </summary>
+        public byte[] ToLevelBytes() => (byte[])_levels.Clone();
+
+        private void RequireOnTheGrid(int column, int row)
+        {
+            if (column < 0 || column >= Width || row < 0 || row >= Height)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(column),
+                    "("
+                    + column.ToString(CultureInfo.InvariantCulture)
+                    + ", "
+                    + row.ToString(CultureInfo.InvariantCulture)
+                    + ") is off a "
+                    + Width.ToString(CultureInfo.InvariantCulture)
+                    + " by "
+                    + Height.ToString(CultureInfo.InvariantCulture)
+                    + " grid.");
+            }
+        }
+
+        /// <summary>
         /// One parse in progress. It exists so that every message can name the
         /// line of the file the fault is on rather than the row of the grid,
         /// which are different numbers as soon as the map carries a comment.
@@ -280,21 +477,26 @@ namespace Sim
             {
                 _source = source;
 
-                List<string> rows = Rows(source, lines, out _firstLine);
+                List<Block> blocks = Blocks(source, lines);
+                Block terrain = blocks[0];
+                Block levels = blocks[1];
 
-                Height = rows.Count;
-                Width = rows[0].Length;
+                _firstLine = terrain.FirstLine;
+
+                Height = terrain.Rows.Count;
+                Width = terrain.Rows[0].Length;
                 Cells = new MapCell[Width * Height];
+                Levels = new byte[Width * Height];
 
                 for (int row = 0; row < Height; row++)
                 {
-                    string line = rows[row];
+                    string line = terrain.Rows[row];
 
                     if (line.Length != Width)
                     {
                         throw new ContentException(
                             source,
-                            _firstLine + row,
+                            terrain.FirstLine + row,
                             "is "
                             + line.Length.ToString(CultureInfo.InvariantCulture)
                             + " characters wide where the first row is "
@@ -305,7 +507,45 @@ namespace Sim
 
                     for (int column = 0; column < Width; column++)
                     {
-                        Cells[(row * Width) + column] = ReadCell(source, _firstLine + row, column, line[column]);
+                        Cells[(row * Width) + column] =
+                            ReadCell(source, terrain.FirstLine + row, column, line[column]);
+                    }
+                }
+
+                if (levels.Rows.Count != Height)
+                {
+                    throw new ContentException(
+                        source,
+                        levels.FirstLine,
+                        "opens a level grid "
+                        + levels.Rows.Count.ToString(CultureInfo.InvariantCulture)
+                        + " rows deep where the terrain grid above it is "
+                        + Height.ToString(CultureInfo.InvariantCulture)
+                        + ". The two blocks are one board seen twice, so a level grid of another shape "
+                        + "leaves a hex whose height nothing states.");
+                }
+
+                for (int row = 0; row < Height; row++)
+                {
+                    string line = levels.Rows[row];
+
+                    if (line.Length != Width)
+                    {
+                        throw new ContentException(
+                            source,
+                            levels.FirstLine + row,
+                            "is "
+                            + line.Length.ToString(CultureInfo.InvariantCulture)
+                            + " characters wide where the terrain grid is "
+                            + Width.ToString(CultureInfo.InvariantCulture)
+                            + ". The two blocks are one board seen twice, so a level grid of another "
+                            + "shape leaves a hex whose height nothing states.");
+                    }
+
+                    for (int column = 0; column < Width; column++)
+                    {
+                        Levels[(row * Width) + column] =
+                            ReadLevel(source, levels.FirstLine + row, column, line[column]);
                     }
                 }
             }
@@ -315,13 +555,14 @@ namespace Sim
             /// grid rows counted from one, because bytes inside a record have no
             /// lines for them to be offset from.
             /// </summary>
-            internal Grid(string source, int width, int height, MapCell[] cells)
+            internal Grid(string source, int width, int height, MapCell[] cells, byte[] levels)
             {
                 _source = source;
                 _firstLine = 1;
                 Width = width;
                 Height = height;
                 Cells = cells;
+                Levels = levels;
             }
 
             internal int Width { get; }
@@ -329,6 +570,9 @@ namespace Sim
             internal int Height { get; }
 
             internal MapCell[] Cells { get; }
+
+            /// <summary>The tier every hex stands at, row-major, beside <see cref="Cells"/>.</summary>
+            internal byte[] Levels { get; }
 
             /// <summary>
             /// The corridor assertion, and the route it produces. Everything
@@ -433,43 +677,79 @@ namespace Sim
                 return Walk(corridorCells, spawnIndex, exitIndex);
             }
 
-            private static List<string> Rows(string source, string[] lines, out int firstLine)
+            /// <summary>
+            /// The blocks of rows the file is made of, blank lines and comments
+            /// between them, each row stripped of the whitespace it was drawn
+            /// with. There are exactly two or the map is refused.
+            /// </summary>
+            /// <remarks>
+            /// <b>A second block used to be the fault and is now the
+            /// requirement.</b> The map holds two planes -- what each hex is,
+            /// and how high it stands -- and neither of them is optional: a
+            /// hex whose height nothing states is a hex the reader would have
+            /// to invent a height for, which is the one thing a reader may
+            /// never do.
+            /// </remarks>
+            private static List<Block> Blocks(string source, string[] lines)
             {
-                var rows = new List<string>();
+                var blocks = new List<Block>();
                 int index = 0;
 
-                while (index < lines.Length && IsBlankOrMapComment(lines[index]))
+                while (index < lines.Length)
                 {
-                    index++;
-                }
-
-                firstLine = index + 1;
-
-                while (index < lines.Length && !IsBlankOrMapComment(lines[index]))
-                {
-                    rows.Add(lines[index]);
-                    index++;
-                }
-
-                for (int after = index; after < lines.Length; after++)
-                {
-                    if (!IsBlankOrMapComment(lines[after]))
+                    while (index < lines.Length && IsBlankOrMapComment(lines[index]))
                     {
-                        throw new ContentException(
-                            source,
-                            after + 1,
-                            "comes after the grid, with a blank line between them. A map holds one grid, "
-                            + "so a second block of rows is either a stray edit or a second map that "
-                            + "nothing will ever read.");
+                        index++;
                     }
+
+                    if (index == lines.Length)
+                    {
+                        break;
+                    }
+
+                    var block = new Block(index + 1);
+
+                    while (index < lines.Length && !IsBlankOrMapComment(lines[index]))
+                    {
+                        block.Rows.Add(lines[index].Trim());
+                        index++;
+                    }
+
+                    blocks.Add(block);
                 }
 
-                if (rows.Count == 0)
+                if (blocks.Count == 0)
                 {
                     throw new ContentException(source, 0, "has no grid in it at all.");
                 }
 
-                return rows;
+                if (blocks.Count == 1)
+                {
+                    throw new ContentException(
+                        source,
+                        blocks[0].FirstLine + blocks[0].Rows.Count,
+                        "ends after one block of rows, and a map is two: the terrain grid, a blank line, "
+                        + "then a level grid of the same shape carrying '"
+                        + FirstLevelCharacter
+                        + "', '"
+                        + (char)(FirstLevelCharacter + 1)
+                        + "' or '"
+                        + (char)(FirstLevelCharacter + LevelCount - 1)
+                        + "' on every hex. The level block is missing, and there is no height a reader "
+                        + "could supply on its behalf.");
+                }
+
+                if (blocks.Count > 2)
+                {
+                    throw new ContentException(
+                        source,
+                        blocks[2].FirstLine,
+                        "opens a third block of rows. A map holds two -- the terrain and the levels -- so "
+                        + "anything after them is either a stray edit or a second map that nothing will "
+                        + "ever read.");
+                }
+
+                return blocks;
             }
 
             /// <summary>
@@ -531,6 +811,38 @@ namespace Sim
                             + "' for the exit, and nothing else -- a digit least of all, because this "
                             + "file holds no numbers.");
                 }
+            }
+
+            /// <summary>
+            /// One character of the level grid. Letters and never digits, for
+            /// the reason <see cref="ReadCell"/> gives: this file holds no
+            /// numbers, so it never has to answer the decimal-point question
+            /// the numeric data files do.
+            /// </summary>
+            private static byte ReadLevel(string source, int line, int column, char character)
+            {
+                int level = character - FirstLevelCharacter;
+
+                if (level < 0 || level >= LevelCount)
+                {
+                    throw new ContentException(
+                        source,
+                        line,
+                        "has '"
+                        + character
+                        + "' at column "
+                        + (column + 1).ToString(CultureInfo.InvariantCulture)
+                        + " of the level grid. A level is '"
+                        + FirstLevelCharacter
+                        + "' for the ground, '"
+                        + (char)(FirstLevelCharacter + 1)
+                        + "' for the tier above it or '"
+                        + (char)(FirstLevelCharacter + LevelCount - 1)
+                        + "' for the one above that, and nothing else -- a digit least of all, because "
+                        + "this file holds no numbers.");
+                }
+
+                return (byte)level;
             }
 
             private static bool IsCorridor(MapCell cell) =>
@@ -650,6 +962,25 @@ namespace Sim
 
             private ContentException Fault(int line, string message) =>
                 new ContentException(_source, line, message);
+
+            /// <summary>
+            /// One run of rows with blank lines either side of it, and the line
+            /// of the file its first row is on -- which is what lets a fault in
+            /// the second block name the reader's own line rather than a row
+            /// number counted from somewhere else.
+            /// </summary>
+            private sealed class Block
+            {
+                internal Block(int firstLine)
+                {
+                    FirstLine = firstLine;
+                    Rows = new List<string>();
+                }
+
+                internal int FirstLine { get; }
+
+                internal List<string> Rows { get; }
+            }
         }
     }
 }

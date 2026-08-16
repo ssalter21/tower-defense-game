@@ -222,7 +222,7 @@ public class ReplayGateTests
         // result as the record's own. That is the failure the gate exists for,
         // wearing the format bump as a disguise.
         UnitTypeTable types = TheMatch.Types();
-        byte[] older = RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle().ToBytes());
+        byte[] older = RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle(), TheMatch.Bundle().ToBytes());
 
         ReplayBundle bundle = ReplayBundle.FromBytes(older);
 
@@ -265,7 +265,7 @@ public class ReplayGateTests
         // than answered with a zero -- which would be a bundle claiming numbers
         // it could then pass a gate against.
         ReplayBundle bundle = ReplayBundle.FromBytes(
-            RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle().ToBytes()));
+            RecordBytes.WithoutTheRulesetStamp(TheMatch.Bundle(), TheMatch.Bundle().ToBytes()));
 
         SimulationException thrown = Assert.Throws<SimulationException>(() => bundle.ToBytes());
 

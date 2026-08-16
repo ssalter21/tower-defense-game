@@ -31,7 +31,7 @@
 #
 # The run this came from:
 #
-#   command stream format 3, simulation version 6, content 51BC7297223A70E8, ruleset D01EB9595248D3C9, ladder 1DBB1082588262F2, seed 20260807, 4 build phases
+#   command stream format 3, simulation version 7, content 51BC7297223A70E8, ruleset D01EB9595248D3C9, ladder 1DBB1082588262F2, seed 20260807, 4 build phases
 #   shape      10 waves, a field of 10, death ends the run
 #   outcome    3 waves survived, 0 of 800 health left, 229 dealt over 4 rounds, ended OutOfHealth
 #

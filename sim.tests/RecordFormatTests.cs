@@ -62,16 +62,22 @@ public class RecordFormatTests
         Assert.False(RecordFormat.IsKnown(RecordKind.Command, RecordFormat.CommandVersion + 1));
 
         // And now they are not constants that happen to be equal. The defense
-        // carries the map handle and the bundle carries the ruleset stamp, so
-        // each is a version 1; the command stream is at 3, having gained what a
-        // build phase built, then lost the take, then given a slot's position
-        // its release order; and the wave's bytes have never moved, so a
-        // version 1 of one is a version that has never existed. Four counters
-        // at three different numbers is what per-kind counting looks like once
-        // they have diverged.
+        // carries the map handle, so it is a version 1; the bundle gained the
+        // ruleset stamp and then the map's level plane, so it is a version 2;
+        // the command stream is at 3, having gained what a build phase built,
+        // then lost the take, then given a slot's position its release order;
+        // and the wave's bytes have never moved, so a version 1 of one is a
+        // version that has never existed. Four counters at four different
+        // numbers is what per-kind counting looks like once they have diverged.
+        //
+        // THE LEVEL PLANE IS THE CASE THAT SEPARATED THE LAST TWO. A map is now
+        // two planes and a bundle inlines its map, so the bundle's bytes moved
+        // while a defense's did not -- a defense names the hexes its towers
+        // stand on and never the map itself. A global counter would have made
+        // every stored defense look newer for it.
         Assert.Equal(1, RecordFormat.GhostVersion);
         Assert.Equal(0, RecordFormat.WaveVersion);
-        Assert.Equal(1, RecordFormat.ReplayVersion);
+        Assert.Equal(2, RecordFormat.ReplayVersion);
         Assert.Equal(3, RecordFormat.CommandVersion);
         Assert.False(RecordFormat.IsKnown(RecordKind.Wave, 1));
 
@@ -79,6 +85,7 @@ public class RecordFormatTests
         // branch deleted here is stored bytes this build can no longer open.
         Assert.True(RecordFormat.IsKnown(RecordKind.Ghost, 0));
         Assert.True(RecordFormat.IsKnown(RecordKind.Replay, 0));
+        Assert.True(RecordFormat.IsKnown(RecordKind.Replay, 1));
         Assert.True(RecordFormat.IsKnown(RecordKind.Command, 0));
         Assert.True(RecordFormat.IsKnown(RecordKind.Command, 1));
         Assert.True(RecordFormat.IsKnown(RecordKind.Command, 2));

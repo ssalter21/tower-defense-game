@@ -19,12 +19,22 @@ namespace Tests.EditMode
     {
         /// <summary>
         /// A three-cell straight corridor, so a hand-computed answer is
-        /// possible.
+        /// possible, with the level grid every map carries under its terrain.
         /// </summary>
+        /// <remarks>
+        /// Every hex on the ground tier: what these assert is the view's
+        /// position arithmetic along the corridor, which a fold would have
+        /// nothing to say about until the height reaches
+        /// <see cref="HexGeometry"/>.
+        /// </remarks>
         private const string StraightMap =
             "....\n"
             + ".S#E\n"
-            + "....\n";
+            + "....\n"
+            + "\n"
+            + "aaaa\n"
+            + "aaaa\n"
+            + "aaaa\n";
 
         private static RoutePath Straight() => RoutePath.For(HexMap.Parse(StraightMap));
 

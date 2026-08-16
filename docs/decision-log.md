@@ -1013,6 +1013,24 @@ free.
 **What is free is the ghost record.** `TowerLayout` does not gain a level, so `RecordFormat.TowerBytes` stays
 at 6 and `GhostRecord` is untouched.
 
+**Corrected again on 16 August, by building the first half of it.** It is **five**, and the fifth is
+`SimulationVersion` **6 → 7**, taken in
+[#214](https://github.com/ssalter21/tower-defense-game/issues/214). Nothing about the tick loop moved — the
+committed match still leaks the same twelve creeps on the same tick 5283 — but `Match` opens its rolling state
+hash by folding the map hash, and the map hash now covers the height of every hex as well as its terrain. So
+every stored record's rolling hash stops reproducing while its outcome does not, which is exactly the condition
+the simulation version exists to retire records for. The rule-fingerprint table refused to let the number move
+without it, which is what that table is for; the row it wanted is `(7u, 0xF7A080A6691EA488UL)`.
+
+**And the map hash is compared under the layout a record stamped it at.** `hex-map/1` folded the terrain alone
+and `hex-map/2` folds the terrain and the levels, so the two are answers to different questions rather than two
+answers to one. A replay bundle carries its stamp and its grid in the same bytes under a format version that
+says which layout they were written at, so the older ones are still checked exactly — against the terrain,
+which is all they ever pinned. Without that, `content/golden/defense-0.replay` — the one bundle nobody can make
+again — would have failed the map gate on a layout bump, which is precisely the loss the restaging verb exists
+to prevent. What the bump does retire is a stamp arriving without its record: a stored defense matched against
+a map loaded today, folded under two layouts with nothing to say which.
+
 ### The map is text, and it is drawn by hand
 
 `content/map.txt` gains a **second grid block** for levels, written in letters — `a`, `b`, `c` for the three
@@ -1021,7 +1039,10 @@ indented in the file so what is typed matches the half-cell offset it produces. 
 which keeps the anti-cheat property and the a-map-is-a-seed property intact for free.
 
 The authoring loop is a sketch, transcribed once, and edited directly thereafter against a render command —
-chosen over a map editor because there is one map to draw and the file is the artefact that ships.
+chosen over a map editor because there is one map to draw and the file is the artefact that ships. That command
+is [`tools/render-map.ps1`](../tools/render-map.ps1), and it draws the **parsed** map: a file that will not
+load produces the loader's own refusal and no picture at all, so "is this a map yet" is answered by the same
+corridor assertion the simulation runs rather than by a second reader that would eventually disagree with it.
 
 ### The stat is called shield, and arcane stays where it was
 

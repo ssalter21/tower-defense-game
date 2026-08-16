@@ -9,10 +9,11 @@ public class ReplayBundleTests
     [Fact]
     public void A_bundle_is_the_header_the_ruleset_the_seed_the_map_the_defense_and_the_wave_and_nothing_else()
     {
-        // Header, ruleset hash, seed, width, height, the grid, the defense and
-        // the wave -- nothing else fits. The eight bytes of ruleset hash are the
-        // whole of format version 1; if this number grows again without the
-        // format version moving, that is the mistake this assertion catches.
+        // Header, ruleset hash, seed, width, height, the terrain grid, the level
+        // grid, the defense and the wave -- nothing else fits. The second plane
+        // of a hundred and thirty-five bytes is the whole of format version 2;
+        // if this number grows again without the format version moving, that is
+        // the mistake this assertion catches.
         UnitTypeTable types = TheMatch.Types();
         ReplayBundle bundle = TheMatch.Bundle();
 
@@ -21,7 +22,7 @@ public class ReplayBundleTests
         int wave = TheMatch.WaveOf(types).ToBytes().Length;
 
         Assert.Equal(135, cells);
-        Assert.Equal(18 + 8 + 8 + 2 + 2 + cells + ghost + wave, bundle.ToBytes().Length);
+        Assert.Equal(18 + 8 + 8 + 2 + 2 + cells + cells + ghost + wave, bundle.ToBytes().Length);
     }
 
     [Fact]
@@ -117,7 +118,8 @@ public class ReplayBundleTests
         // the code HexMap.Parse traces it with, so the maps the two would
         // disagree about do not exist.
         HexMap map = TheMatch.Map();
-        HexMap rebuilt = HexMap.FromCells("inlined", map.Width, map.Height, map.ToCellBytes());
+        HexMap rebuilt =
+            HexMap.FromCells("inlined", map.Width, map.Height, map.ToCellBytes(), map.ToLevelBytes());
 
         Assert.Equal(map.MapHash, rebuilt.MapHash);
         Assert.Equal(map.Route.Count, rebuilt.Route.Count);
@@ -165,8 +167,72 @@ public class ReplayBundleTests
     public void A_grid_whose_shape_and_contents_disagree_refuses()
     {
         ContentException thrown = Assert.Throws<ContentException>(
-            () => HexMap.FromCells("inlined", 5, 3, new byte[14]));
+            () => HexMap.FromCells("inlined", 5, 3, new byte[14], new byte[14]));
 
         Assert.Contains("no unambiguous reading", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_grid_with_a_level_for_every_hex_but_one_refuses()
+    {
+        // The second plane is checked against the first rather than against the
+        // shape, because a plane that is short by one is a hex standing at a
+        // height nothing in the record states.
+        HexMap map = TheMatch.Map();
+
+        ContentException thrown = Assert.Throws<ContentException>(() => HexMap.FromCells(
+            "inlined",
+            map.Width,
+            map.Height,
+            map.ToCellBytes(),
+            new byte[(map.Width * map.Height) - 1]));
+
+        Assert.Contains("levels", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_level_byte_outside_the_three_tiers_refuses()
+    {
+        // The terrain plane's own validation is untouched by the levels
+        // arriving, which is the whole reason they arrive as a second plane
+        // rather than as a widened cell encoding -- so this is a second, narrow
+        // refusal and not a wider one.
+        HexMap map = TheMatch.Map();
+        byte[] levels = map.ToLevelBytes();
+        levels[0] = (byte)HexMap.LevelCount;
+
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => HexMap.FromCells("inlined", map.Width, map.Height, map.ToCellBytes(), levels));
+
+        Assert.Contains("tiers", thrown.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_bundle_written_before_the_level_plane_reads_back_on_the_flat()
+    {
+        // The version-0 golden is the one bundle nobody can make again, and it
+        // was recorded on a board that had no second tier to stand on. So the
+        // plane its branch supplies is not a defaulted field: it is the height
+        // that record was actually played at, and the only one it could have
+        // been.
+        ReplayBundle old = ReplayBundle.FromBytes(
+            File.ReadAllBytes(RepoLayout.GoldenBundleFile(0)));
+
+        Assert.Equal(0, old.Header.FormatVersion);
+
+        for (int row = 0; row < old.Map.Height; row++)
+        {
+            for (int column = 0; column < old.Map.Width; column++)
+            {
+                Assert.Equal(0, old.Map.LevelAt(column, row));
+            }
+        }
+
+        // And its map stamp still checks out, exactly, under the layout it was
+        // taken at -- which is the layout that covered the terrain alone. A
+        // reader comparing it against today's fold would be reporting a layout
+        // bump as a record that contradicts itself.
+        Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
+        Assert.NotEqual(old.Ghost.MapHash, old.Map.MapHash);
     }
 }
