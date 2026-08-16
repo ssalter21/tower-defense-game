@@ -50,11 +50,24 @@ internal static class MapPicture
     /// <summary>The letter the lowest tier is written with, matching the file's.</summary>
     private const char FirstTier = 'a';
 
-    /// <summary>Ground, one entry per tier, palest first.</summary>
-    private static readonly string[] GroundByTier = { "#e4ead8", "#c3d1a8", "#9db477" };
+    // THE TWO RAMPS ARE AUTUMN, because the tile set is. `_Fall` was chosen in
+    // #213 and it sets the palette every unit, overlay and elevation cue reads
+    // against; a drawing surface on a different palette to the board it is
+    // drawing is a surface that flatters or libels a layout for reasons the
+    // layout has nothing to do with. Sampled from the pack's own atlas
+    // (client/Assets/Art/Buildings/hexagons_medieval.png) rather than invented.
+    //
+    // Hue separates the route from the ground and value separates the tiers,
+    // so the two questions -- which tier is this, and is this the path -- stay
+    // readable independently. Ground took the warm half because it is most of
+    // the board; the route is the cooler stone, which is also what a trodden
+    // path looks like.
 
-    /// <summary>Corridor, one entry per tier, on the same ramp in a warmer hue.</summary>
-    private static readonly string[] RouteByTier = { "#e6d3a8", "#cfb173", "#ad8b45" };
+    /// <summary>Ground, one entry per tier, palest first.</summary>
+    private static readonly string[] GroundByTier = { "#efdcb8", "#d5a862", "#a86232" };
+
+    /// <summary>Corridor, one entry per tier, on the same ramp in a cooler hue.</summary>
+    private static readonly string[] RouteByTier = { "#d8d2c6", "#a89d8b", "#736855" };
 
     private const string Ink = "#33312c";
 
