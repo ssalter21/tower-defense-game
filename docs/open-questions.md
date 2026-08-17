@@ -60,6 +60,25 @@ charging gold on top would make the token a permit rather than a price, which is
 different failure mode. Open beside them: **whether a token banks**, which leans toward yes, since a token
 that must be spent on the round it arrives forces the decision at the moment the run knows least.
 
+**Whether the wave is always on screen, or behind a control.** The
+[chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
+visible as a rail of portraits. Sam's remark on choosing it was that the sending is not the most important
+part, and that it may end up behind a UI element — which is a real option and worth stating rather than
+drifting into. **What it costs is stated too, because it cuts against a finding this project keeps making:**
+[the sending research](research/attack-composition-and-sending.md) and the
+[13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) both land on the
+attacking half being the underweighted one, and a surface that is behind a click is a surface that gets used
+less. The honest test is a sheet either way and a played round, not an argument.
+
+**What a thumbnail is, now that a layout depends on one.** `RosterThumbnails` returns null and says so
+deliberately — no per-unit image is committed anywhere, and both ways to close it are art decisions. The
+chosen arrangement puts portraits at the centre of the build phase, so the seam is now load-bearing. The
+mockups borrowed `tools/capture-armed-roster.ps1`'s framing — a three-quarter front at 215°, chosen to show
+both hands — keyed and cropped square, which is a stand-in and not a decision. The two answers on file are a
+committed image per live row, addressed by type id, or a bake with a camera, a pose and a framing chosen per
+unit and a static entry point under `tools/`. Either way it is a look, and looks are signed off; each unit's
+art direction is written on its **Looks** line in [the roster](roster.md).
+
 **Co-operative play.** Wanted, and deliberately unstructured. Every other mode fits the submit-wait-resolve
 loop; co-op may or may not, and it needs authored escalating content rather than player-composed waves, which
 is a different content problem from anything else here. Revisit once seams 1 and 2 have resolved.

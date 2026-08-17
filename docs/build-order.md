@@ -264,6 +264,27 @@ planning surface* and *the watching surface*, worth taking before either is char
 is where the simulation's value reaches a player: the computed highlight reel that makes a field of 100+
 watchable, the stats and histogram that turn a result into a comparison, and the deferred kill heatmap.
 
+**The build phase's arrangement is decided, and it was decided off pictures.** Six layouts were rendered
+against the real board with the real prices on them and chosen from by looking — the tool is
+[`tools/capture-ui-previews.ps1`](../tools/capture-ui-previews.ps1) and the reasoning for choosing that way is
+in [the chrome sheets](chrome/README.md). What was chosen, on 17 August 2026, is
+[`docs/chrome/chosen-build-phase.png`](chrome/chosen-build-phase.png):
+
+- **The chrome is as little as it can be** — one line of run state, one commit button, and nothing else that is
+  not about somewhere in particular.
+- **Towers are chosen at the hex.** Hovering lights a cell and the options open beside it, carrying a portrait,
+  a name and a price each. The menu never covers the cell, because the cell is what the choice is being made
+  against.
+- **The side rail is the wave**, in portraits, in send order. It is the one half of the decision with nowhere
+  else to live, and putting it there is what stops anything appearing twice.
+
+**Two consequences, and neither is free.** The rail's portraits make
+[the thumbnail seam](#3--the-roster) load-bearing rather than optional — `RosterThumbnails` returns null today
+and the mockups borrowed the armed roster's framing, which is a stand-in and not an answer. And the hex menu
+comfortably holds three towers against a roster that is meant to get deeper, so **the menu is the surface that
+has to survive seam 3**, and it wants a sheet of its own against a padded-out roster before any of this is
+built.
+
 ### 8 · The presentation
 
 The KayKit purchase and licence confirmation

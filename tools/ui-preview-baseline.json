@@ -1,0 +1,25 @@
+{
+  "outDir": "docs/chrome",
+  "width": 1600,
+  "shots": [
+    {
+      "id": "as-built-build",
+      "label": "The opening build phase",
+      "state": "build",
+      "notes": "A hundred gold, nothing placed, nothing sent."
+    },
+    {
+      "id": "as-built-placed",
+      "label": "A tower down and a wave started",
+      "state": "build-placed",
+      "notes": "One soldier and two creeps, at 44 gold left."
+    },
+    {
+      "id": "as-built-offer",
+      "label": "The ladder open on an archer",
+      "state": "build-offer",
+      "place": "archer",
+      "notes": "The one edge content/upgrades.txt authors: archer into ranger, 40 gold."
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# The capture writes one sheet per shot in whatever spec it was handed, and a
+# manifest beside them. Three sheets are committed as the baseline a candidate
+# layout is held against; README.md says which three and why.
+#
+# Everything else must not be committed, and that cannot be left to whoever runs
+# the capture next. The fourth working agreement is explicit about it: "if a
+# generated file must **not** be committed, that has to be arranged by
+# construction -- an ignore rule -- and not by remembering."
+#
+# A candidate layout is a scratch class staged into the project for one run, so
+# the sheets it produces are scratch too. Without this file they sit untracked
+# in the tree and the build gate's last step -- the one that fails a push whose
+# run rewrote the repository -- goes red for a reason that has nothing to do
+# with the push.
+#
+# The three negations are not load-bearing today, because an ignore rule cannot
+# govern a file git already tracks. They are here so that re-adding a sheet
+# after a deliberate deletion works without anybody having to remember this file
+# exists.
+*.png
+manifest.json
+!as-built-build.png
+!as-built-placed.png
+!as-built-offer.png
+!chosen-build-phase.png
