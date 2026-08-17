@@ -646,14 +646,17 @@ namespace View.Editor
             }
         }
 
-        private static IEnumerable<UIDocument> Chrome(MatchRoot root, RunLoop loop)
-        {
-            if (loop?.Header?.Document != null) { yield return loop.Header.Document; }
-            if (root.Palette?.Document != null) { yield return root.Palette.Document; }
-            if (root.Wave?.Document != null) { yield return root.Wave.Document; }
-            if (root.Controls?.Document != null) { yield return root.Controls.Document; }
-            if (loop?.Switch?.Document != null) { yield return loop.Switch.Document; }
-        }
+        /// <summary>
+        /// Every panel on screen, the shipped bars and a candidate's own alike.
+        /// </summary>
+        /// <remarks>
+        /// Found rather than listed, because a candidate layout puts up panels
+        /// this class has never heard of and a panel nobody redirected draws to
+        /// the screen instead of to the sheet — which is to say, nowhere, and
+        /// silently.
+        /// </remarks>
+        private static IEnumerable<UIDocument> Chrome(MatchRoot root, RunLoop loop) =>
+            UnityEngine.Object.FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
 
         private static void Tick()
         {
@@ -796,6 +799,14 @@ namespace View.Editor
         /// <summary>Whether anything on this panel is on screen at all.</summary>
         private static bool Displayed(VisualElement panel)
         {
+            // The root as well as what is on it. A candidate layout takes the
+            // shipped bars down by hiding the panel itself, and a check that
+            // only looked at the children would then judge a bar nobody can see.
+            if (panel.resolvedStyle.display == DisplayStyle.None)
+            {
+                return false;
+            }
+
             for (int index = 0; index < panel.childCount; index++)
             {
                 if (panel[index].resolvedStyle.display != DisplayStyle.None)

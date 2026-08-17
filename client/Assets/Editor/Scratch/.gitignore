@@ -1,0 +1,15 @@
+# Candidate layouts live here and are never committed.
+#
+# A candidate is staged into the project for one capture and deleted afterwards,
+# exactly as a candidate model is for tools/capture-art-previews.ps1: nothing
+# unchosen is ever committed, so nothing unchosen may be left in the tree either.
+# What survives a capture is the sheet, and the sheet is what somebody chooses
+# from.
+#
+# Arranged by construction rather than by remembering, which is the fourth
+# working agreement's corollary. Without this file every experiment leaves
+# untracked .cs and .meta behind, and the build gate's last step -- the one that
+# fails a push whose run rewrote the repository -- goes red for a reason that has
+# nothing to do with the push.
+*
+!.gitignore
