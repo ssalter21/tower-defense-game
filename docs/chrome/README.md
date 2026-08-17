@@ -41,7 +41,10 @@ A spec names an output directory, a sheet width, and the shots:
 }
 ```
 
-- **`state`** — `build`, `build-placed` or `build-offer`.
+- **`state`** — `build` (the opening phase), `build-placed` (a tower down, two creeps sent), `build-hover` (the
+  same, with the cell under the pointer lit through `BuildBoard.Lit`) or `build-offer` (the upgrade ladder
+  open). `build-hover` spends less on creeps than it could, on purpose: a hex lights only where the rules would
+  take a tower, so a state that had spent the last of the gold refuses to hover at all.
 - **`place`** — which tower a composed state buys, by its label in `content/units.txt`. The ladder has one edge
   in it today, so a shot of the upgrade offer is a shot of an **archer** and of nothing else; a shot that asks
   for the offer and does not get it is refused rather than written, because an offer that did not open renders
@@ -54,7 +57,15 @@ it as *invalid escape character* rather than as a bad path.
 
 ## What is committed
 
-Three sheets, kept as the baseline a candidate is held against:
+**The chosen arrangement**, which is what the build phase is being built toward:
+
+- `chosen-build-phase.png` — chrome cut to a line of run state and a commit; towers chosen at the hex, with the
+  options opening beside the cell the hover lit; the wave along a side rail in portraits. Decided 17 August
+  2026, from six rendered layouts. Recorded in
+  [the build order](../build-order.md#7--the-interface), with its two loose ends in
+  [open questions](../open-questions.md).
+
+**The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.
 - `as-built-placed.png` — a soldier down and two creeps in the wave, at 44 gold left.
