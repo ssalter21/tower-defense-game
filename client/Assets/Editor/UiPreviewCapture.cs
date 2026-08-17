@@ -374,6 +374,18 @@ namespace View.Editor
                     Send(root, 2);
                     return;
 
+                case "build-hover":
+                    Place(root, shot.place, out _, out _);
+
+                    // Two, and the number is the purse again. A hex lights only
+                    // where the rules would take a tower, so a state that had
+                    // spent the last of the gold on creeps refuses to hover at
+                    // all -- correctly, and uselessly for a sheet about
+                    // hovering.
+                    Send(root, 2);
+                    Hover(root);
+                    return;
+
                 case "build-offer":
                     Place(root, shot.place, out int column, out int row);
                     root.Palette.Offer(column, row);
@@ -398,7 +410,8 @@ namespace View.Editor
 
                 default:
                     throw new InvalidDataException(
-                        "No state called \"" + shot.state + "\". It is build, build-placed or build-offer.");
+                        "No state called \"" + shot.state + "\". It is build, build-placed, build-hover "
+                        + "or build-offer.");
             }
         }
 
@@ -479,6 +492,38 @@ namespace View.Editor
 
             root.Building.Follow();
             root.Palette.Follow();
+        }
+
+        /// <summary>
+        /// Lights the cell the pointer would be over: the nearest one to the
+        /// middle that would take a tower.
+        /// </summary>
+        /// <remarks>
+        /// <b>Through <see cref="BuildBoard.Lit"/>, which is the game's own
+        /// hover.</b> The lit hex is prevention made visible — it lights where
+        /// the rules resolved and nowhere else — so a candidate that draws a
+        /// menu beside it is drawing beside the real affordance rather than
+        /// beside a rectangle somebody invented for a sheet. Where the cell is
+        /// is then readable off <see cref="BuildBoard.LitColumn"/>, which is how
+        /// a candidate knows where to put the menu.
+        /// </remarks>
+        private static void Hover(MatchRoot root)
+        {
+            ComposedRound round = root.Composing;
+
+            foreach (UnitType tower in round.Palette)
+            {
+                if (FirstLegalCell(round, tower, out int column, out int row))
+                {
+                    root.Building.Lit(column, row);
+
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException(
+                "No cell would take a tower, so there is no hover to draw and a sheet of one would be "
+                + "a picture of a pointer over nothing.");
         }
 
         /// <summary>
