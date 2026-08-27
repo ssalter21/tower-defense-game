@@ -50,7 +50,7 @@ public class BuildPhaseTests
     private const int FreeRow = 0;
 
     /// <summary>The other ground cell: the one <see cref="Standing"/> puts an archer on.</summary>
-    private const int StandingColumn = 3;
+    private const int StandingColumn = 6;
 
     /// <summary>Its row.</summary>
     private const int StandingRow = 2;
@@ -756,7 +756,7 @@ public class BuildPhaseTests
 
         // An upgrade names a row of the same half of the table.
         Assert.Contains(
-            "A build phase at wave 1 upgrades at column 3, row 2 requiring a placed unit",
+            "A build phase at wave 1 upgrades at column 6, row 2 requiring a placed unit",
             Assert.Throws<SimulationException>(
                 () => Acting(run, ActionKind.Upgrade, Minion, StandingColumn, StandingRow)).Message,
             StringComparison.Ordinal);
@@ -841,11 +841,11 @@ public class BuildPhaseTests
 
         Assert.Contains(
             "which is a corridor cell",
-            Assert.Throws<SimulationException>(() => Acting(run, ActionKind.Place, Archer, 3, 1)).Message,
+            Assert.Throws<SimulationException>(() => Acting(run, ActionKind.Place, Archer, 4, 1)).Message,
             StringComparison.Ordinal);
 
         Assert.Contains(
-            "which is off a 15 by 9 map",
+            "which is off a 19 by 13 map",
             Assert.Throws<SimulationException>(() => Acting(run, ActionKind.Place, Archer, 20, 0)).Message,
             StringComparison.Ordinal);
 

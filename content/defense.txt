@@ -31,11 +31,22 @@
 # themselves would never exercise overkill, never exercise a shot arriving at
 # something already dying, and never make iteration order matter -- so every
 # one of these six shares a stretch of corridor with at least one other, and
-# the build gate asserts that rather than leaving it to this comment. The
-# corridor is deliberately not covered everywhere: the first few hexes past the
-# entrance are watched by one tower and the stretch either side of the first
-# corner by one as well, which is a large part of why a third of the wave gets
-# through.
+# the build gate asserts that rather than leaving it to this comment.
+#
+# THESE SIX WERE COMPUTED AND NOT CHOSEN. They are what CoverThenUpgradeBot's
+# rule picks on the current map -- the type covering the most unshot route per
+# gold, six times, under the overlap the gate asserts -- because coordinates
+# chosen by hand are coordinates that go stale the next time the board is
+# redrawn, silently and everywhere at once. The mix is the one this file has
+# always had: four bolts and two mortars.
+#
+# THE ROUTE IS COVERED END TO END, which the folded board is the reason for: on
+# the old corridor six towers left gaps near the entrance and either side of the
+# first corner, and a third of the wave walked through them. Here nothing is
+# unwatched, so what leaks now leaks because the wall cannot kill fast enough
+# rather than because it cannot see. Whether that is the right shape for the
+# opponents' wall is #222 -- the ghosts' wave grows every round and
+# this wall does not.
 #
 # The loader refuses a tower that is off the grid, a tower standing inside the
 # corridor, and a tower whose range cannot reach the route at all. The last is
@@ -49,9 +60,9 @@
 # type 4 : mortar, projectile, four hexes -- puts a real entity in the snapshot
 #          that flies for eleven ticks and can be orphaned mid-flight
 
-tower   4     9    0
-tower   3     3    2
-tower   3     6    4
-tower   3     12   4
-tower   4     4    6
-tower   3     10   8
+tower   3     4    3
+tower   3     14   3
+tower   3     14   8
+tower   4     7    9
+tower   3     6    10
+tower   4     13   10

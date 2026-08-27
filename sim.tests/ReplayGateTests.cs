@@ -253,7 +253,18 @@ public class ReplayGateTests
         Assert.Null(restaged.RecordedRulesetHash);
         Assert.False(restaged.RulesetsCoincide);
         Assert.Contains("no ruleset stamp", restaged.ToString(), StringComparison.Ordinal);
-        Assert.Equal(TheMatch.Fresh().Resolve().RollingStateHash, restaged.Match.Resolve().RollingStateHash);
+
+        // NOT THE LIVE MATCH'S HASH, and the difference is the level plane. A
+        // version-0 bundle predates it, so stripping today's record back to
+        // version 0 throws the tiers away and restages the folded board flat --
+        // a different match, legitimately, and the same reason the version-1
+        // bundle now leaks fifteen where the committed run leaks twelve. While
+        // the map was flat these two hashes agreed for a reason that had
+        // nothing to do with restaging, and this assertion proved less than it
+        // looked like it did.
+        Assert.Equal(
+            "F1B4F0BAC3B39D51",
+            restaged.Match.Resolve().RollingStateHash.ToString());
     }
 
     [Fact]

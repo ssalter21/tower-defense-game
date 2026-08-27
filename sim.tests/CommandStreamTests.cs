@@ -538,7 +538,7 @@ public class CommandStreamTests
         // that stopped paying the rounds it was walking refuses at load what it
         // has no way of knowing the run could afford.
         //
-        // The ceiling is observed by what it admits. This run holds 666 gold
+        // The ceiling is observed by what it admits. This run holds 670 gold
         // when its fourth build phase stands and the walk carries 681 -- three
         // waves whose whole price it credited them with leaking -- so a fourth
         // wave costing 680 is a decision the walk has to let past and the round
@@ -547,9 +547,9 @@ public class CommandStreamTests
         //
         // OBSERVED, on the ceiling: close the walk's waves at
         // CloseWaveAtBest(run.Rules, 0) instead -- a bound of nothing dealt. The
-        // walk then holds 663, three gold under the 666 the run itself does, and
-        // the Check below goes red -- "A build phase at wave 4 buys 680 gold of
-        // creeps out of a purse holding 663" -- refusing at load rather than at
+        // walk then holds less than the 670 the run itself does, and the Check
+        // below goes red -- "A build phase at wave 4 buys 680 gold of creeps
+        // out of a purse holding" that lesser figure -- refusing at load rather than at
         // the round, which is what a floor does to every decision a run's own
         // bonus paid for.
         Run run = TheCommands.Fresh();
@@ -573,7 +573,7 @@ public class CommandStreamTests
         // it. The overspend has to be an increase over what the round already
         // fields, because a creep is bought once and only the increase is
         // charged -- and every carried slot has to stay in, because a wave may
-        // only grow. Sixty-eight of them is 680 gold: over the 666 the round
+        // only grow. Sixty-eight of them is 680 gold: over the 670 the round
         // holds and under the 681 the walk carries, which is the window the
         // ordering below is about and which the tighter ceiling narrowed.
         var overspent = new List<RecordCommand>(decisions)
@@ -608,9 +608,9 @@ public class CommandStreamTests
 
         // The purse the round really held, which is the lower half of the
         // ordering: the walk let 680 past on a ceiling of 681 and the round
-        // turned it down on 666. Asserted rather than described, so that a
+        // turned it down on 670. Asserted rather than described, so that a
         // change to either number is a red test and not a stale comment.
-        Assert.Equal(666, partway.Purse.Gold);
+        Assert.Equal(670, partway.Purse.Gold);
 
         // And the upper half: a wave over the ceiling is refused at load, before
         // a round is played, because no run could have afforded it however well

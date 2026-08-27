@@ -36,6 +36,8 @@ public class BoardMapTests
     /// <summary>The ranger, which is what that edge points at.</summary>
     private const int RangerId = 14;
 
+
+
     [Fact]
     public void The_map_draws_what_the_committed_run_has_standing_at_wave_four()
     {
@@ -55,22 +57,26 @@ public class BoardMapTests
         // and 6 2 there one fact rather than two: swap the two operands
         // anywhere and this block reads 2,6.
         //
-        // OBSERVED: set BoardMap.OddRowIndent to zero. Rows 1, 3, 5 and 7 come
-        // back flush with the even ones, the corridor stops stepping sideways
-        // at its turns, and a player counting to the entrance reads column 1
-        // for a hex the map puts at column 1 of a shifted row.
+        // OBSERVED: set BoardMap.OddRowIndent to zero. The odd rows come back
+        // flush with the even ones, the corridor stops stepping sideways at its
+        // turns, and a player counting across row 3 to the descent reads column
+        // 3 for a hex the map puts at column 2 of a shifted row.
         Assert.Equal(
             """
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        standing
-             2    .  .  .  .  .  .  a  .  .  .  .  .  #  .  .          1  a  archer   6,2
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .        2  a  archer   7,4
-             4    .  .  #  .  .  .  .  a  .  .  .  .  .  .  .          3  a  archer   7,6
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .
-             6    .  .  .  .  .  .  .  a  .  .  .  .  .  #  .
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
+             0    .  .  .  .  S  .  .  .  .  .  .  .  .  .  .  .  E  .  .
+             1      .  .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  #  .  .        standing
+             2    .  .  .  #  #  .  a  .  .  .  .  .  .  .  .  .  #  .  .          1  a  archer   6,2
+             3      .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .        2  a  archer   7,4
+             4    .  .  .  #  #  #  #  a  .  .  .  .  .  .  .  .  #  .  .          3  a  archer   7,6
+             5      .  .  .  .  .  .  #  .  .  .  #  #  #  #  #  #  .  .  .
+             6    .  .  .  .  .  .  #  a  .  .  #  .  .  .  .  .  .  .  .
+             7      .  .  .  .  .  .  #  .  .  .  #  #  #  #  #  #  .  .  .
+             8    .  .  .  .  #  #  #  .  .  .  .  .  .  .  .  .  #  .  .
+             9      .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            10    .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            11      .  .  .  #  #  #  #  #  #  #  #  #  #  #  #  #  .  .  .
+            12    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             """,
             BoardMap.ToText(Map(), board, Ladder(types)));
     }
@@ -85,7 +91,7 @@ public class BoardMapTests
             .Place(archer, 6, 2)
             .Place(archer, 7, 4)
             .Place(archer, 7, 6)
-            .Place(archer, 4, 4)
+            .Place(archer, 4, 5)
             .Upgrade(types.ById(RangerId), 6, 2);
 
         // The ranger is still placement 1 on the cell placement 1 was made on,
@@ -98,16 +104,20 @@ public class BoardMapTests
         // purse looks exactly like the three that did not.
         Assert.Equal(
             """
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        standing
-             2    .  .  .  .  .  .  R  .  .  .  .  .  #  .  .          1  R  ranger   6,2
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .        2  a  archer   7,4
-             4    .  .  #  .  a  .  .  a  .  .  .  .  .  .  .          3  a  archer   7,6
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .        4  a  archer   4,4
-             6    .  .  .  .  .  .  .  a  .  .  .  .  .  #  .
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
+             0    .  .  .  .  S  .  .  .  .  .  .  .  .  .  .  .  E  .  .
+             1      .  .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  #  .  .        standing
+             2    .  .  .  #  #  .  R  .  .  .  .  .  .  .  .  .  #  .  .          1  R  ranger   6,2
+             3      .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .        2  a  archer   7,4
+             4    .  .  .  #  #  #  #  a  .  .  .  .  .  .  .  .  #  .  .          3  a  archer   7,6
+             5      .  .  .  .  a  .  #  .  .  .  #  #  #  #  #  #  .  .  .        4  a  archer   4,5
+             6    .  .  .  .  .  .  #  a  .  .  #  .  .  .  .  .  .  .  .
+             7      .  .  .  .  .  .  #  .  .  .  #  #  #  #  #  #  .  .  .
+             8    .  .  .  .  #  #  #  .  .  .  .  .  .  .  .  .  #  .  .
+             9      .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            10    .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            11      .  .  .  #  #  #  #  #  #  #  #  #  #  #  #  #  .  .  .
+            12    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             """,
             BoardMap.ToText(Map(), board, Ladder(types)));
     }
@@ -124,16 +134,20 @@ public class BoardMapTests
         // drawing that ran out of output.
         Assert.Equal(
             """
-                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
-             0    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
-             1      .  S  #  #  #  #  #  #  #  #  #  #  .  .  .        nothing standing
-             2    .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
-             3      .  .  #  #  #  #  #  #  #  #  #  #  .  .  .
-             4    .  .  #  .  .  .  .  .  .  .  .  .  .  .  .
-             5      .  .  #  #  #  #  #  #  #  #  #  #  #  .  .
-             6    .  .  .  .  .  .  .  .  .  .  .  .  .  #  .
-             7      .  E  #  #  #  #  #  #  #  #  #  #  #  .  .
-             8    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
+                  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18
+             0    .  .  .  .  S  .  .  .  .  .  .  .  .  .  .  .  E  .  .
+             1      .  .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  #  .  .        nothing standing
+             2    .  .  .  #  #  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+             3      .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+             4    .  .  .  #  #  #  #  .  .  .  .  .  .  .  .  .  #  .  .
+             5      .  .  .  .  .  .  #  .  .  .  #  #  #  #  #  #  .  .  .
+             6    .  .  .  .  .  .  #  .  .  .  #  .  .  .  .  .  .  .  .
+             7      .  .  .  .  .  .  #  .  .  .  #  #  #  #  #  #  .  .  .
+             8    .  .  .  .  #  #  #  .  .  .  .  .  .  .  .  .  #  .  .
+             9      .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            10    .  .  .  #  .  .  .  .  .  .  .  .  .  .  .  .  #  .  .
+            11      .  .  .  #  #  #  #  #  #  #  #  #  #  #  #  #  .  .  .
+            12    .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .  .
             """,
             BoardMap.ToText(Map(), Board.Empty, Ladder(Types())));
     }

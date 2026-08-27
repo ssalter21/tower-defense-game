@@ -1,5 +1,5 @@
 // The playfield: one hex corridor, exactly one hex wide, never branching, and
-// the tier every hex of it stands at.
+// the tier every hex of it stands at. It folds, and it climbs.
 //
 // '.' ground   '#' corridor   'S' the entrance   'E' the exit
 // 'a' the ground tier   'b' the tier above it   'c' the one above that
@@ -24,33 +24,44 @@
 // stores a cube coordinate; how any of it is drawn is a view question and does
 // not reach here.
 //
+// THE OFFSET DECIDES WHERE A CORNER MAY GO, and this is the rule a hand drawing
+// breaks first. A cell in an odd row touches the two cells above it at its own
+// column and one to the RIGHT; a cell in an even row touches its own column and
+// one to the LEFT. So a turn has to leave the other of that pair empty, or the
+// cell it turns into touches three corridor cells and reads as a junction. A
+// square-grid corner is one cell too tight here, every time.
+//
 // The loader asserts the corridor is well formed rather than trusting this
 // comment: every corridor cell has one or two corridor neighbours, exactly
 // two have one, those two are S and E, and the walk from S to E visits all
-// forty-seven of them.
-//
-// Every hex is on the ground tier, which is the flat corridor this skeleton has
-// always been. The folded map with real elevation is drawn by hand, once, and
-// it is not this file yet.
+// 51 of them.
 //
 // Draw it: ./tools/render-map.ps1
 
-...............
- .S##########...
-............#..
- ..##########...
-..#............
- ..###########..
-.............#.
- .E###########..
-...............
+....S...........E..
+ ....#...........#..
+...##...........#..
+ ..#.............#..
+...####.........#..
+ ......#...######...
+......#...#........
+ ......#...######...
+....###.........#..
+ ...#............#..
+...#............#..
+ ...#############...
+...................
 
-aaaaaaaaaaaaaaa
- aaaaaaaaaaaaaaa
-aaaaaaaaaaaaaaa
- aaaaaaaaaaaaaaa
-aaaaaaaaaaaaaaa
- aaaaaaaaaaaaaaa
-aaaaaaaaaaaaaaa
- aaaaaaaaaaaaaaa
-aaaaaaaaaaaaaaa
+aaaaaaaaaaaaaaaabbb
+ aaaaaaaaaaaaaaaabbb
+aaaaaaaaaaaaaaaabbb
+ aaaaaaaaaaaaabbbbbb
+aaaaaaaaabbbbbbbbbb
+ aaaaaaaaabaaabbbbbb
+aaaaaaaaababbbbbbbb
+ aaaaaaaabbaabbbbbbb
+aaaaaaaabbbbbbbbbbc
+ aaaaaaabbbbbbbccbcc
+abbabbbbbbbbbcccbcc
+ bbbaabbbbbbbbbbbbcc
+bbbbbbbbbbbbccccccc

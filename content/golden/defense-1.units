@@ -142,9 +142,11 @@
 # duration here -- cooldown, windup, backswing, flight, dying -- was multiplied
 # by three and every walking speed divided by it. Damage, health, range and
 # every cost were left exactly where they were, so this changed how the game
-# feels and no balance at all: a Minion crosses the forty-seven hex corridor in
-# fifty-six seconds instead of eighteen, and a wave resolves in about three
-# minutes instead of one.
+# feels and no balance at all: a Minion crossed the forty-seven hex corridor it
+# was measured on in fifty-six seconds instead of eighteen, and a wave resolves
+# in about three minutes instead of one. That corridor has since been replaced
+# by the folded fifty-one hex board, which the same Minion crosses in about
+# sixty-one seconds; the dilation above is untouched by that.
 #
 # THE COMMITTED DEFENSE IS FOUR ARCHERS AND TWO MAGES, so it is a pierce line
 # with a magic tail, and every health pool below is authored against what that

@@ -261,9 +261,12 @@ Five consequences, none optional:
 ⚠️ **The bill it presents is ordering.** The single path is what preserves the send column; a map is designed
 to keep that order rather than merely to be interesting.
 
-⚠️ **Until the maze lands, the board is a 47-hex corridor one cell wide, and every number priced against it is
-provisional by construction.** On one-wide geometry many placements are equivalent, so the build phase will
-feel thin — a fact about *this* corridor, not about the mechanism.
+⚠️ **Until the maze lands, the board is a hand-drawn 51-hex corridor one cell wide that folds and climbs
+through three tiers, and every number priced against it is provisional by construction.** The corridor is still
+one hex wide, so placements along a single leg remain close to equivalent; what the three tiers add is that a
+tier is worth half a hex of reach, which makes the same cell a different placement depending on what it stands
+on. How much of the thinness that actually removes is not yet measured — a fact about *this* board, not about
+the mechanism.
 
 ### The map rotates, and it is generated
 

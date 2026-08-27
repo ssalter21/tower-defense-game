@@ -33,9 +33,9 @@ public class DefenseTests
         TowerLayout layout = TheMatch.Layout(TheMatch.Types());
 
         Assert.Equal(6, layout.Count);
-        Assert.Equal(4, layout.Towers[0].Type.Id);
-        Assert.Equal(9, layout.Towers[0].Column);
-        Assert.Equal(0, layout.Towers[0].Row);
+        Assert.Equal(3, layout.Towers[0].Type.Id);
+        Assert.Equal(4, layout.Towers[0].Column);
+        Assert.Equal(3, layout.Towers[0].Row);
     }
 
     [Fact]
@@ -81,10 +81,10 @@ public class DefenseTests
     [Fact]
     public void A_tower_standing_in_the_corridor_refuses_to_load()
     {
-        // Column 3, row 1 is corridor on the committed map. A tower there would
+        // Column 4, row 1 is corridor on the committed map. A tower there would
         // be a wall, and a wall is how mazing gets in.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => TowerCoverage.For(TheMatch.Map(), TowerLayout.Parse("tower 3 3 1", TheMatch.Types())));
+            () => TowerCoverage.For(TheMatch.Map(), TowerLayout.Parse("tower 3 4 1", TheMatch.Types())));
 
         Assert.Contains("corridor cell", thrown.Message, StringComparison.Ordinal);
     }
@@ -127,7 +127,7 @@ public class DefenseTests
         // answers do not invent one -- what comes back is a clause, and each
         // caller supplies its own subject and its own exception.
         Footing offMap = Footing.Of(map, bolt, 40, 40);
-        Footing corridor = Footing.Of(map, bolt, 3, 1);
+        Footing corridor = Footing.Of(map, bolt, 4, 1);
         Footing sound = Footing.Of(map, standing.Type, standing.Column, standing.Row);
 
         Assert.False(offMap.Possible);
@@ -187,7 +187,7 @@ public class DefenseTests
         // Zero, because a placement carries no line. The refusal survives the
         // absence of one; only the reason changes.
         ContentException corridor = Assert.Throws<ContentException>(
-            () => TowerCoverage.For(TheMatch.Map(), Board.Empty.Place(types.ById(3), 3, 1).Layout()));
+            () => TowerCoverage.For(TheMatch.Map(), Board.Empty.Place(types.ById(3), 4, 1).Layout()));
 
         Assert.Contains("corridor cell", corridor.Message, StringComparison.Ordinal);
         Assert.Equal(0, corridor.Line);
