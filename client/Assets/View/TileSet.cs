@@ -69,11 +69,48 @@ namespace View
         private Material grass;
 
         /// <summary>
+        /// A set of real tiles, built in code rather than deserialized.
+        /// </summary>
+        /// <remarks>
+        /// For the editor tools that assemble a root themselves instead of
+        /// opening the scene — the frame capture is the one that matters. They
+        /// get the same tiles the scene carries by calling the same loader,
+        /// rather than by drawing the blockout and being quietly a picture of
+        /// something the project does not ship.
+        /// </remarks>
+        public static TileSet Of(
+            Mesh ground,
+            Mesh straight,
+            Mesh curve,
+            Mesh hairpin,
+            Mesh deadEnd,
+            Mesh straightRamp,
+            Material surface) =>
+            new TileSet
+            {
+                ground = ground,
+                straight = straight,
+                curve = curve,
+                hairpin = hairpin,
+                deadEnd = deadEnd,
+                straightRamp = straightRamp,
+                surface = surface,
+            };
+
+        /// <summary>
         /// A set that draws every cell with the generated hexagon, telling road
         /// from ground by colour alone. What the project falls back to when no
         /// tile models are wired, and what
         /// <see cref="HexTileMesh"/> exists for.
         /// </summary>
+        /// <remarks>
+        /// <b>The blockout hexagon is flat, and on a board with tiers that
+        /// shows.</b> It is a seven-vertex fan with no sides, so a tile raised a
+        /// tier has nothing standing under its rim and the background is visible
+        /// through the step. That is not a bug to fix in the blockout — it is
+        /// what marks the seam, and the imported tiles have the metre of body
+        /// underneath that closes it.
+        /// </remarks>
         public static TileSet Blockout(Mesh generated, Material roadMaterial, Material grassMaterial) =>
             new TileSet
             {

@@ -554,12 +554,12 @@ namespace View
         /// The order matters in one place only: the camera is framed on bounds
         /// the floor reports, so the floor goes first.
         /// </remarks>
-        public void Build(HexMap map)
+        public void Build(HexMap map, TileSet tiles = null)
         {
             Map = map;
             TileMesh = HexTileMesh.Create();
 
-            Floor = HexFloor.Build(transform, map, TilesToDrawWith());
+            Floor = HexFloor.Build(transform, map, TilesToDrawWith(tiles));
 
             Sun = BuildSun(transform);
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
@@ -577,8 +577,13 @@ namespace View
         /// but half-filled falls back rather than drawing holes; see
         /// <see cref="TileSet.IsComplete"/>.
         /// </remarks>
-        private TileSet TilesToDrawWith()
+        private TileSet TilesToDrawWith(TileSet supplied)
         {
+            if (supplied != null && supplied.IsComplete)
+            {
+                return supplied;
+            }
+
             if (tiles != null && tiles.IsComplete)
             {
                 return tiles;

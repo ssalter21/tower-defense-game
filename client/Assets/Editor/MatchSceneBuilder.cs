@@ -270,18 +270,10 @@ namespace View.Editor
         /// </remarks>
         private static void WireTiles(SerializedObject serialized)
         {
-            var atlas = AssetDatabase.LoadAssetAtPath<Texture>(TileAtlasPath);
-
-            if (atlas == null)
-            {
-                throw new IOException("The tile atlas is not imported at " + TileAtlasPath + ".");
-            }
-
             SerializedProperty tiles = serialized.FindProperty("tiles");
 
             foreach ((string field, string asset) in TileBindings)
             {
-                Mesh mesh = LoadMesh(asset);
                 SerializedProperty property = tiles.FindPropertyRelative(field);
 
                 if (property == null)
@@ -289,11 +281,42 @@ namespace View.Editor
                     throw new IOException("TileSet has no serialized field named " + field + ".");
                 }
 
-                property.objectReferenceValue = mesh;
+                property.objectReferenceValue = LoadMesh(asset);
             }
 
-            tiles.FindPropertyRelative("surface").objectReferenceValue =
-                WriteTextured(TileMaterialPath, "Tiles", atlas);
+            tiles.FindPropertyRelative("surface").objectReferenceValue = TileMaterial();
+        }
+
+        /// <summary>
+        /// The floor's tiles, loaded from the project rather than from a scene.
+        /// </summary>
+        /// <remarks>
+        /// <b>The same six assets the scene is wired with, from the same list.</b>
+        /// An editor tool that assembles its own root — the frame capture — needs
+        /// the tiles too, and building a second list for it is how a capture ends
+        /// up being a picture of a floor the game does not have.
+        /// </remarks>
+        public static TileSet Tiles() =>
+            TileSet.Of(
+                LoadMesh(TileBindings[0].asset),
+                LoadMesh(TileBindings[1].asset),
+                LoadMesh(TileBindings[2].asset),
+                LoadMesh(TileBindings[3].asset),
+                LoadMesh(TileBindings[4].asset),
+                LoadMesh(TileBindings[5].asset),
+                TileMaterial());
+
+        /// <summary>The committed tile material, written if it is not there yet.</summary>
+        private static Material TileMaterial()
+        {
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture>(TileAtlasPath);
+
+            if (atlas == null)
+            {
+                throw new IOException("The tile atlas is not imported at " + TileAtlasPath + ".");
+            }
+
+            return WriteTextured(TileMaterialPath, "Tiles", atlas);
         }
 
         /// <summary>

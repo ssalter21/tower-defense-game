@@ -114,7 +114,10 @@ namespace View.Editor
                 ReplayBundle record = StreamingContent.ReadRecordedMatch();
 
                 var root = host.AddComponent<MatchRoot>();
-                root.Build(record.Map);
+                // The tiles the scene carries. Without this the capture draws
+                // the blockout, which on a board with tiers is a flat hexagon
+                // with no sides and shows the background through every step.
+                root.Build(record.Map, MatchSceneBuilder.Tiles());
 
                 MatchView view = root.BeginMatch(
                     StreamingContent.ReadUnitTypes(),
