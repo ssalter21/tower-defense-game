@@ -1191,3 +1191,61 @@ rather than a number somebody wrote down.
 input by [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md). Adding either is a view contract taken in a
 ticket about rules, so neither was taken — and it goes to [open questions](open-questions.md) rather than
 being assumed, because the day a Cryomancer is signed is the day somebody has to draw one.
+
+---
+
+## 27 August 2026 — the board folds and climbs, and the corridor every number was priced on is gone
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **§8** — the board | Until the maze lands, the board is a **47-hex corridor one cell wide**, and on one-wide geometry many placements are equivalent | **A hand-drawn 51-hex corridor that folds and climbs through three tiers.** Still one hex wide; the tiers are what make one cell a different placement from another | [#218](https://github.com/ssalter21/tower-defense-game/issues/218). Selection pressure needs a fitness function and a fitness function needs one map known to be good to calibrate against, so generation and rotation stay deferred behind a board somebody drew |
+
+### What the fold bought, measured rather than argued
+
+**Six per cent.** The corridor is 51 hexes where it was 47 and the recorded match runs 5581 ticks where it ran
+5283. The 15 August read wanted time under fire *multiplied* by folding the board; the board as drawn spends
+most of its extra room on single-file descents, which cost one hex per row. A serpentine on the same 19-by-13
+grid reaches ninety-odd hexes. **The room is there and this shape does not use it**, and that is written down
+here rather than smoothed over, because the next map is drawn against this number.
+
+Cost efficiency — dealt per 100 gold, which is a cost-weighted leak rate — rose for every creep: minion 329 to
+354, scout 316 to 363, necromancer 360 to 383, skeleton 354 to 366, warrior 344 to 355. Win rate is zero for
+every creep on both boards, so nothing separates them there and nothing did before.
+
+Of the four things a folded board was supposed to fix, **two cannot be answered by the report at all.** Send
+order is invisible because a sweep row fills one slot a round, which is a fact about `content/sweep.csv` and
+not about the map. A defense that scales is invisible because the canned field's wave grows every round and
+its wall does not — [#222](https://github.com/ssalter21/tower-defense-game/issues/222).
+
+### Where a tier is allowed to change, and the leg that cannot hold one
+
+**A ramp cannot turn, so a tier change has to sit between two corridor cells of the same row with corridor
+either side of them.** The KayKit pack ships slope variants for `hex_road_A` alone. Two of the changes on the
+board as first drawn sat on turns -- one on the right-hand descent, one on the left -- and neither had a tile
+that could render it.
+
+The right-hand one moved by carrying tier b up the descent, so **the exit stands at b** and the climb happens
+mid-leg on row 5. The left-hand one could not be moved where it was: **row 8's leg is three cells long and both
+ends are turns**, so no ramp fits on it at any tier. Tier a now holds all the way down the left descent and row
+11 carries the climb instead. That is the rule biting on the drawing rather than on the file, and it is the
+first thing to check when the next board is drawn: a leg needs four cells before it can hold a change.
+
+### The committed defense stopped being chosen
+
+**Six towers still, but computed: `CoverThenUpgradeBot`'s cover-most-per-gold rule on this map, under the
+overlap the build gate asserts.** Hand-picked coordinates are what went stale everywhere at once the moment
+the board moved — the mage at column 9 row 0 could no longer reach any part of the route, and the loader was
+right to refuse it. What the file loses is the ability to stage a specific situation by hand; what it gains is
+that redrawing the board is a regeneration rather than an outage.
+
+It now covers the route end to end, where the old six left gaps near the entrance and either side of the first
+corner. **A third of the wave still gets through** — twelve of forty, unchanged — so what leaks now leaks
+because the wall cannot kill fast enough rather than because it cannot see.
+
+### What a record from before the fold can and cannot say
+
+**A version-0 or version-1 replay bundle predates the level plane, so it restages the folded board flat.** That
+is not a defect: those formats carry no tiers and never could. It means a stripped record no longer agrees with
+the live match, and while the map was flat those two hashes agreed for a reason that had nothing to do with
+restaging. Two tests asserted that agreement and proved less than they looked like they did; they now assert
+the flattened answers, which is the claim the format actually supports.

@@ -37,7 +37,7 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>Per gold rather than by price, because the report is the point.</b>
-    /// Three rangers cover all forty-seven route hexes of <c>content/map.txt</c>
+    /// Five rangers cover all fifty-one route hexes of <c>content/map.txt</c>
     /// for a hundred and twenty gold and fourteen soldiers cover them for four
     /// hundred and twenty, so a rule that started at the bottom of the price list
     /// would spend most of a run's gold on the worse of the two walls and send a

@@ -35,6 +35,8 @@ public class RunTests
         { "a server re-validating", true, false, false, true },
     };
 
+
+
     [Theory]
     [MemberData(nameof(Scenarios))]
     public void Every_usage_scenario_is_the_same_call_with_different_arguments(
@@ -68,7 +70,7 @@ public class RunTests
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on its very first round, (0, 0)
-        // against (23, 239), which is what a second code path hiding behind an
+        // against (30, 239), which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -141,6 +143,8 @@ public class RunTests
 
         Assert.NotEqual(string.Empty, scenario);
     }
+
+
 
     [Fact]
     public void A_run_is_ten_waves_and_a_field_of_ten_until_the_caller_says_otherwise()
@@ -551,7 +555,7 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 6488 against 21605: the 9540 gold
+        // over bought nothing. It goes red at 6488 against 21605: the 9590 gold
         // of creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
@@ -583,8 +587,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(9540, spent);
-        Assert.Equal(10417, bonus);
+        Assert.Equal(9590, spent);
+        Assert.Equal(10480, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -615,8 +619,11 @@ public class RunTests
         // wave; what that round's draw must not be able to see is the health
         // and the gold between them.
         // A cell content/defense.txt stands a mortar on, so it is one a tower
-        // can be put on and one that watches the corridor.
-        BuildAction mortar = BuildAction.Of(ActionKind.Place, 4, 9, 0);
+        // can be put on and one that watches the corridor. THAT IT WATCHES THE
+        // CORRIDOR IS THE POINT: a mortar somewhere it cannot reach would leave
+        // the two openings identical, and the assertion below that they differ
+        // would go red having proved nothing about where the draw comes from.
+        BuildAction mortar = BuildAction.Of(ActionKind.Place, 4, 7, 9);
 
         Run one = TheRun.Fresh(waves: 3, fieldSize: 4);
         Run two = TheRun.Fresh(waves: 3, fieldSize: 4);

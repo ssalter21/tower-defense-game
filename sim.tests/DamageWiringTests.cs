@@ -21,13 +21,13 @@ namespace Sim.Tests;
 public class DamageWiringTests
 {
     /// <summary>One bolt, which is a pierce hitscan tower, on the first tower cell.</summary>
-    private const string OneBolt = "tower 3 3 2";
+    private const string OneBolt = "tower 3 6 2";
 
     /// <summary>One mortar, which is the impact tower wave nine's anchor is answered by.</summary>
-    private const string OneMortar = "tower 4 9 0";
+    private const string OneMortar = "tower 4 7 9";
 
     /// <summary>The same mortar with a bolt beside it, which answers no anchor.</summary>
-    private const string MortarAndBolt = "tower 4 9 0\ntower 3 3 2";
+    private const string MortarAndBolt = "tower 3 6 2\ntower 4 7 9";
 
     [Fact]
     public void A_shot_lands_the_roll_resolved_through_the_fused_expression()

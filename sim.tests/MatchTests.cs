@@ -647,14 +647,31 @@ public class MatchTests
             shots++;
 
             // A hitscan shot lands inside the same call that fired it, so its
-            // damage event is the very next thing in the stream. A projectile's
-            // is not, which is the whole difference between them.
-            bool landedImmediately = index + 1 < events.Count && events.Kinds[index + 1] == "damaged";
+            // damage arrives before any other tower fires. A projectile's does
+            // not, which is the whole difference between them.
+            //
+            // ITS TARGET AND NOT ITS POSITION. This used to read the very next
+            // event, which held while no projectile was ever in flight over a
+            // bolt's landing. On the folded board the towers overlap enough
+            // that a mortar's impact lands between a bolt firing and the same
+            // bolt's damage, and the positional read then checked the roll of
+            // one tower against the amount of another.
+            int landing = -1;
+            int target = events.Amounts[index];
 
-            if (type.Delivery == Delivery.Hitscan && landedImmediately)
+            for (int ahead = index + 1; ahead < events.Count && events.Kinds[ahead] != "fired"; ahead++)
+            {
+                if (events.Kinds[ahead] == "damaged" && events.Subjects[ahead] == target)
+                {
+                    landing = ahead;
+                    break;
+                }
+            }
+
+            if (type.Delivery == Delivery.Hitscan && landing >= 0)
             {
                 Assert.Contains(
-                    events.Amounts[index + 1],
+                    events.Amounts[landing],
                     new[]
                     {
                         DamageModel.Dealt(rules, expected, 0, type.AttackType, ArmourType.Armoured, 0),

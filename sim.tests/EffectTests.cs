@@ -556,15 +556,24 @@ public class EffectTests
 
                 folds++;
 
+                int climb = Math.Abs(
+                    map.LevelAt(map.Route[cell]) - map.LevelAt(map.Route[other]));
+
+                // The climb is bought as well as the ground. A sphere is
+                // measured by Reach, which charges half a hex per tier, so on a
+                // board that folds AND climbs a radius of the flat distance
+                // alone would fall short of a pair on two different tiers --
+                // and that shortfall would be height talking, not the route
+                // distance this test is about.
                 Assert.True(
                     Reach.Encloses(
                         map.Route[cell],
                         map.LevelAt(map.Route[cell]),
-                        hexes * 1000,
+                        (hexes * 1000) + (climb * 500),
                         map.Route[other],
                         map.LevelAt(map.Route[other])),
-                    $"Route cells {cell} and {other} are {hexes} hexes apart and a sphere of that size "
-                    + "does not enclose them.");
+                    $"Route cells {cell} and {other} are {hexes} hexes and {climb} tiers apart, and a "
+                    + "sphere of that size does not enclose them.");
             }
         }
 

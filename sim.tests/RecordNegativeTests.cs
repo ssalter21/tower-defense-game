@@ -186,13 +186,13 @@ public class RecordNegativeTests
     [Fact]
     public void A_branching_corridor_in_the_inlined_map_refuses()
     {
-        // One ground cell turned into corridor, three rows down the middle of
-        // the map. It is the same corridor assertion the text parser runs, on
+        // One ground cell turned into corridor, beside the leg it would branch, in
+        // the top-left fold. It is the same corridor assertion the text parser runs, on
         // the same code, so a replay cannot carry geometry that a map file could
         // not -- and the pathfinder this simulation is never going to have is
         // still not needed.
         ReplayBundle good = TheMatch.Bundle();
-        int cell = (2 * good.Map.Width) + 3;
+        int cell = (2 * good.Map.Width) + 5;
         byte[] bytes = RecordBytes.With(
             good.ToBytes(),
             RecordBytes.BundleCellsOffset + cell,

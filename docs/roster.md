@@ -67,12 +67,13 @@ capstone is where it gets written down.
 ## The clock
 
 **Thirty ticks a second.** Every duration in `units.txt` — cooldown, windup, backswing, flight, dying — is in
-ticks, and speed is thousandths of a hex per tick. The board is a **47-hex corridor**.
+ticks, and speed is thousandths of a hex per tick. The board is a **51-hex corridor that folds and climbs
+through three tiers**.
 
 | | |
 |---|---|
 | Minion walking speed | 0.84 hexes/sec |
-| Time to cross the board | 56 sec |
+| Time to cross the board | 61 sec |
 | One wave | ~3 min |
 | Archer rate of fire | 1.67/sec |
 | Mage rate of fire | 0.56/sec |

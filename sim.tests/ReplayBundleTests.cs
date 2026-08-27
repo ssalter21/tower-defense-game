@@ -11,7 +11,7 @@ public class ReplayBundleTests
     {
         // Header, ruleset hash, seed, width, height, the terrain grid, the level
         // grid, the defense and the wave -- nothing else fits. The second plane
-        // of a hundred and thirty-five bytes is the whole of format version 2;
+        // of two hundred and forty-seven bytes is the whole of format version 2;
         // if this number grows again without the format version moving, that is
         // the mistake this assertion catches.
         UnitTypeTable types = TheMatch.Types();
@@ -21,7 +21,7 @@ public class ReplayBundleTests
         int ghost = TheMatch.Ghost(types).ToBytes().Length;
         int wave = TheMatch.WaveOf(types).ToBytes().Length;
 
-        Assert.Equal(135, cells);
+        Assert.Equal(247, cells);
         Assert.Equal(18 + 8 + 8 + 2 + 2 + cells + cells + ghost + wave, bundle.ToBytes().Length);
     }
 
@@ -266,9 +266,13 @@ public class ReplayBundleTests
         // taken at. Reading and replaying are separate gates and a retired
         // LAYOUT is not a retired record.
         Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
-        Assert.Equal(
-            TheMatch.LeakedInTheCommittedRun,
-            old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked);
+
+        // FIFTEEN AND NOT TWELVE, and the difference is the whole point of the
+        // plane this version predates. A version-1 bundle carries no levels, so
+        // it replays the folded board flat -- and flat, the towers lose the
+        // height their range was priced with and three more creeps get through.
+        // While the map was flat this assertion could not tell the two apart.
+        Assert.Equal(15, old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked);
     }
 
     [Fact]

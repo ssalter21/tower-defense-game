@@ -33,11 +33,11 @@ public class HexMapTests
     {
         HexMap map = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
-        Assert.Equal(15, map.Width);
-        Assert.Equal(9, map.Height);
-        Assert.Equal(47, map.Route.Count);
-        Assert.Equal(Hex.FromOddRowOffset(1, 1), map.Spawn);
-        Assert.Equal(Hex.FromOddRowOffset(1, 7), map.Exit);
+        Assert.Equal(19, map.Width);
+        Assert.Equal(13, map.Height);
+        Assert.Equal(51, map.Route.Count);
+        Assert.Equal(Hex.FromOddRowOffset(4, 0), map.Spawn);
+        Assert.Equal(Hex.FromOddRowOffset(16, 0), map.Exit);
     }
 
     [Fact]
@@ -411,21 +411,26 @@ public class HexMapTests
     }
 
     [Fact]
-    public void The_committed_map_stands_entirely_on_the_ground_tier()
+    public void The_committed_map_climbs_through_all_three_tiers()
     {
-        // The map this skeleton has always been played on is flat, and it stays
-        // flat until somebody draws a folded one. A test rather than a comment,
-        // because every number priced against this board was measured on the
-        // flat and a tier appearing here would move all of them at once.
+        // The board climbs, and this is the test that says so. It replaces the
+        // one that held the map flat: that assertion existed because every
+        // number was priced on the flat and a tier appearing would move all of
+        // them at once, which is exactly what drawing the fold did -- so the
+        // guard is now that the climb is still there rather than that it is not.
         HexMap map = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
+
+        var standing = new HashSet<int>();
 
         for (int row = 0; row < map.Height; row++)
         {
             for (int column = 0; column < map.Width; column++)
             {
-                Assert.Equal(0, map.LevelAt(column, row));
+                standing.Add(map.LevelAt(column, row));
             }
         }
+
+        Assert.Equal(new[] { 0, 1, 2 }, standing.OrderBy(level => level));
     }
 
     [Fact]
@@ -446,13 +451,13 @@ public class HexMapTests
             }
         }
 
-        Assert.Equal(18, rows.Count);
+        Assert.Equal(26, rows.Count);
 
         for (int index = 0; index < rows.Count; index++)
         {
-            // Two blocks of nine, so the row within its own block is what the
-            // offset is about.
-            bool odd = (index % 9) % 2 == 1;
+            // Two blocks of thirteen, so the row within its own block is what
+            // the offset is about.
+            bool odd = (index % 13) % 2 == 1;
 
             Assert.Equal(odd, rows[index].StartsWith(" ", StringComparison.Ordinal));
             Assert.Equal(rows[index].TrimStart().Length, odd ? rows[index].Length - 1 : rows[index].Length);

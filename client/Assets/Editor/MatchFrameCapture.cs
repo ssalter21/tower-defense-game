@@ -58,8 +58,16 @@ namespace View.Editor
         /// <summary>
         /// The shape of a frame. Sixteen by nine, the same shape the playback
         /// bar lays itself out for, because these are pictures of what a player
-        /// sees. A square frame fits the same 47-hex corridor across its width
-        /// and then leaves half its height empty.
+        /// sees.
+        /// <para>
+        /// <b>The board this was reasoned about is gone.</b> The justification
+        /// was that a square frame fits the old 15-by-9, 47-hex corridor across
+        /// its width and then leaves half its height empty. The committed map
+        /// is 19 by 13 now, which is far closer to square, so whether sixteen
+        /// by nine still frames it -- at what <see cref="DistanceArgument"/> --
+        /// is unmeasured. Nothing here was changed on a guess; run the capture
+        /// and look before touching this number.
+        /// </para>
         /// </summary>
         private const float FrameAspect = 16f / 9f;
 

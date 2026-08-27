@@ -25,7 +25,7 @@ public static class TheMatch
     public const int LeakedInTheCommittedRun = 12;
 
     /// <summary>The tick the committed run ends on.</summary>
-    public const int FinalTickOfTheCommittedRun = 5283;
+    public const int FinalTickOfTheCommittedRun = 5581;
 
     /// <summary>
     /// The handle the committed map is filed under, and the one

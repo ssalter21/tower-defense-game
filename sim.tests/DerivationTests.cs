@@ -683,7 +683,7 @@ public class DerivationTests
         HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
         byte[] cells = committed.ToCellBytes();
         byte[] levels = committed.ToLevelBytes();
-        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
+        HexMap original = HexMap.FromCells("map", committed.Width, committed.Height, cells, levels);
         int refused = 0;
         int rehashed = 0;
 
@@ -703,7 +703,7 @@ public class DerivationTests
                 {
                     Assert.NotEqual(
                         original.MapHash,
-                        HexMap.FromCells("edited", 15, 9, edited, levels).MapHash);
+                        HexMap.FromCells("edited", committed.Width, committed.Height, edited, levels).MapHash);
                     rehashed++;
                 }
                 catch (ContentException)
@@ -729,7 +729,7 @@ public class DerivationTests
         HexMap committed = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
         byte[] cells = committed.ToCellBytes();
         byte[] levels = committed.ToLevelBytes();
-        HexMap original = HexMap.FromCells("map", 15, 9, cells, levels);
+        HexMap original = HexMap.FromCells("map", committed.Width, committed.Height, cells, levels);
         int moved = 0;
 
         for (int index = 0; index < levels.Length; index++)
@@ -746,7 +746,7 @@ public class DerivationTests
 
                 Assert.NotEqual(
                     original.MapHash,
-                    HexMap.FromCells("edited", 15, 9, cells, edited).MapHash);
+                    HexMap.FromCells("edited", committed.Width, committed.Height, cells, edited).MapHash);
                 moved++;
             }
         }
