@@ -72,7 +72,11 @@ namespace View
 
             for (int index = 0; index < points.Length; index++)
             {
-                points[index] = HexGeometry.ToWorld(map.Route[index]);
+                // At the tier the cell stands on, so a creep walks over the
+                // board rather than through it. The corridor's tier changes sit
+                // on straight runs, so consecutive points differ by at most one
+                // step and the line between them is the ramp a creep climbs.
+                points[index] = HexGeometry.ToWorld(map.Route[index], map.LevelAt(map.Route[index]));
             }
 
             return new RoutePath(points);

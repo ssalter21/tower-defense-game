@@ -57,7 +57,7 @@ namespace Tests.PlayMode
         private const int SecondRow = 0;
 
         /// <summary>A cell the corridor runs through. Nothing may stand here.</summary>
-        private const int CorridorColumn = 5;
+        private const int CorridorColumn = 4;
 
         private const int CorridorRow = 1;
 
@@ -543,7 +543,8 @@ namespace Tests.PlayMode
         }
 
         private static Vector2 ScreenPointOf(MatchRoot root, int column, int row) =>
-            root.CameraRig.Camera.WorldToScreenPoint(HexGeometry.ToWorld(column, row));
+            root.CameraRig.Camera.WorldToScreenPoint(
+                HexGeometry.ToWorld(column, row, root.Map.LevelAt(column, row)));
 
         /// <summary>
         /// A cell that could take the selected tower and is high enough on the
@@ -557,7 +558,8 @@ namespace Tests.PlayMode
             {
                 for (column = 0; column < root.Map.Width; column++)
                 {
-                    Vector3 screen = camera.WorldToScreenPoint(HexGeometry.ToWorld(column, row));
+                    Vector3 screen = camera.WorldToScreenPoint(
+                        HexGeometry.ToWorld(column, row, root.Map.LevelAt(column, row)));
 
                     if (screen.z > 0f
                         && screen.y > Screen.height * 0.4f

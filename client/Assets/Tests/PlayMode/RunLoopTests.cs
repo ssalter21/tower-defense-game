@@ -95,7 +95,7 @@ namespace Tests.PlayMode
             "archer 6 2 0\n"
             + "archer 7 4 0\n"
             + "archer 7 6 0\n"
-            + "archer 4 4 2\n";
+            + "archer 4 3 2\n";
 
         /// <summary>How many rounds <see cref="Transcript"/> decides.</summary>
         private static int TranscriptRounds =>
@@ -951,7 +951,8 @@ namespace Tests.PlayMode
         }
 
         private static Vector2 ScreenPointOf(MatchRoot root, int column, int row) =>
-            root.CameraRig.Camera.WorldToScreenPoint(HexGeometry.ToWorld(column, row));
+            root.CameraRig.Camera.WorldToScreenPoint(
+                HexGeometry.ToWorld(column, row, root.Map.LevelAt(column, row)));
 
         private static int Number(string word) =>
             int.Parse(word, System.Globalization.CultureInfo.InvariantCulture);

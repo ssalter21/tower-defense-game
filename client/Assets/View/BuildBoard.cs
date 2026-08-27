@@ -55,6 +55,8 @@ namespace View
 
         private RoutePath _route;
 
+        private HexMap _map;
+
         private Transform _towerParent;
 
         private Material _lightMaterial;
@@ -84,7 +86,7 @@ namespace View
         /// <param name="route">The corridor, which is what a tower faces.</param>
         /// <param name="tile">The floor tile mesh, which the lit hex is a copy of.</param>
         public static BuildBoard Build(
-            Transform parent, ComposedRound round, MatchArt art, RoutePath route, Mesh tile)
+            Transform parent, ComposedRound round, MatchArt art, RoutePath route, Mesh tile, HexMap map)
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
             if (round == null) throw new ArgumentNullException(nameof(round));
@@ -95,7 +97,7 @@ namespace View
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var board = host.AddComponent<BuildBoard>();
-            board.Assemble(round, art, route, tile);
+            board.Assemble(round, art, route, tile, map);
 
             return board;
         }
@@ -132,7 +134,8 @@ namespace View
             LitRow = row;
 
             _light.transform.localPosition =
-                HexGeometry.ToWorld(column, row) + (Vector3.up * MatchTuning.BuildLightHeight);
+                HexGeometry.ToWorld(column, row, _map.LevelAt(column, row))
+                + (Vector3.up * MatchTuning.BuildLightHeight);
             _light.SetActive(true);
         }
 
@@ -149,11 +152,12 @@ namespace View
             if (_lightMaterial != null) Destroy(_lightMaterial);
         }
 
-        private void Assemble(ComposedRound round, MatchArt art, RoutePath route, Mesh tile)
+        private void Assemble(ComposedRound round, MatchArt art, RoutePath route, Mesh tile, HexMap map)
         {
             _round = round;
             _art = art;
             _route = route;
+            _map = map;
 
             _towerParent = new GameObject("Towers").transform;
             _towerParent.SetParent(transform, worldPositionStays: false);
@@ -201,7 +205,8 @@ namespace View
         {
             var host = new GameObject("Built " + placement.Id + " " + placement.Type.Label);
             host.transform.SetParent(_towerParent, worldPositionStays: false);
-            host.transform.localPosition = HexGeometry.ToWorld(placement.Column, placement.Row);
+            host.transform.localPosition =
+                HexGeometry.ToWorld(placement.Column, placement.Row, _map.LevelAt(placement.Column, placement.Row));
 
             var view = host.AddComponent<TowerView>();
             Quaternion resting = _route.FacingFrom(host.transform.localPosition);

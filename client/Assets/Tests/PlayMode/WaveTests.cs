@@ -929,7 +929,8 @@ namespace Tests.PlayMode
         }
 
         private static Vector2 ScreenPointOf(MatchRoot root, int column, int row) =>
-            root.CameraRig.Camera.WorldToScreenPoint(HexGeometry.ToWorld(column, row));
+            root.CameraRig.Camera.WorldToScreenPoint(
+                HexGeometry.ToWorld(column, row, root.Map.LevelAt(column, row)));
 
         /// <summary>Where a box's middle is, in the panel's own coordinates.</summary>
         private static float MiddleOf(MatchRoot root, int index) =>

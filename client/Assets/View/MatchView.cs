@@ -519,7 +519,7 @@ namespace View
 
                 var host = new GameObject("Tower " + id + " " + placed.Type.Label);
                 host.transform.SetParent(parent, worldPositionStays: false);
-                host.transform.localPosition = HexGeometry.ToWorld(placed.Hex);
+                host.transform.localPosition = HexGeometry.ToWorld(placed.Hex, _map.LevelAt(placed.Hex));
 
                 var view = host.AddComponent<TowerView>();
                 Quaternion resting = _route.FacingFrom(host.transform.localPosition);

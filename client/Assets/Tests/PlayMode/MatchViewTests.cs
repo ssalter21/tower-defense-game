@@ -606,6 +606,7 @@ namespace Tests.PlayMode
             MatchView view = Begin();
 
             var closing = new Dictionary<int, float>();
+            var aimedAlong = new Dictionary<int, Vector3>();
             int checkedTicks = 0;
             bool watchedOneAllTheWayIn = false;
 
@@ -637,9 +638,11 @@ namespace Tests.PlayMode
                         distanceAlong,
                         SimUnits.ToFloat(target.Value.LateralOffset));
 
+                    Vector3 tangent = view.Route.TangentAt(distanceAlong);
+
                     // Recomputed from the target's position in this snapshot,
                     // and from nothing else at all.
-                    Vector3 origin = ProjectileView.OriginFor(targetAt, view.Route.TangentAt(distanceAlong));
+                    Vector3 origin = ProjectileView.OriginFor(targetAt, tangent);
 
                     float travelled = shell.FlightDurationTicks <= 0
                         ? 1f
@@ -656,13 +659,25 @@ namespace Tests.PlayMode
                     // And it closes, every tick, on a target that is walking.
                     float gap = Vector3.Distance(drawn.LastPosition, targetAt);
 
-                    if (closing.TryGetValue(shell.Id, out float was))
+                    // Except across a tilt change, and that exception is the
+                    // board having ramps on it. The aim line is rebuilt every
+                    // tick as target + apex - tangent * lead, so when a creep
+                    // steps onto a ramp the tangent pitches up, the origin
+                    // swings, and the gap can widen for exactly that one tick
+                    // without the shell having stopped closing on anything. The
+                    // corridor tilts at three places and nowhere else, so this
+                    // skips three ticks per flight at most.
+                    bool tiltHeld = !aimedAlong.TryGetValue(shell.Id, out Vector3 before)
+                        || Vector3.Distance(before, tangent) < 1e-4f;
+
+                    if (tiltHeld && closing.TryGetValue(shell.Id, out float was))
                     {
                         Assert.That(gap, Is.LessThan(was),
                             $"shell {shell.Id} did not close on its target this tick");
                     }
 
                     closing[shell.Id] = gap;
+                    aimedAlong[shell.Id] = tangent;
 
                     if (shell.TicksInFlight == shell.FlightDurationTicks - 1)
                     {

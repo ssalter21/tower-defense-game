@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &2102538378
+--- !u!1 &497206550
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2102538380}
-  - component: {fileID: 2102538379}
+  - component: {fileID: 497206552}
+  - component: {fileID: 497206551}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2102538379
+--- !u!114 &497206551
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2102538378}
+  m_GameObject: {fileID: 497206550}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -150,6 +150,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: View::View.MatchRoot
   roadMaterial: {fileID: 2100000, guid: 9fe586d5fd44d704993aec0157332f89, type: 2}
   grassMaterial: {fileID: 2100000, guid: e20719cebe43d064b82653fdd2d9c6fc, type: 2}
+  tiles:
+    ground: {fileID: 703726867841230225, guid: f61f9be82275441bada82099c14fd92e, type: 3}
+    straight: {fileID: -4834173543892134579, guid: b81ebc3e52c24cb8b7288f7c5e4d6ed4, type: 3}
+    curve: {fileID: -195117725110335826, guid: 8a06bb929c814a74b22938165c004f5b, type: 3}
+    hairpin: {fileID: -9208122355427140850, guid: 615cf765f2204027a2e5a3ea7e48d4da, type: 3}
+    deadEnd: {fileID: 2316860884007315106, guid: 1e441b1cb6834748adf87ec5963403b6, type: 3}
+    straightRamp: {fileID: -126285260458875959, guid: 1267bf0521704d4cb4bc7e87d209746a, type: 3}
+    surface: {fileID: 2100000, guid: 311b9a3e1c16dcf4cacf5e010042284c, type: 2}
+    road: {fileID: 0}
+    grass: {fileID: 0}
   art:
     units:
     - unitId: 1
@@ -244,13 +254,13 @@ MonoBehaviour:
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &2102538380
+--- !u!4 &497206552
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2102538378}
+  m_GameObject: {fileID: 497206550}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -263,4 +273,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 2102538380}
+  - {fileID: 497206552}

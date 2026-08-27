@@ -5,18 +5,28 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The playfield you can look at: one tile per cell of the map grid, road on
-    /// the corridor and grass everywhere else.
+    /// The playfield you can look at: one tile per cell of the map grid, a piece
+    /// of road along the corridor and ground everywhere else, each standing at
+    /// the tier the map gives it.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The renderer walks the grid, and that is the whole of it.</b> There is
-    /// no rule here to get wrong: every cell gets exactly one tile, the tile's
-    /// material is decided by the cell's own kind, and its position comes from
+    /// <b>The renderer walks the grid, and that is the whole of it.</b> Every
+    /// cell gets exactly one tile; which model, and how far it is turned, comes
+    /// from <see cref="RoadTiling"/>; where it stands comes from
     /// <see cref="HexGeometry"/>. No decoration, no variation, no special case
     /// for the ends of the corridor — anything of that sort would be a second
     /// place the map is interpreted, and the point of this class is that there
-    /// is not one.
+    /// is not one. The choosing lives in <see cref="RoadTiling"/> rather than
+    /// here precisely so that it can be tested without a scene.
+    /// </para>
+    /// <para>
+    /// <b>Height is drawn, and it is not decoration.</b> A tier is worth half a
+    /// hex of reach in the simulation, so a player who cannot see which tier a
+    /// cell is on cannot read the range of a tower placed there. The floor
+    /// lifts each tile by <see cref="HexGeometry.LevelStep"/> per tier and
+    /// reports a bounding box that includes the climb, so the camera frames a
+    /// board with tiers as a board with tiers.
     /// </para>
     /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
@@ -29,6 +39,8 @@ namespace View
     public sealed class HexFloor : MonoBehaviour
     {
         private MeshRenderer[] _tiles;
+
+        private TilePiece[] _pieces;
 
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
@@ -58,13 +70,13 @@ namespace View
         /// of the one root object, like everything else, so the scene's root
         /// count does not depend on how big the map is.
         /// </summary>
-        public static HexFloor Build(Transform parent, HexMap map, Mesh tile, Material road, Material grass)
+        public static HexFloor Build(Transform parent, HexMap map, TileSet tiles)
         {
             var host = new GameObject("Floor");
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var floor = host.AddComponent<HexFloor>();
-            floor.Draw(map, tile, road, grass);
+            floor.Draw(map, tiles);
 
             return floor;
         }
@@ -73,34 +85,52 @@ namespace View
         public MeshRenderer TileAt(int column, int row) => _tiles[(row * Map.Width) + column];
 
         /// <summary>
-        /// True if the tile at this cell is drawn as road. Asked of the
-        /// renderer rather than of the map, so a test can catch the floor
-        /// disagreeing with the grid it was drawn from.
+        /// Which piece was drawn at a cell. Asked of the renderer rather than
+        /// recomputed, so a test can catch the floor disagreeing with the grid
+        /// it was drawn from.
         /// </summary>
-        public bool IsRoadTile(int column, int row) => TileAt(column, row).sharedMaterial == RoadMaterial;
+        public TilePiece PieceAt(int column, int row) => _pieces[(row * Map.Width) + column];
 
-        private void Draw(HexMap map, Mesh tile, Material road, Material grass)
+        /// <summary>
+        /// True if the tile at this cell is drawn as road.
+        /// </summary>
+        /// <remarks>
+        /// Read off the piece rather than off the material, because a set of
+        /// real tiles wears one atlas everywhere and the material stopped being
+        /// able to tell road from ground the moment the blockout did.
+        /// </remarks>
+        public bool IsRoadTile(int column, int row) => PieceAt(column, row) != TilePiece.Ground;
+
+        private void Draw(HexMap map, TileSet tiles)
         {
             Map = map;
-            RoadMaterial = road;
-            GrassMaterial = grass;
+            RoadMaterial = tiles.RoadMaterial;
+            GrassMaterial = tiles.GrassMaterial;
             _tiles = new MeshRenderer[map.Width * map.Height];
+            _pieces = new TilePiece[map.Width * map.Height];
 
-            var min = new Vector3(float.MaxValue, 0f, float.MaxValue);
-            var max = new Vector3(float.MinValue, 0f, float.MinValue);
+            var min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            var max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 
             for (int row = 0; row < map.Height; row++)
             {
                 for (int column = 0; column < map.Width; column++)
                 {
-                    Vector3 centre = HexGeometry.ToWorld(column, row);
+                    TileChoice choice = RoadTiling.For(map, column, row);
+                    Vector3 centre = HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
                     MapCell cell = map.CellAt(column, row);
 
                     var cellObject = new GameObject(Name(column, row, cell));
                     cellObject.transform.SetParent(transform, worldPositionStays: false);
-                    cellObject.transform.localPosition = centre;
+                    cellObject.transform.localPosition = centre + (Vector3.up * TileSet.FaceOffset);
 
-                    cellObject.AddComponent<MeshFilter>().sharedMesh = tile;
+                    // A sixth of a turn per step, and negative because Unity
+                    // turns clockwise seen from above while the simulation
+                    // counts its six directions the other way.
+                    cellObject.transform.localRotation =
+                        Quaternion.Euler(0f, -60f * choice.Rotation, 0f);
+
+                    cellObject.AddComponent<MeshFilter>().sharedMesh = tiles.MeshFor(choice.Piece);
 
                     var renderer = cellObject.AddComponent<MeshRenderer>();
 
@@ -108,9 +138,10 @@ namespace View
                     // in this project is allowed a painted-on one.
                     renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                     renderer.receiveShadows = true;
-                    renderer.sharedMaterial = cell == MapCell.Ground ? grass : road;
+                    renderer.sharedMaterial = tiles.MaterialFor(choice.Piece);
 
                     _tiles[(row * map.Width) + column] = renderer;
+                    _pieces[(row * map.Width) + column] = choice.Piece;
 
                     min = Vector3.Min(min, centre - HalfTile);
                     max = Vector3.Max(max, centre + HalfTile);
@@ -120,8 +151,16 @@ namespace View
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
         }
 
+        /// <summary>
+        /// Half a tile, in all three axes. The Y term is what stops a board
+        /// with tiers reporting a flat bounding box and being framed as though
+        /// it had none.
+        /// </summary>
         private static Vector3 HalfTile =>
-            new Vector3(HexGeometry.AcrossFlats * 0.5f, 0f, HexGeometry.PointToPoint * 0.5f);
+            new Vector3(
+                HexGeometry.AcrossFlats * 0.5f,
+                HexGeometry.LevelStep * 0.5f,
+                HexGeometry.PointToPoint * 0.5f);
 
         /// <summary>
         /// A name that says where the tile is and what it is, so a human

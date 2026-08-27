@@ -71,6 +71,29 @@ namespace View
         public const float ColumnPitch = AcrossFlats;
 
         /// <summary>
+        /// How far one tier stands above the one below it, in metres.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One metre, because that is the height of a tile.</b> The tile
+        /// models are authored with their walkable face at <c>y = 0</c> and
+        /// their body hanging to <c>y = -1</c>, so a tier step of exactly one
+        /// makes a raised tile's underside meet the top of the tile beside it
+        /// with no gap and no overlap. The pack's ramp piece climbs exactly one
+        /// as well. Pick any other number and either the ramp stops meeting the
+        /// tier it climbs to, or the columns of earth show daylight between
+        /// them.
+        /// </para>
+        /// <para>
+        /// It is a view constant and never reaches the simulation, which knows
+        /// a tier as an integer and gives it half a hex of reach
+        /// (<c>Reach.MilliHexPerLevel</c>) without any opinion about how tall
+        /// that is in metres. See ADR-0023.
+        /// </para>
+        /// </remarks>
+        public const float LevelStep = 1.0f;
+
+        /// <summary>
         /// Where the centre of a hex is in world space, from its axial
         /// coordinate. Pure: no state, no engine object, no map.
         /// </summary>
@@ -90,6 +113,29 @@ namespace View
         /// </summary>
         public static Vector3 ToWorld(int column, int row) =>
             ToWorld(Sim.Hex.FromOddRowOffset(column, row));
+
+        /// <summary>
+        /// Where the centre of a hex on a given tier is. The same place as
+        /// <see cref="ToWorld(Sim.Hex)"/>, lifted by the tier.
+        /// </summary>
+        /// <remarks>
+        /// An overload rather than a defaulted argument, so that every existing
+        /// caller keeps meaning what it meant — ground level — and the ones that
+        /// have an opinion about height say so.
+        /// </remarks>
+        public static Vector3 ToWorld(Sim.Hex hex, int level)
+        {
+            Vector3 flat = ToWorld(hex);
+
+            return new Vector3(flat.x, level * LevelStep, flat.z);
+        }
+
+        /// <summary>
+        /// Where the centre of a hex on a given tier is, from the column and row
+        /// of the authored grid.
+        /// </summary>
+        public static Vector3 ToWorld(int column, int row, int level) =>
+            ToWorld(Sim.Hex.FromOddRowOffset(column, row), level);
 
         /// <summary>
         /// The six corners of a hex centred on the origin, in world units,

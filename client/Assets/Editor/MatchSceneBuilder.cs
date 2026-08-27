@@ -230,6 +230,119 @@ namespace View.Editor
             "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
+        /// <summary>Where the tile atlas material is written.</summary>
+        public const string TileMaterialPath = "Assets/Materials/Tiles.mat";
+
+        /// <summary>The texture every tile wears. The pack's own atlas.</summary>
+        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval.png";
+
+        /// <summary>
+        /// The serialized field on <c>TileSet</c> for each tile, and the model
+        /// it is filled from.
+        /// </summary>
+        /// <remarks>
+        /// <b>Six models and nine pieces left behind.</b> KayKit's road set has
+        /// thirteen pieces, A to M, and nine of them are junctions of three
+        /// edges or more. The corridor assertion in <c>HexMap</c> gives every
+        /// corridor cell one or two corridor neighbours, so a junction can never
+        /// be selected and importing one would be shipping art nothing draws and
+        /// nothing checks. What the letters mean was read off the meshes rather
+        /// than off the pack's user guide; see issue #224.
+        /// </remarks>
+        private static readonly (string field, string asset)[] TileBindings =
+        {
+            ("ground", "Assets/Art/Tiles/hex_grass.fbx"),
+            ("straight", "Assets/Art/Tiles/hex_road_A.fbx"),
+            ("curve", "Assets/Art/Tiles/hex_road_B.fbx"),
+            ("hairpin", "Assets/Art/Tiles/hex_road_C.fbx"),
+            ("deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
+            ("straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
+        };
+
+        /// <summary>
+        /// Fills in the floor's six tile models and the atlas they wear.
+        /// </summary>
+        /// <remarks>
+        /// Throws on anything missing, for the same reason <see cref="WireArt"/>
+        /// does: a null mesh draws nothing at all, and a floor with a hole in it
+        /// where the path bends reads as a broken map rather than as a scene
+        /// generated against a project missing an import.
+        /// </remarks>
+        private static void WireTiles(SerializedObject serialized)
+        {
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture>(TileAtlasPath);
+
+            if (atlas == null)
+            {
+                throw new IOException("The tile atlas is not imported at " + TileAtlasPath + ".");
+            }
+
+            SerializedProperty tiles = serialized.FindProperty("tiles");
+
+            foreach ((string field, string asset) in TileBindings)
+            {
+                Mesh mesh = LoadMesh(asset);
+                SerializedProperty property = tiles.FindPropertyRelative(field);
+
+                if (property == null)
+                {
+                    throw new IOException("TileSet has no serialized field named " + field + ".");
+                }
+
+                property.objectReferenceValue = mesh;
+            }
+
+            tiles.FindPropertyRelative("surface").objectReferenceValue =
+                WriteTextured(TileMaterialPath, "Tiles", atlas);
+        }
+
+        /// <summary>
+        /// The one mesh inside an imported model, by asset path.
+        /// </summary>
+        /// <remarks>
+        /// The mesh rather than the prefab, because the floor draws tiles with
+        /// its own renderer and one shared material; taking the prefab would
+        /// bring the importer's own material along and bind the atlas in six
+        /// places instead of one.
+        /// </remarks>
+        private static Mesh LoadMesh(string path)
+        {
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (asset is Mesh mesh)
+                {
+                    return mesh;
+                }
+            }
+
+            throw new IOException("No mesh inside " + path + ". Is it imported?");
+        }
+
+        /// <summary>Writes the tile material, rewriting in place if it exists.</summary>
+        private static Material WriteTextured(string path, string name, Texture atlas)
+        {
+            EnsureFolder(Path.GetDirectoryName(path));
+
+            Material material = ViewMaterials.Textured(name, atlas);
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(material, path);
+
+                return AssetDatabase.LoadAssetAtPath<Material>(path);
+            }
+
+            // In place, so the scene's reference survives. Same reasoning as
+            // WriteMaterial.
+            existing.shader = material.shader;
+            existing.CopyPropertiesFromMaterial(material);
+            EditorUtility.SetDirty(existing);
+            Object.DestroyImmediate(material);
+
+            return existing;
+        }
+
         [MenuItem("Tools/Rebuild the match scene")]
         public static void Rebuild()
         {
@@ -246,6 +359,7 @@ namespace View.Editor
             serialized.FindProperty("roadMaterial").objectReferenceValue = road;
             serialized.FindProperty("grassMaterial").objectReferenceValue = grass;
             WireArt(serialized);
+            WireTiles(serialized);
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EnsureFolder(Path.GetDirectoryName(ScenePath));
