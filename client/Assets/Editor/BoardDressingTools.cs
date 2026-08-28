@@ -30,6 +30,14 @@ namespace View.Editor
     /// exists only on one person's disk.
     /// </para>
     /// <para>
+    /// <b>A redraw carries the work, it does not discard it.</b> Both tools draw
+    /// into the one preview and the board editor redraws it after every stroke,
+    /// so the board is torn down and rebuilt constantly. What is standing is read
+    /// back before each teardown and drawn again from that, which is why moving a
+    /// tree and then painting a hex keeps the tree. To go back to the committed
+    /// file, <c>Clear</c> first: with nothing standing there is nothing to carry.
+    /// </para>
+    /// <para>
     /// <b>Only what differs is written.</b> A cell the generator would have
     /// dressed exactly as it now stands produces no line, so the file stays the
     /// list of exceptions rather than a dump of the board — and turning a
@@ -62,7 +70,9 @@ namespace View.Editor
 
             Debug.Log(
                 "Board preview drawn. Move what you like, then Tools > Board > Bake. "
-                + "It is not saved with the scene — closing without baking loses it.");
+                + "It is not saved with the scene — closing without baking loses it. "
+                + "Drawing it again keeps what you have moved; Clear first to go back to "
+                + DressingPath + ".");
         }
 
         /// <summary>
@@ -79,6 +89,10 @@ namespace View.Editor
         /// </remarks>
         public static GameObject DressWith(HexMap map)
         {
+            // Read before the teardown, because the teardown is what would
+            // otherwise lose it.
+            BoardDressing carried = Carried();
+
             Clear();
 
             var host = new GameObject(PreviewName);
@@ -89,13 +103,73 @@ namespace View.Editor
                 MatchSceneBuilder.Tiles(),
                 MatchSceneBuilder.Scenery(),
                 Settings(),
-                Authored());
+                carried ?? Authored());
 
             Hide(host.transform);
 
             return host;
         }
 
+        /// <summary>
+        /// What the preview standing in the scene holds, as overrides, or null
+        /// when there is no preview to carry.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is what stops a redraw eating somebody's afternoon.</b> Both
+        /// tools draw into the one preview and the board editor redraws it after
+        /// every stroke, so without this, moving a tree and then painting a
+        /// single hex threw the tree back where the generator wanted it. Reading
+        /// the standing board first and drawing the new one from that makes a
+        /// redraw carry the work instead of discarding it.
+        /// </para>
+        /// <para>
+        /// <b>Diffed against the map the floor was drawn from, not the one about
+        /// to be drawn.</b> A stroke changes what the generator would produce, so
+        /// measuring the old board against the new map would call every cell the
+        /// stroke touched an override and pin the generator's own scenery into
+        /// the file as if a person had placed it. <see cref="HexFloor.Map"/> is
+        /// the board that is actually standing there, and it is the only honest
+        /// baseline for what somebody moved on it.
+        /// </para>
+        /// <para>
+        /// What comes back is exactly what <see cref="Bake"/> would write, so
+        /// carrying forward and baking cannot disagree about what counts as
+        /// moved.
+        /// </para>
+        /// </remarks>
+        private static BoardDressing Carried()
+        {
+            GameObject[] previews = Previews();
+
+            if (previews.Length == 0)
+            {
+                return null;
+            }
+
+            HexFloor floor = previews[0].GetComponentInChildren<HexFloor>();
+
+            // A script reload clears the floor's fields without destroying its
+            // objects, so Map comes back null on a preview that is already stale.
+            // Nothing there is worth carrying and the file is the better answer.
+            if (floor == null || floor.Map == null)
+            {
+                return null;
+            }
+
+            return BoardDressing.Parse(DressingPath, TextFor(floor, floor.Map, Settings()));
+        }
+
+        /// <summary>
+        /// Takes the preview down.
+        /// </summary>
+        /// <remarks>
+        /// <b>And throws away whatever was moved on it.</b> Drawing the board
+        /// again carries unbaked work forward (<see cref="Carried"/>), so this is
+        /// the only way back to <c>content/dressing.txt</c> — and the only way to
+        /// lose an afternoon in one click. There is no prompt, because a menu
+        /// item that argued with the person who chose it would be worse.
+        /// </remarks>
         [MenuItem("Tools/Board/Clear")]
         public static void Clear()
         {
@@ -117,15 +191,20 @@ namespace View.Editor
                 return;
             }
 
-            HexMap map = StreamingContent.ReadMap();
             HexFloor floor = previews[0].GetComponentInChildren<HexFloor>();
 
-            if (floor == null)
+            if (floor == null || floor.Map == null)
             {
                 Debug.LogWarning("The board preview has no floor on it. Draw it again.");
 
                 return;
             }
+
+            // The board that is standing, not the one on disk. They are the same
+            // thing until somebody opens the map editor, and then they are not:
+            // baking a draft board against the committed map would measure the
+            // scenery against a corridor that is not the one under it.
+            HexMap map = floor.Map;
 
             string text = TextFor(floor, map, Settings());
             string path = Path.Combine(RepositoryRoot(), DressingPath);
@@ -138,7 +217,12 @@ namespace View.Editor
 
             AssetDatabase.Refresh();
 
-            Dress();
+            // Cleared first so the redraw comes from the file rather than from
+            // the preview it would otherwise carry forward. Reading back what
+            // was just written is the round trip, checked for free; carrying the
+            // board forward would draw the same objects again and prove nothing.
+            Clear();
+            DressWith(map);
         }
 
         /// <summary>
@@ -344,7 +428,12 @@ namespace View.Editor
             && Mathf.Abs(left.Scale - right.Scale) < Same;
 
         /// <summary>The settings the scene carries, or the shipped ones.</summary>
-        private static DressingSettings Settings()
+        /// <remarks>
+        /// Public so a test can measure a board against the same settings the
+        /// tools drew it with. A test that assumed the defaults would pass or
+        /// fail on whether anybody had touched the asset.
+        /// </remarks>
+        public static DressingSettings Settings()
         {
             foreach (string guid in AssetDatabase.FindAssets("t:BoardDressingAsset"))
             {
