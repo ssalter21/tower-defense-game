@@ -233,6 +233,19 @@ namespace View.Editor
         /// <summary>Where the tile atlas material is written.</summary>
         public const string TileMaterialPath = "Assets/Materials/Tiles.mat";
 
+        /// <summary>
+        /// Where the dressing settings live. Made once and never rewritten.
+        /// </summary>
+        /// <remarks>
+        /// <b>Created if absent, and left completely alone otherwise.</b> Every
+        /// other asset this file touches is regenerated on every run, because
+        /// every other asset is derived from something. This one is the thing a
+        /// human slides, so regenerating it would throw away the afternoon they
+        /// spent finding a density the board reads well at -- and it would do it
+        /// silently, on a tool somebody ran for an unrelated reason.
+        /// </remarks>
+        public const string DressingAssetPath = "Assets/Settings/BoardDressing.asset";
+
         /// <summary>The texture every tile wears. The pack's own atlas.</summary>
         private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval.png";
 
@@ -445,6 +458,37 @@ namespace View.Editor
             throw new IOException("No tile model is bound for " + piece + ".");
         }
 
+        /// <summary>Points the root at the dressing settings, making them if they are not there.</summary>
+        private static void WireDressing(SerializedObject serialized)
+        {
+            SerializedProperty property = serialized.FindProperty("dressing");
+
+            if (property == null)
+            {
+                throw new IOException("MatchRoot has no serialized field named dressing.");
+            }
+
+            property.objectReferenceValue = DressingAsset();
+        }
+
+        /// <summary>The dressing settings, made at their defaults on first run.</summary>
+        private static BoardDressingAsset DressingAsset()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(DressingAssetPath);
+
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            EnsureFolder(Path.GetDirectoryName(DressingAssetPath));
+
+            BoardDressingAsset made = ScriptableObject.CreateInstance<BoardDressingAsset>();
+            AssetDatabase.CreateAsset(made, DressingAssetPath);
+
+            return AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(DressingAssetPath);
+        }
+
         /// <summary>The committed tile material, written if it is not there yet.</summary>
         private static Material TileMaterial()
         {
@@ -523,6 +567,7 @@ namespace View.Editor
             WireArt(serialized);
             WireTiles(serialized);
             WireScenery(serialized);
+            WireDressing(serialized);
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EnsureFolder(Path.GetDirectoryName(ScenePath));

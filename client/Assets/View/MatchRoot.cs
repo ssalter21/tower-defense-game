@@ -50,6 +50,10 @@ namespace View
         private SceneryModels scenery = new SceneryModels();
 
         [SerializeField]
+        [Tooltip("How heavily the board is dressed. Optional: unset is the shipped weight.")]
+        private BoardDressingAsset dressing;
+
+        [SerializeField]
         [Tooltip("The models and clips the match is drawn with. Every one chosen by the developer; see #44.")]
         private MatchArt art = new MatchArt();
 
@@ -580,12 +584,23 @@ namespace View
         /// The order matters in one place only: the camera is framed on bounds
         /// the floor reports, so the floor goes first.
         /// </remarks>
-        public void Build(HexMap map, TileSet tiles = null, SceneryModels scenery = null)
+        public void Build(
+            HexMap map,
+            TileSet tiles = null,
+            SceneryModels scenery = null,
+            DressingSettings settings = null,
+            BoardDressing authored = null)
         {
             Map = map;
             TileMesh = HexTileMesh.Create();
 
-            Floor = HexFloor.Build(transform, map, TilesToDrawWith(tiles), SceneryToDressWith(scenery));
+            Floor = HexFloor.Build(
+                transform,
+                map,
+                TilesToDrawWith(tiles),
+                SceneryToDressWith(scenery),
+                settings ?? (dressing != null ? dressing.Settings() : null),
+                authored ?? StreamingContent.ReadDressing());
 
             Sun = BuildSun(transform);
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);

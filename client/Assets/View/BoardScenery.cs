@@ -118,39 +118,27 @@ namespace View
     public static class BoardScenery
     {
         /// <summary>
-        /// How far out a rim prop stands, as a fraction of the circumradius.
-        /// Far enough that a tower at the centre is clear of it, near enough
-        /// that it reads as belonging to this hex rather than the next.
+        /// Everything to draw for a map, dressed as it ships.
         /// </summary>
-        private const float RimNear = 0.52f;
-
-        /// <summary>The outer end of that band.</summary>
-        private const float RimFar = 0.70f;
+        public static List<SceneryPlacement> For(HexMap map) => For(map, null, null);
 
         /// <summary>
-        /// How much bigger than authored a small prop is drawn.
+        /// Everything to draw for a map, at a chosen weight and with a chosen
+        /// set of hand-placed exceptions.
         /// </summary>
+        /// <param name="map">The playfield. Null draws nothing.</param>
+        /// <param name="settings">How heavy the dressing is. Null is the shipped weight.</param>
+        /// <param name="dressing">
+        /// The cells somebody has spoken for. Null is none of them.
+        /// </param>
         /// <remarks>
-        /// <b>The pack's props are authored for a camera standing on the
-        /// board and this one frames the whole of it.</b> A barrel is 20
-        /// centimetres against a 2-metre tile, which at the distance a 14-wide
-        /// board is framed from is about two pixels: not small, invisible. The
-        /// groves and the mountains are left at their authored size, because
-        /// they are hex-sized already and scaling those would break the
-        /// silhouette the pack drew.
+        /// <b>The override is applied cell by cell, before the generator runs on
+        /// that cell rather than after.</b> A cell this file speaks for never
+        /// reaches <see cref="Dress"/> at all, so no setting can put anything
+        /// back on it and no roll is spent on it. That is what makes an override
+        /// mean the same thing at every weight.
         /// </remarks>
-        private const float PropScale = 1.7f;
-
-        /// <summary>How high above the board the clouds sit, in metres.</summary>
-        private const float CloudHeight = 6f;
-
-        /// <summary>How many clouds there are. Few enough to read as weather rather than as a ceiling.</summary>
-        private const int CloudCount = 5;
-
-        /// <summary>
-        /// Everything to draw for a map.
-        /// </summary>
-        public static List<SceneryPlacement> For(HexMap map)
+        public static List<SceneryPlacement> For(HexMap map, DressingSettings settings, BoardDressing dressing)
         {
             var placements = new List<SceneryPlacement>();
 
@@ -159,30 +147,51 @@ namespace View
                 return placements;
             }
 
+            DressingSettings weight = settings ?? DressingSettings.Default;
+            BoardDressing authored = dressing ?? BoardDressing.Empty;
+
             for (int row = 0; row < map.Height; row++)
             {
                 for (int column = 0; column < map.Width; column++)
                 {
+                    if (authored.Speaks(column, row))
+                    {
+                        // Whole, and without asking what the cell is. A hand
+                        // placed piece on the corridor is somebody's decision;
+                        // this is not the place to overrule it.
+                        placements.AddRange(authored.At(column, row));
+
+                        continue;
+                    }
+
                     if (map.CellAt(column, row) != MapCell.Ground)
                     {
                         continue;
                     }
 
-                    Dress(map, column, row, placements);
+                    Dress(map, weight, column, row, placements);
                 }
             }
 
-            Clouds(map, placements);
+            if (authored.HasSky)
+            {
+                placements.AddRange(authored.Sky);
+            }
+            else
+            {
+                Clouds(map, weight, placements);
+            }
 
             return placements;
         }
 
         /// <summary>One cell's worth.</summary>
-        private static void Dress(HexMap map, int column, int row, List<SceneryPlacement> placements)
+        private static void Dress(
+            HexMap map, DressingSettings weight, int column, int row, List<SceneryPlacement> placements)
         {
             bool besideTheRoad = TouchesCorridor(map, column, row);
 
-            if (!besideTheRoad && TryFiller(map, column, row, out SceneryPlacement filler))
+            if (!besideTheRoad && TryFiller(map, weight, column, row, out SceneryPlacement filler))
             {
                 placements.Add(filler);
 
@@ -192,20 +201,20 @@ namespace View
             // The camp register, and only along the path, so an encampment reads
             // as being posted where the fighting is rather than scattered over
             // the whole field.
-            if (besideTheRoad && Unit(column, row, 11) < 0.14f)
+            if (besideTheRoad && Unit(column, row, 11) < weight.CampChance)
             {
-                placements.Add(Standing(SceneryGroup.Camp, column, row, 12));
+                placements.Add(Standing(weight, SceneryGroup.Camp, column, row, 12));
 
                 return;
             }
 
-            int props = Unit(column, row, 20) < 0.42f
-                ? (Unit(column, row, 21) < 0.30f ? 2 : 1)
+            int props = Unit(column, row, 20) < weight.PropChance
+                ? (Unit(column, row, 21) < weight.SecondPropChance ? 2 : 1)
                 : 0;
 
             for (int index = 0; index < props; index++)
             {
-                placements.Add(Standing(SceneryGroup.RimProp, column, row, 30 + (index * 7)));
+                placements.Add(Standing(weight, SceneryGroup.RimProp, column, row, 30 + (index * 7)));
             }
         }
 
@@ -213,7 +222,8 @@ namespace View
         /// A hex-filling piece, if this cell draws one. Mountains stand on the
         /// border, where they frame the board rather than block the view of it.
         /// </summary>
-        private static bool TryFiller(HexMap map, int column, int row, out SceneryPlacement placement)
+        private static bool TryFiller(
+            HexMap map, DressingSettings weight, int column, int row, out SceneryPlacement placement)
         {
             placement = default;
 
@@ -224,11 +234,11 @@ namespace View
 
             if (border)
             {
-                if (roll < 0.34f)
+                if (roll < weight.PeakChance)
                 {
                     group = SceneryGroup.Peak;
                 }
-                else if (roll < 0.66f)
+                else if (roll < weight.PeakChance + weight.BorderGroveChance)
                 {
                     group = SceneryGroup.Grove;
                 }
@@ -237,7 +247,7 @@ namespace View
                     return false;
                 }
             }
-            else if (roll < 0.30f)
+            else if (roll < weight.GroveChance)
             {
                 group = SceneryGroup.Grove;
             }
@@ -263,13 +273,14 @@ namespace View
         }
 
         /// <summary>One small thing, out near a rim, turned any way.</summary>
-        private static SceneryPlacement Standing(SceneryGroup group, int column, int row, int salt)
+        private static SceneryPlacement Standing(
+            DressingSettings weight, SceneryGroup group, int column, int row, int salt)
         {
             // A rim rather than a rim's midpoint: the angle is free within the
             // band, so a row of props does not line up across the board.
             float angle = Unit(column, row, salt) * 2f * (float)System.Math.PI;
             float radius = HexGeometry.Circumradius
-                * (RimNear + (Unit(column, row, salt + 1) * (RimFar - RimNear)));
+                * (weight.RimNear + (Unit(column, row, salt + 1) * (weight.RimFar - weight.RimNear)));
 
             return new SceneryPlacement(
                 group,
@@ -280,7 +291,7 @@ namespace View
                 0f,
                 (float)System.Math.Sin(angle) * radius,
                 Unit(column, row, salt + 3) * 360f,
-                PropScale * (0.85f + (Unit(column, row, salt + 4) * 0.35f)));
+                weight.PropScale * (0.85f + (Unit(column, row, salt + 4) * 0.35f)));
         }
 
         /// <summary>
@@ -288,9 +299,9 @@ namespace View
         /// so they carry the cell of the board's corner and are never cleared —
         /// nothing can be built in the sky.
         /// </summary>
-        private static void Clouds(HexMap map, List<SceneryPlacement> placements)
+        private static void Clouds(HexMap map, DressingSettings weight, List<SceneryPlacement> placements)
         {
-            for (int index = 0; index < CloudCount; index++)
+            for (int index = 0; index < weight.CloudCount; index++)
             {
                 float across = Unit(index, 0, 91);
                 float down = Unit(index, 0, 92);
@@ -304,7 +315,7 @@ namespace View
                     column,
                     row,
                     (Unit(index, 0, 94) - 0.5f) * HexGeometry.AcrossFlats,
-                    CloudHeight + (Unit(index, 0, 95) * 2.5f),
+                    weight.CloudHeight + (Unit(index, 0, 95) * weight.CloudSpread),
                     (Unit(index, 0, 96) - 0.5f) * HexGeometry.AcrossFlats,
                     Unit(index, 0, 97) * 360f,
                     0.8f + (Unit(index, 0, 98) * 0.6f)));

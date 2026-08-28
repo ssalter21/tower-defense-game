@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1320525333
+--- !u!1 &500785710
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1320525335}
-  - component: {fileID: 1320525334}
+  - component: {fileID: 500785712}
+  - component: {fileID: 500785711}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1320525334
+--- !u!114 &500785711
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1320525333}
+  m_GameObject: {fileID: 500785710}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -191,6 +191,7 @@ MonoBehaviour:
     - {fileID: -7418876175851292723, guid: 54e14a85a4964d70ac4be91ed0782640, type: 3}
     - {fileID: 6153126632993082432, guid: d3a61ead50c943d4abf96c412283f0d1, type: 3}
     surface: {fileID: 2100000, guid: 311b9a3e1c16dcf4cacf5e010042284c, type: 2}
+  dressing: {fileID: 11400000, guid: 38711135c81891b4c93facc43d0aa2b2, type: 2}
   art:
     units:
     - unitId: 1
@@ -285,13 +286,13 @@ MonoBehaviour:
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &1320525335
+--- !u!4 &500785712
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1320525333}
+  m_GameObject: {fileID: 500785710}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -304,4 +305,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1320525335}
+  - {fileID: 500785712}

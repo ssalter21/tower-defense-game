@@ -83,14 +83,20 @@ namespace View
         /// of the one root object, like everything else, so the scene's root
         /// count does not depend on how big the map is.
         /// </summary>
-        public static HexFloor Build(Transform parent, HexMap map, TileSet tiles, SceneryModels scenery = null)
+        public static HexFloor Build(
+            Transform parent,
+            HexMap map,
+            TileSet tiles,
+            SceneryModels scenery = null,
+            DressingSettings settings = null,
+            BoardDressing dressing = null)
         {
             var host = new GameObject("Floor");
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var floor = host.AddComponent<HexFloor>();
             floor.Draw(map, tiles);
-            floor.Scatter(map, scenery);
+            floor.Scatter(map, scenery, settings, dressing);
 
             return floor;
         }
@@ -234,7 +240,8 @@ namespace View
         /// Stands the board's scenery on the tiles. Nothing at all when no
         /// models were wired, which is what a checkout without the art draws.
         /// </summary>
-        private void Scatter(HexMap map, SceneryModels models)
+        private void Scatter(
+            HexMap map, SceneryModels models, DressingSettings settings, BoardDressing dressing)
         {
             if (models == null || !models.IsUsable)
             {
@@ -243,7 +250,7 @@ namespace View
 
             _scenery = new GameObject[map.Width * map.Height];
 
-            foreach (SceneryPlacement placement in BoardScenery.For(map))
+            foreach (SceneryPlacement placement in BoardScenery.For(map, settings, dressing))
             {
                 Mesh mesh = models.MeshFor(placement.Group, placement.Variant);
 
@@ -258,6 +265,7 @@ namespace View
 
                 var piece = new GameObject(placement.Group + " " + mesh.name);
                 piece.transform.SetParent(host, worldPositionStays: false);
+                piece.AddComponent<ScenerySignature>().Wrote(placement.Group, placement.Variant);
                 piece.transform.localPosition =
                     new Vector3(placement.OffsetX, placement.OffsetY, placement.OffsetZ);
                 piece.transform.localRotation = Quaternion.Euler(0f, placement.Turn, 0f);

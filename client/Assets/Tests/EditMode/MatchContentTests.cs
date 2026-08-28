@@ -27,18 +27,21 @@ namespace Tests.EditMode
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
 
         /// <summary>
-        /// Every file a match reads has an up-to-date copy beside the player.
+        /// Every file that ships has an up-to-date copy beside the player.
         /// </summary>
         /// <remarks>
         /// The map alone was enough to draw the floor. A match also needs the
         /// type table, the defense and the wave, and a file that is read but
         /// does not ship presents as an empty playfield in a build that worked
-        /// perfectly in the editor.
+        /// perfectly in the editor. The shipped list is wider than the list a
+        /// match needs — the board's dressing is read by the view alone — and it
+        /// is the wider one that is checked, because a stale copy is a build
+        /// quietly different from the editor either way.
         /// </remarks>
         [Test]
-        public void EveryContentFileAMatchNeedsIsShipped()
+        public void EveryContentFileThatShipsIsUpToDate()
         {
-            foreach (string fileName in StreamingContent.MatchFileNames)
+            foreach (string fileName in StreamingContent.ShippedFileNames)
             {
                 string authored = Path.Combine(RepositoryRoot(), "content", fileName);
                 string shipped = StreamingContent.PathOf(fileName);
