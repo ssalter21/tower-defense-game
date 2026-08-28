@@ -57,6 +57,8 @@ namespace View
 
         private HexMap _map;
 
+        private HexFloor _floor;
+
         private Transform _towerParent;
 
         private Material _lightMaterial;
@@ -86,7 +88,13 @@ namespace View
         /// <param name="route">The corridor, which is what a tower faces.</param>
         /// <param name="tile">The floor tile mesh, which the lit hex is a copy of.</param>
         public static BuildBoard Build(
-            Transform parent, ComposedRound round, MatchArt art, RoutePath route, Mesh tile, HexMap map)
+            Transform parent,
+            ComposedRound round,
+            MatchArt art,
+            RoutePath route,
+            Mesh tile,
+            HexMap map,
+            HexFloor floor)
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
             if (round == null) throw new ArgumentNullException(nameof(round));
@@ -97,7 +105,7 @@ namespace View
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var board = host.AddComponent<BuildBoard>();
-            board.Assemble(round, art, route, tile, map);
+            board.Assemble(round, art, route, tile, map, floor);
 
             return board;
         }
@@ -124,6 +132,27 @@ namespace View
                 // it, so the old model goes and the new one takes its place.
                 Remove(placement.Id);
                 Draw(placement);
+            }
+
+            // A tower and a grove want the same hex, so the grove gives way.
+            // Done here rather than in Draw because this is the one place that
+            // knows the whole board, and telling the floor the whole of it is
+            // what lets a round that has been reloaded or undone come out right
+            // without this class remembering what it cleared last time.
+            if (_floor != null)
+            {
+                _floor.ClearSceneryUnder(Standing(board));
+            }
+        }
+
+        /// <summary>Every cell the composed board has a tower on.</summary>
+        private static IEnumerable<(int Column, int Row)> Standing(Board board)
+        {
+            for (int index = 0; index < board.Count; index++)
+            {
+                Placement placement = board.Placements[index];
+
+                yield return (placement.Column, placement.Row);
             }
         }
 
@@ -152,12 +181,19 @@ namespace View
             if (_lightMaterial != null) Destroy(_lightMaterial);
         }
 
-        private void Assemble(ComposedRound round, MatchArt art, RoutePath route, Mesh tile, HexMap map)
+        private void Assemble(
+            ComposedRound round,
+            MatchArt art,
+            RoutePath route,
+            Mesh tile,
+            HexMap map,
+            HexFloor floor)
         {
             _round = round;
             _art = art;
             _route = route;
             _map = map;
+            _floor = floor;
 
             _towerParent = new GameObject("Towers").transform;
             _towerParent.SetParent(transform, worldPositionStays: false);

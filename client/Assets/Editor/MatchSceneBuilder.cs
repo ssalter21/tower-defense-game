@@ -260,6 +260,124 @@ namespace View.Editor
         };
 
         /// <summary>
+        /// The models behind each scenery group, and the serialized field on
+        /// <c>SceneryModels</c> that holds them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Adding a model is an edit to this list and nothing else.</b>
+        /// <c>BoardScenery</c> asks for a group and a variant number and never
+        /// counts the art, so a rock appended below is in the rotation on the
+        /// next scene build with no other change anywhere.
+        /// </para>
+        /// <para>
+        /// <b>Mountains are not in the grove list even though both fill a hex.</b>
+        /// A mountain is 1.8 metres tall against a 2-metre tile, so it reads as
+        /// terrain rather than as dressing, and the scatter puts it only on the
+        /// border where it frames the board instead of standing in front of it.
+        /// </para>
+        /// <para>
+        /// <b>The pack's hills are not here, and that is not an oversight.</b>
+        /// Its <c>hill_single</c> models are shells authored to cap a hex that
+        /// is already raised; standing one on flat ground draws its inside,
+        /// which reads as a crater. Nor are the smallest props — a bucket, a
+        /// sack, a stump — which at the distance a whole board is framed from
+        /// are a pixel and a half of noise. Both were imported, looked at on a
+        /// contact sheet, and dropped again.
+        /// </para>
+        /// </remarks>
+        private static readonly (string field, string[] assets)[] SceneryBindings =
+        {
+            ("rimProps", new[]
+            {
+                "rock_single_B", "rock_single_C", "rock_single_D", "rock_single_E",
+                "tree_single_A", "tree_single_B",
+                "barrel", "crate_A_big", "haybale",
+            }),
+            ("camp", new[] { "tent", "weaponrack", "target", "wheelbarrow" }),
+            ("groves", new[]
+            {
+                "trees_A_small", "trees_A_medium", "trees_A_large",
+                "trees_B_small", "trees_B_medium", "trees_B_large",
+            }),
+            ("peaks", new[] { "mountain_A", "mountain_B", "mountain_C" }),
+            ("clouds", new[] { "cloud_big", "cloud_small" }),
+        };
+
+        /// <summary>Where the scenery models are imported.</summary>
+        private const string SceneryFolder = "Assets/Art/Scenery/";
+
+        /// <summary>
+        /// Fills in the board's scenery models. They wear the tile atlas, being
+        /// out of the same pack and mapped to the same texture.
+        /// </summary>
+        /// <remarks>
+        /// Throws on a missing model, unlike the floor's tolerance of an empty
+        /// set at runtime: a scene generated against a checkout with half the
+        /// scenery imported would silently drop a whole group, and a board with
+        /// no mountains looks like a design choice rather than a failed copy.
+        /// </remarks>
+        private static void WireScenery(SerializedObject serialized)
+        {
+            SerializedProperty scenery = serialized.FindProperty("scenery");
+
+            foreach ((string field, string[] assets) in SceneryBindings)
+            {
+                SerializedProperty property = scenery.FindPropertyRelative(field);
+
+                if (property == null)
+                {
+                    throw new IOException("SceneryModels has no serialized field named " + field + ".");
+                }
+
+                property.arraySize = assets.Length;
+
+                for (int index = 0; index < assets.Length; index++)
+                {
+                    property.GetArrayElementAtIndex(index).objectReferenceValue =
+                        LoadMesh(SceneryFolder + assets[index] + ".fbx");
+                }
+            }
+
+            scenery.FindPropertyRelative("surface").objectReferenceValue = TileMaterial();
+        }
+
+        /// <summary>
+        /// The board's scenery, loaded from the project rather than from a
+        /// scene. The frame capture's, for the reason <see cref="Tiles"/> is.
+        /// </summary>
+        public static SceneryModels Scenery() =>
+            SceneryModels.Of(
+                Group("rimProps"),
+                Group("camp"),
+                Group("groves"),
+                Group("peaks"),
+                Group("clouds"),
+                TileMaterial());
+
+        private static Mesh[] Group(string field)
+        {
+            foreach ((string bound, string[] assets) in SceneryBindings)
+            {
+                if (bound != field)
+                {
+                    continue;
+                }
+
+                var meshes = new Mesh[assets.Length];
+
+                for (int index = 0; index < assets.Length; index++)
+                {
+                    meshes[index] = LoadMesh(SceneryFolder + assets[index] + ".fbx");
+                }
+
+                return meshes;
+            }
+
+            throw new IOException("No scenery group is bound for " + field + ".");
+        }
+
+        /// <summary>
         /// Fills in the floor's six tile models and the atlas they wear.
         /// </summary>
         /// <remarks>
@@ -404,6 +522,7 @@ namespace View.Editor
             serialized.FindProperty("grassMaterial").objectReferenceValue = grass;
             WireArt(serialized);
             WireTiles(serialized);
+            WireScenery(serialized);
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EnsureFolder(Path.GetDirectoryName(ScenePath));

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Globalization;
 using Sim;
 using UnityEngine;
@@ -14,11 +15,19 @@ namespace View
     /// <b>The renderer walks the grid, and that is the whole of it.</b> Every
     /// cell gets exactly one tile; which model, and how far it is turned, comes
     /// from <see cref="RoadTiling"/>; where it stands comes from
-    /// <see cref="HexGeometry"/>. No decoration, no variation, no special case
-    /// for the ends of the corridor — anything of that sort would be a second
-    /// place the map is interpreted, and the point of this class is that there
-    /// is not one. The choosing lives in <see cref="RoadTiling"/> rather than
-    /// here precisely so that it can be tested without a scene.
+    /// <see cref="HexGeometry"/>. No variation and no special case for the ends
+    /// of the corridor — anything of that sort would be a second place the map
+    /// is interpreted, and the point of this class is that there is not one. The
+    /// choosing lives in <see cref="RoadTiling"/> rather than here precisely so
+    /// that it can be tested without a scene.
+    /// </para>
+    /// <para>
+    /// <b>Scenery is drawn here and decided elsewhere, for the same reason.</b>
+    /// <see cref="BoardScenery"/> says what stands where; this class puts it
+    /// there and keeps one host per cell, so that <see cref="ShowScenery"/> can
+    /// clear a hex the moment a tower takes it. A floor with no scenery models
+    /// wired draws a bare board rather than failing, because scenery is the one
+    /// thing on the floor that carries no information about the match.
     /// </para>
     /// <para>
     /// <b>Height is drawn, and it is not decoration.</b> A tier is worth half a
@@ -41,6 +50,10 @@ namespace View
         private MeshRenderer[] _tiles;
 
         private TilePiece[] _pieces;
+
+        private GameObject[] _scenery;
+
+        private Transform _sky;
 
         /// <summary>The map this floor was drawn from.</summary>
         public HexMap Map { get; private set; }
@@ -70,13 +83,14 @@ namespace View
         /// of the one root object, like everything else, so the scene's root
         /// count does not depend on how big the map is.
         /// </summary>
-        public static HexFloor Build(Transform parent, HexMap map, TileSet tiles)
+        public static HexFloor Build(Transform parent, HexMap map, TileSet tiles, SceneryModels scenery = null)
         {
             var host = new GameObject("Floor");
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var floor = host.AddComponent<HexFloor>();
             floor.Draw(map, tiles);
+            floor.Scatter(map, scenery);
 
             return floor;
         }
@@ -100,6 +114,71 @@ namespace View
         /// able to tell road from ground the moment the blockout did.
         /// </remarks>
         public bool IsRoadTile(int column, int row) => PieceAt(column, row) != TilePiece.Ground;
+
+        /// <summary>True if anything stands on this cell that a tower would displace.</summary>
+        public bool HasSceneryAt(int column, int row) => SceneryAt(column, row) != null;
+
+        /// <summary>
+        /// The scenery standing on one cell, or null. Null for every cell of a
+        /// board drawn without models.
+        /// </summary>
+        public GameObject SceneryAt(int column, int row) =>
+            _scenery == null ? null : _scenery[(row * Map.Width) + column];
+
+        /// <summary>
+        /// Shows or hides the scenery on one cell.
+        /// </summary>
+        /// <remarks>
+        /// <b>Hidden rather than destroyed, because a tower can be taken back.</b>
+        /// The build phase adds and removes towers freely, and a felled grove
+        /// that could not grow back would make the board's dressing depend on
+        /// the order somebody tried placements in. A cell with nothing on it is
+        /// a silent no-op, so a caller may tell the floor about every tower it
+        /// has without first asking what is there.
+        /// </remarks>
+        public void ShowScenery(int column, int row, bool shown)
+        {
+            GameObject standing = SceneryAt(column, row);
+
+            if (standing != null && standing.activeSelf != shown)
+            {
+                standing.SetActive(shown);
+            }
+        }
+
+        /// <summary>
+        /// Hides the scenery under every cell named and shows it everywhere
+        /// else. What a caller holding a set of towers wants, rather than a call
+        /// per cell and a memory of last time.
+        /// </summary>
+        public void ClearSceneryUnder(IEnumerable<(int Column, int Row)> occupied)
+        {
+            if (_scenery == null)
+            {
+                return;
+            }
+
+            for (int index = 0; index < _scenery.Length; index++)
+            {
+                if (_scenery[index] != null && !_scenery[index].activeSelf)
+                {
+                    _scenery[index].SetActive(true);
+                }
+            }
+
+            if (occupied == null)
+            {
+                return;
+            }
+
+            foreach ((int column, int row) in occupied)
+            {
+                if (column >= 0 && column < Map.Width && row >= 0 && row < Map.Height)
+                {
+                    ShowScenery(column, row, false);
+                }
+            }
+        }
 
         private void Draw(HexMap map, TileSet tiles)
         {
@@ -149,6 +228,87 @@ namespace View
             }
 
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
+        }
+
+        /// <summary>
+        /// Stands the board's scenery on the tiles. Nothing at all when no
+        /// models were wired, which is what a checkout without the art draws.
+        /// </summary>
+        private void Scatter(HexMap map, SceneryModels models)
+        {
+            if (models == null || !models.IsUsable)
+            {
+                return;
+            }
+
+            _scenery = new GameObject[map.Width * map.Height];
+
+            foreach (SceneryPlacement placement in BoardScenery.For(map))
+            {
+                Mesh mesh = models.MeshFor(placement.Group, placement.Variant);
+
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                Transform host = placement.Group == SceneryGroup.Cloud
+                    ? Sky()
+                    : SceneryHost(map, placement.Column, placement.Row);
+
+                var piece = new GameObject(placement.Group + " " + mesh.name);
+                piece.transform.SetParent(host, worldPositionStays: false);
+                piece.transform.localPosition =
+                    new Vector3(placement.OffsetX, placement.OffsetY, placement.OffsetZ);
+                piece.transform.localRotation = Quaternion.Euler(0f, placement.Turn, 0f);
+                piece.transform.localScale = Vector3.one * placement.Scale;
+
+                piece.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+                var renderer = piece.AddComponent<MeshRenderer>();
+
+                // A cloud's shadow crossing the board is the whole reason to
+                // have a cloud; everything else casts because everything in this
+                // project does.
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+                renderer.sharedMaterial = models.Surface;
+            }
+        }
+
+        /// <summary>
+        /// The object one cell's scenery hangs off, made on first use and
+        /// standing at the cell's centre, so that hiding a hex is one call and
+        /// the pieces on it keep their offsets.
+        /// </summary>
+        private Transform SceneryHost(HexMap map, int column, int row)
+        {
+            int index = (row * map.Width) + column;
+
+            if (_scenery[index] == null)
+            {
+                var host = new GameObject("Scenery " + column + "," + row);
+                host.transform.SetParent(transform, worldPositionStays: false);
+                host.transform.localPosition =
+                    HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
+
+                _scenery[index] = host;
+            }
+
+            return _scenery[index].transform;
+        }
+
+        /// <summary>Where the clouds hang. Not a cell, so nothing can clear it.</summary>
+        private Transform Sky()
+        {
+            if (_sky == null)
+            {
+                var host = new GameObject("Sky");
+                host.transform.SetParent(transform, worldPositionStays: false);
+                _sky = host.transform;
+            }
+
+            return _sky;
         }
 
         /// <summary>

@@ -46,6 +46,10 @@ namespace View
         private TileSet tiles = new TileSet();
 
         [SerializeField]
+        [Tooltip("The models the board is dressed with. Optional: an empty set draws a bare board.")]
+        private SceneryModels scenery = new SceneryModels();
+
+        [SerializeField]
         [Tooltip("The models and clips the match is drawn with. Every one chosen by the developer; see #44.")]
         private MatchArt art = new MatchArt();
 
@@ -324,7 +328,7 @@ namespace View
             }
 
             Composing = round;
-            Building = BuildBoard.Build(transform, round, art, RoutePath.For(Map), TileMesh, Map);
+            Building = BuildBoard.Build(transform, round, art, RoutePath.For(Map), TileMesh, Map, Floor);
             Palette = TowerPalette.Build(transform, round, CameraRig.Camera, Map);
             Wave = WaveBar.Build(transform, round);
             Pointer = BuildInput.Build(
@@ -505,6 +509,10 @@ namespace View
             MatchView = host.AddComponent<MatchView>();
             MatchView.Begin(Map, rules, types, layout, wave, seed, art);
 
+            // The layout does not change for the life of a match, so the board
+            // is dressed around it once rather than watched.
+            Floor.ClearSceneryUnder(Standing(layout));
+
             return MatchView;
         }
 
@@ -527,6 +535,24 @@ namespace View
             Controls = null;
             Playback = null;
             MatchView = null;
+
+            // The felled groves grow back, so the next round is composed on the
+            // board this one started from rather than on the one it left.
+            if (Floor != null)
+            {
+                Floor.ClearSceneryUnder(null);
+            }
+        }
+
+        /// <summary>Every cell a layout stands a tower on.</summary>
+        private static System.Collections.Generic.IEnumerable<(int Column, int Row)> Standing(TowerLayout layout)
+        {
+            for (int index = 0; index < layout.Count; index++)
+            {
+                PlacedTower placed = layout.Towers[index];
+
+                yield return (placed.Column, placed.Row);
+            }
         }
 
         /// <summary>
@@ -554,12 +580,12 @@ namespace View
         /// The order matters in one place only: the camera is framed on bounds
         /// the floor reports, so the floor goes first.
         /// </remarks>
-        public void Build(HexMap map, TileSet tiles = null)
+        public void Build(HexMap map, TileSet tiles = null, SceneryModels scenery = null)
         {
             Map = map;
             TileMesh = HexTileMesh.Create();
 
-            Floor = HexFloor.Build(transform, map, TilesToDrawWith(tiles));
+            Floor = HexFloor.Build(transform, map, TilesToDrawWith(tiles), SceneryToDressWith(scenery));
 
             Sun = BuildSun(transform);
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
@@ -593,6 +619,26 @@ namespace View
                 TileMesh,
                 roadMaterial != null ? roadMaterial : ViewMaterials.Create("Road", SceneFraming.RoadColor),
                 grassMaterial != null ? grassMaterial : ViewMaterials.Create("Grass", SceneFraming.GrassColor));
+        }
+
+        /// <summary>
+        /// The models the board is dressed with: the set handed in, then the one
+        /// the scene carries, and nothing at all if neither is usable.
+        /// </summary>
+        /// <remarks>
+        /// There is no generated fallback here, unlike <see cref="TilesToDrawWith"/>,
+        /// and that is the difference between the two in one line: a floor
+        /// without tiles cannot show where the path goes, and a floor without
+        /// scenery is simply a floor.
+        /// </remarks>
+        private SceneryModels SceneryToDressWith(SceneryModels supplied)
+        {
+            if (supplied != null && supplied.IsUsable)
+            {
+                return supplied;
+            }
+
+            return scenery != null && scenery.IsUsable ? scenery : null;
         }
 
         private static Light BuildSun(Transform parent)
