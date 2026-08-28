@@ -58,10 +58,30 @@ namespace View.Editor
         [MenuItem("Tools/Board/Dress %#d")]
         public static void Dress()
         {
+            Selection.activeGameObject = DressWith(StreamingContent.ReadMap());
+
+            Debug.Log(
+                "Board preview drawn. Move what you like, then Tools > Board > Bake. "
+                + "It is not saved with the scene — closing without baking loses it.");
+        }
+
+        /// <summary>
+        /// Draws the preview from a map handed in rather than read from the
+        /// content directory.
+        /// </summary>
+        /// <remarks>
+        /// <b>For the board editor, whose map is not on disk yet.</b> A board
+        /// being drawn exists only in a draft until somebody bakes it, and a
+        /// preview that could only show the committed file would show the board
+        /// as it was before the last twenty clicks. Nothing is selected here
+        /// either — the editor repaints on every stroke, and stealing the
+        /// selection each time would fight the person using it.
+        /// </remarks>
+        public static GameObject DressWith(HexMap map)
+        {
             Clear();
 
             var host = new GameObject(PreviewName);
-            HexMap map = StreamingContent.ReadMap();
 
             HexFloor.Build(
                 host.transform,
@@ -73,11 +93,7 @@ namespace View.Editor
 
             Hide(host.transform);
 
-            Selection.activeGameObject = host;
-
-            Debug.Log(
-                "Board preview drawn. Move what you like, then Tools > Board > Bake. "
-                + "It is not saved with the scene — closing without baking loses it.");
+            return host;
         }
 
         [MenuItem("Tools/Board/Clear")]
