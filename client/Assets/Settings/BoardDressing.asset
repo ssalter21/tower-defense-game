@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15d20107261fc24fa4a431500b6dc3d, type: 3}
+  m_Name: BoardDressing
+  m_EditorClassIdentifier: View::View.BoardDressingAsset
+  groveChance: 0.3
+  peakChance: 0.34
+  borderGroveChance: 0.32
+  propChance: 0.42
+  secondPropChance: 0.3
+  campChance: 0.14
+  propScale: 1.7
+  rimNear: 0.52
+  rimFar: 0.7
+  cloudCount: 5
+  cloudHeight: 6
+  cloudSpread: 2.5

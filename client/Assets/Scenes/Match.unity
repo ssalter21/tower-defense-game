@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &2102538378
+--- !u!1 &500785710
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2102538380}
-  - component: {fileID: 2102538379}
+  - component: {fileID: 500785712}
+  - component: {fileID: 500785711}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2102538379
+--- !u!114 &500785711
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2102538378}
+  m_GameObject: {fileID: 500785710}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -150,6 +150,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: View::View.MatchRoot
   roadMaterial: {fileID: 2100000, guid: 9fe586d5fd44d704993aec0157332f89, type: 2}
   grassMaterial: {fileID: 2100000, guid: e20719cebe43d064b82653fdd2d9c6fc, type: 2}
+  tiles:
+    ground: {fileID: 703726867841230225, guid: f61f9be82275441bada82099c14fd92e, type: 3}
+    straight: {fileID: -4834173543892134579, guid: b81ebc3e52c24cb8b7288f7c5e4d6ed4, type: 3}
+    curve: {fileID: -195117725110335826, guid: 8a06bb929c814a74b22938165c004f5b, type: 3}
+    hairpin: {fileID: -9208122355427140850, guid: 615cf765f2204027a2e5a3ea7e48d4da, type: 3}
+    deadEnd: {fileID: 2316860884007315106, guid: 1e441b1cb6834748adf87ec5963403b6, type: 3}
+    straightRamp: {fileID: -126285260458875959, guid: 1267bf0521704d4cb4bc7e87d209746a, type: 3}
+    surface: {fileID: 2100000, guid: 311b9a3e1c16dcf4cacf5e010042284c, type: 2}
+    road: {fileID: 0}
+    grass: {fileID: 0}
+  scenery:
+    rimProps:
+    - {fileID: -6771102107789436196, guid: 2950e01847204f9298c0a8e54bc1383a, type: 3}
+    - {fileID: -952404110119702382, guid: 8045efa172bc477381addc4bc0dbb467, type: 3}
+    - {fileID: -1908972516316393811, guid: f1d76d3ff1054778bf556b9689317d17, type: 3}
+    - {fileID: 4580205229766308904, guid: f996afca78b44d6c9daf59a7a2f1bff8, type: 3}
+    - {fileID: -3189140834629115801, guid: 424a94fddb49480e91a8fd1d2dac6eb0, type: 3}
+    - {fileID: 2795065170541143438, guid: 6a9989417a2f4807833356cc9870e06b, type: 3}
+    - {fileID: -2643173543783292932, guid: 925183854efe4e79947d3cfe5723a4e0, type: 3}
+    - {fileID: -2285864650295754342, guid: 666341bc758d4f33b407ad9ff0f51fd5, type: 3}
+    - {fileID: -5609036387863046578, guid: 9335acecf19643e8ae51e27db54d6970, type: 3}
+    camp:
+    - {fileID: 6372168373158155345, guid: 5c25a04e11ad4d80b14babc963af3081, type: 3}
+    - {fileID: -6399882758838267036, guid: 8f1cc0b541e04242945b75f37b61cac0, type: 3}
+    - {fileID: -3860864116172256851, guid: e177dd699ff14d489ad1f837ae86f84c, type: 3}
+    - {fileID: -2807450736598629019, guid: fb7e8d4690434c9fbdadd5de62763b03, type: 3}
+    groves:
+    - {fileID: 2018843365479734161, guid: 3ba9a22d8b6b4a17bb61c5286a2a1659, type: 3}
+    - {fileID: 3942226291982591136, guid: e083d6b7149a43daa4f83b50fb114e22, type: 3}
+    - {fileID: 49296848564199152, guid: 475a859093594107ad33666ac13d6597, type: 3}
+    - {fileID: -3146918301439126358, guid: ced2e5f7e4854cfcbb186e53aec7f87a, type: 3}
+    - {fileID: 2465605880213718758, guid: 941eeb09b4a64c88bb6e9ea3e625215b, type: 3}
+    - {fileID: -334426107407318026, guid: 0603a10d744e4490a57cba0d3cccb5d7, type: 3}
+    peaks:
+    - {fileID: -4159589251850826491, guid: 28b6b801af5841178a966d8b3c9b1ed0, type: 3}
+    - {fileID: 7652135771421027118, guid: 636b8997ab9c4fb1848989c9d2a79e0f, type: 3}
+    - {fileID: 5376246073708763396, guid: b858b8802d624bf88fe44ba9b329d777, type: 3}
+    clouds:
+    - {fileID: -7418876175851292723, guid: 54e14a85a4964d70ac4be91ed0782640, type: 3}
+    - {fileID: 6153126632993082432, guid: d3a61ead50c943d4abf96c412283f0d1, type: 3}
+    surface: {fileID: 2100000, guid: 311b9a3e1c16dcf4cacf5e010042284c, type: 2}
+  dressing: {fileID: 11400000, guid: 38711135c81891b4c93facc43d0aa2b2, type: 2}
   art:
     units:
     - unitId: 1
@@ -244,13 +286,13 @@ MonoBehaviour:
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &2102538380
+--- !u!4 &500785712
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2102538378}
+  m_GameObject: {fileID: 500785710}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -263,4 +305,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 2102538380}
+  - {fileID: 500785712}

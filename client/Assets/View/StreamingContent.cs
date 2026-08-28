@@ -128,6 +128,21 @@ namespace View
         public const string ReplayFileName = "match.replay";
 
         /// <summary>
+        /// The scenery somebody placed by hand, over the generated dressing.
+        /// </summary>
+        /// <remarks>
+        /// <b>The only content file the simulation has never heard of.</b>
+        /// Everything else here is parsed by a <c>Sim</c> parser and folded into
+        /// a hash; this one is read by the view, decides nothing, and would be
+        /// removed from a headless build without a single test noticing. It is
+        /// still content rather than an asset because it is a list a human edits
+        /// and diffs, and because a build whose board is dressed differently
+        /// from the editor's is exactly the surprise the streaming copy exists
+        /// to prevent.
+        /// </remarks>
+        public const string DressingFileName = "dressing.txt";
+
+        /// <summary>
         /// Every content file the player has to be able to read, in the order a
         /// match needs them: the types first, because the defense and the wave
         /// are both parsed against them.
@@ -168,6 +183,30 @@ namespace View
             ReplayFileName,
         };
 
+        /// <summary>
+        /// Every file the streaming copy carries: the ones a match needs, and
+        /// the ones only the view reads.
+        /// </summary>
+        /// <remarks>
+        /// <b>Wider than <see cref="MatchFileNames"/>, and deliberately not the
+        /// same list.</b> That one is the gate: a file missing from it means no
+        /// match can start, and a board's dressing is not worth refusing to play
+        /// over. This one is what the sync tool copies and what the drift test
+        /// checks, so a file that ships is still a file somebody notices going
+        /// stale.
+        /// </remarks>
+        public static readonly string[] ShippedFileNames = Shipped();
+
+        private static string[] Shipped()
+        {
+            var all = new string[MatchFileNames.Length + 1];
+
+            MatchFileNames.CopyTo(all, 0);
+            all[all.Length - 1] = DressingFileName;
+
+            return all;
+        }
+
         /// <summary>Where the generated copies are, at runtime and in the editor.</summary>
         public static string Directory => Path.Combine(Application.streamingAssetsPath, FolderName);
 
@@ -199,6 +238,26 @@ namespace View
         /// and there is not going to be one.
         /// </summary>
         public static HexMap ReadMap() => HexMap.ParseUtf8(MapFileName, Read(MapFileName));
+
+        /// <summary>
+        /// The hand-placed scenery, or none of it.
+        /// </summary>
+        /// <remarks>
+        /// <b>Absent is a valid answer, unlike every other file here.</b> A
+        /// board with no overrides is a board nobody has moved anything on,
+        /// which is where this feature starts and where it stays until somebody
+        /// bakes. A malformed one still throws: a mistyped coordinate that was
+        /// quietly skipped would present as "my tree did not save", which is
+        /// the worst failure an authoring tool has.
+        /// </remarks>
+        public static BoardDressing ReadDressing()
+        {
+            string path = PathOf(DressingFileName);
+
+            return File.Exists(path)
+                ? BoardDressing.Parse(DressingFileName, File.ReadAllText(path))
+                : BoardDressing.Empty;
+        }
 
         /// <summary>
         /// The unit type table, parsed by the simulation, with the upgrade ladder

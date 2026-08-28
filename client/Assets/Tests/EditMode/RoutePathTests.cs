@@ -185,6 +185,24 @@ namespace Tests.EditMode
         /// the corridor the match is actually fought on and not only against a
         /// straight line.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Measured flat, and the height checked separately.</b> This used to
+        /// assert that a quarter step was a quarter of a hex in three
+        /// dimensions, which held for exactly as long as the board was flat. The
+        /// corridor now climbs, and a quarter step across a ramp is
+        /// <c>sqrt(2² + 1²) / 4</c> — about 0.559 rather than 0.5. That is not a
+        /// gap, it is a hill, and an assertion that cannot tell the two apart
+        /// would have to be loosened until it stopped catching gaps at all.
+        /// </para>
+        /// <para>
+        /// So the horizontal step carries the original claim unweakened — the
+        /// grid arithmetic is what teleports a creep at a corner when it is
+        /// wrong — and the vertical step gets its own bound, which is what
+        /// catches a creep stepping up a tier in one frame instead of walking
+        /// the ramp.
+        /// </para>
+        /// </remarks>
         [Test]
         public void TheCommittedMapWalksWithoutAGap()
         {
@@ -197,13 +215,24 @@ namespace Tests.EditMode
             for (float distance = 0.25f; distance <= route.StepCount; distance += 0.25f)
             {
                 Vector3 point = route.PointAt(distance, 0f);
-                float step = Vector3.Distance(previous, point);
+
+                float flat = Vector2.Distance(
+                    new Vector2(previous.x, previous.z),
+                    new Vector2(point.x, point.z));
 
                 Assert.That(
-                    step,
+                    flat,
                     Is.EqualTo(0.25f * SimUnits.MetresPerHex).Within(1e-2f),
-                    $"the corridor jumps at distance {distance} — a quarter step should always be a "
-                    + "quarter of a hex, and a gap here would show up as a creep teleporting at a corner");
+                    $"the corridor jumps at distance {distance} — a quarter step should always cover a "
+                    + "quarter of a hex across the ground, and a gap here would show up as a creep "
+                    + "teleporting at a corner");
+
+                Assert.That(
+                    Mathf.Abs(point.y - previous.y),
+                    Is.LessThanOrEqualTo((0.25f * HexGeometry.LevelStep) + 1e-3f),
+                    $"the corridor climbs too fast at distance {distance} — a quarter step may cross at "
+                    + "most a quarter of a tier, and more than that is a creep jumping up the hillside "
+                    + "rather than walking the ramp");
 
                 previous = point;
             }

@@ -208,7 +208,8 @@ namespace Tests.PlayMode
                     Assert.That(tile, Is.Not.Null, "no tile at " + column + "," + row);
                     Assert.That(
                         tile.transform.position,
-                        Is.EqualTo(HexGeometry.ToWorld(column, row)).Using(new VectorComparer(Tolerance)),
+                        Is.EqualTo(HexGeometry.ToWorld(column, row, map.LevelAt(column, row)))
+                            .Using(new VectorComparer(Tolerance)),
                         "tile at " + column + "," + row + " is in the wrong place");
                 }
             }

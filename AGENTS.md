@@ -39,6 +39,23 @@ editor, no socket to a live Unity, no "first open the project and press the butt
 a *session*, and sessions are exactly what a fresh clone, a CI runner and an overnight agent do not have.
 Batchmode (`-batchmode -executeMethod`, `-batchmode -runTests`) needs the editor closed and works from nothing.
 
+**The board itself is drawn in Unity, and `content/map.txt` is still the artifact.** `Tools > Board > Edit Map`
+opens a window that paints hexes and tiers in the scene view and bakes that file. It does not hold a second copy
+of the map's rules: a draft is legal exactly when `HexMap.ParseUtf8` accepts it, so the editor refuses in the
+simulation's own sentence and cannot drift from it. Loading the committed board and baking it unchanged is
+asserted to be byte-for-byte identical -- `BoardDraftTests` -- because a bake that moved the board by a space
+would invalidate `defense.txt`, `match.replay`, the landmark table and the cell coordinates in seventeen
+`sim.tests` files for no visible reason. The bake names that chain and runs none of it.
+
+**The board's dressing is the one thing edited by hand, and it still obeys this.** `Tools > Board > Dress`
+draws the real floor and scenery into the open scene so a human can move things; `Bake` writes what they left to
+`content/dressing.txt`; `Clear` takes it down. Every preview object carries `HideFlags.DontSave`, so none of it
+reaches `Match.unity` and the scene stays generated. All three are `public static void` with no arguments, so an
+agent runs them with `-batchmode -executeMethod View.Editor.BoardDressingTools.Bake` like anything else --
+there is no bridge and no session. Where the scenery goes by default is
+`client/Assets/Settings/BoardDressing.asset`, which `build-match-scene.ps1` creates once and then never touches
+again, because it is the one asset in this project a person tunes rather than derives.
+
 ## 4. Generated files are committed beside the change that caused them
 
 If a change causes a file to be regenerated — a lockfile, a `.meta`, a built plug-in — that file goes in the

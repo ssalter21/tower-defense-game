@@ -70,7 +70,19 @@ namespace View
         /// point above it, because the rig allows that view and refusing to pick
         /// from it would be a limit on the camera imposed from over here.
         /// </remarks>
-        public static bool TryGroundPoint(Ray ray, out Vector3 point)
+        public static bool TryGroundPoint(Ray ray, out Vector3 point) =>
+            TryGroundPoint(ray, 0f, out point);
+
+        /// <summary>
+        /// Where <paramref name="ray"/> crosses the horizontal plane at
+        /// <paramref name="height"/> metres, if it does.
+        /// </summary>
+        /// <remarks>
+        /// A board with tiers has one of these planes per tier, and which of
+        /// them a click meant is not a question this can answer on its own —
+        /// see <see cref="TryPick"/>, which asks the map.
+        /// </remarks>
+        public static bool TryGroundPoint(Ray ray, float height, out Vector3 point)
         {
             point = default;
 
@@ -81,7 +93,7 @@ namespace View
                 return false;
             }
 
-            float along = -ray.origin.y / slope;
+            float along = (height - ray.origin.y) / slope;
 
             // Behind the camera is not in front of it. Without this, aiming at
             // the sky picks the hex the camera is standing over.
@@ -195,8 +207,54 @@ namespace View
                 return false;
             }
 
-            return TryGroundPoint(camera.ScreenPointToRay(screenPoint), out Vector3 ground)
-                && TryCellAt(ground, map, out column, out row);
+            if (map is null)
+            {
+                return false;
+            }
+
+            Ray ray = camera.ScreenPointToRay(screenPoint);
+
+            // One horizontal plane per tier, tried in the order this ray crosses
+            // them. A cell is only the answer if it actually stands on the tier
+            // whose plane the ray crossed to reach it — otherwise the ray passed
+            // over a raised cell and through the ground it was hiding, and the
+            // hit belongs to whichever tier owns it.
+            //
+            // The order is the whole of the occlusion rule: whichever plane the
+            // ray meets first is the one whose tile is in front. A ray heading
+            // downwards meets the top tier first, so a click on a hillside lands
+            // on the hill and not on the field beyond it. A ray heading upwards
+            // — the rig allows a camera under the floor — meets the bottom tier
+            // first, and there the low tile is the one in the way. Scanning top
+            // down regardless would pick through the floor from underneath.
+            bool descending = ray.direction.y < 0f;
+
+            for (int step = 0; step < HexMap.LevelCount; step++)
+            {
+                int level = descending ? HexMap.LevelCount - 1 - step : step;
+
+                if (!TryGroundPoint(ray, level * HexGeometry.LevelStep, out Vector3 ground))
+                {
+                    continue;
+                }
+
+                if (!TryCellAt(ground, map, out int at, out int on))
+                {
+                    continue;
+                }
+
+                if (map.LevelAt(at, on) != level)
+                {
+                    continue;
+                }
+
+                column = at;
+                row = on;
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

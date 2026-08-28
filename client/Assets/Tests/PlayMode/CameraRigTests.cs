@@ -593,7 +593,7 @@ namespace Tests.PlayMode
                 "unit 1 grunt moving 200 85 0 0 0 0 0 0 none 0 12\n"
                 + "unit 3 bolt placed 0 0 3200 6 3 2 9 15 hitscan 0 0\n");
 
-            var layout = TowerLayout.Parse("tower 3 3 2\n", types);
+            var layout = TowerLayout.Parse("tower 3 3 3\n", types);
             var wave = WaveScript.Parse("order 0 1 4 0\n", types);
 
             // The rules are handed over and never consulted: this table is

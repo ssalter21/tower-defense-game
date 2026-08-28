@@ -125,6 +125,8 @@ namespace View
 
         private bool _offering;
 
+        private HexMap _map;
+
         private int _offerColumn;
 
         private int _offerRow;
@@ -166,7 +168,7 @@ namespace View
         /// <paramref name="round"/> may build and drawing its offers where
         /// <paramref name="camera"/> sees them.
         /// </summary>
-        public static TowerPalette Build(Transform parent, ComposedRound round, Camera camera)
+        public static TowerPalette Build(Transform parent, ComposedRound round, Camera camera, HexMap map)
         {
             if (parent == null) throw new ArgumentNullException(nameof(parent));
             if (round == null) throw new ArgumentNullException(nameof(round));
@@ -175,7 +177,7 @@ namespace View
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var palette = host.AddComponent<TowerPalette>();
-            palette.Assemble(host.AddComponent<UIDocument>(), round, camera);
+            palette.Assemble(host.AddComponent<UIDocument>(), round, camera, map);
 
             return palette;
         }
@@ -333,10 +335,11 @@ namespace View
         // Building
         // ---------------------------------------------------------------
 
-        private void Assemble(UIDocument document, ComposedRound round, Camera camera)
+        private void Assemble(UIDocument document, ComposedRound round, Camera camera, HexMap map)
         {
             _round = round;
             _camera = camera;
+            _map = map;
             _panel = RuntimePanel.Settings("Palette panel", PanelSortingOrder);
 
             Document = document;
@@ -523,7 +526,7 @@ namespace View
                 return;
             }
 
-            Vector3 world = HexGeometry.ToWorld(_offerColumn, _offerRow)
+            Vector3 world = HexGeometry.ToWorld(_offerColumn, _offerRow, _map.LevelAt(_offerColumn, _offerRow))
                 + (Vector3.up * OfferAnchorHeight);
 
             if (_camera.WorldToViewportPoint(world).z <= 0f)

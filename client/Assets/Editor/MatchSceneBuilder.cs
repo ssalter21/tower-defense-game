@@ -230,6 +230,325 @@ namespace View.Editor
             "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
+        /// <summary>Where the tile atlas material is written.</summary>
+        public const string TileMaterialPath = "Assets/Materials/Tiles.mat";
+
+        /// <summary>
+        /// Where the dressing settings live. Made once and never rewritten.
+        /// </summary>
+        /// <remarks>
+        /// <b>Created if absent, and left completely alone otherwise.</b> Every
+        /// other asset this file touches is regenerated on every run, because
+        /// every other asset is derived from something. This one is the thing a
+        /// human slides, so regenerating it would throw away the afternoon they
+        /// spent finding a density the board reads well at -- and it would do it
+        /// silently, on a tool somebody ran for an unrelated reason.
+        /// </remarks>
+        public const string DressingAssetPath = "Assets/Settings/BoardDressing.asset";
+
+        /// <summary>The texture every tile wears. The pack's own atlas.</summary>
+        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval.png";
+
+        /// <summary>
+        /// The serialized field on <c>TileSet</c> for each tile, and the model
+        /// it is filled from.
+        /// </summary>
+        /// <remarks>
+        /// <b>Six models and nine pieces left behind.</b> KayKit's road set has
+        /// thirteen pieces, A to M, and nine of them are junctions of three
+        /// edges or more. The corridor assertion in <c>HexMap</c> gives every
+        /// corridor cell one or two corridor neighbours, so a junction can never
+        /// be selected and importing one would be shipping art nothing draws and
+        /// nothing checks. What the letters mean was read off the meshes rather
+        /// than off the pack's user guide; see issue #224.
+        /// </remarks>
+        private static readonly (TilePiece piece, string field, string asset)[] TileBindings =
+        {
+            (TilePiece.Ground, "ground", "Assets/Art/Tiles/hex_grass.fbx"),
+            (TilePiece.Straight, "straight", "Assets/Art/Tiles/hex_road_A.fbx"),
+            (TilePiece.Curve, "curve", "Assets/Art/Tiles/hex_road_B.fbx"),
+            (TilePiece.Hairpin, "hairpin", "Assets/Art/Tiles/hex_road_C.fbx"),
+            (TilePiece.DeadEnd, "deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
+            (TilePiece.StraightRamp, "straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
+        };
+
+        /// <summary>
+        /// The models behind each scenery group, and the serialized field on
+        /// <c>SceneryModels</c> that holds them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Adding a model is an edit to this list and nothing else.</b>
+        /// <c>BoardScenery</c> asks for a group and a variant number and never
+        /// counts the art, so a rock appended below is in the rotation on the
+        /// next scene build with no other change anywhere.
+        /// </para>
+        /// <para>
+        /// <b>Mountains are not in the grove list even though both fill a hex.</b>
+        /// A mountain is 1.8 metres tall against a 2-metre tile, so it reads as
+        /// terrain rather than as dressing, and the scatter puts it only on the
+        /// border where it frames the board instead of standing in front of it.
+        /// </para>
+        /// <para>
+        /// <b>The pack's hills are not here, and that is not an oversight.</b>
+        /// Its <c>hill_single</c> models are shells authored to cap a hex that
+        /// is already raised; standing one on flat ground draws its inside,
+        /// which reads as a crater. Nor are the smallest props — a bucket, a
+        /// sack, a stump — which at the distance a whole board is framed from
+        /// are a pixel and a half of noise. Both were imported, looked at on a
+        /// contact sheet, and dropped again.
+        /// </para>
+        /// </remarks>
+        private static readonly (string field, string[] assets)[] SceneryBindings =
+        {
+            ("rimProps", new[]
+            {
+                "rock_single_B", "rock_single_C", "rock_single_D", "rock_single_E",
+                "tree_single_A", "tree_single_B",
+                "barrel", "crate_A_big", "haybale",
+            }),
+            ("camp", new[] { "tent", "weaponrack", "target", "wheelbarrow" }),
+            ("groves", new[]
+            {
+                "trees_A_small", "trees_A_medium", "trees_A_large",
+                "trees_B_small", "trees_B_medium", "trees_B_large",
+            }),
+            ("peaks", new[] { "mountain_A", "mountain_B", "mountain_C" }),
+            ("clouds", new[] { "cloud_big", "cloud_small" }),
+        };
+
+        /// <summary>Where the scenery models are imported.</summary>
+        private const string SceneryFolder = "Assets/Art/Scenery/";
+
+        /// <summary>
+        /// Fills in the board's scenery models. They wear the tile atlas, being
+        /// out of the same pack and mapped to the same texture.
+        /// </summary>
+        /// <remarks>
+        /// Throws on a missing model, unlike the floor's tolerance of an empty
+        /// set at runtime: a scene generated against a checkout with half the
+        /// scenery imported would silently drop a whole group, and a board with
+        /// no mountains looks like a design choice rather than a failed copy.
+        /// </remarks>
+        private static void WireScenery(SerializedObject serialized)
+        {
+            SerializedProperty scenery = serialized.FindProperty("scenery");
+
+            foreach ((string field, string[] assets) in SceneryBindings)
+            {
+                SerializedProperty property = scenery.FindPropertyRelative(field);
+
+                if (property == null)
+                {
+                    throw new IOException("SceneryModels has no serialized field named " + field + ".");
+                }
+
+                property.arraySize = assets.Length;
+
+                for (int index = 0; index < assets.Length; index++)
+                {
+                    property.GetArrayElementAtIndex(index).objectReferenceValue =
+                        LoadMesh(SceneryFolder + assets[index] + ".fbx");
+                }
+            }
+
+            scenery.FindPropertyRelative("surface").objectReferenceValue = TileMaterial();
+        }
+
+        /// <summary>
+        /// The board's scenery, loaded from the project rather than from a
+        /// scene. The frame capture's, for the reason <see cref="Tiles"/> is.
+        /// </summary>
+        public static SceneryModels Scenery() =>
+            SceneryModels.Of(
+                Group("rimProps"),
+                Group("camp"),
+                Group("groves"),
+                Group("peaks"),
+                Group("clouds"),
+                TileMaterial());
+
+        private static Mesh[] Group(string field)
+        {
+            foreach ((string bound, string[] assets) in SceneryBindings)
+            {
+                if (bound != field)
+                {
+                    continue;
+                }
+
+                var meshes = new Mesh[assets.Length];
+
+                for (int index = 0; index < assets.Length; index++)
+                {
+                    meshes[index] = LoadMesh(SceneryFolder + assets[index] + ".fbx");
+                }
+
+                return meshes;
+            }
+
+            throw new IOException("No scenery group is bound for " + field + ".");
+        }
+
+        /// <summary>
+        /// Fills in the floor's six tile models and the atlas they wear.
+        /// </summary>
+        /// <remarks>
+        /// Throws on anything missing, for the same reason <see cref="WireArt"/>
+        /// does: a null mesh draws nothing at all, and a floor with a hole in it
+        /// where the path bends reads as a broken map rather than as a scene
+        /// generated against a project missing an import.
+        /// </remarks>
+        private static void WireTiles(SerializedObject serialized)
+        {
+            SerializedProperty tiles = serialized.FindProperty("tiles");
+
+            foreach ((TilePiece _, string field, string asset) in TileBindings)
+            {
+                SerializedProperty property = tiles.FindPropertyRelative(field);
+
+                if (property == null)
+                {
+                    throw new IOException("TileSet has no serialized field named " + field + ".");
+                }
+
+                property.objectReferenceValue = LoadMesh(asset);
+            }
+
+            tiles.FindPropertyRelative("surface").objectReferenceValue = TileMaterial();
+        }
+
+        /// <summary>
+        /// The floor's tiles, loaded from the project rather than from a scene.
+        /// </summary>
+        /// <remarks>
+        /// <b>The same six assets the scene is wired with, from the same list.</b>
+        /// An editor tool that assembles its own root — the frame capture — needs
+        /// the tiles too, and building a second list for it is how a capture ends
+        /// up being a picture of a floor the game does not have.
+        /// </remarks>
+        public static TileSet Tiles() =>
+            TileSet.Of(
+                TileMesh(TilePiece.Ground),
+                TileMesh(TilePiece.Straight),
+                TileMesh(TilePiece.Curve),
+                TileMesh(TilePiece.Hairpin),
+                TileMesh(TilePiece.DeadEnd),
+                TileMesh(TilePiece.StraightRamp),
+                TileMaterial());
+
+        /// <summary>
+        /// The model one piece is drawn with, on its own.
+        /// </summary>
+        /// <remarks>
+        /// Separate from <see cref="Tiles"/> because asking for the whole set
+        /// writes the atlas material as a side effect, and a test that only
+        /// wants to measure a mesh should not dirty an asset to do it.
+        /// </remarks>
+        public static Mesh TileMesh(TilePiece piece)
+        {
+            foreach ((TilePiece bound, string _, string asset) in TileBindings)
+            {
+                if (bound == piece)
+                {
+                    return LoadMesh(asset);
+                }
+            }
+
+            throw new IOException("No tile model is bound for " + piece + ".");
+        }
+
+        /// <summary>Points the root at the dressing settings, making them if they are not there.</summary>
+        private static void WireDressing(SerializedObject serialized)
+        {
+            SerializedProperty property = serialized.FindProperty("dressing");
+
+            if (property == null)
+            {
+                throw new IOException("MatchRoot has no serialized field named dressing.");
+            }
+
+            property.objectReferenceValue = DressingAsset();
+        }
+
+        /// <summary>The dressing settings, made at their defaults on first run.</summary>
+        private static BoardDressingAsset DressingAsset()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(DressingAssetPath);
+
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            EnsureFolder(Path.GetDirectoryName(DressingAssetPath));
+
+            BoardDressingAsset made = ScriptableObject.CreateInstance<BoardDressingAsset>();
+            AssetDatabase.CreateAsset(made, DressingAssetPath);
+
+            return AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(DressingAssetPath);
+        }
+
+        /// <summary>The committed tile material, written if it is not there yet.</summary>
+        private static Material TileMaterial()
+        {
+            var atlas = AssetDatabase.LoadAssetAtPath<Texture>(TileAtlasPath);
+
+            if (atlas == null)
+            {
+                throw new IOException("The tile atlas is not imported at " + TileAtlasPath + ".");
+            }
+
+            return WriteTextured(TileMaterialPath, "Tiles", atlas);
+        }
+
+        /// <summary>
+        /// The one mesh inside an imported model, by asset path.
+        /// </summary>
+        /// <remarks>
+        /// The mesh rather than the prefab, because the floor draws tiles with
+        /// its own renderer and one shared material; taking the prefab would
+        /// bring the importer's own material along and bind the atlas in six
+        /// places instead of one.
+        /// </remarks>
+        private static Mesh LoadMesh(string path)
+        {
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
+            {
+                if (asset is Mesh mesh)
+                {
+                    return mesh;
+                }
+            }
+
+            throw new IOException("No mesh inside " + path + ". Is it imported?");
+        }
+
+        /// <summary>Writes the tile material, rewriting in place if it exists.</summary>
+        private static Material WriteTextured(string path, string name, Texture atlas)
+        {
+            EnsureFolder(Path.GetDirectoryName(path));
+
+            Material material = ViewMaterials.Textured(name, atlas);
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(material, path);
+
+                return AssetDatabase.LoadAssetAtPath<Material>(path);
+            }
+
+            // In place, so the scene's reference survives. Same reasoning as
+            // WriteMaterial.
+            existing.shader = material.shader;
+            existing.CopyPropertiesFromMaterial(material);
+            EditorUtility.SetDirty(existing);
+            Object.DestroyImmediate(material);
+
+            return existing;
+        }
+
         [MenuItem("Tools/Rebuild the match scene")]
         public static void Rebuild()
         {
@@ -246,6 +565,9 @@ namespace View.Editor
             serialized.FindProperty("roadMaterial").objectReferenceValue = road;
             serialized.FindProperty("grassMaterial").objectReferenceValue = grass;
             WireArt(serialized);
+            WireTiles(serialized);
+            WireScenery(serialized);
+            WireDressing(serialized);
             serialized.ApplyModifiedPropertiesWithoutUndo();
 
             EnsureFolder(Path.GetDirectoryName(ScenePath));

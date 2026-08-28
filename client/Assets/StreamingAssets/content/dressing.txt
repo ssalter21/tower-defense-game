@@ -1,0 +1,33 @@
+# The scenery somebody placed by hand. Everything not named here is
+# generated -- see client/Assets/View/BoardScenery.cs.
+#
+# A CELL NAMED IN THIS FILE IS TAKEN OVER BY IT, WHOLE. Whatever the
+# generator would have put on that hex is discarded and these lines are what
+# stands there. So an override survives every setting: turn the grove chance
+# up and the board re-dresses except the cells this file speaks for.
+#
+# WRITTEN BY THE EDITOR, AND EDITABLE BY HAND. Tools > Board > Dress draws
+# the board in the scene view, you move things, Tools > Board > Bake writes
+# this. Nothing stops you typing a line instead.
+#
+# Integers only. Offsets are millimetres from the middle of the cell, east
+# and north; turn is degrees; scale is percent of the model's authored size.
+# A decimal point here would be a bug on the first machine whose separator
+# is a comma.
+#
+# THE CELL IS A COLUMN AND A ROW, counted the way map.txt is written, so a
+# piece can be placed by counting characters in that file.
+#
+# clear <col> <row>                    the hex stands empty
+# place <col> <row> <what> <variant> <east> <north> <turn> <scale>
+# cloud <variant> <east> <up> <north> <turn> <scale>
+#
+# ONE cloud LINE REPLACES THE WHOLE SKY. Clouds belong to no cell, so there
+# is nothing to key an override on and no diff to take.
+#
+# what : rimprop, camp, grove or peak. Which model of that family is drawn
+#        is the variant, counted from the lists in MatchSceneBuilder and
+#        wrapped, so a variant past the end of a family is not an error.
+#
+#       col row  what      variant east    north   turn  scale
+

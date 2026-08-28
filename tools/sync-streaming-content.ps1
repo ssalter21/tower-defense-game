@@ -85,6 +85,12 @@ $target   = Join-Path $repoRoot 'client/Assets/StreamingAssets/content'
 # and that hash is what the replay gate compares the shipped record's stamped one
 # against -- so a player without this file rebuilds the wrong hash and
 # match.replay is refused. It ships because a hash covers it.
+# dressing.txt is the FOURTH case, and the mildest: it is content the client
+# reads and the simulation has never heard of. Where a tree stands changes no
+# tick and no hash, so nothing refuses a player without it -- the board simply
+# draws the generated dressing and every hand-placed exception is silently
+# gone. That is a build quietly different from the editor, which is the one
+# failure this list exists to prevent, so it ships.
 $files = @(
     'map.txt',
     'units.txt',
@@ -93,7 +99,8 @@ $files = @(
     'defense.txt',
     'wave.txt',
     'field.txt',
-    'match.replay'
+    'match.replay',
+    'dressing.txt'
 )
 
 if (-not (Test-Path $source)) { throw "No authored content at $source." }
