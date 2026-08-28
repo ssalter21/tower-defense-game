@@ -90,21 +90,59 @@ namespace View
         /// <summary>Edges the straight piece's road meets: opposite, E and W.</summary>
         private static readonly int[] StraightEdges = { 0, 3 };
 
-        /// <summary>Edges the 120-degree curve meets: W and SE.</summary>
-        private static readonly int[] CurveEdges = { 3, 5 };
+        /// <summary>Edges the 120-degree curve meets: E and SW, one edge skipped.</summary>
+        private static readonly int[] CurveEdges = { 0, 4 };
 
-        /// <summary>Edges the 60-degree hairpin meets: W and SW, which are adjacent.</summary>
-        private static readonly int[] HairpinEdges = { 3, 4 };
+        /// <summary>Edges the 60-degree hairpin meets: E and SE, which are adjacent.</summary>
+        private static readonly int[] HairpinEdges = { 0, 5 };
 
-        /// <summary>The one edge a dead end meets: W.</summary>
-        private static readonly int[] DeadEndEdges = { 3 };
+        /// <summary>The one edge a dead end meets: E.</summary>
+        private static readonly int[] DeadEndEdges = { 0 };
 
         /// <summary>
-        /// The edge a ramp climbs towards. The straight's two edges are E and W
-        /// and the slope rises to E, so this is the piece's high side before
-        /// any rotation.
+        /// The edge a ramp climbs towards. The slope's road runs E to W and
+        /// rises westwards, so this is the piece's high side before any
+        /// rotation, and its low side is the opposite edge.
         /// </summary>
-        private const int RampHighEdge = 0;
+        public const int RampHighEdge = 3;
+
+        /// <summary>
+        /// The edges a piece's road meets before it is turned, as the six-bit
+        /// set <see cref="CorridorEdges"/> speaks in.
+        /// </summary>
+        /// <remarks>
+        /// <b>Public because these numbers are a claim about the models, and a
+        /// claim about a model should be checked against the model.</b> They
+        /// were once typed from a probe of the pack's glTF, which is right
+        /// handed where Unity is left handed, and every piece but the
+        /// straight — the one shape symmetric enough to survive a mirroring —
+        /// came out turned. Nothing failed, because nothing was comparing them
+        /// to anything. <c>RoadTilingMeshTests</c> now does.
+        /// </remarks>
+        public static int EdgesOf(TilePiece piece)
+        {
+            int[] edges = Table(piece);
+            int set = 0;
+
+            for (int index = 0; index < edges.Length; index++)
+            {
+                set |= 1 << edges[index];
+            }
+
+            return set;
+        }
+
+        private static int[] Table(TilePiece piece) =>
+            piece switch
+            {
+                TilePiece.Ground => System.Array.Empty<int>(),
+                TilePiece.Straight => StraightEdges,
+                TilePiece.Curve => CurveEdges,
+                TilePiece.Hairpin => HairpinEdges,
+                TilePiece.DeadEnd => DeadEndEdges,
+                TilePiece.StraightRamp => StraightEdges,
+                _ => throw new System.InvalidOperationException("No edge table for " + piece + "."),
+            };
 
         /// <summary>
         /// The tile for one cell of the grid.

@@ -249,14 +249,14 @@ namespace View.Editor
         /// nothing checks. What the letters mean was read off the meshes rather
         /// than off the pack's user guide; see issue #224.
         /// </remarks>
-        private static readonly (string field, string asset)[] TileBindings =
+        private static readonly (TilePiece piece, string field, string asset)[] TileBindings =
         {
-            ("ground", "Assets/Art/Tiles/hex_grass.fbx"),
-            ("straight", "Assets/Art/Tiles/hex_road_A.fbx"),
-            ("curve", "Assets/Art/Tiles/hex_road_B.fbx"),
-            ("hairpin", "Assets/Art/Tiles/hex_road_C.fbx"),
-            ("deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
-            ("straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
+            (TilePiece.Ground, "ground", "Assets/Art/Tiles/hex_grass.fbx"),
+            (TilePiece.Straight, "straight", "Assets/Art/Tiles/hex_road_A.fbx"),
+            (TilePiece.Curve, "curve", "Assets/Art/Tiles/hex_road_B.fbx"),
+            (TilePiece.Hairpin, "hairpin", "Assets/Art/Tiles/hex_road_C.fbx"),
+            (TilePiece.DeadEnd, "deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
+            (TilePiece.StraightRamp, "straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
         };
 
         /// <summary>
@@ -272,7 +272,7 @@ namespace View.Editor
         {
             SerializedProperty tiles = serialized.FindProperty("tiles");
 
-            foreach ((string field, string asset) in TileBindings)
+            foreach ((TilePiece _, string field, string asset) in TileBindings)
             {
                 SerializedProperty property = tiles.FindPropertyRelative(field);
 
@@ -298,13 +298,34 @@ namespace View.Editor
         /// </remarks>
         public static TileSet Tiles() =>
             TileSet.Of(
-                LoadMesh(TileBindings[0].asset),
-                LoadMesh(TileBindings[1].asset),
-                LoadMesh(TileBindings[2].asset),
-                LoadMesh(TileBindings[3].asset),
-                LoadMesh(TileBindings[4].asset),
-                LoadMesh(TileBindings[5].asset),
+                TileMesh(TilePiece.Ground),
+                TileMesh(TilePiece.Straight),
+                TileMesh(TilePiece.Curve),
+                TileMesh(TilePiece.Hairpin),
+                TileMesh(TilePiece.DeadEnd),
+                TileMesh(TilePiece.StraightRamp),
                 TileMaterial());
+
+        /// <summary>
+        /// The model one piece is drawn with, on its own.
+        /// </summary>
+        /// <remarks>
+        /// Separate from <see cref="Tiles"/> because asking for the whole set
+        /// writes the atlas material as a side effect, and a test that only
+        /// wants to measure a mesh should not dirty an asset to do it.
+        /// </remarks>
+        public static Mesh TileMesh(TilePiece piece)
+        {
+            foreach ((TilePiece bound, string _, string asset) in TileBindings)
+            {
+                if (bound == piece)
+                {
+                    return LoadMesh(asset);
+                }
+            }
+
+            throw new IOException("No tile model is bound for " + piece + ".");
+        }
 
         /// <summary>The committed tile material, written if it is not there yet.</summary>
         private static Material TileMaterial()
