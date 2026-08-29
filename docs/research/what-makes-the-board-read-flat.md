@@ -3,10 +3,10 @@
 **The question:** the committed board looks like a layer cake rather than a landscape. Before dressing it
 differently, what is actually causing that — and is a half-height step the fix?
 
-**The answer: the board has 121 one-metre cliff faces and ramps exactly three of them.** Breaking each drop
-into half steps is buildable, costs no new art and no simulation change, and it measurably improves the
-board's outline. It does not add tonal separation, which is the reason a second ledge starts to look like a
-contour map instead of a hillside.
+**The answer: the board has 121 one-metre cliff faces and ramps exactly three of them.** A half step is the
+fix, and it has to be a real one — a level worth half a block, which the terrain can stand on and a tower can
+be built on. The first attempt drew half steps as decoration under the rim, and §6 records why that was
+withdrawn and what §3 got wrong.
 
 ## 1. The board, counted
 
@@ -43,17 +43,23 @@ Kay authored the ramps as a matched pair, and the `_low` half is not imported. T
 anyone models anything: half-step geometry at exactly the granularity `HexGeometry.LevelStep` implies is
 already in the pack, free.
 
-## 3. Why the step itself must not move
+## 3. Why the step itself must not move — **wrong, see §6**
 
-`HexGeometry.LevelStep` is 1.0 because the tile models hang a metre of body below their walkable face, so a
-raised tile's underside meets the top of the tile beside it with no gap and no overlap. Halving it opens
-daylight in every step on the board. The tier is also a simulation quantity — it is worth half a hex of reach,
-`Reach.MilliHexPerLevel`, ADR-0023 — so a half tier would be a rules change, not a look.
+> `HexGeometry.LevelStep` is 1.0 because the tile models hang a metre of body below their walkable face, so a
+> raised tile's underside meets the top of the tile beside it with no gap and no overlap. Halving it opens
+> daylight in every step on the board. The tier is also a simulation quantity — it is worth half a hex of
+> reach, `Reach.MilliHexPerLevel`, ADR-0023 — so a half tier would be a rules change, not a look.
+>
+> So the ledges drawn by `HexFloor.Terrace` are neither: they are extra copies of the ground tile set below
+> the face and slightly wider, carrying no cell, no tier and no build slot. Where a neighbour is level the
+> neighbour's own body hides the ledge; where the ground falls away its rim shows as a shelf. The match's
+> result, its landmark table and its per-tick hash are unchanged, which is what makes this safe to try.
 
-So the ledges drawn by `HexFloor.Terrace` are neither: they are extra copies of the ground tile set below the
-face and slightly wider, carrying no cell, no tier and no build slot. Where a neighbour is level the
-neighbour's own body hides the ledge; where the ground falls away its rim shows as a shelf. The match's
-result, its landmark table and its per-tick hash are unchanged, which is what makes this safe to try.
+Left standing above because the reasoning is the interesting part of the mistake. The first sentence is a
+fact; the second does not follow from it, and nobody checked. **A metre of body under a half-metre step
+over-covers by half a metre** — the surplus is buried in the hillside, and no daylight appears anywhere. The
+argument reversed the inequality. The third sentence is true and was the real cost, and it is a cost worth
+paying rather than a reason not to.
 
 ## 4. What the ledges do, and what they do not
 
@@ -86,3 +92,26 @@ strength of Kay's own usage guide. That is already refuted in this repository:
 because they are shells authored to cap a hex that is already raised and drawing one on flat ground shows its
 inside. The usage guide is describing a board built the pack's way, where the hex under the hill is itself
 lifted; it is not advice that transfers to scattering them.
+
+## 6. What was withdrawn, and what replaced it
+
+The ledges of §4 were built, rendered and rejected on sight. Two things were wrong with them.
+
+**They bought silhouette and no depth, and that was measurable.** The ratio of side-face to top-face luminance
+across the rendered frames is **0.62 at zero ledges, 0.62 at one and 0.63 at two** — it does not move, because
+every ledge is the same material at the same angle as the face above it. More ledges add edges and no tone. A
+step drawn in four thin steps of one colour is still one colour.
+
+**And they were a picture of a lie.** A ledge carried no level, so the ground the eye read as a gentle slope
+was ground a tower could not stand on and a shot did not measure against. The board looked graded and played
+stepped.
+
+**What replaced it is the rules change §3 talked itself out of.** `LevelStep` is 0.5, `Reach.MilliHexPerLevel`
+is 250 and `HexMap.LevelCount` is 9. A whole block of climb is two levels and is worth the half hex it always
+was — so no tower's reach moved and the port was doubling every level in the map file — but the terrain can
+now rise through the half step, and the pack's `*_sloped_low` pieces finally have a level to land on. The
+board is graded because the ground is graded.
+
+**The cost, stated.** It retired every stored record: simulation version 11, a new fingerprint row, and
+`content/map.txt` rewritten from `a b c` to `a c e`. And the ceiling on what height is worth rose from one hex
+to two, because nine levels is four blocks of relief where three tiers was two. Both are in the decision log.

@@ -191,7 +191,7 @@ public class ReplayBundleTests
     }
 
     [Fact]
-    public void A_level_byte_outside_the_three_tiers_refuses()
+    public void A_level_byte_above_the_top_of_the_board_refuses()
     {
         // The terrain plane's own validation is untouched by the levels
         // arriving, which is the whole reason they arrive as a second plane
@@ -204,7 +204,7 @@ public class ReplayBundleTests
         ContentException thrown = Assert.Throws<ContentException>(
             () => HexMap.FromCells("inlined", map.Width, map.Height, map.ToCellBytes(), levels));
 
-        Assert.Contains("tiers", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("levels", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -306,10 +306,14 @@ deterministic and demonstrably worth playing. **Pathfinding is no longer in it a
 generation and rotation are deferred behind the first hand-authored map** — [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
 [the decision log](decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for).
 
-- **The maze and elevation** — **three tiers**, a tier worth **500 milli-hex**, applied as the signed
-  difference `baseRange + (towerLevel − targetLevel) × 500` rather than as a bonus for standing high. Radii
-  read as spheres, `hexDistance × 1000 + |levelDifference| × 500 ≤ radius`, so height only ever costs them, and
-  a floor guarantees any tower reaches the hexes touching it. How the map preserves the send column
+- **The maze and elevation** — **nine levels of half a block each**, a level worth **250 milli-hex**, applied
+  as the signed difference `baseRange + (towerLevel − targetLevel) × 250` rather than as a bonus for standing
+  high. A whole block is two levels and still buys half a hex, which is what it was worth when a level *was* a
+  block; the half step in between is new, and it is what lets a slope be graded instead of stepped. Radii read
+  as spheres, `hexDistance × 1000 + |levelDifference| × 250 ≤ radius`, so height only ever costs them, and
+  a floor guarantees any tower reaches the hexes touching it. **The ceiling moved with the count:** four blocks
+  of relief is a two-hex refund where three tiers capped it at one, which is asserted in `ReachTests` rather
+  than left to be discovered. How the map preserves the send column
   [ordering](vision.md#depth-is-the-point) needs is still a design question, with a legibility veto on it.
 - **The single path** — a map folds but never branches, and the player never alters the route by building, so
   `HexMap`'s existing load-time trace is the whole of it: still one hex wide, still asserted, still no search

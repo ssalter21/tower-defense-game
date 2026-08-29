@@ -249,10 +249,11 @@ Five consequences, none optional:
 - **No pathfinder, and no line of sight.** `HexMap` already traces the single corridor at load and asserts it
   never branches; folding it changes none of that. Both were priced as determinism obligations in the hottest
   loop, and both are out permanently.
-- **Range is a signed difference.** `baseRange + (towerLevel − targetLevel) × 500`, in milli-hex: shooting down
-  a tier buys half a hex, shooting up one costs half a hex. Anything with a radius instead reads as a sphere —
-  `hexDistance × 1000 + |levelDifference| × 500 ≤ radius` — where height only ever costs, so a tower on a cliff
-  cannot blanket the board. A floor guarantees any tower reaches the hexes touching it.
+- **Range is a signed difference.** `baseRange + (towerLevel − targetLevel) × 250`, in milli-hex, where a level
+  is half a block: shooting down a whole block buys half a hex, shooting up one costs half a hex. Anything with
+  a radius instead reads as a sphere — `hexDistance × 1000 + |levelDifference| × 250 ≤ radius` — where height
+  only ever costs, so a tower on a cliff cannot blanket the board. A floor guarantees any tower reaches the
+  hexes touching it.
 - **Elevation is a third coordinate, and the map carries it.** The hex map gains a level layer: a format
   version and a hash-layout bump. `TowerLayout` does *not* — a tower stands on a hex and the hex knows its
   level — so the ghost record's format survives untouched. Cheap now, expensive later.
@@ -261,11 +262,12 @@ Five consequences, none optional:
 ⚠️ **The bill it presents is ordering.** The single path is what preserves the send column; a map is designed
 to keep that order rather than merely to be interesting.
 
-⚠️ **Until the maze lands, the board is a hand-drawn 51-hex corridor one cell wide that folds and climbs
-through three tiers, and every number priced against it is provisional by construction.** The corridor is still
-one hex wide, so placements along a single leg remain close to equivalent; what the three tiers add is that a
-tier is worth half a hex of reach, which makes the same cell a different placement depending on what it stands
-on. How much of the thinness that actually removes is not yet measured — a fact about *this* board, not about
+⚠️ **Until the maze lands, the board is a hand-drawn 51-hex corridor one cell wide that folds and climbs two
+whole blocks, and every number priced against it is provisional by construction.** The corridor is still
+one hex wide, so placements along a single leg remain close to equivalent; what the climb adds is that a
+block is worth half a hex of reach, which makes the same cell a different placement depending on what it stands
+on. **The grid under it is now half a block per level and nine levels deep, and the committed board has not
+spent that yet** — it stands at three heights on a grid that would carry nine. How much of the thinness that actually removes is not yet measured — a fact about *this* board, not about
 the mechanism.
 
 ### The map rotates, and it is generated

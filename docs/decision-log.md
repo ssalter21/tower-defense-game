@@ -14,6 +14,31 @@ This file exists so the vision can stay readable. It grows; the vision should no
 
 ---
 
+## 29 August 2026 — a level is half a block
+
+The board read as a stack of plates and the cause was measured rather than felt: of the 121 places where one
+hex stood above its neighbour on the committed map, **118 were drawn as a bare vertical face and three were
+ramped**. Every change of height was a whole block because a level *was* a whole block, and the tile pack cuts
+a piece that rises half of one — `hex_grass_sloped_low`, `hex_road_A_sloped_low` — which had no level to land
+on and had never been imported.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§ elevation**, ADR-0054, build-order seam 9 | **Three tiers**, a tier worth **500 milli-hex** | **Nine levels of half a block, a level worth 250.** Two levels is one block and two times 250 is the 500 that was there before, so *every tower reaches exactly what it reached* and a map is ported by doubling its levels. `content/map.txt` went from `a b c` to `a c e` and did not otherwise move. |
+| — | Height was capped at a **one-hex** refund by there being three tiers | **Two hexes**, because nine levels is four blocks of relief. A board need not use them; the ceiling is asserted in `ReachTests` so that raising it again is a deliberate edit. |
+| — | Half steps were **view-only geometry** — an extra copy of the tile drawn under the rim | **Withdrawn as insufficient.** Measured: the side-to-top luminance ratio did not move as ledges were added (0.62 / 0.62 / 0.63 for none, one and two), because every ledge is the same material at the same angle. It bought silhouette and no depth, and the boards drawn with it were rejected on sight. Real levels replaced it. |
+
+**It is a rule change and it retired every stored record**, which is what simulation version 11 and the row
+added to `DerivationTests` are for. The fingerprint was observed both ways round: with the halving reverted and
+every other line of the change left in, it comes back as version 10's, because a wider alphabet of levels no
+map uses is not a rule.
+
+**What it does not decide.** Which of the six prototype landscapes in `docs/prototypes/` the game adopts, and
+whether `content/map.txt` is regraded onto the finer grid at all. It stands at three heights on a grid that
+would carry nine, and that is a decision waiting rather than an omission.
+
+---
+
 ## Before 6 August 2026 — reading the finished skeleton
 
 Three claims were written before the walking skeleton existed, and reading the finished skeleton changed them.

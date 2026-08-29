@@ -4,98 +4,62 @@ using System.Collections.Generic;
 namespace View
 {
     /// <summary>
-    /// Named dressings of the committed board, each one a proposal to look at
-    /// rather than a setting to ship.
+    /// One landscape per reference frame: a board to draw, an atlas to draw it
+    /// in, a light to draw it under and a dressing to scatter over it.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>These exist to be rendered side by side and then mostly deleted.</b>
-    /// The board's real dressing lives in
-    /// <c>Assets/Settings/BoardDressing.asset</c>, which is the thing a human
-    /// slides and which nothing here writes to. A preset is a whole set of
-    /// numbers under one name so that <c>tools/capture-prototypes.ps1</c> can
-    /// draw the same corridor six ways in one run and a person can choose.
-    /// Once one is chosen the numbers move to that asset and this file loses
-    /// the other five.
+    /// <b>These exist to be compared and then mostly deleted.</b> Once one is
+    /// chosen its numbers move to <c>client/Assets/Settings/BoardDressing.asset</c>
+    /// and its board to <c>content/map.txt</c>, and the rest go. Nothing in the
+    /// game reads this file — only <see cref="Editor.PrototypeCapture"/> does.
     /// </para>
     /// <para>
-    /// <b>Every preset dresses the same map and changes nothing about it.</b>
-    /// The corridor, its 51 cells and the tier of each of them come from
-    /// <c>content/map.txt</c> and no preset touches them — so the match, its
-    /// result, its landmark table and its per-tick hash are identical under all
-    /// of these. What differs is scenery density, where the tall things stand,
-    /// and how many ledges break a tier's drop.
+    /// <b>Each one is a reading of a particular picture, not a taste.</b> The
+    /// reference is named on every preset, because "which of these six do you
+    /// like" is a much worse question than "which of these six is the picture
+    /// you pointed at". Where a preset fails to be its reference that is a
+    /// finding, and it is one that can only be had by putting them side by
+    /// side.
     /// </para>
     /// <para>
-    /// <b>Each is named for the reference frame it was read off.</b> The
-    /// references are gathered in the hex landscape board; the note against each
-    /// preset says which picture it is trying to be, because a set of numbers
-    /// with no source is a set of numbers nobody can argue with.
+    /// <b>The road is the same road in all six.</b> Every board is
+    /// <c>content/map.txt</c>'s corridor, cell for cell, under a different
+    /// height map — so what differs between two of these pictures is the
+    /// landscape and never the route. See <c>docs/prototypes/boards/</c>.
     /// </para>
     /// </remarks>
     public static class SceneryPresets
     {
-        /// <summary>The name a caller gets when it asks for nothing.</summary>
-        public const string DefaultName = "as-it-ships";
+        /// <summary>The name of the one landscape that ships, meaning none of these.</summary>
+        public const string Shipped = "as-it-ships";
 
-        /// <summary>
-        /// One proposal: its name, what it is trying to look like, and the
-        /// numbers that get it there.
-        /// </summary>
-        public readonly struct Preset
-        {
-            public Preset(string name, string reference, string intent, DressingSettings settings)
-            {
-                Name = name;
-                Reference = reference;
-                Intent = intent;
-                Settings = settings;
-            }
-
-            /// <summary>The name the tools take on the command line.</summary>
-            public string Name { get; }
-
-            /// <summary>The reference image this was read off.</summary>
-            public string Reference { get; }
-
-            /// <summary>What it is trying to prove, in one sentence.</summary>
-            public string Intent { get; }
-
-            /// <summary>The numbers.</summary>
-            public DressingSettings Settings { get; }
-        }
+        private static readonly Preset[] Presets = Build();
 
         /// <summary>Every preset, in the order they are worth looking at.</summary>
-        public static IReadOnlyList<Preset> All => Build();
+        public static IReadOnlyList<Preset> All => Presets;
 
-        /// <summary>The names, for a tool that wants to list them.</summary>
+        /// <summary>Their names, for an error message that has to list them.</summary>
         public static IReadOnlyList<string> Names
         {
             get
             {
-                var names = new List<string>();
+                var names = new string[Presets.Length];
 
-                foreach (Preset preset in Build())
+                for (int index = 0; index < Presets.Length; index++)
                 {
-                    names.Add(preset.Name);
+                    names[index] = Presets[index].Name;
                 }
 
                 return names;
             }
         }
 
-        /// <summary>
-        /// One preset by name, case insensitively.
-        /// </summary>
-        /// <exception cref="ArgumentException">
-        /// If no preset has that name. A tool asked for a dressing that does not
-        /// exist should stop rather than render the default under the wrong
-        /// filename, which is the one failure that survives into a comparison
-        /// and is never noticed.
-        /// </exception>
+        /// <summary>One preset by name.</summary>
+        /// <exception cref="ArgumentException">If nothing is called that.</exception>
         public static Preset ByName(string name)
         {
-            foreach (Preset preset in Build())
+            foreach (Preset preset in Presets)
             {
                 if (string.Equals(preset.Name, name, StringComparison.OrdinalIgnoreCase))
                 {
@@ -104,122 +68,293 @@ namespace View
             }
 
             throw new ArgumentException(
-                "No scenery preset is named '" + name + "'. Known: " + string.Join(", ", Names) + ".",
+                "There is no scenery preset called '" + name + "'. They are: "
+                + string.Join(", ", Names) + ".",
                 nameof(name));
         }
 
-        private static IReadOnlyList<Preset> Build() => new[]
-        {
-            // The one the platform already gives, included so the comparison has
-            // a floor. A set of five alternatives with nothing to beat is five
-            // opinions; with this in the row it is a measurement.
-            new Preset(
-                "as-it-ships",
-                "none -- the committed BoardDressing",
-                "The board as it draws today: one bare metre of cliff at every tier change.",
-                DressingSettings.Default),
+        private static Preset[] Build() =>
+            new[]
+            {
+                // The board as it stands, so there is something to beat. Its
+                // levels were doubled when a level became half a block, so it is
+                // the same three heights it always had and none of the ones in
+                // between -- which is exactly what the other five are about.
+                new Preset(
+                    Shipped,
+                    "none -- the committed board",
+                    "The board as it is today: three heights, every change of height a whole block, "
+                    + "and no half step anywhere. The control.",
+                    board: null,
+                    atlas: null,
+                    Sunlight.Default,
+                    DressingSettings.Default),
 
-            // The half step on its own, with every other number held still, so
-            // that what the ledge does is separable from what a re-dressing does.
-            new Preset(
-                "half-step",
-                "Medieval Hexagon Pack -- the nature usage guide",
-                "Only change: a tier's drop is broken into two half-metre steps. Everything else is as it ships.",
-                With(DressingSettings.Default, apron: 1, spread: 0.06f)),
+                // "Ridge, lake, road" -- itch.io gallery, Medieval Hexagon Pack.
+                new Preset(
+                    "ridge-lake-road",
+                    "Ridge, lake, road",
+                    "The road kept low and unbroken through the middle, a bank of high ground owning "
+                    + "one flank, and a lake eating a corner so no part of the board is uniformly busy.",
+                    board: "ridge-lake-road",
+                    atlas: "hexagons_medieval_Summer",
+                    new Sunlight(-34f, 44f, 1.15f, 0.99f, 0.95f, 0.86f, 0.34f, 0.36f, 0.40f),
+                    new DressingSettings
+                    {
+                        WaterLevel = 0,
+                        GroveChance = 0.26f,
+                        PeakChance = 0.40f,
+                        BorderGroveChance = 0.30f,
+                        PropChance = 0.34f,
+                        CampChance = 0.20f,
+                        RidgeChance = 0.58f,
+                        RimDrop = 1f,
+                        CloudCount = 6,
+                    }),
 
-            // Kay's own composition for the pack: high ground on one flank, a
-            // road reading straight through the middle, and the mass of the
-            // dressing pulled off the centre so the corridor stays legible.
-            new Preset(
-                "terraced-ridge",
-                "Medieval Hexagon Pack -- ridge, lake, road",
-                "The ridge reads as a hillside: ledged steps, tall things gathered on the high flank, "
-                    + "the middle of the board left open.",
-                new DressingSettings
-                {
-                    GroveChance = 0.22f,
-                    PeakChance = 0.46f,
-                    BorderGroveChance = 0.30f,
-                    PropChance = 0.38f,
-                    SecondPropChance = 0.26f,
-                    CampChance = 0.16f,
-                    ApronCount = 1,
-                    ApronSpread = 0.07f,
-                }),
+                // "The signature composition" -- the pack's cover render.
+                new Preset(
+                    "signature-strip",
+                    "The signature composition",
+                    "One continuous climb from the near corner to the far one rather than a grid of "
+                    + "plateaus, with everything tall gathered at the far end.",
+                    board: "signature-strip",
+                    atlas: "hexagons_medieval_Summer",
+                    new Sunlight(-52f, 38f, 1.2f, 1f, 0.96f, 0.88f, 0.33f, 0.36f, 0.42f),
+                    new DressingSettings
+                    {
+                        GroveChance = 0.22f,
+                        PeakChance = 0.52f,
+                        BorderGroveChance = 0.26f,
+                        PropChance = 0.30f,
+                        CampChance = 0.16f,
+                        RidgeChance = 0.62f,
+                        RimDrop = 1f,
+                        CloudCount = 8,
+                        CloudHeight = 7f,
+                    }),
 
-            // The Builder Pack's wide render is mostly empty ground: perhaps six
-            // built things across a hundred tiles. This is that ratio applied to
-            // this board, and it is the one most likely to look too bare.
-            new Preset(
-                "sparse-country",
-                "Medieval Builder Pack -- the wide rolling landscape",
-                "Kay's ratio: far fewer stands of trees, more open grass, and the few tall things "
-                    + "spaced far enough apart to be landmarks.",
-                new DressingSettings
-                {
-                    GroveChance = 0.12f,
-                    PeakChance = 0.30f,
-                    BorderGroveChance = 0.22f,
-                    PropChance = 0.26f,
-                    SecondPropChance = 0.14f,
-                    CampChance = 0.10f,
-                    ApronCount = 1,
-                    ApronSpread = 0.06f,
-                }),
+                // "The best landscape render in the collection" -- Medieval
+                // Builder Pack. Six built things per hundred tiles, and the rest
+                // forest, rock and empty grass.
+                new Preset(
+                    "rolling-country",
+                    "The best landscape render in the collection",
+                    "Gentle relief and nothing dramatic. The interest is meant to come from what "
+                    + "stands on the ground rather than from the ground, so the wood is heavy and "
+                    + "the built things are few.",
+                    board: "rolling-country",
+                    atlas: "hexagons_medieval_Summer",
+                    new Sunlight(-24f, 56f, 1.05f, 1f, 0.98f, 0.93f, 0.36f, 0.38f, 0.40f),
+                    new DressingSettings
+                    {
+                        GroveChance = 0.46f,
+                        PeakChance = 0.30f,
+                        BorderGroveChance = 0.44f,
+                        PropChance = 0.24f,
+                        SecondPropChance = 0.22f,
+                        CampChance = 0.08f,
+                        RidgeChance = 0.44f,
+                        RimDrop = 0.8f,
+                        CloudCount = 4,
+                    }),
 
-            // Every published render has a tall mass at the far edge that the
-            // eye stops against. This turns the border up hard and thins the
-            // middle, which is the density gradient the forest renders use.
-            new Preset(
-                "back-wall",
-                "Medieval Hexagon Pack -- the three-biome strip; Forest Nature Pack -- cliff layering",
-                "A rim of rock the eye stops against, with the board thinning towards the camera.",
-                new DressingSettings
-                {
-                    GroveChance = 0.16f,
-                    PeakChance = 0.62f,
-                    BorderGroveChance = 0.30f,
-                    PropChance = 0.34f,
-                    SecondPropChance = 0.22f,
-                    CampChance = 0.12f,
-                    ApronCount = 2,
-                    ApronSpread = 0.05f,
-                }),
+                // "Three-deep cliff layering" -- Forest Nature Pack. Every level
+                // change has a visible rock face, and the tree clusters straddle
+                // the edges instead of sitting neatly on one level.
+                new Preset(
+                    "three-deep-cliff",
+                    "Three-deep cliff layering",
+                    "Three flat shelves parted by whole-block faces, and the wood pushed onto the "
+                    + "lips of them rather than centred on the shelves.",
+                    board: "three-deep-cliff",
+                    atlas: "hexagons_medieval_Summer",
+                    new Sunlight(-62f, 32f, 1.25f, 1f, 0.95f, 0.87f, 0.30f, 0.33f, 0.40f),
+                    new DressingSettings
+                    {
+                        GroveChance = 0.30f,
+                        PeakChance = 0.44f,
+                        BorderGroveChance = 0.34f,
+                        PropChance = 0.28f,
+                        CampChance = 0.14f,
+                        RidgeChance = 0.82f,
+                        RimDrop = 1.2f,
+                        CloudCount = 5,
+                    }),
 
-            // The nine-tile diorama: almost nothing standing, and what is there
-            // is posted along the path. The test of whether this board needs
-            // scenery at all or just needs shape.
-            new Preset(
-                "camp-road",
-                "Medieval Hexagon Pack -- the nine-tile scene",
-                "Almost bare, with the little that stands posted along the corridor. "
-                    + "Tests whether the depth is terrain rather than dressing.",
-                new DressingSettings
-                {
-                    GroveChance = 0.08f,
-                    PeakChance = 0.26f,
-                    BorderGroveChance = 0.14f,
-                    PropChance = 0.20f,
-                    SecondPropChance = 0.10f,
-                    CampChance = 0.30f,
-                    ApronCount = 1,
-                    ApronSpread = 0.08f,
-                }),
-        };
+                // "Canyon variant" -- the arid cut of the builder-pack
+                // landscape, whose stepped walls read as a much stronger drop
+                // than the green version's.
+                new Preset(
+                    "canyon-run",
+                    "Canyon variant",
+                    "The road on the floor of a trench with the walls stepping away from it. The "
+                    + "autumn atlas, because the arid read is what makes the reference land.",
+                    board: "canyon-run",
+                    atlas: "hexagons_medieval_Fall",
+                    new Sunlight(-18f, 28f, 1.3f, 1f, 0.93f, 0.80f, 0.34f, 0.31f, 0.30f),
+                    new DressingSettings
+                    {
+                        GroveChance = 0.10f,
+                        PeakChance = 0.46f,
+                        BorderGroveChance = 0.12f,
+                        PropChance = 0.38f,
+                        SecondPropChance = 0.34f,
+                        CampChance = 0.22f,
+                        RidgeChance = 0.70f,
+                        RimDrop = 1.4f,
+                        CloudCount = 3,
+                    }),
+
+                // "Clay render -- read the silhouette" and "Diorama scale". A low
+                // flat plate with three or four vertical incidents rising off it.
+                new Preset(
+                    "diorama-plate",
+                    "Clay render, and diorama scale",
+                    "A low flat plate with four vertical incidents rising off it and very little "
+                    + "else. The winter atlas caps them, which is what turns an incident into a "
+                    + "landmark.",
+                    board: "diorama-plate",
+                    atlas: "hexagons_medieval_Winter",
+                    new Sunlight(-44f, 34f, 1.15f, 0.96f, 0.97f, 1f, 0.38f, 0.41f, 0.48f),
+                    new DressingSettings
+                    {
+                        GroveChance = 0.16f,
+                        PeakChance = 0.58f,
+                        BorderGroveChance = 0.14f,
+                        PropChance = 0.20f,
+                        CampChance = 0.12f,
+                        RidgeChance = 0.40f,
+                        RimDrop = 1.4f,
+                        CloudCount = 6,
+                        CloudHeight = 7.5f,
+                    }),
+            };
 
         /// <summary>
-        /// A copy of a set with the ledges changed and nothing else, so a preset
-        /// that means "the shipped board plus one ledge" says exactly that
-        /// instead of restating every other number and drifting from it.
+        /// The sun a board is lit by. Part of a preset because half of what
+        /// separates two of these pictures is where the shadows fall: the same
+        /// cliff is a cliff or a smudge depending on whether anything is casting
+        /// across it.
         /// </summary>
-        private static DressingSettings With(DressingSettings basis, int apron, float spread)
+        public readonly struct Sunlight
         {
-            DressingSettings copy = basis.Copy();
+            public Sunlight(
+                float yaw,
+                float pitch,
+                float intensity,
+                float red,
+                float green,
+                float blue,
+                float ambientRed,
+                float ambientGreen,
+                float ambientBlue)
+            {
+                Yaw = yaw;
+                Pitch = pitch;
+                Intensity = intensity;
+                Red = red;
+                Green = green;
+                Blue = blue;
+                AmbientRed = ambientRed;
+                AmbientGreen = ambientGreen;
+                AmbientBlue = ambientBlue;
+            }
 
-            copy.ApronCount = apron;
-            copy.ApronSpread = spread;
+            /// <summary>The light the project ships with, from <see cref="SceneFraming"/>.</summary>
+            public static Sunlight Default =>
+                new Sunlight(
+                    SceneFraming.SunYawDegrees,
+                    SceneFraming.SunPitchDegrees,
+                    SceneFraming.SunIntensity,
+                    1f,
+                    0.97f,
+                    0.91f,
+                    0.32f,
+                    0.34f,
+                    0.38f);
 
-            return copy;
+            public float Yaw { get; }
+
+            public float Pitch { get; }
+
+            public float Intensity { get; }
+
+            public float Red { get; }
+
+            public float Green { get; }
+
+            public float Blue { get; }
+
+            public float AmbientRed { get; }
+
+            public float AmbientGreen { get; }
+
+            public float AmbientBlue { get; }
+        }
+
+        /// <summary>One named landscape: what to draw, and what it is trying to be.</summary>
+        public readonly struct Preset
+        {
+            public Preset(
+                string name,
+                string reference,
+                string intent,
+                string board,
+                string atlas,
+                Sunlight light,
+                DressingSettings settings)
+            {
+                Name = name;
+                Reference = reference;
+                Intent = intent;
+                Board = board;
+                Atlas = atlas;
+                Light = light;
+                Settings = settings;
+            }
+
+            /// <summary>What it is called on the command line and in the file names.</summary>
+            public string Name { get; }
+
+            /// <summary>The reference frame it is a reading of.</summary>
+            public string Reference { get; }
+
+            /// <summary>What it is trying to do, in a sentence.</summary>
+            public string Intent { get; }
+
+            /// <summary>
+            /// The board file under <c>docs/prototypes/boards/</c>, without its
+            /// extension. Null draws the committed <c>content/map.txt</c>.
+            /// </summary>
+            public string Board { get; }
+
+            /// <summary>
+            /// The texture under <c>client/Assets/Art/Buildings/</c>, without its
+            /// extension. Null wears the atlas the project ships.
+            /// </summary>
+            /// <remarks>
+            /// The pack cuts four atlases against one set of UVs, so a whole
+            /// season is one texture swap and no geometry at all. It is worth
+            /// knowing before anybody models a second biome.
+            /// <para>
+            /// <b>And the shipped one is the worst of the four for this.</b>
+            /// <c>hexagons_medieval</c> puts an olive-yellow in the swatch the
+            /// grass tiles sample, which at board scale reads as scorched
+            /// rather than green; <c>_Summer</c> puts an actual green there and
+            /// is the same geometry and the same UVs. Five of the six presets
+            /// below name an atlas for that reason, and only the control wears
+            /// the shipped one -- so if these pictures look greener than the
+            /// game does, this field is why.
+            /// </para>
+            /// </remarks>
+            public string Atlas { get; }
+
+            /// <summary>The sun it is lit by.</summary>
+            public Sunlight Light { get; }
+
+            /// <summary>How heavily it is dressed.</summary>
+            public DressingSettings Settings { get; }
         }
     }
 }

@@ -7,12 +7,22 @@ namespace Sim.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>The arithmetic is asserted at the boundary and nowhere else.</b> A tier
-/// is worth half a hex and distances are whole hexes, so the only ranges where
-/// half a hex is visible at all are the ones whose boundary the half hex
-/// crosses. Every range constant below is chosen for that and is written down
-/// beside the crossing it makes: a test at a range where the half hex changes
-/// no answer would pass under a rule that ignored height entirely.
+/// <b>The arithmetic is asserted at the boundary and nowhere else.</b> A block
+/// of height is two levels and is worth half a hex, and distances are whole
+/// hexes, so the only ranges where half a hex is visible at all are the ones
+/// whose boundary the half hex crosses. Every range constant below is chosen
+/// for that and is written down beside the crossing it makes: a test at a range
+/// where the half hex changes no answer would pass under a rule that ignored
+/// height entirely.
+/// </para>
+/// <para>
+/// <b>The levels here are even numbers because a block is two of them.</b>
+/// When a level was a whole block these fixtures read a, b, c; they now read
+/// a, c, e, and every assertion in this file is measuring exactly what it
+/// measured before. An odd level is half a block and worth a quarter hex,
+/// which is a quantity no boundary in this file crosses -- that is deliberate,
+/// and it is why the half step could be added without any of these numbers
+/// moving.
 /// </para>
 /// <para>
 /// <b>The committed map is on the flat, so none of this is observable on
@@ -25,13 +35,13 @@ public class ReachTests
 {
     /// <summary>
     /// A straight nine-hex corridor with a room under it, and one hex of that
-    /// corridor standing two tiers up: the ridge.
+    /// corridor standing two blocks up: the ridge.
     /// </summary>
     /// <remarks>
     /// The tower stands at column 4 of row 2, which is two hexes from route
     /// cells 3, 4 and 5 and three from everything else -- so at a range of 2600
     /// its reach on the flat is exactly those three cells, in one run. Raising
-    /// the middle of the three by two tiers costs a full hex, which takes it to
+    /// the middle of the three by two blocks costs a full hex, which takes it to
     /// 3000 and out, and leaves the two either side of it untouched. The hole
     /// is in the middle of a run of route rather than at its end, which is what
     /// makes it a second interval rather than a shorter first one.
@@ -41,7 +51,7 @@ public class ReachTests
         .........
         .........
 
-        aaaacaaaa
+        aaaaeaaaa
         aaaaaaaaa
         aaaaaaaaa
         """;
@@ -58,21 +68,21 @@ public class ReachTests
         """;
 
     /// <summary>
-    /// The same board again as a staircase: the corridor climbs from the ground
-    /// tier to the top one on the way to the exit.
+    /// The same board again as a staircase: the corridor climbs two whole blocks
+    /// on the way to the exit.
     /// </summary>
     private const string TheSameBoardAsAStaircase = """
         S#######E
         .........
         .........
 
-        aaabbbccc
-        aaabbbccc
-        aaabbbccc
+        aaaccceee
+        aaaccceee
+        aaaccceee
         """;
 
     /// <summary>
-    /// A corridor with a tower cell directly beside it, one tier down. Adjacent
+    /// A corridor with a tower cell directly beside it, two blocks down. Adjacent
     /// and below is the case the floor exists for: without it a soldier here
     /// has an effective range of half a hex and cannot hit the creep he is
     /// touching.
@@ -81,7 +91,7 @@ public class ReachTests
         S##E
         ....
 
-        cccc
+        eeee
         aaaa
         """;
 
@@ -113,31 +123,37 @@ public class ReachTests
     private static readonly Hex Origin = new Hex(0, 0);
 
     [Fact]
-    public void A_tower_one_tier_above_its_target_reaches_half_a_hex_further()
+    public void A_tower_one_block_above_its_target_reaches_half_a_hex_further()
     {
         // Two and a half hexes: three hexes is out on the flat and the half hex
-        // bought by shooting down one tier is exactly what closes it. At a
+        // bought by shooting down one block is exactly what closes it. At a
         // range of 2000 or 3000 the same shot answers the same either way, and
         // the test would pass under a rule that never read a level.
         const int TwoAndAHalfHexes = 2500;
 
         Assert.False(Reach.Shoots(Origin, 0, TwoAndAHalfHexes, Away(3), 0));
-        Assert.True(Reach.Shoots(Origin, 1, TwoAndAHalfHexes, Away(3), 0));
+        Assert.True(Reach.Shoots(Origin, 2, TwoAndAHalfHexes, Away(3), 0));
+
+        // And the half step in between buys a quarter hex, which does not close
+        // it. This is the assertion that says a level is half of what it was:
+        // under the old rule the line below reached, and the one above it is
+        // the height that reaches now.
+        Assert.False(Reach.Shoots(Origin, 1, TwoAndAHalfHexes, Away(3), 0));
 
         // And it is a difference and not a bonus for standing high. The same
-        // tower on the top tier shooting a target on the top tier reaches
-        // exactly as far as it did on the ground, which is the claim a flat
-        // per-level bonus would fail.
+        // tower on the top of the board shooting a target up there with it
+        // reaches exactly as far as it did on the ground, which is the claim a
+        // flat per-level bonus would fail.
         for (int hexes = 0; hexes <= 5; hexes++)
         {
             Assert.Equal(
                 Reach.Shoots(Origin, 0, TwoAndAHalfHexes, Away(hexes), 0),
-                Reach.Shoots(Origin, 2, TwoAndAHalfHexes, Away(hexes), 2));
+                Reach.Shoots(Origin, 4, TwoAndAHalfHexes, Away(hexes), 4));
         }
     }
 
     [Fact]
-    public void A_tower_one_tier_below_its_target_reaches_half_a_hex_less()
+    public void A_tower_one_block_below_its_target_reaches_half_a_hex_less()
     {
         // Two hexes exactly: the target two hexes away is in range on the flat
         // and the half hex charged for shooting up one tier is what takes it
@@ -147,9 +163,13 @@ public class ReachTests
         const int TwoHexes = 2000;
 
         Assert.True(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 0));
-        Assert.False(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 1));
         Assert.False(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 2));
-        Assert.True(Reach.Shoots(Origin, 0, TwoHexes, Away(1), 2));
+        Assert.False(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 4));
+        Assert.True(Reach.Shoots(Origin, 0, TwoHexes, Away(1), 4));
+
+        // Half a block up costs a quarter hex, and a quarter hex is enough to
+        // put a shot that landed exactly on the boundary outside it.
+        Assert.False(Reach.Shoots(Origin, 0, TwoHexes, Away(2), 1));
     }
 
     [Fact]
@@ -162,15 +182,15 @@ public class ReachTests
         // shared the shot's signed term would blanket the board from a cliff.
         const int TwoHexes = 2000;
 
-        Assert.True(Reach.Encloses(Origin, 1, TwoHexes, Away(2), 1));
-        Assert.False(Reach.Encloses(Origin, 1, TwoHexes, Away(2), 0));
-        Assert.False(Reach.Encloses(Origin, 1, TwoHexes, Away(2), 2));
+        Assert.True(Reach.Encloses(Origin, 2, TwoHexes, Away(2), 2));
+        Assert.False(Reach.Encloses(Origin, 2, TwoHexes, Away(2), 0));
+        Assert.False(Reach.Encloses(Origin, 2, TwoHexes, Away(2), 4));
 
-        Assert.True(Reach.Shoots(Origin, 1, TwoHexes, Away(2), 0));
+        Assert.True(Reach.Shoots(Origin, 2, TwoHexes, Away(2), 0));
     }
 
     [Fact]
-    public void Any_reach_at_all_reaches_the_six_hexes_touching_it_whatever_the_tiers_do()
+    public void Any_reach_at_all_reaches_the_six_hexes_touching_it_whatever_the_levels_do()
     {
         // The floor, over every neighbour and every pair of tiers there is. One
         // thousandth of a hex is the smallest range that is a range at all, so
@@ -181,8 +201,18 @@ public class ReachTests
         //
         // The second hex out is what says the floor is the hexes touching it
         // and not a rule that swallowed the range column. It is out at every
-        // pair of tiers, downhill included, because two tiers refund one hex and
-        // it is two hexes away.
+        // pair of levels but one, downhill included, because a refund is a
+        // quarter hex a level and it is two hexes away.
+        //
+        // THE ONE PAIR IS THE CEILING, AND IT IS NEW. Nine levels is four
+        // blocks, so the deepest drop on the board refunds two whole hexes and
+        // a shot with any range at all reaches the second hex out on the refund
+        // alone. Under three levels the most a refund could ever buy was one
+        // hex and this held for every pair. It is asserted below rather than
+        // stepped around: the ceiling on what height is worth is now two hexes,
+        // and that is a fact about the board somebody should have to delete a
+        // line to change.
+        const int TheDeepestDrop = HexMap.LevelCount - 1;
         for (int direction = 0; direction < Hex.DirectionCount; direction++)
         {
             Hex neighbour = Origin.Neighbour(direction);
@@ -195,7 +225,13 @@ public class ReachTests
                     Assert.True(Reach.Shoots(Origin, standing, 1, neighbour, target));
                     Assert.True(Reach.Encloses(Origin, standing, 1, neighbour, target));
 
-                    Assert.False(Reach.Shoots(Origin, standing, 1, beyond, target));
+                    if (standing - target < TheDeepestDrop)
+                    {
+                        Assert.False(Reach.Shoots(Origin, standing, 1, beyond, target));
+                    }
+
+                    // The sphere never refunds, so the ceiling does not apply
+                    // to it and the second hex is out at every pair.
                     Assert.False(Reach.Encloses(Origin, standing, 1, beyond, target));
 
                     // No range is not a short range. A creep carries zero in the
@@ -205,6 +241,11 @@ public class ReachTests
                     Assert.False(Reach.Encloses(Origin, standing, 0, neighbour, target));
                 }
             }
+
+            // The ceiling itself, named. Shooting from the top of the board at
+            // the bottom of it refunds exactly two hexes, which is the most
+            // height can ever be worth here.
+            Assert.True(Reach.Shoots(Origin, TheDeepestDrop, 1, beyond, 0));
 
             // And zero reaches nothing at all rather than reaching only itself,
             // which the flat arithmetic used to grant it.
@@ -217,7 +258,7 @@ public class ReachTests
     public void A_tower_below_the_corridor_beside_it_still_covers_the_hex_it_is_touching()
     {
         // The floor through the whole stack rather than through the arithmetic:
-        // a one-hex tower on the ground tier under a corridor two tiers above
+        // a one-hex tower on the ground under a corridor two blocks above
         // it. The climb costs a whole hex, so the signed difference alone would
         // leave this tower unable to reach the route at all -- which would be
         // refused at load, in a file, as a mistyped coordinate.
@@ -249,7 +290,7 @@ public class ReachTests
         Assert.Equal(Fix64.FromInt(3), flat.IntervalStart(0, 0));
         Assert.Equal(Fix64.FromInt(5), flat.IntervalEnd(0, 0));
 
-        // Raise the middle one two tiers and the run is cut in half, with the
+        // Raise the middle one two blocks and the run is cut in half, with the
         // cells either side of the ridge untouched.
         TowerCoverage ridged = TowerCoverage.For(
             HexMap.Parse("ridge map", RidgeAcrossTheCorridor),

@@ -1,0 +1,37 @@
+// Three-deep cliff layering
+//
+// A prototype board: the committed corridor of content/map.txt, unmoved, under
+// a different landscape. Generated -- see docs/prototypes/scenery/README.md.
+//
+// After the Forest Nature Pack render. Three flat shelves parted by whole-block
+// faces, so every level change has a rock face with its own shadow.
+//
+// Levels are half a block each and run 'a' to 'i'.
+
+....S...........E..
+ ....#...........#..
+...##...........#..
+ ..#.............#..
+...####.........#..
+ ......#...######...
+......#...#........
+ ......#...######...
+....###.........#..
+ ...#............#..
+...#............#..
+ ...#############...
+...................
+
+dddddfffffffhhhhfhh
+ dddddfffffffhhhhfhh
+dddddfffffffhhhhfhh
+ dddddfffffffhhhhfhh
+dddddddfffffffhhfhh
+ bddddddddfddffffhhh
+bbbbddddddddfffffff
+ bbbbbbddddddddddfff
+bbbbdddbbddddddddff
+ bbbdbbbbbbddddddddf
+bbbdbbbbbbbdddddddd
+ bbbddbbbbbbdddddddd
+bbbbbbbbbbbdddddddd

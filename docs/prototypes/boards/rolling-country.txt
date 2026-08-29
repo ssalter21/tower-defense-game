@@ -1,0 +1,38 @@
+// Rolling country
+//
+// A prototype board: the committed corridor of content/map.txt, unmoved, under
+// a different landscape. Generated -- see docs/prototypes/scenery/README.md.
+//
+// After the Medieval Builder Pack landscape. Gentle relief and nothing
+// dramatic -- the interest is meant to come from what stands on it, at
+// roughly six built things per hundred tiles.
+//
+// Levels are half a block each and run 'a' to 'i'.
+
+....S...........E..
+ ....#...........#..
+...##...........#..
+ ..#.............#..
+...####.........#..
+ ......#...######...
+......#...#........
+ ......#...######...
+....###.........#..
+ ...#............#..
+...#............#..
+ ...#############...
+...................
+
+ddedddcbbbbbccddedc
+ deeeddccbbcccdddedd
+deeddeddccccdddeedd
+ eedeeedddddddeeeedd
+eeeddeedddddeeeeeed
+ eeeeededddddeeeeedd
+deeeddedcdddeeeeedd
+ dddddcecccdddedddcc
+ddddeeecbbccdddddcc
+ ddcecccbbbccdddddcb
+cdceccbaabbccddddcb
+ ddceecaaabbcdddddcb
+ddddccbaaabccddeddc

@@ -199,10 +199,26 @@ namespace Tests.EditMode
         /// So the horizontal step carries the original claim unweakened — the
         /// grid arithmetic is what teleports a creep at a corner when it is
         /// wrong — and the vertical step gets its own bound, which is what
-        /// catches a creep stepping up a tier in one frame instead of walking
-        /// the ramp.
+        /// catches a creep stepping up a whole block in one frame instead of
+        /// walking the ramp.
+        /// </para>
+        /// <para>
+        /// <b>The bound is a quarter of a block and not a quarter of a
+        /// level.</b> A block is the steepest a corridor may climb across one
+        /// hex — the tall ramp piece rises exactly that and the pack cuts
+        /// nothing steeper — so a quarter step across the steepest legal ramp
+        /// crosses a quarter of it. When a level was a whole block the two
+        /// readings were the same number and the distinction did not exist;
+        /// halving the level made a quarter of a level too tight by exactly
+        /// two, which is what this caught.
         /// </para>
         /// </remarks>
+        /// <summary>
+        /// How many levels a block of height is, which is the steepest one hex
+        /// of corridor may climb.
+        /// </summary>
+        private const float LevelsPerBlock = 2f;
+
         [Test]
         public void TheCommittedMapWalksWithoutAGap()
         {
@@ -229,9 +245,9 @@ namespace Tests.EditMode
 
                 Assert.That(
                     Mathf.Abs(point.y - previous.y),
-                    Is.LessThanOrEqualTo((0.25f * HexGeometry.LevelStep) + 1e-3f),
+                    Is.LessThanOrEqualTo((0.25f * LevelsPerBlock * HexGeometry.LevelStep) + 1e-3f),
                     $"the corridor climbs too fast at distance {distance} — a quarter step may cross at "
-                    + "most a quarter of a tier, and more than that is a creep jumping up the hillside "
+                    + "most a quarter of a block, and more than that is a creep jumping up the hillside "
                     + "rather than walking the ramp");
 
                 previous = point;

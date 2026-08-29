@@ -1,0 +1,37 @@
+// Diorama plate
+//
+// A prototype board: the committed corridor of content/map.txt, unmoved, under
+// a different landscape. Generated -- see docs/prototypes/scenery/README.md.
+//
+// After the clay render. A low flat plate with four vertical incidents rising
+// off it and nothing else -- the composition the pack keeps returning to.
+//
+// Levels are half a block each and run 'a' to 'i'.
+
+....S...........E..
+ ....#...........#..
+...##...........#..
+ ..#.............#..
+...####.........#..
+ ......#...######...
+......#...#........
+ ......#...######...
+....###.........#..
+ ...#............#..
+...#............#..
+ ...#############...
+...................
+
+bbbbbbbbbcdedcbbbbb
+ bbbbbbbbceggecbbbbb
+cdcbbbbbcdgigdcbbbb
+ ffbbbbbbceggecbbbbb
+fgfbbbbbbcefedbbbbb
+ ffdbbbbbbceefdbbbbb
+cdcbbbbbbceegecbbbb
+ bbbbbbbbbceeecccccb
+bbbbbbbbbbccccbccdd
+ bbbbbbbbbbbbbbcdcfd
+bbbbbbbbbbbbbbbdchf
+ bbbbbbbbbbbbbbccffd
+bbbbbbbbbbbbbbbcddd

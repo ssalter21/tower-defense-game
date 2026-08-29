@@ -50,6 +50,10 @@ namespace View
         private Mesh[] peaks = Array.Empty<Mesh>();
 
         [SerializeField]
+        [Tooltip("Low mounds, sat on the lip where the ground drops a level.")]
+        private Mesh[] hills = Array.Empty<Mesh>();
+
+        [SerializeField]
         [Tooltip("Clouds, above the board.")]
         private Mesh[] clouds = Array.Empty<Mesh>();
 
@@ -63,6 +67,7 @@ namespace View
             Mesh[] camp,
             Mesh[] groves,
             Mesh[] peaks,
+            Mesh[] hills,
             Mesh[] clouds,
             Material surface) =>
             new SceneryModels
@@ -71,6 +76,7 @@ namespace View
                 camp = camp ?? Array.Empty<Mesh>(),
                 groves = groves ?? Array.Empty<Mesh>(),
                 peaks = peaks ?? Array.Empty<Mesh>(),
+                hills = hills ?? Array.Empty<Mesh>(),
                 clouds = clouds ?? Array.Empty<Mesh>(),
                 surface = surface,
             };
@@ -88,6 +94,7 @@ namespace View
                 || camp.Length > 0
                 || groves.Length > 0
                 || peaks.Length > 0
+                || hills.Length > 0
                 || clouds.Length > 0);
 
         /// <summary>How many models stand behind one group.</summary>
@@ -120,6 +127,7 @@ namespace View
                 SceneryGroup.Camp => camp,
                 SceneryGroup.Grove => groves,
                 SceneryGroup.Peak => peaks,
+                SceneryGroup.Hill => hills,
                 SceneryGroup.Cloud => clouds,
                 _ => Array.Empty<Mesh>(),
             };

@@ -1,0 +1,37 @@
+// The signature composition
+//
+// A prototype board: the committed corridor of content/map.txt, unmoved, under
+// a different landscape. Generated -- see docs/prototypes/scenery/README.md.
+//
+// After the pack cover: one continuous climb from front-right to back-left,
+// rather than a grid of plateaus. Everything tall is at the far end.
+//
+// Levels are half a block each and run 'a' to 'i'.
+
+....S...........E..
+ ....#...........#..
+...##...........#..
+ ..#.............#..
+...####.........#..
+ ......#...######...
+......#...#........
+ ......#...######...
+....###.........#..
+ ...#............#..
+...#............#..
+ ...#############...
+...................
+
+iiihhggffedccbbabaa
+ iiihhggfeddccbbabaa
+hhhhhggfeedccbbbbaa
+ hhhggffeeddccbbbbaa
+ggghhffeeddcccbbbba
+ gggffefeddccccbbbba
+ffffeefdddcccccbbbb
+ ffeeedfdddccccccbbb
+feeefffdcccccccccbb
+ eedfdddccccccccccbb
+eddfddcccccccccccbb
+ dddffdccccccccccbbb
+ddddddcccccccbbbbbb

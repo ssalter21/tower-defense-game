@@ -318,22 +318,23 @@ public class HexMapTests
     }
 
     [Fact]
-    public void A_level_outside_the_three_tiers_refuses_to_load_and_a_digit_is_one()
+    public void A_level_above_the_top_of_the_board_refuses_to_load_and_a_digit_is_one()
     {
         // The level grid holds no numbers either, which is the half of that
-        // rule a second block could quietly have lost. 'd' is the other half:
-        // there are three tiers and a fourth is not flattened onto the third.
+        // rule a second block could quietly have lost. The letter past the top
+        // is the other half: there are nine levels and a tenth is not flattened
+        // onto the ninth.
         ContentException tier = Assert.Throws<ContentException>(() => HexMap.Parse("""
             .....
             .S#E.
             .....
 
             aaaaa
-            aadaa
+            aajaa
             aaaaa
             """));
 
-        Assert.Contains("'d'", tier.Message, StringComparison.Ordinal);
+        Assert.Contains("'j'", tier.Message, StringComparison.Ordinal);
         Assert.Equal(6, tier.Line);
 
         ContentException digit = Assert.Throws<ContentException>(() => HexMap.Parse("""
@@ -411,13 +412,21 @@ public class HexMapTests
     }
 
     [Fact]
-    public void The_committed_map_climbs_through_all_three_tiers()
+    public void The_committed_map_climbs_two_whole_blocks_and_uses_no_half_step()
     {
         // The board climbs, and this is the test that says so. It replaces the
         // one that held the map flat: that assertion existed because every
-        // number was priced on the flat and a tier appearing would move all of
+        // number was priced on the flat and a climb appearing would move all of
         // them at once, which is exactly what drawing the fold did -- so the
         // guard is now that the climb is still there rather than that it is not.
+        //
+        // THE EVEN LEVELS ARE THE POINT NOW. A level was a whole block and is
+        // now half of one, and this board was ported by doubling: it stands at
+        // 0, 2 and 4, which is the same three heights it always had. That it
+        // uses no odd level is what says the half step is available and this
+        // board has not spent it, and it is the assertion that goes red the day
+        // somebody regrades the committed map -- which is a change that retires
+        // every stored record and should not happen quietly.
         HexMap map = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
         var standing = new HashSet<int>();
@@ -430,7 +439,7 @@ public class HexMapTests
             }
         }
 
-        Assert.Equal(new[] { 0, 1, 2 }, standing.OrderBy(level => level));
+        Assert.Equal(new[] { 0, 2, 4 }, standing.OrderBy(level => level));
     }
 
     [Fact]

@@ -71,27 +71,50 @@ namespace View
         public const float ColumnPitch = AcrossFlats;
 
         /// <summary>
-        /// How far one tier stands above the one below it, in metres.
+        /// How far one level stands above the one below it, in metres.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>One metre, because that is the height of a tile.</b> The tile
-        /// models are authored with their walkable face at <c>y = 0</c> and
-        /// their body hanging to <c>y = -1</c>, so a tier step of exactly one
-        /// makes a raised tile's underside meet the top of the tile beside it
-        /// with no gap and no overlap. The pack's ramp piece climbs exactly one
-        /// as well. Pick any other number and either the ramp stops meeting the
-        /// tier it climbs to, or the columns of earth show daylight between
-        /// them.
+        /// <b>Half a metre, because the pack cuts half steps and there was
+        /// nowhere to put them.</b> The tile models are authored with their
+        /// walkable face at <c>y = 0</c> and a metre of body hanging to
+        /// <c>y = -1</c>, and the ramps come in a matched pair: every
+        /// <c>*_sloped_low</c> piece tops out at exactly <c>+0.5</c> and every
+        /// <c>*_sloped_high</c> piece at exactly <c>+1.0</c>. At a one-metre
+        /// level only the high one had a level to land on, so a board could
+        /// only ever step a whole block and the ground read as a stack of
+        /// plates. At half a metre both land: one level of climb is the low
+        /// ramp, two is the high one, and a slope can be graded instead of
+        /// stepped.
+        /// </para>
+        /// <para>
+        /// <b>The body still closes the seam, and now it over-closes it.</b>
+        /// A tile raised one level has a metre of earth under a half-metre
+        /// drop, so the extra half is buried in the hillside rather than
+        /// showing daylight. What a metre of body no longer covers is a drop of
+        /// more than two levels, which is why <see cref="HexFloor"/> stacks
+        /// <c>hex_grass_bottom</c> underneath to make the rest of the cliff.
         /// </para>
         /// <para>
         /// It is a view constant and never reaches the simulation, which knows
-        /// a tier as an integer and gives it half a hex of reach
+        /// a level as an integer and gives it a quarter hex of reach
         /// (<c>Reach.MilliHexPerLevel</c>) without any opinion about how tall
         /// that is in metres. See ADR-0023.
         /// </para>
         /// </remarks>
-        public const float LevelStep = 1.0f;
+        public const float LevelStep = 0.5f;
+
+        /// <summary>
+        /// How tall one tile's body is, in metres: the earth hanging under its
+        /// walkable face, which is what closes the seam between two levels.
+        /// </summary>
+        /// <remarks>
+        /// A fact about the pack rather than a choice -- every base tile in it
+        /// measures <c>y = -1</c> to <c>y = 0</c> -- and it is written down
+        /// because <see cref="LevelStep"/> is no longer equal to it and the two
+        /// used to be silently the same number.
+        /// </remarks>
+        public const float TileBody = 1.0f;
 
         /// <summary>
         /// Where the centre of a hex is in world space, from its axial

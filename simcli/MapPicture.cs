@@ -30,9 +30,9 @@ namespace Sim.Cli;
 /// same reason every other file this program writes is.
 /// </para>
 /// <para>
-/// <b>The palette is a diagram's and not the game's.</b> Tiers read as three
-/// steps of one shade so the fold is legible at a glance; nothing here is an
-/// art decision, and the tile set the game is actually drawn with is somebody
+/// <b>The palette is a diagram's and not the game's.</b> Levels read as steps
+/// of one shade so the fold is legible at a glance; nothing here is an art
+/// decision, and the tile set the game is actually drawn with is somebody
 /// else's to choose.
 /// </para>
 /// </remarks>
@@ -47,7 +47,7 @@ internal static class MapPicture
     /// <summary>How tall the caption under the board is.</summary>
     private const double CaptionHeight = 96;
 
-    /// <summary>The letter the lowest tier is written with, matching the file's.</summary>
+    /// <summary>The letter the ground level is written with, matching the file's.</summary>
     private const char FirstTier = 'a';
 
     // THE TWO RAMPS ARE AUTUMN, because the tile set is. `_Fall` was chosen in
@@ -57,17 +57,34 @@ internal static class MapPicture
     // layout has nothing to do with. Sampled from the pack's own atlas
     // (client/Assets/Art/Buildings/hexagons_medieval.png) rather than invented.
     //
-    // Hue separates the route from the ground and value separates the tiers,
-    // so the two questions -- which tier is this, and is this the path -- stay
+    // Hue separates the route from the ground and value separates the levels,
+    // so the two questions -- how high is this, and is this the path -- stay
     // readable independently. Ground took the warm half because it is most of
     // the board; the route is the cooler stone, which is also what a trodden
     // path looks like.
+    //
+    // NINE STOPS, AND THE THREE SAMPLED ONES ARE STILL AMONG THEM. A level was
+    // a whole block and there were three of them; a level is now half a block
+    // and there are nine. The endpoints and the middle are the colours read off
+    // the atlas, and the six new stops are interpolated between them -- so a
+    // board using only the old heights draws in exactly the shades it always
+    // did, and the half steps land between the shades they sit between.
 
-    /// <summary>Ground, one entry per tier, palest first.</summary>
-    private static readonly string[] GroundByTier = { "#efdcb8", "#d5a862", "#a86232" };
+    /// <summary>Ground, one entry per level, palest first.</summary>
+    private static readonly string[] GroundByTier =
+    {
+        "#efdcb8", "#e8cfa2", "#e2c28d",
+        "#dcb578", "#d5a862", "#ca9656",
+        "#be854a", "#b3743e", "#a86232",
+    };
 
-    /// <summary>Corridor, one entry per tier, on the same ramp in a cooler hue.</summary>
-    private static readonly string[] RouteByTier = { "#d8d2c6", "#a89d8b", "#736855" };
+    /// <summary>Corridor, one entry per level, on the same ramp in a cooler hue.</summary>
+    private static readonly string[] RouteByTier =
+    {
+        "#d8d2c6", "#ccc5b7", "#c0b8a8",
+        "#b4aa9a", "#a89d8b", "#9b907e",
+        "#8e8270", "#807562", "#736855",
+    };
 
     private const string Ink = "#33312c";
 

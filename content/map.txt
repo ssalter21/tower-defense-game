@@ -2,7 +2,14 @@
 // the tier every hex of it stands at. It folds, and it climbs.
 //
 // '.' ground   '#' corridor   'S' the entrance   'E' the exit
-// 'a' the ground tier   'b' the tier above it   'c' the one above that
+// 'a' the ground, then a letter per HALF BLOCK of height above it, up to 'i'.
+//
+// HALF BLOCKS, NOT BLOCKS. A level used to be a whole block and this board was
+// written 'a' 'b' 'c'; it now reads 'a' 'c' 'e', which is the same three
+// heights on a grid twice as fine. Nothing about it moved and no tower's reach
+// changed -- Reach halved what a level is worth in the same change -- but the
+// levels in between are now available to grade a slope with, and the odd
+// letters here are the mark of a board that has not used them yet.
 //
 // A comment here starts with '//' rather than '#', because '#' is a corridor
 // cell and sharing the marker would make a corridor beginning at column one
@@ -52,16 +59,16 @@
  ...#############...
 ...................
 
-aaaaaaaaaaaaaaaabbb
- aaaaaaaaaaaaaaaabbb
-aaaaaaaaaaaaaaaabbb
- aaaaaaaaaaaaabbbbbb
-aaaaaaaaabbbbbbbbbb
- aaaaaaaaabaaabbbbbb
-aaaaaaaaababbbbbbbb
- aaaaaaaabbaabbbbbbb
-aaaaaaaabbbbbbbbbbc
- aaaaaaabbbbbbbccbcc
-abbabbbbbbbbbcccbcc
- bbbaabbbbbbbbbbbbcc
-bbbbbbbbbbbbccccccc
+aaaaaaaaaaaaaaaaccc
+ aaaaaaaaaaaaaaaaccc
+aaaaaaaaaaaaaaaaccc
+ aaaaaaaaaaaaacccccc
+aaaaaaaaacccccccccc
+ aaaaaaaaacaaacccccc
+aaaaaaaaacacccccccc
+ aaaaaaaaccaaccccccc
+aaaaaaaacccccccccce
+ aaaaaaaccccccceecee
+accaccccccccceeecee
+ cccaaccccccccccccee
+cccccccccccceeeeeee
