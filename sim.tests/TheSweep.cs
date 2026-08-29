@@ -122,15 +122,7 @@ public static class TheSweep
     /// </remarks>
     public static BuildPhase Builds(Run run, int preferred)
     {
-        IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
-        BuildPhase phase = BuildPhase.Of();
-
-        for (int index = 0; index < built.Count; index++)
-        {
-            phase = phase.With(built[index]);
-        }
-
-        return phase;
+        return BuildPhase.Of().With(CoverThenUpgradeBot.Decide(run));
     }
 
     /// <summary>

@@ -28,7 +28,9 @@
     the runner takes the seven files out of it by the names it declares. A round
     is resolved against a field of K opponents drawn from a population of other
     players' rounds; there is no such population until runs are stored, so the
-    canned pair standing in for it is field.txt behind the committed defense.
+    canned pair standing in for it is field.txt behind the committed defense,
+    which that opponent OPENS behind and then builds on out of a purse of its
+    own, by the same half-purse rule a run's own scripted player builds by.
     It is a build phase's output -- a hundred gold, everything on tick zero --
     because the skeleton's authored match is forty creeps and three hundred and
     eighty gold, which no purse in this economy can compose. That file's own

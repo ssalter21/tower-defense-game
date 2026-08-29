@@ -146,6 +146,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(board));
             }
 
+            if (purse is null)
+            {
+                throw new ArgumentNullException(nameof(purse));
+            }
+
             UnitType[] byPrice = ByPrice(types, costs);
             UnitType[] placeable = Placeable(byPrice, ladder);
             bool[] covered = CoveredBy(map, board);

@@ -197,13 +197,25 @@ namespace Sim
         /// nothing.
         /// </para>
         /// <para>
-        /// <b>The wave is not charged to that purse, and the share it would cost
-        /// is why the wall gets half.</b> What the stand-in sends is authored
-        /// rather than composed -- <c>content/field.txt</c> is calibrated as
-        /// roughly what a round's wave comes to once a purse has bought a wall as
-        /// well -- so the offensive share is already spent by the time this pool
-        /// is handed the script. Charging it here as well would price one wave
-        /// twice.
+        /// <b>The wave is not priced, and the share it would cost leaves the
+        /// purse anyway.</b> What the stand-in sends is authored rather than
+        /// composed -- <c>content/field.txt</c> is calibrated as roughly what a
+        /// round's wave comes to once a purse has bought a wall as well -- so
+        /// pricing it here would be pricing one wave twice, and a pool handed a
+        /// script no purse could compose would be refused rather than recorded.
+        /// What carries into the next round is therefore what the WALL declined
+        /// to spend out of its own share; the rest is the wave's and is gone. A
+        /// purse that banked the offensive share would compound at the ruleset's
+        /// interest on gold a player spends, which is an opponent growing richer
+        /// for sending the same wave.
+        /// </para>
+        /// <para>
+        /// <b>The opening wall is handed over and not bought.</b> A member of
+        /// this pool is a recorded round rather than a run played from nothing,
+        /// and <paramref name="defense"/> is what was recorded at its first one
+        /// -- so it stands beside the opening purse instead of coming out of it.
+        /// Charging for it would refuse most layouts anybody could author: the
+        /// committed six cost 344 gold against an opening purse of 100.
         /// </para>
         /// <para>
         /// <b>What a field of one collapses is a rank and not a payment.</b> A
@@ -280,11 +292,20 @@ namespace Sim
 
             for (int round = 0; round < recorded.Length; round++)
             {
+                // The share the wall may spend, taken out of the purse before
+                // the wall is offered it: what is left of the round's gold is
+                // the offensive share, and the authored wave is what that share
+                // bought. So the purse walking into the next round is what the
+                // WALL declined to spend and nothing else.
+                Purse share = Purse.Holding(CoverThenUpgradeBot.BudgetOf(purse));
+
                 // The wall is built before the round's wave is recorded, exactly
                 // as a run's is: what this round's incoming waves meet is what
                 // this round built.
-                Build built = Composed(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse))
-                    .Resolve(round + 1, WaveScript.Nothing, ladder, purse, costs, types, map, board);
+                Build built = BuildPhase
+                    .Of()
+                    .With(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse))
+                    .Resolve(round + 1, WaveScript.Nothing, ladder, share, costs, types, map, board);
 
                 board = built.Board;
                 recorded[round] = new[] { RoundOrders.Of(board.Layout(), Grown(wave, round + 1)) };
@@ -394,27 +415,6 @@ namespace Sim
             }
 
             return board;
-        }
-
-        /// <summary>
-        /// A build phase carrying these actions and no wave slots.
-        /// </summary>
-        /// <remarks>
-        /// The stand-in's wave is authored rather than composed, so the phase
-        /// this resolves is the defensive half alone -- which is what makes the
-        /// wall's price the run's own pricing rule rather than a subtraction
-        /// performed here.
-        /// </remarks>
-        private static BuildPhase Composed(IReadOnlyList<BuildAction> actions)
-        {
-            BuildPhase phase = BuildPhase.Of();
-
-            for (int index = 0; index < actions.Count; index++)
-            {
-                phase = phase.With(actions[index]);
-            }
-
-            return phase;
         }
 
         /// <summary>

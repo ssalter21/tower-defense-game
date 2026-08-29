@@ -243,6 +243,11 @@ committed run gets more past the ghost after it upgrades than before, and `conte
 roster by which armour class the mage's magic attack happens to meet. The measurements are in
 [the 29 August decision-log entry](decision-log.md).
 
+**It is also what caps the ghost's growth at round six.** Once the four archers are mages there is no dearer
+row and no unshot hex, so rounds six to ten of every sweep are still a growing wave against a frozen wall —
+the thing [#222](https://github.com/ssalter21/tower-defense-game/issues/222) set out to remove, removed for
+half a run. That half is not a second ticket: it is this question, seen from the harness end.
+
 **Three answers, and none of them is a tuning pass.** Upgrade by the same value rule the cover half uses, which
 needs a per-gold score for a tower that covers nothing new. Refuse an upgrade that lowers damage a tick, which
 is a rule about one column and would leave the mage unbuyable on this board. Or leave it, on the argument that

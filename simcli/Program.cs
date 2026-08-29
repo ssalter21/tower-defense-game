@@ -244,8 +244,9 @@ public static class Program
         "         file at all.",
         string.Empty,
         "         --defense is the OPPONENTS' defense and never this run's. It is",
-        "         the wall every member of the canned field stands behind. A run",
-        "         opens on an empty board and stands whatever its own build",
+        "         the wall every member of the canned field OPENS behind, and each",
+        "         of them builds on it round by round out of a purse of its own. A",
+        "         run opens on an empty board and stands whatever its own build",
         "         phases put on the map, so nothing hands it a defense at all.",
     };
 

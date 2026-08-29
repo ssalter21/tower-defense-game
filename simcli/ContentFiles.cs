@@ -90,8 +90,8 @@ internal static class RunContentFiles
     public static ContentFile Rules { get; } = new ContentFile("rules", "ruleset.txt", typeof(Ruleset));
 
     /// <summary>
-    /// What the canned opponent stands behind, and nothing this run stands: a
-    /// run opens on an empty board and builds its own.
+    /// The wall the canned opponent opens behind and builds on, and nothing
+    /// this run stands: a run opens on an empty board and builds its own.
     /// </summary>
     public static ContentFile Defense { get; } = new ContentFile("defense", "defense.txt", typeof(TowerLayout));
 

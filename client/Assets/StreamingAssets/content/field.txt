@@ -16,14 +16,14 @@
 # The multiplication is in FieldPool.Canned and the rounds it records are the
 # run's wave count.
 #
-# ITS WALL ACCUMULATES BESIDE THIS COLUMN, and the two are not charged to one
-# purse. What a stand-in builds comes out of a purse of its own -- the starting
-# gold, the interest and the flat base, half of it spent on the wall each round
-# -- while what it SENDS is this file, authored rather than composed. The
-# hundred gold below is what an opening round's wave comes to once a purse has
-# bought a wall as well, so the offensive share is already spent by the time
-# FieldPool.Canned is handed this script and charging it twice would price one
-# wave twice. content/defense.txt's header carries what the wall grows into.
+# ITS WALL ACCUMULATES BESIDE THIS COLUMN, out of the same purse. A stand-in
+# opens with the starting gold, spends half of it on the wall each round and is
+# paid the interest and the flat base afterwards -- and the half the wall does
+# not get is THIS FILE, which is why nothing prices the column below. The
+# hundred gold here is what an opening round's wave comes to once a purse has
+# bought a wall as well, so pricing it again would price one wave twice; what
+# carries into the next round is what the WALL declined to spend and nothing
+# else. content/defense.txt's header carries what that wall grows into.
 #
 # WHICH IS WHY A RUN AGAINST THIS FIELD DIES. A wall stops a roughly fixed
 # NUMBER of creeps rather than a share of them -- the committed defense kills
@@ -78,8 +78,8 @@
 # IT DECIDES THE PERFORMANCE BONUS AS WELL AS THE WIN RATE, and the same
 # calibration argument carries -- more directly than it used to. The bonus is a
 # share of the leak cost a run's wave dealt, so this opponent's WALL is what
-# decides it: swept at the committed shape the roster's five earn between 8,669
-# and 12,882 gold of bonus against 13,440 of flat base, and the column separates
+# decides it: swept at the committed shape the roster's five earn between 9,189
+# and 13,152 gold of bonus against 13,440 of flat base, and the column separates
 # them creep by creep. Against wave.txt, which outspends every opponent it faces
 # three and a half times over, a run gets nothing past and the bonus is zero on
 # every row -- a field of that shape turns the offense half of the economy off

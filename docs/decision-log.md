@@ -1265,28 +1265,37 @@ A wave is paid a share of the leak cost it dealt and nothing in the pool resolve
 stand-in's round closes on the interest and the base and **no bonus**. Assuming one would be assuming a number
 only a played round produces.
 
-**Its wave is not charged to that purse either.** `content/field.txt` is calibrated as roughly what a round's
-wave comes to *once a purse has bought a wall as well*, so the offensive share is already spent by the time the
-pool is handed the script; charging it again would price one wave twice.
+**Its wave is not priced, and the share it would cost leaves the purse anyway.** `content/field.txt` is
+calibrated as roughly what a round's wave comes to *once a purse has bought a wall as well*, so pricing it here
+would price one wave twice — and a pool handed a script no purse could compose would then be refused rather
+than recorded, which is what `TheSweep.LethalField` exists to be. What carries into the next round is
+therefore **what the wall declined to spend out of its own share**; the rest is the wave's and is gone. A purse
+that banked the offensive share would compound at the ruleset's interest on gold a player spends — an
+opponent growing richer for sending the same wave.
+
+**The opening wall is handed over and not bought.** A member of the pool is a *recorded round* rather than a
+run played from nothing, so `content/defense.txt` stands beside the opening purse instead of coming out of it.
+Charging for it would refuse most layouts anybody could author: the committed six cost 344 gold against an
+opening purse of 100.
 
 ### What it actually builds, and the finding that fell out
 
-**Six mages by round four, and then nothing.** The committed route is covered end to end, so the rule finds
-nothing to place and spends on upgrading: the four archers become mages — **344 gold of wall at round one, 552
-from round four on** — and from there every placement is the dearest row the roster has, the purse banks, and
-the wall never moves again. Two caps, both real: a rule that only places where something is unshot at has
-nowhere to put a seventh tower however rich it gets, and a rule that upgrades into the dearest row runs out of
-rows.
+**Six mages by round six, and then nothing.** The committed route is covered end to end, so the rule finds
+nothing to place and spends on upgrading: the four archers become mages one at a time in rounds two, three,
+five and six — **344 gold of wall, then 396, 448, 448, 500 and 552 from round six on** — and after that every
+placement is the dearest row the roster has and there is nothing left to buy. Two caps, both real: a rule that
+only places where something is unshot at has nowhere to put a seventh tower however rich it gets, and a rule
+that upgrades into the dearest row runs out of rows.
 
 **And the dearer wall is a worse wall.** A mage costs 92 against an archer's 40 and fires once every 54 ticks
 against 18 — a third less damage a tick for more than twice the price, bought for no reason but that it is
 dearer. The committed run gets *more* past the ghost from round two on, not less: wave two's `dealt` went 17 to
-36, wave three's 102 to 135, and the run's whole total 331 to 387. It still dies at wave four with 0 of 800
+36, wave three's 102 to 126, and the run's whole total 331 to 375. It still dies at wave four with 0 of 800
 health left, because what kills it is the ghost's *wave* and that has not moved.
 
 The sweep re-ranks with it, and not in one direction — the mage's magic attack meets the roster's armour
-classes differently than the archer's pierce. Dealt over eight runs a creep: minion 43,621 to 34,784, scout
-47,198 to 51,630, necromancer 48,944 to 48,944, skeleton 44,336 to 42,463, warrior 43,152 to 37,913. Win rate
+classes differently than the archer's pierce. Dealt over eight runs a creep: minion 43,621 to 36,847, scout
+47,198 to 52,687, necromancer 48,944 to 48,944, skeleton 44,336 to 43,588, warrior 43,152 to 38,468. Win rate
 is still zero on all five rows.
 
 **This is left standing rather than tuned away.** "Upgrade the oldest placement into the dearest row" is
@@ -1294,3 +1303,9 @@ is still zero on all five rows.
 while a ghost opening behind a covered route reaches it in round two. The bot is now the thing the report is
 most obviously wrong about, which is a better place for it to be than invisible — and it is one open question
 and not two, because fixing it fixes both walls at once.
+
+**And the ticket is answered for six rounds of ten, not for all ten.** From round six the wall is frozen again
+for want of anything to buy, so the late rounds a defense that scales was supposed to show up in are still a
+growing wave against a still wall. What moved is that the freeze is now a property of the *player* rather than
+of the pool, which is one place to fix instead of two — it is
+[filed as an open question](open-questions.md) and not carried here as done.

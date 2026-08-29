@@ -78,17 +78,11 @@ namespace Sim
                 throw new ArgumentNullException(nameof(run));
             }
 
-            IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
             int wave = run.Purse.Gold - CoverThenUpgradeBot.BudgetOf(run.Purse);
 
-            BuildPhase phase = BuildPhase.Of(WaveBudget.SlotOf(run, preferred, wave));
-
-            for (int index = 0; index < built.Count; index++)
-            {
-                phase = phase.With(built[index]);
-            }
-
-            return phase;
+            return BuildPhase
+                .Of(WaveBudget.SlotOf(run, preferred, wave))
+                .With(CoverThenUpgradeBot.Decide(run));
         }
     }
 

@@ -15,21 +15,27 @@
 # recorded once per round, and it builds between rounds the way a run does: it
 # opens holding the ruleset's starting purse, spends the same half of it a run's
 # scripted player spends, and is paid the same interest and the same flat base
-# afterwards. So round one stands exactly these six and round ten stands what
-# nine rounds of that income bought on top of them. The wall a growing wave is
-# measured against therefore grows too, which is the whole reason a late round
-# of content/sweep.csv is worth reading.
+# afterwards. What the wall declines to spend out of its half is what carries
+# into the next round; the other half is the wave's, and the wave is the
+# authored column in content/field.txt. So round one stands exactly these six
+# and round ten stands what nine rounds of that income bought on top of them.
+# The wall a growing wave is measured against therefore grows too, which is the
+# whole reason a late round of content/sweep.csv is worth reading. These six
+# stand beside that opening purse rather than out of it -- a member is a
+# RECORDED round and not a run played from nothing, and 344 gold of towers
+# could not be bought out of an opening hundred anyway.
 #
-# WHAT IT GROWS INTO, ON THIS BOARD, IS SIX MAGES BY ROUND FOUR. The route below
+# WHAT IT GROWS INTO, ON THIS BOARD, IS SIX MAGES BY ROUND SIX. The route below
 # is covered end to end already, so the rule finds nothing to place and spends
-# on upgrading instead: the four archers become mages -- 344 gold of wall at
-# round one, 552 from round four on -- and then every placement is the dearest
-# row the roster has and the purse banks with nothing to buy. IT IS A DEARER
-# WALL AND A WORSE ONE. A mage costs 92 against an archer's 40 and fires once
-# every 54 ticks against 18, so the committed run gets MORE past the ghost from
-# round two on, not less -- wave two's dealt went from 17 to 36 the day this
-# started growing. "Upgrade the oldest placement into the dearest row" is not
-# "buy the better tower", and this is where that shows.
+# on upgrading instead: the four archers become mages one at a time in rounds
+# two, three, five and six -- 344 gold of wall, then 396, 448, 448, 500 and 552
+# from there on -- and after that every placement is the dearest row the roster
+# has and there is nothing left to buy. IT IS A DEARER WALL AND A WORSE ONE. A
+# mage costs 92 against an archer's 40 and fires once every 54 ticks against 18
+# -- a third less damage a tick for more than twice the price -- so the
+# committed run gets MORE past this wall from round two on than it does past the
+# seed. "Upgrade the oldest placement into the dearest row" is not "buy the
+# better tower", and this is where that shows.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 #
