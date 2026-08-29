@@ -122,15 +122,7 @@ public static class TheSweep
     /// </remarks>
     public static BuildPhase Builds(Run run, int preferred)
     {
-        IReadOnlyList<BuildAction> built = CoverThenUpgradeBot.Decide(run);
-        BuildPhase phase = BuildPhase.Of();
-
-        for (int index = 0; index < built.Count; index++)
-        {
-            phase = phase.With(built[index]);
-        }
-
-        return phase;
+        return BuildPhase.Of().With(CoverThenUpgradeBot.Decide(run));
     }
 
     /// <summary>
@@ -138,7 +130,13 @@ public static class TheSweep
     /// behind <c>content/field.txt</c>, drawn with replacement.
     /// </summary>
     public static FieldPool Field(UnitTypeTable types) =>
-        FieldPool.Canned(TheMatch.Layout(types), TheRun.FieldWave(types));
+        FieldPool.Canned(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheLadder.Committed(types),
+            TheMatch.Layout(types),
+            TheRun.FieldWave(types));
 
     /// <summary>
     /// A field that sends the skeleton's authored match instead: three hundred
@@ -146,7 +144,13 @@ public static class TheSweep
     /// and is therefore what kills one.
     /// </summary>
     public static FieldPool LethalField(UnitTypeTable types) =>
-        FieldPool.Canned(TheMatch.Layout(types), TheMatch.Wave(types));
+        FieldPool.Canned(
+            TheMatch.Map(),
+            TheRuleset.Committed(),
+            types,
+            TheLadder.Committed(types),
+            TheMatch.Layout(types),
+            TheMatch.Wave(types));
 
     /// <summary>
     /// The committed rules on a pool one round of that field spends. What death
@@ -177,7 +181,13 @@ public static class TheSweep
             TheRuleset.Committed(),
             towers,
             TheLadder.Committed(),
-            FieldPool.Canned(defense, TheRun.FieldWave(TheMatch.Types())),
+            FieldPool.Canned(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                towers,
+                TheLadder.Committed(),
+                defense,
+                TheRun.FieldWave(TheMatch.Types())),
             Seed,
             Runs,
             Waves,

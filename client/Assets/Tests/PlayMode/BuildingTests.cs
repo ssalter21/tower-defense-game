@@ -350,13 +350,21 @@ namespace Tests.PlayMode
             MatchRoot root = Playfield();
             UnitTypeTable types = Types();
 
+            Ruleset rules = StreamingContent.ReadRuleset();
+            UpgradeLadder ladder = StreamingContent.ReadUpgrades(types);
+
             var run = new Run(
                 root.Map,
-                StreamingContent.ReadRuleset(),
+                rules,
                 types,
-                StreamingContent.ReadUpgrades(types),
+                ladder,
                 FieldPool.Canned(
-                    StreamingContent.ReadDefense(types), StreamingContent.ReadWave(types)),
+                    root.Map,
+                    rules,
+                    types,
+                    ladder,
+                    StreamingContent.ReadDefense(types),
+                    StreamingContent.ReadWave(types)),
                 TheMatchOnScreen.Seed);
 
             root.BeginBuilding(ComposedRound.For(run), TheMatchOnScreen.Art());

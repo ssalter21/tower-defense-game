@@ -25,6 +25,14 @@ code either.
 The point is where the friction lands. Waiting silently spends the developer's wall-clock time invisibly —
 nobody ever sees the total, so nobody ever fixes it.
 
+**The build gate will not catch it for you.** `dotnet test sim.tests` is every test that runs on a push; no
+EditMode or PlayMode test runs in continuous integration at all. Run them yourself, editor closed, with
+`run-editmode-tests.ps1`, `run-playmode-tests.ps1` or `run-unity-tests.ps1` — there is nowhere else they run.
+The gate names what it skips instead, in `check-unity-test-inventory.ps1`, and goes red when that list stops
+matching the tests on disk. It counts them; it does not compile them — a test added or removed turns it red, a
+test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
+every gate step will still pass.
+
 ## 3. Every automation has a static command-line entry point
 
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
@@ -32,7 +40,7 @@ Anything an agent needs to run lives in `tools/` and runs from a shell: `run-hea
 `run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
 `build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
-`check-project-settings.ps1`.
+`check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
 editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on

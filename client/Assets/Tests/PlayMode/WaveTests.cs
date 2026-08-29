@@ -687,12 +687,21 @@ namespace Tests.PlayMode
             MatchRoot root = Playfield();
             UnitTypeTable types = Types();
 
+            Ruleset rules = StreamingContent.ReadRuleset();
+            UpgradeLadder ladder = StreamingContent.ReadUpgrades(types);
+
             var run = new Run(
                 root.Map,
-                StreamingContent.ReadRuleset(),
+                rules,
                 types,
-                StreamingContent.ReadUpgrades(types),
-                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadWave(types)),
+                ladder,
+                FieldPool.Canned(
+                    root.Map,
+                    rules,
+                    types,
+                    ladder,
+                    StreamingContent.ReadDefense(types),
+                    StreamingContent.ReadWave(types)),
                 TheMatchOnScreen.Seed);
 
             root.BeginBuilding(ComposedRound.For(run), TheMatchOnScreen.Art());
@@ -720,12 +729,21 @@ namespace Tests.PlayMode
             MatchRoot root = Playfield();
             UnitTypeTable types = Types();
 
+            Ruleset rules = StreamingContent.ReadRuleset();
+            UpgradeLadder ladder = StreamingContent.ReadUpgrades(types);
+
             var run = new Run(
                 root.Map,
-                StreamingContent.ReadRuleset(),
+                rules,
                 types,
-                StreamingContent.ReadUpgrades(types),
-                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadField(types)),
+                ladder,
+                FieldPool.Canned(
+                    root.Map,
+                    rules,
+                    types,
+                    ladder,
+                    StreamingContent.ReadDefense(types),
+                    StreamingContent.ReadField(types)),
                 TheMatchOnScreen.Seed);
 
             // Round one, composed and committed through the screen's own phase.

@@ -171,17 +171,7 @@ namespace Sim
         /// The decision as the build phase surface wants it, with nothing
         /// reshaped: the three things stored are the three things a phase is.
         /// </summary>
-        public BuildPhase ToPhase()
-        {
-            BuildPhase phase = BuildPhase.Of(_slots);
-
-            for (int index = 0; index < _actions.Length; index++)
-            {
-                phase = phase.With(_actions[index]);
-            }
-
-            return phase;
-        }
+        public BuildPhase ToPhase() => BuildPhase.Of(_slots).With(_actions);
 
         public bool Equals(RecordCommand? other)
         {

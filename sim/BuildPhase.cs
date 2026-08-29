@@ -229,6 +229,40 @@ namespace Sim
         }
 
         /// <summary>
+        /// This phase with every one of these actions after the ones it already
+        /// carries, in the order they came.
+        /// </summary>
+        /// <remarks>
+        /// The whole of what a scripted player, a stored command and the canned
+        /// pool's stand-in each do with a list of actions they have just been
+        /// handed. Appending them one at a time is four spellings of one loop,
+        /// and a phase's actions are its order, so a loop that walked one of
+        /// them backwards would be a different decision rather than a bug
+        /// anybody could see.
+        /// </remarks>
+        public BuildPhase With(IReadOnlyList<BuildAction> actions)
+        {
+            if (actions is null)
+            {
+                throw new ArgumentNullException(nameof(actions));
+            }
+
+            var grown = new BuildAction[_actions.Length + actions.Count];
+
+            for (int index = 0; index < _actions.Length; index++)
+            {
+                grown[index] = _actions[index];
+            }
+
+            for (int index = 0; index < actions.Count; index++)
+            {
+                grown[_actions.Length + index] = actions[index];
+            }
+
+            return new BuildPhase(_slots, grown);
+        }
+
+        /// <summary>
         /// This phase sending a different wave, with the actions it already
         /// carries left where they are.
         /// </summary>

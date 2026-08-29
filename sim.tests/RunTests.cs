@@ -831,33 +831,55 @@ public class RunTests
     }
 
     [Fact]
-    public void The_canned_pool_is_one_opponent_who_buys_the_same_wave_again_every_round()
+    public void The_canned_pool_is_one_opponent_who_builds_a_wall_and_buys_the_same_wave_again()
     {
         // The population every run in this repository is played against, and it
         // is composed here rather than by whoever happened to read the two
-        // files: one member a round, behind the one committed defense, sending
-        // the authored wave bought once more every round. A player accumulates
-        // a wave over a run, so a stand-in that sent the same wave in round ten
-        // as in round one is a run whose incoming pressure is flat while its
-        // own climbs.
+        // files: one member a round, opening behind the committed defense,
+        // building on it out of a purse of its own, and sending the authored
+        // wave bought once more every round. A player accumulates both a wave
+        // and a wall over a run, so a stand-in that did neither is a run whose
+        // incoming pressure is flat while its own climbs.
         //
         // OBSERVED: hand every round the authored counts -- drop the
         // multiplication in Grown. The round-seven assertion goes red at 10
-        // against 70, and every run against this pool ends holding a purse it
-        // had no reason to spend.
+        // against 70. Record the seed at every round instead of the board the
+        // rounds build, and the wall assertion below goes red at equal worth.
         UnitTypeTable types = TheMatch.Types();
+        Ruleset rules = TheRuleset.Committed();
+        CostTable costs = CostTable.From(rules, types);
         TowerLayout defense = TheMatch.Layout(types);
         WaveScript wave = TheRun.FieldWave(types);
 
-        FieldPool canned = FieldPool.Canned(defense, wave, rounds: 10);
+        FieldPool canned = FieldPool.Canned(
+            TheMatch.Map(),
+            rules,
+            types,
+            TheLadder.Committed(types),
+            defense,
+            wave,
+            rounds: 10);
 
         Assert.Equal(10, canned.Rounds);
         Assert.Equal(10, canned.Size);
         Assert.Equal(1, canned.SizeAt(6));
 
-        // The same wall in every round: what grows is what it sends.
-        Assert.Same(defense, canned.At(0, 0).Defense);
-        Assert.Same(defense, canned.At(9, 0).Defense);
+        // The committed defense is the wall it opens with, cell for cell. What
+        // the first round adds to it is whatever half of the opening purse pays
+        // for, which on the committed content is nothing at all.
+        TowerLayout opening = canned.At(0, 0).Defense;
+
+        Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(opening));
+
+        // And by the last round it is a dearer wall standing on the same cells:
+        // the route is covered end to end already, so the rule the run builds by
+        // has nothing left to place and spends on upgrading instead.
+        TowerLayout closing = canned.At(9, 0).Defense;
+
+        Assert.Equal(defense.Count, closing.Count);
+        Assert.True(
+            Worth(costs, closing) > Worth(costs, opening),
+            "The stand-in's wall is worth more by the last round than it was in the first.");
 
         // One column, deeper every round. The shape is what content/field.txt
         // is calibrated for, so growth is a count and never a second order.
@@ -1578,6 +1600,19 @@ public class RunTests
         }
 
         return run;
+    }
+
+    /// <summary>What a wall costs to stand: every tower on it, at the price of its row.</summary>
+    private static int Worth(CostTable costs, TowerLayout wall)
+    {
+        int gold = 0;
+
+        for (int index = 0; index < wall.Towers.Count; index++)
+        {
+            gold += costs.PriceOf(Purchase.Unit(wall.Towers[index].Type.Id));
+        }
+
+        return gold;
     }
 
     /// <summary>An outcome built from pairs rather than from a simulation.</summary>
