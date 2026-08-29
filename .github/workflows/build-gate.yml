@@ -13,6 +13,17 @@
 # scripts and they have to be runnable from a shell on a laptop as well as
 # here.
 #
+# WHAT THIS GATE DOES NOT RUN, AND WHERE THAT IS WRITTEN DOWN. Not one Unity
+# test. Both of the editor's test platforms need a licensed editor, and putting
+# one here means either a licence secret living in this repository or a machine
+# somebody keeps registered as a runner; neither was taken. What is done instead
+# is that the gate names them: check-unity-test-inventory.ps1 prints every
+# engine-side test file and its test count on the runs that PASS, and goes red
+# when that list stops matching the files on disk. So the count cannot rot in
+# silence, and a reader of a green check is told in the log that it means the
+# simulation is fine rather than that the branch is. AGENTS.md rule 2 says where
+# those tests do run.
+#
 # The second job is Part III section 6's determinism matrix: the same match,
 # played on three operating systems and two processor architectures, by two
 # differently compiled images of the same simulation, all six required to
@@ -51,6 +62,19 @@ jobs:
       - name: The client's expensive project settings are what was decided
         shell: pwsh
         run: ./tools/check-project-settings.ps1
+
+      # The step that is about the tests this gate cannot run. It launches no
+      # editor either: a test is counted by its [Test] or [UnityTest] attribute
+      # in the source text, which is the number the editor's own runner reports
+      # for as long as nothing is parameterised -- and the script refuses rather
+      # than guessing if something ever is. It prints the whole list on a pass,
+      # so the skipped tests are named in the log of every green run, and it
+      # fails when the list and the files on disk disagree, so nobody can add an
+      # engine-side test without meeting the sentence saying this will not run
+      # it.
+      - name: The Unity tests this gate does not run are named and counted
+        shell: pwsh
+        run: ./tools/check-unity-test-inventory.ps1
 
       # The content the player ships with is a generated copy of the content
       # in content/, committed like a lockfile. There is an edit-mode test that
