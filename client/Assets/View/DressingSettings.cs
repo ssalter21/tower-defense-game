@@ -85,6 +85,44 @@ namespace View
         /// <summary>How much higher than that a cloud may be, in metres.</summary>
         public float CloudSpread { get; set; } = 2.5f;
 
+        /// <summary>
+        /// How many ledges are drawn under a tile that stands above one of its
+        /// neighbours. Zero is a bare metre of cliff, which is what ships.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>One ledge is a half step, and that is the whole idea.</b> A tier
+        /// is <see cref="HexGeometry.LevelStep"/> — one metre — and the board
+        /// currently drops the whole of it in one face. Drawing one extra copy
+        /// of the tile half a metre down and slightly wider turns that face
+        /// into two half-metre steps with a shelf between them, which is the
+        /// only thing separating a terraced hillside from a layer cake. Two
+        /// ledges gives thirds, and so on; the drop of ledge <c>i</c> of
+        /// <c>n</c> is <c>i / (n + 1)</c> of a tier.
+        /// </para>
+        /// <para>
+        /// <b>It is geometry under the board and nothing else.</b> A ledge is
+        /// not a cell, carries no tier, cannot be built on and is never picked.
+        /// The simulation's idea of height is an integer per cell and does not
+        /// move — see ADR-0023 — so no ledge changes a tower's reach, the
+        /// match's result or its per-tick hash. Half-tier *terrain* would be a
+        /// different and much larger proposal, and this is deliberately not it.
+        /// </para>
+        /// </remarks>
+        public int ApronCount { get; set; }
+
+        /// <summary>
+        /// How much wider each successive ledge is than the tile above it, as a
+        /// fraction of the tile.
+        /// </summary>
+        /// <remarks>
+        /// The shelf a ledge shows is this fraction of a tile wide, so it is the
+        /// number that decides whether the step reads as a terrace or as a
+        /// smudge. Too big and the ledge hangs over the neighbour's face
+        /// instead of tucking under it.
+        /// </remarks>
+        public float ApronSpread { get; set; } = 0.06f;
+
         /// <summary>A copy, so a caller cannot edit the set another one is reading.</summary>
         public DressingSettings Copy() =>
             new DressingSettings
@@ -101,6 +139,8 @@ namespace View
                 CloudCount = CloudCount,
                 CloudHeight = CloudHeight,
                 CloudSpread = CloudSpread,
+                ApronCount = ApronCount,
+                ApronSpread = ApronSpread,
             };
     }
 }

@@ -96,6 +96,7 @@ namespace View
 
             var floor = host.AddComponent<HexFloor>();
             floor.Draw(map, tiles);
+            floor.Terrace(map, tiles, settings);
             floor.Scatter(map, scenery, settings, dressing);
 
             return floor;
@@ -234,6 +235,129 @@ namespace View
             }
 
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
+        }
+
+        /// <summary>
+        /// Draws the ledges that break a tier's drop into smaller steps, where
+        /// the settings ask for any.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A ledge is another copy of the ground tile, lower and wider.</b>
+        /// Set under a tile that stands above one of its neighbours, its rim
+        /// shows as a shelf part way down the cliff and the rest of it is buried
+        /// in the hillside. Nothing new is imported and nothing is modelled: the
+        /// pack's tile already has a metre of body under its face, which is
+        /// exactly what has to be there for the trick to close.
+        /// </para>
+        /// <para>
+        /// <b>It is skipped where the ground does not fall away.</b> A ledge
+        /// under a tile whose neighbours are all at its own tier or higher would
+        /// be buried on every side, so it is geometry nobody can see — and on a
+        /// board this size that is most of the cells. Where a neighbour *is*
+        /// level, the ledge sits half a step below that neighbour's face and is
+        /// hidden by it, which is what lets one rule serve every cell without
+        /// asking which of the six edges is the exposed one.
+        /// </para>
+        /// <para>
+        /// <b>The ledges are not tiles.</b> They are not counted in
+        /// <see cref="TileCount"/>, never returned by <see cref="TileAt"/> and
+        /// never picked, because a thing a player can click is a thing the
+        /// simulation has to have an opinion about, and the simulation has no
+        /// idea these exist.
+        /// </para>
+        /// </remarks>
+        private void Terrace(HexMap map, TileSet tiles, DressingSettings settings)
+        {
+            int ledges = settings?.ApronCount ?? 0;
+
+            if (ledges <= 0)
+            {
+                return;
+            }
+
+            Mesh mesh = tiles.MeshFor(TilePiece.Ground);
+            Material surface = tiles.MaterialFor(TilePiece.Ground);
+
+            if (mesh == null || surface == null)
+            {
+                return;
+            }
+
+            float spread = settings.ApronSpread;
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    int level = map.LevelAt(column, row);
+
+                    if (!StandsAbove(map, column, row, level))
+                    {
+                        continue;
+                    }
+
+                    Vector3 centre = HexGeometry.ToWorld(column, row, level);
+
+                    for (int ledge = 1; ledge <= ledges; ledge++)
+                    {
+                        float drop = HexGeometry.LevelStep * ledge / (ledges + 1f);
+                        float width = 1f + (spread * ledge);
+
+                        var shelf = new GameObject(
+                            "Ledge " + column.ToString(CultureInfo.InvariantCulture)
+                            + "," + row.ToString(CultureInfo.InvariantCulture)
+                            + " -" + ledge.ToString(CultureInfo.InvariantCulture));
+
+                        shelf.transform.SetParent(transform, worldPositionStays: false);
+                        shelf.transform.localPosition =
+                            centre + (Vector3.up * (TileSet.FaceOffset - drop));
+                        shelf.transform.localScale = new Vector3(width, 1f, width);
+
+                        shelf.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+                        var renderer = shelf.AddComponent<MeshRenderer>();
+                        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                        renderer.receiveShadows = true;
+                        renderer.sharedMaterial = surface;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if any of a cell's six neighbours is on a lower tier, or if the
+        /// cell is on the board's edge — where the ground falls away to nothing
+        /// at all.
+        /// </summary>
+        /// <remarks>
+        /// Adjacency comes from the simulation's own neighbour walk rather than
+        /// from an offset table typed out here, for the reason
+        /// <see cref="RoadTiling.CorridorEdges"/> gives: a second opinion about
+        /// which cells touch is a bug that only shows on the odd rows.
+        /// </remarks>
+        private static bool StandsAbove(HexMap map, int column, int row, int level)
+        {
+            Hex hex = Hex.FromOddRowOffset(column, row);
+
+            for (int direction = 0; direction < Hex.DirectionCount; direction++)
+            {
+                Hex neighbour = hex.Neighbour(direction);
+                Hex.ToOddRowOffset(neighbour, out int otherColumn, out int otherRow);
+
+                if (otherColumn < 0 || otherColumn >= map.Width
+                    || otherRow < 0 || otherRow >= map.Height)
+                {
+                    return true;
+                }
+
+                if (map.LevelAt(otherColumn, otherRow) < level)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
