@@ -40,6 +40,33 @@
 > argument and nothing else. What no longer holds is that the spread is the spread of the opponents this run
 > will actually be scored against; a round-seven opponent is not in the population any single round fights.
 >
+> **Amended by [#222](https://github.com/ssalter21/tower-defense-game/issues/222), 29 August 2026: a member of
+> the pool builds its wall out of a purse, by the rule a run builds by.** The stand-in was a layout and a wave
+> script; it is now a recorded round with an economy. It opens holding the ruleset's starting purse, hands what
+> stands and what it holds to `CoverThenUpgradeBot`, pays through `BuildPhase.Resolve`, and closes on
+> `Purse.CloseWave`. `content/defense.txt` is the wall it opens with rather than the wall it stands behind in
+> every round.
+>
+> **The reason it reuses the run's own arithmetic rather than getting its own is that two economies can
+> disagree**, and a stand-in whose wall was priced by a second rule would drift from the one a run is scored
+> against without anything failing. There is one buy policy and one purse, called twice.
+>
+> **Four things a recorded round cannot have the same as a played one**, each a modelling choice rather than an
+> omission. It is paid **no bonus**, because a wave is paid a share of the leak cost it dealt and nothing here
+> resolves a round of its own. Its **wave is not priced**, because `content/field.txt` is calibrated as what a
+> round's wave costs *after* a wall, so pricing it would price one wave twice — but the offensive share still
+> leaves the purse, so only what the wall declined to spend compounds. Its **opening wall is handed over rather
+> than bought**, because the committed six cost 344 gold against an opening purse of 100 and charging for it
+> would refuse most layouts anybody could author. And it therefore banks **less** than a run does, so "the
+> income a run has had" means the income *line* and not the whole of what a run holds.
+>
+> **What it bought, measured rather than claimed:** six rounds of ten. The wall grows 344 → 396 → 448 → 448 →
+> 500 → 552 gold and then stops, because the route is covered so nothing can be placed and every placement is
+> the dearest row so nothing can be upgraded. Worse, the dearer wall is a **weaker** wall — the committed run's
+> total dealt rose 331 → 375 — because the bot upgrades archers into mages without knowing what either is
+> worth. That is left standing rather than tuned away, as
+> [an open question](../open-questions.md#does-the-scripted-players-upgrade-half-need-to-know-what-a-tower-is-worth).
+>
 > The rest of this file is left as it was written. It describes rules that were in force and is a record of
 > them, not a description of the build.
 

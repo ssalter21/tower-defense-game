@@ -183,10 +183,22 @@ namespace Sim
         /// holds to <see cref="CoverThenUpgradeBot"/>, pays for what comes back
         /// through <see cref="BuildPhase.Resolve"/>, and closes the round on
         /// <see cref="Purse.CloseWave"/> -- the interest on what it banked and the
-        /// flat base, which is the income a run of that round has had. So
-        /// <paramref name="defense"/> is the wall it opens with and not the wall
-        /// it stands at every round: round ten is that seed plus nine rounds of
-        /// building on top of it.
+        /// flat base. That is the income line a run is paid and not the whole of
+        /// what a run has: a run banks its unspent offensive share as well, and
+        /// is paid a bonus, and the two paragraphs below say why neither is
+        /// available here. So <paramref name="defense"/> is the wall it opens
+        /// with and not the wall it stands at every round.
+        /// </para>
+        /// <para>
+        /// <b>Every round builds before it is recorded, the first one included.</b>
+        /// What a round's incoming waves meet is what that round built, which is
+        /// the order a run resolves in -- so the layout recorded at round one is
+        /// this seed plus whatever round one's own share bought, and round ten is
+        /// the seed plus ten rounds of building rather than nine. On the committed
+        /// content round one adds nothing, because the opening share is 50 gold
+        /// against a cheapest upgrade of 92; that is a fact about this content and
+        /// not a rule, and content whose route left a gap would place a tower in
+        /// round one.
         /// </para>
         /// <para>
         /// <b>The bonus line is the one a stand-in cannot have.</b> A wave is

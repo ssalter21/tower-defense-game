@@ -29,7 +29,9 @@ nobody ever sees the total, so nobody ever fixes it.
 EditMode or PlayMode test runs in continuous integration at all. Run them yourself, editor closed, with
 `run-editmode-tests.ps1`, `run-playmode-tests.ps1` or `run-unity-tests.ps1` — there is nowhere else they run.
 The gate names what it skips instead, in `check-unity-test-inventory.ps1`, and goes red when that list stops
-matching the tests on disk.
+matching the tests on disk. It counts them; it does not compile them — a test added or removed turns it red, a
+test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
+every gate step will still pass.
 
 ## 3. Every automation has a static command-line entry point
 
