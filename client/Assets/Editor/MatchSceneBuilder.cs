@@ -353,6 +353,43 @@ namespace View.Editor
             }
 
             scenery.FindPropertyRelative("surface").objectReferenceValue = TileMaterial();
+
+            WireCatalogue(scenery.FindPropertyRelative("catalogue"));
+        }
+
+        /// <summary>
+        /// Fills in the models <c>content/dressing.txt</c> names one by one.
+        /// </summary>
+        /// <remarks>
+        /// <b>Only what the file names, which is why this reads the file.</b>
+        /// The collection under <c>Assets/Art/Kaykit</c> is four thousand
+        /// models; a scene carrying all of them would load four thousand meshes
+        /// to draw the six somebody placed, and every one of them would be a
+        /// reference the scene's YAML had to spell out. What a board needs is
+        /// the models it stands on, so that is what goes in -- and the bake
+        /// rebuilds this straight after writing the file, so the two cannot
+        /// drift.
+        /// </remarks>
+        private static void WireCatalogue(SerializedProperty catalogue)
+        {
+            if (catalogue == null)
+            {
+                throw new IOException("SceneryModels has no serialized field named catalogue.");
+            }
+
+            SceneryModels.CataloguedModel[] bound =
+                SceneryCatalogue.Bind(StreamingContent.ReadDressing().Names());
+
+            catalogue.arraySize = bound.Length;
+
+            for (int index = 0; index < bound.Length; index++)
+            {
+                SerializedProperty entry = catalogue.GetArrayElementAtIndex(index);
+
+                entry.FindPropertyRelative("name").stringValue = bound[index].Name;
+                entry.FindPropertyRelative("mesh").objectReferenceValue = bound[index].Mesh;
+                entry.FindPropertyRelative("material").objectReferenceValue = bound[index].Material;
+            }
         }
 
         /// <summary>
@@ -361,12 +398,13 @@ namespace View.Editor
         /// </summary>
         public static SceneryModels Scenery() =>
             SceneryModels.Of(
-                Group("rimProps"),
-                Group("camp"),
-                Group("groves"),
-                Group("peaks"),
-                Group("clouds"),
-                TileMaterial());
+                    Group("rimProps"),
+                    Group("camp"),
+                    Group("groves"),
+                    Group("peaks"),
+                    Group("clouds"),
+                    TileMaterial())
+                .With(SceneryCatalogue.Bind(StreamingContent.ReadDressing().Names()));
 
         private static Mesh[] Group(string field)
         {

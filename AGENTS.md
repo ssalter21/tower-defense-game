@@ -55,6 +55,17 @@ asserted to be byte-for-byte identical -- `BoardDraftTests` -- because a bake th
 would invalidate `defense.txt`, `match.replay`, the landmark table and the cell coordinates in seventeen
 `sim.tests` files for no visible reason. The bake names that chain and runs none of it.
 
+**The whole KayKit collection is imported, and a model is addressed by name.** `client/Assets/Art/Kaykit/`
+holds all 4,247 models of the 21 packs that ship an `fbx(unity)` export. `Tools > Board > Scenery` is the
+palette: search it, pick one, place it on a cell. In `content/dressing.txt` that is a **`model`** line naming
+the path under that folder -- `model 3 4 city-builder/building_A 0 0 0 100` -- as against a **`place`** line,
+which asks a *family* for its n-th and is what the generator writes. Both verbs stay: a generator scattering a
+board it has never seen must be able to ask for "a grove", and a person who has looked at the thing means that
+one. **Each pack ships its own atlas**, so a named model carries its own material and only family pieces wear
+the board's one surface; drawing a City Builder crate against the hexagon atlas produces confetti, not a
+slightly-wrong crate. **The scene carries only the models the dressing file names**, resolved at scene-build
+time -- so a bake that adds a model needs `build-match-scene.ps1` after it, which the bake's own log line says.
+
 **The board's dressing is the one thing edited by hand, and it still obeys this.** `Tools > Board > Dress`
 draws the real floor and scenery into the open scene so a human can move things; `Bake` writes what they left to
 `content/dressing.txt`; `Clear` takes it down. **Drawing the board again carries unbaked work forward rather than

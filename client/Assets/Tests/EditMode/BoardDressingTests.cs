@@ -171,6 +171,54 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void AModelLineNamesOneModelAndSurvivesTheRoundTrip()
+        {
+            const string name = "city-builder/building_A";
+
+            BoardDressing read = BoardDressing.Parse(
+                "test", "model 3 4 " + name + " 250 -125 90 150");
+
+            IReadOnlyList<SceneryPlacement> on = read.At(3, 4);
+
+            Assert.That(on.Count, Is.EqualTo(1));
+            Assert.That(on[0].IsNamed, Is.True, "A model line did not produce a named piece.");
+            Assert.That(on[0].Model, Is.EqualTo(name));
+            Assert.That(on[0].OffsetX, Is.EqualTo(0.25f).Within(0.0001f));
+            Assert.That(on[0].OffsetZ, Is.EqualTo(-0.125f).Within(0.0001f));
+            Assert.That(on[0].Turn, Is.EqualTo(90f).Within(0.0001f));
+            Assert.That(on[0].Scale, Is.EqualTo(1.5f).Within(0.0001f));
+
+            // The round trip, which is the one that matters: what the bake would
+            // write has to read back as the same piece, or a name drifts every
+            // time somebody saves.
+            string written = BoardDressing.Write(new List<SceneryPlacement>(on), null, null);
+            IReadOnlyList<SceneryPlacement> again = BoardDressing.Parse("test", written).At(3, 4);
+
+            Assert.That(again.Count, Is.EqualTo(1));
+            Assert.That(again[0].Model, Is.EqualTo(name));
+            Assert.That(again[0].Turn, Is.EqualTo(90f).Within(0.0001f));
+            Assert.That(again[0].Scale, Is.EqualTo(1.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void TheNamesAreEveryModelTheFileAsksFor()
+        {
+            BoardDressing read = BoardDressing.Parse(
+                "test",
+                "model 1 1 halloween/arch 0 0 0 100\n"
+                + "model 2 2 halloween/arch 0 0 0 100\n"
+                + "model 3 3 resource/Containers_Box_Large 0 0 0 100\n"
+                + "place 4 4 grove 0 0 0 0 100");
+
+            // Once each and families left out: this list is what the scene
+            // builder resolves into the catalogue it ships, and a duplicate or a
+            // family in it would be a mesh reference the board never uses.
+            Assert.That(read.Names().Count, Is.EqualTo(2));
+            Assert.That(read.Names(), Does.Contain("halloween/arch"));
+            Assert.That(read.Names(), Does.Contain("resource/Containers_Box_Large"));
+        }
+
+        [Test]
         public void ABadLineIsRefusedByNumber()
         {
             FormatException(() => BoardDressing.Parse("test", "\n\nplace 1 2 grove"), "line 3");
@@ -178,6 +226,7 @@ namespace Tests.EditMode
             FormatException(() => BoardDressing.Parse("test", "place 1 2 shrubbery 0 0 0 0 100"), "shrubbery");
             FormatException(() => BoardDressing.Parse("test", "place 1 2 grove 0 0.5 0 0 100"), "0.5");
             FormatException(() => BoardDressing.Parse("test", "place 1 2 cloud 0 0 0 0 100"), "cloud");
+            FormatException(() => BoardDressing.Parse("test", "model 1 2 halloween/arch 0 0 0"), "model");
         }
 
         [Test]

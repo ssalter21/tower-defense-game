@@ -96,14 +96,15 @@ namespace View.Editor
             Clear();
 
             var host = new GameObject(PreviewName);
+            BoardDressing dressing = carried ?? Authored();
 
             HexFloor.Build(
                 host.transform,
                 map,
                 MatchSceneBuilder.Tiles(),
-                MatchSceneBuilder.Scenery(),
+                MatchSceneBuilder.Scenery().With(SceneryCatalogue.Bind(dressing.Names())),
                 Settings(),
-                carried ?? Authored());
+                dressing);
 
             Hide(host.transform);
 
@@ -211,9 +212,16 @@ namespace View.Editor
 
             File.WriteAllText(path, text);
 
+            BoardDressing baked = BoardDressing.Parse(DressingPath, text);
+
             Debug.Log(
-                "Baked " + BoardDressing.Parse(DressingPath, text).CellCount + " cell exceptions to "
-                + DressingPath + ". Run tools/sync-streaming-content.ps1 and commit both copies.");
+                "Baked " + baked.CellCount + " cell exceptions to " + DressingPath
+                + ". Run tools/sync-streaming-content.ps1 and commit both copies."
+                + (baked.Names().Count == 0
+                    ? string.Empty
+                    : " It names " + baked.Names().Count + " model(s) out of the collection, so run "
+                        + "tools/build-match-scene.ps1 too -- the scene carries only the models the "
+                        + "file names, and a board drawn outside this preview will not have them."));
 
             AssetDatabase.Refresh();
 
@@ -302,7 +310,19 @@ namespace View.Editor
                 if (!TryCellOf(floor, map, at.parent, out int column, out int row))
                 {
                     // A cloud, or something reparented out of a cell. Either way
-                    // it carries no cell and belongs to the sky block.
+                    // it carries no cell and belongs to the sky block -- unless it
+                    // names a model, which the sky has no way to express, and which
+                    // is dropped rather than written as a cloud it is not.
+                    if (piece.IsNamed)
+                    {
+                        Debug.LogWarning(
+                            piece.Model + " is not standing on a cell, so it cannot be baked. "
+                            + "Named models belong to a hex; only clouds may float free.",
+                            piece);
+
+                        continue;
+                    }
+
                     standing.Add(new SceneryPlacement(
                         SceneryGroup.Cloud, piece.Variant, 0, 0,
                         local.x, local.y, local.z, at.localEulerAngles.y, at.localScale.x));
@@ -310,9 +330,13 @@ namespace View.Editor
                     continue;
                 }
 
-                standing.Add(new SceneryPlacement(
-                    piece.Group, piece.Variant, column, row,
-                    local.x, local.y, local.z, at.localEulerAngles.y, at.localScale.x));
+                standing.Add(piece.IsNamed
+                    ? SceneryPlacement.Named(
+                        piece.Model, column, row,
+                        local.x, local.y, local.z, at.localEulerAngles.y, at.localScale.x)
+                    : new SceneryPlacement(
+                        piece.Group, piece.Variant, column, row,
+                        local.x, local.y, local.z, at.localEulerAngles.y, at.localScale.x));
             }
 
             return standing;
@@ -419,8 +443,8 @@ namespace View.Editor
         }
 
         private static bool Alike(SceneryPlacement left, SceneryPlacement right) =>
-            left.Group == right.Group
-            && left.Variant == right.Variant
+            string.Equals(left.Model, right.Model)
+            && (left.IsNamed || (left.Group == right.Group && left.Variant == right.Variant))
             && Mathf.Abs(left.OffsetX - right.OffsetX) < Same
             && Mathf.Abs(left.OffsetY - right.OffsetY) < Same
             && Mathf.Abs(left.OffsetZ - right.OffsetZ) < Same
