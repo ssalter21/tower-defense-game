@@ -25,12 +25,11 @@ code either.
 The point is where the friction lands. Waiting silently spends the developer's wall-clock time invisibly —
 nobody ever sees the total, so nobody ever fixes it.
 
-**The build gate will not catch it for you.** `dotnet test sim.tests` is every test that runs on a push: no
-EditMode or PlayMode test has ever run in continuous integration, on any branch, because both need a licensed
-editor and that gate deliberately has none. They run from `run-editmode-tests.ps1`, `run-playmode-tests.ps1`
-and `run-unity-tests.ps1`, on a machine with the editor closed, and nowhere else. What the gate does instead is
-name them — `check-unity-test-inventory.ps1` prints every engine-side test it is skipping and goes red when
-that list stops matching what is on disk, so a green check cannot quietly come to mean more than it does.
+**The build gate will not catch it for you.** `dotnet test sim.tests` is every test that runs on a push; no
+EditMode or PlayMode test runs in continuous integration at all. Run them yourself, editor closed, with
+`run-editmode-tests.ps1`, `run-playmode-tests.ps1` or `run-unity-tests.ps1` — there is nowhere else they run.
+The gate names what it skips instead, in `check-unity-test-inventory.ps1`, and goes red when that list stops
+matching the tests on disk.
 
 ## 3. Every automation has a static command-line entry point
 

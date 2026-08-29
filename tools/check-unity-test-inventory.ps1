@@ -4,12 +4,12 @@
     prints them. No editor involved.
 
 .DESCRIPTION
-    The build gate runs `dotnet test sim.tests` and no Unity test at all: those
-    need a licensed editor, and that gate is the one automation in this
-    repository that deliberately needs none. So the block below is where a
-    reader of a green check finds out what the check did not cover, and
-    `tools/run-editmode-tests.ps1` and `tools/run-playmode-tests.ps1` are where
-    it gets covered instead.
+    The build gate runs `dotnet test sim.tests` and no Unity test at all: both
+    of the editor's test platforms need a licensed editor, and that gate is the
+    one automation in this repository that deliberately needs none. So the block
+    below is where a reader of a green check finds out what the check did not
+    cover, and `tools/run-editmode-tests.ps1` and `tools/run-playmode-tests.ps1`
+    are where it gets covered instead.
 
     A list like that written as prose rots the first time somebody adds a test
     file: the sentence stays, the number under it stops being true, and a green
@@ -19,11 +19,19 @@
     write the new test into the block -- which sits under the sentence saying
     nothing in continuous integration will run it.
 
-    Reading is the whole mechanism. A test is counted by its `[Test]` or
-    `[UnityTest]` attribute in the source text, which is the number the editor's
-    own runner reports because nothing here is parameterised. Scope is TRACKED
-    files under client/Assets, so a scratch fixture no clone would get does not
-    go red until it is staged.
+    WHAT THE NUMBERS COUNT, WHICH IS NOT WHAT THE EDITOR REPORTS. One test
+    METHOD per `[Test]` or `[UnityTest]`, read out of the source text. A method
+    whose parameters carry `[Values]` or `[ValueSource]` runs as one case per
+    value, so the editor's own totals are at least these and can be larger --
+    `RoadTilingMeshTests` is three methods and six cases. Counting cases would
+    mean resolving the arrays they come from, which is a C# compiler's job.
+    Methods are what can be counted honestly by reading, so methods are the
+    unit. An attribute that declares a test method WITHOUT `[Test]` is a
+    different matter, because a method written that way is counted as nothing at
+    all, and this refuses rather than undercounting if one ever appears.
+
+    Scope is TRACKED files under client/Assets, so a scratch fixture no clone
+    would get does not go red until it is staged.
 
 .EXAMPLE
     ./tools/check-unity-test-inventory.ps1
@@ -34,8 +42,8 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
-# The declared inventory: test count, then path. These are the tests the build
-# gate does not run.
+# The declared inventory: test methods, then path. These are the tests the
+# build gate does not run.
 $declaration = @'
   4  client/Assets/Tests/EditMode/BoardBakeTests.cs
   7  client/Assets/Tests/EditMode/BoardDraftTests.cs
@@ -69,12 +77,28 @@ $declaration = @'
   4  client/Assets/Tests/PlayMode/WeaponSocketTests.cs
 '@
 
+# The runners this script sends a reader to, named once and checked, so a
+# renamed runner is a red gate rather than a printed path that goes nowhere.
+$editModeRunner = './tools/run-editmode-tests.ps1'
+$playModeRunner = './tools/run-playmode-tests.ps1'
+$bothRunner     = './tools/run-unity-tests.ps1'
+
+foreach ($runner in @($editModeRunner, $playModeRunner, $bothRunner)) {
+    $full = [System.IO.Path]::Combine($repoRoot, ($runner -replace '^\./', ''))
+    if (-not [System.IO.File]::Exists($full)) {
+        Write-Host "This script sends readers to $runner, and there is no such file." -ForegroundColor Red
+        Write-Host "Point it at whatever the runner is called now, or the tests it names have nowhere to run."
+        exit 1
+    }
+}
+
 # Which runner covers a file, decided by the folder the editor's two test
-# platforms are split along.
+# platforms are split along. Empty for a test file kept anywhere else, whose
+# platform is a property of its assembly definition rather than of its path.
 function Get-Runner([string]$path) {
-    if ($path -match '/EditMode/') { return './tools/run-editmode-tests.ps1' }
-    if ($path -match '/PlayMode/') { return './tools/run-playmode-tests.ps1' }
-    return 'no runner in tools/ covers this path'
+    if ($path -match '/EditMode/') { return $editModeRunner }
+    if ($path -match '/PlayMode/') { return $playModeRunner }
+    return ''
 }
 
 $declared = [ordered]@{}
@@ -99,54 +123,66 @@ if ($tracked.Count -eq 0) {
 # PowerShell's file provider has hidden-file and wildcard semantics that differ
 # between Windows and the Linux runner, and System.IO has none of them.
 #
-# One test is one [Test] or [UnityTest] at the head of a line. Attributes that
-# expand into several cases -- [TestCase], [Values] -- would put this count and
-# the editor's out of step, so their absence is asserted rather than assumed.
+# The refusal below is matched ANYWHERE in the file rather than at the head of a
+# line. NUnit attributes are written both ways -- above a method and inline on
+# one of its parameters -- and an anchored pattern sees only the first, which is
+# how one sits in the tree unnoticed by the check meant to notice it. Every
+# offender is collected before anything is reported, because the second one is
+# no less interesting than the first.
 $onDisk = [ordered]@{}
-foreach ($path in ($tracked | Sort-Object)) {
+$uncountable = foreach ($path in ($tracked | Sort-Object)) {
     $text = [System.IO.File]::ReadAllText([System.IO.Path]::Combine($repoRoot, $path))
 
-    $expanding = [regex]::Matches($text, '(?m)^\s*\[(?:TestCase|TestCaseSource|Values|ValueSource|Combinatorial|Theory)\b')
-    if ($expanding.Count -gt 0) {
-        Write-Host "$path uses $($expanding.Count) case-expanding attribute(s)." -ForegroundColor Red
-        Write-Host "This script counts one test per [Test] or [UnityTest], which no longer matches what the"
-        Write-Host "editor reports. Teach it to expand them, or every number it prints is the wrong number."
-        exit 1
-    }
+    $hidden = [regex]::Matches($text, '\[(?:TestCase|TestCaseSource|Theory)\b')
+    if ($hidden.Count -gt 0) { "  $path uses $($hidden.Count) of them" }
 
     $count = [regex]::Matches($text, '(?m)^\s*\[(?:Test|UnityTest)\s*[\](,]').Count
     if ($count -gt 0) { $onDisk[$path] = $count }
+}
+
+if ($uncountable) {
+    Write-Host "A test method is declared here without [Test] or [UnityTest]:" -ForegroundColor Red
+    $uncountable | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+    Write-Host ""
+    Write-Host "This script counts one test method per [Test] or [UnityTest], so a method declared any"
+    Write-Host "other way is counted as none, and the inventory it prints is short by however many there"
+    Write-Host "are. Teach it to see them before the number it publishes goes back to being decorative."
+    exit 1
 }
 
 # --- Report -------------------------------------------------------------------
 # Printed on the runs that PASS and not only the ones that fail. The list is the
 # point: a green gate that never says what it skipped is the thing this check
 # exists to stop.
-$runners = @($onDisk.Keys | ForEach-Object { Get-Runner $_ } | Select-Object -Unique)
-
-foreach ($runner in $runners) {
+foreach ($runner in @($onDisk.Keys | ForEach-Object { Get-Runner $_ } | Select-Object -Unique)) {
     $files = @($onDisk.Keys | Where-Object { (Get-Runner $_) -eq $runner })
     $tests = ($files | ForEach-Object { $onDisk[$_] } | Measure-Object -Sum).Sum
 
+    $where = if ($runner) {
+        "Run them with $runner, editor closed"
+    } else {
+        "Outside Tests/EditMode and Tests/PlayMode, so which platform runs them is their assembly definition's business"
+    }
+
     Write-Host ""
-    Write-Host "Not run by the build gate. Run them with $runner, editor closed:"
+    Write-Host "Not run by the build gate. ${where}:"
     foreach ($file in $files) {
         Write-Host ("  {0,3}  {1}" -f $onDisk[$file], $file)
     }
-    Write-Host ("  {0,3} tests in {1} files" -f $tests, $files.Count) -ForegroundColor Yellow
+    Write-Host ("  {0,3} test methods in {1} files" -f $tests, $files.Count) -ForegroundColor Yellow
 }
 
 # --- Compare against the declaration ------------------------------------------
 $paths = @($declared.Keys) + @($onDisk.Keys) | Sort-Object -Unique
 $drift = foreach ($path in $paths) {
     if (-not $onDisk.Contains($path)) {
-        "  declared, but not on disk: $path ($($declared[$path]) tests)"
+        "  declared, but not on disk: $path ($($declared[$path]) test methods)"
     }
     elseif (-not $declared.Contains($path)) {
-        "  on disk, but not declared: $path ($($onDisk[$path]) tests)"
+        "  on disk, but not declared: $path ($($onDisk[$path]) test methods)"
     }
     elseif ($declared[$path] -ne $onDisk[$path]) {
-        "  declared $($declared[$path]) tests, found $($onDisk[$path]): $path"
+        "  declared $($declared[$path]) test methods, found $($onDisk[$path]): $path"
     }
 }
 
@@ -166,5 +202,6 @@ if ($drift) {
 }
 
 $total = ($onDisk.Values | Measure-Object -Sum).Sum
-Write-Host "$total Unity tests in $($onDisk.Count) files, all declared, none of them run here." -ForegroundColor Green
+Write-Host "$total Unity test methods in $($onDisk.Count) files, all declared, none of them run here." -ForegroundColor Green
+Write-Host "Either platform also runs from $bothRunner -Platform EditMode or -Platform PlayMode."
 exit 0
