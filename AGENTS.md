@@ -49,7 +49,12 @@ would invalidate `defense.txt`, `match.replay`, the landmark table and the cell 
 
 **The board's dressing is the one thing edited by hand, and it still obeys this.** `Tools > Board > Dress`
 draws the real floor and scenery into the open scene so a human can move things; `Bake` writes what they left to
-`content/dressing.txt`; `Clear` takes it down. Every preview object carries `HideFlags.DontSave`, so none of it
+`content/dressing.txt`; `Clear` takes it down. **Drawing the board again carries unbaked work forward rather than
+discarding it** -- both tools share one preview and the map editor rebuilds it after every stroke, so a teardown
+that read the file back would mean painting one hex threw away every tree somebody had moved. What is standing is
+measured against the map the floor was *drawn from* (`HexFloor.Map`), never the one about to be drawn, or a stroke
+would pin the generator's own scenery into the file as though a person had placed it. `Clear` is therefore the
+only way back to the committed file, and the only way to lose the work in one click. Every preview object carries `HideFlags.DontSave`, so none of it
 reaches `Match.unity` and the scene stays generated. All three are `public static void` with no arguments, so an
 agent runs them with `-batchmode -executeMethod View.Editor.BoardDressingTools.Bake` like anything else --
 there is no bridge and no session. Where the scenery goes by default is
