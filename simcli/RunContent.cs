@@ -55,7 +55,7 @@ internal readonly struct RunShape
 /// </para>
 /// <para>
 /// <b>The defense file is the opponents' and nothing else.</b> It is the wall
-/// the canned field stands behind; a run stands whatever its own build phases
+/// the canned field opens behind; a run stands whatever its own build phases
 /// put on the map, and it opens with nothing there.
 /// See <c>docs/adr/0040-a-run-is-authored-as-text-and-compiled-to-a-record.md</c>.
 /// </para>
@@ -69,8 +69,9 @@ internal readonly struct RunShape
 /// <para>
 /// <b>The field is canned and it stands in for a ghost pool that does not
 /// exist.</b> What that means -- one player, recorded once per round and drawn
-/// with replacement, buying the authored column again every round -- is composed
-/// by <see cref="FieldPool.Canned"/> and described there. It is the simulation's
+/// with replacement, buying the authored column again every round and building
+/// on its opening wall out of a purse of its own -- is composed by
+/// <see cref="FieldPool.Canned"/> and described there. It is the simulation's
 /// answer to how thin a pool may be rather than this reader's, which is why the
 /// two files meeting here does not make it this file's decision. What this file
 /// does decide is how deep to record it, because the run's wave count is here
@@ -222,6 +223,10 @@ internal sealed class RunContent
     /// </remarks>
     private FieldPool Pool(RunShape shape) =>
         FieldPool.Canned(
+            _map,
+            _rules,
+            Types,
+            Ladder,
             _defense,
             _field,
             shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves);

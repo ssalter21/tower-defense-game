@@ -1249,3 +1249,48 @@ is not a defect: those formats carry no tiers and never could. It means a stripp
 the live match, and while the map was flat those two hashes agreed for a reason that had nothing to do with
 restaging. Two tests asserted that agreement and proved less than they looked like they did; they now assert
 the flattened answers, which is the claim the format actually supports.
+
+---
+
+## 29 August 2026 — the ghost gets a purse, and the wall it buys with it is worse
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **the 27 August entry** — what a folded board could not answer | A defense that scales is invisible, because the canned field's wave grows every round and **its wall does not** | **The wall grows too.** A member of the canned pool opens holding `content/ruleset.txt`'s starting purse, spends the same half of it `CoverThenUpgradeBot` spends for a run, and is paid the same interest and the same flat base afterwards | [#222](https://github.com/ssalter21/tower-defense-game/issues/222). A growing wave measured against a frozen wall makes the late rounds of `content/sweep.csv` mean less the later they are, which is exactly where a defense that scales was supposed to show up |
+| **[`content/defense.txt`](../content/defense.txt)** | The wall every member of the canned field stands behind, in every round | **The wall they open with.** Round one stands these six; round ten stands what nine rounds of that income bought on top of them | The ticket's open question was what purse a ghost has. The answer chosen was the run's own: the same half-purse rule, on an income the ghost is assumed to have had, so there is one economy and not two that can disagree |
+
+### The bonus line is the one a stand-in cannot have
+
+A wave is paid a share of the leak cost it dealt and nothing in the pool resolves a round of its own, so a
+stand-in's round closes on the interest and the base and **no bonus**. Assuming one would be assuming a number
+only a played round produces.
+
+**Its wave is not charged to that purse either.** `content/field.txt` is calibrated as roughly what a round's
+wave comes to *once a purse has bought a wall as well*, so the offensive share is already spent by the time the
+pool is handed the script; charging it again would price one wave twice.
+
+### What it actually builds, and the finding that fell out
+
+**Six mages by round four, and then nothing.** The committed route is covered end to end, so the rule finds
+nothing to place and spends on upgrading: the four archers become mages — **344 gold of wall at round one, 552
+from round four on** — and from there every placement is the dearest row the roster has, the purse banks, and
+the wall never moves again. Two caps, both real: a rule that only places where something is unshot at has
+nowhere to put a seventh tower however rich it gets, and a rule that upgrades into the dearest row runs out of
+rows.
+
+**And the dearer wall is a worse wall.** A mage costs 92 against an archer's 40 and fires once every 54 ticks
+against 18 — a third less damage a tick for more than twice the price, bought for no reason but that it is
+dearer. The committed run gets *more* past the ghost from round two on, not less: wave two's `dealt` went 17 to
+36, wave three's 102 to 135, and the run's whole total 331 to 387. It still dies at wave four with 0 of 800
+health left, because what kills it is the ghost's *wave* and that has not moved.
+
+The sweep re-ranks with it, and not in one direction — the mage's magic attack meets the roster's armour
+classes differently than the archer's pierce. Dealt over eight runs a creep: minion 43,621 to 34,784, scout
+47,198 to 51,630, necromancer 48,944 to 48,944, skeleton 44,336 to 42,463, warrior 43,152 to 37,913. Win rate
+is still zero on all five rows.
+
+**This is left standing rather than tuned away.** "Upgrade the oldest placement into the dearest row" is
+`CoverThenUpgradeBot`'s rule and a run plays by it too; a run's purse just rarely reaches the upgrade half,
+while a ghost opening behind a covered route reaches it in round two. The bot is now the thing the report is
+most obviously wrong about, which is a better place for it to be than invisible — and it is one open question
+and not two, because fixing it fixes both walls at once.

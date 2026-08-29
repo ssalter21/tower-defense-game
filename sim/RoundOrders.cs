@@ -87,6 +87,13 @@ namespace Sim
     /// </remarks>
     public sealed class FieldPool
     {
+        /// <summary>
+        /// The leak cost a round of the canned stand-in is closed on. Nothing
+        /// here plays a match, so there is no wave of its own to have got
+        /// anything past and no share of anything to be paid.
+        /// </summary>
+        private const int NothingDealt = 0;
+
         private readonly RoundOrders[][] _rounds;
 
         private readonly RoundOrders[] _members;
@@ -170,6 +177,35 @@ namespace Sim
         /// and never spends it.
         /// </para>
         /// <para>
+        /// <b>And it builds its wall out of a purse, round by round, by the rule
+        /// a run builds by.</b> The stand-in opens holding
+        /// <see cref="Ruleset.StartingPurseGold"/>, hands what stands and what it
+        /// holds to <see cref="CoverThenUpgradeBot"/>, pays for what comes back
+        /// through <see cref="BuildPhase.Resolve"/>, and closes the round on
+        /// <see cref="Purse.CloseWave"/> -- the interest on what it banked and the
+        /// flat base, which is the income a run of that round has had. So
+        /// <paramref name="defense"/> is the wall it opens with and not the wall
+        /// it stands at every round: round ten is that seed plus nine rounds of
+        /// building on top of it.
+        /// </para>
+        /// <para>
+        /// <b>The bonus line is the one a stand-in cannot have.</b> A wave is
+        /// paid a share of the leak cost it dealt and nothing here resolves a
+        /// round of its own, so the closing pays the interest and the base and
+        /// no bonus. Assuming a bonus would be assuming a number that only a
+        /// played round produces, and the honest reading of an unplayed one is
+        /// nothing.
+        /// </para>
+        /// <para>
+        /// <b>The wave is not charged to that purse, and the share it would cost
+        /// is why the wall gets half.</b> What the stand-in sends is authored
+        /// rather than composed -- <c>content/field.txt</c> is calibrated as
+        /// roughly what a round's wave comes to once a purse has bought a wall as
+        /// well -- so the offensive share is already spent by the time this pool
+        /// is handed the script. Charging it here as well would price one wave
+        /// twice.
+        /// </para>
+        /// <para>
         /// <b>What a field of one collapses is a rank and not a payment.</b> A
         /// wave is paid a share of the leak cost it dealt, so nothing here
         /// prices anything; a population of one puts nearly every round above
@@ -179,14 +215,50 @@ namespace Sim
         /// consumes.
         /// </para>
         /// </remarks>
-        /// <param name="defense">The wall this opponent stands behind in every round.</param>
+        /// <param name="map">The board the wall stands on, and the route it is measured against.</param>
+        /// <param name="rules">The purse it opens with, the interest it earns and the base it is paid.</param>
+        /// <param name="types">The roster its wall is built out of and its wave is read against.</param>
+        /// <param name="ladder">The edges a placement climbs, checked as a run's are.</param>
+        /// <param name="defense">The wall this opponent opens with, and builds on from there.</param>
         /// <param name="wave">What it sends in its first round, and buys again in each one after.</param>
         /// <param name="rounds">
         /// How many rounds of it to record. A run longer than this fights the
         /// last of them, by the rule <see cref="OfRounds"/> carries.
         /// </param>
-        public static FieldPool Canned(TowerLayout defense, WaveScript wave, int rounds = Run.DefaultWaves)
+        public static FieldPool Canned(
+            HexMap map,
+            Ruleset rules,
+            UnitTypeTable types,
+            UpgradeLadder ladder,
+            TowerLayout defense,
+            WaveScript wave,
+            int rounds = Run.DefaultWaves)
         {
+            if (map is null)
+            {
+                throw new ArgumentNullException(nameof(map));
+            }
+
+            if (rules is null)
+            {
+                throw new ArgumentNullException(nameof(rules));
+            }
+
+            if (types is null)
+            {
+                throw new ArgumentNullException(nameof(types));
+            }
+
+            if (ladder is null)
+            {
+                throw new ArgumentNullException(nameof(ladder));
+            }
+
+            if (defense is null)
+            {
+                throw new ArgumentNullException(nameof(defense));
+            }
+
             if (wave is null)
             {
                 throw new ArgumentNullException(nameof(wave));
@@ -202,10 +274,21 @@ namespace Sim
             }
 
             var recorded = new RoundOrders[rounds][];
+            CostTable costs = CostTable.From(rules, types);
+            Board board = Standing(defense);
+            Purse purse = Purse.Holding(rules.StartingPurseGold);
 
             for (int round = 0; round < recorded.Length; round++)
             {
-                recorded[round] = new[] { RoundOrders.Of(defense, Grown(wave, round + 1)) };
+                // The wall is built before the round's wave is recorded, exactly
+                // as a run's is: what this round's incoming waves meet is what
+                // this round built.
+                Build built = Composed(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse))
+                    .Resolve(round + 1, WaveScript.Nothing, ladder, purse, costs, types, map, board);
+
+                board = built.Board;
+                recorded[round] = new[] { RoundOrders.Of(board.Layout(), Grown(wave, round + 1)) };
+                purse = built.Purse.CloseWave(rules, NothingDealt).Purse;
             }
 
             return OfRounds(recorded);
@@ -286,6 +369,52 @@ namespace Sim
             }
 
             return copied;
+        }
+
+        /// <summary>
+        /// The board an authored layout is, placement by placement in the order
+        /// the layout lists them.
+        /// </summary>
+        /// <remarks>
+        /// A layout is what a defense looks like from outside and a board is
+        /// what building acts on, so the stand-in's opening wall is stood before
+        /// its first round rather than parsed again each round. The ordinals
+        /// follow the file's own order, which is the order an upgrade reaches
+        /// them in.
+        /// </remarks>
+        private static Board Standing(TowerLayout defense)
+        {
+            Board board = Board.Empty;
+
+            for (int index = 0; index < defense.Towers.Count; index++)
+            {
+                PlacedTower tower = defense.Towers[index];
+
+                board = board.Place(tower.Type, tower.Column, tower.Row);
+            }
+
+            return board;
+        }
+
+        /// <summary>
+        /// A build phase carrying these actions and no wave slots.
+        /// </summary>
+        /// <remarks>
+        /// The stand-in's wave is authored rather than composed, so the phase
+        /// this resolves is the defensive half alone -- which is what makes the
+        /// wall's price the run's own pricing rule rather than a subtraction
+        /// performed here.
+        /// </remarks>
+        private static BuildPhase Composed(IReadOnlyList<BuildAction> actions)
+        {
+            BuildPhase phase = BuildPhase.Of();
+
+            for (int index = 0; index < actions.Count; index++)
+            {
+                phase = phase.With(actions[index]);
+            }
+
+            return phase;
         }
 
         /// <summary>

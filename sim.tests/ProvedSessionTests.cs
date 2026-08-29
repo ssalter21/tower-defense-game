@@ -375,7 +375,13 @@ public class ProvedSessionTests
             TheRuleset.Committed(),
             types,
             TheLadder.Committed(types),
-            FieldPool.Canned(TheMatch.Layout(types), TheRun.FieldWave(types)),
+            FieldPool.Canned(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                types,
+                TheLadder.Committed(types),
+                TheMatch.Layout(types),
+                TheRun.FieldWave(types)),
             TheRun.Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);

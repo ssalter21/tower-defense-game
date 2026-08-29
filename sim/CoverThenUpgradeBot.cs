@@ -5,7 +5,7 @@ namespace Sim
 {
     /// <summary>
     /// The defensive half of a scripted player: what one round builds, out of
-    /// half the purse, against the board the run already has standing.
+    /// half the purse, against the board that is already standing.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -20,6 +20,14 @@ namespace Sim
     /// Tuning the bot is not tuning the game: every row of the balance report is
     /// played by this player, so what it does has to move with the player rather
     /// than with the rules the report is about.
+    /// </para>
+    /// <para>
+    /// <b>Both walls in the report are built by this rule.</b> A run's own board
+    /// is one caller and <see cref="FieldPool.Canned"/>'s stand-in is the other,
+    /// so the wall a growing wave is measured against grows the way the player's
+    /// does. There is no second build rule for an opponent to be strong or weak
+    /// by, which is what stops "the wave outgrew the defense" meaning "the
+    /// opponent was written to lose".
     /// </para>
     /// <para>
     /// <b>What the defense does not spend banks.</b> It is not handed to the
@@ -87,12 +95,62 @@ namespace Sim
                 throw new ArgumentNullException(nameof(run));
             }
 
-            UnitType[] byPrice = ByPrice(run.Types, run.Costs);
-            UnitType[] placeable = Placeable(byPrice, run.Ladder);
-            bool[] covered = CoveredBy(run.Map, run.Board);
-            Board board = run.Board;
+            return Decide(run.Map, run.Types, run.Costs, run.Ladder, run.Board, run.Purse);
+        }
+
+        /// <summary>
+        /// The same rule, over a board and a purse that belong to no run.
+        /// </summary>
+        /// <remarks>
+        /// Everything the rule reads, named one by one. A run holds all six and
+        /// hands them over; the canned field pool holds a board and a purse of
+        /// its own and no run at all, and a wall built by a second copy of this
+        /// rule is a wall that can disagree with the one a player builds.
+        /// </remarks>
+        /// <param name="map">The board's map: where a cell is, and where the route runs.</param>
+        /// <param name="types">The roster every placeable row is read out of.</param>
+        /// <param name="costs">What every row is priced at.</param>
+        /// <param name="ladder">The edges that say which rows are reached by upgrading rather than placed.</param>
+        /// <param name="board">What stands before this round builds.</param>
+        /// <param name="purse">What is held before this round builds, of which the wall takes a share.</param>
+        public static IReadOnlyList<BuildAction> Decide(
+            HexMap map,
+            UnitTypeTable types,
+            CostTable costs,
+            UpgradeLadder ladder,
+            Board board,
+            Purse purse)
+        {
+            if (map is null)
+            {
+                throw new ArgumentNullException(nameof(map));
+            }
+
+            if (types is null)
+            {
+                throw new ArgumentNullException(nameof(types));
+            }
+
+            if (costs is null)
+            {
+                throw new ArgumentNullException(nameof(costs));
+            }
+
+            if (ladder is null)
+            {
+                throw new ArgumentNullException(nameof(ladder));
+            }
+
+            if (board is null)
+            {
+                throw new ArgumentNullException(nameof(board));
+            }
+
+            UnitType[] byPrice = ByPrice(types, costs);
+            UnitType[] placeable = Placeable(byPrice, ladder);
+            bool[] covered = CoveredBy(map, board);
             var actions = new List<BuildAction>();
-            int left = BudgetOf(run.Purse);
+            int left = BudgetOf(purse);
 
             // Cover: the type that reaches the most route nothing reaches for
             // what it costs, until nothing on any free cell reaches any more of it.
@@ -105,14 +163,14 @@ namespace Sim
             // only way anything does.
             while (true)
             {
-                (UnitType? type, int column, int row) = BestValue(run.Map, board, placeable, run.Costs, covered);
+                (UnitType? type, int column, int row) = BestValue(map, board, placeable, costs, covered);
 
                 if (type is null)
                 {
                     break;
                 }
 
-                int price = run.Costs.PriceOf(Purchase.Unit(type.Id));
+                int price = costs.PriceOf(Purchase.Unit(type.Id));
 
                 // The rule is one sequence of actions and it stops at the first
                 // one the half will not pay for. What the half cannot afford is
@@ -126,7 +184,7 @@ namespace Sim
 
                 actions.Add(BuildAction.Of(ActionKind.Place, type.Id, column, row));
                 board = board.Place(type, column, row);
-                Reach(covered, run.Map, type, column, row);
+                Reach(covered, map, type, column, row);
                 left -= price;
             }
 
@@ -134,14 +192,14 @@ namespace Sim
             // next type up, until every one of them is as dear as the roster goes.
             while (true)
             {
-                (Placement placement, UnitType? into) = Dearer(board, byPrice, run.Costs);
+                (Placement placement, UnitType? into) = Dearer(board, byPrice, costs);
 
                 if (into is null)
                 {
                     break;
                 }
 
-                int price = run.Costs.PriceOf(Purchase.Unit(into.Id));
+                int price = costs.PriceOf(Purchase.Unit(into.Id));
 
                 if (price > left)
                 {

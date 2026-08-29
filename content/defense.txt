@@ -1,16 +1,35 @@
-# The defense the skeleton's one match is fought by, and the OPPONENTS' defense
-# everywhere else.
+# The defense the skeleton's one match is fought by, and the wall the OPPONENTS
+# open with everywhere else.
 #
 # THIS IS NOT WHAT A RUN STANDS BEHIND. A run opens on an empty board and stands
 # whatever its own build phases put on the map -- see content/commands.txt. This
 # file is the wall on the other side: the one the authored match's wave is sent
-# at, and the one every member of the canned field pool stands behind while a
-# run's waves are measured against it.
+# at, and the one every member of the canned field pool starts its run behind.
 #
-# Six towers, and they never change. There is no build phase, no economy and
-# nothing a mouse does that reaches the simulation: the defense is this file,
-# read once, and from then on it is one array that is never written to. Every
-# hit and every death in the match belongs to the creeps.
+# IN THE AUTHORED MATCH THESE SIX NEVER CHANGE. There is no build phase, no
+# economy and nothing a mouse does that reaches a match: the defense is this
+# file, read once, and from then on it is one array that is never written to.
+# Every hit and every death in that match belongs to the creeps.
+#
+# IN THE CANNED FIELD IT IS A SEED AND NOT THE WALL. A member of that pool is
+# recorded once per round, and it builds between rounds the way a run does: it
+# opens holding the ruleset's starting purse, spends the same half of it a run's
+# scripted player spends, and is paid the same interest and the same flat base
+# afterwards. So round one stands exactly these six and round ten stands what
+# nine rounds of that income bought on top of them. The wall a growing wave is
+# measured against therefore grows too, which is the whole reason a late round
+# of content/sweep.csv is worth reading.
+#
+# WHAT IT GROWS INTO, ON THIS BOARD, IS SIX MAGES BY ROUND FOUR. The route below
+# is covered end to end already, so the rule finds nothing to place and spends
+# on upgrading instead: the four archers become mages -- 344 gold of wall at
+# round one, 552 from round four on -- and then every placement is the dearest
+# row the roster has and the purse banks with nothing to buy. IT IS A DEARER
+# WALL AND A WORSE ONE. A mage costs 92 against an archer's 40 and fires once
+# every 54 ticks against 18, so the committed run gets MORE past the ghost from
+# round two on, not less -- wave two's dealt went from 17 to 36 the day this
+# started growing. "Upgrade the oldest placement into the dearest row" is not
+# "buy the better tower", and this is where that shows.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 #
@@ -38,15 +57,17 @@
 # gold, six times, under the overlap the gate asserts -- because coordinates
 # chosen by hand are coordinates that go stale the next time the board is
 # redrawn, silently and everywhere at once. The mix is the one this file has
-# always had: four bolts and two mortars.
+# always had: four bolts and two mortars. The pool goes on applying that same
+# rule round after round, so the seed and the growth are one player's judgement
+# rather than a hand-placed opening followed by a bot's second opinion.
 #
 # THE ROUTE IS COVERED END TO END, which the folded board is the reason for: on
 # the old corridor six towers left gaps near the entrance and either side of the
 # first corner, and a third of the wave walked through them. Here nothing is
 # unwatched, so what leaks now leaks because the wall cannot kill fast enough
-# rather than because it cannot see. Whether that is the right shape for the
-# opponents' wall is #222 -- the ghosts' wave grows every round and
-# this wall does not.
+# rather than because it cannot see. It is also what caps the ghost at six
+# towers: a rule that only places where something is unshot at has nowhere left
+# to place, however much gold it is holding.
 #
 # The loader refuses a tower that is off the grid, a tower standing inside the
 # corridor, and a tower whose range cannot reach the route at all. The last is

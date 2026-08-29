@@ -274,13 +274,21 @@ namespace View
         public Run RunOn(ulong seed)
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
+            Ruleset rules = StreamingContent.ReadRuleset();
+            UpgradeLadder ladder = StreamingContent.ReadUpgrades(types);
 
             return new Run(
                 Map,
-                StreamingContent.ReadRuleset(),
+                rules,
                 types,
-                StreamingContent.ReadUpgrades(types),
-                FieldPool.Canned(StreamingContent.ReadDefense(types), StreamingContent.ReadField(types)),
+                ladder,
+                FieldPool.Canned(
+                    Map,
+                    rules,
+                    types,
+                    ladder,
+                    StreamingContent.ReadDefense(types),
+                    StreamingContent.ReadField(types)),
                 seed);
         }
 

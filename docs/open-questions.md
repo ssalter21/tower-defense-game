@@ -226,3 +226,31 @@ whole-board pulse tower is one row", off Sam's own remark that a whole-board swe
 a pulse" — so the refusal closes a shape the decision opened. That shape survives as a period of 0, which fires
 with the attack instead of pulsing. Striking the refusal is one line if a pulsing damage aura is wanted; what
 it would then need is a stated rule for where its dice come from.
+
+### Does the scripted player's upgrade half need to know what a tower is worth?
+
+**Raised by [#222](https://github.com/ssalter21/tower-defense-game/issues/222) and left standing rather than
+fixed inside it.** `CoverThenUpgradeBot` covers the route by value — the type reaching the most unshot route
+per gold — and then upgrades by **price alone**: the lowest-ordinal placement becomes the cheapest row dearer
+than the one standing on it, whatever that row does. On the committed roster the archer costs 40 and fires
+every 18 ticks and the mage costs 92 and fires every 54, so every upgrade the bot makes is a third less damage
+a tick for more than twice the price.
+
+**It was nearly invisible until the ghost got a purse.** A run's own purse rarely reaches the upgrade half at
+all — there is always more route to cover — while a canned opponent opens behind a route covered end to end
+and reaches it in round two. Now both walls of the report are built by this rule, and the report says so: the
+committed run gets more past the ghost after it upgrades than before, and `content/sweep.csv` re-ranks the
+roster by which armour class the mage's magic attack happens to meet. The measurements are in
+[the 29 August decision-log entry](decision-log.md).
+
+**Three answers, and none of them is a tuning pass.** Upgrade by the same value rule the cover half uses, which
+needs a per-gold score for a tower that covers nothing new. Refuse an upgrade that lowers damage a tick, which
+is a rule about one column and would leave the mage unbuyable on this board. Or leave it, on the argument that
+a deliberately simple bot is the point and the report already carries a note saying a row describes a game and
+never skilled play. What settles it is what the report is for, which is a question about the harness rather
+than about the bot.
+
+**A second cap comes with it, and it is not the same question.** A rule that places only where nothing is shot
+at stops placing the moment the route is covered, so a wall is capped at however many towers cover the board
+— six here — however rich it gets. Redundant coverage is a real defensive move and this bot has no way to
+make it.

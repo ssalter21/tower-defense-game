@@ -268,7 +268,13 @@ public class GoldenRunTests
             TheRuleset.Committed(),
             types,
             TheLadder.Committed(types),
-            FieldPool.Canned(defense, TheRun.FieldWave(types)),
+            FieldPool.Canned(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                types,
+                TheLadder.Committed(types),
+                defense,
+                TheRun.FieldWave(types)),
             Seed,
             Run.DefaultWaves,
             Run.DefaultFieldSize);
