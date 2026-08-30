@@ -52,7 +52,6 @@ $declaration = @'
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
  11  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
   6  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
-  5  client/Assets/Tests/EditMode/HorizonSceneryTests.cs
  10  client/Assets/Tests/EditMode/ImportedArtTests.cs
   4  client/Assets/Tests/EditMode/MatchContentTests.cs
   4  client/Assets/Tests/EditMode/RoadTilingMeshTests.cs

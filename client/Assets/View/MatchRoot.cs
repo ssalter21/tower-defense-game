@@ -635,7 +635,6 @@ namespace View
                 settings ?? (dressing != null ? dressing.Settings() : null),
                 skyMaterial,
                 landMaterial,
-                SceneryToDressWith(scenery),
                 sky);
 
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);

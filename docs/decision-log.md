@@ -35,11 +35,14 @@ is never picked and is not in `TileCount`; the regrade is a prototype board unde
 `content/map.txt`, so no stored record moved and `SimulationVersion` stays at 11. Adopting the board into
 `content/map.txt` is a separate step and does retire every record.
 
-**Later the same day, the plain was planted.** It grounded the board but it was not country: one flat colour
-fading into haze. There is now a treeline four to seventeen metres off the board's edge and a range of hills
-from thirteen to thirty-five metres behind that, chosen by `View/HorizonScenery.cs` off a jittered lattice and
-kept clear of the board by measuring each candidate's distance to the board's *footprint* rather than to its
-middle — a ring around a rectangle is close on the long sides and far off the short ones.
+**The plain was planted, and the planting was reverted the same day.** The bare plain grounded the board but
+was not country, so a treeline went in four to seventeen metres off the rim with a range of hills behind it,
+placed off a jittered lattice and kept clear of the board by its distance to the board's *footprint* rather
+than to its middle. It was tuned over a dozen renders and rejected on sight: the pack's models scattered on
+open ground read as clutter around the board rather than as country behind it, and the diorama the whole
+landscape is after was worse for having them. **The plain is bare, and that is the decision, not the default.**
+`View/HorizonScenery.cs` and its tests are gone with it; what survived is the shader finding below, which was
+turned up while chasing a symptom the planting did not cause.
 
 | Where | What it said | What is true now |
 |---|---|---|

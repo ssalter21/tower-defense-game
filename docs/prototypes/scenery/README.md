@@ -43,20 +43,20 @@ board is not resting on the plain — its cliff columns bury themselves in it, s
 country cut out of a landscape rather than as a game piece on a table. It is `client/Assets/View/Horizon.cs`
 and its numbers are in `SceneFraming`.
 
-**And then the plain was empty, so it was planted.** A treeline stands four to seventeen metres clear of
-the board's edge, and hills rise from thirteen out to thirty-five behind it. The wood is what stops the rim
-being a clean hexagonal cut — no amount of ground behind a board fixes that silhouette, and something with an
-irregular outline standing just off the edge does. The gap is set off the camera rather than off taste: a
-tree that size at that distance hides about three and a half metres of ground at the shipped 35-degree pitch,
-which is less than the gap, so no cell is occluded from the angle the game plays at.
+**The plain was planted, and the planting was rejected.** A treeline four to seventeen metres off the rim
+and a range of hills behind it were built, tuned over a dozen renders and then taken out again on sight: with
+the pack's models scattered on open ground the board stopped reading as a diorama and started reading as a
+cluttered tabletop. The plain is bare again and that is the committed state. What the attempt was worth is
+the finding below, which was found while chasing it and applies to the bare plain just as much.
 
 **The white band along the horizon was not fog.** It looked exactly like haze piling up at the far clip, and
 two rounds of moving the fog did nothing to it — which is what said it was something else. Sampling a column
 of pixels showed the ground at 255 where the fog colour would have been 222: brighter than the thing it was
 supposedly fading into, which no amount of fog can do. It was the specular term. Both lit shaders default to
 half smoothness, which on a hex tile is a sheen nobody notices and on a plane two hundred metres across is a
-blown highlight all along the grazing edge. `ViewMaterials.Matte` is the fix, and until it landed the hills
-looked like they were floating, because the ground under them was white.
+blown highlight all along the grazing edge. `ViewMaterials.Matte` is the fix. Before it landed the horizon
+was a white line and anything standing near it looked like it was floating, because the ground underneath was
+brighter than the sky.
 
 **The sky is not visible from the shipped camera, and that is geometry rather than a fault.** The horizon of
 a flat plain sits at eye level; the shipped camera is pitched 35 degrees down through a 20-degree half lens,
