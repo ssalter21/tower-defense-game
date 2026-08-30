@@ -1,23 +1,25 @@
 # Landscape prototypes
 
-Six landscapes over one road, each a reading of one reference frame from
+Six landscapes were drawn over one road, each a reading of one reference frame from
 [the KayKit board](../../research/what-makes-the-board-read-flat.md), plus the committed board as a control.
-Regenerate with `tools/capture-prototypes.ps1` (editor closed — it is batchmode).
+**`rolling-country` was chosen and adopted, and the other four have been deleted** — boards, frames and
+presets. What is left is the control and the preset the board came from. Regenerate with
+`tools/capture-prototypes.ps1` (editor closed — it is batchmode).
 
 **Every board is the same corridor.** `content/map.txt`'s 51 cells, unmoved, cell for cell. What differs is
 the height map under them, the atlas they wear and how heavily they are dressed. The boards themselves are in
 [`../boards/`](../boards/) and are parsed by `HexMap.ParseUtf8` like any other map, corridor assertion
 included — which is what proves each one really is the committed route.
 
+**The two frames left are now the same landscape**, because the board was adopted: the control draws
+`content/map.txt` and `rolling-country` draws the file it was copied from. They differ only in the sun the
+preset carries. The control is the one that cannot go stale, and the pair is kept only until somebody wants
+the folder smaller still.
+
 | Preset | Reference | The idea |
 |---|---|---|
 | `as-it-ships` | none — the control | **The adopted board.** `content/map.txt` is rolling-country now, so this frame and the one below it are the same landscape under the shipped atlas and the shipped dressing. |
-| `ridge-lake-road` | *Ridge, lake, road* | Road low and unbroken through the middle, high ground on one flank, a lake eating a corner. |
-| `signature-strip` | *The signature composition* | One continuous climb from the near corner to the far one; everything tall at the far end. |
 | `rolling-country` | *The best landscape render in the collection* | **Chosen and adopted into `content/map.txt`.** Gentle relief and heavy wood — the interest is what stands on the ground, not the ground. Nothing steps a whole block. |
-| `three-deep-cliff` | *Three-deep cliff layering* | Three flat shelves parted by whole-block faces, with the wood pushed onto the lips. |
-| `canyon-run` | *Canyon variant* | The road on the floor of a trench, walls stepping away, autumn atlas. |
-| `diorama-plate` | *Clay render*, *Diorama scale* | A low plate with four vertical incidents and very little else. |
 
 - `presets.txt` — the numbers behind each frame, and a relief census counted off the map it was drawn from.
 - `board-<preset>-high.png` — the shipped camera framing.

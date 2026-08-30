@@ -124,7 +124,7 @@ namespace View.Editor
                         map,
                         MatchSceneBuilder.Tiles(surface),
                         MatchSceneBuilder.Scenery(surface),
-                        preset.Settings,
+                        DressingFor(preset),
                         BoardDressing.Empty,
                         preset.Sky);
 
@@ -187,6 +187,32 @@ namespace View.Editor
             WriteIndex(outDir, drawn);
 
             Debug.Log("PrototypeCapture: wrote " + written.Count + " frames to " + outDir);
+        }
+
+        /// <summary>
+        /// The dressing a preset is drawn with: its own, or — for the control —
+        /// the numbers the game actually ships.
+        /// </summary>
+        /// <remarks>
+        /// <b>The control has to read the committed asset, or it is not a
+        /// control.</b> Every other preset carries its chances inline, which is
+        /// the point of a preset; the shipped one carried
+        /// <see cref="DressingSettings.Default"/>, and the moment somebody
+        /// adopted a preset into <c>BoardDressing.asset</c> those stopped being
+        /// the same numbers. A frame captioned "the board as it ships" drawn
+        /// with chances the board does not ship is worse than no frame at all.
+        /// </remarks>
+        private static DressingSettings DressingFor(SceneryPresets.Preset preset)
+        {
+            if (preset.Name != SceneryPresets.Shipped)
+            {
+                return preset.Settings;
+            }
+
+            var asset = AssetDatabase.LoadAssetAtPath<BoardDressingAsset>(
+                MatchSceneBuilder.DressingAssetPath);
+
+            return asset != null ? asset.Settings() : preset.Settings;
         }
 
         /// <summary>
@@ -306,7 +332,7 @@ namespace View.Editor
 
             foreach ((SceneryPresets.Preset preset, HexMap map) in drawn)
             {
-                DressingSettings settings = preset.Settings;
+                DressingSettings settings = DressingFor(preset);
 
                 Census(map, out int falls, out int blocks, out int lowest, out int highest);
 
@@ -314,7 +340,9 @@ namespace View.Editor
                 lines.Add("    reference  " + preset.Reference);
                 lines.Add("    intent     " + preset.Intent);
                 lines.Add("    board      " + (preset.Board ?? "content/map.txt"));
-                lines.Add("    atlas      " + (preset.Atlas ?? "hexagons_medieval (shipped)"));
+                lines.Add(
+                    "    atlas      "
+                    + (preset.Atlas ?? "whatever Materials/Tiles.mat wears"));
                 lines.Add(
                     "    relief     levels " + Letter(lowest) + " to " + Letter(highest)
                     + ", " + falls.ToString(CultureInfo.InvariantCulture) + " falls, "

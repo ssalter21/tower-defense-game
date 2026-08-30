@@ -10,36 +10,14 @@
 
 as-it-ships
     reference  none -- the committed board
-    intent     The board as it is today: three heights, every change of height a whole block, and no half step anywhere. The control.
+    intent     The board as it is today, which since the adoption is rolling-country: gentle relief, every change of height a half block, nothing stepping a whole one.
     board      content/map.txt
-    atlas      hexagons_medieval (shipped)
+    atlas      whatever Materials/Tiles.mat wears
     relief     levels a to e, 268 falls, 0 of a block or more
     sun        -30.00 degrees round, 50.00 down, at 1.10
     water      none
-    chances    grove 0.30, peak 0.34, border grove 0.32, prop 0.42, camp 0.14, mound 0.50
-    rim        falls 1.00 metres
-
-ridge-lake-road
-    reference  Ridge, lake, road
-    intent     The road kept low and unbroken through the middle, a bank of high ground owning one flank, and a lake eating a corner so no part of the board is uniformly busy.
-    board      ridge-lake-road
-    atlas      hexagons_medieval_Summer
-    relief     levels a to i, 231 falls, 59 of a block or more
-    sun        -34.00 degrees round, 44.00 down, at 1.15
-    water      level a and below
-    chances    grove 0.26, peak 0.40, border grove 0.30, prop 0.34, camp 0.20, mound 0.58
-    rim        falls 1.00 metres
-
-signature-strip
-    reference  The signature composition
-    intent     One continuous climb from the near corner to the far one rather than a grid of plateaus, with everything tall gathered at the far end.
-    board      signature-strip
-    atlas      hexagons_medieval_Summer
-    relief     levels a to i, 222 falls, 35 of a block or more
-    sun        -52.00 degrees round, 38.00 down, at 1.20
-    water      none
-    chances    grove 0.22, peak 0.52, border grove 0.26, prop 0.30, camp 0.16, mound 0.62
-    rim        falls 1.00 metres
+    chances    grove 0.46, peak 0.30, border grove 0.44, prop 0.24, camp 0.08, mound 0.44
+    rim        falls 0.80 metres
 
 rolling-country
     reference  The best landscape render in the collection
@@ -51,37 +29,4 @@ rolling-country
     water      none
     chances    grove 0.46, peak 0.30, border grove 0.44, prop 0.24, camp 0.08, mound 0.44
     rim        falls 0.80 metres
-
-three-deep-cliff
-    reference  Three-deep cliff layering
-    intent     Three flat shelves parted by whole-block faces, and the wood pushed onto the lips of them rather than centred on the shelves.
-    board      three-deep-cliff
-    atlas      hexagons_medieval_Summer
-    relief     levels b to h, 143 falls, 143 of a block or more
-    sun        -62.00 degrees round, 32.00 down, at 1.25
-    water      none
-    chances    grove 0.30, peak 0.44, border grove 0.34, prop 0.28, camp 0.14, mound 0.82
-    rim        falls 1.20 metres
-
-canyon-run
-    reference  Canyon variant
-    intent     The road on the floor of a trench with the walls stepping away from it. The autumn atlas, because the arid read is what makes the reference land.
-    board      canyon-run
-    atlas      hexagons_medieval_Fall
-    relief     levels a to i, 413 falls, 281 of a block or more
-    sun        -18.00 degrees round, 28.00 down, at 1.30
-    water      none
-    chances    grove 0.10, peak 0.46, border grove 0.12, prop 0.38, camp 0.22, mound 0.70
-    rim        falls 1.40 metres
-
-diorama-plate
-    reference  Clay render, and diorama scale
-    intent     A low flat plate with four vertical incidents rising off it and very little else. The winter atlas caps them, which is what turns an incident into a landmark.
-    board      diorama-plate
-    atlas      hexagons_medieval_Winter
-    relief     levels b to i, 217 falls, 96 of a block or more
-    sun        -44.00 degrees round, 34.00 down, at 1.15
-    water      none
-    chances    grove 0.16, peak 0.58, border grove 0.14, prop 0.20, camp 0.12, mound 0.40
-    rim        falls 1.40 metres
 

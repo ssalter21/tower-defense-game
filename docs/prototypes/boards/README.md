@@ -1,12 +1,13 @@
 # The prototype boards
 
-Six height maps over one corridor. Each is a whole map file — terrain block, blank line, level block — and is
+Six height maps were drawn over one corridor; the four that were not chosen have been deleted, and what is
+left is the one that was. Each is a whole map file — terrain block, blank line, level block — and is
 loaded through `HexMap.ParseUtf8` by `PrototypeCapture`, so a board the game would refuse fails at render
 rather than becoming a picture of a map nothing can load.
 
 **The terrain block is `content/map.txt`'s, character for character, in all six.** Only the level block
-differs. That is what makes the rendered frames in [`../scenery/`](../scenery/) comparable: anything that
-changes between two of them is landscape, and the route is a constant.
+differs. That was what made the rendered frames in [`../scenery/`](../scenery/) comparable: anything that
+changed between two of them was landscape, and the route was a constant.
 
 **Levels are half a block, `a` to `i`.** Two levels is one block of height and is worth half a hex of reach,
 which is what a level was worth on its own before the grid was halved. See

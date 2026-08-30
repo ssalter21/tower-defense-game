@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace View
 {
@@ -10,10 +9,16 @@ namespace View
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>These exist to be compared and then mostly deleted.</b> Once one is
-    /// chosen its numbers move to <c>client/Assets/Settings/BoardDressing.asset</c>
-    /// and its board to <c>content/map.txt</c>, and the rest go. Nothing in the
-    /// game reads this file — only <see cref="Editor.PrototypeCapture"/> does.
+    /// <b>These existed to be compared and then mostly deleted, and mostly
+    /// they have been.</b> Six landscapes were drawn over one road;
+    /// <c>rolling-country</c> was chosen, its numbers moved to
+    /// <c>client/Assets/Settings/BoardDressing.asset</c>, its board to
+    /// <c>content/map.txt</c> and its atlas onto <c>Materials/Tiles.mat</c>, and
+    /// the other four are gone from this file and from
+    /// <c>docs/prototypes/</c>. What is left is the control, which draws
+    /// whatever <c>content/map.txt</c> currently is, and the preset it was
+    /// adopted from. Nothing in the game reads this file — only
+    /// <see cref="Editor.PrototypeCapture"/> does.
     /// </para>
     /// <para>
     /// <b>Each one is a reading of a particular picture, not a taste.</b> The
@@ -24,7 +29,7 @@ namespace View
     /// side.
     /// </para>
     /// <para>
-    /// <b>The road is the same road in all six.</b> Every board is
+    /// <b>The road is the same road in all of them.</b> Every board is
     /// <c>content/map.txt</c>'s corridor, cell for cell, under a different
     /// height map — so what differs between two of these pictures is the
     /// landscape and never the route. See <c>docs/prototypes/boards/</c>.
@@ -82,7 +87,9 @@ namespace View
                 // rolling-country, adopted. It stays in the set because a
                 // control drawn from content/map.txt is the one frame that
                 // cannot go stale, and because it is where the shipped atlas
-                // and the shipped dressing are seen rather than a preset's.
+                // and the shipped dressing are seen rather than a preset's --
+                // the capture swaps the committed BoardDressing.asset in for
+                // this one rather than using the settings written here.
                 new Preset(
                     Shipped,
                     "none -- the committed board",
@@ -92,50 +99,6 @@ namespace View
                     atlas: null,
                     Sunlight.Default,
                     DressingSettings.Default),
-
-                // "Ridge, lake, road" -- itch.io gallery, Medieval Hexagon Pack.
-                new Preset(
-                    "ridge-lake-road",
-                    "Ridge, lake, road",
-                    "The road kept low and unbroken through the middle, a bank of high ground owning "
-                    + "one flank, and a lake eating a corner so no part of the board is uniformly busy.",
-                    board: "ridge-lake-road",
-                    atlas: "hexagons_medieval_Summer",
-                    new Sunlight(-34f, 44f, 1.15f, 0.99f, 0.95f, 0.86f, 0.34f, 0.36f, 0.40f),
-                    new DressingSettings
-                    {
-                        WaterLevel = 0,
-                        GroveChance = 0.26f,
-                        PeakChance = 0.40f,
-                        BorderGroveChance = 0.30f,
-                        PropChance = 0.34f,
-                        CampChance = 0.20f,
-                        RidgeChance = 0.58f,
-                        RimDrop = 1f,
-                        CloudCount = 6,
-                    }),
-
-                // "The signature composition" -- the pack's cover render.
-                new Preset(
-                    "signature-strip",
-                    "The signature composition",
-                    "One continuous climb from the near corner to the far one rather than a grid of "
-                    + "plateaus, with everything tall gathered at the far end.",
-                    board: "signature-strip",
-                    atlas: "hexagons_medieval_Summer",
-                    new Sunlight(-52f, 38f, 1.2f, 1f, 0.96f, 0.88f, 0.33f, 0.36f, 0.42f),
-                    new DressingSettings
-                    {
-                        GroveChance = 0.22f,
-                        PeakChance = 0.52f,
-                        BorderGroveChance = 0.26f,
-                        PropChance = 0.30f,
-                        CampChance = 0.16f,
-                        RidgeChance = 0.62f,
-                        RimDrop = 1f,
-                        CloudCount = 8,
-                        CloudHeight = 7f,
-                    }),
 
                 // "The best landscape render in the collection" -- Medieval
                 // Builder Pack. Six built things per hundred tiles, and the rest
@@ -161,94 +124,6 @@ namespace View
                         RimDrop = 0.8f,
                         CloudCount = 4,
                     }),
-
-                // "Three-deep cliff layering" -- Forest Nature Pack. Every level
-                // change has a visible rock face, and the tree clusters straddle
-                // the edges instead of sitting neatly on one level.
-                new Preset(
-                    "three-deep-cliff",
-                    "Three-deep cliff layering",
-                    "Three flat shelves parted by whole-block faces, and the wood pushed onto the "
-                    + "lips of them rather than centred on the shelves.",
-                    board: "three-deep-cliff",
-                    atlas: "hexagons_medieval_Summer",
-                    new Sunlight(-62f, 32f, 1.25f, 1f, 0.95f, 0.87f, 0.30f, 0.33f, 0.40f),
-                    new DressingSettings
-                    {
-                        GroveChance = 0.30f,
-                        PeakChance = 0.44f,
-                        BorderGroveChance = 0.34f,
-                        PropChance = 0.28f,
-                        CampChance = 0.14f,
-                        RidgeChance = 0.82f,
-                        RimDrop = 1.2f,
-                        CloudCount = 5,
-                    }),
-
-                // "Canyon variant" -- the arid cut of the builder-pack
-                // landscape, whose stepped walls read as a much stronger drop
-                // than the green version's.
-                new Preset(
-                    "canyon-run",
-                    "Canyon variant",
-                    "The road on the floor of a trench with the walls stepping away from it. The "
-                    + "autumn atlas, because the arid read is what makes the reference land.",
-                    board: "canyon-run",
-                    atlas: "hexagons_medieval_Fall",
-                    new Sunlight(-18f, 28f, 1.3f, 1f, 0.93f, 0.80f, 0.34f, 0.31f, 0.30f),
-                    new DressingSettings
-                    {
-                        GroveChance = 0.10f,
-                        PeakChance = 0.46f,
-                        BorderGroveChance = 0.12f,
-                        PropChance = 0.38f,
-                        SecondPropChance = 0.34f,
-                        CampChance = 0.22f,
-                        RidgeChance = 0.70f,
-                        RimDrop = 1.4f,
-                        CloudCount = 3,
-                    },
-                    // A dusty sky over a dusty board. The haze is warm, so the
-                    // land runs out into the same air the autumn atlas is lit
-                    // by rather than into a summer afternoon.
-                    new SkySettings(
-                        new Color(0.62f, 0.66f, 0.74f, 1f),
-                        new Color(0.86f, 0.79f, 0.67f, 1f),
-                        new Color(0.47f, 0.41f, 0.31f, 1f),
-                        1.30f,
-                        1.15f)),
-
-                // "Clay render -- read the silhouette" and "Diorama scale". A low
-                // flat plate with three or four vertical incidents rising off it.
-                new Preset(
-                    "diorama-plate",
-                    "Clay render, and diorama scale",
-                    "A low flat plate with four vertical incidents rising off it and very little "
-                    + "else. The winter atlas caps them, which is what turns an incident into a "
-                    + "landmark.",
-                    board: "diorama-plate",
-                    atlas: "hexagons_medieval_Winter",
-                    new Sunlight(-44f, 34f, 1.15f, 0.96f, 0.97f, 1f, 0.38f, 0.41f, 0.48f),
-                    new DressingSettings
-                    {
-                        GroveChance = 0.16f,
-                        PeakChance = 0.58f,
-                        BorderGroveChance = 0.14f,
-                        PropChance = 0.20f,
-                        CampChance = 0.12f,
-                        RidgeChance = 0.40f,
-                        RimDrop = 1.4f,
-                        CloudCount = 6,
-                        CloudHeight = 7.5f,
-                    },
-                    // A cold, thin, high sky over the snow caps, and a land
-                    // the colour of the plate rather than of grass.
-                    new SkySettings(
-                        new Color(0.60f, 0.70f, 0.86f, 1f),
-                        new Color(0.84f, 0.87f, 0.90f, 1f),
-                        new Color(0.42f, 0.46f, 0.42f, 1f),
-                        1.25f,
-                        0.75f)),
             };
 
         /// <summary>
@@ -380,10 +255,16 @@ namespace View
 
             /// <summary>
             /// What is behind and beneath it. Left at its default on a preset
-            /// that wants the committed sky, which is most of them: the two that
-            /// name one are the two not wearing a green atlas, and a summer sky
-            /// over an autumn board is the join that gives a re-skin away.
+            /// that wants the committed sky, which both of these do.
             /// </summary>
+            /// <remarks>
+            /// <b>Nothing overrides it now, and the hook is kept on purpose.</b>
+            /// The two presets that did were the two not wearing a green atlas,
+            /// and they are gone -- but a summer sky over an autumn board is
+            /// exactly the join that gives a re-skin away, so the next seasonal
+            /// board will want this and it is one defaulted argument to leave
+            /// standing.
+            /// </remarks>
             public SkySettings Sky { get; }
         }
     }
