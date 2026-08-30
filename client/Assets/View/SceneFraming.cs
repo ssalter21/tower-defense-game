@@ -247,16 +247,113 @@ namespace View
         /// aerial perspective rather than a fault — it is the cue that tells the
         /// eye the far edge is far.
         /// </remarks>
-        public static float HazeNearBoards => 1.8f;
+        public static float HazeNearBoards => 2.2f;
 
         /// <summary>How far out the haze is total, in board-widths.</summary>
-        public static float HazeFarBoards => 4.5f;
+        public static float HazeFarBoards => 5f;
 
         /// <summary>
         /// The most of the land's own radius the haze may take to close, so a
         /// small board's plain still ends in haze rather than in an edge.
         /// </summary>
         public static float HazeShareOfRadius => 0.85f;
+
+        // ---------------------------------------------------------------
+        // What stands on the plain
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// How far clear of the board's edge the treeline begins, in metres.
+        /// </summary>
+        /// <remarks>
+        /// <b>Set off the camera rather than off taste.</b> A tree of this size
+        /// standing this far out hides about three and a half metres of ground
+        /// behind it at the shipped 35-degree pitch, which is less than the gap
+        /// -- so no cell is occluded from the angle the game plays at. Drop the
+        /// camera to the raking frames and the wood does cross in front of the
+        /// near rim, which is what a treeline seen from ground level does.
+        /// </remarks>
+        public static float TreelineGap => 4f;
+
+        /// <summary>How deep the band of wood is, in metres.</summary>
+        public static float TreelineDepth => 13f;
+
+        /// <summary>How far apart the wood's candidate positions are, in metres.</summary>
+        public static float TreelineStep => 3f;
+
+        /// <summary>
+        /// The chance a candidate position at the near edge of the band is
+        /// taken. It thins outward, so the wood frays instead of stopping on a
+        /// line.
+        /// </summary>
+        public static float TreelineChance => 0.78f;
+
+        /// <summary>
+        /// How much bigger than authored a distant tree is drawn. Just over
+        /// one: the groves are cut to fill a hex and these are standing on open
+        /// ground where nothing sets their scale for the eye.
+        /// </summary>
+        public static float TreelineScale => 1.15f;
+
+        /// <summary>
+        /// How far clear of the board the hills begin, in metres.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The hills are a ring, not a scatter, and the first cut was a
+        /// scatter.</b> Spread evenly from just off the board out to the edge of
+        /// the plain they read as rubble strewn over open country: some of them
+        /// beside the board where they looked like debris, most of them so far
+        /// out that the haze had eaten them. Gathered into a band well beyond
+        /// the wood they read as what they are, which is the far side of a
+        /// valley.
+        /// </para>
+        /// <para>
+        /// Nearly thirty hexes out, so a hill is something seen through air
+        /// rather than a mountain parked beside the board.
+        /// </para>
+        /// </remarks>
+        public static float DistantHillGap => 13f;
+
+        /// <summary>How far apart the hills' candidate positions are, in metres.</summary>
+        public static float DistantHillStep => 8f;
+
+        /// <summary>
+        /// The chance one of those positions carries a hill. High, because a
+        /// range has to be continuous.
+        /// </summary>
+        /// <remarks>
+        /// <b>Isolated hills in haze look like debris in the sky.</b> The first
+        /// cut placed them sparsely and far out, where the land under them was
+        /// already fully hazed -- so each one had no visible ground beneath it
+        /// and read as a chunk floating over the horizon. Close enough that the
+        /// ground still reads, and dense enough to form a line, they are the far
+        /// side of a valley instead.
+        /// </remarks>
+        public static float DistantHillChance => 0.55f;
+
+        /// <summary>
+        /// What share of them are mountains rather than low mounds. Under half,
+        /// so the skyline has a couple of peaks in it and is not a row of them.
+        /// </summary>
+        public static float DistantPeakShare => 0.5f;
+
+        /// <summary>
+        /// How far out the hills go, as a share of the plain's radius. Short of
+        /// the whole, because past the haze they are haze.
+        /// </summary>
+        public static float DistantHillReach => 0.13f;
+
+        /// <summary>How much bigger than authored the nearest hill is drawn.</summary>
+        public static float DistantHillNearScale => 2.6f;
+
+        /// <summary>
+        /// How much bigger than authored the furthest one is. Much bigger,
+        /// because a model cut to fill a two-metre hex is four pixels at a
+        /// hundred and fifty metres, and a hill nobody can see is a hill nobody
+        /// drew.
+        /// </summary>
+        public static float DistantHillFarScale => 4.2f;
 
         /// <summary>The sun's colour — very slightly warm, and otherwise white.</summary>
         public static Color SunColor => new Color(1f, 0.97f, 0.91f, 1f);

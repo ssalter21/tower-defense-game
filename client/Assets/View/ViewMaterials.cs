@@ -43,6 +43,65 @@ namespace View
         /// <summary>The albedo map property of both shaders above, in order.</summary>
         private static readonly string[] MapProperties = { "_BaseMap", "_MainTex" };
 
+        /// <summary>The smoothness property of both shaders above, in order.</summary>
+        private static readonly string[] SmoothnessProperties = { "_Smoothness", "_Glossiness" };
+
+        /// <summary>
+        /// One plain lit material with every trace of shine taken off it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For anything very large and very flat, where the default is a
+        /// bug.</b> Both shaders default to half smoothness, which on a hex tile
+        /// is a faint sheen nobody notices and on a plane two hundred metres
+        /// across is a catastrophe: the further part of it is seen at a grazing
+        /// angle, Fresnel drives the specular term up, and the ground goes to a
+        /// blown white band along the horizon.
+        /// </para>
+        /// <para>
+        /// <b>It was diagnosed off the pixels and not off the shader.</b> The
+        /// white band looked exactly like fog piled up at the far clip, and two
+        /// rounds of moving the fog did nothing to it. Sampling a column of the
+        /// frame is what showed the value at 255 where the fog colour would have
+        /// been 222 -- brighter than the thing the ground was supposedly fading
+        /// into, which no amount of fog can do.
+        /// </para>
+        /// </remarks>
+        public static Material Matte(string name, Color color)
+        {
+            Material material = Create(name, color);
+
+            foreach (string property in SmoothnessProperties)
+            {
+                if (material.HasProperty(property))
+                {
+                    material.SetFloat(property, 0f);
+                }
+            }
+
+            if (material.HasProperty("_Metallic"))
+            {
+                material.SetFloat("_Metallic", 0f);
+            }
+
+            // The specular highlight has its own toggle on the URP shader, and
+            // switching it off is what actually removes the term rather than
+            // making it small.
+            if (material.HasProperty("_SpecularHighlights"))
+            {
+                material.SetFloat("_SpecularHighlights", 0f);
+                material.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+            }
+
+            if (material.HasProperty("_EnvironmentReflections"))
+            {
+                material.SetFloat("_EnvironmentReflections", 0f);
+                material.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+            }
+
+            return material;
+        }
+
         /// <summary>Builds one plain lit material.</summary>
         public static Material Create(string name, Color color)
         {

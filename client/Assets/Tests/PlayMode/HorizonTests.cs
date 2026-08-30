@@ -150,7 +150,11 @@ namespace Tests.PlayMode
 
             try
             {
-                Horizon.Build(host.transform, StreamingContent.ReadMap(), DressingSettings.Default);
+                Horizon.Build(
+                    host.transform,
+                    StreamingContent.ReadMap(),
+                    new Bounds(Vector3.zero, new Vector3(38f, 2f, 22f)),
+                    DressingSettings.Default);
 
                 Assert.That(RenderSettings.fog, Is.True, "The horizon did not put any haze up.");
             }

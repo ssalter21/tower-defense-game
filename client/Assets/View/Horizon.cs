@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Sim;
 using UnityEngine;
 
@@ -62,6 +63,12 @@ namespace View
         /// <summary>How far the plain reaches from the middle of the board.</summary>
         public float Radius { get; private set; }
 
+        /// <summary>The middle of the board, which is what the plain is laid around.</summary>
+        public Vector3 Middle { get; private set; }
+
+        /// <summary>How many things are standing on the plain. Zero without models.</summary>
+        public int Planted { get; private set; }
+
         /// <summary>
         /// Builds a horizon under <paramref name="parent"/> and hangs it around
         /// <paramref name="map"/>.
@@ -75,16 +82,18 @@ namespace View
         public static Horizon Build(
             Transform parent,
             HexMap map,
+            Bounds board,
             DressingSettings settings,
             Material sky = null,
             Material land = null,
+            SceneryModels models = null,
             SkySettings look = default)
         {
             var host = new GameObject("Horizon");
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var horizon = host.AddComponent<Horizon>();
-            horizon.Raise(map, settings, sky, land, look.OrDefault());
+            horizon.Raise(map, board, settings, sky, land, models, look.OrDefault());
 
             return horizon;
         }
@@ -150,9 +159,22 @@ namespace View
         }
 
         private void Raise(
-            HexMap map, DressingSettings settings, Material sky, Material land, SkySettings look)
+            HexMap map,
+            Bounds board,
+            DressingSettings settings,
+            Material sky,
+            Material land,
+            SceneryModels models,
+            SkySettings look)
         {
             DressingSettings dressing = settings ?? DressingSettings.Default;
+
+            // Centred on the board and not on the origin. Cell 0,0 is at the
+            // world origin and the grid runs east and south off it, so the
+            // middle of a board is nowhere near the object everything hangs
+            // off -- which does not matter for a disc two hundred metres wide
+            // and matters a great deal for a treeline measured off the rim.
+            Middle = new Vector3(board.center.x, 0f, board.center.z);
 
             LandHeight = (Floor(map) * HexGeometry.LevelStep) - dressing.RimDrop;
             Radius = Mathf.Min(
@@ -162,7 +184,65 @@ namespace View
             Sky = Dome(sky, look);
             Land = Plain(land, look);
 
+            Plant(board, models);
             Haze(map, look);
+        }
+
+        /// <summary>
+        /// Stands a treeline and a range of hills on the plain. Nothing at all
+        /// where no models were wired, which is what a checkout without the art
+        /// draws -- the same rule the board's own dressing lives under, and the
+        /// reason a bare playfield is still exactly a floor and a horizon.
+        /// </summary>
+        /// <remarks>
+        /// <b>Where each piece goes is <see cref="HorizonScenery"/>'s business
+        /// and this only puts it there</b>, which is the same split
+        /// <see cref="HexFloor"/> keeps with <see cref="BoardScenery"/>: the
+        /// choosing is pure and asserted without a scene, and the drawing is
+        /// here where it needs a mesh and a material.
+        /// </remarks>
+        private void Plant(Bounds board, SceneryModels models)
+        {
+            if (models == null || !models.IsUsable)
+            {
+                return;
+            }
+
+            var host = new GameObject("Distance");
+            host.transform.SetParent(transform, worldPositionStays: false);
+
+            IReadOnlyList<DistantPiece> standing = HorizonScenery.For(
+                board.center.x,
+                board.center.z,
+                board.extents.x,
+                board.extents.z,
+                Radius,
+                Planting.Default);
+
+            foreach (DistantPiece piece in standing)
+            {
+                Mesh mesh = models.MeshFor(piece.Group, piece.Variant);
+
+                if (mesh == null)
+                {
+                    continue;
+                }
+
+                var drawn = new GameObject(piece.Group + " " + mesh.name);
+                drawn.transform.SetParent(host.transform, worldPositionStays: false);
+                drawn.transform.localPosition = new Vector3(piece.X, LandHeight, piece.Z);
+                drawn.transform.localRotation = Quaternion.Euler(0f, piece.Turn, 0f);
+                drawn.transform.localScale = Vector3.one * piece.Scale;
+
+                drawn.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+                var renderer = drawn.AddComponent<MeshRenderer>();
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+                renderer.sharedMaterial = models.Surface;
+
+                Planted++;
+            }
         }
 
         /// <summary>
@@ -206,7 +286,7 @@ namespace View
         {
             Material material = supplied != null
                 ? supplied
-                : ViewMaterials.Create("Land", look.Land);
+                : ViewMaterials.Matte("Land", look.Land);
 
             if (material == null)
             {
@@ -215,7 +295,7 @@ namespace View
 
             var plain = new GameObject("Land");
             plain.transform.SetParent(transform, worldPositionStays: false);
-            plain.transform.localPosition = Vector3.up * LandHeight;
+            plain.transform.localPosition = Middle + (Vector3.up * LandHeight);
 
             plain.AddComponent<MeshFilter>().sharedMesh = Disc(Radius);
 

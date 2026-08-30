@@ -630,7 +630,7 @@ namespace View.Editor
         {
             Material road = WriteMaterial(RoadMaterialPath, "Road", SceneFraming.RoadColor);
             Material grass = WriteMaterial(GrassMaterialPath, "Grass", SceneFraming.GrassColor);
-            Material land = WriteMaterial(LandMaterialPath, "Land", SceneFraming.LandColor);
+            Material land = WriteMatte(LandMaterialPath, "Land", SceneFraming.LandColor);
             Material sky = WriteSky();
 
             UnityEngine.SceneManagement.Scene scene =
@@ -830,11 +830,16 @@ namespace View.Editor
         /// site, so the committed asset and the committed constant cannot
         /// drift. An edit-mode test asserts they have not.
         /// </summary>
-        private static Material WriteMaterial(string path, string name, Color color)
+        private static Material WriteMatte(string path, string name, Color color) =>
+            Write(path, ViewMaterials.Matte(name, color));
+
+        private static Material WriteMaterial(string path, string name, Color color) =>
+            Write(path, ViewMaterials.Create(name, color));
+
+        private static Material Write(string path, Material material)
         {
             EnsureFolder(Path.GetDirectoryName(path));
 
-            Material material = ViewMaterials.Create(name, color);
             var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
 
             if (existing == null)

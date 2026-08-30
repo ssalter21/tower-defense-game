@@ -35,6 +35,16 @@ is never picked and is not in `TileCount`; the regrade is a prototype board unde
 `content/map.txt`, so no stored record moved and `SimulationVersion` stays at 11. Adopting the board into
 `content/map.txt` is a separate step and does retire every record.
 
+**Later the same day, the plain was planted.** It grounded the board but it was not country: one flat colour
+fading into haze. There is now a treeline four to seventeen metres off the board's edge and a range of hills
+from thirteen to thirty-five metres behind that, chosen by `View/HorizonScenery.cs` off a jittered lattice and
+kept clear of the board by measuring each candidate's distance to the board's *footprint* rather than to its
+middle — a ring around a rectangle is close on the long sides and far off the short ones.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `ViewMaterials.Create`, used for everything | One plain lit material, **shader defaults and all** | **Anything very large and very flat gets `Matte` instead.** Both shaders default to half smoothness. On a hex tile that is a sheen nobody notices; on a plane two hundred metres across the grazing edge blows to white and reads as fog piled against the far clip. It cost two rounds of moving the fog before a column of sampled pixels showed the ground brighter than the colour it was supposedly fading into — which no amount of fog can do. |
+
 ---
 
 ## 29 August 2026 — a level is half a block

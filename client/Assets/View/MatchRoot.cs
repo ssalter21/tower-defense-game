@@ -631,9 +631,11 @@ namespace View
             Horizon = View.Horizon.Build(
                 transform,
                 map,
+                Floor.WorldBounds,
                 settings ?? (dressing != null ? dressing.Settings() : null),
                 skyMaterial,
                 landMaterial,
+                SceneryToDressWith(scenery),
                 sky);
 
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
