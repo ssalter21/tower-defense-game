@@ -14,6 +14,29 @@ This file exists so the vision can stay readable. It grows; the vision should no
 
 ---
 
+## 30 August 2026 — the board stops floating, and stops stepping a block
+
+`rolling-country` was chosen off the contact sheet, and a second pass on it turned up two things that were
+not about which landscape it was.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `SceneFraming.BackgroundColor`, and every frame ever captured | The camera **clears to a flat colour** where there is no floor | **There is a world behind the board.** A procedural sky, a plain of land laid at the depth the board's own rim falls to, and linear haze joining them — `View/Horizon.cs`. The flat colour survives only as the fallback for a project without the skybox shader. The board's cliff columns bury themselves in the plain, so it reads as country cut out of a landscape rather than as a slab hanging in nothing. |
+| The board generator's slope rules | A cell could sit **two levels** clear of the one touching it | **One level, on the chosen board.** A whole-block face has no ramp and no grass slope cut for it, so it drew as a sawn edge — 29 of them on the first cut of `rolling-country`. A slope limiter files them: 44 of 247 cells moved, 7 of 275 falls lost, the same `a` to `e` relief, and `presets.txt` now reads **`0 of a block or more`** where the shipped board reads `121`. |
+
+**What was tried and did not work, so it is not tried again:** shrinking the plain to put the horizon in the
+shipped shot. The horizon of a flat plain sits at eye level, and the shipped camera looks between 15 and 55
+degrees below horizontal — so the horizon is above the top of the frame at *any* radius. Land behind the
+board at that pitch is what looking down at a landscape looks like; the sky arrives when the camera comes
+down.
+
+**What did not change:** anything the simulation can see. The horizon carries no collider, is never a tile,
+is never picked and is not in `TileCount`; the regrade is a prototype board under `docs/`, not
+`content/map.txt`, so no stored record moved and `SimulationVersion` stays at 11. Adopting the board into
+`content/map.txt` is a separate step and does retire every record.
+
+---
+
 ## 29 August 2026 — a level is half a block
 
 The board read as a stack of plates and the cause was measured rather than felt: of the 121 places where one

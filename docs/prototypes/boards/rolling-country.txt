@@ -7,6 +7,15 @@
 // dramatic -- the interest is meant to come from what stands on it, at
 // roughly six built things per hundred tiles.
 //
+// NOTHING HERE STEPS A WHOLE BLOCK. Every one of the 268 places where this
+// ground stands above its neighbour is a single level, which is half a block,
+// which is the step the pack cuts its low ramp and its two grass slopes for.
+// The first cut of this board had 29 whole-block drops in it and they read as
+// sawn edges. A slope limiter files them: it walks the grid until no two
+// touching cells differ by more than one, holding the road's own staircase
+// fixed. It moved 44 cells and cost 7 of the board's 275 falls, and the relief
+// is the same 'a' to 'e' it was.
+//
 // Levels are half a block each and run 'a' to 'i'.
 
 ....S...........E..
@@ -30,9 +39,9 @@ deeddeddccccdddeedd
 eeeddeedddddeeeeeed
  eeeeededddddeeeeedd
 deeeddedcdddeeeeedd
- dddddcecccdddedddcc
-ddddeeecbbccdddddcc
- ddcecccbbbccdddddcb
-cdceccbaabbccddddcb
- ddceecaaabbcdddddcb
-ddddccbaaabccddeddc
+ ddddddedccdddedddcc
+ddddeeedcbccdddddcc
+ dddedddcbbccdddddcb
+cddeddccbbbccddddcb
+ dddeedcbabbcdddddcb
+ddddddcbaabccddeddc

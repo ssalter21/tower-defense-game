@@ -155,8 +155,108 @@ namespace View
         /// <summary>Everything that is not corridor.</summary>
         public static Color GrassColor => new Color(0.29f, 0.44f, 0.25f, 1f);
 
-        /// <summary>What the camera clears to where there is no floor.</summary>
+        /// <summary>
+        /// What the camera clears to where there is no floor and no sky. Only
+        /// reached in a checkout whose skybox shader is missing; see
+        /// <see cref="SkyMaterial"/>.
+        /// </summary>
         public static Color BackgroundColor => new Color(0.11f, 0.13f, 0.16f, 1f);
+
+        // ---------------------------------------------------------------
+        // The world behind and beneath the board
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// The tint of the sky overhead. A blue with some green in it rather
+        /// than a pure one, so it sits against the atlas's grass instead of
+        /// vibrating against it.
+        /// </summary>
+        public static Color SkyZenithColor => new Color(0.42f, 0.55f, 0.78f, 1f);
+
+        /// <summary>
+        /// The colour at the sky's horizon, and of the haze the land fades
+        /// into. One colour for both on purpose — see <see cref="SkySettings"/>.
+        /// </summary>
+        public static Color SkyHazeColor => new Color(0.72f, 0.79f, 0.86f, 1f);
+
+        /// <summary>
+        /// The plain of land the board is cut out of. Much duller and much
+        /// darker than the atlas's grass, and the first cut of it was neither:
+        /// a plain mixed to match the tiles filled two thirds of every frame
+        /// with a flat bright green, and the board read as a raft on a sea
+        /// rather than as a piece of country. What is wanted is the same land
+        /// seen far off, and distance takes the light and the saturation out of
+        /// everything.
+        /// </summary>
+        public static Color LandColor => new Color(0.42f, 0.48f, 0.32f, 1f);
+
+        /// <summary>How brightly the sky is drawn.</summary>
+        public static float SkyExposure => 1.05f;
+
+        /// <summary>
+        /// How much air the sun's light comes through. Under one is a thin,
+        /// hard, high-altitude sky; over one is a heavy washed one. Just under,
+        /// because the board is lit as a clear day.
+        /// </summary>
+        public static float SkyAtmosphere => 0.7f;
+
+        /// <summary>Which sun the sky draws: 0 none, 1 simple, 2 high quality.</summary>
+        public static float SkySunQuality => 1f;
+
+        /// <summary>How big the sun's disk is, as a fraction of the sky.</summary>
+        public static float SkySunSize => 0.03f;
+
+        /// <summary>How hard the sun's edge is. Higher is tighter.</summary>
+        public static float SkySunConvergence => 6f;
+
+        /// <summary>
+        /// How many board-widths of land there are around the board.
+        /// </summary>
+        /// <remarks>
+        /// Big enough that the plain's edge is off screen at every stop of the
+        /// dolly, and no bigger: the disc is drawn every frame and the part of
+        /// it past the haze is invisible by construction.
+        /// <para>
+        /// <b>Shrinking it does not put the horizon in the shipped shot, and it
+        /// was tried.</b> The horizon of a flat plain sits at eye level, and the
+        /// shipped camera is pitched 35 degrees down with a 20-degree half
+        /// lens — so it is looking between 15 and 55 degrees below horizontal
+        /// and the horizon is above the top of the frame whatever the disc's
+        /// radius is. Land behind the board at that angle is what looking down
+        /// at a landscape looks like; the sky arrives when the camera comes
+        /// down, which is what the low and raking frames are for.
+        /// </para>
+        /// </remarks>
+        public static float HorizonReachFactor => 6f;
+
+        /// <summary>
+        /// The most of the camera's far plane the land may use. Under one, or
+        /// the plain is clipped and the hole in it is the sky.
+        /// </summary>
+        public static float HorizonFarClipShare => 0.6f;
+
+        /// <summary>
+        /// How far out the haze begins, in board-widths.
+        /// </summary>
+        /// <remarks>
+        /// Fog is measured from the camera and not from the board, so this
+        /// cannot be pushed out until no tile is ever touched by it without the
+        /// plain staying a flat green sheet all the way to the sky. It is set
+        /// just past the near half of the board instead: the front of the board
+        /// is clear, the back of it carries a fifth of the haze, and that is
+        /// aerial perspective rather than a fault — it is the cue that tells the
+        /// eye the far edge is far.
+        /// </remarks>
+        public static float HazeNearBoards => 1.8f;
+
+        /// <summary>How far out the haze is total, in board-widths.</summary>
+        public static float HazeFarBoards => 4.5f;
+
+        /// <summary>
+        /// The most of the land's own radius the haze may take to close, so a
+        /// small board's plain still ends in haze rather than in an edge.
+        /// </summary>
+        public static float HazeShareOfRadius => 0.85f;
 
         /// <summary>The sun's colour — very slightly warm, and otherwise white.</summary>
         public static Color SunColor => new Color(1f, 0.97f, 0.91f, 1f);

@@ -36,6 +36,12 @@ namespace View.Editor
         /// <summary>Everything else's material.</summary>
         public const string GrassMaterialPath = "Assets/Materials/Grass.mat";
 
+        /// <summary>Where the skybox material is written.</summary>
+        public const string SkyMaterialPath = "Assets/Materials/Sky.mat";
+
+        /// <summary>Where the material for the plain around the board is written.</summary>
+        public const string LandMaterialPath = "Assets/Materials/Land.mat";
+
         private const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
 
         private const string StaffPath = "Assets/Art/Weapons/staff.fbx";
@@ -624,6 +630,8 @@ namespace View.Editor
         {
             Material road = WriteMaterial(RoadMaterialPath, "Road", SceneFraming.RoadColor);
             Material grass = WriteMaterial(GrassMaterialPath, "Grass", SceneFraming.GrassColor);
+            Material land = WriteMaterial(LandMaterialPath, "Land", SceneFraming.LandColor);
+            Material sky = WriteSky();
 
             UnityEngine.SceneManagement.Scene scene =
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -634,6 +642,8 @@ namespace View.Editor
             var serialized = new SerializedObject(matchRoot);
             serialized.FindProperty("roadMaterial").objectReferenceValue = road;
             serialized.FindProperty("grassMaterial").objectReferenceValue = grass;
+            serialized.FindProperty("skyMaterial").objectReferenceValue = sky;
+            serialized.FindProperty("landMaterial").objectReferenceValue = land;
             WireArt(serialized);
             WireTiles(serialized);
             WireScenery(serialized);
@@ -837,6 +847,50 @@ namespace View.Editor
             // Rewriting in place rather than deleting and recreating: the asset
             // GUID is what the scene points at, and a new GUID would silently
             // null the reference in a scene nobody rebuilt.
+            existing.shader = material.shader;
+            existing.CopyPropertiesFromMaterial(material);
+            EditorUtility.SetDirty(existing);
+            Object.DestroyImmediate(material);
+
+            return existing;
+        }
+
+        /// <summary>
+        /// Writes the skybox asset, or leaves the scene without one.
+        /// </summary>
+        /// <remarks>
+        /// <b>Committed as an asset rather than found at runtime, for the
+        /// reason <see cref="MatchRoot"/> gives about its two plain
+        /// materials.</b> A shader only ever reached through
+        /// <c>Shader.Find</c> can be stripped out of a player build, and a
+        /// stripped skybox is a magenta sky. An asset in the scene is a
+        /// reference the build's shader scan can see.
+        /// </remarks>
+        private static Material WriteSky()
+        {
+            EnsureFolder(Path.GetDirectoryName(SkyMaterialPath));
+
+            Material material = SkyMaterial.Create("Sky");
+
+            if (material == null)
+            {
+                Debug.LogWarning(
+                    "MatchSceneBuilder: no " + View.SkyMaterial.ShaderName + " shader in this "
+                    + "project, so the scene gets no sky and the camera clears to a flat colour. "
+                    + "The board still draws.");
+
+                return null;
+            }
+
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(SkyMaterialPath);
+
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(material, SkyMaterialPath);
+
+                return AssetDatabase.LoadAssetAtPath<Material>(SkyMaterialPath);
+            }
+
             existing.shader = material.shader;
             existing.CopyPropertiesFromMaterial(material);
             EditorUtility.SetDirty(existing);

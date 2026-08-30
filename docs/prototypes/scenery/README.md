@@ -14,7 +14,7 @@ included — which is what proves each one really is the committed route.
 | `as-it-ships` | none — the control | Three heights, every change of height a whole block, no half step anywhere. |
 | `ridge-lake-road` | *Ridge, lake, road* | Road low and unbroken through the middle, high ground on one flank, a lake eating a corner. |
 | `signature-strip` | *The signature composition* | One continuous climb from the near corner to the far one; everything tall at the far end. |
-| `rolling-country` | *The best landscape render in the collection* | Gentle relief and heavy wood — the interest is what stands on the ground, not the ground. |
+| `rolling-country` | *The best landscape render in the collection* | **Chosen.** Gentle relief and heavy wood — the interest is what stands on the ground, not the ground. Regraded so nothing steps a whole block. |
 | `three-deep-cliff` | *Three-deep cliff layering* | Three flat shelves parted by whole-block faces, with the wood pushed onto the lips. |
 | `canyon-run` | *Canyon variant* | The road on the floor of a trench, walls stepping away, autumn atlas. |
 | `diorama-plate` | *Clay render*, *Diorama scale* | A low plate with four vertical incidents and very little else. |
@@ -23,6 +23,32 @@ included — which is what proves each one really is the committed route.
 - `board-<preset>-high.png` — the shipped camera framing.
 - `board-<preset>-low.png` and `-raking.png` — **judge the terrain here.** A cliff face is close to invisible
   from the shipped pitch, which is exactly why the shipped pitch is not where the board was found to be flat.
+
+## The second pass on `rolling-country`
+
+`rolling-country` was picked, and then two things were wrong with it.
+
+**Twenty-nine of its steps were a whole block.** A level is half a block and the pack cuts a ramp for a
+half step, but the height field was quantised without anything stopping two touching cells landing two
+levels apart — and a two-level face has no ramp and no slope, so it drew as a sawn edge. A slope limiter
+now walks the grid until no two touching cells differ by more than one level, holding the road's own
+staircase fixed while it does. It moved 44 of the board's 247 cells and cost 7 of its 275 falls. The relief
+is the same `a` to `e` it always was and **no step on the board is a whole block any more** — the census in
+`presets.txt` reads `0 of a block or more`, against the control's `121`.
+
+**And the board was floating in a void.** The camera cleared to a flat dark colour, so every frame was a slab
+of hexes hanging in nothing with a hard silhouette all the way round. There is now a horizon: a procedural
+sky, a plain of land laid at the depth the board's own rim falls to, and linear haze joining the two. The
+board is not resting on the plain — its cliff columns bury themselves in it, so it reads as a piece of
+country cut out of a landscape rather than as a game piece on a table. It is `client/Assets/View/Horizon.cs`
+and its numbers are in `SceneFraming`.
+
+**The sky is not visible from the shipped camera, and that is geometry rather than a fault.** The horizon of
+a flat plain sits at eye level; the shipped camera is pitched 35 degrees down through a 20-degree half lens,
+so it looks between 15 and 55 degrees below horizontal and the horizon is above the top of the frame at any
+radius. Shrinking the plain was tried and does nothing. What is behind the board at the shipped pitch is
+land, which is what looking down at a landscape looks like — the sky arrives when the camera comes down, and
+the low and raking frames are where to see it.
 
 ## What was learned drawing these
 

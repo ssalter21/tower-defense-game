@@ -20,6 +20,10 @@ on the board. The generator applies three rules the eye cannot check by reading 
 - **A road climb is at most a whole block**, so it is always either the low ramp or the high one.
 - **A cell touching the road stands no more than a block below it**, or the lane hangs in the air over its own
   shoulder.
+- **On `rolling-country`, no two touching cells differ by more than one level at all.** A slope limiter walks
+  the grid until that holds, with the road's staircase pinned. That board was chosen, and a whole-block face
+  has no ramp and no slope cut for it — it draws as a sawn edge. The other five are left as they were: they
+  exist to be compared against, and three of them are about a hard edge on purpose.
 
 Nothing here is committed content. To adopt one, copy its level block into `content/map.txt` — which retires
 every stored record, because the map hash covers the levels.

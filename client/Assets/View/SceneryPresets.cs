@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace View
 {
@@ -204,7 +205,16 @@ namespace View
                         RidgeChance = 0.70f,
                         RimDrop = 1.4f,
                         CloudCount = 3,
-                    }),
+                    },
+                    // A dusty sky over a dusty board. The haze is warm, so the
+                    // land runs out into the same air the autumn atlas is lit
+                    // by rather than into a summer afternoon.
+                    new SkySettings(
+                        new Color(0.62f, 0.66f, 0.74f, 1f),
+                        new Color(0.86f, 0.79f, 0.67f, 1f),
+                        new Color(0.47f, 0.41f, 0.31f, 1f),
+                        1.30f,
+                        1.15f)),
 
                 // "Clay render -- read the silhouette" and "Diorama scale". A low
                 // flat plate with three or four vertical incidents rising off it.
@@ -228,7 +238,15 @@ namespace View
                         RimDrop = 1.4f,
                         CloudCount = 6,
                         CloudHeight = 7.5f,
-                    }),
+                    },
+                    // A cold, thin, high sky over the snow caps, and a land
+                    // the colour of the plate rather than of grass.
+                    new SkySettings(
+                        new Color(0.60f, 0.70f, 0.86f, 1f),
+                        new Color(0.84f, 0.87f, 0.90f, 1f),
+                        new Color(0.42f, 0.46f, 0.42f, 1f),
+                        1.25f,
+                        0.75f)),
             };
 
         /// <summary>
@@ -303,7 +321,8 @@ namespace View
                 string board,
                 string atlas,
                 Sunlight light,
-                DressingSettings settings)
+                DressingSettings settings,
+                SkySettings sky = default)
             {
                 Name = name;
                 Reference = reference;
@@ -312,6 +331,7 @@ namespace View
                 Atlas = atlas;
                 Light = light;
                 Settings = settings;
+                Sky = sky;
             }
 
             /// <summary>What it is called on the command line and in the file names.</summary>
@@ -355,6 +375,14 @@ namespace View
 
             /// <summary>How heavily it is dressed.</summary>
             public DressingSettings Settings { get; }
+
+            /// <summary>
+            /// What is behind and beneath it. Left at its default on a preset
+            /// that wants the committed sky, which is most of them: the two that
+            /// name one are the two not wearing a green atlas, and a summer sky
+            /// over an autumn board is the join that gives a re-skin away.
+            /// </summary>
+            public SkySettings Sky { get; }
         }
     }
 }

@@ -46,7 +46,7 @@ rolling-country
     intent     Gentle relief and nothing dramatic. The interest is meant to come from what stands on the ground rather than from the ground, so the wood is heavy and the built things are few.
     board      rolling-country
     atlas      hexagons_medieval_Summer
-    relief     levels a to e, 275 falls, 29 of a block or more
+    relief     levels a to e, 268 falls, 0 of a block or more
     sun        -24.00 degrees round, 56.00 down, at 1.05
     water      none
     chances    grove 0.46, peak 0.30, border grove 0.44, prop 0.24, camp 0.08, mound 0.44

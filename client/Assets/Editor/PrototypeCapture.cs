@@ -125,7 +125,8 @@ namespace View.Editor
                         MatchSceneBuilder.Tiles(surface),
                         MatchSceneBuilder.Scenery(surface),
                         preset.Settings,
-                        BoardDressing.Empty);
+                        BoardDressing.Empty,
+                        preset.Sky);
 
                     scene.Sun.transform.rotation = Quaternion.Euler(preset.Light.Pitch, preset.Light.Yaw, 0f);
                     scene.Sun.color = new Color(preset.Light.Red, preset.Light.Green, preset.Light.Blue, 1f);
