@@ -13,7 +13,7 @@ as-it-ships
     intent     The board as it is today: three heights, every change of height a whole block, and no half step anywhere. The control.
     board      content/map.txt
     atlas      hexagons_medieval (shipped)
-    relief     levels a to e, 121 falls, 121 of a block or more
+    relief     levels a to e, 268 falls, 0 of a block or more
     sun        -30.00 degrees round, 50.00 down, at 1.10
     water      none
     chances    grove 0.30, peak 0.34, border grove 0.32, prop 0.42, camp 0.14, mound 0.50

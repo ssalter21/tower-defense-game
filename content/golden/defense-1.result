@@ -1,10 +1,10 @@
 restaged   Restaged, not replayed: recorded under simulation version 11, content DFD299414CFC11DA and ruleset D01EB9595248D3C9, run under simulation version 11, content DFD299414CFC11DA and ruleset D01EB9595248D3C9. The outcome is what this defense and this wave do today, and it is not this record's result.
 replay bundle format 2, simulation version 11, content DFD299414CFC11DA
 seed       20260801
-defense    98A2C8B5A93960BF, read at defense record format 1
+defense    C01213891C06A678, read at defense record format 1
 wave       DCF2E2EC543F4DAB
-result     12 of 40 leaked, tick 5581 (186 seconds at 30 ticks a second), state 2ADC8C67DFAAC7A8
-landmark  first-overtake           1096     23     18
-landmark  projectile-orphaned       930     29      0
-landmark  first-leak               1778     27      0
-landmark  last-creep-dies          5545    117      0
+result     18 of 40 leaked, tick 5758 (191 seconds at 30 ticks a second), state 8BD461327A615C11
+landmark  first-overtake           1096     22     17
+landmark  projectile-orphaned      2742     75      0
+landmark  first-leak               1733     25      0
+landmark  last-creep-dies          5722    109      0

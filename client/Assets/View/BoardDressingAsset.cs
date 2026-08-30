@@ -95,6 +95,21 @@ namespace View
         [SerializeField]
         private float cloudSpread = 2.5f;
 
+        [Range(0f, 1f)]
+        [Tooltip("The chance a cell standing over a lower one carries a mound on the lip of the drop.")]
+        [SerializeField]
+        private float ridgeChance = 0.5f;
+
+        [Range(0f, 4f)]
+        [Tooltip("How far a cell on the board's edge hangs below its own face, in metres.")]
+        [SerializeField]
+        private float rimDrop = 1f;
+
+        [Range(-1, 8)]
+        [Tooltip("The level at and below which ground is drawn as water. -1 is a board with none.")]
+        [SerializeField]
+        private int waterLevel = -1;
+
         /// <summary>
         /// The numbers, as the pure chooser wants them.
         /// </summary>
@@ -119,6 +134,9 @@ namespace View
                 CloudCount = cloudCount,
                 CloudHeight = cloudHeight,
                 CloudSpread = cloudSpread,
+                RidgeChance = ridgeChance,
+                RimDrop = rimDrop,
+                WaterLevel = waterLevel,
             };
     }
 }

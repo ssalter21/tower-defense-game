@@ -266,9 +266,10 @@ to keep that order rather than merely to be interesting.
 whole blocks, and every number priced against it is provisional by construction.** The corridor is still
 one hex wide, so placements along a single leg remain close to equivalent; what the climb adds is that a
 block is worth half a hex of reach, which makes the same cell a different placement depending on what it stands
-on. **The grid under it is now half a block per level and nine levels deep, and the committed board has not
-spent that yet** — it stands at three heights on a grid that would carry nine. How much of the thinness that actually removes is not yet measured — a fact about *this* board, not about
-the mechanism.
+on. **The grid under it is now half a block per level and nine levels deep, and the committed board spends five
+of those nine** — every change of height on it is a single level, which is half a block, and nothing on it
+steps a whole one. How much of the thinness that actually removes is not yet measured — a fact about *this*
+board, not about the mechanism.
 
 ### The map rotates, and it is generated
 

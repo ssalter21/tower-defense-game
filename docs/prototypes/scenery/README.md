@@ -11,10 +11,10 @@ included — which is what proves each one really is the committed route.
 
 | Preset | Reference | The idea |
 |---|---|---|
-| `as-it-ships` | none — the control | Three heights, every change of height a whole block, no half step anywhere. |
+| `as-it-ships` | none — the control | **The adopted board.** `content/map.txt` is rolling-country now, so this frame and the one below it are the same landscape under the shipped atlas and the shipped dressing. |
 | `ridge-lake-road` | *Ridge, lake, road* | Road low and unbroken through the middle, high ground on one flank, a lake eating a corner. |
 | `signature-strip` | *The signature composition* | One continuous climb from the near corner to the far one; everything tall at the far end. |
-| `rolling-country` | *The best landscape render in the collection* | **Chosen.** Gentle relief and heavy wood — the interest is what stands on the ground, not the ground. Regraded so nothing steps a whole block. |
+| `rolling-country` | *The best landscape render in the collection* | **Chosen and adopted into `content/map.txt`.** Gentle relief and heavy wood — the interest is what stands on the ground, not the ground. Nothing steps a whole block. |
 | `three-deep-cliff` | *Three-deep cliff layering* | Three flat shelves parted by whole-block faces, with the wood pushed onto the lips. |
 | `canyon-run` | *Canyon variant* | The road on the floor of a trench, walls stepping away, autumn atlas. |
 | `diorama-plate` | *Clay render*, *Diorama scale* | A low plate with four vertical incidents and very little else. |
@@ -84,5 +84,6 @@ each other, and a pillar has six low sides. Four of the six boards run a pass th
 that do not are the two whose whole point is a hard edge.
 
 The presets live in `client/Assets/View/SceneryPresets.cs` and exist to be compared and then mostly deleted.
-Once one is chosen its numbers move to `client/Assets/Settings/BoardDressing.asset`, its board to
-`content/map.txt`, and the others go.
+**`rolling-country` was chosen and adopted**: its level block is `content/map.txt`, its chances are
+`client/Assets/Settings/BoardDressing.asset`, and its atlas is the one `Materials/Tiles.mat` wears. The other
+five are still here to be compared against and can go whenever somebody wants the folder smaller.

@@ -137,9 +137,17 @@ namespace Tests.PlayMode
             {
                 Assert.That(drawn.Value.Type.Id, Is.EqualTo(ArcherId));
                 Assert.That(drawn.Value.Model, Is.Not.Null);
+                // At the cell's own level, and not at ground. The two-argument
+                // overload was right for as long as the free cell happened to
+                // stand on the bottom tier, and the regraded board put it half
+                // a block up -- which is a fact about the map rather than about
+                // the placement, so the expectation reads the map.
                 Assert.That(
                     drawn.Value.transform.position,
-                    Is.EqualTo(HexGeometry.ToWorld(FreeColumn, FreeRow)).Using(Near));
+                    Is.EqualTo(
+                        HexGeometry.ToWorld(
+                            FreeColumn, FreeRow, root.Map.LevelAt(FreeColumn, FreeRow)))
+                        .Using(Near));
             }
         }
 

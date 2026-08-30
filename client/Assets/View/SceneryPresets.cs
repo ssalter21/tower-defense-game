@@ -77,15 +77,17 @@ namespace View
         private static Preset[] Build() =>
             new[]
             {
-                // The board as it stands, so there is something to beat. Its
-                // levels were doubled when a level became half a block, so it is
-                // the same three heights it always had and none of the ones in
-                // between -- which is exactly what the other five are about.
+                // The board as it stands. It used to be the thing to beat --
+                // three heights and a whole block between each -- and it is now
+                // rolling-country, adopted. It stays in the set because a
+                // control drawn from content/map.txt is the one frame that
+                // cannot go stale, and because it is where the shipped atlas
+                // and the shipped dressing are seen rather than a preset's.
                 new Preset(
                     Shipped,
                     "none -- the committed board",
-                    "The board as it is today: three heights, every change of height a whole block, "
-                    + "and no half step anywhere. The control.",
+                    "The board as it is today, which since the adoption is rolling-country: gentle "
+                    + "relief, every change of height a half block, nothing stepping a whole one.",
                     board: null,
                     atlas: null,
                     Sunlight.Default,

@@ -252,8 +252,19 @@ namespace View.Editor
         /// </remarks>
         public const string DressingAssetPath = "Assets/Settings/BoardDressing.asset";
 
-        /// <summary>The texture every tile wears. The pack's own atlas.</summary>
-        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval.png";
+        /// <summary>The texture every tile wears.</summary>
+        /// <remarks>
+        /// <b>The summer cut, and not the one the pack calls default.</b> All
+        /// four seasons are the same geometry against the same UVs, so this is a
+        /// texture and never an import -- and <c>hexagons_medieval.png</c> puts
+        /// an olive-yellow in the swatch the grass tiles sample, which at
+        /// whole-board framing reads as scorched rather than green.
+        /// <c>_Summer</c> puts an actual green there. It is one line and it is
+        /// the largest single change to how this board looks; see the contact
+        /// sheet in <c>docs/prototypes/scenery/</c>, where the control is the
+        /// only frame still wearing the shipped one.
+        /// </remarks>
+        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval_Summer.png";
 
         /// <summary>
         /// The serialized field on <c>TileSet</c> for each tile, and the model

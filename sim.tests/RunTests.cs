@@ -555,7 +555,7 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 6488 against 21605: the 9590 gold
+        // over bought nothing. It goes red at 6488 against 21605: the 9560 gold
         // of creeps, and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
@@ -587,8 +587,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(9590, spent);
-        Assert.Equal(10480, bonus);
+        Assert.Equal(9560, spent);
+        Assert.Equal(10435, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -864,19 +864,40 @@ public class RunTests
         Assert.Equal(10, canned.Size);
         Assert.Equal(1, canned.SizeAt(6));
 
-        // The committed defense is the wall it opens with, cell for cell. What
-        // the first round adds to it is whatever half of the opening purse pays
-        // for, which on the committed content is nothing at all.
+        // The committed defense is the wall it opens with, plus whatever half of
+        // the opening purse pays for.
+        //
+        // IT USED TO PAY FOR NOTHING, AND NOW IT PAYS FOR ONE TOWER. That is a
+        // fact about the board rather than about the stand-in. While the map
+        // climbed three flat tiers the committed six covered the route end to
+        // end, so the rule the run builds by found nowhere left to place and
+        // spent on upgrading from the first round. The regraded map is a
+        // landscape and the same six towers do not quite reach across it: two
+        // steps of the fifty-one are covered by nothing, and the opponent's
+        // first purchase goes there.
+        //
+        // <b>This is a finding, not a fixture detail.</b> The committed defense
+        // is hand-placed and the board under it moved; that it no longer covers
+        // the whole route is the honest consequence, and it is written down here
+        // rather than papered over by widening the assertion to "roughly the
+        // same wall".
         TowerLayout opening = canned.At(0, 0).Defense;
 
-        Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(opening));
+        Assert.Equal(defense.Count + 1, opening.Count);
 
-        // And by the last round it is a dearer wall standing on the same cells:
-        // the route is covered end to end already, so the rule the run builds by
-        // has nothing left to place and spends on upgrading instead.
+        foreach (PlacedTower placed in defense.Towers)
+        {
+            Assert.Contains(
+                opening.Towers,
+                standing => standing.Column == placed.Column && standing.Row == placed.Row);
+        }
+
+        // And by the last round it is a dearer wall on the cells it settled on:
+        // once the gap is filled the rule has nothing left to place and spends
+        // on upgrading instead.
         TowerLayout closing = canned.At(9, 0).Defense;
 
-        Assert.Equal(defense.Count, closing.Count);
+        Assert.Equal(opening.Count, closing.Count);
         Assert.True(
             Worth(costs, closing) > Worth(costs, opening),
             "The stand-in's wall is worth more by the last round than it was in the first.");

@@ -14,6 +14,37 @@ This file exists so the vision can stay readable. It grows; the vision should no
 
 ---
 
+## 30 August 2026 — rolling-country is the committed board
+
+The prototype was chosen off the contact sheet and is now `content/map.txt`. Its level block, its dressing
+chances and its atlas all moved across; the corridor did not move at all, cell for cell.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `content/map.txt` | **Three heights, `a c e`**, and a whole block between each — 121 falls, every one of them a bare sawn face | **Five levels, `a` to `e`, and nothing steps a whole block.** Every change of height on the board is one level, which is half a block, which is what the pack cuts a low ramp and two grass slopes for. |
+| `client/Assets/Materials/Tiles.mat` | The pack's default atlas | **`hexagons_medieval_Summer`.** Same geometry, same UVs, one texture — the default puts an olive-yellow in the swatch the grass tiles sample and reads as scorched at board framing. |
+| `BoardDressingAsset` | Twelve serialized fields | **Fifteen.** `ridgeChance`, `rimDrop` and `waterLevel` existed on `DressingSettings` and had never been given a slider, so the shipped board could not express two of rolling-country's numbers at all. |
+| `content/defense.txt` | Six hand-placed towers | **The same six, one of them moved.** See below. |
+
+**The defense had to move, and that is the honest cost.** Tower reach is priced off the level a tower stands
+on, so regrading the ground repriced every tower on it. Two properties the repo asserts stopped holding: the
+archer at 14,3 had its stretch of corridor entirely to itself, and the route stopped being covered end to end.
+Moving the most redundant tower — the archer at 6,10, whose coverage was almost entirely inside two other
+towers' — to 11,4 restores the overlap and closes the gap at route steps 40 and 41. **Steps 16 and 17 are
+still covered by nothing**, and no placement of a single tower closes them: that would take re-authoring more
+of a defense somebody placed by hand, which is a bigger decision than adopting a map.
+
+**What it cost the defense, measured rather than argued.** The recorded match went from **12 of 40 leaked to
+18**, and from 5581 ticks to 5758. The canned opponent's opening now buys a tower where it used to buy
+nothing, because there is somewhere left to place. None of that is tuned back out — it is what this board
+does to this defense, and softening it would hide the finding.
+
+**What did not change:** any rule. `SimulationVersion` stays at 11, because the version stamps the rules and
+the rules are untouched; what retires the stored records is the map hash, and they were regenerated. Reach,
+the ruleset and the ladder are all byte-identical.
+
+---
+
 ## 30 August 2026 — the board stops floating, and stops stepping a block
 
 `rolling-country` was chosen off the contact sheet, and a second pass on it turned up two things that were

@@ -25,5 +25,7 @@ on the board. The generator applies three rules the eye cannot check by reading 
   has no ramp and no slope cut for it — it draws as a sawn edge. The other five are left as they were: they
   exist to be compared against, and three of them are about a hard edge on purpose.
 
-Nothing here is committed content. To adopt one, copy its level block into `content/map.txt` — which retires
-every stored record, because the map hash covers the levels.
+**`rolling-country` has been adopted**: its level block is `content/map.txt`, so that file and this one now
+carry the same heights. The rest are not committed content. Adopting another means copying its level block
+into `content/map.txt`, which retires every stored record because the map hash covers the levels — and then
+regenerating them with `tools/run-headless-match.ps1 -Regenerate` and `tools/sync-streaming-content.ps1`.
