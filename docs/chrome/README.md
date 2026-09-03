@@ -75,9 +75,11 @@ The rest is regenerable and not committed, and that is arranged by [`.gitignore`
 whoever runs the capture next remembering to delete them: left to memory, a plain run leaves files in the tree
 and the build gate's last step fails the next push for a dirty repository.
 
-**A sheet is a claim about the content it was rendered from.** Move a price, a label or the ladder and these
-three are stale while going on looking entirely reasonable — a build phase with the wrong number in it is not a
-picture that announces itself. Re-capture them whenever `content/units.txt` or `content/upgrades.txt` moves.
+**A sheet is a claim about the content it was rendered from.** Move a price, a label, the ladder, the board or
+what stands on it and these three are stale while going on looking entirely reasonable — a build phase with the
+wrong number in it is not a picture that announces itself. Re-capture them whenever `content/units.txt`,
+`content/upgrades.txt`, `content/map.txt` or `content/dressing.txt` moves. Those four are the ones
+[`check-docs.ps1`](../../tools/check-docs.ps1) dates the committed sheets against.
 
 ## Two things that had to be measured
 
