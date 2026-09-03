@@ -40,7 +40,7 @@ Anything an agent needs to run lives in `tools/` and runs from a shell: `run-hea
 `run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
 `build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
-`check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
+`check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
 editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on
@@ -110,7 +110,7 @@ instruments each row rests on and the standing rules the last row cites.
 |---|---|---|
 | `sim/`, `sim.tests/`, `sim.poison/` | The gate, the matrix, the IL scan, the golden trace | Full — a green gate is sufficient |
 | `content/*.txt` | The trace moves and must be regenerated deliberately | Full to change; never to regenerate in order to get green |
-| `simcli/`, `tools/` | The gate runs five of these scripts; every other one runs from a shell | Full — run the one you changed |
+| `simcli/`, `tools/` | The gate runs six of these scripts; every other one runs from a shell | Full — run the one you changed |
 | `docs/` | Nothing automated | Full to draft; a person's review is the gate |
 | `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
 | `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |

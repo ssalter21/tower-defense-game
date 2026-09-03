@@ -38,8 +38,22 @@ jobs:
     name: simulation
     runs-on: ubuntu-latest
 
+    # Read of the pull requests, for the golden-artefact step below: it asks
+    # GitHub which open pull request has this branch as its head. Naming the
+    # permissions at all narrows this job to these two, since a block here
+    # replaces the defaults rather than adding to them.
+    permissions:
+      contents: read
+      pull-requests: read
+
     steps:
+      # All of the history, not the single commit a gate normally needs. The
+      # golden-artefact step compares this branch against its merge base with
+      # origin/main, and a shallow checkout has neither the base nor a merge
+      # base to find.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -76,6 +90,27 @@ jobs:
       - name: The Unity tests this gate does not run are named and counted
         shell: pwsh
         run: ./tools/check-unity-test-inventory.ps1
+
+      # The step that guards the golden artefacts -- the trace, the landmarks,
+      # content/golden/, the sweep, the run outcome, the replay and the command
+      # list -- against being quietly rewritten. Everything else here asks
+      # whether the simulation still produces them; nothing else can ask
+      # whether they were meant to move, because a rules change plus a
+      # regeneration is a green gate on this job and on all six matrix rows.
+      #
+      # IT IS A LABEL AND NOT A FIX ON PURPOSE. The alternative -- a check that
+      # decides for itself whether a regeneration was legitimate -- would be a
+      # gate that can never go red on a deliberate content change, which is the
+      # hole the dark factory fell through in section 4.2 of the software
+      # factory note. So the escape hatch is made loud instead of closed: a
+      # diff touching a golden artefact is a diff a person reads, and the
+      # `regenerated-deliberately` label on the branch's pull request is where
+      # that person says so.
+      - name: A moved golden artefact is labelled as deliberate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./tools/check-golden-label.ps1
 
       # The content the player ships with is a generated copy of the content
       # in content/, committed like a lockfile. There is an edit-mode test that
