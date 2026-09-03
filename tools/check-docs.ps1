@@ -32,7 +32,11 @@
        re-captured in the same commit as the content passes, per rule 4 of
        AGENTS.md. It is a date and not the pixels: a rename or a rebase that
        re-stamps a picture buys it a pass it did not earn, and only a person
-       looking at it can catch that.
+       looking at it can catch that. A sheet docs/chrome/README.md lists as a
+       chosen arrangement rather than as a baseline is named as exempt and
+       reported n/a, because it records a decision rather than describing the
+       board; an exemption naming a file that is no longer committed is itself
+       a refusal.
     3. The record count docs/README.md quotes for docs/adr/ is the number of
        records in it.
     4. Every ADR a source file cites exists. A comment pointing at a record
@@ -76,6 +80,14 @@ function Checked([string]$sentence) {
 function Skip([string]$what, [string]$why) {
     $skipped.Add($what)
     Write-Host "  SKIP  $why" -ForegroundColor Yellow
+}
+
+# A file an invariant was never meant to cover. Distinct from SKIP, which is a
+# question this machine could not ask, and from ok, which is a question that was
+# asked and answered: printing an exemption green would be the check claiming to
+# have looked at something it deliberately did not.
+function Exempt([string]$sentence) {
+    Write-Host "  n/a   $sentence" -ForegroundColor DarkGray
 }
 
 # Tracked files only. An untracked draft under docs/ is somebody's working
@@ -222,7 +234,29 @@ $pictures = @(TrackedUnder 'docs/chrome') + @(TrackedUnder 'docs/frames') |
 
 if (-not $pictures) { throw "No committed picture found under docs/chrome/ or docs/frames/." }
 
+# The sheets that record a decision instead of describing the board: the ones
+# docs/chrome/README.md lists as the chosen arrangement rather than as one of
+# the baselines beneath it. What such a sheet shows is where the chrome is
+# going, so rebuilding the board cannot make it stale the way it makes a
+# baseline stale, and dating it against content/ asks it the wrong question.
+# Named one file at a time on purpose -- a pattern here would exempt the next
+# sheet dropped into the directory as well.
+$decisionSheets = @('docs/chrome/chosen-build-phase.png')
+
+# An exemption for a file that is no longer committed covers nothing, and it
+# would go on reading as though it still applied to something.
+foreach ($sheet in $decisionSheets) {
+    if ($pictures -notcontains $sheet) {
+        Refuse "$sheet is named as exempt from this invariant and is not a committed picture, so the exemption covers nothing. Restore the file, or drop its name from the exemption."
+    }
+}
+
 foreach ($picture in $pictures) {
+    if ($decisionSheets -contains $picture) {
+        Exempt "$picture is the chosen arrangement docs/chrome/README.md records, not a baseline, so its date is not compared."
+        continue
+    }
+
     $when = LastCommitted $picture
     # At least as new, not newer. A picture re-captured in the same commit as
     # the content that moved -- which is what AGENTS.md rule 4 asks for --

@@ -129,13 +129,13 @@ get green is the dark factory's exact failure, and this is the one-line guard ag
 
 ### A3 · The documentary checker
 
-The slop surface here is prose, and it has drifted again since the last time it was measured:
+The slop surface here is prose, and three drifts were sitting in it when this row was written:
 
-- `docs/chrome/as-built-*.png` and `docs/frames/match-tick-*.png` are dated 14 and 17 August. The board folded on
-  the 27th and was tiled on the 28th. All five show a flat grey-green corridor.
-- The vision still says the KayKit purchase is pending browser confirmation under #56; the whole collection is
-  on disk and imported (#229).
-- `docs/README.md` says 51 ADRs; there are 56.
+- `docs/chrome/as-built-*.png` and `docs/frames/match-tick-*.png` were dated 14 and 17 August. The board folded
+  on the 27th and was tiled on the 28th. All five showed a flat grey-green corridor.
+- The vision said the KayKit purchase was pending browser confirmation under #56; the whole collection was on
+  disk and imported (#229).
+- `docs/README.md` said 51 ADRs; there were 56.
 
 A `tools/check-docs.ps1` that walks `docs/` for `#<n>` citations and asks `gh issue view --json state`, compares
 every tick quoted in `sit-down.md` to `content/landmarks.txt`, and refuses when a committed sheet or frame is
