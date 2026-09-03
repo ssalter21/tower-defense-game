@@ -1310,6 +1310,47 @@ growing wave against a still wall. What moved is that the freeze is now a proper
 of the pool, which is one place to fix instead of two — it is
 [filed as an open question](open-questions.md) and not carried here as done.
 
+---
+
+## 29 August 2026 — the whole collection is imported
+
+**What it said:** [the collection inventory](research/kaykit-collection-inventory.md) — "It is not in this
+repository and should not go in whole", and the import pattern is "pull the individual files a scene needs,
+commit those, leave the rest outside."
+
+**What is true now:** every model in the 21 packs that ship an `fbx(unity)` export is committed, at
+`client/Assets/Art/Kaykit/` — 4,247 models and 171 textures, 154 MB.
+
+**Why it moved.** The 606 MB the original claim was priced against is four redundant export formats. One of
+them is the one this project imports, and it is a quarter of the weight; the other three-quarters is `.blend`
+sources, glTF, OBJ, user guides and contact sheets, none of which Unity ever reads. Nothing about the
+5 MB-per-file tripwire moved — the largest file in the whole import is 443 KB.
+
+**What it cost, and what it bought.** It costs every clone 154 MB it did not carry before, and that is a real
+price with no undo. What it buys is that choosing scenery stops being an import request. The selective pattern
+was correct while dressing the board meant picking six trees; it is the wrong shape the moment somebody is
+dressing a board by hand and wants to look at what is available, because every candidate cost a round trip
+through a copy step before it could be looked at *in situ*.
+
+**The two things that had to change with it.** Both were latent and neither was a bug until now:
+
+- **One material for all scenery.** `SceneryModels` held a single `surface`, the Medieval Hexagon atlas, which
+  was correct while every model came from that pack. Every other pack ships its own atlas, so a City Builder
+  crate drawn against the hexagon texture is not a slightly-wrong crate, it is confetti. A named model now
+  carries its own material, resolved from the atlas its own importer bound.
+- **A family and a variant number cannot address 4,247 models.** The generator asks for "a grove" and an
+  index, and must keep doing so — it is scattering a board it has never seen. A person has already looked at
+  the thing and means *that one*. So `content/dressing.txt` gained a second verb: `model <col> <row> <name>
+  …`, addressing one model by its path under `Assets/Art/Kaykit`. `place` is untouched, the generator is
+  untouched, and the committed board bakes byte-for-byte identical.
+
+**What is deliberately not done.** The scene carries only the models the dressing file actually names, not the
+catalogue — four thousand mesh references in `Match.unity` to draw the six somebody placed would be a scene
+nobody could merge. The consequence is that `Bake` now names `tools/build-match-scene.ps1` in its own log
+line, because the file and the scene are two artifacts and only the first one it writes itself.
+
+---
+
 ## 3 September 2026 — the wall is bought by value, and the report's dealt column mostly empties
 
 | Where | What it said | What is true now | Why |

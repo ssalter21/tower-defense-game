@@ -20,9 +20,11 @@ The full model-name listing is the companion file: **[The KayKit model index](ka
 ## 1. Where it is, and what it costs to keep
 
 The archive sits at `~/Downloads/The Complete KayKit Collection v6.1.zip` — 635,630,650 bytes, 28,903 zip
-entries, 28,221 of them files. **It is not in this repository and should not go in whole.** The tripwire in
-`tools/check-file-sizes.ps1` caps a tracked file at 5 MB, and the reason it exists — no large-file storage,
-ever — applies with more force to 606 MB of art whose four redundant export formats are 90% of the weight.
+entries, 28,221 of them files. **The four export formats are 90% of that weight, and only one of them is
+imported.** `Assets/fbx(unity)/` across all 21 packs that ship it is 4,247 models and 171 textures — 154 MB,
+whose largest single file is the 443 KB `christmas_tree_decorated.fbx`, comfortably inside the 5 MB cap in
+`tools/check-file-sizes.ps1`. That subset **is** in the repository, at `client/Assets/Art/Kaykit/`, since
+29 August 2026; see [the decision log](../decision-log.md#29-august-2026--the-whole-collection-is-imported).
 
 **It is extracted, and it is extracted outside this repository**, at the same level as the checkout rather
 than inside it:
@@ -31,13 +33,14 @@ than inside it:
 ~/repos/kaykit-collection/The Complete KayKit Collection v6.1/
 ```
 
-That folder is where every later import is pulled from, and nothing else reads it — no tool, no test and no
-path in the project points at it, because a repository that needed a folder beside it would not be a
-repository a fresh clone could build. It is a working copy of the zip for a person to look through and copy
-out of, and deleting it costs one re-extraction.
+Nothing in the project reads that folder — no tool, no test and no path points at it, because a repository
+that needed a folder beside it would not be a repository a fresh clone could build. It is a working copy of
+the zip for a person to look through, and deleting it costs one re-extraction. It is still the only place the
+`.blend` sources, the OBJ and glTF exports, the user guides and the contact sheets live.
 
-The import pattern already in `client/Assets/Art/` is the right one: pull the individual files a scene needs,
-commit those, leave the rest outside.
+**What is imported is `fbx(unity)` and nothing else.** Not `fbx/`, whose axis convention gives a root scale of
+100 and a mirrored axis that nothing in this project detects; not `gltf/` or `obj/`, which are the same models
+again. One format in, three left outside, and the 606 MB becomes 154.
 
 ## 2. Licence
 
