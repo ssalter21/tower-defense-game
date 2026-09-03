@@ -2,7 +2,7 @@
 
 Working rules for anything — human or agent — doing execution work in this repo.
 
-Five rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
+Six rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
 most to find later. Keep this file short: it is loaded into every agent's context, so anything that is a
 *finding* rather than an *instruction* belongs in [`docs/research/`](docs/research/).
 
@@ -94,6 +94,27 @@ second is an orphan.
 
 Delete the branch too once its pull request merges. GitHub drops the remote branch on merge, but the local one
 is yours to remove; `git branch --merged origin/main` lists everything that has already landed.
+
+## 6. What verifies an area decides how much of it an agent may do unattended
+
+The gate covers the simulation completely and, as rule 2 says, counts the client's tests without running them,
+so an agent working alone has hard evidence about one half of this repository and thin evidence about the
+other. **Match the autonomy to what would actually catch the change being wrong**, per the gradient below.
+Treating every area alike is what fails quietly: hold a change a player will see to the simulation's standard
+and every check still passes, on an artefact nobody has looked at. The evidence is in
+[The software factory](docs/research/the-software-factory.html), which asked for this rule, and
+[What agents can build unattended](docs/research/what-agents-can-build-unattended.md), which names the
+instruments each row rests on and the standing rules the last row cites.
+
+| Area | What verifies it | Autonomy |
+|---|---|---|
+| `sim/`, `sim.tests/`, `sim.poison/` | The gate, the matrix, the IL scan, the golden trace | Full — a green gate is sufficient |
+| `content/*.txt` | The trace moves and must be regenerated deliberately | Full to change; never to regenerate in order to get green |
+| `simcli/`, `tools/` | The gate runs five of these scripts; every other one runs from a shell | Full — run the one you changed |
+| `docs/` | Nothing automated | Full to draft; a person's review is the gate |
+| `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
+| `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |
+| Art, names, numbers a player sees | Nothing automatable | Human only — the standing rules |
 
 ## Waiting on Unity
 
