@@ -205,6 +205,13 @@ namespace View
         public string ScriptPath { get; private set; }
 
         /// <summary>
+        /// What the run put into the pool, one sentence a round: the ones it
+        /// stored and the ones it could not. Empty until the run is over, and
+        /// empty for a session the prover did not agree with.
+        /// </summary>
+        public IReadOnlyList<string> Stored { get; private set; } = new string[0];
+
+        /// <summary>
         /// The run's last frame, in words, or nothing while it is still going.
         /// </summary>
         /// <remarks>
@@ -422,17 +429,33 @@ namespace View
         /// written.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The write is the client's and the proving is the simulation's:
         /// <c>System.IO</c> is a banned namespace in <c>sim</c>, so a session
         /// that agreed hands back a script and where it lands is whoever is
         /// holding it. A disagreement hands back no script at all, so there is
         /// nothing here that could write one by ignoring the sentence.
+        /// </para>
+        /// <para>
+        /// <b>An agreeing session's rounds go into the pool as well, which is
+        /// what closes the loop.</b> A run draws its opponents out of a folder
+        /// and adds its own rounds back to it, so the population grows by being
+        /// played. It is gated on the same agreement the script is: a run whose
+        /// record does not play back to what the player was shown is a run
+        /// nobody can reproduce, and a pool of those could not be checked
+        /// against anything.
+        /// </para>
         /// </remarks>
         private void Finish()
         {
             Mode = RunMode.Over;
             Proved = ProvedSession.Of(_decisions, _rounds, Run, _afresh);
             ScriptPath = WrittenRun.Written(Proved, _directory);
+
+            Stored = ScriptPath == null
+                ? new string[0]
+                : WrittenRun.Stored(Run, _root.Map, Run.Types, _root.PoolDirectory);
+
             EndingText = Run.Outcome.ToString() + "\n\n" + WrittenRun.Wording(Proved, ScriptPath);
         }
     }

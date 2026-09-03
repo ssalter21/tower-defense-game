@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Sim;
@@ -69,6 +70,67 @@ namespace View
             File.WriteAllText(path, proved.Script, Utf8);
 
             return path;
+        }
+
+        /// <summary>
+        /// Puts the run's own rounds into a pool folder, so that what somebody
+        /// played becomes somebody else's opponents.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Only a session the prover agreed with is stored.</b> A run whose
+        /// record does not play back to what the player was shown is a run
+        /// nobody can reproduce, and a pool of those is a population that
+        /// cannot be checked against anything. So this is called on exactly the
+        /// sessions <see cref="Written"/> writes a script for.
+        /// </para>
+        /// <para>
+        /// <b>What a round is made of, and the proof that it reads back, are
+        /// the simulation's</b> -- <see cref="RecordedRun"/> -- so the client
+        /// and <c>simcli play-run --store</c> store a run the same way. What is
+        /// here is the file.
+        /// </para>
+        /// <para>
+        /// <b>A round that stood no wall or sent nothing is not stored.</b> A
+        /// stored round is a wall and a wave, so a first round that built
+        /// nothing simply does not join the pool; the sentence saying so comes
+        /// back for whoever wants to show it.
+        /// </para>
+        /// </remarks>
+        /// <param name="run">The run, after every round of it resolved.</param>
+        /// <param name="map">The board it was played on.</param>
+        /// <param name="types">The roster its rounds are recorded against.</param>
+        /// <param name="directory">The pool folder the records land in.</param>
+        /// <returns>What was stored and what was not, one sentence each.</returns>
+        public static IReadOnlyList<string> Stored(
+            Run run,
+            HexMap map,
+            UnitTypeTable types,
+            string directory)
+        {
+            if (directory is null) throw new ArgumentNullException(nameof(directory));
+
+            IReadOnlyList<StorableRound> rounds = RecordedRun.Of(run, map, types);
+            var said = new List<string>();
+
+            Directory.CreateDirectory(directory);
+
+            foreach (StorableRound round in rounds)
+            {
+                if (!round.IsStorable)
+                {
+                    said.Add("Not stored: " + round.Refusal);
+
+                    continue;
+                }
+
+                string name = round.Name + StreamingContent.PoolFileExtension;
+
+                File.WriteAllBytes(Path.Combine(directory, name), round.Bytes);
+                said.Add("Stored " + name);
+            }
+
+            return said;
         }
 
         /// <summary>

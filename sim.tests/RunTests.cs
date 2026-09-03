@@ -810,10 +810,10 @@ public class RunTests
 
         FieldPool pool = FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } });
 
-        Assert.Same(opening, pool.At(0, 0));
-        Assert.Same(later, pool.At(1, 0));
-        Assert.Same(later, pool.At(9, 0));
-        Assert.Equal(1, pool.SizeAt(0));
+        Assert.Same(opening, pool.StandingIn(0, 0));
+        Assert.Same(later, pool.StandingIn(1, 0));
+        Assert.Same(later, pool.StandingIn(9, 0));
+        Assert.Equal(1, pool.StandInsAt(0));
 
         // The whole population, round structure flattened away: what a pool is
         // worth is measured over all of it at once.
@@ -826,8 +826,8 @@ public class RunTests
         // rounds to record means by handing over a list.
         FieldPool flat = FieldPool.Of(new[] { opening, later });
 
-        Assert.Equal(2, flat.SizeAt(0));
-        Assert.Same(later, flat.At(7, 1));
+        Assert.Equal(2, flat.StandInsAt(0));
+        Assert.Same(later, flat.StandingIn(7, 1));
     }
 
     [Fact]
@@ -862,13 +862,13 @@ public class RunTests
 
         Assert.Equal(10, canned.Rounds);
         Assert.Equal(10, canned.Size);
-        Assert.Equal(1, canned.SizeAt(6));
+        Assert.Equal(1, canned.StandInsAt(6));
 
         // The committed defense is the wall it opens behind, cell for cell, and
         // what the first round adds to it is whatever half of the opening purse
         // pays for: on the committed content one forty-gold archer out of a
         // fifty-gold half, standing on route the six already watch.
-        TowerLayout opening = canned.At(0, 0).Defense;
+        TowerLayout opening = canned.StandingIn(0, 0).Defense;
 
         Assert.Equal(defense.Count + 1, opening.Count);
         Assert.All(
@@ -880,7 +880,7 @@ public class RunTests
         // value half of the rule: a second tower on route something already
         // watches, or an upgrade of what stands, whichever scores more damage
         // over the route per gold.
-        TowerLayout closing = canned.At(9, 0).Defense;
+        TowerLayout closing = canned.StandingIn(9, 0).Defense;
 
         Assert.True(
             closing.Count > defense.Count,
@@ -892,13 +892,13 @@ public class RunTests
 
         // One column, deeper every round. The shape is what content/field.txt
         // is calibrated for, so growth is a count and never a second order.
-        Assert.Equal(wave.TotalUnits, canned.At(0, 0).Wave.TotalUnits);
-        Assert.Equal(wave.Count, canned.At(6, 0).Wave.Count);
-        Assert.Equal(wave.TotalUnits * 7, canned.At(6, 0).Wave.TotalUnits);
-        Assert.Equal(wave.TotalUnits * 10, canned.At(9, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits, canned.StandingIn(0, 0).Wave.TotalUnits);
+        Assert.Equal(wave.Count, canned.StandingIn(6, 0).Wave.Count);
+        Assert.Equal(wave.TotalUnits * 7, canned.StandingIn(6, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(9, 0).Wave.TotalUnits);
 
         // And past the last round it recorded, the deepest round stands.
-        Assert.Equal(wave.TotalUnits * 10, canned.At(40, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(40, 0).Wave.TotalUnits);
     }
 
     [Fact]

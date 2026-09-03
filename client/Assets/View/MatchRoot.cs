@@ -234,6 +234,7 @@ namespace View
         /// and drawing it with art the caller supplies.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// What a test calls, for two reasons. The folder, so a run played by a
         /// test does not write over the one a person played; and the art, which
         /// is the same seam and the same reason as
@@ -241,6 +242,15 @@ namespace View
         /// has the assets in hand and no generated scene to read them from would
         /// otherwise get nothing on exactly the checkout where somebody is
         /// trying to see whether the run works.
+        /// </para>
+        /// <para>
+        /// <b>The folder is where the pool comes from as well.</b> A run is
+        /// resolved against the stored rounds beside it, so a fixture pinning a
+        /// run's numbers has to control which rounds those are — otherwise
+        /// somebody who has played, or run <c>tools/seed-pool.ps1</c>, turns
+        /// every such fixture red for a reason that has nothing to do with the
+        /// code. <see cref="PoolDirectory"/> is what this points somewhere else.
+        /// </para>
         /// </remarks>
         public RunLoop BeginRun(ulong seed, string directory, MatchArt art)
         {
@@ -262,15 +272,48 @@ namespace View
                     + "resuming one, so a second is a fresh scene rather than a second call.");
             }
 
+            PoolDirectory = System.IO.Path.Combine(directory, StreamingContent.PoolFolderName);
             Loop = RunLoop.Build(this, art, () => RunOn(seed), directory);
 
             return Loop;
         }
 
         /// <summary>
+        /// Where this root's runs draw their opponents from.
+        /// </summary>
+        /// <remarks>
+        /// The shipped pool beside the streaming content, which is where
+        /// <c>tools/seed-pool.ps1</c> fills one and where a player reads it —
+        /// until <see cref="BeginRun(ulong, string, MatchArt)"/> points it at
+        /// the folder that caller named, which is a fixture's own scratch.
+        /// </remarks>
+        public string PoolDirectory { get; private set; } = StreamingContent.PoolDirectory;
+
+        /// <summary>
+        /// The folder's rounds, read once and kept.
+        /// </summary>
+        /// <remarks>
+        /// <b>Once, because a run has to be the same run twice.</b> A session is
+        /// proved by building a second run on the same seed and holding it
+        /// against what the player was shown, and a population that had grown
+        /// between the two -- by this very run storing its own rounds on the way
+        /// out, say -- would make the two runs differ for a reason that is not a
+        /// determinism bug. So the pool a root plays against is the pool as it
+        /// stood when the root's first run was built.
+        /// </remarks>
+        private StoredRounds pool;
+
+        /// <summary>
         /// A run on <paramref name="seed"/> with nothing played into it, over
         /// this object's playfield and the shipped content.
         /// </summary>
+        /// <remarks>
+        /// <b>Its opponents come out of <see cref="PoolDirectory"/>.</b> Each
+        /// round draws K of the rounds stored at its own stage, and the canned
+        /// field stands in for whatever that stage cannot fill -- so a player
+        /// with no pool plays against the canned field exactly as this always
+        /// did, and a player who has one plays against people.
+        /// </remarks>
         public Run RunOn(ulong seed)
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
@@ -282,15 +325,21 @@ namespace View
                 rules,
                 types,
                 ladder,
-                FieldPool.Canned(
-                    Map,
-                    rules,
-                    types,
-                    ladder,
-                    StreamingContent.ReadDefense(types),
-                    StreamingContent.ReadField(types)),
+                FieldPool
+                    .Canned(
+                        Map,
+                        rules,
+                        types,
+                        ladder,
+                        StreamingContent.ReadDefense(types),
+                        StreamingContent.ReadField(types))
+                    .Storing(Pool(types).ByStage),
                 seed);
         }
+
+        /// <summary>The stored rounds beside the player, read once. See <see cref="pool"/>.</summary>
+        private StoredRounds Pool(UnitTypeTable types) =>
+            pool ??= StreamingContent.ReadPool(PoolDirectory, Map, types);
 
         /// <summary>
         /// Puts the build chrome up over a round the caller composed. What a

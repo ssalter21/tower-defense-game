@@ -22,7 +22,7 @@ The finding stands and the sequence does not follow from it — see
 | 3 | **Roster to about ten units, using only the levers `UnitType` already has** | Enough vocabulary for a decision to be interesting | Small — it is text rows |
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
 | 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
-| 6 | **Opponent defenses read from a folder of ghost records** | The whole loop at zero latency, with no service in it | Small — `GhostRecord` already round-trips |
+| 6 | **Opponents read from a folder of stored rounds** | The whole loop at zero latency, with no service in it. A stored round is a wall and a wave at a stage, and a run draws K of them recorded at its own — [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | Small — the defense and the wave already round-trip |
 | 7 | **Then** the generative depth, the two-board interface, and the service | | |
 
 **Step 5 is fifth deliberately.** Is the economy tense, is composing a wave interesting, does send order matter,

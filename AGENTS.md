@@ -45,7 +45,8 @@ Anything an agent needs to run lives in `tools/` and runs from a shell: `run-hea
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
 `run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
 `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
+`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
+`render-map.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
 `check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
