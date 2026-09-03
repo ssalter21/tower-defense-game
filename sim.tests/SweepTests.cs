@@ -149,13 +149,22 @@ public class SweepTests
         // The attacking direction still meets a whole six-tower wall, which
         // kills some of what it is sent and kills it by rolling.
         //
+        // AND IT IS THE NECROMANCER'S ROW RATHER THAN THE MINION'S, which is
+        // the same kind of statement about the wall. Since #236 the bot stands a
+        // second tower on route it already watches once nothing is unshot at, so
+        // four waves of minions or of scouts now get nothing past a field member
+        // at all -- a row of zeroes on both seeds, which can disagree with
+        // nothing. The necromancer is the first row of the roster that still
+        // leaks, so the sweep is widened by one creep to reach it.
+        //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
-        // minion's whole-population row is identical across the two plans -- and
-        // the determinism test above stays green, which is exactly the hole it
-        // cannot see.
-        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan()), "minion");
-        SweepRow other = TheSweep.Whole(Sweep.Of(TheSweep.Plan(seed: TheSweep.Seed + 1)), "minion");
+        // necromancer's whole-population row is identical across the two plans
+        // -- and the determinism test above stays green, which is exactly the
+        // hole it cannot see.
+        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan(mostCreeps: 3)), "necromancer");
+        SweepRow other = TheSweep.Whole(
+            Sweep.Of(TheSweep.Plan(mostCreeps: 3, seed: TheSweep.Seed + 1)), "necromancer");
 
         Assert.NotEqual(one.LeakCostDealt, other.LeakCostDealt);
     }

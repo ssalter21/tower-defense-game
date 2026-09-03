@@ -11,9 +11,10 @@ namespace Sim
     /// <para>
     /// <b>The rule, in one sentence.</b> Each round, with up to half the purse:
     /// while any route hex is unshot at, buy the tower type that covers the most
-    /// of them per gold; once nothing more can be covered, upgrade the
-    /// lowest-ordinal placement that is not already the dearest type. Stop at the
-    /// first action the half will not pay for, and bank the rest.
+    /// of them per gold; once nothing more can be covered, buy whichever scores
+    /// most damage over the route per gold -- an upgrade, or a second tower on
+    /// route something already watches. Stop at the first action the half will
+    /// not pay for, and bank the rest.
     /// </para>
     /// <para>
     /// <b>Half is a constant here and not in <c>content/ruleset.txt</c>.</b>
@@ -54,10 +55,32 @@ namespace Sim
     /// statement about the wave.
     /// </para>
     /// <para>
-    /// <b>Nothing here can buy gold's worth of nothing.</b> A place is only ever
-    /// made on a cell that reaches a route hex nothing reaches yet, and an
-    /// upgrade only ever names a cell a placement already stands on. A tower that
-    /// reaches no part of the route is a legal decision -- see
+    /// <b>What a covered route is worth is one score, and both halves of the
+    /// second phase are read off it.</b> A row standing on a cell scores the
+    /// middle of its damage roll, divided by the ticks between its shots, times
+    /// the bodies one shot hits, times the route hexes it reaches from there,
+    /// over the gold it costs above whatever stands on that cell -- nothing, for
+    /// a cell that is empty. An upgrade and a second tower are therefore
+    /// comparable numbers rather than two rules, and the higher one is bought.
+    /// </para>
+    /// <para>
+    /// <b>The reach in that score is the reach of the row being bought</b>, so an
+    /// upgrade is scored on what the new row would watch from the cell and never
+    /// on what the old one watches. The two differ wherever a rung reaches
+    /// further than the rung below it, which on this roster is every one of
+    /// them.
+    /// </para>
+    /// <para>
+    /// <b>The second phase opens when nothing more <i>can</i> be covered</b>,
+    /// which is not the same as every route hex being shot at: a hex no legal
+    /// cell reaches would otherwise hold the bot in the first phase forever and
+    /// leave it unable to buy anything at all.
+    /// </para>
+    /// <para>
+    /// <b>Nothing here can buy gold's worth of nothing.</b> Every place either
+    /// reaches a route hex nothing reaches yet or scores on the route it does
+    /// reach, and an upgrade only ever names a cell a placement already stands
+    /// on. A tower that reaches no part of the route is a legal decision -- see
     /// <see cref="Footing"/> -- and one bought by mistake would never show up as
     /// unspent gold, because the gold <i>was</i> spent.
     /// </para>
@@ -193,26 +216,34 @@ namespace Sim
                 left -= price;
             }
 
-            // Then upgrade: the placement that has stood longest becomes the
-            // next type up, until every one of them is as dear as the roster goes.
+            // Then buy by value: the highest-scoring of an upgrade and a second
+            // tower on route something already watches, until nothing scores or
+            // the half will not pay for what won.
+            //
+            // The purse is charged the full price of the row bought -- what a
+            // ladder edge costs is its target's own price -- while the score
+            // divides by what that row costs above the one standing on the cell.
             while (true)
             {
-                (Placement placement, UnitType? into) = Dearer(board, byPrice, costs);
+                (UnitType? type, ActionKind kind, int column, int row) =
+                    BestBuy(map, board, placeable, byPrice, costs, ladder);
 
-                if (into is null)
+                if (type is null)
                 {
                     break;
                 }
 
-                int price = costs.PriceOf(Purchase.Unit(into.Id));
+                int price = costs.PriceOf(Purchase.Unit(type.Id));
 
                 if (price > left)
                 {
                     break;
                 }
 
-                actions.Add(BuildAction.Of(ActionKind.Upgrade, into.Id, placement.Column, placement.Row));
-                board = board.Upgrade(into, placement.Column, placement.Row);
+                actions.Add(BuildAction.Of(kind, type.Id, column, row));
+                board = kind == ActionKind.Place
+                    ? board.Place(type, column, row)
+                    : board.Upgrade(type, column, row);
                 left -= price;
             }
 
@@ -315,21 +346,75 @@ namespace Sim
         }
 
         /// <summary>
-        /// The lowest-ordinal placement with a dearer type to become, and the
-        /// cheapest type that costs more than the one standing on it.
+        /// The best-scoring thing to buy on a route nothing can cover any more
+        /// of: a second tower on a free cell, or an upgrade of a placement. A
+        /// null type is a board where nothing scores at all, and it is where the
+        /// bot stops -- there is no second fallback, because a player with
+        /// nothing left to do should read as one.
         /// </summary>
         /// <remarks>
-        /// A null type is a board every placement of which is already as dear as
-        /// the roster goes, and it is where the bot stops: there is no second
-        /// fallback, because a player with nothing left to do should read as one.
-        /// The price list ascends by price and then by id, so the first row above
-        /// the current price is the cheapest one, ties settled by the lower id.
+        /// <para>
+        /// Two candidates are compared by cross-multiplying the two fractions,
+        /// which is their order in integers that never round. The score opens at
+        /// nothing for one gold, so the comparison admits the first candidate
+        /// worth anything at all.
+        /// </para>
+        /// <para>
+        /// Places are walked before upgrades, each by price and then by the
+        /// canonical order of the cells or the placements, and a candidate has
+        /// to beat the score standing to take it -- so a tie goes to the first
+        /// of them, which is a total order over the candidates with no sort and
+        /// no comparator.
+        /// </para>
         /// </remarks>
-        private static (Placement Placement, UnitType? Into) Dearer(
+        private static (UnitType? Type, ActionKind Kind, int Column, int Row) BestBuy(
+            HexMap map,
             Board board,
+            UnitType[] placeable,
             UnitType[] byPrice,
-            CostTable costs)
+            CostTable costs,
+            UpgradeLadder ladder)
         {
+            UnitType? bestType = null;
+            ActionKind bestKind = ActionKind.Place;
+            int bestColumn = 0;
+            int bestRow = 0;
+            long bestDamage = 0;
+            long bestGold = 1;
+
+            for (int index = 0; index < placeable.Length; index++)
+            {
+                UnitType type = placeable[index];
+                long gold = (long)type.CooldownTicks * costs.PriceOf(Purchase.Unit(type.Id));
+
+                // A row that never shoots, or one priced at nothing, divides by
+                // zero rather than scoring badly.
+                if (gold <= 0)
+                {
+                    continue;
+                }
+
+                for (int row = 0; row < map.Height; row++)
+                {
+                    for (int column = 0; column < map.Width; column++)
+                    {
+                        if (!board.IsFree(column, row) || !Footing.Of(map, type, column, row).Possible)
+                        {
+                            continue;
+                        }
+
+                        long damage = DamageOverRoute(map, type, column, row);
+
+                        if (damage * bestGold > bestDamage * gold)
+                        {
+                            (bestType, bestKind, bestColumn, bestRow) =
+                                (type, ActionKind.Place, column, row);
+                            (bestDamage, bestGold) = (damage, gold);
+                        }
+                    }
+                }
+            }
+
             for (int index = 0; index < board.Placements.Count; index++)
             {
                 Placement placement = board.Placements[index];
@@ -337,14 +422,74 @@ namespace Sim
 
                 for (int other = 0; other < byPrice.Length; other++)
                 {
-                    if (costs.PriceOf(Purchase.Unit(byPrice[other].Id)) > standing)
+                    UnitType into = byPrice[other];
+                    int over = costs.PriceOf(Purchase.Unit(into.Id)) - standing;
+
+                    if (over <= 0 || !Climbs(ladder, placement.Type, into))
                     {
-                        return (placement, byPrice[other]);
+                        continue;
+                    }
+
+                    long gold = (long)into.CooldownTicks * over;
+
+                    if (gold <= 0)
+                    {
+                        continue;
+                    }
+
+                    long damage = DamageOverRoute(map, into, placement.Column, placement.Row);
+
+                    if (damage * bestGold > bestDamage * gold)
+                    {
+                        (bestType, bestKind, bestColumn, bestRow) =
+                            (into, ActionKind.Upgrade, placement.Column, placement.Row);
+                        (bestDamage, bestGold) = (damage, gold);
                     }
                 }
             }
 
-            return (default, null);
+            return (bestType, bestKind, bestColumn, bestRow);
+        }
+
+        /// <summary>
+        /// Whether a placement of one type may be swapped for another. A row no
+        /// edge points at is reached from anything standing; a row some edge
+        /// points at is reached only along an edge, which is the prerequisite
+        /// <see cref="BuildPhase"/> refuses an upgrade for breaking.
+        /// </summary>
+        private static bool Climbs(UpgradeLadder ladder, UnitType standing, UnitType into) =>
+            !ladder.IsTargetOfAnEdge(into.Id) || ladder.HasEdge(standing.Id, into.Id);
+
+        /// <summary>
+        /// The damage a row standing on this cell puts on the route, over the
+        /// ticks it takes to put it there: the width of its damage roll times
+        /// the bodies one shot hits times the route hexes it reaches. Divided by
+        /// the row's cooldown and by the gold it costs, this is the score
+        /// <see cref="BestBuy"/> compares.
+        /// </summary>
+        /// <remarks>
+        /// The width of the roll is twice its middle, and every candidate is
+        /// doubled alike, so the factor cancels out of the comparison and the
+        /// middle is never halved into an integer that rounds.
+        /// </remarks>
+        private static long DamageOverRoute(HexMap map, UnitType type, int column, int row) =>
+            (long)(type.DamageMin + type.DamageMax) * type.Targets * Reaching(map, type, column, row);
+
+        /// <summary>How many route hexes a type standing on this cell reaches, covered or not.</summary>
+        private static int Reaching(HexMap map, UnitType type, int column, int row)
+        {
+            Hex hex = Hex.FromOddRowOffset(column, row);
+            int reaching = 0;
+
+            for (int step = 0; step < map.Route.Count; step++)
+            {
+                if (Footing.Reaches(map, hex, type.RangeMilliHex, map.Route[step]))
+                {
+                    reaching++;
+                }
+            }
+
+            return reaching;
         }
 
         /// <summary>
@@ -431,7 +576,10 @@ namespace Sim
             return covered;
         }
 
-        /// <summary>How many unreached route hexes a type standing on this cell would reach.</summary>
+        /// <summary>
+        /// How many unreached route hexes a type standing on this cell would
+        /// reach: <see cref="Reaching"/> narrowed to the steps nothing covers yet.
+        /// </summary>
         private static int Gained(HexMap map, UnitType type, int column, int row, bool[] covered)
         {
             Hex hex = Hex.FromOddRowOffset(column, row);

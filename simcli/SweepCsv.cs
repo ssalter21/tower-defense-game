@@ -123,8 +123,9 @@ internal static class SweepCsv
             text,
             "defense_gold",
             "the defense these rows were played against was built by a deliberately simple bot -- the tower "
-            + "that covers the most unshot route per gold then upgrade the oldest -- so a row describes a "
-            + "game and never skilled play; see #163");
+            + "that covers the most unshot route per gold and then whichever upgrade or second tower scores "
+            + "the most damage over the route per gold above what already stands there -- so a row describes "
+            + "a game and never skilled play; see #163 and #236");
 
         Note(
             text,

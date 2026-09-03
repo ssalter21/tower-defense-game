@@ -22,26 +22,27 @@
 # the authored column in content/field.txt. Every round builds before it is
 # recorded, the first one included, so round one stands these six plus whatever
 # round one's own share bought and round ten stands ten rounds of that income on
-# top of them. On this content round one buys nothing -- an opening share of 50
-# gold against a cheapest upgrade of 92 -- but that is a fact about this file and
-# not a rule.
+# top of them. On this content round one buys one forty-gold archer out of an
+# opening share of 50 gold, but that is a fact about this file and not a rule.
 # The wall a growing wave is measured against therefore grows too, which is the
 # whole reason a late round of content/sweep.csv is worth reading. These six
 # stand beside that opening purse rather than out of it -- a member is a
 # RECORDED round and not a run played from nothing, and 344 gold of towers
 # could not be bought out of an opening hundred anyway.
 #
-# WHAT IT GROWS INTO, ON THIS BOARD, IS SIX MAGES BY ROUND SIX. The route below
-# is covered end to end already, so the rule finds nothing to place and spends
-# on upgrading instead: the four archers become mages one at a time in rounds
-# two, three, five and six -- 344 gold of wall, then 396, 448, 448, 500 and 552
-# from there on -- and after that every placement is the dearest row the roster
-# has and there is nothing left to buy. IT IS A DEARER WALL AND A WORSE ONE. A
-# mage costs 92 against an archer's 40 and fires once every 54 ticks against 18
-# -- a third less damage a tick for more than twice the price -- so the
-# committed run gets MORE past this wall from round two on than it does past the
-# seed. "Upgrade the oldest placement into the dearest row" is not "buy the
-# better tower", and this is where that shows.
+# WHAT IT GROWS INTO, ON THIS BOARD, IS FOURTEEN TOWERS BY ROUND FIVE AND A
+# DEARER FOURTEEN AFTER THAT. The route below is covered end to end already, so
+# every round of it is bought by the value half of the rule: whichever of a
+# second tower on watched route and an upgrade of something standing scores the
+# most damage over the route per gold. That is archers while there are cells
+# worth standing on and mages after -- 384 gold of wall, then 464, 544, 624,
+# 664, 716, 768, 768, 820 and 872, and round ten stands eight archers and six
+# mages.
+#
+# THE COMMITTED RUN GETS NOTHING PAST IT. Its whole total dealt is 0 where it
+# was 375 against the wall the price-alone rule built, and it still dies at
+# wave four -- what kills it is the wave in content/field.txt and that has not
+# moved. See the 3 September 2026 entry in docs/decision-log.md.
 #
 # Same rules as units.txt: integers only, no decimal point, comments free.
 #

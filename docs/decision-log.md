@@ -1309,3 +1309,69 @@ for want of anything to buy, so the late rounds a defense that scales was suppos
 growing wave against a still wall. What moved is that the freeze is now a property of the *player* rather than
 of the pool, which is one place to fix instead of two — it is
 [filed as an open question](open-questions.md) and not carried here as done.
+
+## 3 September 2026 — the wall is bought by value, and the report's dealt column mostly empties
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[`docs/open-questions.md`](open-questions.md)** — does the scripted player's upgrade half need to know what a tower is worth? | An open question with three answers: score an upgrade by value, refuse an upgrade that lowers damage a tick, or leave it | **Answered: score it by value.** `CoverThenUpgradeBot` scores every purchase left on a covered route the same way and buys the highest — the middle of a row's damage roll over the ticks between its shots, times the bodies one shot hits, times the route hexes it reaches from that cell, per gold that row costs above whatever stands on it | [#236](https://github.com/ssalter21/tower-defense-game/issues/236), decided by Sam. One rule for both halves of the phase is the one that stays right when the roster grows; the price-alone rule was buying a mage for no reason but that it was dearer |
+| **the 29 August entry** — the two caps on the stand-in's wall | A rule that only places where something is unshot at has nowhere to put a seventh tower however rich it gets, and a rule that upgrades into the dearest row runs out of rows | **Neither cap is there.** Once nothing on the route is unshot the bot may stand a second tower on route something already watches, scored by that same number — so a redundant place and an upgrade are two candidates in one comparison rather than two phases | The same ticket. Redundant coverage is a real defensive move and the bot had no way to make it, which is what froze the stand-in's wall from round six |
+
+### What the stand-in now builds
+
+**Fourteen towers by round five, and dearer every round after.** The wall the canned pool opens behind is the
+committed six, and half of every round's purse goes on it: **384 gold of wall in round one, then 464, 544,
+624, 664, 716, 768, 768, 820 and 872** — against 344, 396, 448, 448, 500 and then 552 frozen from round six.
+Nine of the ten rounds now buy something. Where the old rule bought the dearest row it could reach, this one
+buys archers until the cells worth standing on are gone and then climbs into mages: round ten stands eight
+archers and six mages.
+
+### And the wave stops getting through
+
+**The committed run now deals nothing at all.** Round by round its `dealt` went **0, 36, 126, 213 → 0, 0, 0,
+0**, and its whole total **375 → 0**. What it *took* has not moved by a gold — 100, 200, 290, 387 in both —
+so it still dies at wave four with 0 of 800 health left, and for the same reason: what kills it is the ghost's
+wave, and that has not moved.
+
+**The sweep loses one of its five rows outright and thins the other four.** Leak cost dealt over eight runs a
+creep: minion **36,847 → 2,073**, scout **52,687 → 0**, necromancer **48,944 → 31,337**, skeleton **43,588 →
+25,810**, warrior **38,468 → 22,769**. Taken falls with it — 37,305 → 27,289, 36,122 → 27,289, 35,844 →
+19,794, 36,913 → 22,898, 36,913 → 21,267 — because a run's own wall is built by this rule too and now kills
+what arrives. Cost efficiency follows dealt: 318 → 28, 386 → 0, 383 → 321, 351 → 259, 336 → 257. Win rate is
+still zero on all five rows.
+
+**A scout row of zeroes is a row that cannot answer anything**, and it is the finding rather than a reason to
+retune: no price and no ruleset number moved here. The two lightest creeps are the ones a wall of archers
+chews, so the report now says the fast cheap end of the roster does not survive contact with a defense that
+spends its whole share — which is a statement about the roster and the board, made by a bot both sides play
+by. `SweepTests.A_sweep_on_another_seed_is_another_population_of_runs` had to move to the necromancer's row to
+find a number that still disagrees across two seeds, which is the same finding seen from the suite.
+
+### Two readings of the decided sentence, and which one was built
+
+**"The reach it already has" is the reach of the row being bought.** An upgrade is scored on what the *new*
+row would watch from that cell and never on what the old one watches — a mage reaching 4,600 thousandths of a
+hex where the archer under it reaches 3,200, so the extra reach is a large part of why any upgrade is bought
+at all. The other reading — score the new row's damage against the old row's reach — describes no tower that
+ever stands, and it has nothing to say at all about a second tower on an empty cell, which Sam's decision
+scores by the same rule. **"Over" is read as "across" and not as "divided by"** for the same reason: dividing
+by reach would make a wide tower worth less than a narrow one, which is the opposite of what the cover half
+does.
+
+**The phase opens when nothing more *can* be covered**, which is not the same sentence as "nothing on the
+route is unshot". A route hex no legal cell reaches would otherwise hold the bot in the covering phase forever
+and leave it unable to buy anything at all. On the committed board the two are the same moment.
+
+### The stepping stone, which is the rule's own consequence
+
+**The bot will buy a tower and climb out of it in the same round.** The score divides by what a row costs
+*above* the one under it, while a build phase charges the row's whole price — an upgrade costs its target's
+full price and always has, see `content/upgrades.txt`. So a cheap tower is a cheap way to make an upgrade look
+good: a 30-gold soldier stood and then turned into an archer is 70 gold spent on a 40-gold archer. It is
+asserted rather than hidden, in
+`BuildPolicyTests.Once_the_route_is_covered_the_bot_buys_the_most_damage_over_the_route_per_gold`, because it
+is the kind of thing somebody finds in the report and reads as a bug.
+
+**Whether that denominator should be the gold actually paid is left open** and is
+[filed as a question](open-questions.md) rather than decided here: the rule as decided says *price
+difference*, and a rule rewritten on the way past is not the rule anybody chose.

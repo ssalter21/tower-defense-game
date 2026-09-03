@@ -864,19 +864,28 @@ public class RunTests
         Assert.Equal(10, canned.Size);
         Assert.Equal(1, canned.SizeAt(6));
 
-        // The committed defense is the wall it opens with, cell for cell. What
-        // the first round adds to it is whatever half of the opening purse pays
-        // for, which on the committed content is nothing at all.
+        // The committed defense is the wall it opens behind, cell for cell, and
+        // what the first round adds to it is whatever half of the opening purse
+        // pays for: on the committed content one forty-gold archer out of a
+        // fifty-gold half, standing on route the six already watch.
         TowerLayout opening = canned.At(0, 0).Defense;
 
-        Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(opening));
+        Assert.Equal(defense.Count + 1, opening.Count);
+        Assert.All(
+            TheMatch.Spelling(defense),
+            tower => Assert.Contains(tower, TheMatch.Spelling(opening)));
 
-        // And by the last round it is a dearer wall standing on the same cells:
-        // the route is covered end to end already, so the rule the run builds by
-        // has nothing left to place and spends on upgrading instead.
+        // And by the last round it is a bigger wall and a dearer one. The route
+        // is covered end to end already, so every round of it is bought by the
+        // value half of the rule: a second tower on route something already
+        // watches, or an upgrade of what stands, whichever scores more damage
+        // over the route per gold.
         TowerLayout closing = canned.At(9, 0).Defense;
 
-        Assert.Equal(defense.Count, closing.Count);
+        Assert.True(
+            closing.Count > defense.Count,
+            "The stand-in stood " + closing.Count + " towers by the last round against the " + defense.Count
+            + " it opened behind.");
         Assert.True(
             Worth(costs, closing) > Worth(costs, opening),
             "The stand-in's wall is worth more by the last round than it was in the first.");

@@ -64,8 +64,13 @@
 > 500 → 552 gold and then stops, because the route is covered so nothing can be placed and every placement is
 > the dearest row so nothing can be upgraded. Worse, the dearer wall is a **weaker** wall — the committed run's
 > total dealt rose 331 → 375 — because the bot upgrades archers into mages without knowing what either is
-> worth. That is left standing rather than tuned away, as
-> [an open question](../open-questions.md#does-the-scripted-players-upgrade-half-need-to-know-what-a-tower-is-worth).
+> worth.
+>
+> **Amended by [#236](https://github.com/ssalter21/tower-defense-game/issues/236), 3 September 2026: the bot
+> buys by value on a covered route.** Both halves of the paragraph above are gone. It scores a second tower on
+> covered route and an upgrade by one number and buys the higher, so the stand-in's wall grows in nine rounds
+> of ten — 384 gold to 872 — and the committed run's total dealt fell 375 → **0**. The numbers are in
+> [the decision-log entry](../decision-log.md).
 >
 > The rest of this file is left as it was written. It describes rules that were in force and is a record of
 > them, not a description of the build.

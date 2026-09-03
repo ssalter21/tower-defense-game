@@ -37,6 +37,15 @@ public class BuildPolicyTests
     private const int Minion = 1;
 
     /// <summary>
+    /// The committed roster's placed rows, cheapest first and then by id, which
+    /// is the order the bot walks them in.
+    /// </summary>
+    private static readonly int[] ByPrice = { Soldier, Archer, Ranger, Mage };
+
+    /// <summary>The same list without the row the ladder's one edge points at, which may not be placed.</summary>
+    private static readonly int[] Placeable = { Soldier, Archer, Mage };
+
+    /// <summary>
     /// How many waves the runs below last. Three towers cover the whole corridor
     /// and each upgrade behind them costs more than an early round's half, so a
     /// shorter run would observe the first phase alone and say nothing about the
@@ -127,11 +136,18 @@ public class BuildPolicyTests
 
                 List<(int Column, int Row)> maximisers = Maximisers(map, board, type);
 
-                Assert.Equal(maximisers[0], (action.Column, action.Row));
-
-                if (maximisers.Count > 1)
+                // A place that adds nothing is a second tower on route
+                // something already watches, and the cell it goes on is the
+                // value rule's rather than this walk's -- see
+                // Once_the_route_is_covered_the_bot_buys_the_most_damage_over_the_route_per_gold.
+                if (maximisers.Count > 0)
                 {
-                    ties++;
+                    Assert.Equal(maximisers[0], (action.Column, action.Row));
+
+                    if (maximisers.Count > 1)
+                    {
+                        ties++;
+                    }
                 }
 
                 board = board.Place(type, action.Column, action.Row);
@@ -145,7 +161,7 @@ public class BuildPolicyTests
     }
 
     [Fact]
-    public void Every_action_the_bot_takes_buys_new_coverage_or_upgrades_a_placement()
+    public void Every_action_the_bot_takes_reaches_the_route_or_upgrades_a_placement()
     {
         // The bot cannot burn gold on nothing, and it is avoided by
         // construction rather than accepted. A tower that reaches no part of the
@@ -153,17 +169,20 @@ public class BuildPolicyTests
         // useless -- so one bought by mistake would stand on the board and never
         // show up as unspent gold, because the gold was spent.
         //
-        // Every place is therefore required to reach a route hex the board did
-        // not already reach, and every upgrade to name a cell something already
-        // stands on.
+        // Every place is therefore required to reach some of the route and every
+        // upgrade to name a cell something already stands on. A place is no
+        // longer required to reach route nothing reaches yet: once the route is
+        // covered the bot may stand a second tower on a stretch something
+        // already watches, and the run below is required to have done all three
+        // of those things.
         //
-        // OBSERVED: score the coverage the board already holds -- drop the
-        // covered check out of CoverThenUpgradeBot.Gained. This goes red, "place
-        // type 11 at column 10, row 2 reaches no route hex the board did not
-        // already reach", which is a soldier bought for thirty gold to watch a
-        // stretch of corridor three others were already watching.
+        // OBSERVED: score a row by what it deals and never by what it watches --
+        // drop the Reaching term out of CoverThenUpgradeBot.DamageOverRoute. This
+        // goes red, "place type 11 at column 0, row 0 reaches no route hex at
+        // all", which is a soldier in the corner of the board.
         HexMap map = TheMatch.Map();
         int places = 0;
+        int redundant = 0;
         int upgrades = 0;
 
         foreach ((Board opening, IReadOnlyList<BuildAction> actions) in Played())
@@ -187,16 +206,24 @@ public class BuildPolicyTests
 
                 int before = Reached(map, board);
 
+                Assert.True(
+                    Alone(map, type, action.Column, action.Row) > 0,
+                    action.ToString() + " reaches no route hex at all.");
+
                 board = board.Place(type, action.Column, action.Row);
                 places++;
 
-                Assert.True(
-                    Reached(map, board) > before,
-                    action.ToString() + " reaches no route hex the board did not already reach.");
+                if (Reached(map, board) == before)
+                {
+                    redundant++;
+                }
             }
         }
 
-        Assert.True(places > 0 && upgrades > 0, "This run took " + places + " places and " + upgrades + " upgrades.");
+        Assert.True(
+            places > redundant && redundant > 0 && upgrades > 0,
+            "This run took " + places + " places, " + redundant + " of them redundant, and " + upgrades
+            + " upgrades.");
     }
 
     [Fact]
@@ -211,13 +238,16 @@ public class BuildPolicyTests
         // the target of the ladder's one edge, so it may not be placed: the
         // dearest-reaching row the ladder lets the bot stand is the archer.
         //
-        // THE RANGER IS THEN NEVER BUILT AT ALL. The upgrade half climbs to a
-        // strictly dearer row, and the ranger costs exactly what the archer
-        // costs -- so nothing this bot does ever reaches it. That is worth
-        // knowing rather than fixing here: it means the sweep's defense never
-        // exercises the one upgrade edge the roster has, so a balance question
-        // about the ranger cannot be answered from content/sweep.csv. It is a
-        // property of this bot's rule and not of the ladder.
+        // THE RANGER IS THEN NEVER BUILT AT ALL. An upgrade is scored per gold
+        // of what the new row costs above the one standing, and the ranger costs
+        // exactly what the archer costs -- a difference of nothing, which is no
+        // score at all rather than a poor one -- so nothing this bot does ever
+        // reaches it. That is worth knowing rather than fixing here: it means
+        // the sweep's defense never exercises the one upgrade edge the roster
+        // has, so a balance question about the ranger cannot be answered from
+        // content/sweep.csv. It is a property of this bot's rule and not of the
+        // ladder, and it holds even though the ranger reaches further than the
+        // archer for the same gold.
         //
         // OBSERVED: score by price alone -- return the first type with anything
         // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
@@ -269,6 +299,113 @@ public class BuildPolicyTests
         // And the price the ranger is never reached over: equal to the archer's,
         // so a climb that wants a strictly dearer row steps straight past it.
         Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
+    }
+
+    [Fact]
+    public void Once_the_route_is_covered_the_bot_buys_the_most_damage_over_the_route_per_gold()
+    {
+        // THE RULE, IN A SENTENCE. Once nothing the bot may place covers any
+        // route that is not already covered, every purchase left is scored the
+        // same way -- the middle of a row's damage roll, over the ticks between
+        // its shots, times the bodies one shot hits, times the route hexes it
+        // reaches from the cell in question, per gold that row costs above
+        // whatever stands on that cell -- and the highest score is bought,
+        // whether that is an upgrade of a placement or a second tower on a cell
+        // nothing stands on. An empty cell has nothing standing on it, so a
+        // place is scored per gold of the whole price.
+        //
+        // Every action of a whole run taken after the covering phase is checked
+        // against every candidate that was open to it, recomputed here off the
+        // unit table and off the coverage intervals a match resolves range
+        // through.
+        //
+        // OBSERVED: take the biggest top and never divide by the gold --
+        // compare with `damage > bestDamage` instead of cross-multiplying in
+        // CoverThenUpgradeBot.BestBuy. This goes red, place type 4 at column
+        // 13, row 10 where upgrade type 3 at column 5, row 0 was expected: a
+        // 92-gold mage bought for its damage where 10 gold turns a standing
+        // soldier into an archer.
+        HexMap map = TheMatch.Map();
+        UnitTypeTable types = TheMatch.Types();
+        CostTable costs = CostTable.From(TheRuleset.Committed(), types);
+        UpgradeLadder ladder = TheMatch.Ladder(types);
+        int scored = 0;
+        int steps = 0;
+
+        // The two rosters this oracle walks are written out by hand for
+        // readability, so they are held against the table and the ladder they
+        // came from: a row appended to content/units.txt would otherwise leave
+        // this test scoring candidates the bot considers and it does not, which
+        // is a wrong oracle rather than a red assertion.
+        int[] placed = types.Types
+            .Where(type => type.Role == UnitRole.Placed)
+            .OrderBy(type => costs.PriceOf(Purchase.Unit(type.Id)))
+            .ThenBy(type => type.Id)
+            .Select(type => type.Id)
+            .ToArray();
+
+        Assert.Equal(ByPrice, placed);
+        Assert.Equal(Placeable, placed.Where(id => !ladder.IsTargetOfAnEdge(id)).ToArray());
+
+        foreach ((Board opening, IReadOnlyList<BuildAction> actions) in Played())
+        {
+            Board board = opening;
+
+            // The cells this round put a tower on, so that a cell it then
+            // climbs out of again can be recognised below.
+            var stood = new List<(int Column, int Row)>();
+
+            foreach (BuildAction action in actions)
+            {
+                UnitType type = types.ById(action.TypeId);
+
+                if (!Covering(map, board, types))
+                {
+                    Assert.Equal(
+                        Bought(map, board, types, costs, ladder),
+                        (action.Kind, action.TypeId, action.Column, action.Row));
+
+                    scored++;
+                }
+
+                if (action.Kind == ActionKind.Upgrade)
+                {
+                    // A row bought and then climbed out of in the same round.
+                    // The score divides by what a row costs ABOVE the one under
+                    // it while the purse pays that row's whole price, so a cheap
+                    // tower is a cheap way to make an upgrade look good: a
+                    // soldier here is 30 gold spent to buy a 40-gold archer for
+                    // 70. That is a consequence of the rule and not a rule, and
+                    // it is written down here because it is the kind of thing
+                    // somebody finds in the report and reads as a bug.
+                    steps += stood.Contains((action.Column, action.Row)) ? 1 : 0;
+
+                    board = board.Upgrade(type, action.Column, action.Row);
+                    continue;
+                }
+
+                stood.Add((action.Column, action.Row));
+                board = board.Place(type, action.Column, action.Row);
+            }
+        }
+
+        Assert.True(scored > 0, "No round of this run got past the covering phase.");
+        Assert.True(steps > 0, "No round of this run placed a tower and upgraded it again.");
+
+        // And the comparison the rule is about, in the numbers it is made of.
+        // The mage deals less a tick than the archer for more than twice the
+        // price -- which is what the price-alone rule bought anyway -- so an
+        // archer becomes a mage only where the mage's extra hex of reach carries
+        // the score, and the run above shows both answers.
+        UnitType archer = types.ById(Archer);
+        UnitType mage = types.ById(Mage);
+
+        Assert.True(
+            (mage.DamageMin + mage.DamageMax) * archer.CooldownTicks
+                < (archer.DamageMin + archer.DamageMax) * mage.CooldownTicks,
+            "The mage deals more a tick than the archer, so this roster no longer poses the question.");
+        Assert.Equal(52, costs.PriceOf(Purchase.Unit(Mage)) - costs.PriceOf(Purchase.Unit(Archer)));
+        Assert.True(mage.RangeMilliHex > archer.RangeMilliHex);
     }
 
     [Fact]
@@ -390,6 +527,115 @@ public class BuildPolicyTests
 
         return maximisers;
     }
+
+    /// <summary>
+    /// Whether any row the bot may stand outright still covers route the board
+    /// does not, which is the whole of what keeps it in the covering phase.
+    /// </summary>
+    private static bool Covering(HexMap map, Board board, UnitTypeTable types)
+    {
+        foreach (int id in Placeable)
+        {
+            if (Maximisers(map, board, types.ById(id)).Count > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The highest-scoring purchase open on a board nothing can cover any more
+    /// of: every row on every free cell it can stand on, then every upgrade of
+    /// every placement, each scored as the rule says and compared by
+    /// cross-multiplying so that no fraction rounds.
+    /// </summary>
+    /// <remarks>
+    /// The two walks are in the order the bot takes them and a candidate has to
+    /// beat the score standing to take it, so a tie goes to the first of them.
+    /// </remarks>
+    private static (ActionKind Kind, int TypeId, int Column, int Row) Bought(
+        HexMap map,
+        Board board,
+        UnitTypeTable types,
+        CostTable costs,
+        UpgradeLadder ladder)
+    {
+        ActionKind bestKind = ActionKind.Place;
+        int bestId = 0;
+        int bestColumn = 0;
+        int bestRow = 0;
+        long bestDamage = 0;
+        long bestGold = 1;
+
+        foreach (int id in Placeable)
+        {
+            UnitType type = types.ById(id);
+            long gold = (long)type.CooldownTicks * costs.PriceOf(Purchase.Unit(id));
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    if (!board.IsFree(column, row) || !Footing.Of(map, type, column, row).Possible)
+                    {
+                        continue;
+                    }
+
+                    long damage = DamageOverRoute(map, type, column, row);
+
+                    if (damage * bestGold > bestDamage * gold)
+                    {
+                        (bestKind, bestId, bestColumn, bestRow) = (ActionKind.Place, id, column, row);
+                        (bestDamage, bestGold) = (damage, gold);
+                    }
+                }
+            }
+        }
+
+        for (int index = 0; index < board.Placements.Count; index++)
+        {
+            Placement placement = board.Placements[index];
+            int standing = costs.PriceOf(Purchase.Unit(placement.Type.Id));
+
+            foreach (int id in ByPrice)
+            {
+                UnitType into = types.ById(id);
+                int over = costs.PriceOf(Purchase.Unit(id)) - standing;
+                bool climbs = !ladder.IsTargetOfAnEdge(id) || ladder.HasEdge(placement.Type.Id, id);
+
+                if (over <= 0 || !climbs)
+                {
+                    continue;
+                }
+
+                long gold = (long)into.CooldownTicks * over;
+                long damage = DamageOverRoute(map, into, placement.Column, placement.Row);
+
+                if (damage * bestGold > bestDamage * gold)
+                {
+                    (bestKind, bestId, bestColumn, bestRow) =
+                        (ActionKind.Upgrade, id, placement.Column, placement.Row);
+                    (bestDamage, bestGold) = (damage, gold);
+                }
+            }
+        }
+
+        return (bestKind, bestId, bestColumn, bestRow);
+    }
+
+    /// <summary>
+    /// The top of the score: the width of a row's damage roll -- twice its
+    /// middle, and every candidate is doubled alike -- times the bodies one shot
+    /// hits, times the route hexes it reaches from this cell.
+    /// </summary>
+    private static long DamageOverRoute(HexMap map, UnitType type, int column, int row) =>
+        (long)(type.DamageMin + type.DamageMax) * type.Targets * Alone(map, type, column, row);
+
+    /// <summary>How much of the route one of these reaches from this cell, with nothing else on the board.</summary>
+    private static int Alone(HexMap map, UnitType type, int column, int row) =>
+        Reached(map, Board.Empty.Place(type, column, row));
 
     /// <summary>How much of the route one of these reaches from the best cell on an empty board.</summary>
     private static int Widest(HexMap map, UnitType type)
