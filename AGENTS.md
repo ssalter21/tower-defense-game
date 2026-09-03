@@ -33,11 +33,18 @@ matching the tests on disk. It counts them; it does not compile them — a test 
 test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
 every gate step will still pass.
 
+**A scheduled task runs all three overnight, so a break shows up the morning after rather than weeks later.**
+`register-nightly-unity.ps1` puts `nightly-unity.ps1` on the machine at 03:00, and it writes one line per
+runner — date, runner, pass or fail, tests run, exit code — to `client/Logs/nightly.log`, which git ignores.
+It tests one checkout as it stood at 03:00, so it is a catch and not a substitute for running the one you
+changed.
+
 ## 3. Every automation has a static command-line entry point
 
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
-`run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
+`run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
+`build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
 `build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
 `check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
