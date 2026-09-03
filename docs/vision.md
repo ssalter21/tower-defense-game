@@ -604,8 +604,9 @@ make this a *final-deliverable* pipeline rather than a placeholder one:
   and CC0 already grants modification, commercially, with no attribution and no royalty. The money buys
   bundling, the original geometry and rig, and every future pack.
 
-**Bought, and on the machine.** The licence is read from the archive's own `License.txt` rather than off a
-store page — CC0, commercial use included, attribution optional, one licence across all 22 packs. What is in
+**Bought, and in the repository.** The licence is read from the archive's own `License.txt` rather than off a
+store page — CC0, commercial use included, attribution optional, one licence across all 22 packs. Every model
+in the 21 packs that ship an `fbx(unity)` export is committed at `client/Assets/Art/Kaykit/`, and what is in
 the collection is catalogued from the archive itself in
 [the collection inventory](research/kaykit-collection-inventory.md).
 
