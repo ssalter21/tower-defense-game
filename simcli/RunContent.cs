@@ -253,17 +253,93 @@ internal sealed class RunContent
     /// deepest round stands from there, which is the rule
     /// <see cref="FieldPool.OfRounds"/> carries.
     /// </remarks>
-    private FieldPool Pool(RunShape shape) =>
+    /// <remarks>
+    /// <b>A restricted wall opens on nothing, and that is not a shortcut.</b>
+    /// <c>content/defense.txt</c> is four archers and two mages, so a wall
+    /// asked for pierce that opened behind it would carry its counter in the
+    /// seed -- and measured, that is exactly what happened: the armoured Minion
+    /// reported zero against both pierce and impact until the seed came out.
+    /// Opening every restricted wall empty makes the columns equal by
+    /// construction -- same purse, same rounds, one difference -- and leaves
+    /// the authored defense meaning what it always meant to the unrestricted
+    /// wall and to every other verb.
+    /// </remarks>
+    private FieldPool Pool(RunShape shape, AttackType? only = null) =>
         FieldPool
             .Canned(
                 _map,
                 _rules,
                 Types,
                 Ladder,
-                _defense,
+                only is null ? _defense : TowerLayout.Nothing,
                 _field,
-                shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves)
+                shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves,
+                only)
             .Storing(_stored);
+
+    /// <summary>
+    /// Every attack type the roster has a placeable tower for, in matrix order.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Derived and not listed.</b> The three the matrix has rows for are
+    /// pierce, impact and magic, but which of them this roster can actually
+    /// build a wall out of is a fact about <c>content/units.txt</c> -- so a
+    /// roster that retires its last mage sweeps two walls and says so on its
+    /// coverage row, rather than refusing or reporting a wall of nothing.
+    /// </para>
+    /// <para>
+    /// A tower some edge of the ladder points at counts: it cannot be placed
+    /// directly, but the bot climbs to it, so an attack type reachable only by
+    /// upgrade is still an attack type a wall can be made of.
+    /// </para>
+    /// </remarks>
+    public IReadOnlyList<AttackType> WallTypes()
+    {
+        var found = new List<AttackType>();
+
+        for (int attack = 0; attack < DamageMatrix.AttackTypes; attack++)
+        {
+            for (int index = 0; index < Types.Count; index++)
+            {
+                UnitType type = Types.Types[index];
+
+                if (type.Role == UnitRole.Placed && (int)type.AttackType == attack)
+                {
+                    found.Add((AttackType)attack);
+                    break;
+                }
+            }
+        }
+
+        return found;
+    }
+
+    /// <summary>
+    /// One pool per wall, each named by what its opponents build.
+    /// </summary>
+    /// <remarks>
+    /// <b>One pool a wall and not one pool restricted three times.</b> A
+    /// <see cref="FieldPool"/> is recorded round by round at construction, so
+    /// the restriction has to be in force while it is being built rather than
+    /// applied to a population that already exists.
+    /// </remarks>
+    private SweepWall[] Walls(RunShape shape, IReadOnlyList<AttackType> walls)
+    {
+        if (walls is null || walls.Count == 0)
+        {
+            return new[] { SweepWall.Unrestricted(Pool(shape)) };
+        }
+
+        var built = new SweepWall[walls.Count];
+
+        for (int index = 0; index < walls.Count; index++)
+        {
+            built[index] = SweepWall.Of(walls[index], Pool(shape, walls[index]));
+        }
+
+        return built;
+    }
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>
     public Run Fresh(ulong seed, RunShape shape) =>
@@ -295,8 +371,13 @@ internal sealed class RunContent
     /// C#.
     /// </para>
     /// </remarks>
+    /// <param name="walls">
+    /// The attack types to score the roster against, one wall each, or nothing
+    /// for a single unrestricted wall -- whatever the defending bot buys.
+    /// </param>
     public SweepPlan Sweep(
         RunShape shape,
+        IReadOnlyList<AttackType> walls,
         ulong firstSeed,
         int runsPerCreep,
         int freeSnapshotsPerRun,
@@ -310,7 +391,7 @@ internal sealed class RunContent
             _rules,
             Types,
             Ladder,
-            Pool(shape),
+            Walls(shape, walls),
             firstSeed,
             runsPerCreep,
             shape.Waves,

@@ -101,6 +101,41 @@ answered by the attack type, so that is what the report has to carry.
 The soldier row is the other warning: 2,801 / 2,877 / 2,888 / 2,856 / 2,728 at `--waves 2` separates nothing
 either. A wall too weak to stop anything saturates as surely as one that stops everything.
 
+## What was done about it
+
+The wall became an axis of the report — [ADR-0058](../adr/0058-a-sweep-row-is-a-creep-against-one-attack-type.md).
+Every creep is now scored against a wall of each attack type the roster has a tower for, so
+`content/sweep.csv` is five creeps by three walls and names the wall in a column of its own.
+
+**One further thing had to move, and it was found by measuring.** A restricted wall built on top of
+`content/defense.txt` still opens behind four archers and two mages, and that mixed seed was enough to zero
+the armoured Minion against *both* pierce and impact:
+
+| wall, seeded from content/defense.txt | minion | skeleton-scout | necromancer | skeleton | skeleton-warrior |
+|---|---|---|---|---|---|
+| pierce | **0** | **0** | 5,229 | 6,993 | 18,160 |
+| impact | **0** | 34 | 4,411 | 4,762 | 30,102 |
+| magic | 20,873 | 37,673 | 46,709 | 34,259 | 30,151 |
+
+A restricted wall therefore opens on nothing, which makes the three columns equal by construction — same
+purse, same rounds, one difference. That is the committed report:
+
+| wall | minion | skeleton-scout | necromancer | skeleton | skeleton-warrior |
+|---|---|---|---|---|---|
+| pierce | 164 | **42** | 274 | 361 | 375 |
+| impact | 118 | 346 | 238 | 332 | 429 |
+| magic | 369 | 426 | 428 | 405 | 380 |
+
+(cost-efficiency, dealt per 100 gold.) **No cell is zero and every creep is priced against every wall.** The
+matrix reads straight down the columns: the swift Scout is worst against pierce at 42 and best against impact
+at 346, an eightfold swing; the arcane Necromancer is worst against impact — its 140% — and best against
+magic, its 70%.
+
+**What it does not fix, and the wall column is what makes it visible.** A mage costs 92 against a soldier's
+30, so an equal purse buys a far sparser magic wall and every creep scores well against it — the armoured
+Minion does best of all against magic, nominally its counter. Comparing across columns mixes matchup with
+density; comparing down a column does not, and that is the comparison the report is for.
+
 ## How to reproduce
 
 Editor closed, from a shell. `tools/_shared.ps1` joined `-ContentFile`'s option and value into one token until

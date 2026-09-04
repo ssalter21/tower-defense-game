@@ -223,6 +223,7 @@ public static class Program
         "             " + RunShapeUsage,
         "             [--free-snapshots <number>] [--snapshot-price <number>]",
         "             [--most-creeps <number>] [--policy <name>] [--per-run]",
+        "             [--walls <types>]",
         string.Empty,
         "         Plays a population of runs per creep and writes the balance",
         "         report as a comma-separated file -- to --out, or to standard",
@@ -235,6 +236,15 @@ public static class Program
         "         or " + AllIn + ", which builds nothing and sends the lot. Two reports",
         "         under the two of them are what says what the defensive half of",
         "         a round is worth. The name is a row of the file.",
+        string.Empty,
+        "         --walls is what the OPPONENTS' towers are made of, and every",
+        "         creep is scored against every one of them: a comma-separated",
+        "         list of " + string.Join(", ", DamageMatrix.AttackWordList) + ", or '" + AnyWall + "' for",
+        "         whatever the defending bot buys unrestricted. Left out, it is",
+        "         every attack type the roster has a tower for. One wall cannot",
+        "         price a roster -- the matrix is authored so none of the three",
+        "         is globally better, so a single wall reports a landslide and a",
+        "         zero and which creep gets which is a fact about the bot.",
         string.Empty,
         "         --per-run writes a row for every run under the folded ones,",
         "         each naming the seed it was played on -- the distribution the",
@@ -398,7 +408,8 @@ public static class Program
                     "snapshot-price",
                     "most-creeps",
                     "policy",
-                    "per-run"));
+                    "per-run",
+                    "walls"));
 
             default:
                 throw new UsageException($"'{args[0]}' is not a verb this program has.");
@@ -752,9 +763,11 @@ public static class Program
     private static int RunSweep(Arguments arguments)
     {
         string name = arguments.Optional("policy") ?? SweepPlan.EvenShare;
+        RunContent content = ContentOf(arguments);
 
-        SweepPlan plan = ContentOf(arguments).Sweep(
+        SweepPlan plan = content.Sweep(
             ShapeOf(arguments),
+            WallsOf(arguments, content),
             arguments.RequiredUnsigned("seed"),
             arguments.Optional("runs", SweepPlan.DefaultRunsPerCreep, 1, MaximumRunsPerCreep),
             Dial(arguments, "free-snapshots"),
@@ -784,6 +797,91 @@ public static class Program
         }
 
         return 0;
+    }
+
+    /// <summary>What a wall of no restriction is asked for by name.</summary>
+    private const string AnyWall = SweepWall.Any;
+
+    /// <summary>How the walls are separated in one argument.</summary>
+    private const char WallSeparator = ',';
+
+    /// <summary>
+    /// The walls to score the roster against: the roster's own attack types
+    /// where nobody said, or the ones named.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Every attack type is the default because one of them is not a
+    /// report.</b> The matrix is authored so no attack type is globally better,
+    /// so a wall of one type hard-counters one armour class and barely troubles
+    /// another: swept against a single wall the roster reads as a landslide and
+    /// a zero, and which creep gets which says more about the defending bot than
+    /// about any creep. Measured in
+    /// <c>docs/research/a-sweep-row-measures-the-walls-attack-type.md</c>.
+    /// </para>
+    /// <para>
+    /// <b><c>any</c> is the way back to one wall</b>, and it is a name rather
+    /// than an absence: a report played against whatever a value-buying bot
+    /// converged on is a legitimate thing to ask for -- it is what a run
+    /// actually meets -- but it is not the thing this file is committed as, and
+    /// the two must not be confusable. It cannot be mixed with a restricted
+    /// wall, because "no restriction" is not a fourth type and a file listing
+    /// it beside pierce would read as though it were.
+    /// </para>
+    /// </remarks>
+    private static IReadOnlyList<AttackType> WallsOf(Arguments arguments, RunContent content)
+    {
+        string? named = arguments.Optional("walls");
+
+        if (named is null)
+        {
+            return content.WallTypes();
+        }
+
+        string[] words = named.Split(WallSeparator);
+        var walls = new List<AttackType>();
+
+        for (int index = 0; index < words.Length; index++)
+        {
+            string word = words[index].Trim();
+
+            if (word == AnyWall)
+            {
+                if (words.Length > 1)
+                {
+                    throw new UsageException(
+                        $"--walls names '{AnyWall}' beside {words.Length - 1} attack "
+                        + $"{(words.Length == 2 ? "type" : "types")}. '{AnyWall}' is the absence of a "
+                        + "restriction rather than a fourth kind of wall, so a report carrying it beside "
+                        + "pierce would have two rows a reader would compare and one of them would be the "
+                        + "other one's superset. Ask for it alone, or name the types.");
+                }
+
+                return new AttackType[0];
+            }
+
+            AttackType attack = DamageMatrix.AttackFor(word);
+
+            if (attack == AttackType.None)
+            {
+                throw new UsageException(
+                    $"--walls names '{word}', which is not an attack type. A wall is built out of one of "
+                    + $"{string.Join(", ", DamageMatrix.AttackWordList)}, or '{AnyWall}' for whatever the "
+                    + "defending bot buys unrestricted.");
+            }
+
+            if (walls.Contains(attack))
+            {
+                throw new UsageException(
+                    $"--walls names '{word}' twice. Every creep meets every wall once, so a repeated wall "
+                    + "is the same fifteen runs played and reported again under a heading that cannot be "
+                    + "told from the first.");
+            }
+
+            walls.Add(attack);
+        }
+
+        return walls;
     }
 
     /// <summary>
