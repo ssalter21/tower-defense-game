@@ -30,7 +30,7 @@ is real — and every mode of it is the same machine at a different latency.*
 In [`research/`](research/). They are **evidence, not design documents**: each resolves one question, cites
 primary sources, and decides nothing.
 
-**Nine remain of twenty-four.** [Fifteen were
+**Nine remained of twenty-four, and one has been written since.** [Fifteen were
 retired](decision-log.md#5-september-2026-later--fifteen-research-notes-are-retired) on 5 September 2026, and
 the test each one was held to was not its age but whether anything still needed it: a note stays if code, a
 content file or an ADR cites it, or if it holds a measurement that costs real time to take again. A survey
@@ -48,6 +48,7 @@ code or the content file whose number it explains:
 | [A wall kills a count, not a share](research/a-wall-kills-a-count-not-a-share.md) | What does an opponent who buys its column again every round cost a run, and can a run build its way out? |
 | [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
 | [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
+| [A sweep row measures the wall's attack type](research/a-sweep-row-measures-the-walls-attack-type.md) | Two of the sweep's five rows report zero. Is that a lost control, or the damage matrix working? |
 
 **Asset research**, on the art that is actually on the machine:
 

@@ -29,8 +29,15 @@ function Get-ContentArguments {
 
     $arguments = @('--content', $Directory)
 
+    # THE PARENTHESES ARE LOAD-BEARING. PowerShell binds ',' tighter than '+',
+    # so `'--' + $option, $value` is `'--' + ($option, $value)` -- a string
+    # concatenated with an ARRAY, which stringifies it space-separated into the
+    # single token `--defense D:\d.txt`. The runner then refuses an option
+    # nobody named, quoting a pair that looks correct, and the message points
+    # at the option rather than at the joining. Measured: every -ContentFile
+    # example in these scripts' own headers failed this way.
     foreach ($option in ($Elsewhere.Keys | Sort-Object)) {
-        $arguments += @('--' + $option, [string]$Elsewhere[$option])
+        $arguments += @(('--' + $option), [string]$Elsewhere[$option])
     }
 
     return , $arguments
