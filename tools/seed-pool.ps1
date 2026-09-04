@@ -106,8 +106,12 @@ Write-Host "Building simcli into $build"
 & dotnet build (Join-Path $repoRoot 'simcli') --configuration Debug --nologo --output $build | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "Building simcli failed (exit $LASTEXITCODE)." }
 
-$runner = Join-Path $build 'Sim.Cli.dll'
-if (-not (Test-Path $runner)) { throw "simcli built but $runner is not there." }
+# Named $program because that is what every other tool in here calls the
+# built assembly. The invocation below is hand-rolled rather than Invoke-SimCli
+# so the refusal can name the creep and the seed it failed on -- this is a loop
+# over a matrix, and "store-run refused" alone does not say which cell.
+$program = Join-Path $build 'Sim.Cli.dll'
+if (-not (Test-Path $program)) { throw "simcli built but $program is not there." }
 
 New-Item -ItemType Directory -Force $Pool | Out-Null
 
@@ -127,7 +131,7 @@ foreach ($creep in $creeps) {
             '--policy', $player,
             '--creep', $creep) + (Get-ContentArguments -Directory $content)
 
-        & dotnet $runner $arguments
+        & dotnet $program $arguments
 
         if ($LASTEXITCODE -ne 0) {
             throw "store-run refused (creep $creep, seed $seed, exit $LASTEXITCODE); its reason is above."

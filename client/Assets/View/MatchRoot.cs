@@ -301,7 +301,7 @@ namespace View
         /// determinism bug. So the pool a root plays against is the pool as it
         /// stood when the root's first run was built.
         /// </remarks>
-        private StoredRounds pool;
+        private StoredRounds _pool;
 
         /// <summary>
         /// A run on <paramref name="seed"/> with nothing played into it, over
@@ -337,9 +337,9 @@ namespace View
                 seed);
         }
 
-        /// <summary>The stored rounds beside the player, read once. See <see cref="pool"/>.</summary>
+        /// <summary>The stored rounds beside the player, read once. See <see cref="_pool"/>.</summary>
         private StoredRounds Pool(UnitTypeTable types) =>
-            pool ??= StreamingContent.ReadPool(PoolDirectory, Map, types);
+            _pool ??= StreamingContent.ReadPool(PoolDirectory, Map, types);
 
         /// <summary>
         /// Puts the build chrome up over a round the caller composed. What a

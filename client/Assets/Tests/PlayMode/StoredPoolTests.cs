@@ -212,8 +212,8 @@ namespace Tests.PlayMode
             IReadOnlyList<string> said = WrittenRun.Stored(run, Map(), types, _folder);
 
             Assert.That(said.Count, Is.EqualTo(2), "Every round is accounted for, stored or not.");
-            Assert.That(said[0], Does.StartWith("Not stored"), "Round one stood no wall.");
-            Assert.That(said[1], Does.StartWith("Stored"));
+            Assert.That(said[0], Does.StartWith("not stored"), "Round one stood no wall.");
+            Assert.That(said[1], Does.StartWith("stored"));
 
             StoredRounds read = StreamingContent.ReadPool(_folder, Map(), types);
 

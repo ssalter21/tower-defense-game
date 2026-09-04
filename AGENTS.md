@@ -46,8 +46,9 @@ Anything an agent needs to run lives in `tools/` and runs from a shell: `run-hea
 `run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
 `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
 `build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
-`render-map.ps1`,
-`capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
+`render-map.ps1`, `run-sweep.ps1`, `show-ladder.ps1`,
+`capture-match-frames.ps1`, `capture-art-previews.ps1`, `capture-ui-previews.ps1`,
+`capture-armed-roster.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
 `check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running

@@ -67,7 +67,7 @@ internal sealed class RoundFolder
         {
             if (!round.IsStorable)
             {
-                said.Add("not stored " + round.Refusal);
+                said.Add(round.Sentence(string.Empty));
 
                 continue;
             }
@@ -75,14 +75,7 @@ internal sealed class RoundFolder
             string name = round.Name + FileExtension;
 
             File.WriteAllBytes(Path.Combine(_directory, name), round.Bytes);
-            said.Add(
-                "stored     "
-                + name
-                + " ("
-                + PlainText.Number(round.Bytes.Length)
-                + " bytes, round "
-                + PlainText.Number(round.Stage)
-                + ", read back before writing)");
+            said.Add(round.Sentence(name));
         }
 
         return said;

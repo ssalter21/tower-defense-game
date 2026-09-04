@@ -38,6 +38,25 @@ namespace Sim
 
         /// <summary>Whether there is a record here to write.</summary>
         public bool IsStorable => Refusal is null;
+
+        /// <summary>
+        /// The line a person is told about this round, given what the file was
+        /// called. A refused round names its reason and no file.
+        /// </summary>
+        /// <remarks>
+        /// The sentence is here rather than in each shell for the reason the
+        /// composing is: two callers writing the same fact in two grammars is
+        /// two things to read and one of them to drift. Composing a sentence
+        /// opens no path, so it sits on this side of ADR-0018 with the rest.
+        /// </remarks>
+        /// <param name="fileName">What the record was written as, suffix included.</param>
+        public string Sentence(string fileName) =>
+            IsStorable
+                ? "stored     " + fileName
+                    + " (" + Bytes.Length.ToString(CultureInfo.InvariantCulture)
+                    + " bytes, round " + Stage.ToString(CultureInfo.InvariantCulture)
+                    + ", read back before writing)"
+                : "not stored " + Refusal;
     }
 
     /// <summary>

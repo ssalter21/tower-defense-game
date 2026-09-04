@@ -119,7 +119,7 @@ namespace View
             {
                 if (!round.IsStorable)
                 {
-                    said.Add("Not stored: " + round.Refusal);
+                    said.Add(round.Sentence(string.Empty));
 
                     continue;
                 }
@@ -127,7 +127,7 @@ namespace View
                 string name = round.Name + StreamingContent.PoolFileExtension;
 
                 File.WriteAllBytes(Path.Combine(directory, name), round.Bytes);
-                said.Add("Stored " + name);
+                said.Add(round.Sentence(name));
             }
 
             return said;
