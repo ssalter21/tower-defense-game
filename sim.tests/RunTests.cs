@@ -810,10 +810,10 @@ public class RunTests
 
         FieldPool pool = FieldPool.OfRounds(new[] { new[] { opening }, new[] { later } });
 
-        Assert.Same(opening, pool.At(0, 0));
-        Assert.Same(later, pool.At(1, 0));
-        Assert.Same(later, pool.At(9, 0));
-        Assert.Equal(1, pool.SizeAt(0));
+        Assert.Same(opening, pool.StandingIn(0, 0));
+        Assert.Same(later, pool.StandingIn(1, 0));
+        Assert.Same(later, pool.StandingIn(9, 0));
+        Assert.Equal(1, pool.StandInsAt(0));
 
         // The whole population, round structure flattened away: what a pool is
         // worth is measured over all of it at once.
@@ -826,8 +826,8 @@ public class RunTests
         // rounds to record means by handing over a list.
         FieldPool flat = FieldPool.Of(new[] { opening, later });
 
-        Assert.Equal(2, flat.SizeAt(0));
-        Assert.Same(later, flat.At(7, 1));
+        Assert.Equal(2, flat.StandInsAt(0));
+        Assert.Same(later, flat.StandingIn(7, 1));
     }
 
     [Fact]
@@ -862,34 +862,43 @@ public class RunTests
 
         Assert.Equal(10, canned.Rounds);
         Assert.Equal(10, canned.Size);
-        Assert.Equal(1, canned.SizeAt(6));
+        Assert.Equal(1, canned.StandInsAt(6));
 
-        // The committed defense is the wall it opens with, cell for cell. What
-        // the first round adds to it is whatever half of the opening purse pays
-        // for, which on the committed content is nothing at all.
-        TowerLayout opening = canned.At(0, 0).Defense;
+        // The committed defense is the wall it opens behind, cell for cell, and
+        // what the first round adds to it is whatever half of the opening purse
+        // pays for: on the committed content one forty-gold archer out of a
+        // fifty-gold half, standing on route the six already watch.
+        TowerLayout opening = canned.StandingIn(0, 0).Defense;
 
-        Assert.Equal(TheMatch.Spelling(defense), TheMatch.Spelling(opening));
+        Assert.Equal(defense.Count + 1, opening.Count);
+        Assert.All(
+            TheMatch.Spelling(defense),
+            tower => Assert.Contains(tower, TheMatch.Spelling(opening)));
 
-        // And by the last round it is a dearer wall standing on the same cells:
-        // the route is covered end to end already, so the rule the run builds by
-        // has nothing left to place and spends on upgrading instead.
-        TowerLayout closing = canned.At(9, 0).Defense;
+        // And by the last round it is a bigger wall and a dearer one. The route
+        // is covered end to end already, so every round of it is bought by the
+        // value half of the rule: a second tower on route something already
+        // watches, or an upgrade of what stands, whichever scores more damage
+        // over the route per gold.
+        TowerLayout closing = canned.StandingIn(9, 0).Defense;
 
-        Assert.Equal(defense.Count, closing.Count);
+        Assert.True(
+            closing.Count > defense.Count,
+            "The stand-in stood " + closing.Count + " towers by the last round against the " + defense.Count
+            + " it opened behind.");
         Assert.True(
             Worth(costs, closing) > Worth(costs, opening),
             "The stand-in's wall is worth more by the last round than it was in the first.");
 
         // One column, deeper every round. The shape is what content/field.txt
         // is calibrated for, so growth is a count and never a second order.
-        Assert.Equal(wave.TotalUnits, canned.At(0, 0).Wave.TotalUnits);
-        Assert.Equal(wave.Count, canned.At(6, 0).Wave.Count);
-        Assert.Equal(wave.TotalUnits * 7, canned.At(6, 0).Wave.TotalUnits);
-        Assert.Equal(wave.TotalUnits * 10, canned.At(9, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits, canned.StandingIn(0, 0).Wave.TotalUnits);
+        Assert.Equal(wave.Count, canned.StandingIn(6, 0).Wave.Count);
+        Assert.Equal(wave.TotalUnits * 7, canned.StandingIn(6, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(9, 0).Wave.TotalUnits);
 
         // And past the last round it recorded, the deepest round stands.
-        Assert.Equal(wave.TotalUnits * 10, canned.At(40, 0).Wave.TotalUnits);
+        Assert.Equal(wave.TotalUnits * 10, canned.StandingIn(40, 0).Wave.TotalUnits);
     }
 
     [Fact]

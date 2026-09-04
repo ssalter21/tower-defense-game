@@ -2,7 +2,7 @@
 
 Working rules for anything — human or agent — doing execution work in this repo.
 
-Five rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
+Six rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
 most to find later. Keep this file short: it is loaded into every agent's context, so anything that is a
 *finding* rather than an *instruction* belongs in [`docs/research/`](docs/research/).
 
@@ -33,14 +33,23 @@ matching the tests on disk. It counts them; it does not compile them — a test 
 test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
 every gate step will still pass.
 
+**A scheduled task runs all three overnight, so a break shows up the morning after rather than weeks later.**
+`register-nightly-unity.ps1` puts `nightly-unity.ps1` on the machine at 03:00, and it writes one line per
+runner — date, runner, pass or fail, tests run, exit code — to `client/Logs/nightly.log`, which git ignores.
+It tests one checkout as it stood at 03:00, so it is a catch and not a substitute for running the one you
+changed.
+
 ## 3. Every automation has a static command-line entry point
 
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
-`run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
-`capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
-`check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
+`run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
+`build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
+`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
+`render-map.ps1`, `run-sweep.ps1`, `show-ladder.ps1`,
+`capture-match-frames.ps1`, `capture-art-previews.ps1`, `capture-ui-previews.ps1`,
+`capture-armed-roster.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
+`check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
 editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on
@@ -105,6 +114,27 @@ second is an orphan.
 
 Delete the branch too once its pull request merges. GitHub drops the remote branch on merge, but the local one
 is yours to remove; `git branch --merged origin/main` lists everything that has already landed.
+
+## 6. What verifies an area decides how much of it an agent may do unattended
+
+The gate covers the simulation completely and, as rule 2 says, counts the client's tests without running them,
+so an agent working alone has hard evidence about one half of this repository and thin evidence about the
+other. **Match the autonomy to what would actually catch the change being wrong**, per the gradient below.
+Treating every area alike is what fails quietly: hold a change a player will see to the simulation's standard
+and every check still passes, on an artefact nobody has looked at. The evidence is in
+[The software factory](docs/research/the-software-factory.html), which asked for this rule, and
+[What agents can build unattended](docs/research/what-agents-can-build-unattended.md), which names the
+instruments each row rests on and the standing rules the last row cites.
+
+| Area | What verifies it | Autonomy |
+|---|---|---|
+| `sim/`, `sim.tests/`, `sim.poison/` | The gate, the matrix, the IL scan, the golden trace | Full — a green gate is sufficient |
+| `content/*.txt` | The trace moves and must be regenerated deliberately | Full to change; never to regenerate in order to get green |
+| `simcli/`, `tools/` | The gate runs seven of these scripts; every other one runs from a shell | Full — run the one you changed |
+| `docs/` | `check-docs.ps1`, on four claims a document makes about other files | Full to draft; a person's review is the gate |
+| `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
+| `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |
+| Art, names, numbers a player sees | Nothing automatable | Human only — the standing rules |
 
 ## Waiting on Unity
 

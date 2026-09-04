@@ -27,11 +27,18 @@ internal sealed class PlayedRun
 {
     private readonly IReadOnlyList<RoundReport> _rounds;
 
-    private PlayedRun(CommandStream stream, Run run, IReadOnlyList<RoundReport> rounds)
+    private readonly StoredRounds? _pool;
+
+    private PlayedRun(
+        CommandStream stream,
+        Run run,
+        IReadOnlyList<RoundReport> rounds,
+        StoredRounds? pool)
     {
         Stream = stream;
         Run = run;
         _rounds = rounds;
+        _pool = pool;
     }
 
     /// <summary>The record that was played, as it came off the disk.</summary>
@@ -45,7 +52,16 @@ internal sealed class PlayedRun
     /// to the end.
     /// </summary>
     /// <param name="record">What the bytes are called in any error message. Never a path.</param>
-    public static PlayedRun Of(string record, byte[] bytes, RunContent content, RunShape shape)
+    /// <param name="pool">
+    /// The folder the run's opponents were drawn from, so a round can name the
+    /// ids it met. Null where no folder was named.
+    /// </param>
+    public static PlayedRun Of(
+        string record,
+        byte[] bytes,
+        RunContent content,
+        RunShape shape,
+        StoredRounds? pool)
     {
         CommandStream stream = CommandStream.FromBytes(record, bytes);
 
@@ -54,7 +70,7 @@ internal sealed class PlayedRun
         // are held against the run in front of them.
         Run run = content.Fresh(stream.Seed, shape);
 
-        return new PlayedRun(stream, run, stream.Replay(run));
+        return new PlayedRun(stream, run, stream.Replay(run), pool);
     }
 
     /// <summary>
@@ -83,7 +99,7 @@ internal sealed class PlayedRun
         (byte[] bytes, IReadOnlyList<RoundReport> rounds) =
             CommandStream.Recorded(run, commands);
 
-        return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, rounds));
+        return (bytes, new PlayedRun(CommandStream.FromBytes(source, bytes), run, rounds, pool: null));
     }
 
     /// <summary>The shape the run was played at: N, K, and whether death ends it.</summary>
@@ -120,10 +136,51 @@ internal sealed class PlayedRun
 
             text.Append(Stream.Commands[index].ToString())
                 .Append("   ->   ")
-                .Append(_rounds[index].ToString());
+                .Append(_rounds[index].ToString())
+                .Append(FieldOf(index));
         }
 
         return text.ToString();
+    }
+
+    /// <summary>
+    /// Who the round met, where any of them was somebody: how many of the K
+    /// slots drew a stored round, which ones by id, and how many the canned
+    /// field stood in for.
+    /// </summary>
+    /// <remarks>
+    /// <b>Nothing at all where the folder holds no round.</b> A run against an
+    /// empty pool is resolved against the canned field exactly as it was before
+    /// there were folders, and a line saying so on every round of every report
+    /// would be a claim about a population that does not exist -- and would move
+    /// <c>content/run-outcome.txt</c>, which is a run played against no folder.
+    /// </remarks>
+    private string FieldOf(int round)
+    {
+        if (_pool is null || _pool.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        FieldDraw field = _rounds[round].Field;
+        var names = new List<string>();
+
+        for (int slot = 0; slot < field.Drawn.Count; slot++)
+        {
+            Hash64? id = _pool.Drawn(round + 1, field.Drawn[slot]);
+
+            if (id is not null)
+            {
+                names.Add(id.Value.ToString());
+            }
+        }
+
+        return ", field "
+            + PlainText.Number(names.Count)
+            + " stored and "
+            + PlainText.Number(field.Canned)
+            + " canned"
+            + (names.Count == 0 ? string.Empty : ": " + string.Join(", ", names));
     }
 
     /// <summary>

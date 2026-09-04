@@ -19,7 +19,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 51 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 57 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/README.md) | The five deep dives the vision was built on, the row-by-row account of what it overturned in them, and the specifications whose implementation is gone |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
@@ -71,6 +71,7 @@ at its top rather than being rewritten.
 | [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
 | [A player build measures no text without a PanelSettings asset](research/a-player-build-measures-no-text-without-a-panelsettings-asset.md) | A build drew none of its HUD while the editor drew all of it. What is different about a player? |
 | [The software factory, assessed against this repository](research/the-software-factory.html) *(HTML)* | What is the software-factory approach, which of it applies here, and what should change as a result? |
+| [What agents can build unattended](research/what-agents-can-build-unattended.md) | With the tracker empty and step 5 half-built, which seams can an `/afk` run take to green, what proves each, and what must a person hand over first? |
 
 > **One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence
 > and pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those

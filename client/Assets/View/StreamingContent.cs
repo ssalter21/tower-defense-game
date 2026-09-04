@@ -207,8 +207,37 @@ namespace View
             return all;
         }
 
+        /// <summary>
+        /// The folder of stored rounds a run's opponents are drawn from: one
+        /// file per round, named by its record id.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It sits beside the content and is not content.</b> The seven text
+        /// files and the record are authored, committed and synced by
+        /// <c>tools/sync-streaming-content.ps1</c>; this folder is written at
+        /// runtime and grows every time somebody plays, so it is ignored by
+        /// construction -- see <c>client/.gitignore</c>. It is here rather than
+        /// somewhere of its own because a build is a folder somebody unzipped
+        /// and streaming assets are the only folder Unity copies into one
+        /// verbatim.
+        /// </para>
+        /// <para>
+        /// <b>Absent is the ordinary case.</b> A fresh clone has seeded no pool,
+        /// and a run against nobody stored is a run against the canned field --
+        /// which is every run this project has played so far.
+        /// </para>
+        /// </remarks>
+        public const string PoolFolderName = "pool";
+
+        /// <summary>What a stored round is called on disk, after its id.</summary>
+        public const string PoolFileExtension = ".round";
+
         /// <summary>Where the generated copies are, at runtime and in the editor.</summary>
         public static string Directory => Path.Combine(Application.streamingAssetsPath, FolderName);
+
+        /// <summary>Where the stored rounds are.</summary>
+        public static string PoolDirectory => Path.Combine(Directory, PoolFolderName);
 
         /// <summary>The full path of one content file.</summary>
         public static string PathOf(string fileName) => Path.Combine(Directory, fileName);
@@ -327,6 +356,57 @@ namespace View
         /// </remarks>
         public static ReplayBundle ReadRecordedMatch() =>
             ReplayBundle.FromBytes(FolderName + "/" + ReplayFileName, Read(ReplayFileName));
+
+        /// <summary>
+        /// The stored rounds beside the player, offered to the pool in id
+        /// order.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This opens files and does nothing else.</b> Which stored rounds a
+        /// run may meet is <see cref="Sim.StoredRounds"/>'s, in the simulation,
+        /// so the client and <c>simcli</c> read one folder by one rule rather
+        /// than two that have to agree. A record it refuses is named on
+        /// <see cref="Sim.StoredRounds.Refusals"/> and skipped: a folder that
+        /// has been played into for months carries records from formats that
+        /// have moved, and a run that would not start over one is a run nobody
+        /// can play on the day a format does.
+        /// </para>
+        /// <para>
+        /// <b>The order a directory lists in does not matter</b>, because
+        /// <see cref="Sim.StoredRounds"/> files each stage by id whatever order
+        /// the records arrive in. A draw is an index into a stage, so that
+        /// order is load bearing, and it lives where the population is built
+        /// rather than in each shell that walks a folder.
+        /// </para>
+        /// </remarks>
+        public static StoredRounds ReadPool(HexMap map, UnitTypeTable types) =>
+            ReadPool(PoolDirectory, map, types);
+
+        /// <summary>The same, out of a folder the caller names.</summary>
+        /// <remarks>
+        /// What a test calls, for the reason it hands the art in rather than
+        /// reading a generated scene: a suite that filled the folder a person's
+        /// run draws from would score their next run against its fixtures.
+        /// </remarks>
+        public static StoredRounds ReadPool(string directory, HexMap map, UnitTypeTable types)
+        {
+            var pool = new StoredRounds(map, types);
+
+            // Qualified because this class has a Directory of its own, which is
+            // the folder the content lives in rather than the type.
+            if (!System.IO.Directory.Exists(directory))
+            {
+                return pool;
+            }
+
+            foreach (string path in System.IO.Directory.GetFiles(directory, "*" + PoolFileExtension))
+            {
+                pool.Add(Path.GetFileNameWithoutExtension(path), File.ReadAllBytes(path));
+            }
+
+            return pool;
+        }
 
         /// <summary>
         /// True when every file a match needs is beside the player.

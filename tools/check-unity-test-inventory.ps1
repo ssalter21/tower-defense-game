@@ -73,6 +73,7 @@ $declaration = @'
   3  client/Assets/Tests/PlayMode/RealRigSamplingTests.cs
  14  client/Assets/Tests/PlayMode/RunLoopTests.cs
   2  client/Assets/Tests/PlayMode/SimPluginTests.cs
+  5  client/Assets/Tests/PlayMode/StoredPoolTests.cs
  21  client/Assets/Tests/PlayMode/WaveTests.cs
   4  client/Assets/Tests/PlayMode/WeaponSocketTests.cs
 '@

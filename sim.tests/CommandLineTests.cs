@@ -189,6 +189,87 @@ public class CommandLineTests
     }
 
     [Fact]
+    public void A_run_against_an_empty_pool_is_the_committed_run_and_a_seeded_one_names_who_it_met()
+    {
+        // The three claims a folder of opponents makes from a shell, in the
+        // order they have to hold: an empty folder is the run this program has
+        // always played, byte for byte; storing a run puts its rounds where the
+        // next one draws from; and drawing from a seeded folder names the ids
+        // it met and how many the canned field stood in for.
+        //
+        // OBSERVED: consume one draw off the stream for a stage that stored
+        // nobody -- start FieldFor's top-up loop at zero rather than at `met`.
+        // The first assertion goes red on a whole outcome file, which is what
+        // retiring content/run-outcome.txt without meaning to looks like.
+        string scratch = TheCommandLine.Scratch("play-run-pool");
+        string pool = Path.Combine(scratch, "pool");
+        string empty = Path.Combine(scratch, "empty.txt");
+        string seeded = Path.Combine(scratch, "seeded.txt");
+        string[] against = { "--pool", pool };
+
+        CommandLineResult unseeded = TheCommandLine.Invoke(
+            new[] { "play-run", "--commands", RepoLayout.CommandFile, "--out", empty }
+                .Concat(against)
+                .Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Contains("pool       0 stored rounds", unseeded.Output, StringComparison.Ordinal);
+        Assert.Equal(File.ReadAllText(RepoLayout.RunOutcomeFile), File.ReadAllText(empty));
+
+        // And what that run stored is what the next one meets. The first round
+        // built a wall and sent nothing, so it is not a stored round and says
+        // so rather than landing as a file the folder would refuse.
+        CommandLineResult stored = TheCommandLine.Invoke(
+            new[] { "play-run", "--commands", RepoLayout.CommandFile, "--store" }
+                .Concat(against)
+                .Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Contains("not stored round 1", stored.Output, StringComparison.Ordinal);
+        Assert.Contains("read back before writing", stored.Output, StringComparison.Ordinal);
+
+        // A file the reader cannot use, dropped in beside them: it is named and
+        // skipped, and the run still finishes. A folder accumulates for as long
+        // as anybody plays, so a stale record in one must not stop a run.
+        File.WriteAllBytes(Path.Combine(pool, "0000000000000000.round"), new byte[] { 1, 2, 3, 4 });
+
+        CommandLineResult met = TheCommandLine.Invoke(
+            new[] { "play-run", "--commands", RepoLayout.CommandFile, "--out", seeded }
+                .Concat(against)
+                .Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Contains("refused    0000000000000000", met.Output, StringComparison.Ordinal);
+        Assert.Contains("1 refused", met.Output, StringComparison.Ordinal);
+
+        // The outcome names who each round met and how many of the ten it could
+        // not fill, and the two together are the field's width.
+        string[] rounds = File.ReadAllLines(seeded)
+            .Where(line => line.StartsWith("wave ", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.NotEmpty(rounds);
+        Assert.All(rounds, round => Assert.Contains(" canned", round, StringComparison.Ordinal));
+        Assert.Contains(
+            rounds,
+            round => round.Contains(" stored and ", StringComparison.Ordinal)
+                && !round.Contains("0 stored and ", StringComparison.Ordinal));
+
+        // Replaying the same commands against the same folder draws the same
+        // ten, which is what a derived draw buys.
+        string again = Path.Combine(scratch, "again.txt");
+
+        TheCommandLine.Invoke(
+            new[] { "play-run", "--commands", RepoLayout.CommandFile, "--out", again }
+                .Concat(against)
+                .Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Equal(File.ReadAllText(seeded), File.ReadAllText(again));
+        Assert.NotEqual(File.ReadAllText(empty), File.ReadAllText(seeded));
+    }
+
+    [Fact]
     public void The_ladder_verb_reads_the_committed_pair_and_exits_zero()
     {
         // Two files and not seven, which is the shape of the verb: a ladder is

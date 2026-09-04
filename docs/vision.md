@@ -604,8 +604,11 @@ make this a *final-deliverable* pipeline rather than a placeholder one:
   and CC0 already grants modification, commercially, with no attribution and no royalty. The money buys
   bundling, the original geometry and rig, and every future pack.
 
-⚠️ **Confirm before paying.** Every licence and price claim here was read as extracted text rather than in a
-browser. [#56](https://github.com/ssalter21/tower-defense-game/issues/56) is open for exactly this check.
+**Bought, and in the repository.** The licence is read from the archive's own `License.txt` rather than off a
+store page — CC0, commercial use included, attribution optional, one licence across all 22 packs. Every model
+in the 21 packs that ship an `fbx(unity)` export is committed at `client/Assets/Art/Kaykit/`, and what is in
+the collection is catalogued from the archive itself in
+[the collection inventory](research/kaykit-collection-inventory.md).
 
 ### Where the effort goes
 
@@ -753,8 +756,8 @@ listed below.
 2. **The five deep dives** — [`docs/archive/`](archive/README.md). Their claims are inherited except where
    [the archive index](archive/README.md) replaces them.
 3. **KayKit** — [The Complete KayKit](https://kaylousberg.itch.io/kaykit-complete), CC0, $150, `.blend`
-   sources. Licence and price **pending browser confirmation** under
-   [#56](https://github.com/ssalter21/tower-defense-game/issues/56).
+   sources. Licence read from the archive's own `License.txt`, catalogued in
+   [the collection inventory](research/kaykit-collection-inventory.md).
 4. **CC0 1.0** — [Creative Commons deed](https://creativecommons.org/publicdomain/zero/1.0/): copy, modify,
    distribute and perform, including commercially, without permission.
 5. **Legion TD 2** — the both-boards-at-once structure, and the two-currency loop whose *problem statement*

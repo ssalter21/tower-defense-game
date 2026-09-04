@@ -227,35 +227,36 @@ a pulse" — so the refusal closes a shape the decision opened. That shape survi
 with the attack instead of pulsing. Striking the refusal is one line if a pulsing damage aura is wanted; what
 it would then need is a stated rule for where its dice come from.
 
-### Does the scripted player's upgrade half need to know what a tower is worth?
+### Does the bot's value score divide by the gold it spends or by the gold it adds?
 
-**Raised by [#222](https://github.com/ssalter21/tower-defense-game/issues/222) and left standing rather than
-fixed inside it.** `CoverThenUpgradeBot` covers the route by value — the type reaching the most unshot route
-per gold — and then upgrades by **price alone**: the lowest-ordinal placement becomes the cheapest row dearer
-than the one standing on it, whatever that row does. On the committed roster the archer costs 40 and fires
-every 18 ticks and the mage costs 92 and fires every 54, so every upgrade the bot makes is a third less damage
-a tick for more than twice the price.
+**Left standing by [#236](https://github.com/ssalter21/tower-defense-game/issues/236) rather than settled
+inside it.** That ticket decided what a purchase on a covered route is worth — damage a tick, times the bodies
+a shot hits, times the route hexes it reaches, per gold of the price difference — and `CoverThenUpgradeBot`
+implements exactly that. The difference is the wrinkle: an upgrade costs its target's **full** price, which
+`content/upgrades.txt` has said since the ladder was authored, so the number the score divides by is not the
+number the purse hands over.
 
-**It was nearly invisible until the ghost got a purse.** A run's own purse rarely reaches the upgrade half at
-all — there is always more route to cover — while a canned opponent opens behind a route covered end to end
-and reaches it in round two. Now both walls of the report are built by this rule, and the report says so: the
-committed run gets more past the ghost after it upgrades than before, and `content/sweep.csv` re-ranks the
-roster by which armour class the mage's magic attack happens to meet. The measurements are in
-[the 29 August decision-log entry](decision-log.md).
+**What that buys is a stepping stone.** A 30-gold soldier stood on a good cell and turned into an archer in
+the same round is 70 gold spent on a 40-gold archer, and the rule rates it highly because the second half of
+it only cost 10 gold above what was standing. The run in `BuildPolicyTests` asserts the bot does this, so it
+is visible rather than lurking.
 
-**It is also what caps the ghost's growth at round six.** Once the four archers are mages there is no dearer
-row and no unshot hex, so rounds six to ten of every sweep are still a growing wave against a frozen wall —
-the thing [#222](https://github.com/ssalter21/tower-defense-game/issues/222) set out to remove, removed for
-half a run. That half is not a second ticket: it is this question, seen from the harness end.
+**Two answers.** Divide by the gold actually paid, which is one number for both candidates and makes the
+stepping stone score exactly what it is worth; or keep the difference, on the argument that what an upgrade is
+worth is what it *adds* and the waste is a true thing about the rule that the report should carry. What
+settles it is whether this bot is meant to model a player valuing a board or a player emptying a purse.
 
-**Three answers, and none of them is a tuning pass.** Upgrade by the same value rule the cover half uses, which
-needs a per-gold score for a tower that covers nothing new. Refuse an upgrade that lowers damage a tick, which
-is a rule about one column and would leave the mage unbuyable on this board. Or leave it, on the argument that
-a deliberately simple bot is the point and the report already carries a note saying a row describes a game and
-never skilled play. What settles it is what the report is for, which is a question about the harness rather
-than about the bot.
+### Is a sweep row worth reading when the wall stops its creep outright?
 
-**A second cap comes with it, and it is not the same question.** A rule that places only where nothing is shot
-at stops placing the moment the route is covered, so a wall is capped at however many towers cover the board
-— six here — however rich it gets. Redundant coverage is a real defensive move and this bot has no way to
-make it.
+**Raised by [#236](https://github.com/ssalter21/tower-defense-game/issues/236)'s regeneration.** A defense
+that spends its whole share on a covered route now stops the light end of the roster: `content/sweep.csv` has
+the skeleton scout dealing **0** over eight runs and the minion **2,073**, against 52,687 and 36,847 before.
+A row of zeroes ranks against nothing, carries a cost efficiency of zero that means "never got through" rather
+than "poor value", and cannot disagree with itself across seeds — `SweepTests` had to move its determinism
+assertion to the necromancer to find a number that still moves.
+
+**It is a real reading of the board and not a broken harness**, which is what makes it a question. Three
+shapes it could take: leave it and read a zero as the finding it is; play the sweep against a thinner wall so
+that every row leaks something; or add a column that says what a row *survived* rather than what it dealt, so
+a creep that never gets through is still ranked by how far it got. The last is the only one that does not
+choose between honesty and signal.

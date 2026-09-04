@@ -77,6 +77,21 @@ public static class Program
     /// </remarks>
     private const string ContentDirectoryOption = "content";
 
+    /// <summary>
+    /// The directory a run's opponents are read out of: one file per stored
+    /// round, named by its record id.
+    /// </summary>
+    /// <remarks>
+    /// It is optional, and leaving it out is a run against the canned field --
+    /// which is what every run this program played before there were folders
+    /// was. An absent or empty directory is the same thing: a pool of nobody
+    /// stored, topped up to K by the stand-in.
+    /// </remarks>
+    private const string PoolDirectoryOption = "pool";
+
+    /// <summary>What <c>--store</c> is called on the command line.</summary>
+    private const string StoreOption = "store";
+
     /// <summary>The left margin a verb's continuation lines sit on.</summary>
     private const string UsageIndent = "             ";
 
@@ -96,7 +111,7 @@ public static class Program
     /// </remarks>
     private static readonly string[] RunOptions = RunContentFiles.All
         .Select(file => file.Option)
-        .Concat(new[] { ContentDirectoryOption, "waves", "field-size", "no-death" })
+        .Concat(new[] { ContentDirectoryOption, PoolDirectoryOption, "waves", "field-size", "no-death" })
         .ToArray();
 
     /// <summary>
@@ -104,7 +119,7 @@ public static class Program
     /// here rather than beside each verb, because a switch that is a pair on one
     /// verb and a switch on another is an argument nobody can spell twice.
     /// </summary>
-    private static readonly string[] Switches = { "no-death", "per-run" };
+    private static readonly string[] Switches = { "no-death", "per-run", StoreOption };
 
     /// <summary>
     /// The content every run verb takes, as an invocation writes it: a directory
@@ -115,7 +130,8 @@ public static class Program
         + UsageIndent
         + Wrapped(RunContentFiles.All.Select(file => "--" + file.Option + " <file>"));
 
-    private const string RunShapeUsage = "[--waves <number>] [--field-size <number>] [--no-death]";
+    private const string RunShapeUsage =
+        "[--" + PoolDirectoryOption + " <directory>] [--waves <number>] [--field-size <number>] [--no-death]";
 
     private static readonly string[] Usage =
     {
@@ -148,13 +164,17 @@ public static class Program
         "         looking one up. It is not what pins the geometry -- the map hash",
         "         is -- so leaving it out records a defense that does not say.",
         string.Empty,
-        "  play-run   --commands <file> [--out <file>]",
+        "  play-run   --commands <file> [--out <file>] [--" + StoreOption + "]",
         "             " + RunContentUsage,
         "             " + RunShapeUsage,
         string.Empty,
         "         Plays a command file to the end and prints the run's outcome.",
         "         The seed comes off the record, so the run played is the run the",
         "         decisions were made in. With --out, writes the outcome there.",
+        string.Empty,
+        "         --" + StoreOption + " writes every round of the run it just played into",
+        "         the pool directory, having read each one's bytes back first.",
+        "         It needs --" + PoolDirectoryOption + ", because there is nowhere else to put them.",
         string.Empty,
         "  record-run --script <file> --seed <number> --out <file>",
         "             " + RunContentUsage,
@@ -163,6 +183,19 @@ public static class Program
         "         Compiles an authored command script into a command file, having",
         "         first read the bytes back and played them to the end. Nothing is",
         "         written if it will not replay.",
+        string.Empty,
+        "  store-run  --seed <number> --" + PoolDirectoryOption + " <directory>",
+        "             [--policy <name>] [--creep <id>]",
+        "             " + RunContentUsage,
+        "             " + RunShapeUsage,
+        string.Empty,
+        "         Plays a run under a scripted player and stores every round of",
+        "         it into the pool, so a fresh clone has opponents. It draws",
+        "         from the folder it is filling, so a pool seeded a run at a",
+        "         time grows into a population that has met itself.",
+        string.Empty,
+        "         --policy names the player, as sweep's does. --creep is the",
+        "         type id it sends; left out, it is the roster's first walker.",
         string.Empty,
         "  ladder     --units <file> --upgrades <file>",
         string.Empty,
@@ -228,6 +261,20 @@ public static class Program
         ProseIndent + "content file is a default, and a default is a number nobody",
         ProseIndent + "authored folded into a content hash as though somebody had.",
         string.Empty,
+        "  Where a run's opponents come from",
+        string.Empty,
+        ProseIndent + "--" + PoolDirectoryOption + " names a directory of stored rounds -- one file",
+        ProseIndent + "per round, named by its record id and ending " + RoundFolder.FileExtension + ". A run at",
+        ProseIndent + "its seventh wave draws K of the rounds stored at a seventh,",
+        ProseIndent + "without meeting any of them twice, and whatever that stage",
+        ProseIndent + "cannot fill is the canned field standing in. So an absent or",
+        ProseIndent + "empty directory is the run this program has always played.",
+        string.Empty,
+        ProseIndent + "A file the reader refuses -- a retired format, a truncation, a",
+        ProseIndent + "round played on another board or under other numbers -- is",
+        ProseIndent + "named and skipped. A folder is a runtime artefact, so a stale",
+        ProseIndent + "record in one must not stop a run.",
+        string.Empty,
         "  The two files that hold orders, and why they are two",
         string.Empty,
         "         --field is the canned opponent, and every verb that plays a run",
@@ -291,7 +338,7 @@ public static class Program
     {
         if (args.Length == 0)
         {
-            throw new UsageException("No verb. This program does one of eight things.");
+            throw new UsageException("No verb. This program does one of nine things.");
         }
 
         switch (args[0])
@@ -318,10 +365,13 @@ public static class Program
                     new[] { "map", "units", "upgrades", "rules", "defense", "wave", "seed", "out", "map-handle" }));
 
             case "play-run":
-                return PlayRun(RunVerb("play-run", args, "commands", "out"));
+                return PlayRun(RunVerb("play-run", args, "commands", "out", StoreOption));
 
             case "record-run":
                 return RecordRun(RunVerb("record-run", args, "script", "seed", "out"));
+
+            case "store-run":
+                return StoreRun(RunVerb("store-run", args, "seed", "policy", "creep"));
 
             // Two files and not a RunVerb: a ladder is read against the roster
             // and against nothing else, so asking for a map, a schedule, a
@@ -436,6 +486,7 @@ public static class Program
     private static int PlayRun(Arguments arguments)
     {
         string path = arguments.Required("commands");
+        RunContent content = ContentOf(arguments, out RoundFolder? folder, out StoredRounds? pool);
 
         // The record's name in any message is the file's name and never its
         // path: the simulation is handed bytes and a label, and a label it
@@ -443,10 +494,16 @@ public static class Program
         PlayedRun run = PlayedRun.Of(
             Path.GetFileName(path),
             File.ReadAllBytes(path),
-            ContentOf(arguments),
-            ShapeOf(arguments));
+            content,
+            ShapeOf(arguments),
+            pool);
 
         Report(run);
+
+        if (folder is not null && arguments.Given(StoreOption))
+        {
+            Say(folder.Written(run.Run, content.Map, content.Types));
+        }
 
         string? outcome = arguments.Optional("out");
 
@@ -458,6 +515,167 @@ public static class Program
         Write(outcome, run.OutcomeFile());
 
         return 0;
+    }
+
+    /// <summary>
+    /// Plays a run under a scripted player and stores every round of it into
+    /// the pool.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This is how a folder gets its first opponents.</b> A fresh clone has
+    /// nobody stored, and the two verbs that play a run both need a command
+    /// file somebody authored -- so seeding a pool by hand would mean writing a
+    /// run out for every seed. <c>tools/seed-pool.ps1</c> is the shell end of
+    /// this.
+    /// </para>
+    /// <para>
+    /// <b>It plays against the pool it is filling.</b> The rounds already in the
+    /// folder are read first and drawn from, so a folder seeded a run at a time
+    /// grows into a population that has met itself rather than a set of runs
+    /// that each fought the canned field alone.
+    /// </para>
+    /// <para>
+    /// <b>There is no record of the run, only of its rounds.</b> A scripted
+    /// player's decisions are not authored, so there is no script to compile and
+    /// nothing here writes a command file. What a pool wants is rounds, and a
+    /// round is what it stores.
+    /// </para>
+    /// </remarks>
+    private static int StoreRun(Arguments arguments)
+    {
+        RunContent content = ContentOf(arguments, out RoundFolder? folder, out _);
+
+        if (folder is null)
+        {
+            throw new UsageException(
+                $"'{arguments.Verb}' needs --{PoolDirectoryOption}, and it was not given. The verb exists "
+                + "to fill a folder of stored rounds, so a run with nowhere to put them is an invocation "
+                + "that would play a whole run and write nothing.");
+        }
+
+        string name = arguments.Optional("policy") ?? SweepPlan.EvenShare;
+        BuildPolicy policy = PolicyOf(name);
+
+        Run run = content.Fresh(arguments.RequiredUnsigned("seed"), ShapeOf(arguments));
+        int creep = arguments.Optional("creep", FirstCreep(content.Types), 1, MaximumCreeps);
+
+        while (!run.IsOver)
+        {
+            run.Advance(policy(run, creep));
+        }
+
+        Console.Out.Write(
+            "played     "
+            + name
+            + " on creep "
+            + PlainText.Number(creep)
+            + "\n"
+            + RunSummary.Outcome(run)
+            + "\n");
+
+        Say(folder.Written(run, content.Map, content.Types));
+
+        return 0;
+    }
+
+    /// <summary>
+    /// The roster's first walker, which is what a scripted player sends where
+    /// the invocation did not name one.
+    /// </summary>
+    /// <remarks>
+    /// A default rather than a refusal, because a scripted player has to be
+    /// sending something and the first row of the table is the one a sweep's
+    /// first row is about. Naming <c>--creep</c> is how a folder gets seeded
+    /// with runs that send different things.
+    /// </remarks>
+    private static int FirstCreep(UnitTypeTable types)
+    {
+        for (int index = 0; index < types.Count; index++)
+        {
+            if (types.Types[index].Role == UnitRole.Moving)
+            {
+                return types.Types[index].Id;
+            }
+        }
+
+        throw new UsageException(
+            "The roster has no creep in it to send, so a scripted player has nothing to buy. A run's wave "
+            + "is bodies off the unit table, and a table of towers alone is content that cannot be played "
+            + "rather than a run that sends nothing.");
+    }
+
+    /// <summary>
+    /// The folder of stored rounds a run draws from, or nothing where none was
+    /// named.
+    /// </summary>
+    /// <remarks>
+    /// <c>--store</c> is refused without one rather than defaulted to a
+    /// directory this program chose: a run that wrote its rounds somewhere
+    /// nobody named would be a pool that fills itself in a place nobody reads.
+    /// </remarks>
+    private static RoundFolder? FolderOf(Arguments arguments)
+    {
+        string? directory = arguments.Optional(PoolDirectoryOption);
+
+        if (directory is not null)
+        {
+            return new RoundFolder(directory);
+        }
+
+        if (arguments.Given(StoreOption))
+        {
+            throw new UsageException(
+                $"'{arguments.Verb}' was asked to --{StoreOption} the run it plays and was given no "
+                + $"--{PoolDirectoryOption} to store it in. A stored round goes into a folder somebody "
+                + "named, because a pool nobody reads is a pool nobody plays against.");
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// What the folder holds, with anything it refused said out loud first.
+    /// </summary>
+    /// <remarks>
+    /// The refusals are printed and the run goes on. A folder accumulates over
+    /// months and a record from a retired format is the ordinary case in one,
+    /// so a run that stopped over a file it could not read would be a run
+    /// nobody could play on the day a format moved.
+    /// </remarks>
+    private static StoredRounds? ReadPool(RoundFolder? folder, RunContent content)
+    {
+        if (folder is null)
+        {
+            return null;
+        }
+
+        StoredRounds pool = folder.Read(content.Map, content.Types);
+
+        for (int index = 0; index < pool.Refusals.Count; index++)
+        {
+            Console.Out.Write("refused    " + pool.Refusals[index] + "\n");
+        }
+
+        Console.Out.Write(
+            "pool       "
+            + PlainText.Number(pool.Count)
+            + " stored rounds over "
+            + PlainText.Number(pool.Stages)
+            + " stages, "
+            + PlainText.Number(pool.Refusals.Count)
+            + " refused\n");
+
+        return pool;
+    }
+
+    /// <summary>Lines a verb has to say, one to a line.</summary>
+    private static void Say(IReadOnlyList<string> lines)
+    {
+        for (int index = 0; index < lines.Count; index++)
+        {
+            Console.Out.Write(lines[index] + "\n");
+        }
     }
 
     /// <summary>
@@ -617,13 +835,38 @@ public static class Program
     /// verb takes and a file the layout tests look for.
     /// </remarks>
     private static RunContent ContentOf(Arguments arguments) =>
-        RunContent.Of(
+        ContentOf(arguments, out _, out _);
+
+    /// <summary>
+    /// The same, with the folder it drew its opponents out of and what that
+    /// folder held.
+    /// </summary>
+    /// <remarks>
+    /// <b>Every verb that plays a run comes through here</b>, so <c>--pool</c>
+    /// is an option every one of them reads rather than one two of them ignore
+    /// silently. What the folder holds is layered in front of the canned field;
+    /// where no folder was named, the content is what it always was. The two
+    /// outputs are for the verbs that have more to do with them: naming the
+    /// drawn ids in a report, and storing a run's own rounds back.
+    /// </remarks>
+    private static RunContent ContentOf(
+        Arguments arguments,
+        out RoundFolder? folder,
+        out StoredRounds? pool)
+    {
+        RunContent content = RunContent.Of(
             TextOf(arguments, RunContentFiles.Map),
             TextOf(arguments, RunContentFiles.Units),
             TextOf(arguments, RunContentFiles.Upgrades),
             TextOf(arguments, RunContentFiles.Rules),
             TextOf(arguments, RunContentFiles.Defense),
             TextOf(arguments, RunContentFiles.Field));
+
+        folder = FolderOf(arguments);
+        pool = ReadPool(folder, content);
+
+        return pool is null ? content : content.Storing(pool.ByStage);
+    }
 
     /// <summary>
     /// One content file's text: out of the path its own option named, or out of

@@ -67,8 +67,8 @@ internal readonly struct RunShape
 /// simulation assembly and then scanning the compiled image for it.
 /// </para>
 /// <para>
-/// <b>The field is canned and it stands in for a ghost pool that does not
-/// exist.</b> What that means -- one player, recorded once per round and drawn
+/// <b>The canned field is what stands in where a folder of stored rounds is
+/// thin.</b> What that means -- one player, recorded once per round and drawn
 /// with replacement, buying the authored column again every round and building
 /// on its opening wall out of a purse of its own -- is composed by
 /// <see cref="FieldPool.Canned"/> and described there. It is the simulation's
@@ -76,6 +76,13 @@ internal readonly struct RunShape
 /// two files meeting here does not make it this file's decision. What this file
 /// does decide is how deep to record it, because the run's wave count is here
 /// and not there -- see <see cref="Pool"/>.
+/// </para>
+/// <para>
+/// <b>The stored rounds arrive already read.</b> They come out of a folder,
+/// which is <see cref="RoundFolder"/>'s business; what this holds is the
+/// population, in the shape <see cref="FieldPool.Storing"/> layers over the
+/// canned field. Content with none of them is the run this program has always
+/// played.
 /// </para>
 /// </remarks>
 internal sealed class RunContent
@@ -96,21 +103,33 @@ internal sealed class RunContent
 
     private readonly WaveScript _field;
 
+    private readonly IReadOnlyList<IReadOnlyList<RoundOrders>> _stored;
+
     private RunContent(
         HexMap map,
         UnitTypeTable types,
         UpgradeLadder ladder,
         Ruleset rules,
         TowerLayout defense,
-        WaveScript field)
+        WaveScript field,
+        IReadOnlyList<IReadOnlyList<RoundOrders>> stored)
     {
         _map = map;
         _rules = rules;
         _defense = defense;
         _field = field;
+        _stored = stored;
         Types = types;
         Ladder = ladder;
     }
+
+    /// <summary>The board every match in the run is fought on.</summary>
+    /// <remarks>
+    /// Held out rather than kept private because a stored round is pinned to a
+    /// board by hash, so whoever reads a folder of them has to know which board
+    /// this run is on.
+    /// </remarks>
+    public HexMap Map => _map;
 
     /// <summary>
     /// The roster every creep, cost and offering in the run is read out of, with
@@ -147,8 +166,21 @@ internal sealed class RunContent
             ladder,
             Ruleset.Parse(rulesText),
             TowerLayout.Parse(defenseText, types),
-            Field(fieldText, types));
+            Field(fieldText, types),
+            new RoundOrders[0][]);
     }
+
+    /// <summary>
+    /// The same content, with a population of stored rounds in front of the
+    /// canned field.
+    /// </summary>
+    /// <remarks>
+    /// The canned field stays behind them and is what fills a stage the folder
+    /// is thin at, so a run against an empty folder is the run this program has
+    /// always played. See <see cref="FieldPool.Storing"/>.
+    /// </remarks>
+    public RunContent Storing(IReadOnlyList<IReadOnlyList<RoundOrders>> stored) =>
+        new RunContent(_map, Types, Ladder, _rules, _defense, _field, stored);
 
     /// <summary>
     /// The canned opponent's wave, refused unless it is a round's worth of
@@ -222,14 +254,16 @@ internal sealed class RunContent
     /// <see cref="FieldPool.OfRounds"/> carries.
     /// </remarks>
     private FieldPool Pool(RunShape shape) =>
-        FieldPool.Canned(
-            _map,
-            _rules,
-            Types,
-            Ladder,
-            _defense,
-            _field,
-            shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves);
+        FieldPool
+            .Canned(
+                _map,
+                _rules,
+                Types,
+                Ladder,
+                _defense,
+                _field,
+                shape.Waves == Purse.RoundCapLifted ? Run.DefaultWaves : shape.Waves)
+            .Storing(_stored);
 
     /// <summary>A run on this content, with nothing played into it yet.</summary>
     public Run Fresh(ulong seed, RunShape shape) =>

@@ -189,3 +189,17 @@ InitTestScene*.unity*
 # showing up untracked in every clone forever, which is how people learn to
 # stop reading `git status`.
 /ProjectSettings/SceneTemplateSettings.json
+
+# The pool of stored rounds a run's opponents are drawn from. It is written at
+# runtime -- by simcli's play-run --store and by tools/seed-pool.ps1 -- and it
+# grows every time somebody plays, so it is a runtime artefact and not content.
+# Committing one would ship an arbitrary snapshot of somebody's evening as
+# though it were authored, and every fresh clone would be scored against it.
+#
+# THE FOLDER AND ITS .meta ARE IGNORED TOGETHER. Unity writes a .meta beside
+# every folder under Assets/, and an ignored folder with a tracked .meta is the
+# hazard the Sim.pdb.meta negation above exists to avoid. Nothing in here is
+# ever tracked, which is what makes a bare folder rule right here and wrong for
+# Assets/Resources/.
+/Assets/StreamingAssets/content/pool/
+/Assets/StreamingAssets/content/pool.meta
