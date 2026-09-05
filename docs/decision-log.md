@@ -283,7 +283,7 @@ of the reversals is of this file's own companion.
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[The build order](build-order.md#the-sequence)**, on why step 5 is fifth | *Is the economy tense, is composing a wave interesting, does send order matter, is the roster varied* — "every one is answerable from a command line and a spreadsheet" | **Half of them are.** The economy and the roster answered from a shell. **Composing a wave and send order did not**, and the reason is structural rather than a gap in the verb | The CLI will never carry the visual elements — video replays, range indicators — and building them there is not worth it. What a person would learn from them there, the simulation can compute and summarise instead |
-| **[§3 — three anchors, a shape and a filling](vision.md#three-gates-at-waves-3-6-and-9)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
+| **[§3 — three anchors, a shape and a filling](vision.md#the-gates)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
 | **§3 — one purse** | The economy is the sharp decision the game is built around | **Not tense yet, and that is accepted rather than fixed** | Attack performance is rewarded, so spending on attack is the long-term investment and nothing argues against it. The expected correction is already in the design: health falls, and the run eventually has to pivot its spending. Not worth tuning before the roster can be judged |
 | **[Open questions](open-questions.md)** — is placement worth having on this geometry | Thin until the maze lands, per [#142](https://github.com/ssalter21/tower-defense-game/issues/142), and possibly not worth the tickets | **Placement earns its place**, and is expected to get more interesting as elevation lands | Played rather than argued. This does **not** settle the separate question of whether the defending side has to be *towers* — squads on a rampart are still live |
 
@@ -714,7 +714,7 @@ gate widens the wave, deepens what a slot may hold, and pays for a capstone.**
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **The purse and a public capacity schedule.** A wave opens carrying two slots at ten apiece, and each gate adds two slots and ten count | A purse alone lets compounding gold end every run as one enormous box of whatever is most cost-efficient, which deletes send order as a decision by leaving one thing to order |
-| **[§3 — the gate rounds](vision.md#three-gates-at-waves-3-6-and-9)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
+| **[§3 — the gate rounds](vision.md#the-gates)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
 | **[§3 — one purse](vision.md#one-purse)**, and [6 August](#6-august-2026--six-reversals)'s settled answer | One currency; a second was priced and declined the same day | **Still one *income* currency.** A second thing exists, is granted three times a run, has no exchange rate and buys exactly one object | The 6 August rejection was of two *wallets fed by income* — the thing that makes every purchase a question about which pool to feed. A grant with a single sink is not that |
 | **[The roster](roster.md#what-things-cost)** | Capstones are expected to break the pricing rule downward, and the first one is where the exemption gets written down | **There is no exemption, because gold does not buy a capstone.** The token is the whole price | An exemption to a gold rule, for a thing gold does not buy, is a clause about nothing |
 | **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | The per-wave type limit is deleted rather than deferred, along with the forced pick, the round menu and the special rounds | **The first of the four to be redesigned.** It returns as a capacity schedule with a second dimension; the other three stay deleted | Deleting it was right and restoring it unchanged would have been wrong. It was a bound with no clock on it, and a gate is the clock |
@@ -1416,3 +1416,62 @@ is the kind of thing somebody finds in the report and reads as a bug.
 **Whether that denominator should be the gold actually paid is left open** and is
 [filed as a question](open-questions.md) rather than decided here: the rule as decided says *price
 difference*, and a rule rewritten on the way past is not the rule anybody chose.
+
+---
+
+## 5 September 2026 — the vision is cut to its decisions, and three sections learn to say they are not built
+
+No design moved here. **The document did.** [The vision](vision.md) went from 780 lines and 8,758 words to
+279 and 2,318 — a 74% cut by words — and everything removed was argument rather than decision.
+
+The header of this file has said the reason since it was written: *"This file exists so the vision can stay
+readable. It grows; the vision should not."* It had been growing anyway. Every claim in it arrived in the same
+shape — a bold assertion, then *Three consequences*, *Two limits*, *The objection it must answer*, a warning
+block — so 57 bold-lead paragraphs and 9 of those blocks were carrying roughly 900 words of actual decision.
+The justification already had three homes: this log, 57 ADRs and 20 research notes. The vision was a fourth
+copy of all three, and the copy with no test on it.
+
+### What was wrong rather than merely long
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[§3 — the gates](vision.md#the-gates)** | The capacity schedule and the capstone, stated as *"fixed, public and known before it starts"* with no mention of status | **The same design, marked *(designed, not built)*** | `grep -ri capstone sim/` is empty and `BuildPhase` still says *nothing bounds how many slots a wave carries*. The design was settled [on 14 August](#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant); the vision never said it was unbuilt, so three documents read as disagreeing about whether it existed |
+| **[Bottom line, claim 4](vision.md#bottom-line)** | *"All four, none deferred."* | **"The multiplayer is real, and all of it is deferred."** | [The build order](build-order.md) calls deferring the multiplayer *the largest scope deletion available* and defers all four. Co-op was listed as Unspecified in the vision's own table two sections later. A standing document cannot claim *none deferred* about four things three of which are deferred |
+| **[§3 — the board](vision.md#the-board-is-a-maze)**, generation and rotation | Stated flat, with the deferral in a warning aside below it | **Marked *(designed, not built)*** | Same defect as the gates, and the aside was doing the work a status marker should do |
+| **[§7 — the service](vision.md#7-what-runs-it)** | Stated flat | **Marked *(not built)*** | Nothing in the repository serves anything |
+| **Numbers — base, bonus, health, interest, purse, snapshot price** | Restated in the vision with the measurement narrative that produced each one | **Named, not quoted.** The vision says a bonus is paid on leak cost dealt; what the rate *is* is [`content/ruleset.txt`](../content/ruleset.txt) | Every one of those numbers was argued three times — in the ruleset's own comments, here on the day it moved, and again in the vision. The ruleset is the only one of the three that cannot go stale |
+
+### What was cut without anything being lost
+
+The Sources section (32 lines and 17 comparison games), the objection-and-answer paragraphs, the three
+eliminated damage candidates ([ADR-0001](adr/0001-fixed-point-arithmetic.md) and this log hold them), the
+capstone's *three things it buys the design*, §4's costs table, and the derivations behind the Latin square
+and the ×10 scale. **One comparison game survives in the whole document** — Element TD, as the depth target,
+where naming it is shorter than describing it.
+
+Two mechanics were dropped in a first pass and put back on review, because they are decisions rather than
+argument: **a lobby smaller than ten is topped up from the pool**, and **the gate schedule's shape holds for a
+rotation while its filling is drawn per run**.
+
+### The anchors, and what was left to rot deliberately
+
+Ninety links pointed into the vision. The nine numbered sections and four sub-sections — `#one-purse`,
+`#depth-is-the-point`, `#the-board-is-a-maze`, `#how-a-shot-resolves` — were kept as anchors for that reason
+as much as for their content. The twelve live links that named a heading which no longer exists were
+retargeted, in [the build order](build-order.md), [open questions](open-questions.md),
+[the roster](roster.md) and this file.
+
+**The fifty-one links from [`research/`](research/) and [`archive/`](archive/README.md) were not.** Those are
+frozen evidence notes that already carry banners saying the vision has moved past them; an unresolved anchor
+lands a reader at the top of the vision, which is the right place for a note written against a version of it
+that no longer exists. Rewriting them would be churn in the two directories that exist precisely so the
+standing document does not have to carry their history.
+
+### What this does not fix
+
+**`check-docs.ps1` would not have caught any of it.** Its four invariants cover issue states, picture
+freshness, the ADR count and ADR citations from source. Nothing checks whether a document's claim about the
+*simulation* is true, which is why a section describing an unbuilt mechanism as fixed and public survived
+three weeks in the file that outranks every other file in the repository. A fifth invariant — a document
+claiming a mechanism exists when no code implements it — is not obviously mechanisable, and is not filed as a
+ticket here because nobody has yet said what it would read.

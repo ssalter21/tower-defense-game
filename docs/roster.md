@@ -51,7 +51,7 @@ signing **damage, cooldown and how many bodies it hits**.
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
 **The rule does not reach a capstone, because gold does not buy one.**
-[A gate hands the player one token](vision.md#a-capstone-is-granted-never-earned) at waves 3, 6 and 9, and the
+[A gate hands the player one token](vision.md#the-gates) at waves 3, 6 and 9, and the
 token is the whole price: three capstones a run, and the decision is which tower line to spend one on rather
 than what it costs. The cost column prices what gold buys, and the top of a line is not in it. That retires
 the shallow-U exemption this section used to reserve — an exemption to a gold rule, for a thing gold does not
