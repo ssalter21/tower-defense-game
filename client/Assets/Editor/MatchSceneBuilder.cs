@@ -201,8 +201,13 @@ namespace View.Editor
         /// </para>
         /// <para>
         /// <b>A tier is told apart by colour, by a prop or by a second
-        /// model.</b> The Archer and the Ranger are the pair that proves it:
-        /// one model, one scale, and what separates them on sight is the
+        /// model, and a prop may be held or may stand beside.</b> The beside
+        /// column is empty on every row here: the four looks that need it —
+        /// the Engineer's turret, the Paladin's statue, the Cleric's font and
+        /// the Druid's weirwood — are signed in <c>docs/roster.md</c> and none
+        /// of them has a row in <c>content/units.txt</c> to be authored
+        /// against yet. The Archer and the Ranger are the pair that proves the
+        /// rule: one model, one scale, and what separates them on sight is the
         /// Ranger's own atlas and the quiver in its hand. The atlas covers the
         /// body only — a prop is its own import off its own pack's atlas, and
         /// this quiver is authored on the rogue's.
@@ -240,30 +245,33 @@ namespace View.Editor
             string backswing,
             Vector3 rightTilt,
             Vector3 leftTilt,
-            EffectAnchor anchor)[] UnitBindings =
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside)[] UnitBindings =
         {
             (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
-                null, null, null, null, null, default, default, default),
+                null, null, null, null, null, default, default, default, default),
             (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale, null,
-                null, null, null, null, null, default, default, default),
+                null, null, null, null, null, default, default, default, default),
             (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, null,
                 null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
-                Bow),
+                Bow, default),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, null,
                 StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
-                StaffTip),
+                StaffTip, default),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale, null,
-                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default),
+                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, null,
                 SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default,
-                SwordTip),
+                SwordTip, default),
             (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
-                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default, default),
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default, default,
+                default),
             (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale, null,
-                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default, default),
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default, default,
+                default),
             (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, RangerAltAtlasPath,
                 QuiverPath, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
-                Bow),
+                Bow, default),
         };
 
         /// <summary>
@@ -730,7 +738,8 @@ namespace View.Editor
                     binding.backswing,
                     binding.rightTilt,
                     binding.leftTilt,
-                    binding.anchor);
+                    binding.anchor,
+                    binding.beside);
             }
 
             // A row with no art chosen for it yet: the stand-in at the size its
@@ -760,7 +769,8 @@ namespace View.Editor
         /// </summary>
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
             WireUnit(
-                entry, unitId, model, scale, null, null, null, null, null, null, default, default, default);
+                entry, unitId, model, scale, null, null, null, null, null, null, default, default, default,
+                default);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -783,7 +793,8 @@ namespace View.Editor
             string backswing,
             Vector3 rightTilt,
             Vector3 leftTilt,
-            EffectAnchor anchor)
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside)
         {
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
@@ -804,6 +815,12 @@ namespace View.Editor
             // for exactly the reason this method writes every field.
             anchored.FindPropertyRelative("transformName").stringValue = anchor.TransformName ?? string.Empty;
             anchored.FindPropertyRelative("tip").vector3Value = anchor.Tip;
+
+            SerializedProperty standing = entry.FindPropertyRelative("beside");
+
+            standing.FindPropertyRelative("model").objectReferenceValue = MaybeModel(beside.model);
+            standing.FindPropertyRelative("scale").floatValue = beside.scale;
+            standing.FindPropertyRelative("offset").vector3Value = beside.offset;
         }
 
         /// <summary>
@@ -855,7 +872,9 @@ namespace View.Editor
                     binding.rightTilt,
                     binding.leftTilt,
                     binding.anchor,
-                    MaybeTexture(binding.texture)));
+                    MaybeTexture(binding.texture),
+                    BesideProp.Standing(
+                        MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset)));
             }
 
             units.AddRange(UnboundUnits.StandIns());

@@ -213,10 +213,17 @@ because that ticket is the only one that knows what the prop is called.
 
 **One consequence that is work rather than prose.** A per-row texture is built: `UnitArt` carries the atlas a
 row wears, the two views put it on the body before anything goes in a hand, and the alternate atlases the rows
-above name are imported beside their own packs. There is still **no socket for a prop beside a tower**, only
-the two hand bones, so `turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's tree have nowhere to
-stand until one is built. The Engineer line cannot be drawn as designed at any tier without it — and the
-quiver the Ranger carries is in its fist for the same reason.
+above name are imported beside their own packs. **A third socket is built too, and it is not a hand bone**:
+`UnitArt` carries a beside prop — a model and a size — and `TowerView` stands it one tile from the tower root,
+where it stays while the tower turns to aim. `turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's
+weirwood each have somewhere to stand. **The size is per prop and it is a view fact**, never a column in
+`content/units.txt`: the three props authored in their characters' own packs come in at the right size, and a
+Forest Nature tree does not. The quiver the Ranger carries is still in its fist, because that is a spine socket
+and not this one.
+
+**One tower has one beside slot, and one rung wants two.** The Artificer's look puts an `ammo_crate` beside
+the turret. That is the one place on this page the socket as built does not reach, and it is written on that
+rung's `Needs` line rather than settled here.
 
 **Every tier on this page is authorable as of layout 3 and playable as of #217**, which built the timed
 effect three of them rest on; see [the column
@@ -318,10 +325,11 @@ signed numbers.
 
 - **Does** — every tower within two hexes fires a quarter faster, always.
 - **Looks** — `Paladin_with_Helmet`, `paladin_texture_B`, `paladin_book` open, and the gold `paladin_statue`
-  standing on the tile beside him.
+  standing on the tile beside him — **drawn at 1**, the size it imports at, which is 2.55 m tall and 1.60 across
+  and stands level with the Paladin himself.
 - **Numbers** — aura: origin `self`, radius 2000, affects `friend`, payload `cooldown`, magnitude −25,
   period 30, duration 30.
-- **Needs** — **the beside slot.** The statue has nowhere to stand until a third socket exists.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 > **Two Blessings over one tower do not stack; the timer refreshes.** That is the rule the effect model
@@ -352,11 +360,11 @@ signed numbers.
 
 - **Does** — every undead within three hexes loses a third of its armour while it is there.
 - **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`, and the `Cleric_Font` on the tile beside him, light
-  on the ground. The Cleric has **no second model anywhere in the collection**, so this line is colour and
-  props at every rung.
+  on the ground — **drawn at 1**, which is 0.81 m tall and 1.44 across, a basin at knee height. The Cleric has
+  **no second model anywhere in the collection**, so this line is colour and props at every rung.
 - **Numbers** — aura: origin `self`, radius 3000, affects `enemy`, payload `armour`, magnitude −30, period 30,
   duration 30.
-- **Needs** — **the beside slot**, for the font.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 > **Zeal is the successor, not the alternative.** *Every tower within two hexes deals more damage* is the
@@ -483,14 +491,16 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 - **Does** — the whole board slows a fifth while he stands. Every board.
 - **Looks** — `Druid`, `druid_texture_alt_B`, and a **bare weirwood standing on the tile beside him** —
-  `Tree_Bare_*_Color8` from the Forest Nature pack, the cream-white trunk under a red canopy. Roots on every
-  hex once they are drawn.
+  **`Tree_Bare_1_C_Color8`** from the Forest Nature pack, signed on 5 September 2026 from a rendered sheet of
+  all six `Color8` bare trees turned through the game's own six camera angles. It is the largest of the six at
+  936 triangles and the only silhouette that reads as an ancient tree rather than a dead stick from every
+  angle. **Drawn at 0.55**: at its own size it spreads 3.74 m, which is nearly two tiles and reaches back
+  through the Druid, and 0.55 brings that to the 2.06 m of the tile it stands on and leaves it 2.89 m tall,
+  half again the Druid's own height. Roots on every hex once they are drawn.
 - **Numbers** — aura: origin `self`, radius 60000, affects `enemy`, payload `speed`, magnitude −20, period 30,
   duration 30.
-- **Needs** — **the beside slot**, for the tree. The exact tree *shape* is an art pick and is not made here:
-  the pack ships two bare forms with several variants each, and nobody has seen them rendered beside a Druid.
-  The Druid art ticket carries that render as its own approval step.
-- **Open** — none but the shape.
+- **Needs** — nothing. The beside slot is built and the tree is picked.
+- **Open** — none.
 
 > **The Druid keeps his own body, and the PlantWarrior is set aside.** It was proposed as this line's second
 > model and it is rejected: of the six second models it was the only one that read as a *different creature*
@@ -541,17 +551,21 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### Engineer · tier 1 · status signed
 
 - **Does** — four hexes, slow lobbed shot, one target.
-- **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing.
+- **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing —
+  **drawn at 1**, which is 1.13 m tall and 1.00 across, and the shell leaves the top of it at 0.77 m rather
+  than leaving the man.
 - **Numbers** — range 4000, cooldown 60, damage 250–350, projectile, flight 45, impact, cost ~30.
-- **Needs** — **the beside slot.** This line cannot be drawn as designed at any rung without it.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 ### Artificer · tier 2 · status signed
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret.
+- **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret — the crate is 0.46 m
+  tall at 1.
 - **Numbers** — range 4000 → **5000**. Cost 30 — range is unpriced.
-- **Needs** — the beside slot.
+- **Needs** — **a second beside slot.** A tower has one, and this rung names two things standing on the
+  ground; until there are two, this rung draws the turret or the crate and not both.
 - **Open** — none.
 
 ### Mortar · tier 3 · status signed
@@ -561,7 +575,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   drawn. The Engineer has **no second model anywhere in the collection**, so this line is colour and props at
   every rung.
 - **Numbers** — bubble on target: radius 1500, payload `damage`.
-- **Needs** — the beside slot.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 > **Two blasts on the board, and they are not the same tool.** The Mage's is magic at radius 1000 and lands at
@@ -1048,11 +1062,13 @@ open.
    automated balance sweeps are good enough to derive it. The rule says 30, the row says 92, and that gap is
    now held open on purpose. It is the one number on this page waiting on a tool rather than on a decision.
 5. **The three absent shapes have their models, and every unit on this page has a signed one.** Answered on
-   5 September 2026 by a person, from a rendered sheet of all 32 candidates. What is *not* signed is the
-   shape of the Druid's weirwood — the pack ships several bare forms, nobody has seen them beside a Druid,
-   and the Druid art ticket carries that render as its own approval step.
+   5 September 2026 by a person, from a rendered sheet of all 32 candidates — and the Druid's weirwood, the
+   one shape that sheet left open, was signed the same day from a sheet of its own:
+   [`Tree_Bare_1_C_Color8`](https://github.com/ssalter21/tower-defense-game/issues/274#issuecomment-5552677475).
 6. **A capstone token exists as a rule and not yet as code.** The cost section above states it; nothing
    grants or spends one. Until [the token ticket](https://github.com/ssalter21/tower-defense-game/issues/273)
    lands, the nine capstone rows can be authored and drawn but not bought.
-7. **The beside slot gates four looks.** The Engineer's turret at every rung, the Paladin's statue, the
-   Cleric's font and the Druid's tree all need a socket that is not a hand bone, and there is not one.
+7. **The beside slot is built and one rung wants two of it.** The Engineer's turret, the Paladin's statue,
+   the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
+   down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —
+   the one look on this page the socket as built cannot draw whole.

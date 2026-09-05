@@ -85,6 +85,126 @@ namespace Tests.EditMode
         /// <summary>The atlas the Skeletons 1.1 characters were authored against.</summary>
         private const string SkeletonAtlasPath = "Assets/Art/Characters/skeleton_texture_A.png";
 
+        private const string EngineerModelPath = "Assets/Art/Kaykit/adventurers/Engineer.fbx";
+
+        private const string TurretPath = "Assets/Art/Kaykit/adventurers/turret_base.fbx";
+
+        private const string CratePath = "Assets/Art/Kaykit/adventurers/ammo_crate.fbx";
+
+        private const string EngineerAtlasPath = "Assets/Art/Kaykit/adventurers/engineer_texture.png";
+
+        private const string PaladinModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx";
+
+        private const string StatuePath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx";
+
+        private const string PaladinAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_texture_A.png";
+
+        private const string PaladinAltAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png";
+
+        private const string ClericModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx";
+
+        private const string FontPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric_Font.fbx";
+
+        private const string ClericAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/cleric_texture.png";
+
+        private const string ClericAltAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png";
+
+        private const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
+
+        private const string DruidAtlasPath = "Assets/Art/Kaykit/adventurers/druid_texture.png";
+
+        private const string DruidAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
+
+        /// <summary>The bare weirwood the developer picked on 5 September 2026.</summary>
+        private const string WeirwoodPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx";
+
+        /// <summary>
+        /// The atlas the Forest Nature pack ships in every one of its eight
+        /// colourway folders. The eight files are byte-identical: a colourway
+        /// is where a model's UVs land on the sheet and not a different sheet.
+        /// So which of the eight binds is the thing worth asserting -- any of
+        /// them would draw, and only the one in the model's own folder is what
+        /// the importer's recursive-up search is supposed to find.
+        /// </summary>
+        private const string ForestAtlasPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/forest_texture.png";
+
+        /// <summary>
+        /// How big the weirwood is drawn beside the Druid.
+        /// </summary>
+        /// <remarks>
+        /// Measured rather than chosen by eye. At its own imported size the
+        /// tree spreads 3.74 m across, which is nearly two of this board's
+        /// 2.0 m tiles and reaches back through the Druid himself; this brings
+        /// the spread to 2.06 -- the tile it is standing on -- and leaves it
+        /// 2.89 m tall against a Druid who measures about two. The other three
+        /// beside props are authored in the same packs as the characters they
+        /// stand with and need no correction at all, which is the whole reason
+        /// the size is per prop and not a constant.
+        /// </remarks>
+        private const float WeirwoodScale = 0.55f;
+
+        /// <summary>
+        /// The four looks <c>docs/roster.md</c> signs that put something on the
+        /// ground beside a tower: which character, which atlas it wears, and
+        /// what stands beside it at what size.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>None of these has a row in <c>content/units.txt</c> yet</b>, so
+        /// there is nowhere else in code for them to be written down: the two
+        /// binding tables carry rows, and these are looks waiting for rows. The
+        /// record is <c>docs/roster.md</c>, and
+        /// <c>docs/roster-expansion-beside-candidates.txt</c> is the same four
+        /// again as something that can be photographed.
+        /// </para>
+        /// <para>
+        /// <b>The Artificer's ammo crate is not here.</b> A tower has one
+        /// beside slot and that rung's look puts the crate beside the turret,
+        /// which is two -- so the crate is a question about the rung rather
+        /// than a binding, and it goes on the candidate sheet instead.
+        /// </para>
+        /// </remarks>
+        private static readonly (
+            string look,
+            string model,
+            string atlas,
+            string beside,
+            float scale,
+            string propAtlas)[] SignedBesideLooks =
+        {
+            ("the Engineer's turret", EngineerModelPath, null, TurretPath, 1f, EngineerAtlasPath),
+            ("the Paladin's Blessing", PaladinModelPath, PaladinAltAtlasPath, StatuePath, 1f,
+                PaladinAtlasPath),
+            ("the Cleric's Consecration", ClericModelPath, ClericAltAtlasPath, FontPath, 1f,
+                ClericAtlasPath),
+            ("the Druid's Overgrowth", DruidModelPath, DruidAltAtlasPath, WeirwoodPath, WeirwoodScale,
+                ForestAtlasPath),
+        };
+
+        /// <summary>
+        /// Where the Engineer's shot leaves: the top of the turret standing
+        /// beside him, and not his own hands.
+        /// </summary>
+        /// <remarks>
+        /// The name is the prop's, because <c>DrawnModel</c> names an instance
+        /// after the asset and an FBX root node is named after its file. How far
+        /// up the turret is not written down -- <see cref="EffectAnchor"/> reads
+        /// it off the mesh, so a re-exported turret moves its own muzzle.
+        /// </remarks>
+        private static readonly EffectAnchor TurretMuzzle =
+            EffectAnchor.AtTipOf("turret_base", Vector3.up);
+
         /// <summary>
         /// Model to atlas. The adventurers each carry their own and the
         /// skeletons share one, which is deliberate and recorded on #44: the
@@ -131,6 +251,23 @@ namespace Tests.EditMode
             // failure this table exists for: a model drawn against the wrong
             // atlas draws confetti, and one drawn against none draws magenta.
             (UnboundUnits.StandInModelPath, "Assets/Art/Kaykit/prototype/prototypebits_texture.png"),
+
+            // The four props that stand beside a tower, and the characters they
+            // stand beside. This is where the confetti risk is sharpest: a
+            // row's own atlas covers its body only, so each of these has to
+            // arrive already wearing its own pack's. The tree's pack ships
+            // eight folders of identical bytes, so which one it binds is what
+            // says whether the colourway resolved or whether another Color
+            // folder answered first.
+            (EngineerModelPath, EngineerAtlasPath),
+            (TurretPath, EngineerAtlasPath),
+            (CratePath, EngineerAtlasPath),
+            (PaladinModelPath, PaladinAtlasPath),
+            (StatuePath, PaladinAtlasPath),
+            (ClericModelPath, ClericAtlasPath),
+            (FontPath, ClericAtlasPath),
+            (DruidModelPath, DruidAtlasPath),
+            (WeirwoodPath, ForestAtlasPath),
         };
 
         /// <summary>
@@ -511,9 +648,18 @@ namespace Tests.EditMode
                 Assert.That(anchor, Is.Not.Null,
                     $"unit {type.Id} ({type.Label}) has an anchor that resolved to nothing");
 
-                Assert.That(anchor.IsChildOf(tower.Model.transform), Is.True,
-                    $"unit {type.Id} ({type.Label}) anchors on {anchor.name}, which is not part of its "
-                    + "own model — an effect anchor is a point on the art, not on the scene");
+                // On the body, or on the thing standing beside it. Both are
+                // this row's own art and a row may fire from either — the
+                // Engineer's shell leaves his turret while the Paladin beside
+                // his statue still fires from his book. What is excluded is
+                // everything else, which is the scene.
+                var onTheArt = anchor.IsChildOf(tower.Model.transform)
+                    || (tower.Beside != null && anchor.IsChildOf(tower.Beside.transform));
+
+                Assert.That(onTheArt, Is.True,
+                    $"unit {type.Id} ({type.Label}) anchors on {anchor.name}, which is neither part of "
+                    + "its model nor part of what stands beside it — an effect anchor is a point on the "
+                    + "art, not on the scene");
 
                 Vector3 fromRoot = tower.Muzzle - tower.transform.position;
                 float alongTheProp = Vector3.Distance(tower.Muzzle, anchor.position);
@@ -575,6 +721,232 @@ namespace Tests.EditMode
                 "the refusal has to name the anchor that was not found, or it sends the reader looking "
                 + "at the art instead of at the string");
         }
+
+        /// <summary>
+        /// The Engineer's turret stands on the tile beside him, keeps standing
+        /// there while he turns, and is where his shots leave from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the whole of the Engineer line's identity.</b> He is a
+        /// wrench and a turret at every rung; the turret is what fires, so an
+        /// anchor that fell back to his own body would put the shell coming out
+        /// of the man rather than out of the machine. The anchor resolves
+        /// across the built tower, which is what makes a node inside a beside
+        /// prop the same kind of name as a bone.
+        /// </para>
+        /// <para>
+        /// <b>The turn is asserted because that is the failure this cannot see
+        /// in a photograph.</b> A tower rotates to track a creep, so a prop left
+        /// at a fixed local offset orbits it — swinging through the neighbouring
+        /// tiles once per target — and a still frame of any single tick looks
+        /// perfectly correct.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheEngineersTurretStandsBesideHimAndHisShotsLeaveIt()
+        {
+            TowerView tower = BuiltTower(TypeOf(ArcherUnitId), EngineerWithHisTurret());
+
+            Assert.That(tower.Beside, Is.Not.Null, "nothing was drawn beside the Engineer");
+            Assert.That(tower.Beside.name, Is.EqualTo("turret_base"));
+
+            Assert.That(tower.Beside.transform.IsChildOf(tower.transform), Is.True,
+                "the turret hangs off the tower root, which is what makes it a socket rather than "
+                + "scenery somebody left on the board");
+
+            Assert.That(tower.Beside.transform.IsChildOf(tower.Model.transform), Is.False,
+                "the turret is under the body, so it inherits the row's scale and whatever atlas the "
+                + "row wears — which for a prop off another pack is confetti at the wrong size");
+
+            AssertStandsAt(
+                tower.Beside.transform.position,
+                tower.transform.position + BesideProp.NextTile,
+                "the turret does not stand on the tile beside him");
+
+            Transform anchor = tower.AnchorTransform;
+
+            Assert.That(anchor, Is.Not.Null, "the Engineer's anchor resolved to nothing");
+
+            Assert.That(anchor.IsChildOf(tower.Beside.transform), Is.True,
+                $"the Engineer fires from {anchor.name}, which is not part of the turret — the shot "
+                + "leaves the machine and not the man holding the wrench");
+
+            Bounds turret = WorldBounds(tower.Beside, null);
+
+            Assert.That(tower.Muzzle.y, Is.GreaterThan(turret.center.y),
+                "the shell leaves the underside of the turret");
+
+            Debug.Log(
+                $"[beside] the Engineer's turret is {turret.size.y:F2} m tall and fires from "
+                + $"{tower.Muzzle.y:F2} m up, {Vector3.Distance(tower.Muzzle, tower.transform.position):F2} m "
+                + "from his own root");
+
+            // Turned to track a creep behind him. The tower rotates; the thing
+            // on the ground beside it does not.
+            Vector3 stood = tower.Beside.transform.position;
+
+            tower.Pose(TowerState.Idle, 0, tower.transform.position + (Vector3.forward * 8f));
+
+            AssertStandsAt(
+                tower.Beside.transform.position, stood,
+                "the turret moved when the Engineer turned, so it orbits him rather than standing on a tile");
+        }
+
+        /// <summary>
+        /// Each of the four signed beside looks resolves: the prop is there, it
+        /// is drawn at the size written down for it, and it wears its own
+        /// pack's atlas rather than the row's.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The atlas is the assertion that matters here.</b> A row's colour
+        /// is put on the bare body before anything else is attached, and these
+        /// props are each their own import off their own pack — so a font drawn
+        /// against a cleric's character sheet is confetti rather than a
+        /// slightly-wrong font. That the prop is a sibling of the body rather
+        /// than a child of it is what makes that true, and it is asserted by
+        /// reading the material the prop actually ends up drawing with.
+        /// </para>
+        /// <para>
+        /// <b>The row it is built against is a stand-in.</b> None of these four
+        /// looks has a row in <c>content/units.txt</c>; a live placed row lends
+        /// its <see cref="UnitType"/> because <see cref="TowerView"/> reads two
+        /// tick budgets off one and neither is reached from a tower that is
+        /// never posed.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EverySignedBesidePropStandsForItsRow()
+        {
+            foreach ((string look, string model, string atlas, string beside, float scale, string propAtlas)
+                in SignedBesideLooks)
+            {
+                UnitArt drawnAs = UnitArt.Armed(
+                    0,
+                    Loaded(model),
+                    MatchArt.TowerScale,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    default,
+                    default,
+                    default,
+                    atlas == null ? null : LoadedAtlas(atlas),
+                    BesideProp.OnTheNextTile(Loaded(beside), scale));
+
+                TowerView tower = BuiltTower(TypeOf(ArcherUnitId), drawnAs);
+
+                Assert.That(tower.Beside, Is.Not.Null, look + " drew nothing beside its tower");
+
+                Renderer[] renderers = tower.Beside.GetComponentsInChildren<Renderer>(true);
+
+                Assert.That(renderers, Is.Not.Empty, look + " stands beside its tower with no mesh at all");
+
+                AssertStandsAt(
+                    tower.Beside.transform.position,
+                    tower.transform.position + BesideProp.NextTile,
+                    look + " does not stand on the tile beside its tower");
+
+                foreach (Renderer renderer in renderers)
+                {
+                    foreach (Material material in renderer.sharedMaterials)
+                    {
+                        Assert.That(material, Is.Not.Null, look + " has a null material slot");
+
+                        Texture bound = MainTextureOf(material);
+
+                        Assert.That(bound, Is.Not.Null,
+                            look + " bound no atlas at all, which draws flat magenta");
+
+                        // Named, not merely "not the row's own". The row's atlas
+                        // is null on one of these looks, so an inequality
+                        // against it would assert nothing at all there — and
+                        // the failure being guarded is a prop wearing SOME
+                        // other sheet, not specifically the character's.
+                        Assert.That(AssetDatabase.GetAssetPath(bound), Is.EqualTo(propAtlas),
+                            look + " is drawn against an atlas that is not its own pack's, which is "
+                            + "confetti rather than a slightly-wrong prop — the row's colour goes on the "
+                            + "bare body and must not reach what stands beside it");
+                    }
+                }
+
+                Bounds drawn = WorldBounds(tower.Beside, null);
+
+                Debug.Log(
+                    $"[beside] {look}: {tower.Beside.name} at x{scale}, {drawn.size.y:F2} m tall, "
+                    + $"{drawn.size.x:F2} x {drawn.size.z:F2} on the ground");
+
+                Assert.That(drawn.size.x, Is.LessThan(HexGeometry.AcrossFlats * 1.5f),
+                    look + " spreads wider than half again the tile it is standing on, so it is over "
+                    + "its neighbours and probably over its own tower");
+            }
+        }
+
+        /// <summary>
+        /// A row that names a prop to stand beside it and never says how big
+        /// stops the view being built, and says which prop.
+        /// </summary>
+        /// <remarks>
+        /// Zero is what an unwritten serialized field holds, so this is the
+        /// shape of both failures that can reach here: a model dropped into the
+        /// inspector slot, and a binding table that named a prop and left the
+        /// size out. Neither throws anywhere else — a prop drawn at no size at
+        /// all is a prop nobody can see missing, which is the same refusal
+        /// <see cref="WeaponSocket"/> makes about a bone that is not there.
+        /// </remarks>
+        [Test]
+        public void APropStandingBesideATowerAtNoSizeAtAllFailsByName()
+        {
+            UnitArt sizeless = UnitArt.Armed(
+                0, Loaded(EngineerModelPath), MatchArt.TowerScale, null, null, null, null, null,
+                default, default, default, null,
+                BesideProp.Standing(Loaded(TurretPath), 0f, BesideProp.NextTile));
+
+            var host = new GameObject("sizeless-beside-prop");
+            _spawned.Add(host);
+
+            var tower = host.AddComponent<TowerView>();
+
+            var refused = Assert.Throws<System.InvalidOperationException>(
+                () => tower.BuildStatic(0, TypeOf(ArcherUnitId), sizeless, Quaternion.identity));
+
+            Assert.That(refused.Message, Does.Contain("turret_base"),
+                "the refusal has to name the prop that has no size, or it sends the reader looking at the "
+                + "art instead of at the table");
+        }
+
+        /// <summary>The Engineer's tier-1 look: the wrench in hand, the turret beside him.</summary>
+        private static UnitArt EngineerWithHisTurret() =>
+            UnitArt.Armed(
+                0,
+                Loaded(EngineerModelPath),
+                MatchArt.TowerScale,
+                Loaded("Assets/Art/Kaykit/adventurers/engineer_Wrench.fbx"),
+                null,
+                null,
+                null,
+                null,
+                default,
+                default,
+                TurretMuzzle,
+                null,
+                BesideProp.OnTheNextTile(Loaded(TurretPath), 1f));
+
+        /// <summary>Where something stands, to the millimetre.</summary>
+        private static void AssertStandsAt(Vector3 actual, Vector3 expected, string message) =>
+            Assert.That(Vector3.Distance(actual, expected), Is.LessThan(1e-3f),
+                message + " — it is at " + actual + " and not at " + expected);
+
+        private static GameObject Loaded(string path) =>
+            AssetDatabase.LoadAssetAtPath<GameObject>(path)
+            ?? throw new AssertionException("nothing imported at " + path);
+
+        private static Texture2D LoadedAtlas(string path) =>
+            AssetDatabase.LoadAssetAtPath<Texture2D>(path)
+            ?? throw new AssertionException("nothing imported at " + path);
 
         /// <summary>One tower built the way the game builds it, unposed.</summary>
         private TowerView BuiltTower(UnitType type, UnitArt art)

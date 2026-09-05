@@ -6,20 +6,22 @@ namespace View
 {
     /// <summary>
     /// Where a unit's shots leave its art from: a transform named on the built
-    /// body — a bone, or a node inside whatever the body is holding — and
-    /// optionally the far end of that transform's own geometry, which is what
-    /// makes a staff tip a staff tip rather than a fist.
+    /// unit — a bone, a node inside whatever the body is holding, or a node
+    /// inside whatever stands beside it — and optionally the far end of that
+    /// transform's own geometry, which is what makes a staff tip a staff tip
+    /// rather than a fist.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The name is looked up across the whole built body, props
+    /// <b>The name is looked up across the whole built unit, props
     /// included.</b> A held thing is parented onto a bone by
-    /// <see cref="WeaponSocket"/> before this resolves, so a bone name and a
-    /// node inside a prop are the same kind of lookup and take the same field.
-    /// One name that finds nothing throws and names itself; the alternative —
-    /// falling back to the root — draws the flash out of the tower's navel and
-    /// reads as an art problem from every angle except the one that shows it is
-    /// a misspelt string.
+    /// <see cref="WeaponSocket"/> and a beside prop onto the root by
+    /// <see cref="TowerView"/>, both before this resolves, so a bone name, a
+    /// node inside a weapon and a node inside a turret are one kind of lookup
+    /// and take one field. One name that finds nothing throws and names itself;
+    /// the alternative — falling back to the root — draws the flash out of the
+    /// tower's navel and reads as an art problem from every angle except the
+    /// one that shows it is a misspelt string.
     /// </para>
     /// <para>
     /// <b>The tip is a direction, and the distance comes off the asset.</b>
@@ -96,8 +98,9 @@ namespace View
         /// the rig moves.
         /// </summary>
         /// <param name="body">
-        /// The instantiated model, with whatever it holds already parented onto
-        /// its bones.
+        /// The built unit: the instantiated model, whatever it holds already
+        /// parented onto its bones, and whatever stands beside it already
+        /// parented onto the root.
         /// </param>
         /// <exception cref="ArgumentNullException"><paramref name="body"/> is null.</exception>
         /// <exception cref="InvalidOperationException">
@@ -119,9 +122,10 @@ namespace View
             {
                 throw new InvalidOperationException(
                     "No transform named '" + transformName + "' on " + body.name + ", so its shots have "
-                    + "nowhere to leave from. An effect anchor names a bone or a node inside something the "
-                    + "unit holds, and the thing it holds is parented on before this runs — so a name that "
-                    + "finds nothing is a misspelling or a weapon that was never attached.");
+                    + "nowhere to leave from. An effect anchor names a bone, a node inside something the "
+                    + "unit holds, or a node inside something standing beside it, and both kinds of prop "
+                    + "are parented on before this runs — so a name that finds nothing is a misspelling or "
+                    + "a prop that was never attached.");
             }
 
             return new AnchoredPoint(at, tip == Vector3.zero ? Vector3.zero : FarEndOf(at, tip));

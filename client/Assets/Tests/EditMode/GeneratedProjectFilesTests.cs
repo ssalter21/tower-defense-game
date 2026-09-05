@@ -204,6 +204,23 @@ namespace Tests.EditMode
                 // player path drawing a tier in the colour of the rung below it
                 // while every editor path drew it right.
                 SameOrBothEmpty(made.Texture, unit.Texture, "atlas for unit " + unit.UnitId);
+
+                // What stands beside the row, which is a model, a size and a
+                // place. Only the first of the three is an asset reference, so
+                // a manifest that kept the turret and drew it at a tenth of its
+                // size, or on the tower's own tile, would pass everything else
+                // here.
+                SameOrBothEmpty(made.Beside.Model, unit.Beside.Model, "beside prop for unit " + unit.UnitId);
+
+                Assert.That(made.Beside.Scale, Is.EqualTo(unit.Beside.Scale),
+                    GeneratedTestAssets.ManifestPath + " draws what stands beside unit " + unit.UnitId
+                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+                Assert.That(made.Beside.Offset, Is.EqualTo(unit.Beside.Offset),
+                    GeneratedTestAssets.ManifestPath + " stands what is beside unit " + unit.UnitId
+                    + " somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
                 SameOrBothEmpty(

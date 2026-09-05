@@ -10,7 +10,8 @@ namespace View.Editor
     /// <summary>
     /// A named set of characters to render: one line per character, saying
     /// which model, what it holds in each hand, what clip it is posed in and,
-    /// where the look being asked about is a colour, which atlas it wears.
+    /// where the look being asked about is a colour or a thing on the ground
+    /// beside it, which atlas it wears and what stands there.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -48,6 +49,17 @@ namespace View.Editor
     /// asking about a silhouette and seven is a line asking about a colour;
     /// both are legal, and a set written before this column existed still
     /// reads.
+    /// </para>
+    /// <para>
+    /// <b>The beside prop is an eighth field and it carries its own size,
+    /// written <c>path*scale</c>.</b> A turret, a statue, a font and a tree
+    /// stand on the ground rather than in a fist, so no bone positions them and
+    /// no hand scales them — a Forest Nature tree comes in authored for a
+    /// forest and would stand over the character it is meant to stand beside.
+    /// The size rides on the prop rather than in a column of its own for the
+    /// same reason a turn does: it is a fact about the prop and not about the
+    /// character. A turn is refused here, because a thing on the floor takes
+    /// the rotation its importer gave it.
     /// </para>
     /// <para>
     /// <b>The clip may name its bank, and for a Large rig it must.</b>
@@ -116,6 +128,15 @@ namespace View.Editor
             /// <summary>The atlas as the set file spelled it, or <c>-</c>.</summary>
             public string TexturePath { get; internal set; }
 
+            /// <summary>What stands on the ground beside it, or null.</summary>
+            public GameObject Beside { get; internal set; }
+
+            /// <summary>How big that prop is drawn. One for a prop drawn as imported.</summary>
+            public float BesideScale { get; internal set; }
+
+            /// <summary>The beside prop as the set file spelled it, size and all, or <c>-</c>.</summary>
+            public string BesidePath { get; internal set; }
+
             /// <summary>The clip as the set file spelled it, for the manifest.</summary>
             public string ClipName { get; internal set; }
 
@@ -177,12 +198,12 @@ namespace View.Editor
                 string[] fields = line.Split(
                     new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (fields.Length != 6 && fields.Length != 7)
+                if (fields.Length < 6 || fields.Length > 8)
                 {
                     faults.Add(
-                        where + ": " + fields.Length + " fields, not 6 or 7. A line is "
-                        + "'side name model right-hand left-hand clip [texture]', with '-' for an "
-                        + "empty hand and the texture left off for the model's own atlas.");
+                        where + ": " + fields.Length + " fields, not 6, 7 or 8. A line is "
+                        + "'side name model right-hand left-hand clip [texture [beside]]', with '-' for "
+                        + "an empty hand, an empty slot or the model's own atlas.");
                     continue;
                 }
 
@@ -211,7 +232,7 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// One line's six fields, turned into loaded assets. Returns null and
+        /// One line's fields, turned into loaded assets. Returns null and
         /// appends to <paramref name="faults"/> when anything is missing, so
         /// the caller can report the whole file at once.
         /// </summary>
@@ -226,6 +247,7 @@ namespace View.Editor
                 LeftHandPath = fields[4],
                 ClipName = fields[5],
                 TexturePath = fields.Length > 6 ? fields[6] : Empty,
+                BesidePath = fields.Length > 7 ? fields[7] : Empty,
             };
 
             switch (fields[0])
@@ -256,6 +278,19 @@ namespace View.Editor
             candidate.LeftHandTilt = left;
             candidate.Clip = FindClip(where, fields[5], faults);
             candidate.Texture = LoadTexture(where, candidate.TexturePath, faults);
+            candidate.Beside = LoadBeside(where, candidate.BesidePath, faults, out float besideScale);
+            candidate.BesideScale = besideScale;
+
+            // Only a tower has the socket. CreepView draws no beside prop --
+            // nothing that walks stands beside anything -- so a creep line
+            // naming one would render a picture with the prop missing and say
+            // nothing about why.
+            if (candidate.Side == Side.Creep && candidate.BesidePath != Empty)
+            {
+                faults.Add(
+                    where + ": '" + candidate.BesidePath + "' stands beside a creep. The beside socket is "
+                    + "a tower's; a creep would carry its prop down the corridor.");
+            }
 
             return faults.Count == before ? candidate : null;
         }
@@ -291,6 +326,70 @@ namespace View.Editor
             if (model == null)
             {
                 faults.Add(where + ": " + field + " '" + relative + "' — nothing imported at " + path);
+            }
+
+            return model;
+        }
+
+        /// <summary>
+        /// The prop that stands beside the character, null for <c>-</c>, or a
+        /// fault naming what was wrong with it. A <c>*scale</c> suffix comes
+        /// back in <paramref name="scale"/>, and a prop that names none is
+        /// drawn at the size it imported at.
+        /// </summary>
+        private static GameObject LoadBeside(
+            string where, string spec, List<string> faults, out float scale)
+        {
+            scale = 1f;
+
+            if (spec == Empty)
+            {
+                return null;
+            }
+
+            // A turn belongs on a held prop, whose bone decides where it points.
+            // Something on the floor takes the rotation its importer gave it, so
+            // a '@' here is refused rather than quietly dropped.
+            if (spec.IndexOf('@') >= 0)
+            {
+                faults.Add(
+                    where + ": beside prop '" + spec + "' carries a turn. A '@x,y,z' belongs on a held "
+                    + "prop; a thing standing on the ground keeps the rotation it was imported with.");
+
+                return null;
+            }
+
+            int star = spec.IndexOf('*');
+            string relative = star < 0 ? spec : spec.Substring(0, star);
+
+            // One mistake, one fault. A size that will not parse leaves nothing
+            // to say anything about, so the range check is the else and not the
+            // next statement -- two lines about one typo is how a file of these
+            // stops being readable.
+            if (star < 0)
+            {
+                // Nothing said, so the prop is drawn as imported.
+            }
+            else if (!float.TryParse(
+                spec.Substring(star + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out scale))
+            {
+                faults.Add(
+                    where + ": beside prop '" + spec + "' — the size after '*' is not a number, as in "
+                    + "'*0.5'.");
+            }
+            else if (scale <= 0f)
+            {
+                faults.Add(
+                    where + ": beside prop '" + spec + "' is drawn at " + scale + ", which is a prop that "
+                    + "never appeared.");
+            }
+
+            string path = ArtRoot + relative;
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+            if (model == null)
+            {
+                faults.Add(where + ": beside prop '" + relative + "' — nothing imported at " + path);
             }
 
             return model;

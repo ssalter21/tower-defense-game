@@ -181,6 +181,7 @@ namespace View.Editor
                     }
 
                     ReportHeld(stand, "unit " + type.Id);
+                    ReportBeside(stand, "unit " + type.Id);
                     Frame(camera, Measured(stand));
 
                     Write(path, Grab(camera, width, height));
@@ -255,6 +256,7 @@ namespace View.Editor
                         }
 
                         ReportHeld(stand, candidate.Name);
+                        ReportBeside(stand, candidate.Name);
                         Frame(camera, Measured(stand));
 
                         Write(path, Grab(camera, width, height));
@@ -270,7 +272,7 @@ namespace View.Editor
                     manifest.Add(
                         string.Format(
                             CultureInfo.InvariantCulture,
-                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8} | {9}",
+                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8} | {9} | {10}",
                             index + 1,
                             (index / SheetColumns) + 1,
                             (index % SheetColumns) + 1,
@@ -280,7 +282,8 @@ namespace View.Editor
                             candidate.ModelPath,
                             candidate.RightHandPath,
                             candidate.LeftHandPath,
-                            candidate.TexturePath));
+                            candidate.TexturePath,
+                            candidate.BesidePath));
                 }
 
                 string sheet = Path.Combine(outDir, "candidates-sheet.png");
@@ -306,7 +309,7 @@ namespace View.Editor
                     "# candidates-sheet.png; rNcM is the row and column of the tile.",
                     "#",
                     "#   n  tile  name                   side   clip"
-                    + "                           model | right hand | left hand | texture",
+                    + "                           model | right hand | left hand | texture | beside",
                 }.Concat(manifest).ToArray());
 
             written.Add(manifestPath);
@@ -318,6 +321,11 @@ namespace View.Editor
         /// references to that frame is what <see cref="UnitArt.IsPosed"/> asks
         /// for.
         /// </summary>
+        /// <remarks>
+        /// A creep takes no beside prop. The socket is a tower's, and the set
+        /// reader refuses one on a creep line rather than leaving this to drop
+        /// it silently.
+        /// </remarks>
         private static UnitArt ArtFor(CandidateSet.Candidate candidate) =>
             candidate.Side == CandidateSet.Side.Tower
                 ? UnitArt.Armed(
@@ -332,7 +340,8 @@ namespace View.Editor
                     candidate.RightHandTilt,
                     candidate.LeftHandTilt,
                     default,
-                    candidate.Texture)
+                    candidate.Texture,
+                    BesideProp.OnTheNextTile(candidate.Beside, candidate.BesideScale))
                 : UnitArt.Armed(
                     0,
                     candidate.Model,
@@ -542,6 +551,38 @@ namespace View.Editor
                     + $"min ({min.x:F2}, {min.y:F2}, {min.z:F2}) "
                     + $"max ({max.x:F2}, {max.y:F2}, {max.z:F2})");
             }
+        }
+
+        /// <summary>
+        /// How tall the thing standing beside the character is against the
+        /// character itself, and how far from it.
+        /// </summary>
+        /// <remarks>
+        /// The one number a beside prop needs and a held prop does not: a
+        /// weapon is authored beside the character that swings it and comes in
+        /// at the right size, while a turret and a Forest Nature tree are
+        /// scenery off other packs and come in at scenery's size. A ratio
+        /// rather than an absolute height, because "does it read as standing
+        /// beside him" is a comparison and the sheet is the other half of it.
+        /// </remarks>
+        private static void ReportBeside(GameObject stand, string subject)
+        {
+            var tower = stand.GetComponent<TowerView>();
+
+            if (tower == null || tower.Beside == null)
+            {
+                return;
+            }
+
+            Bounds prop = Measured(tower.Beside);
+            Bounds body = Measured(tower.Model);
+            Vector3 fromRoot = prop.center - stand.transform.position;
+
+            Debug.Log(
+                $"[beside] {subject} {tower.Beside.name}: {prop.size.y:F2} m tall against the body's "
+                + $"{body.size.y:F2} ({prop.size.y / Mathf.Max(body.size.y, 1e-4f):F2} of it), "
+                + $"{prop.size.x:F2} x {prop.size.z:F2} on the ground, centred "
+                + $"({fromRoot.x:F2}, {fromRoot.y:F2}, {fromRoot.z:F2}) from the root");
         }
 
         /// <summary>The world bounds of everything drawn under an object.</summary>

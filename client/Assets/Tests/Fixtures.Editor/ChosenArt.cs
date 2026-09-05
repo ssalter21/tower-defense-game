@@ -147,6 +147,13 @@ namespace Tests.Fixtures
         /// <see cref="MatchArt"/> rather than being typed again here, so this
         /// table and the builder's can disagree about which model a unit takes
         /// but never about what a half is.
+        /// <para>
+        /// Nothing stands beside anything yet. The four looks that need the
+        /// beside socket are signed in <c>docs/roster.md</c> and none of them
+        /// has a row in <c>content/units.txt</c>; the column is here so that
+        /// this table and the builder's disagree the day one of them gets a
+        /// prop and the other does not.
+        /// </para>
         /// </remarks>
         public static readonly (
             int unitId,
@@ -160,30 +167,33 @@ namespace Tests.Fixtures
             string backswing,
             Vector3 rightTilt,
             Vector3 leftTilt,
-            EffectAnchor anchor)[] UnitPaths =
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside)[] UnitPaths =
         {
             (1, MinionModelPath, MatchArt.CreepScale, null,
-                null, null, null, null, null, default, default, default),
+                null, null, null, null, null, default, default, default, default),
             (2, RogueModelPath, MatchArt.CreepScale, null,
-                null, null, null, null, null, default, default, default),
+                null, null, null, null, null, default, default, default, default),
             (3, RangerModelPath, MatchArt.TowerScale, null,
                 null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
-                Bow),
+                Bow, default),
             (4, MageModelPath, MatchArt.TowerScale, null,
                 StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
-                StaffTip),
+                StaffTip, default),
             (7, SkeletonMageModelPath, MatchArt.CreepScale, null,
-                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default, default),
+                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default, default, default),
             (11, KnightModelPath, MatchArt.TowerScale, null,
                 SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default,
-                SwordTip),
+                SwordTip, default),
             (12, MinionModelPath, MatchArt.CreepScale, null,
-                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default, default),
+                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default, default,
+                default),
             (13, WarriorModelPath, MatchArt.CreepScale, null,
-                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default, default),
+                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default, default,
+                default),
             (14, RangerModelPath, MatchArt.TowerScale, RangerAltAtlasPath,
                 QuiverModelPath, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName,
-                default, BowFlip, Bow),
+                default, BowFlip, Bow, default),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -216,7 +226,8 @@ namespace Tests.Fixtures
                     u.rightTilt,
                     u.leftTilt,
                     u.anchor,
-                    MaybeTexture(u.texture)))
+                    MaybeTexture(u.texture),
+                    BesideProp.Standing(MaybeModel(u.beside.model), u.beside.scale, u.beside.offset)))
                     .Concat(UnboundUnits.StandIns()),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));

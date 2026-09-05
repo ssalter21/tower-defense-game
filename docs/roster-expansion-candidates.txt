@@ -11,9 +11,9 @@
 # candidates-sheet.png and candidates-manifest.txt. Nothing here is an oracle
 # and no test reads it. Edit a line, run it again, look again.
 #
-# HOW A LINE READS. Six whitespace-separated fields, or seven:
+# HOW A LINE READS. Six whitespace-separated fields, or seven, or eight:
 #
-#     side  name  model  right-hand  left-hand  clip  [texture]
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
 #
 #   side        tower or creep -- which of the two shipped views draws it.
 #   name        what the PNG is called. The model's own name, not a unit name:
@@ -33,12 +33,27 @@
 #               below it. So the rows whose signed look in docs/roster.md is a
 #               colour name their atlas here. It covers the body only: a prop
 #               is its own import off its own pack's atlas.
+#   beside      what stands on the GROUND beside the tower rather than in a
+#               hand, with *scale for how big it is drawn -- turret_base*1,
+#               Tree_Bare_1_C_Color8*0.55. A held prop is authored beside the
+#               character that holds it and comes in at the right size; a
+#               turret and a forest tree are scenery and do not. Only a tower
+#               has the socket, so a beside prop on a creep line is refused.
+#               How far beside is not in this file: everything stands one tile
+#               away, which is BesideProp.NextTile.
 #
 # A held prop may carry a turn, written path@x,y,z in Euler degrees. Every
 # weapon in these packs is authored for the right hand, so a bow in the off
 # hand needs @0,180,0, and a staff hangs head-down from the fist until
 # @0,0,-90 stands it up. Both numbers are the ones MatchSceneBuilder already
 # carries for the live rows.
+#
+# THE FOUR BESIDE PROPS HAVE A SET OF THEIR OWN.
+# docs/roster-expansion-beside-candidates.txt puts the turret, the ammo crate,
+# the Paladin's statue, the Cleric's font and all six Color8 bare trees beside
+# the characters that get them, which is the question of how big a thing on
+# the ground should be. The Engineer's turret is on his line here as well,
+# because it is his tier-1 look and not a separate question.
 #
 # ONE LINE PER MODEL, SO ONE TIER'S LOOK. A model serves up to three tiers and
 # the proposal gives each tier its own Looks column, but a character can only
@@ -116,9 +131,13 @@ tower Marksman_Crossbow    Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx
 tower Rogue                Kaykit/adventurers/Rogue.fbx                                   Kaykit/adventurers/dagger.fbx                                -                                                                   Throw
 tower Rogue_Hooded         Kaykit/adventurers/Rogue_Hooded.fbx                            Kaykit/adventurers/dagger.fbx                                Kaykit/adventurers/dagger.fbx                                       Melee_Dualwield_Attack_Slice Kaykit/adventurers/rogue_texture_alt_A.png
 
-# Engineer line. One model all three tiers; the turret and the crate stand
-# beside him and are not held, so they are not on this line.
-tower Engineer             Kaykit/adventurers/Engineer.fbx                                Kaykit/adventurers/engineer_Wrench.fbx                       -                                                                   Idle_A
+# Engineer line. One model all three tiers, and the turret beside him is what
+# fires at every one of them. It is the eighth field: the socket that is not a
+# hand bone. The crate the Artificer stands beside the turret is not here --
+# one tower has one beside slot -- and it is in
+# docs/roster-expansion-beside-candidates.txt, which asks about all four
+# beside props at once.
+tower Engineer             Kaykit/adventurers/Engineer.fbx                                Kaykit/adventurers/engineer_Wrench.fbx                       -                                                                   Idle_A                       -                                                                   Kaykit/adventurers/turret_base.fbx*1
 
 # ---------------------------------------------------------------- creeps ---
 

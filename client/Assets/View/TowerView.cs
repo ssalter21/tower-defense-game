@@ -62,6 +62,10 @@ namespace View
 
         private AnchoredPoint _effectAnchor;
 
+        private Vector3 _besideOffset;
+
+        private Quaternion _besideRotation = Quaternion.identity;
+
         private Quaternion _restingRotation = Quaternion.identity;
 
         /// <summary>Its one-based place in the defense — the id the snapshot uses.</summary>
@@ -79,6 +83,9 @@ namespace View
         /// <summary>What it holds in <c>handslot.l</c>, or null.</summary>
         public GameObject LeftHand { get; private set; }
 
+        /// <summary>What stands on the ground beside it, or null.</summary>
+        public GameObject Beside { get; private set; }
+
         /// <summary>True when this tower has a rig and three clips.</summary>
         public bool IsAnimated => _animator != null;
 
@@ -91,9 +98,10 @@ namespace View
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The anchor was found on this tower's own model or on what it holds
-        /// when the view was built, so this reads the current pose of a bone or
-        /// a staff tip and the flash moves with the arm. A tower with no anchor
+        /// The anchor was found on this tower's own model, on what it holds or
+        /// on what stands beside it when the view was built, so this reads the
+        /// current pose of a bone, a staff tip or a turret barrel — and the
+        /// flash on a held prop moves with the arm. A tower with no anchor
         /// — a row drawn as the stand-in, which is a mannequin with no staff tip
         /// to name — falls back to
         /// <see cref="MatchTuning.TowerMuzzleHeight"/> above its base.
@@ -137,10 +145,13 @@ namespace View
             _skin = DrawnModel.Wear(Model, art.Texture);
 
             Hold(art);
+            Place(art.Beside);
 
-            _effectAnchor = art.EffectAnchor.ResolveOn(Model);
+            _effectAnchor = art.EffectAnchor.ResolveOn(gameObject);
 
             transform.rotation = resting;
+
+            Stand();
         }
 
         /// <summary>
@@ -177,11 +188,12 @@ namespace View
             // What it holds goes on the bones before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
             Hold(art);
+            Place(art.Beside);
 
-            // After the hands, because an anchor may name a node inside what
-            // the unit is holding, and once — the lookup is by name and this is
+            // After the hands and the beside prop, because an anchor may name a
+            // node inside either, and once — the lookup is by name and this is
             // the last moment the hierarchy changes shape.
-            _effectAnchor = art.EffectAnchor.ResolveOn(Model);
+            _effectAnchor = art.EffectAnchor.ResolveOn(gameObject);
 
             // Binding is SimDrivenAnimator's business, including the ban on a
             // RuntimeAnimatorController, and the clip lengths stay over there
@@ -190,6 +202,8 @@ namespace View
                 Model, art.IdleClip, art.WindupClip, art.BackswingClip);
 
             transform.rotation = resting;
+
+            Stand();
         }
 
         /// <summary>
@@ -217,6 +231,72 @@ namespace View
         }
 
         /// <summary>
+        /// Draws whatever the art stands beside the tower, as a sibling of the
+        /// model rather than as a child of a bone.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Beside the model and not under it.</b> The body is instantiated
+        /// at the row's own scale and then painted with the row's own atlas, and
+        /// a prop parented under it would inherit both — which for a scenery
+        /// asset off another pack means the wrong size in the wrong swatches.
+        /// </para>
+        /// <para>
+        /// <b>A prop with no size is refused here and named.</b> Zero is what an
+        /// unfilled serialized field holds, so it is what a model dropped into
+        /// the inspector slot arrives with and what a row inherits if a table
+        /// ever stops writing the size — and a prop drawn at no size at all is a
+        /// prop nobody can see missing.
+        /// </para>
+        /// </remarks>
+        private void Place(BesideProp prop)
+        {
+            if (!prop.IsSet)
+            {
+                return;
+            }
+
+            if (prop.Scale <= 0f)
+            {
+                throw new InvalidOperationException(
+                    "Unit " + Id + " stands " + prop.Model.name + " beside it at a size of " + prop.Scale
+                    + ". A beside prop carries its own size because the packs are per pack, and zero is "
+                    + "what an unwritten field holds — so this is a row that named a prop and never said "
+                    + "how big.");
+            }
+
+            Beside = DrawnModel.Under(transform, prop.Model, prop.Scale);
+            _besideOffset = prop.Offset;
+
+            // Composed with the resting facing in Stand rather than overwritten.
+            _besideRotation = Beside.transform.localRotation;
+        }
+
+        /// <summary>
+        /// Puts the beside prop back where it stands, whichever way the tower
+        /// has since turned.
+        /// </summary>
+        /// <remarks>
+        /// <b>A tower turns and the thing on the ground beside it does not.</b>
+        /// The whole view rotates to aim — that is what <see cref="Pose"/> does
+        /// — so a prop left at a fixed local offset would swing through the
+        /// neighbouring tiles every time a creep walked past. Its world pose is
+        /// written from the resting facing instead, which is the frame the
+        /// offset is measured in and the one the tile was chosen in.
+        /// </remarks>
+        private void Stand()
+        {
+            if (Beside == null)
+            {
+                return;
+            }
+
+            Beside.transform.SetPositionAndRotation(
+                transform.position + (_restingRotation * _besideOffset),
+                _restingRotation * _besideRotation);
+        }
+
+        /// <summary>
         /// Points the tower and poses it from one tick of simulation state.
         /// </summary>
         /// <param name="state">Idle, winding up, or recovering.</param>
@@ -232,6 +312,11 @@ namespace View
             transform.rotation = targetPosition.HasValue
                 ? FacingToward(targetPosition.Value)
                 : _restingRotation;
+
+            // After the turn and before the early return, because a tower with
+            // no clips still turns to track a creep and would still drag its
+            // prop round with it.
+            Stand();
 
             if (_animator == null)
             {

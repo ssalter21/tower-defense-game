@@ -98,6 +98,29 @@ caption is worth keeping attached to the *landmark* rather than to the number,
 because a superseded tick is usually still a tick of the match, so a stale frame
 goes on looking perfectly reasonable.
 
+## And one sheet that is not a frame at all
+
+- [`roster/beside-props-sheet.png`](roster/beside-props-sheet.png) — the four props that stand on the ground
+  beside a tower, drawn through the real `TowerView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-expansion-beside-candidates.txt`. Ten tiles: the six
+  `Color8` bare trees beside the Druid, then the turret, the ammo crate, the Paladin's statue and the Cleric's
+  font beside theirs. **It is here because a size is the one thing a turntable cannot show.** The Druid's tree
+  was picked from a turntable of the six trunk forms at uniform framing, which says nothing about how big a
+  tree should be next to a standing man; this is the same six at the size the signed one is drawn at.
+
+  **The trees come out dark grey-brown, and that is the model and not a broken import.** This pack ships
+  the same `forest_texture.png` in all eight of its colourway folders — the eight files are byte-identical, so
+  a colourway is where a model's UVs land on one shared sheet rather than a sheet of its own — and this
+  model's trunk lands on a dark swatch. That the atlas binds, and binds the one in the model's own `Color8`
+  folder, is asserted in `ImportedArtTests`. The Overgrowth line in [`roster.md`](../roster.md) described the
+  weirwood as a cream-white trunk before anyone had rendered one; whether this is the tree that line meant is
+  the question the sheet is asking.
+
+  It draws no board, no roster row and no price — every character on it is a model no row in
+  `content/units.txt` points at yet — which is why `check-docs.ps1` exempts it from being dated against the
+  authored content. Regenerate it with the command above and copy `candidates-sheet.png` over it; the tool's
+  own output name is deliberately not the committed one, because every candidate run rewrites it.
+
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture
 next remembering to delete four files. Left to memory, a plain

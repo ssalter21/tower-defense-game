@@ -16,9 +16,10 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Size says which side a unit is on and nothing else.</b> A tier is
-    /// told apart by <see cref="Texture"/>, by what the unit holds, or by
-    /// being a different model — never by being bigger. So two rows sharing a
-    /// model share a scale, and what separates them is one of the other three.
+    /// told apart by <see cref="Texture"/>, by what the unit holds, by what
+    /// stands <see cref="Beside">beside</see> it, or by being a different
+    /// model — never by being bigger. So two rows sharing a model share a
+    /// scale, and what separates them is one of the other four.
     /// </para>
     /// </remarks>
     [Serializable]
@@ -47,6 +48,10 @@ namespace View
         [SerializeField]
         [Tooltip("Hung off handslot.l. Null for a unit that carries nothing there.")]
         private GameObject leftHand;
+
+        [SerializeField]
+        [Tooltip("Stood on the ground beside the tower rather than held. Empty for a row with nothing there.")]
+        private BesideProp beside;
 
         [SerializeField]
         [Tooltip("Euler degrees applied to the right-hand item, on top of the bone. Usually zero.")]
@@ -105,7 +110,8 @@ namespace View
             Vector3 rightHandTilt = default,
             Vector3 leftHandTilt = default,
             EffectAnchor effectAnchor = default,
-            Texture2D texture = null) =>
+            Texture2D texture = null,
+            BesideProp beside = default) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -114,6 +120,7 @@ namespace View
                 texture = texture,
                 rightHand = rightHand,
                 leftHand = leftHand,
+                beside = beside,
                 idleClip = idle,
                 windupClip = windup,
                 backswingClip = backswing,
@@ -156,6 +163,26 @@ namespace View
 
         /// <summary>What goes on <c>handslot.l</c>, or null.</summary>
         public GameObject LeftHand => leftHand;
+
+        /// <summary>
+        /// What stands on the ground beside this row, and how big — empty for a
+        /// row with nothing there.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The third socket, and the only one that is not a bone. It is what
+        /// lets a tier be told apart by something the character is not carrying:
+        /// the Engineer's turret is what fires, and a statue, a font and a
+        /// weirwood are each a tower's whole tier-three read.
+        /// </para>
+        /// <para>
+        /// <b>Drawn by <see cref="TowerView"/> and ignored by
+        /// <see cref="CreepView"/>.</b> Nothing that walks stands beside
+        /// anything: a creep would carry its prop down the corridor, sliding
+        /// along a fixed offset from a body that is moving.
+        /// </para>
+        /// </remarks>
+        public BesideProp Beside => beside;
 
         /// <summary>
         /// How the right-hand item is turned relative to the bone. Zero for

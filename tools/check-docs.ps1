@@ -241,7 +241,15 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # baseline stale, and dating it against content/ asks it the wrong question.
 # Named one file at a time on purpose -- a pattern here would exempt the next
 # sheet dropped into the directory as well.
-$decisionSheets = @('docs/chrome/chosen-build-phase.png')
+# The beside-prop sheet is the same species from the other direction: it
+# draws ten characters that no row in content/units.txt points at, standing
+# beside props no row names, so dating it against the roster asks it about
+# content it does not contain. What would make it stale is somebody changing
+# which prop stands beside which tower, and that is a line in docs/roster.md.
+$decisionSheets = @(
+    'docs/chrome/chosen-build-phase.png'
+    'docs/frames/roster/beside-props-sheet.png'
+)
 
 # An exemption for a file that is no longer committed covers nothing, and it
 # would go on reading as though it still applied to something.
@@ -253,7 +261,7 @@ foreach ($sheet in $decisionSheets) {
 
 foreach ($picture in $pictures) {
     if ($decisionSheets -contains $picture) {
-        Exempt "$picture is the chosen arrangement docs/chrome/README.md records, not a baseline, so its date is not compared."
+        Exempt "$picture records a decision rather than describing the board, so its date is not compared."
         continue
     }
 

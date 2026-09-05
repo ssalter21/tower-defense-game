@@ -1,0 +1,93 @@
+# The four props that stand beside a tower, as a candidate set.
+#
+# WHAT THIS IS FOR. docs/roster.md signs four looks that are not held in a
+# hand: the Engineer's turret, the Paladin's statue, the Cleric's font and the
+# Druid's bare weirwood. Each stands on the tile beside its tower. The trunk
+# form of the Druid's tree was picked on 5 September 2026 from a turntable
+# sheet -- Tree_Bare_1_C_Color8, issue #274 -- and a turntable at uniform
+# framing says nothing about how big a tree should be next to a standing man.
+# That is what this set is for.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-expansion-beside-candidates.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle. Edit a line, run it
+# again, look again.
+#
+# HOW A LINE READS. The same fields docs/roster-expansion-candidates.txt uses,
+# and its header is where they are written out. The eighth is the one this set
+# is about:
+#
+#     side  name  model  right-hand  left-hand  clip  texture  beside
+#
+#   beside  what stands on the ground beside the tower, relative to
+#           client/Assets/Art/, with *scale for how big it is drawn. A held
+#           prop is authored beside the character that holds it and comes in
+#           at the right size; these are scenery off other packs and do not.
+#           The offset is not in this file: everything beside a tower stands
+#           one tile away, which is BesideProp.NextTile, which is the board's
+#           own column pitch.
+#
+# THE SIZES BELOW WERE MEASURED, NOT GUESSED. The capture logs a [beside] line
+# per tile giving the prop's drawn height, its footprint and where its centre
+# sits. Drawn at their own imported size, on a board whose tiles are 2.0 across
+# the flats:
+#
+#   turret_base      1.13 m tall, 1.00 x 1.13 on the ground   *1
+#   ammo_crate       0.46 m tall, 0.57 x 0.49                 *1
+#   paladin_statue   2.55 m tall, 1.60 x 1.09                 *1
+#   Cleric_Font      0.81 m tall, 1.44 x 1.44                 *1
+#   Tree_Bare_1_C    5.26 m tall, 3.74 x 2.07                 *0.55
+#
+# The first four are authored in the same packs as the characters they stand
+# beside and land inside their own tile at 1. The trees are scenery for a
+# forest: 1_C spreads 3.74 across, which is nearly two tiles, and reaches back
+# through the Druid himself. 0.55 brings that spread to 2.06 -- the tile it is
+# standing on -- and leaves it 2.89 tall, half again the Druid's own height.
+# All six trees take that one number so the comparison is like for like.
+#
+# The character's own atlas covers the character only. A beside prop is its own
+# import off its own pack's atlas -- the forest texture for the trees, the
+# paladin's for the statue -- so nothing is painted over it, and that is what
+# stops a Cleric_Font drawn against a cleric's character sheet coming out as
+# confetti.
+#
+# TEN LINES, FOUR QUESTIONS. Six of them are the same Druid holding the same
+# staff beside each of the pack's six Color8 bare trees, which is the pick
+# re-asked at the scale it will actually be drawn at. The other four are the
+# turret, the statue and the font beside the characters roster.md gives them
+# to, each at the tier its Looks line signs.
+
+# ------------------------------------------------- the Druid's weirwood ---
+
+# Overgrowth, tier 3: druid_texture_alt_B and a bare weirwood on the tile
+# beside him. Tree_Bare_1_C is the signed trunk form -- the largest of the six
+# at 936 triangles and the only silhouette that reads as an ancient tree from
+# every angle -- and the other five are here so the pick can be seen against
+# its alternatives at the size a Druid stands next to.
+tower Druid_Tree_1_A  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_1_A_Color8.fbx*0.55
+tower Druid_Tree_1_B  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_1_B_Color8.fbx*0.55
+tower Druid_Tree_1_C  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx*0.55
+tower Druid_Tree_2_A  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_2_A_Color8.fbx*0.55
+tower Druid_Tree_2_B  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_2_B_Color8.fbx*0.55
+tower Druid_Tree_2_C  Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Ranged_Magic_Shoot  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_2_C_Color8.fbx*0.55
+
+# ------------------------------------------------ the other three props ---
+
+# Engineer, tier 1: the wrench in hand and the turret beside him doing the
+# firing. The turret is the line's identity at every rung, so it is here at
+# tier 1 in the atlas the Engineer imports wearing.
+tower Engineer_Turret  Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Idle_A  -  Kaykit/adventurers/turret_base.fbx*1
+
+# Artificer, tier 2: engineer_texture_alt_A, and roster.md puts an ammo_crate
+# beside the turret. One socket holds one prop, so this line asks about the
+# crate on its own -- whether the rung reads with the crate where the turret
+# was is the question, and two props beside one tower is not a thing that
+# exists.
+tower Artificer_Crate  Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Idle_A  Kaykit/adventurers/engineer_texture_alt_A.png  Kaykit/adventurers/ammo_crate.fbx*1
+
+# Blessing, tier 3: paladin_texture_B, the book open, and the gold statue.
+tower Paladin_Statue  Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx  -  Ranged_Magic_Shoot  Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png  Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+
+# Consecration, tier 3: cleric_texture_B, the mace, and the font on the ground.
+tower Cleric_Font  Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  -  Ranged_Magic_Shoot  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png  Kaykit/mystery-monthly-series-6/cleric/Cleric_Font.fbx*1
