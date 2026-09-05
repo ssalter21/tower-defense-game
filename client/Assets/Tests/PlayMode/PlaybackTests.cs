@@ -23,9 +23,10 @@ namespace Tests.PlayMode
     /// legitimate reason anyone would revisit the no-cache decision.
     /// </para>
     /// <para>
-    /// What is left is three claims with a failure mode each: that the re-run
+    /// What is left is four claims with a failure mode each: that the re-run
     /// ticks' events never arrive, that a seek clears the one remaining thing
-    /// that owns a clock, and that the pool releases by subtraction without
+    /// that owns a clock — asserted once on the tracer count and once on the
+    /// ring a bubble leaves — and that the pool releases by subtraction without
     /// anybody clearing it.
     /// </para>
     /// </remarks>
@@ -167,6 +168,57 @@ namespace Tests.PlayMode
 
             Assert.That(view.Decorations.TracersDrawn, Is.Zero,
                 "the drawn count survived the clear");
+        }
+
+        /// <summary>
+        /// A bubble's ring does not survive a seek and is not drawn twice by
+        /// one.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The same two claims the tracer count makes, on the decoration a
+        /// blast and an aura leave: the count goes back to zero because a ring
+        /// still on screen belongs to a tick that has not happened yet, and it
+        /// does not climb again, because the ticks the seek re-runs are
+        /// re-simulated with no sink attached and say nothing at all.
+        /// </para>
+        /// <para>
+        /// The rings are handed over by hand because no shipped row authors a
+        /// bubble, so no match played from <c>content/units.txt</c> would ever
+        /// fire one. What that costs is nothing: what is under test is the
+        /// seek, and a ring put on screen deliberately is a harder starting
+        /// position than one that happened to be there.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void ABubblesRingDoesNotSurviveASeekOrArriveTwiceFromOne()
+        {
+            PlaybackController playback = Playback();
+            MatchView view = playback.View;
+
+            RunUntil(view, () => view.Current.Tick >= BusyTick);
+
+            Assert.That(view.Current.Tick, Is.EqualTo(BusyTick),
+                "the match ended before it got busy enough for a seek to re-run anything");
+
+            int towerId = view.Current.Towers[0].Id;
+
+            view.Decorations.AuraPulsed(towerId, 3000, BubblePayload.Cooldown);
+            view.Decorations.BlastLanded(towerId, 3000, BubblePayload.Damage);
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2),
+                "the rings were never drawn, so a count that dropped would prove nothing");
+
+            int heardBefore = view.Decorations.EventsHeard;
+
+            // Backwards, so the seek re-simulates eighteen hundred ticks.
+            playback.SeekTo(BusyTick);
+
+            Assert.That(view.Decorations.RingsDrawn, Is.Zero,
+                "a ring survived a seek, so it belongs to a tick that has not happened yet");
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heardBefore),
+                "the re-run ticks emitted their events into the decorations");
         }
 
         /// <summary>

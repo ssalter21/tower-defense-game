@@ -185,7 +185,11 @@ namespace View
 
             BuildTowers(layout, towerParent);
 
-            Decorations = new MatchDecorations(transform, CreepPositionOf, TowerMuzzleOf);
+            Decorations = new MatchDecorations(
+                transform,
+                CreepPositionOf,
+                TowerMuzzleOf,
+                EntityGroundOf);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -631,5 +635,27 @@ namespace View
 
         private Vector3? TowerMuzzleOf(int towerId) =>
             _towers.TryGetValue(towerId, out TowerView view) ? view.Muzzle : (Vector3?)null;
+
+        /// <summary>
+        /// Where an entity is standing, whichever kind it is — what a bubble's
+        /// ring is drawn under.
+        /// </summary>
+        /// <remarks>
+        /// Towers, creeps and projectiles are numbered out of one id space, so
+        /// a caller holding an id that could be either does not have to be told
+        /// which — and cannot be told wrong. A tower is at its own transform
+        /// and does not move; a creep is where it was last drawn, which is the
+        /// same at-most-a-tick-behind answer <see cref="CreepPositionOf"/>
+        /// gives and is allowed to be for the same reason.
+        /// </remarks>
+        private Vector3? EntityGroundOf(int entityId)
+        {
+            if (_towers.TryGetValue(entityId, out TowerView tower))
+            {
+                return tower.transform.position;
+            }
+
+            return CreepPositionOf(entityId);
+        }
     }
 }

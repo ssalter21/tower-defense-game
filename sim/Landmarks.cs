@@ -269,6 +269,16 @@ namespace Sim
         public void CreepOvertook(int creepId, int overtakenCreepId) =>
             Note(FirstOvertake, creepId, overtakenCreepId);
 
+        /// <inheritdoc/>
+        public void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload)
+        {
+        }
+
         /// <summary>
         /// The row for a moment that never happened. Words rather than a tick of
         /// zero, because zero is a tick a real landmark could sit on.

@@ -924,6 +924,104 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A blast and an aura each leave a ring on the ground under whatever
+        /// they were centred on, as wide as the bubble reached.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The events are handed over by hand, and they have to be.</b> No
+        /// row of <c>content/units.txt</c> authors a bubble, so a match played
+        /// from the shipped content never fires one — the same reason the
+        /// simulation's own bubble tests are written against fixture rows. What
+        /// is under test here is the decoration, and the decoration is reached
+        /// through the interface the simulation would reach it through.
+        /// </para>
+        /// <para>
+        /// <b>The position is asserted against the tower, because a tower's is
+        /// exact.</b> A creep's ring lands on the position the creep was last
+        /// drawn at, which is a lerp and would have to be re-derived here to be
+        /// compared; that half is asserted as "under the creep and not under
+        /// the tower", which is the claim that would break if the two lookups
+        /// were crossed.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void ABubbleLeavesARingUnderWhatItWasCentredOnAtTheSizeItReached()
+        {
+            const int RadiusMilliHex = 3000;
+
+            MatchView view = Begin();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            int towerId = view.Current.Towers[0].Id;
+            Vector3 stands = view.Towers[towerId].transform.position;
+
+            view.Decorations.AuraPulsed(towerId, RadiusMilliHex, BubblePayload.Cooldown);
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(1),
+                "an aura pulsed and left nothing on the board");
+
+            Transform ring = Rings(view).Single();
+
+            Assert.That(
+                Vector3.Distance(ring.position, stands + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                Is.LessThan(1e-3f),
+                $"the ring is at {ring.position} and the tower that pulsed is at {stands}");
+
+            // Sized to the radius, in the one place a simulation number becomes
+            // a view number. A ring that ignored the radius would look right on
+            // every bubble that happened to be three hexes wide.
+            Assert.That(ring.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(RadiusMilliHex)).Within(1e-4f));
+            Assert.That(ring.localScale.z, Is.EqualTo(ring.localScale.x));
+
+            // And it keeps that size for the whole of its life, which is the
+            // one place it parts company with a spark. A spark's size is how
+            // loud it is and closing it down is it going away; a ring's size is
+            // the entire message, so a ring that shrank would report a reach
+            // the bubble did not have on every tick but its first.
+            //
+            // OBSERVED: age every effect alike. This goes red on the first
+            // tick, at seven eighths of the width it was drawn at, and nothing
+            // else in the suite notices — the ring is still drawn, still
+            // pooled, still cleared by a seek, and it is telling the truth for
+            // one frame in eight.
+            float drawnAt = ring.localScale.x;
+
+            for (int tick = 1; tick < MatchTuning.BubbleRingTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+
+                Assert.That(ring.localScale.x, Is.EqualTo(drawnAt).Within(1e-4f),
+                    $"the ring is {ring.localScale.x} metres across {tick} ticks after a bubble "
+                    + $"{drawnAt} metres across went off");
+            }
+
+            // And a blast is the same ring under the body the shot arrived at.
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            view.Decorations.BlastLanded(creepId, RadiusMilliHex, BubblePayload.Damage);
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2));
+
+            float nearest = Rings(view).Min(disc => Vector3.Distance(disc.position, walks));
+
+            Assert.That(nearest, Is.LessThan(MatchTuning.BubbleRingHeight + 1e-3f),
+                "no ring is under the creep the blast landed on");
+
+            // A bubble that reached only its centre is a ring of no size, and a
+            // centre the view is not holding has nowhere to be. Neither draws,
+            // and neither is an error.
+            view.Decorations.BlastLanded(creepId, 0, BubblePayload.Speed);
+            view.Decorations.AuraPulsed(int.MaxValue, RadiusMilliHex, BubblePayload.Shield);
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2),
+                "a bubble with no radius, or centred on nothing the view is holding, drew a ring anyway");
+        }
+
+        /// <summary>
         /// Decoration does not pile up over a whole match. The count on screen
         /// stays bounded by what the last few ticks produced, because aging
         /// happens where the simulation advances rather than where somebody
@@ -954,5 +1052,12 @@ namespace Tests.PlayMode
             Assert.That(most, Is.LessThan(40),
                 $"{most} effects were on screen at once — decoration is accumulating rather than ageing");
         }
+
+        /// <summary>
+        /// Every bubble ring standing under the view, found by the name the
+        /// pool gives them.
+        /// </summary>
+        private static IEnumerable<Transform> Rings(MatchView view) =>
+            view.GetComponentsInChildren<Transform>().Where(child => child.name == "BubbleRing");
     }
 }

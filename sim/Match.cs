@@ -711,7 +711,7 @@ namespace Sim
             AgeDyingCreeps();
             FlyProjectiles(events);
             RunTowers(events);
-            PulseAuras();
+            PulseAuras(events);
             ClearAwayTheGone();
 
             Tick++;
@@ -979,7 +979,7 @@ namespace Sim
         /// range is still intersected with the route at load.
         /// </para>
         /// </remarks>
-        private void PulseAuras()
+        private void PulseAuras(IMatchEvents? events)
         {
             if (_towersPulse)
             {
@@ -1000,6 +1000,12 @@ namespace Sim
                     }
 
                     tower.PulseIn = type.Bubble.PeriodTicks - 1;
+                    events?.AuraPulsed(tower.Id, type.Bubble.RadiusMilliHex, type.Bubble.Payload);
+
+                    // The pulse is announced and the spread is silent. A pulse
+                    // has no roll to spread -- the draw belongs to an attack
+                    // and an aura is not one -- so the only thing a sink would
+                    // hear from in there is a landing that cannot happen.
                     Spread(type, _layout.Towers[index].Hex, roll: 0, events: null);
                 }
             }
@@ -1025,6 +1031,7 @@ namespace Sim
                 }
 
                 creep.PulseIn = creep.Type.Bubble.PeriodTicks - 1;
+                events?.AuraPulsed(creep.Id, creep.Type.Bubble.RadiusMilliHex, creep.Type.Bubble.Payload);
                 Spread(creep.Type, CellUnder(creep.Distance), roll: 0, events: null);
             }
         }
@@ -1083,7 +1090,13 @@ namespace Sim
                     // than looked up a second time: an arriving projectile has a
                     // live target by construction, because one without is
                     // orphaned three lines up.
-                    Land(projectile.Type, projectile.Origin, target, projectile.Damage, events);
+                    Land(
+                        projectile.Type,
+                        projectile.Origin,
+                        projectile.EmitterId,
+                        target,
+                        projectile.Damage,
+                        events);
                     projectile.Gone = true;
                 }
             }
@@ -1266,13 +1279,14 @@ namespace Sim
                     Land(
                         type,
                         _layout.Towers[tower].Hex,
+                        _towers[tower].Id,
                         FindWalkingCreep(TargetRef.Creep(targetId)),
                         damage,
                         events);
                     break;
 
                 case Delivery.Projectile:
-                    Launch(type, _layout.Towers[tower].Hex, targetId, damage);
+                    Launch(type, _layout.Towers[tower].Hex, _towers[tower].Id, targetId, damage);
                     break;
 
                 case Delivery.None:
@@ -1319,8 +1333,9 @@ namespace Sim
         /// asked first.
         /// </para>
         /// </remarks>
+        /// <param name="emitterId">The tower that fired it, which is what a self-centred bubble is centred on.</param>
         /// <param name="target">Where the creep it was aimed at is in the live array, or -1 for nothing.</param>
-        private void Land(UnitType type, Hex origin, int target, int roll, IMatchEvents? events)
+        private void Land(UnitType type, Hex origin, int emitterId, int target, int roll, IMatchEvents? events)
         {
             Bubble bubble = type.Bubble;
 
@@ -1340,6 +1355,27 @@ namespace Sim
                 return;
             }
 
+            // A bubble centred on a body that is no longer there lands on
+            // nothing and says nothing -- the same rule a single shot at a dead
+            // creep follows, and not a special case: the centre is a fact about
+            // where the shot arrived, and a shot that arrived nowhere has none.
+            // A self-centred bubble always has one, because a tower is still
+            // standing where it stands.
+            if (bubble.Origin == BubbleOrigin.Target && target < 0)
+            {
+                return;
+            }
+
+            // Said out loud before it is resolved, as the entity it is centred
+            // on rather than as the cell: the tower for a sweep, the body the
+            // shot arrived at for a blast. A radius of zero is announced like
+            // any other, because which radii are worth drawing is a question
+            // for whatever is listening and not a shape the match has.
+            events?.BlastLanded(
+                bubble.Origin == BubbleOrigin.Self ? emitterId : _creeps[target].Id,
+                bubble.RadiusMilliHex,
+                bubble.Payload);
+
             // A bubble of no radius is the one body the shot landed on, and
             // that is what makes it different from a sphere of no size: two
             // creeps can stand on the same hex, so "the cell the shot arrived
@@ -1357,17 +1393,6 @@ namespace Sim
                     Afflict(target, bubble);
                 }
 
-                return;
-            }
-
-            // A bubble centred on a body that is no longer there lands on
-            // nothing -- the same rule a single shot at a dead creep follows,
-            // and not a special case: the centre is a fact about where the shot
-            // arrived, and a shot that arrived nowhere has none. A self-centred
-            // bubble always has one, because a tower is still standing where it
-            // stands.
-            if (bubble.Origin == BubbleOrigin.Target && target < 0)
-            {
                 return;
             }
 
@@ -1410,11 +1435,15 @@ namespace Sim
         /// is refused.
         /// </para>
         /// <para>
-        /// <b>Nothing is said out loud.</b> A modifier is not one of the six
-        /// things a match reports and a seventh would be a view contract rather
-        /// than a rule -- see
-        /// <c>docs/adr/0008-match-events-are-decorative.md</c>. What a slow does
-        /// is in the state hash, where a run that drifts in it is caught.
+        /// <b>The firing was said out loud and the landing is not.</b> Whoever
+        /// set this off announced it -- a blast where the shot resolved, an
+        /// aura where its period came round -- and what a modifier then does to
+        /// one body is not reported: a stat arriving on a unit is that unit's
+        /// own picture rather than a moment. The roll a blast spreads goes out
+        /// through <see cref="Damage"/> as any other landing does, and a pulse
+        /// has no roll to spread. What a slow does is in the state hash, where
+        /// a run that drifts in it is caught. See
+        /// <c>docs/adr/0008-match-events-are-decorative.md</c>.
         /// </para>
         /// </remarks>
         /// <param name="roll">What the dice gave the shot that fired it, and nothing to a pulse.</param>
@@ -1566,7 +1595,7 @@ namespace Sim
             tower.Cooldown = Effects.Modified(type.CooldownTicks, tower.Effects.CooldownMagnitude);
         }
 
-        private void Launch(UnitType type, Hex origin, int targetId, int damage)
+        private void Launch(UnitType type, Hex origin, int emitterId, int targetId, int damage)
         {
             if (_projectileCount == _projectiles.Length)
             {
@@ -1584,6 +1613,12 @@ namespace Sim
             // move, so this is the same fact as the tower's own hex, carried the
             // way the row that fired it is carried.
             projectile.Origin = origin;
+
+            // Who fired it, which is the same fact again as an entity rather
+            // than as a cell -- what a sweep's own event names, because a
+            // listener resolves a position from an id in the snapshot and not
+            // from a hex the simulation handed it.
+            projectile.EmitterId = emitterId;
 
             // A reference and a countdown. No position, now or ever: where it
             // appears to be is a question the view answers from where its target
@@ -2051,6 +2086,15 @@ namespace Sim
             /// is.
             /// </summary>
             internal Hex Origin;
+
+            /// <summary>
+            /// The tower that fired it, which is <see cref="Origin"/> as an
+            /// entity: what a sweep's own event names when the shot lands, so
+            /// that whatever is listening resolves the position itself. Not in
+            /// the state hash -- it cannot change and nothing about the match
+            /// reads it.
+            /// </summary>
+            internal int EmitterId;
 
             internal TargetRef Target;
 

@@ -478,6 +478,64 @@ public class EffectTests
     }
 
     [Fact]
+    public void An_aura_says_so_every_time_its_period_comes_round()
+    {
+        // What the pulse looks like from outside: one event per pulse, naming
+        // the emitter, carrying the radius and the payload off its own row. The
+        // banner's period is forty-five ticks and its counter starts at zero,
+        // so it pulses on the first tick of the match and every forty-fifth
+        // tick after that.
+        //
+        // OBSERVED: announce the pulse above the PulseIn countdown in
+        // Match.PulseAuras rather than below it. Every assertion about what the
+        // aura DOES stays green and this goes red at 300 events against 7 -- an
+        // aura that pulses twice a second and reports thirty times a second.
+        const int Period = 45;
+        const int Ticks = 300;
+
+        TheMatch.EventLog log = Watched("tower 13 2 1", "order 0 1 1 0", Ticks);
+        int[] pulses = log.IndicesOf("aura");
+
+        Assert.Equal(1 + ((Ticks - 1) / Period), pulses.Length);
+
+        for (int pulse = 0; pulse < pulses.Length; pulse++)
+        {
+            Assert.Equal(1 + (pulse * Period), log.Ticks[pulses[pulse]]);
+            Assert.Equal(1, log.Subjects[pulses[pulse]]);
+            Assert.Equal(3000, log.Amounts[pulses[pulse]]);
+            Assert.Equal(BubblePayload.Cooldown, log.Payloads[pulses[pulse]]);
+        }
+
+        // The plain tower is the same row without the six bubble columns, and
+        // it says nothing at all -- so the count above is a fact about the
+        // period and not about standing on the board.
+        Assert.Equal(0, Watched("tower 12 2 1", "order 0 1 1 0", Ticks).CountOf("aura"));
+    }
+
+    [Fact]
+    public void A_walking_emitter_that_pulses_says_so_as_itself()
+    {
+        // An aura is a row and not a side, so a creep carrying one pulses on
+        // exactly the same clock and reports through exactly the same event.
+        // The warden's period is thirty ticks and it is the second entity on
+        // the board, behind the one tower.
+        TheMatch.EventLog log = Watched("tower 12 2 1", "order 0 3 1 0", ticks: 100);
+        int[] pulses = log.IndicesOf("aura");
+
+        Assert.NotEmpty(pulses);
+        Assert.All(pulses, index => Assert.Equal(2, log.Subjects[index]));
+        Assert.All(pulses, index => Assert.Equal(BubblePayload.Shield, log.Payloads[index]));
+
+        // Thirty ticks apart, measured from the tick it spawned rather than
+        // from the wall clock -- which is what makes a pulse the same in every
+        // replay of the same record.
+        for (int pulse = 1; pulse < pulses.Length; pulse++)
+        {
+            Assert.Equal(30, log.Ticks[pulses[pulse]] - log.Ticks[pulses[pulse - 1]]);
+        }
+    }
+
+    [Fact]
     public void A_curse_on_a_creeps_armour_lands_after_the_shot_that_carried_it_and_before_the_next()
     {
         // A bubble carrying a modifier does not carry the damage: the shot
@@ -671,6 +729,10 @@ public class EffectTests
 
         return log;
     }
+
+    /// <summary>The same, run a tick at a time so every event carries its tick.</summary>
+    private static TheMatch.EventLog Watched(string defense, string wave, int ticks) =>
+        TheMatch.Watched(Corridor(defense, wave), ticks);
 
     /// <summary>How many shots one tower of that type gets away in that many ticks.</summary>
     private static int ShotsIn(int towerType, int ticks) =>

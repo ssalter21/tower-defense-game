@@ -160,8 +160,12 @@ fixed, and inventing a sixth keyword would be widening the schema that #213 clos
 modifiable and the fifth name is taken; it is written here rather than left as a silence.
 
 **An event for a modifier landing.** [ADR-0008](0008-match-events-are-decorative.md) makes events decorative
-and there are six of them; a seventh would be a view contract taken in a ticket about rules. What a slow does
-is in the state hash, and a view that wants to draw one wants a snapshot field, which is its own decision.
+and none of them is a fact about one unit's state; one for a modifier arriving would be a view contract taken
+in a ticket about rules. What a slow does is in the state hash, and a view that wants to draw one wants a
+snapshot field, which is its own decision — taken in
+[#254](https://github.com/ssalter21/tower-defense-game/issues/254). The two events
+[#253](https://github.com/ssalter21/tower-defense-game/issues/253) added report a *bubble going off* and not
+what it left behind, which is the same line drawn from the other side.
 
 ## What it cost
 

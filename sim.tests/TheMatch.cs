@@ -203,16 +203,58 @@ public static class TheMatch
     /// <summary>Where max hp sits in the layout the committed table declares.</summary>
     private const int MaxHpField = 4;
 
+    /// <summary>
+    /// The same match, watched a tick at a time so that every event is stamped
+    /// with the tick it arrived on.
+    /// </summary>
+    /// <remarks>
+    /// An event carries no tick number -- a tick number is state, and events
+    /// are decorative -- so the only thing that knows which tick they belong to
+    /// is whoever is advancing the match, exactly as <see cref="Landmarks"/>
+    /// requires of its own caller. Ticks count from one, so an event emitted
+    /// while the match stands at tick zero is stamped 1.
+    /// </remarks>
+    public static EventLog Watched(Match match, int ticks)
+    {
+        var log = new EventLog();
+
+        for (int tick = 0; tick < ticks && !match.IsFinished; tick++)
+        {
+            log.EnteringTick(match.Tick + 1);
+            match.Advance(1, log);
+        }
+
+        return log;
+    }
+
     /// <summary>Everything a match said happened, in the order it said it.</summary>
     public sealed class EventLog : IMatchEvents
     {
+        private int _tick;
+
         public List<string> Kinds { get; } = new();
 
         public List<int> Subjects { get; } = new();
 
         public List<int> Amounts { get; } = new();
 
+        /// <summary>
+        /// What a bubble carried, for the two events that are a bubble going
+        /// off, and <c>None</c> for every other event.
+        /// </summary>
+        public List<BubblePayload> Payloads { get; } = new();
+
+        /// <summary>
+        /// The tick each event arrived on, and zero throughout for a log filled
+        /// by one <c>Advance</c> over many ticks rather than by
+        /// <see cref="Watched"/>.
+        /// </summary>
+        public List<int> Ticks { get; } = new();
+
         public int Count => Kinds.Count;
+
+        /// <summary>The tick whose events are about to arrive.</summary>
+        public void EnteringTick(int tick) => _tick = tick;
 
         public void TowerFired(int towerId, int targetId) => Record("fired", towerId, targetId);
 
@@ -227,13 +269,35 @@ public static class TheMatch
         public void CreepOvertook(int creepId, int overtakenCreepId) =>
             Record("overtook", creepId, overtakenCreepId);
 
+        // The radius rides in the amount slot, which is the slot for the second
+        // number of an event, and the payload in its own list beside it.
+        public void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload) =>
+            Record("blast", centreId, radiusMilliHex, payload);
+
+        public void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload) =>
+            Record("aura", emitterId, radiusMilliHex, payload);
+
         public int CountOf(string kind) => Kinds.Count(name => name == kind);
 
-        private void Record(string kind, int subject, int amount)
+        /// <summary>
+        /// Where the events of that kind sit in the parallel lists, in the
+        /// order they arrived. One lookup for a caller that wants more than one
+        /// of the five things an event was recorded with.
+        /// </summary>
+        public int[] IndicesOf(string kind) =>
+            Enumerable.Range(0, Count).Where(index => Kinds[index] == kind).ToArray();
+
+        private void Record(
+            string kind,
+            int subject,
+            int amount,
+            BubblePayload payload = BubblePayload.None)
         {
             Kinds.Add(kind);
             Subjects.Add(subject);
             Amounts.Add(amount);
+            Payloads.Add(payload);
+            Ticks.Add(_tick);
         }
     }
 }

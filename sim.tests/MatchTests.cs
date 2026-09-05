@@ -713,6 +713,8 @@ public class MatchTests
         Assert.Equal(
             new[]
             {
+                "AuraPulsed",
+                "BlastLanded",
                 "CreepDamaged",
                 "CreepDied",
                 "CreepLeaked",
@@ -722,10 +724,21 @@ public class MatchTests
             },
             methods.Select(method => method.Name).OrderBy(name => name, StringComparer.Ordinal).ToArray());
 
+        // An int or an enum, and the enum is admitted rather than an accident:
+        // what the rule refuses is something to hold on to, and an enum member
+        // is a value with no identity, no lifetime and nothing behind it. A
+        // Hex, a Fix64, a Bubble or any other struct is still refused here, and
+        // those are the shapes that would smuggle a position across.
         foreach (MethodInfo method in methods)
         {
             Assert.Equal(typeof(void), method.ReturnType);
-            Assert.All(method.GetParameters(), parameter => Assert.Equal(typeof(int), parameter.ParameterType));
+
+            Assert.All(
+                method.GetParameters(),
+                parameter => Assert.True(
+                    parameter.ParameterType == typeof(int) || parameter.ParameterType.IsEnum,
+                    "IMatchEvents." + method.Name + " takes a " + parameter.ParameterType.Name
+                    + ", which is something an effect could be built out of and hold on to."));
         }
     }
 

@@ -67,11 +67,11 @@ $declaration = @'
   8  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
   2  client/Assets/Tests/PlayMode/LocomotionTests.cs
- 20  client/Assets/Tests/PlayMode/MatchViewTests.cs
+ 21  client/Assets/Tests/PlayMode/MatchViewTests.cs
   2  client/Assets/Tests/PlayMode/ParityRunTests.cs
   4  client/Assets/Tests/PlayMode/PlayableHeadPoisonTests.cs
  10  client/Assets/Tests/PlayMode/PlayablesSamplingTests.cs
-  5  client/Assets/Tests/PlayMode/PlaybackTests.cs
+  6  client/Assets/Tests/PlayMode/PlaybackTests.cs
   3  client/Assets/Tests/PlayMode/PlayfieldRebuildTests.cs
   3  client/Assets/Tests/PlayMode/RealRigSamplingTests.cs
  14  client/Assets/Tests/PlayMode/RunLoopTests.cs

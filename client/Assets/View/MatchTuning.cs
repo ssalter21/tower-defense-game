@@ -184,6 +184,35 @@ namespace View
         /// <summary>How high up a creep a hit spark appears, in metres.</summary>
         public const float HitSparkHeight = 0.9f;
 
+        /// <summary>
+        /// How long the ring a blast or an aura leaves behind lasts, in
+        /// simulation ticks.
+        /// </summary>
+        /// <remarks>
+        /// Longer than a spark because it is bigger and slower: a bubble that
+        /// covers three hexes wants a moment to be read across, where a spark
+        /// is a point and is read at once.
+        /// </remarks>
+        public const int BubbleRingTicks = 8;
+
+        /// <summary>How thick the ring is, in metres.</summary>
+        /// <remarks>
+        /// <b>The ring is a placeholder and this is what makes it one.</b> It
+        /// is a flat cylinder — a disc — lying on the floor at the size of the
+        /// bubble that made it, because Unity's primitives have no torus and
+        /// nothing here may billboard. What a blast and an aura should actually
+        /// look like is an art decision nobody has taken, and a disc is
+        /// deliberately the plainest thing that says "the bubble reached this
+        /// far" without pretending to be one.
+        /// </remarks>
+        public const float BubbleRingThickness = 0.04f;
+
+        /// <summary>
+        /// How far above the floor the ring lies, in metres. Enough to clear
+        /// the tile it covers rather than fight it for the same depth.
+        /// </summary>
+        public const float BubbleRingHeight = 0.03f;
+
         // ---------------------------------------------------------------
         // Decoration colours
         // ---------------------------------------------------------------
@@ -199,6 +228,14 @@ namespace View
 
         /// <summary>The mortar shell's colour.</summary>
         public static Color ProjectileColor => new Color(0.22f, 0.2f, 0.19f, 1f);
+
+        /// <summary>
+        /// The colour of a blast's or an aura's ring. One colour for both, and
+        /// that is part of the placeholder: telling a blast from a pulse by its
+        /// look is a design decision nobody has taken, so the ring says how far
+        /// the bubble reached and nothing else.
+        /// </summary>
+        public static Color BubbleRingColor => new Color(0.62f, 0.72f, 1f, 1f);
 
         // ---------------------------------------------------------------
         // The board being built

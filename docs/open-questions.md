@@ -234,8 +234,11 @@ per-creep counter and can be taken at any time, so it is not on the critical pat
 
 **Nothing a view can see says a creep is slowed.** Timed effects landed in
 [#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state: they are folded into the
-rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field and in no
-match event. That is deliberate — events are decorative by
+rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field. The only
+events that mention one are the two [#253](https://github.com/ssalter21/tower-defense-game/issues/253) added,
+and those say a bubble carrying that payload went off rather than that a creep is now carrying it — a moment,
+not a state, and nothing that can be read off a creep already slowed. That is deliberate — events are
+decorative by
 [ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
 about rules. **It became urgent on 5 September 2026.** Four signed rows slow something — Shield Wall,

@@ -1,12 +1,13 @@
 namespace Sim
 {
     /// <summary>
-    /// The six things a match will tell you about as they happen, if you ask.
-    /// Every parameter is an entity id or a count -- no event carries a
-    /// position, a duration, or simulation state. Emitted only to the sink
-    /// passed to <see cref="Match.Advance(int, IMatchEvents)"/>, and a
-    /// subscribed match produces the same rolling state hash as a silent one.
-    /// See <c>docs/adr/0008-match-events-are-decorative.md</c>.
+    /// The eight things a match will tell you about as they happen, if you ask.
+    /// Every parameter is an entity id, a count, or a value read straight off
+    /// the emitter's row -- no event carries a position, a duration, or
+    /// simulation state. Emitted only to the sink passed to
+    /// <see cref="Match.Advance(int, IMatchEvents)"/>, and a subscribed match
+    /// produces the same rolling state hash as a silent one. See
+    /// <c>docs/adr/0008-match-events-are-decorative.md</c>.
     /// </summary>
     public interface IMatchEvents
     {
@@ -32,5 +33,37 @@ namespace Sim
         /// the two. Fires once per pair, on the tick the pass completes.
         /// </summary>
         void CreepOvertook(int creepId, int overtakenCreepId);
+
+        /// <summary>
+        /// A bubble that fires with an attack went off, on the tick the shot
+        /// resolved.
+        /// </summary>
+        /// <remarks>
+        /// <b>The centre is an entity and not a place.</b> A sweep is centred
+        /// on the tower that fired it and a blast on the body the shot arrived
+        /// at, and both are ids out of the one id space -- so a listener looks
+        /// the position up in the snapshot it is drawing rather than being
+        /// handed one that could disagree with it. A blast whose target is no
+        /// longer on the map has no centre at all and is not reported, which is
+        /// the same silence its damage lands in.
+        /// </remarks>
+        /// <param name="centreId">The tower for a sweep, the creep the shot arrived at for a blast.</param>
+        /// <param name="radiusMilliHex">Thousandths of a hex, read as a sphere. Zero is the centre alone.</param>
+        /// <param name="payload">What it carried into everything it enclosed.</param>
+        void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload);
+
+        /// <summary>
+        /// A bubble on a clock of its own pulsed, on the tick its period came
+        /// round.
+        /// </summary>
+        /// <remarks>
+        /// Centred on whatever is emitting it, which is a tower or a walking
+        /// creep depending on which row carries the aura -- one id space, so
+        /// the parameter does not have to say which.
+        /// </remarks>
+        /// <param name="emitterId">The tower or creep the aura pulses from.</param>
+        /// <param name="radiusMilliHex">Thousandths of a hex, read as a sphere. Zero is the emitter alone.</param>
+        /// <param name="payload">What the pulse carried into everything it enclosed.</param>
+        void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload);
     }
 }
