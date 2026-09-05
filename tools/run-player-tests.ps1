@@ -32,7 +32,7 @@ param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$Results = "$PSScriptRoot\..\player-tests.xml",
     [string]$LogFile = "$PSScriptRoot\..\player-tests.log",
-    [int]$MinimumTests = 125
+    [int]$MinimumTests = 128
 )
 
 $ErrorActionPreference = 'Stop'

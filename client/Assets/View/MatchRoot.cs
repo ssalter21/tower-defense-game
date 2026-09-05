@@ -617,9 +617,17 @@ namespace View
         }
 
         /// <summary>
-        /// Takes one piece of chrome or one drawn thing off the screen now and
-        /// out of memory at the end of the frame.
+        /// Takes one piece of chrome or one drawn thing off the screen now, and
+        /// out of memory as soon as the engine allows.
         /// </summary>
+        /// <remarks>
+        /// <b>Deactivated first, and that is the half that has to happen now.</b>
+        /// A play-mode <c>Destroy</c> is deferred to the end of the frame it was
+        /// asked in, and that is a frame a capture can be reading. Outside play
+        /// mode there is no end of frame to defer to, so the destroy is
+        /// immediate — which is what lets an editor tool call
+        /// <see cref="Build"/> as well as a running game.
+        /// </remarks>
         private static void Retire(Component component)
         {
             if (component == null)
@@ -627,8 +635,17 @@ namespace View
                 return;
             }
 
-            component.gameObject.SetActive(false);
-            Destroy(component.gameObject);
+            GameObject host = component.gameObject;
+            host.SetActive(false);
+
+            if (Application.isPlaying)
+            {
+                Destroy(host);
+            }
+            else
+            {
+                DestroyImmediate(host);
+            }
         }
 
         /// <summary>
@@ -636,10 +653,25 @@ namespace View
         /// map, then the light, then the camera framed on the floor.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Public and taking the map rather than reading it, so a test can draw
         /// a floor from a map it wrote itself without a file being involved.
         /// The order matters in one place only: the camera is framed on bounds
         /// the floor reports, so the floor goes first.
+        /// </para>
+        /// <para>
+        /// <b>Building again replaces the playfield rather than adding a second
+        /// one, and that is a correctness matter.</b> <see cref="Awake"/> builds
+        /// as soon as this component exists — which in play mode is the moment
+        /// <c>AddComponent</c> returns — so an editor tool that adds the
+        /// component and then calls this with the real tiles was leaving the
+        /// blockout floor standing underneath, in the same place. Two floors at
+        /// one height z-fight into a chequerboard of triangles, and two suns
+        /// light the board twice. That is what the chrome sheets were pictures
+        /// of; the match frames were clean only because <c>Awake</c> does not
+        /// run in an edit-mode editor, so there the second build was the only
+        /// one. See #240.
+        /// </para>
         /// </remarks>
         public void Build(
             HexMap map,
@@ -648,8 +680,14 @@ namespace View
             DressingSettings settings = null,
             BoardDressing authored = null)
         {
+            ClearPlayfield();
+
             Map = map;
-            TileMesh = HexTileMesh.Create();
+
+            // Kept across a rebuild rather than made again. It is handed to
+            // BuildBoard, which outlives this call, so a fresh mesh here would
+            // leave that one drawing a destroyed one.
+            TileMesh = TileMesh != null ? TileMesh : HexTileMesh.Create();
 
             Floor = HexFloor.Build(
                 transform,
@@ -661,6 +699,21 @@ namespace View
 
             Sun = BuildSun(transform);
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
+        }
+
+        /// <summary>
+        /// Takes down the floor, the sun and the camera a previous
+        /// <see cref="Build"/> left standing. Does nothing the first time.
+        /// </summary>
+        private void ClearPlayfield()
+        {
+            Retire(Floor);
+            Retire(Sun);
+            Retire(CameraRig);
+
+            Floor = null;
+            Sun = null;
+            CameraRig = null;
         }
 
         /// <summary>

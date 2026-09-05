@@ -52,10 +52,17 @@ namespace Tests.PlayMode
         protected MatchView Begin() => TheMatchOnScreen.Begin(Spawn(GetType().Name));
 
         /// <summary>
-        /// The scene's one root object, with nothing built on it yet — what a
-        /// fixture calls before <c>Build</c>, <c>BeginBuilding</c> or
-        /// <c>BeginRun</c>.
+        /// The scene's one root object — what a fixture calls before
+        /// <c>Build</c>, <c>BeginBuilding</c> or <c>BeginRun</c>.
         /// </summary>
+        /// <remarks>
+        /// <b>It comes back with a playfield already on it.</b> These are
+        /// play-mode tests, so <c>Awake</c> has run by the time
+        /// <c>AddComponent</c> returns, and <c>Awake</c> builds. A fixture that
+        /// goes on to call <c>Build</c> is rebuilding rather than building, and
+        /// that is why <c>Build</c> replaces the playfield rather than adding to
+        /// it; see <c>PlayfieldRebuildTests</c>.
+        /// </remarks>
         protected MatchRoot Playfield() =>
             Spawn(SceneFraming.RootObjectName).AddComponent<MatchRoot>();
 
