@@ -91,31 +91,42 @@ remaining; the offense never enters the placing.** A run's outcome is a **vector
 
 ### The gates
 
-*(designed, not built)* — **waves 3, 6 and 9 open the run up. The schedule is public; what a player does with
-it is not.**
+**Two halves, and only one of them is decided.** The capstone token is; the capacity schedule is not.
 
-At each gate the wave gains **two slots**, every slot's **count cap rises by ten**, and the player is handed
-**one capstone token** — spendable only on capstoning a tower already standing.
+**Rounds 3, 6 and 9 each grant one capstone token.** Three a run against nine capstones, and the token is what
+a capstone costs — no gold. **This half is decided**, on
+[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move),
+and it is a plain currency: it goes up on those three rounds and it is spent on a capstone edge. Nothing else.
 
-| Waves | Slots | Count cap | Capstones held |
-|---|---|---|---|
-| 1–2 | 2 | 10 | 0 |
-| 3–5 | 4 | 20 | 1 |
-| 6–8 | 6 | 30 | 2 |
-| 9–10 | 8 | 40 | 3 |
+**Scarcity is the grant schedule rather than the price.** Five of the nine capstones change neither the damage
+roll nor the bodies a shot hits, so the cost rule would price them identically to the rung below; that is
+accepted rather than corrected. What makes a token a decision is that there are three and nine places to put
+one. The token has no income, no exchange rate and one sink, so it does not reopen the one-purse question.
 
-**A gate rations capacity, never which kinds.** The token has no income, no exchange rate and one sink, so it
-does not reopen the one-purse question. One hard constraint on the roster: **for every gate, its counter is
-purchasable strictly before it.**
+*(designed, not built)* — **the capacity gate is a separate thing and it is not decided.** The idea was that
+the same three rounds also widen the wave: two more slots and ten more count each time.
 
-**The schedule has two layers turning over at different rates.** Its **shape** — which gate carries which
-tier, and which one opens the counter — holds for a whole rotation and is what preparation is a skill about.
-Its **filling** — which creeps sit on each gate's menu — is drawn per run and is where replay value comes
-from. **The ghost pool does not shard for it**: ghosts draw on `(map, stage)` alone, and a ghost from this
-rotation played under the same shape.
+| Waves | Slots | Count cap |
+|---|---|---|
+| 1–2 | 2 | 10 |
+| 3–5 | 4 | 20 |
+| 6–8 | 6 | 30 |
+| 9–10 | 8 | 40 |
 
-The opening pair, one token per gate, whether a token banks, and the currency's name are
-[open questions](open-questions.md). **The schedule is fitted after the roster has depth worth rationing.**
+**A gate would ration capacity, never which kinds.** That schedule was deleted on
+[13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
+along with the per-wave type limit, and **what bounds a wave today is the purse.** It is written down here so
+it is not re-derived, not because it is coming back on a date. One hard constraint if it ever does: **for
+every gate, its counter is purchasable strictly before it.**
+
+**If the schedule returns it has two layers turning over at different rates.** Its **shape** — which gate
+carries which tier, and which one opens the counter — would hold for a whole rotation and is what preparation
+is a skill about. Its **filling** — which creeps sit on each gate's menu — would be drawn per run and is where
+replay value comes from. **The ghost pool would not shard for it**: ghosts draw on `(map, stage)` alone.
+
+Whether a token banks and what the currency is called are [open questions](open-questions.md). **The capacity
+schedule is fitted after the roster has depth worth rationing** — the roster got that depth on 5 September, so
+this is now waiting on a playtest rather than on the roster.
 
 ### Depth is the point
 

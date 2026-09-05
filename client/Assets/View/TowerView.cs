@@ -58,6 +58,8 @@ namespace View
 
         private SimDrivenAnimator _animator;
 
+        private AnchoredPoint _effectAnchor;
+
         private Quaternion _restingRotation = Quaternion.identity;
 
         /// <summary>Its one-based place in the defense — the id the snapshot uses.</summary>
@@ -78,8 +80,32 @@ namespace View
         /// <summary>True when this tower has a rig and three clips.</summary>
         public bool IsAnimated => _animator != null;
 
-        /// <summary>Where its shots leave from — what a tracer is drawn out of.</summary>
-        public Vector3 Muzzle => transform.position + (Vector3.up * MatchTuning.TowerMuzzleHeight);
+        /// <summary>The transform its shots leave from, or null if it has no anchor.</summary>
+        public Transform AnchorTransform => _effectAnchor.At;
+
+        /// <summary>
+        /// Where its shots leave from — what a tracer is drawn out of and where
+        /// the muzzle flash sits.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The anchor was found on this tower's own model or on what it holds
+        /// when the view was built, so this reads the current pose of a bone or
+        /// a staff tip and the flash moves with the arm. A tower with no anchor
+        /// — a row drawn as the stand-in, which is a mannequin with no staff tip
+        /// to name — falls back to
+        /// <see cref="MatchTuning.TowerMuzzleHeight"/> above its base.
+        /// </para>
+        /// <para>
+        /// <b>Decorations only.</b> This is read where the event stream is
+        /// handled, and a projectile may not use it: see
+        /// <see cref="EffectAnchor"/> for why a shell's origin stays derived
+        /// from its target.
+        /// </para>
+        /// </remarks>
+        public Vector3 Muzzle => _effectAnchor.IsSet
+            ? _effectAnchor.Position
+            : transform.position + (Vector3.up * MatchTuning.TowerMuzzleHeight);
 
         /// <summary>What the last <see cref="Pose"/> call drew. For tests.</summary>
         public TowerState LastState { get; private set; }
@@ -105,6 +131,8 @@ namespace View
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
             Hold(art);
+
+            _effectAnchor = art.EffectAnchor.ResolveOn(Model);
 
             transform.rotation = resting;
         }
@@ -139,6 +167,11 @@ namespace View
             // What it holds goes on the bones before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
             Hold(art);
+
+            // After the hands, because an anchor may name a node inside what
+            // the unit is holding, and once — the lookup is by name and this is
+            // the last moment the hierarchy changes shape.
+            _effectAnchor = art.EffectAnchor.ResolveOn(Model);
 
             // Binding is SimDrivenAnimator's business, including the ban on a
             // RuntimeAnimatorController, and the clip lengths stay over there

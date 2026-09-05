@@ -90,17 +90,20 @@ load-bearing half of rows 4 and 5 and is the reason those two stopped being judg
 not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
 somebody sits down with the build.
 
-**What the gate rounds' loose ends are, and what the defense currency is called.**
-[Three gates](vision.md#the-gates) fix the capacity schedule and hand out a capstone
-token. Four things about them are readings rather than decisions, and all four are cheap to move while nothing
-is built. **The currency has no name**, and everything player-facing here gets named deliberately — gold took
-two goes. **The opening pair is two slots and ten count**, which is what makes the schedule 2/4/6/8 and
-10/20/30/40; only the steps were specified, so the starting values are an inference from them. **A gate grants
-one token**, which is what makes it three capstones a run. And **a capstone costs the token and no gold**,
-which is the simplest reading and the one [the roster](roster.md#what-things-cost) is now written against —
-charging gold on top would make the token a permit rather than a price, which is a different mechanic with a
-different failure mode. Open beside them: **whether a token banks**, which leans toward yes, since a token
-that must be spent on the round it arrives forces the decision at the moment the run knows least.
+**What the gate rounds' remaining loose ends are, and what the defense currency is called.** Two of the four
+readings here were settled on
+[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
+**a grant is one token**, which is what makes it three capstones a run, and **a capstone costs the token and no
+gold** — charging gold on top would make the token a permit rather than a price, which is a different mechanic
+with a different failure mode. Both are now rules in [the roster](roster.md#what-things-cost) rather than
+readings.
+
+Two are still open, and both are cheap to move while nothing is built. **The currency has no name**, and
+everything player-facing here gets named deliberately — gold took two goes. **Whether a token banks** leans
+toward yes, since a token that must be spent on the round it arrives forces the decision at the moment the run
+knows least. A third is open for a different reason: **the capacity schedule** — the opening pair of two slots
+and ten count, and the 2/4/6/8 and 10/20/30/40 steps — was deleted on 13 August and only the token half came
+back, so it is a design waiting on a playtest rather than a reading waiting on a signature.
 
 **Whether the wave is always on screen, or behind a control.** The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
@@ -205,17 +208,18 @@ range worth substantially more by tying it to elevation. That silence is deliber
 has been measured, because a coefficient guessed against the one-hex corridor is a coefficient priced against
 geometry that is going away. **The silence is not a judgement that these levers are free.**
 
-**The correction that was owed is paid, and it left a row exposed.**
-[#216](https://github.com/ssalter21/tower-defense-game/issues/216) made `bodies` read the `targets` column
-instead of guessing 3 from `Delivery == Projectile`, so a Marksman is priced on arrival. What the guess had
-been doing besides that is holding up the **Mage**: the rule prices it at **30 gold** and the row costs **92**,
-because 92 is three bodies' worth of a splash the simulation has never had. `docs/roster.md` signs the splash —
-one additional hex, radius 1000 — and `units.txt` layout 3 is the first schema that could carry it, as a bubble
-on the target with a damage payload. **#216 authored no such bubble and moved no price**, because either is a
-decision about what a Mage is; the gap is pinned in `ContentTests` with both numbers in it. Three ways out:
-author the splash and accept an unpriced radius, reprice the row to what it does, or make it genuinely fire
-three shots — which is a different tower. [The expansion proposal](roster-expansion-proposal.md) recommends the first, so
-that the Mage line has its splash from tier 1; it is a recommendation and not the answer.
+**The Mage's gap is now half-answered, and the open half is the price.** Settled on
+[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
+**the splash is authored** — a bubble on the target, radius 1000, damage payload — and **the 92 is not
+touched**. The rule prices the row at 30 because `bodies` reads `targets`, which is 1; the row costs 92 because
+92 was three bodies' worth of a splash. Authoring the splash makes the row do what it was priced for without
+making the *rule* say so, since the rule counts `targets` and not bubble radius.
+
+**What stays open is the number, and it waits on a tool rather than on a signature.** Repricing a row whose
+value is a splash radius is exactly what the cost rule is worst at, so the price waits for the automated
+balance sweeps to be trustworthy enough to derive it. Until then the gap stands, pinned in `ContentTests` with
+both numbers in it, and it is the clearest single argument for the sweep-derived pricing this file already
+contemplates.
 
 **Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
 makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing
@@ -234,10 +238,13 @@ rolling state hash, where a run that drifts in one is caught, and they appear in
 match event. That is deliberate — events are decorative by
 [ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
-about rules. It is a real gap all the same: the day a Cryomancer is signed is the day somebody has to draw a
-slowed creep, and a creep that is walking at four tenths of its speed for no visible reason is the sort of
-thing a playtest reports as a bug. The cheap answer is a field on `CreepSnapshot`; the question is which
-field, because "is it slowed" and "what is on it" are different contracts.
+about rules. **It became urgent on 5 September 2026.** Four signed rows slow something — Shield Wall,
+Overgrowth, the Skeleton Mage's haste and the Frost Wight's Frostbite — and a creep walking at four tenths of
+its speed for no visible reason is the sort of thing a playtest reports as a bug. The cheap answer is a field
+on `CreepSnapshot`; the question is which field, because "is it slowed" and "what is on it" are different
+contracts. The [effect-visibility ticket](https://github.com/ssalter21/tower-defense-game/issues/254) lands the
+contract and a placeholder look; **what a slowed or hasted creep actually looks like beyond a first tint is
+still Sam's to sign.**
 
 **Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
 the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads
@@ -253,7 +260,8 @@ means "the attack's own roll, spread" — so a damage *modifier* has no name lef
 Said plainly, so nobody has to reconstruct it from two ADRs: an author **can** spread the attack's own roll
 over a sphere, apply a percentage to speed, cooldown or armour, and grant a shield. An author **cannot** write
 a bubble dealing a flat amount, and cannot write a damage buff or debuff of any kind — including the "+x%
-damage to nearby towers" shape the Captain is described by in the same table that authorised the columns.
+damage to nearby towers" shape the retired Captain was described by in the same table that authorised the
+columns — and the shape the Cleric's Zeal wants now.
 
 Each ticket recorded its own half in its own ADR; the sum was never put in front of anybody. The way out is
 cheap and costs no format version, because it is a keyword rather than a column: a sixth payload value
@@ -261,6 +269,13 @@ distinguishing "the roll this attack made" from "the damage stat", at which poin
 it is not is an agent's to name** — a payload keyword is roster vocabulary. Until it is named, `roster.md`'s
 column table says the schema is narrower than the decision rather than quietly restating the decision as the
 narrowing.
+
+**Its naming was deliberately deferred on 5 September 2026, with a reason.** The Cleric's capstone was the
+first row that would have needed it: *Zeal*, every tower within two hexes dealing more damage. **Consecration
+was signed instead** — an armour aura, authorable today — and Zeal is written into
+[the roster](roster.md#consecration--tier-3--status-signed) as the *successor* rather than the alternative, so
+it is not re-invented. Naming a payload word nobody is implementing this effort would be signing a word blind;
+it gets named when it is built.
 
 **Whether an aura may carry damage.** #217 refuses `bubblePeriod > 0` beside a `damage` payload at load, on the
 argument that a pulse drawing dice outside a shot breaks the single-stream guarantee. The argument is sound and

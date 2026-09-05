@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1065247574
+--- !u!1 &1883407845
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1065247576}
-  - component: {fileID: 1065247575}
+  - component: {fileID: 1883407847}
+  - component: {fileID: 1883407846}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1065247575
+--- !u!114 &1883407846
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1065247574}
+  m_GameObject: {fileID: 1883407845}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -205,6 +205,9 @@ MonoBehaviour:
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 2
       model: {fileID: 919132149155446097, guid: 09960b6ddb684d8794ac0d6cd80f54d1, type: 3}
       scale: 0.5
@@ -215,6 +218,9 @@ MonoBehaviour:
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 3
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1
@@ -225,6 +231,9 @@ MonoBehaviour:
       idleClip: {fileID: 1916961860785133836, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       windupClip: {fileID: -4457504429419621214, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      effectAnchor:
+        transformName: bow_withString
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 4
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
@@ -235,6 +244,9 @@ MonoBehaviour:
       idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: staff
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 7
       model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
       scale: 0.5
@@ -245,6 +257,9 @@ MonoBehaviour:
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 11
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
@@ -255,6 +270,9 @@ MonoBehaviour:
       idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 12
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
@@ -265,6 +283,9 @@ MonoBehaviour:
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 13
       model: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
       scale: 0.5
@@ -275,6 +296,9 @@ MonoBehaviour:
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 14
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1.5
@@ -285,15 +309,18 @@ MonoBehaviour:
       idleClip: {fileID: 1916961860785133836, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       windupClip: {fileID: -4457504429419621214, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      effectAnchor:
+        transformName: bow_withString
+        tip: {x: 0, y: 0, z: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &1065247576
+--- !u!4 &1883407847
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1065247574}
+  m_GameObject: {fileID: 1883407845}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -306,4 +333,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1065247576}
+  - {fileID: 1883407847}

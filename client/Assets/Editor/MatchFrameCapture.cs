@@ -156,12 +156,28 @@ namespace View.Editor
                 {
                     view.StepOneTick();
 
+                    // Drawn on every tick and not only on the ones that are
+                    // kept. Where a tower is pointing and where its shot leaves
+                    // from are both read off the pose it was last drawn in — a
+                    // flash leaves the staff tip the tower is holding, and the
+                    // staff is wherever the last Draw put its arm. Stepping a
+                    // thousand ticks without drawing and then photographing the
+                    // next one is a picture of a match whose towers have never
+                    // moved, with the effects of the tick that was kept hanging
+                    // off a rig still standing in its bind pose. It also makes
+                    // the picture a function of the tick alone rather than of
+                    // which other ticks were asked for in the same run.
+                    //
+                    // It costs one Draw per stepped tick rather than one per
+                    // frame kept -- 2,700 of them to reach the late frames
+                    // instead of six -- which is the work the game itself does
+                    // every frame and is not what a capture spends its time on.
+                    view.Draw(1f);
+
                     if (view.Current.Tick < wanted[next])
                     {
                         continue;
                     }
-
-                    view.Draw(1f);
 
                     string path = Path.Combine(
                         outDir,
