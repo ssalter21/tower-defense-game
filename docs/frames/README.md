@@ -109,7 +109,7 @@ for a date to see, so a date alone would call a current frame stale.
 says no. It is written by the capture and never by hand; see
 [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
-## And one sheet that is not a frame at all
+## And two sheets that are not frames at all
 
 - [`roster/beside-props-sheet.png`](roster/beside-props-sheet.png) — the four props that stand on the ground
   beside a tower, drawn through the real `TowerView` by
@@ -131,6 +131,35 @@ says no. It is written by the capture and never by hand; see
   `content/units.txt` points at yet — which is why `check-docs.ps1` exempts it from being dated against the
   authored content. Regenerate it with the command above and copy `candidates-sheet.png` over it; the tool's
   own output name is deliberately not the committed one, because every candidate run rewrites it.
+
+- [`roster/melee-lines-sheet.png`](roster/melee-lines-sheet.png) — the nine rungs of the Knight, the Barbarian
+  and the Paladin, drawn through the real `TowerView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-melee-lines.txt`. Nine tiles, three lines of three, in
+  the order [`roster.md`](../roster.md) writes them: Soldier, Sergeant, Shield Wall; Barbarian, Berserker,
+  Slam; Paladin, Templar, Blessing. **It is here because a rung is told apart from the rung below it by
+  colour, by a prop or by a second model**, and the earlier candidate sheet drew one character per model — so
+  it could show whether the Barbarian was the right barbarian and could not show whether the Berserker reads
+  as a rung above him.
+
+  Each tile transcribes what `MatchSceneBuilder` and `Tests.Fixtures.ChosenArt` bind for that row, with one
+  exception the set file names at its own head: **the three Paladin rows are bound with no clips**, because
+  `roster.md` names a clip on every rung of the other two lines and none on any rung of that one. They stand
+  in their bind pose in the game, which is not a photograph of anything, so on this sheet they are posed in
+  the clips the earlier candidate sheets already put those two models up in. That is framing and not a
+  binding, and the `_` on that line's windup and backswing still stands.
+
+  **Two things on it are questions rather than results.** The Berserker's `axe_2handed_Large` measures 2.58 m
+  from grip to head on a body about two tall, and lies level across him the way the Soldier's sword does —
+  issue #204 looked at the sword and recorded it as reading correctly, and nobody has looked at an axe that
+  size in the same position. And **a held prop keeps its own atlas while the body changes colour**, because a
+  row's atlas covers the body and never what the body is holding: the `shield_square` on tiles two and three
+  stays on the pack's base `knight_texture` while the Sergeant and the Shield Wall wear `alt_A` and `alt_B`
+  over it, and the Blessing's `paladin_shield` stays gold on `paladin_texture_A` while its body turns silver
+  on `_B`. That is the rule working as written, and whether it reads as one figure is the eye check.
+
+  Like the sheet above it, it draws no board, no price and no roster row — a set sheet is drawn from its set
+  file — which is why `check-docs.ps1` exempts it from being dated against the authored content. Regenerate
+  it with the command above and copy `candidates-sheet.png` over it.
 
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture

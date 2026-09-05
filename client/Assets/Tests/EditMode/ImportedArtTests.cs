@@ -93,6 +93,17 @@ namespace Tests.EditMode
 
         private const string EngineerAtlasPath = "Assets/Art/Kaykit/adventurers/engineer_texture.png";
 
+        private const string BarbarianAtlasPath = "Assets/Art/Kaykit/adventurers/barbarian_texture.png";
+
+        /// <summary>
+        /// The Adventurers pack's own knight sheet, which is not the copy in
+        /// <c>Art/Characters</c> the live Knight model binds. The
+        /// <c>shield_square</c> is authored on this one and sits beside it, so
+        /// the importer's recursive-up search finds this file and not that one.
+        /// </summary>
+        private const string AdventurersKnightAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture.png";
+
         private const string PaladinModelPath =
             "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx";
 
@@ -264,6 +275,23 @@ namespace Tests.EditMode
             (CratePath, EngineerAtlasPath),
             (PaladinModelPath, PaladinAtlasPath),
             (StatuePath, PaladinAtlasPath),
+
+            // The rest of the melee lines' art: each a body or a prop whose
+            // atlas is in its own pack's folder -- the Adventurers barbarian
+            // sheet for the Barbarian and both axes, the Paladin pack's for his
+            // hammer, shield and book. The shield_square is on the Adventurers
+            // pack's own knight sheet, which is not the copy in Art/Characters
+            // that the live Knight model binds.
+            (ChosenArt.BarbarianModelPath, BarbarianAtlasPath),
+            (ChosenArt.BarbarianLargeModelPath, BarbarianAtlasPath),
+            (ChosenArt.AxeModelPath, BarbarianAtlasPath),
+            (ChosenArt.LargeAxeModelPath, BarbarianAtlasPath),
+            (ChosenArt.ShieldSquareModelPath, AdventurersKnightAtlasPath),
+            (ChosenArt.PaladinModelPath, PaladinAtlasPath),
+            (ChosenArt.HammerModelPath, PaladinAtlasPath),
+            (ChosenArt.PaladinShieldModelPath, PaladinAtlasPath),
+            (ChosenArt.BookModelPath, PaladinAtlasPath),
+
             (ClericModelPath, ClericAtlasPath),
             (FontPath, ClericAtlasPath),
             (DruidModelPath, DruidAtlasPath),
@@ -271,11 +299,19 @@ namespace Tests.EditMode
         };
 
         /// <summary>
-        /// Every clip a tower is posed with. Three states each, and the set a
-        /// tower gets depends on what it holds — the bow three for the Archer
-        /// and the Ranger, rest-and-cast for the Mage, rest-and-chop for the
-        /// Soldier. See #44 and the 14 August weapon pass.
+        /// Every clip a tower is posed with, as a bare name. Three states each,
+        /// and the set a tower gets depends on what it holds — the bow three
+        /// for the Archer and the Ranger, rest-and-cast for the Mage,
+        /// rest-and-chop for the Soldier, the two-handed chop for the
+        /// Barbarian, the raised guard for the Shield Wall and the slam for the
+        /// Slam. See #44, the 14 August weapon pass and <c>docs/roster.md</c>.
         /// </summary>
+        /// <remarks>
+        /// The bank a name comes out of is asserted separately, in
+        /// <see cref="EveryClipComesOutOfTheBankForItsRowsRig"/>. This one asks
+        /// only that the name exists somewhere, which is why the Large rig's
+        /// clip is written here without its bank.
+        /// </remarks>
         private static readonly string[] TowerClipNames =
         {
             ChosenArt.BowIdleClipName,
@@ -284,7 +320,13 @@ namespace Tests.EditMode
             ChosenArt.RestClipName,
             ChosenArt.SpellcastClipName,
             ChosenArt.ChopClipName,
+            ChosenArt.TwoHandedChopClipName,
+            ChosenArt.BlockingClipName,
+            SlamClipBareName,
         };
+
+        /// <summary>The Slam's swing, without the bank its binding names.</summary>
+        private const string SlamClipBareName = "Melee_2H_Slam";
 
         /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
         private static readonly string[] ClipBankPaths =
@@ -293,7 +335,19 @@ namespace Tests.EditMode
             ChosenArt.GeneralBankPath,
             ChosenArt.RangedBankPath,
             ChosenArt.MeleeBankPath,
+            ChosenArt.LargeGeneralBankPath,
+            ChosenArt.LargeMeleeBankPath,
         };
+
+        /// <summary>The banks of the second rig, which one row is drawn on.</summary>
+        private static readonly string[] LargeBankPaths =
+        {
+            ChosenArt.LargeGeneralBankPath,
+            ChosenArt.LargeMeleeBankPath,
+        };
+
+        /// <summary>The Slam, which is the only row on the Large rig.</summary>
+        private const int SlamUnitId = 19;
 
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
@@ -460,6 +514,73 @@ namespace Tests.EditMode
                 ranger.RightHand != archer.RightHand || ranger.LeftHand != archer.LeftHand,
                 Is.True,
                 "the Ranger holds exactly what the Archer holds, so the prop separates nothing");
+        }
+
+        /// <summary>
+        /// No two rows drawn with the same model are drawn identically.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The rule from <c>docs/roster.md</c>, swept over every pair rather
+        /// than named one pair at a time.</b> A rung is told apart from the one
+        /// below it by what the body wears, holds or stands beside — never by
+        /// how big it is — so two rows on one model that agree about all four of
+        /// those are two rungs a player cannot tell apart. Nine rows now share a
+        /// model with another, and the day somebody adds a tenth this covers it
+        /// by being written this way rather than by anybody remembering.
+        /// </para>
+        /// <para>
+        /// Which atlas or which prop separates a given pair stays unnamed:
+        /// those are the developer's to move, and naming them would make this
+        /// test the place the art is decided. It asserts only that something
+        /// does.
+        /// </para>
+        /// <para>
+        /// <b>The rows on <see cref="UnboundUnits"/>'s list are skipped, and
+        /// they are the reason this needs saying.</b> Every one of them draws
+        /// the same stand-in, holding nothing, in no atlas — they are
+        /// deliberately indistinguishable, which is how an undressed row reads
+        /// as undressed. Issue #271 empties that list and this covers those
+        /// rows the moment it does.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void NoTwoRowsOnOneModelAreDrawnAlike()
+        {
+            IReadOnlyList<UnitArt> rows = ChosenArt.Load().Units;
+            var compared = 0;
+
+            for (var i = 0; i < rows.Count; i++)
+            {
+                for (int j = i + 1; j < rows.Count; j++)
+                {
+                    UnitArt below = rows[i];
+                    UnitArt above = rows[j];
+
+                    if (below.Model != above.Model
+                        || UnboundUnits.Lists(below.UnitId)
+                        || UnboundUnits.Lists(above.UnitId))
+                    {
+                        continue;
+                    }
+
+                    compared++;
+
+                    bool told = below.Texture != above.Texture
+                        || below.RightHand != above.RightHand
+                        || below.LeftHand != above.LeftHand
+                        || below.Beside.Model != above.Beside.Model;
+
+                    Assert.That(told, Is.True,
+                        $"units {below.UnitId} and {above.UnitId} draw the same model in the same atlas, "
+                        + "holding the same things, with the same thing beside them — so nothing on the "
+                        + "board tells the two rungs apart. See docs/roster.md: a rung is told apart by "
+                        + "what the body wears, holds or stands beside");
+                }
+            }
+
+            Assert.That(compared, Is.GreaterThan(0),
+                "no two rows share a model, so this compared nothing at all");
         }
 
         /// <summary>
@@ -1217,6 +1338,70 @@ namespace Tests.EditMode
                     $"'{wanted}' is in none of the {ClipBankPaths.Length} banks. "
                     + $"Found: {string.Join(", ", names)}");
             }
+        }
+
+        /// <summary>
+        /// Every clip a tower is posed with comes out of the bank for the rig
+        /// its model is on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the failure the second rig introduced.</b> The collection
+        /// ships <c>Rig_Medium</c> and <c>Rig_Large</c>, and
+        /// <c>Idle_A</c>, <c>Walking_A</c> and <c>Death_A</c> are in both — so
+        /// a bare clip name asked of the banks in order answers with the medium
+        /// one every time. A medium clip on a Large body does not throw and
+        /// does not warn: it drives bones that are not there and leaves the ones
+        /// that are where they started, which reads as the model being bad.
+        /// Both binding tables spell a Large clip with its bank for that
+        /// reason, and this is what holds them to it.
+        /// </para>
+        /// <para>
+        /// <b>Held both ways.</b> A Large row's clips must come from the Large
+        /// banks and every other row's must not, because the second half is
+        /// what catches a medium row that gained a bank prefix by being copied
+        /// from the row above it.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryClipComesOutOfTheBankForItsRowsRig()
+        {
+            var large = new HashSet<AnimationClip>(
+                LargeBankPaths.SelectMany(AssetDatabase.LoadAllAssetsAtPath).OfType<AnimationClip>());
+
+            MatchArt art = ChosenArt.Load();
+            UnitArt slam = art.ArtFor(SlamUnitId);
+
+            Assert.That(slam.Model, Is.SameAs(Loaded(ChosenArt.BarbarianLargeModelPath)),
+                $"unit {SlamUnitId} is the row this test knows to be on the Large rig, and it is drawn "
+                + "with something else now — the roster has moved under this assertion");
+
+            Assert.That(slam.IsPosed, Is.True,
+                $"unit {SlamUnitId} carries no clips, so the rig this test is about is not exercised");
+
+            var measured = 0;
+
+            foreach (UnitArt unit in art.Units)
+            {
+                bool onTheLargeRig = unit.UnitId == SlamUnitId;
+
+                foreach (AnimationClip clip in new[] { unit.IdleClip, unit.WindupClip, unit.BackswingClip })
+                {
+                    if (clip == null)
+                    {
+                        continue;
+                    }
+
+                    Assert.That(large.Contains(clip), Is.EqualTo(onTheLargeRig),
+                        $"unit {unit.UnitId} is posed with '{clip.name}' from the "
+                        + (onTheLargeRig ? "Medium" : "Large") + " banks, and its model is on the "
+                        + (onTheLargeRig ? "Large" : "Medium") + " rig");
+
+                    measured++;
+                }
+            }
+
+            Assert.That(measured, Is.GreaterThan(0), "no row is posed at all, so this measured nothing");
         }
 
         /// <summary>

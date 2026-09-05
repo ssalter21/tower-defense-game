@@ -252,9 +252,17 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # beside props no row names, so dating it against the roster asks it about
 # content it does not contain. What would make it stale is somebody changing
 # which prop stands beside which tower, and that is a line in docs/roster.md.
+# The melee-lines sheet is drawn the same way and exempt for the same reason,
+# from the other direction again: its nine rungs DO have rows now, but a set
+# sheet is drawn from a set file -- models, props, atlases and one pose -- and
+# reads none of the four authored files. Move a price or a range and it renders
+# the same pixels, so a date against content/ would ask it a question it cannot
+# answer. What would make it stale is a look in docs/roster.md moving, which is
+# a person's job to notice and not this check's.
 $decisionSheets = @(
     'docs/chrome/chosen-build-phase.png'
     'docs/frames/roster/beside-props-sheet.png'
+    'docs/frames/roster/melee-lines-sheet.png'
 )
 
 # An exemption for a file that is no longer committed covers nothing, and it

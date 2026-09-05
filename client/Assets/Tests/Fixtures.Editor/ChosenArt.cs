@@ -46,6 +46,19 @@ namespace Tests.Fixtures
         public const string RangerModelPath = "Assets/Art/Characters/Ranger.fbx";
         public const string MageModelPath = "Assets/Art/Characters/Mage.fbx";
 
+        /// <summary>The folder the Paladin's model, props and atlases all import into.</summary>
+        public const string PaladinFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/";
+
+        public const string BarbarianModelPath = "Assets/Art/Kaykit/adventurers/Barbarian.fbx";
+
+        /// <summary>The Slam's body, and the one thing here on the Large rig.</summary>
+        public const string BarbarianLargeModelPath =
+            "Assets/Art/Kaykit/adventurers/Barbarian_Large.fbx";
+
+        public const string PaladinModelPath = PaladinFolder + "Paladin.fbx";
+
+        public const string HelmetedPaladinModelPath = PaladinFolder + "Paladin_with_Helmet.fbx";
+
         public const string BowModelPath = "Assets/Art/Weapons/bow_withString.fbx";
         public const string StaffModelPath = "Assets/Art/Weapons/staff.fbx";
         public const string SwordModelPath = "Assets/Art/Weapons/sword_1handed.fbx";
@@ -57,13 +70,57 @@ namespace Tests.Fixtures
         /// <summary>The Ranger's quiver, in the fist for want of a socket on the spine.</summary>
         public const string QuiverModelPath = "Assets/Art/Kaykit/adventurers/quiver.fbx";
 
+        /// <summary>The Sergeant's off-hand shield, which the Shield Wall raises.</summary>
+        public const string ShieldSquareModelPath = "Assets/Art/Kaykit/adventurers/shield_square.fbx";
+
+        public const string AxeModelPath = "Assets/Art/Kaykit/adventurers/axe_2handed.fbx";
+
+        /// <summary>The Berserker's bigger axe, which the Slam carries onto the Large rig.</summary>
+        public const string LargeAxeModelPath = "Assets/Art/Kaykit/adventurers/axe_2handed_Large.fbx";
+
+        public const string HammerModelPath = PaladinFolder + "paladin_hammer.fbx";
+
+        public const string PaladinShieldModelPath = PaladinFolder + "paladin_shield.fbx";
+
+        /// <summary>The open book the Blessing holds instead of its hammer.</summary>
+        public const string BookModelPath = PaladinFolder + "paladin_book.fbx";
+
+        /// <summary>The gold statue that stands on the tile beside the Blessing.</summary>
+        public const string StatueModelPath = PaladinFolder + "paladin_statue.fbx";
+
         /// <summary>The Adventurers pack's second ranger colourway.</summary>
         public const string RangerAltAtlasPath = "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
 
-        public const string MovementBankPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
-        public const string GeneralBankPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
-        public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
-        public const string MeleeBankPath = "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx";
+        public const string KnightAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_A.png";
+
+        public const string KnightAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_B.png";
+
+        public const string BarbarianAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/barbarian_texture_alt_A.png";
+
+        public const string PaladinAltAtlasPath = PaladinFolder + "paladin_texture_B.png";
+
+        /// <summary>Where every bank of both rigs is imported.</summary>
+        public const string ClipBankFolder = "Assets/Art/Animations/";
+
+        public const string MovementBankPath = ClipBankFolder + "Rig_Medium_MovementBasic.fbx";
+        public const string GeneralBankPath = ClipBankFolder + "Rig_Medium_General.fbx";
+        public const string RangedBankPath = ClipBankFolder + "Rig_Medium_CombatRanged.fbx";
+        public const string MeleeBankPath = ClipBankFolder + "Rig_Medium_CombatMelee.fbx";
+
+        /// <summary>The Large rig's banks, reached only by a clip name that says so.</summary>
+        public const string LargeGeneralBankPath = ClipBankFolder + "Rig_Large_General.fbx";
+
+        public const string LargeMeleeBankPath = ClipBankFolder + "Rig_Large_CombatMelee.fbx";
+
+        /// <summary>Every bank of both rigs, which a qualified name is matched against.</summary>
+        private static readonly string[] AllBankPaths =
+        {
+            MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath,
+            LargeGeneralBankPath, LargeMeleeBankPath,
+        };
 
         public const string WalkClipName = "Walking_A";
         public const string DeathClipName = "Death_A";
@@ -73,6 +130,16 @@ namespace Tests.Fixtures
         public const string BowReleaseClipName = "Ranged_Bow_Release";
         public const string SpellcastClipName = "Ranged_Magic_Spellcasting";
         public const string ChopClipName = "Melee_1H_Attack_Chop";
+        public const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
+
+        /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
+        public const string BlockingClipName = "Melee_Blocking";
+
+        /// <summary>The Slam's swing, which is on the Large rig alone and names its bank.</summary>
+        public const string SlamClipName = "Rig_Large_CombatMelee/Melee_2H_Slam";
+
+        /// <summary><see cref="RestClipName"/> out of the other rig's bank.</summary>
+        public const string LargeRestClipName = "Rig_Large_General/Idle_A";
 
         /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
         public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
@@ -116,6 +183,14 @@ namespace Tests.Fixtures
 
         public const string SwordNode = "sword_1handed";
 
+        public const string AxeNode = "axe_2handed";
+
+        public const string LargeAxeNode = "axe_2handed_Large";
+
+        public const string HammerNode = "paladin_hammer";
+
+        public const string BookNode = "paladin_book";
+
         /// <summary>
         /// The bow's own origin -- the grip the bone puts in the fist, which is
         /// where the string is drawn back from.
@@ -134,6 +209,22 @@ namespace Tests.Fixtures
         /// <summary>The point of the Soldier's sword, whose blade runs along the same axis.</summary>
         public static readonly EffectAnchor SwordTip = EffectAnchor.AtTipOf(SwordNode, Vector3.up);
 
+        /// <summary>The head of the Barbarian's two-handed axe.</summary>
+        public static readonly EffectAnchor AxeHead = EffectAnchor.AtTipOf(AxeNode, Vector3.up);
+
+        /// <summary>The head of the bigger axe the Berserker and the Slam swing.</summary>
+        public static readonly EffectAnchor LargeAxeHead =
+            EffectAnchor.AtTipOf(LargeAxeNode, Vector3.up);
+
+        /// <summary>The head of the Paladin's hammer.</summary>
+        public static readonly EffectAnchor HammerHead = EffectAnchor.AtTipOf(HammerNode, Vector3.up);
+
+        /// <summary>
+        /// The open book itself, and no tip -- a book is held rather than
+        /// swung, and the far end of one is a corner of the cover.
+        /// </summary>
+        public static readonly EffectAnchor Book = EffectAnchor.At(BookNode);
+
         /// <summary>
         /// What each row in <c>content/units.txt</c> that has art is drawn as,
         /// and how big, as signed in <c>docs/roster.md</c>. A row that has none
@@ -148,11 +239,27 @@ namespace Tests.Fixtures
         /// table and the builder's can disagree about which model a unit takes
         /// but never about what a half is.
         /// <para>
-        /// Nothing stands beside anything yet. The four looks that need the
-        /// beside socket are signed in <c>docs/roster.md</c> and none of them
-        /// has a row in <c>content/units.txt</c>; the column is here so that
-        /// this table and the builder's disagree the day one of them gets a
-        /// prop and the other does not.
+        /// The Blessing is the one row that stands beside anything: its statue
+        /// is the first of the four beside looks <c>docs/roster.md</c> signs to
+        /// reach a row in <c>content/units.txt</c> with art. The other three
+        /// are on lines nobody has dressed yet.
+        /// </para>
+        /// <para>
+        /// A rung inherits what the rung below it holds — the Sergeant and the
+        /// Shield Wall carry the Soldier's sword, the Slam the Berserker's axe
+        /// and the Blessing the Templar's shield — because a <c>Looks</c> line
+        /// in <c>docs/roster.md</c> names what changes at that rung and not
+        /// everything the body carries. A colour does not carry the same way:
+        /// it is one of the three things that tell a rung apart, and that page
+        /// gives tier 3 the second model instead wherever one exists, so the
+        /// Slam wears the atlas its own model imports with.
+        /// </para>
+        /// <para>
+        /// The three Paladin rows carry no clips. That page names a clip on
+        /// every rung of the Knight and Barbarian lines and none on any rung of
+        /// the Paladin's, whose windup and backswing carry its <c>_</c> for an
+        /// unsigned number, so those rows stand in their bind pose rather than
+        /// being posed by a clip this table picked.
         /// </para>
         /// </remarks>
         public static readonly (
@@ -194,6 +301,30 @@ namespace Tests.Fixtures
             (14, RangerModelPath, MatchArt.TowerScale, RangerAltAtlasPath,
                 QuiverModelPath, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName,
                 default, BowFlip, Bow, default),
+            (15, KnightModelPath, MatchArt.TowerScale, KnightAltAAtlasPath,
+                SwordModelPath, ShieldSquareModelPath, RestClipName, ChopClipName, RestClipName,
+                default, default, SwordTip, default),
+            (16, KnightModelPath, MatchArt.TowerScale, KnightAltBAtlasPath,
+                SwordModelPath, ShieldSquareModelPath, BlockingClipName, ChopClipName, BlockingClipName,
+                default, default, SwordTip, default),
+            (17, BarbarianModelPath, MatchArt.TowerScale, null,
+                AxeModelPath, null, RestClipName, TwoHandedChopClipName, RestClipName,
+                default, default, AxeHead, default),
+            (18, BarbarianModelPath, MatchArt.TowerScale, BarbarianAltAtlasPath,
+                LargeAxeModelPath, null, RestClipName, TwoHandedChopClipName, RestClipName,
+                default, default, LargeAxeHead, default),
+            (19, BarbarianLargeModelPath, MatchArt.TowerScale, null,
+                LargeAxeModelPath, null, LargeRestClipName, SlamClipName, LargeRestClipName,
+                default, default, LargeAxeHead, default),
+            (20, PaladinModelPath, MatchArt.TowerScale, null,
+                HammerModelPath, null, null, null, null,
+                default, default, HammerHead, default),
+            (21, HelmetedPaladinModelPath, MatchArt.TowerScale, null,
+                HammerModelPath, PaladinShieldModelPath, null, null, null,
+                default, default, HammerHead, default),
+            (22, HelmetedPaladinModelPath, MatchArt.TowerScale, PaladinAltAtlasPath,
+                BookModelPath, PaladinShieldModelPath, null, null, null,
+                default, default, Book, (StatueModelPath, 1f, BesideProp.NextTile)),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -260,9 +391,13 @@ namespace Tests.Fixtures
         }
 
         /// <summary>
-        /// A clip by name from whichever bank holds it. The fixture searches
-        /// rather than being told the bank, because which bank a clip lives in
-        /// is the pack's business and not a choice anybody signed off.
+        /// A clip by name from whichever bank holds it. A bare name searches
+        /// the four <c>Rig_Medium</c> banks, because which of them a clip lives
+        /// in is the pack's business and not a choice anybody signed off;
+        /// <c>Rig_Large_General/Idle_A</c> names its bank and searches only
+        /// that, because <c>Idle_A</c>, <c>Walking_A</c> and <c>Death_A</c>
+        /// exist in both rigs and a medium clip on a Large body draws wrongly
+        /// rather than failing.
         /// </summary>
         private static AnimationClip MaybeClip(string name)
         {
@@ -271,9 +406,27 @@ namespace Tests.Fixtures
                 return null;
             }
 
-            foreach (string bank in new[] { MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath })
+            int slash = name.IndexOf('/');
+            string wanted = slash < 0 ? name : name.Substring(slash + 1);
+            string qualified = slash < 0 ? null : ClipBankFolder + name.Substring(0, slash) + ".fbx";
+
+            // Filtered out of the declared banks rather than composed into a
+            // path, so a bank name with a typo in it comes back as "no bank of
+            // that name" instead of as an empty search of a path nothing is at.
+            string[] banks = qualified == null
+                ? new[] { MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath }
+                : AllBankPaths.Where(b => b == qualified).ToArray();
+
+            if (banks.Length == 0)
             {
-                AnimationClip found = Clips(bank).FirstOrDefault(c => c.name == name);
+                throw new InvalidOperationException(
+                    "No bank called '" + name.Substring(0, slash) + "' among " +
+                    string.Join(", ", AllBankPaths) + ".");
+            }
+
+            foreach (string bank in banks)
+            {
+                AnimationClip found = Clips(bank).FirstOrDefault(c => c.name == wanted);
 
                 if (found != null)
                 {
@@ -281,7 +434,8 @@ namespace Tests.Fixtures
                 }
             }
 
-            throw new InvalidOperationException("No clip called '" + name + "' in any of the four banks.");
+            throw new InvalidOperationException(
+                "No clip called '" + wanted + "' in " + string.Join(", ", banks) + ".");
         }
 
         /// <summary>Every model path in the table above, each named once.</summary>

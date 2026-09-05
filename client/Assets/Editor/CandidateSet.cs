@@ -77,10 +77,7 @@ namespace View.Editor
         public const string ArtRoot = "Assets/Art/";
 
         /// <summary>Where the clip banks are, all rigs together.</summary>
-        public const string ClipBankFolder = "Assets/Art/Animations";
-
-        /// <summary>The banks an unqualified clip name is looked for in.</summary>
-        private const string MediumBankPrefix = "Rig_Medium_";
+        public const string ClipBankFolder = ClipBanks.Folder;
 
         /// <summary>What a field holds when the character carries nothing there.</summary>
         private const string Empty = "-";
@@ -443,55 +440,14 @@ namespace View.Editor
         /// </summary>
         private static AnimationClip FindClip(string where, string spec, List<string> faults)
         {
-            int slash = spec.IndexOf('/');
-            string bank = slash < 0 ? null : spec.Substring(0, slash);
-            string name = slash < 0 ? spec : spec.Substring(slash + 1);
+            AnimationClip clip = ClipBanks.Find(spec, out string whereItLooked);
 
-            var searched = new List<string>();
-            var found = new List<string>();
-
-            foreach (string asset in AssetDatabase.FindAssets("t:Model", new[] { ClipBankFolder }))
+            if (clip == null)
             {
-                string path = AssetDatabase.GUIDToAssetPath(asset);
-                string file = Path.GetFileNameWithoutExtension(path);
-
-                bool wanted = bank == null
-                    ? file.StartsWith(MediumBankPrefix, StringComparison.Ordinal)
-                    : file == bank;
-
-                if (!wanted)
-                {
-                    continue;
-                }
-
-                searched.Add(file);
-
-                foreach (UnityEngine.Object entry in AssetDatabase.LoadAllAssetsAtPath(path))
-                {
-                    // __preview__ duplicates are editor thumbnail bookkeeping
-                    // Unity hangs off any clip it has ever drawn an icon for.
-                    // One of those resolves to nothing outside the editor.
-                    if (!(entry is AnimationClip clip)
-                        || clip.name.StartsWith("__preview__", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    if (clip.name == name)
-                    {
-                        return clip;
-                    }
-
-                    found.Add(clip.name);
-                }
+                faults.Add(where + ": no clip '" + ClipBanks.NameIn(spec) + "' in " + whereItLooked);
             }
 
-            faults.Add(
-                where + ": no clip '" + name + "' in " + (searched.Count == 0
-                    ? "any bank called '" + bank + "' under " + ClipBankFolder
-                    : string.Join(", ", searched) + ". Those hold: " + string.Join(", ", found)));
-
-            return null;
+            return clip;
         }
     }
 }

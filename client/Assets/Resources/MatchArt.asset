@@ -177,46 +177,46 @@ MonoBehaviour:
         transformName: bow_withString
         tip: {x: 0, y: 0, z: 0}
     - unitId: 15
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 148f117d62a304d4c8fb92bbe39955d9, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 1dbfd1039fd8af74fb00fd5c611751ac, type: 3}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 16
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: a82a525d5b1a33d489640ba3bfd4eda5, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 1dbfd1039fd8af74fb00fd5c611751ac, type: 3}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: 6824622970789808875, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: 6824622970789808875, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 17
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 7800915d9c0b4d840ac88134569d3a36, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -224,17 +224,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -3183232228448455838, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: axe_2handed
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 18
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: ee469dd2d3756d74d9d80e6e54abe1ed, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: a3ce16df644efd74db2105bbdc615bc1, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -242,17 +242,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -3183232228448455838, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: axe_2handed_Large
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 19
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 054d80a70404355df9877d170ee6b2bc, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: a3ce16df644efd74db2105bbdc615bc1, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -260,17 +260,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+      windupClip: {fileID: -8053727146932420721, guid: 0df74e54a4e42b62f14d6d522fa99552, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: axe_2handed_Large
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 20
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: ec52b260b4b3a8903446599ff028f37a, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 131dd901e3183be4ebd6b73a1594babe, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -282,14 +282,14 @@ MonoBehaviour:
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: paladin_hammer
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 21
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 131dd901e3183be4ebd6b73a1594babe, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 4720c4954f2b635438c5fdc112c88bef, type: 3}
       beside:
         model: {fileID: 0}
         scale: 0
@@ -300,25 +300,25 @@ MonoBehaviour:
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: paladin_hammer
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 22
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: b7e9e1a7e8c5fc74faacd0ff01931488, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: e448367f791631940a3a42552df0b10a, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 4720c4954f2b635438c5fdc112c88bef, type: 3}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: 31f7508baba133a48b15cc77be60ab1f, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
+        transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
     - unitId: 23
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}

@@ -53,9 +53,41 @@ namespace View.Editor
         /// <summary>The Ranger's quiver, in the fist for want of a socket on the spine.</summary>
         private const string QuiverPath = "Assets/Art/Kaykit/adventurers/quiver.fbx";
 
+        /// <summary>The folder the Paladin's model, props and atlases all import into.</summary>
+        private const string PaladinFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/";
+
+        /// <summary>The Sergeant's off-hand shield, which the Shield Wall raises.</summary>
+        private const string ShieldSquarePath = "Assets/Art/Kaykit/adventurers/shield_square.fbx";
+
+        private const string AxePath = "Assets/Art/Kaykit/adventurers/axe_2handed.fbx";
+
+        /// <summary>The Berserker's bigger axe, which the Slam carries onto the Large rig.</summary>
+        private const string LargeAxePath = "Assets/Art/Kaykit/adventurers/axe_2handed_Large.fbx";
+
+        private const string HammerPath = PaladinFolder + "paladin_hammer.fbx";
+
+        private const string PaladinShieldPath = PaladinFolder + "paladin_shield.fbx";
+
+        /// <summary>The open book the Blessing holds instead of its hammer.</summary>
+        private const string BookPath = PaladinFolder + "paladin_book.fbx";
+
+        /// <summary>The gold statue that stands on the tile beside the Blessing.</summary>
+        private const string StatuePath = PaladinFolder + "paladin_statue.fbx";
+
         /// <summary>The Adventurers pack's second ranger colourway.</summary>
         private const string RangerAltAtlasPath =
             "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
+
+        private const string KnightAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_A.png";
+
+        private const string KnightAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_B.png";
+
+        private const string BarbarianAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/barbarian_texture_alt_A.png";
+
+        private const string PaladinAltAtlasPath = PaladinFolder + "paladin_texture_B.png";
 
         private const string WalkClipName = "Walking_A";
 
@@ -73,6 +105,23 @@ namespace View.Editor
         private const string SpellcastClipName = "Ranged_Magic_Spellcasting";
 
         private const string ChopClipName = "Melee_1H_Attack_Chop";
+
+        private const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
+
+        /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
+        private const string BlockingClipName = "Melee_Blocking";
+
+        /// <summary>
+        /// The Slam's swing, which exists on the Large rig alone and so names
+        /// its bank.
+        /// </summary>
+        private const string SlamClipName = "Rig_Large_CombatMelee/Melee_2H_Slam";
+
+        /// <summary>
+        /// <see cref="RestClipName"/> on the Large rig: the same name, in the
+        /// other rig's bank, driving the other rig's bones.
+        /// </summary>
+        private const string LargeRestClipName = "Rig_Large_General/Idle_A";
 
         /// <summary>
         /// The bow's half turn. Every weapon in this pack is authored for the
@@ -147,6 +196,14 @@ namespace View.Editor
 
         private const string SwordNode = "sword_1handed";
 
+        private const string AxeNode = "axe_2handed";
+
+        private const string LargeAxeNode = "axe_2handed_Large";
+
+        private const string HammerNode = "paladin_hammer";
+
+        private const string BookNode = "paladin_book";
+
         /// <summary>
         /// Which way along a shafted weapon its far end lies, in the prop's own
         /// local space.
@@ -176,6 +233,25 @@ namespace View.Editor
         private static readonly EffectAnchor SwordTip =
             EffectAnchor.AtTipOf(SwordNode, AlongTheShaft);
 
+        /// <summary>The head of the Barbarian's two-handed axe.</summary>
+        private static readonly EffectAnchor AxeHead =
+            EffectAnchor.AtTipOf(AxeNode, AlongTheShaft);
+
+        /// <summary>The head of the bigger axe the Berserker and the Slam swing.</summary>
+        private static readonly EffectAnchor LargeAxeHead =
+            EffectAnchor.AtTipOf(LargeAxeNode, AlongTheShaft);
+
+        /// <summary>The head of the Paladin's hammer.</summary>
+        private static readonly EffectAnchor HammerHead =
+            EffectAnchor.AtTipOf(HammerNode, AlongTheShaft);
+
+        /// <summary>
+        /// The open book itself, and no tip. A book is held, not swung: its
+        /// pages are where the Blessing's light comes from, and the far end of
+        /// one is a corner of the cover.
+        /// </summary>
+        private static readonly EffectAnchor Book = EffectAnchor.At(BookNode);
+
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row of
         /// <c>content/units.txt</c> that has art. A row that has none yet is on
@@ -201,16 +277,43 @@ namespace View.Editor
         /// </para>
         /// <para>
         /// <b>A tier is told apart by colour, by a prop or by a second
-        /// model, and a prop may be held or may stand beside.</b> The beside
-        /// column is empty on every row here: the four looks that need it —
-        /// the Engineer's turret, the Paladin's statue, the Cleric's font and
-        /// the Druid's weirwood — are signed in <c>docs/roster.md</c> and none
-        /// of them has a row in <c>content/units.txt</c> to be authored
-        /// against yet. The Archer and the Ranger are the pair that proves the
-        /// rule: one model, one scale, and what separates them on sight is the
-        /// Ranger's own atlas and the quiver in its hand. The atlas covers the
-        /// body only — a prop is its own import off its own pack's atlas, and
-        /// this quiver is authored on the rogue's.
+        /// model, and a prop may be held or may stand beside.</b> The Archer
+        /// and the Ranger are the pair that proves the rule: one model, one
+        /// scale, and what separates them on sight is the Ranger's own atlas
+        /// and the quiver in its hand. The atlas covers the body only — a prop
+        /// is its own import off its own pack's atlas, and this quiver is
+        /// authored on the rogue's. The Blessing is the one row here with the
+        /// beside column filled in; the other three looks <c>docs/roster.md</c>
+        /// signs for that socket are on lines whose art has not been chosen
+        /// yet.
+        /// </para>
+        /// <para>
+        /// <b>A rung inherits what the rung below it holds, and its
+        /// <c>Looks</c> line in <c>docs/roster.md</c> names only what
+        /// changes.</b> So the Sergeant and the Shield Wall carry the
+        /// Soldier's sword, the Slam carries the Berserker's axe and the
+        /// Blessing keeps the Templar's shield in the hand its book does not
+        /// fill. Reading those lines as a complete inventory instead would
+        /// strip the weapon off six of the nine rows below.
+        /// </para>
+        /// <para>
+        /// <b>A prop carries up a line and a colour does not.</b> A body has to
+        /// be holding something, so a rung that names no weapon keeps the one
+        /// below it; a colour is one of the three things that tell a rung
+        /// apart, and that page gives tier 3 the second model instead wherever
+        /// one exists. So the Slam is drawn in the atlas
+        /// <c>Barbarian_Large</c> imports wearing rather than in the
+        /// Berserker's, and its rung reads as a different body and not as the
+        /// Berserker in a bigger size.
+        /// </para>
+        /// <para>
+        /// <b>The Paladin line is bound with no clips, and that is the record
+        /// speaking rather than an omission.</b> <c>docs/roster.md</c> names a
+        /// clip on every rung of the Knight and Barbarian lines and none on any
+        /// rung of the Paladin's, whose windup and backswing carry the <c>_</c>
+        /// that page puts on a number nobody has signed. A clip chosen here to
+        /// fill the gap would be this table deciding how a tower swings, so
+        /// those three rows stand in their bind pose until the ask is answered.
         /// </para>
         /// <para>
         /// <b>What each unit holds, and the clips it holds it with, are the
@@ -272,6 +375,30 @@ namespace View.Editor
             (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, RangerAltAtlasPath,
                 QuiverPath, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
                 Bow, default),
+            (15, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, KnightAltAAtlasPath,
+                SwordPath, ShieldSquarePath, RestClipName, ChopClipName, RestClipName, default, default,
+                SwordTip, default),
+            (16, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, KnightAltBAtlasPath,
+                SwordPath, ShieldSquarePath, BlockingClipName, ChopClipName, BlockingClipName,
+                default, default, SwordTip, default),
+            (17, "Assets/Art/Kaykit/adventurers/Barbarian.fbx", MatchArt.TowerScale, null,
+                AxePath, null, RestClipName, TwoHandedChopClipName, RestClipName, default, default,
+                AxeHead, default),
+            (18, "Assets/Art/Kaykit/adventurers/Barbarian.fbx", MatchArt.TowerScale, BarbarianAltAtlasPath,
+                LargeAxePath, null, RestClipName, TwoHandedChopClipName, RestClipName, default, default,
+                LargeAxeHead, default),
+            (19, "Assets/Art/Kaykit/adventurers/Barbarian_Large.fbx", MatchArt.TowerScale, null,
+                LargeAxePath, null, LargeRestClipName, SlamClipName, LargeRestClipName, default, default,
+                LargeAxeHead, default),
+            (20, PaladinFolder + "Paladin.fbx", MatchArt.TowerScale, null,
+                HammerPath, null, null, null, null, default, default,
+                HammerHead, default),
+            (21, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, null,
+                HammerPath, PaladinShieldPath, null, null, null, default, default,
+                HammerHead, default),
+            (22, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, PaladinAltAtlasPath,
+                BookPath, PaladinShieldPath, null, null, null, default, default,
+                Book, (StatuePath, 1f, BesideProp.NextTile)),
         };
 
         /// <summary>
@@ -291,25 +418,6 @@ namespace View.Editor
         {
             ("creepWalkClip", null, WalkClipName),
             ("creepDeathClip", null, DeathClipName),
-        };
-
-        /// <summary>
-        /// The four clip banks, searched in order for a clip by name.
-        /// </summary>
-        /// <remarks>
-        /// All four share one rig, which is why a clip from any of them drives
-        /// any of the characters — verified by measurement rather than trusted,
-        /// and the reason this project has one artist rather than two. The
-        /// melee bank is the newest and arrived with the Soldier's sword: a
-        /// tower holding a sword and playing <c>Ranged_Bow_Draw</c> is the same
-        /// class of mistake as a mage holding a bow.
-        /// </remarks>
-        private static readonly string[] ClipBankPaths =
-        {
-            "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
-            "Assets/Art/Animations/Rig_Medium_General.fbx",
-            "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
-            "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
         /// <summary>Where the tile atlas material is written.</summary>
@@ -935,39 +1043,16 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The clip of that name, from whichever of the four banks holds it.
+        /// The clip a binding names, or a throw saying where it looked.
+        /// <see cref="ClipBanks"/> is what decides which banks that is, so a
+        /// set file and this table cannot disagree about what a name means.
         /// </summary>
-        /// <remarks>
-        /// <c>__preview__</c> duplicates are editor thumbnail bookkeeping Unity
-        /// hangs off any clip it has ever drawn an icon for. Wiring one of those
-        /// into a scene would work in the editor and resolve to nothing in a
-        /// build, which is the worst of both.
-        /// </remarks>
         private static AnimationClip LoadClip(string name)
         {
-            var found = new List<string>();
+            AnimationClip clip = ClipBanks.Find(name, out string whereItLooked);
 
-            foreach (string bank in ClipBankPaths)
-            {
-                foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(bank))
-                {
-                    if (!(asset is AnimationClip candidate) || candidate.name.StartsWith("__preview__"))
-                    {
-                        continue;
-                    }
-
-                    if (candidate.name == name)
-                    {
-                        return candidate;
-                    }
-
-                    found.Add(candidate.name);
-                }
-            }
-
-            throw new IOException(
-                "No clip called '" + name + "' in any of the four banks. Found: "
-                + string.Join(", ", found));
+            return clip ?? throw new IOException(
+                "No clip called '" + ClipBanks.NameIn(name) + "' in " + whereItLooked);
         }
 
         /// <summary>
