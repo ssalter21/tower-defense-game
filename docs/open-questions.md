@@ -49,7 +49,7 @@ not in question; every one of them names a real failure mode. Not blocking, and 
 somebody sits down with the build.
 
 **What the gate rounds' loose ends are, and what the defense currency is called.**
-[Three gates](vision.md#three-gates-at-waves-3-6-and-9) fix the capacity schedule and hand out a capstone
+[Three gates](vision.md#the-gates) fix the capacity schedule and hand out a capstone
 token. Four things about them are readings rather than decisions, and all four are cheap to move while nothing
 is built. **The currency has no name**, and everything player-facing here gets named deliberately — gold took
 two goes. **The opening pair is two slots and ten count**, which is what makes the schedule 2/4/6/8 and
@@ -103,10 +103,10 @@ and gives the whole player base one shared map to be compared on, but empties th
 every cycle — and the pool is what the async mode *is*. Slower rotation lets the pool fill and lets a map be
 learned, which is most of where mastery would come from, at the cost of the map being solved before it turns
 over. The three candidate answers are in
-[§3](vision.md#the-map-rotates-and-it-is-generated); the survey is
+[§3](vision.md#the-board-is-a-maze); the survey is
 [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html). Not blocking until
 step 6, since nothing before it reads a pool. **The rotation carries more than the map:** the
-[gate schedule's *shape*](vision.md#three-gates-at-waves-3-6-and-9) is on the same clock, so a cadence
+[gate schedule's *shape*](vision.md#the-gates) is on the same clock, so a cadence
 choice sets how long a *preparation* problem stays learnable as well as how long a map does. Both want the same
 answer — long enough to learn — which is a mild argument for slow.
 

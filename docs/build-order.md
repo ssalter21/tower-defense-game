@@ -54,7 +54,7 @@ authoring new unit types.
 What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
 the special rounds and the per-wave type limit all come out of the played game, and go back when the roster
 is deep enough for a gate to be gating something worth having. **The type limit is the first of the four to
-be redesigned rather than merely parked** — [the gate rounds](vision.md#three-gates-at-waves-3-6-and-9) make
+be redesigned rather than merely parked** — [the gate rounds](vision.md#the-gates) make
 it a public capacity schedule with a second dimension in it, and the order is unchanged: the roster gets its
 depth first and the schedule is fitted to it afterwards. Gating a shallow roster holds back early
 testing and buys nothing, and a mechanic carried switched-off through a client build is a tax on every step
@@ -124,13 +124,13 @@ now and the most expensive later, and it needs no server, art or friends to answ
 the **computed-balance budget** from [§5](vision.md#5-how-it-is-balanced).
 
 **One reconciliation belongs to nobody else.** [*Your defense decides your offense*](vision.md#depth-is-the-point)
-wants a private, tower-gated creep pool; [*the offering is public*](vision.md#the-offering-is-public) wants a
+wants a private, tower-gated creep pool; [*the offering is public*](vision.md#what-a-player-sees-before-committing) wants a
 shared one. A pool that is both gated and public is a contradiction unless the gate applies to something other
 than the offering. Seam 1 chooses which bends. It also owns the tension between the offense
-[not entering the placing](vision.md#a-run-is-ten-waves-and-health-is-money) and the attacking half being as
+[not entering the placing](vision.md#3-what-a-match-is) and the attacking half being as
 deep as the defending one.
 
-**It owns the capacity schedule's numbers.** [The gate rounds](vision.md#three-gates-at-waves-3-6-and-9)
+**It owns the capacity schedule's numbers.** [The gate rounds](vision.md#the-gates)
 fix the shape — two more slots and ten more count at each of waves 3, 6 and 9 — and every integer in it is a
 ruleset row and a sweep target: the starting width, the two steps, the three rounds, and how many capstone
 tokens a gate hands over. The question the sweep is owed is the one a capacity bound has and a purse does not:
@@ -167,7 +167,7 @@ Constrained by [§4](vision.md#4-what-persists) — nothing is unlocked, so ever
 the first run — and by [§6](vision.md#6-what-it-looks-like), since a unit whose role cannot be read off its
 silhouette fails the accessibility pillar however well it plays.
 
-Three inherited constraints. From [the gate rounds](vision.md#three-gates-at-waves-3-6-and-9): a
+Three inherited constraints. From [the gate rounds](vision.md#the-gates): a
 counter must be purchasable strictly before the gate that needs it, and the menu half of the schedule signs a
 bill of **nine game changer creeps per shape**, tiered across three gates, one opening a genuine counter. From
 [the damage model](vision.md#how-a-shot-resolves): every unit carries an attack or armour type from the fixed
@@ -215,7 +215,7 @@ is ever adopted, its documented failure mode — a U-shaped meta where the wides
 is caught by win rate **binned by number of ingredients taken**, a grouping rather than a tool.
 
 **Pointed at maps it scores them**, which is what makes
-[generated rotation](vision.md#the-map-rotates-and-it-is-generated) a filter rather than a hope. **The sweep
+[generated rotation](vision.md#the-board-is-a-maze) a filter rather than a hope. **The sweep
 must take its map as a parameter, not as a fixed input.** One further column is owed: the both-columns check.
 Outcome spread and the ingredient bin are no longer columns — `--per-run` writes a row per run, so both are a
 query over a file the sweep already produced rather than an edit to the harness. See
