@@ -123,7 +123,7 @@ The opening pair, one token per gate, whether a token banks, and the currency's 
 
 - **The attacking half is as deep as the defending half.**
 - **Your defense decides your offense** — a tower unlocks a skill tree for the creeps you can buy.
-  [The research pushed back on this one](research/attack-composition-and-sending.md);
+  [The research pushed back on this one](open-questions.md#what-the-design-research-found);
   [seam 1](build-order.md#1--the-match-format) owns the call.
 - **You choose the order they come out in.** A wave is a sequence, not a bag. Order is a lever only on a
   single-file path, only where speeds differ, and only where *a count is a column, not a pile*.
@@ -131,7 +131,7 @@ The opening pair, one token per gate, whether a token banks, and the currency's 
 Creeps get **classes and roles** — tanks, damage, support, swarm, specialists — rather than a stat ladder.
 
 **Nothing is to be built from this section.** [Seam 1](build-order.md#1--the-match-format) chooses, from
-[the depth research](research/build-depth-in-tower-defense.md).
+[what the depth research found](open-questions.md#what-the-design-research-found).
 
 ### The board is a maze
 

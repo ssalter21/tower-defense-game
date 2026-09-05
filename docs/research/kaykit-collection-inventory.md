@@ -11,11 +11,14 @@ hex-tile kit whose road pieces are already a tower-defense path vocabulary.
 > **This note was read from the archive, not from a web page.** Every count, name, triangle figure and texture
 > dimension below was extracted from `The Complete KayKit Collection v6.1.zip` itself — the file listing from
 > the zip central directory, the animation and mesh data from the glTF JSON chunks. Where it disagrees with
-> [The character roster](kaykit-character-roster.md) — compiled from itch.io listings before the bundle was
+> the earlier character-roster note — compiled from itch.io listings before the bundle was
 > downloaded — **this note is the one that is true.** The disagreements are listed in
 > [§9](#9-what-this-corrects).
 
-The full model-name listing is the companion file: **[The KayKit model index](kaykit-model-index.md)**.
+**The model names are not listed here, and no longer need to be.** The whole `fbx(unity)` subset is imported
+at `client/Assets/Art/Kaykit/`, so the listing that used to be a companion note is now the directory itself:
+`ls client/Assets/Art/Kaykit/<pack>/` answers *does KayKit have a thing, and what is the file called* against
+the files rather than against a transcription of them.
 
 ## 1. Where it is, and what it costs to keep
 
@@ -329,7 +332,7 @@ Recolours ship as extra atlases against the same UVs, which is what makes the at
 | Adventurers, Skeletons, Series 4/5/6 | 190 props | Weapons and accessories beside the characters |
 | Character Animations 1.1 | — | The clip library and two mannequins |
 
-Every name is in [the model index](kaykit-model-index.md).
+Every name is a file under `client/Assets/Art/Kaykit/`.
 
 ### The Medieval Hexagon pack is the interesting one
 
@@ -355,9 +358,9 @@ Whole-pack triangle spread: Hexagon 16–5,659 (avg 1,006, pulled up by building
 
 ## 9. What this corrects
 
-[The character roster](kaykit-character-roster.md) was written against itch.io listings before the bundle
-existed on disk, and said so. Six of its
-claims do not survive contact with the files:
+The earlier character-roster note was written against itch.io listings before the bundle existed on disk, and
+said so. It was retired on 5 September 2026 once this note had corrected it; six of its claims did not survive
+contact with the files, and they are recorded here because the numbers they got wrong are still quotable:
 
 1. **"All 57 share one rig."** There are two rigs, and `Rig_Large` has no ranged or tool clips at all. This is
    the correction that changes a design decision rather than a number.

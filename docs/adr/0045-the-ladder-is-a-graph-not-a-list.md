@@ -17,9 +17,8 @@ field can hold the shape, and the file that holds it is a graph written down one
 **The diamond is the reason, and it costs one extra line.** The Mage splits into the Pyromancer and the
 Cryomancer and both roads end at the Frostfire Archmage, so the target is named by two rows. A single parent
 pointer on the child forbids that by construction; a single successor field on the source forbids the split.
-[The survey](../research/upgrade-graph-representation-in-shipped-tower-defenses.md) is blunt about which shape
-to rule out by name — Legion TD 2's singular `upgradesFrom` string, which is rare rather than absent, and is
-the one thing this format must not become.
+The survey behind this record was blunt about which shape to rule out by name — Legion TD 2's singular
+`upgradesFrom` string, which is rare rather than absent, and is the one thing this format must not become.
 
 **Storage shape predicts whether a game can reconverge at all**, which is why this is a decision rather than a
 detail. Element TD and Kingdom Rush use the identical out-edge mechanism and only Element TD ever names one

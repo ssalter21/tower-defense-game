@@ -24,8 +24,8 @@ pre-loaded so the run never has to ask.
 
 1. **The gate verifies the simulation side completely and the client side not at all.** Every push runs the
    sim tests, the IL scan, the poison suite, the six-row determinism matrix and the headless replay; not one
-   Unity test. The [software-factory note](the-software-factory.html) called this the autonomy gradient and
-   asked for it to be written down. It still is not. What has changed since 7 August is that the client half
+   Unity test. The software-factory note called this the autonomy gradient and asked for it to be written
+   down; it was, later the same day, as [rule 6 of `AGENTS.md`](../../AGENTS.md). What has changed since 7 August is that the client half
    gained its own instruments — three Unity runners that count their tests, `capture-ui-previews.ps1`,
    `capture-match-frames.ps1`, and synthetic clicks driving the built player — and every one of them needs the
    editor **closed**. AFK time is exactly when it is. So the client is now agent-verifiable *unattended* in a
@@ -327,6 +327,7 @@ alone: capture a frame and look at it, or drive the build.
 
 Everything here is verified in this repository at commit `49b8964`, 3 September 2026: `docs/vision.md`,
 `docs/build-order.md`, `docs/open-questions.md`, the 27 and 29 August entries of `docs/decision-log.md`,
-`docs/roster.md`, `docs/research/the-software-factory.html`, `AGENTS.md`, `.github/workflows/build-gate.yml`,
+`docs/roster.md`, `docs/research/the-software-factory.html` (since retired), `AGENTS.md`,
+`.github/workflows/build-gate.yml`,
 `tools/`, the closed issues #173–#229, and `gh issue list --state open`, which is empty. Test counts as PR #229 reported them: 815 sim, 82 edit-mode,
 136 play-mode.
