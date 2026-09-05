@@ -62,7 +62,21 @@ namespace View.Editor
         /// until the copy they generate is regenerated and committed.
         /// </para>
         /// </remarks>
-        public static readonly (int UnitId, float Scale)[] Rows = { };
+        public static readonly (int UnitId, float Scale)[] Rows =
+        {
+            // The Knight line's two new rungs, then the eight lines authored
+            // whole: ids 15 to 37, in the order content/units.txt carries them.
+            // Every one of them stands, so every one of them is a tower scale.
+            (15, MatchArt.TowerScale), (16, MatchArt.TowerScale),
+            (17, MatchArt.TowerScale), (18, MatchArt.TowerScale), (19, MatchArt.TowerScale),
+            (20, MatchArt.TowerScale), (21, MatchArt.TowerScale), (22, MatchArt.TowerScale),
+            (23, MatchArt.TowerScale), (24, MatchArt.TowerScale), (25, MatchArt.TowerScale),
+            (26, MatchArt.TowerScale), (27, MatchArt.TowerScale),
+            (28, MatchArt.TowerScale), (29, MatchArt.TowerScale), (30, MatchArt.TowerScale),
+            (31, MatchArt.TowerScale),
+            (32, MatchArt.TowerScale), (33, MatchArt.TowerScale), (34, MatchArt.TowerScale),
+            (35, MatchArt.TowerScale), (36, MatchArt.TowerScale), (37, MatchArt.TowerScale),
+        };
 
         /// <summary>Whether this row is one of the ones with no art yet.</summary>
         public static bool Lists(int unitId)

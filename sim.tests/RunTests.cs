@@ -70,7 +70,7 @@ public class RunTests
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on its very first round, (0, 0)
-        // against (30, 239), which is what a second code path hiding behind an
+        // against (26, 239), which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -555,8 +555,8 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 6488 against 21605: the 9590 gold
-        // of creeps, and the interest a bank that never paid for them would have
+        // over bought nothing. It goes red by the 8830 gold of creeps it spent,
+        // and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
         Ruleset rules = run.Rules;
@@ -587,8 +587,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(9590, spent);
-        Assert.Equal(10480, bonus);
+        Assert.Equal(8830, spent);
+        Assert.Equal(9205, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -866,11 +866,19 @@ public class RunTests
 
         // The committed defense is the wall it opens behind, cell for cell, and
         // what the first round adds to it is whatever half of the opening purse
-        // pays for: on the committed content one forty-gold archer out of a
-        // fifty-gold half, standing on route the six already watch.
+        // pays for -- which on the committed content is nothing at all. The six
+        // towers already cover the route end to end, so the covering half of the
+        // bot's rule has nothing to buy, and the value half's best-scoring
+        // purchase costs more than the fifty-gold half. The rule stops at the
+        // first thing the half will not pay for rather than falling back on a
+        // cheaper one, so the opening round banks its share.
+        //
+        // It bought one forty-gold archer here while the roster was four rows.
+        // What moved is the candidate list and not the rule: nine roots and
+        // eighteen rungs put a dearer row at the top of the score.
         TowerLayout opening = canned.StandingIn(0, 0).Defense;
 
-        Assert.Equal(defense.Count + 1, opening.Count);
+        Assert.Equal(defense.Count, opening.Count);
         Assert.All(
             TheMatch.Spelling(defense),
             tower => Assert.Contains(tower, TheMatch.Spelling(opening)));

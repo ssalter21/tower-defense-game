@@ -27,23 +27,68 @@ public class BuildPolicyTests
     /// <summary>The committed archer: forty gold and three hexes.</summary>
     private const int Archer = 3;
 
-    /// <summary>The committed mage: ninety-two gold, and the dearest row on the roster.</summary>
+    /// <summary>The committed mage: ninety-two gold, and the root of the magic projectile line.</summary>
     private const int Mage = 4;
 
-    /// <summary>The committed ranger: forty gold and four hexes, and the widest reach on the roster.</summary>
+    /// <summary>The committed ranger: forty gold and four hexes, the Archer line's second rung.</summary>
     private const int Ranger = 14;
+
+    /// <summary>The Barbarian: thirty-three gold and one hex, the slow heavy melee root.</summary>
+    private const int Barbarian = 17;
+
+    /// <summary>The Paladin: thirty-seven gold and one hex, the magic melee root.</summary>
+    private const int Paladin = 20;
+
+    /// <summary>The Cleric: thirty-two gold and three hexes, the magic ranged root.</summary>
+    private const int Cleric = 23;
+
+    /// <summary>The Druid: thirty gold and three and a half hexes, the cheapest reach on the roster.</summary>
+    private const int Druid = 28;
+
+    /// <summary>The Rogue: thirty-three gold and two hexes, thrown fast.</summary>
+    private const int Rogue = 32;
+
+    /// <summary>The Engineer: thirty gold and four hexes, lobbed slowly.</summary>
+    private const int Engineer = 35;
 
     /// <summary>The creep the runs below are about.</summary>
     private const int Minion = 1;
 
     /// <summary>
     /// The committed roster's placed rows, cheapest first and then by id, which
-    /// is the order the bot walks them in.
+    /// is the order the bot walks them in. Nine lines of three rungs, so
+    /// twenty-seven of them.
     /// </summary>
-    private static readonly int[] ByPrice = { Soldier, Archer, Ranger, Mage };
+    /// <remarks>
+    /// Written out by hand rather than derived, exactly as the ladder below is:
+    /// a row appended to <c>content/units.txt</c> has to land here as a red
+    /// assertion, because an oracle that recomputed this order would agree with
+    /// the bot about an ordering neither of them had been told.
+    /// </remarks>
+    private static readonly int[] ByPrice =
+    {
+        // 30 gold: soldier, druid, elder, overgrowth, engineer, artificer, mortar
+        Soldier, Druid, 29, 30, Engineer, 36, 37,
 
-    /// <summary>The same list without the row the ladder's one edge points at, which may not be placed.</summary>
-    private static readonly int[] Placeable = { Soldier, Archer, Mage };
+        // 32: cleric, bishop, consecration. 33: barbarian, rogue. 37: paladin
+        Cleric, 24, 25, Barbarian, Rogue, Paladin,
+
+        // 40: archer, ranger. 41: sergeant, shield-wall. 43: cutthroat
+        Archer, Ranger, 15, 16, 33,
+
+        // 50: berserker, slam. 56: templar, blessing. 60: overwatch
+        18, 19, 21, 22, 31,
+
+        // 92: mage. 124: sorcerer, unravel. 129: fan-of-knives
+        Mage, 26, 27, 34,
+    };
+
+    /// <summary>
+    /// The same list without the rows an edge of the ladder points at, which may
+    /// not be placed: one root per tower line, and there are nine lines.
+    /// </summary>
+    private static readonly int[] Placeable =
+        { Soldier, Druid, Engineer, Cleric, Barbarian, Rogue, Paladin, Archer, Mage };
 
     /// <summary>
     /// How many waves the runs below last. Three towers cover the whole corridor
@@ -68,8 +113,8 @@ public class BuildPolicyTests
         // Half the purse, rounded down, and the wave gets the rest of the purse
         // rather than the rest of the half. An opening round is the clearest
         // place to read it: a hundred gold splits fifty and fifty, the board
-        // takes one forty-gold archer and cannot afford a second, and the ten it
-        // did not spend banks instead of buying another minion.
+        // takes one thirty-gold engineer and cannot afford a second, and the
+        // twenty it did not spend banks instead of buying two more minions.
         //
         // That banking is what the interest rate and the unspent-gold column
         // have to be about -- a player that always emptied its purse would make
@@ -77,9 +122,9 @@ public class BuildPolicyTests
         //
         // OBSERVED: hand the wave what the defense left rather than the half it
         // was never offered -- price the actions in EvenShareBot.Decide and take
-        // that off the purse for the wave's share. This goes red, 100 spent
-        // where 90 was expected, and three more rows of this class go red behind
-        // it on runs that reach different boards with the extra gold.
+        // that off the purse for the wave's share. This goes red on the spend,
+        // and three more rows of this class go red behind it on runs that reach
+        // different boards with the extra gold.
         Run run = TheBuild.Fresh(fieldSize: FieldSize);
 
         Assert.Equal(100, run.Purse.Gold);
@@ -88,9 +133,9 @@ public class BuildPolicyTests
         BuildPhase phase = EvenShareBot.Decide(run, Minion);
         RoundReport report = run.Advance(phase);
 
-        Assert.Equal(Archer, Assert.Single(phase.Actions).TypeId);
-        Assert.Equal(90, report.Build.Spent);
-        Assert.Equal(10, report.Build.Purse.Gold);
+        Assert.Equal(Engineer, Assert.Single(phase.Actions).TypeId);
+        Assert.Equal(80, report.Build.Spent);
+        Assert.Equal(20, report.Build.Purse.Gold);
 
         // And the half is rounded down, so an odd purse leaves the odd coin on
         // the wave's side rather than on the board's.
@@ -227,35 +272,37 @@ public class BuildPolicyTests
     }
 
     [Fact]
-    public void The_bot_opens_on_the_archer_and_never_reaches_the_ranger_at_all()
+    public void The_bot_opens_on_the_engineer_and_never_reaches_a_second_rung_at_all()
     {
         // Two consequences of the rules rather than rules of their own, written
         // down because both are the kind of thing somebody finds in the report
         // and reads as a bug.
         //
-        // THE OPENING PURSE BUYS AN ARCHER. The ranger reaches further for the
-        // same forty gold and used to win this purchase outright. #179 made it
-        // the target of the ladder's one edge, so it may not be placed: the
-        // dearest-reaching row the ladder lets the bot stand is the archer.
+        // THE OPENING PURSE BUYS AN ENGINEER. The covering half scores reach per
+        // gold, and the engineer is four hexes for thirty -- the best of that
+        // ratio on the widened roster, ahead of the druid's three and a half for
+        // thirty and the archer's three for forty. It opened on the archer while
+        // the roster was four rows; nine lines of roots is what moved it.
         //
-        // THE RANGER IS THEN NEVER BUILT AT ALL. An upgrade is scored per gold
-        // of what the new row costs above the one standing, and the ranger costs
-        // exactly what the archer costs -- a difference of nothing, which is no
-        // score at all rather than a poor one -- so nothing this bot does ever
-        // reaches it. That is worth knowing rather than fixing here: it means
-        // the sweep's defense never exercises the one upgrade edge the roster
-        // has, so a balance question about the ranger cannot be answered from
-        // content/sweep.csv. It is a property of this bot's rule and not of the
-        // ladder, and it holds even though the ranger reaches further than the
-        // archer for the same gold.
+        // NO SECOND RUNG IS EVER BUILT, and the ranger is the clearest case. An
+        // upgrade is scored per gold of what the new row costs ABOVE the one
+        // standing, and the ranger costs exactly what the archer costs -- a
+        // difference of nothing, which is no score at all rather than a poor
+        // one. Five more rungs are flat against the row beneath them for the
+        // same reason, and the rest are dear enough that a cheaper root on a
+        // free cell outscores them. That is worth knowing rather than fixing
+        // here: the sweep's defense exercises no upgrade edge at all, so a
+        // balance question about any second or third rung cannot be answered
+        // from content/sweep.csv. It is a property of this bot's rule and not of
+        // the ladder.
         //
         // OBSERVED: score by price alone -- return the first type with anything
         // to gain out of CoverThenUpgradeBot.BestValue. This goes red on the
-        // opening action, type 11 where 3 was expected.
+        // opening action, type 11 where 35 was expected.
         //
         // OBSERVED: drop the Placeable filter from CoverThenUpgradeBot.Decide.
-        // This goes red the other way, type 14 where 3 was expected, and every
-        // sweep in the project dies on the placement the ladder refuses.
+        // This goes red the other way, on a rung the ladder refuses to place,
+        // and every sweep in the project dies on that placement.
         UnitTypeTable types = TheMatch.Types();
         CostTable costs = CostTable.From(TheRuleset.Committed(), types);
         HexMap map = TheMatch.Map();
@@ -272,26 +319,33 @@ public class BuildPolicyTests
             }
         }
 
-        Assert.Equal(Archer, built[0]);
+        Assert.Equal(Engineer, built[0]);
         Assert.DoesNotContain(Ranger, built);
 
-        // The soldier and the mage do get built, so the ranger's absence is the
-        // two rules above and not a player that only ever buys one thing: the
-        // soldier once the archer's cells stop paying, the mage as the climb
-        // the upgrade half does make.
-        Assert.Contains(Soldier, built);
-        Assert.Contains(Mage, built);
+        // Six different roots get built, so the ranger's absence is the two
+        // rules above and not a player that only ever buys one thing. Every one
+        // of them is a root: nothing an edge points at is ever reached.
+        Assert.Equal(new[] { Engineer, Druid, Soldier, Cleric, Rogue, Archer }, built);
 
-        // And the reason, in the two comparisons the rule makes: the archer
-        // reaches more corridor per gold than the soldier even though the
-        // soldier is cheaper, and the ranger would have beaten the archer on
-        // reach at the same price if the ladder let it be placed at all.
+        UpgradeLadder ladder = TheMatch.Ladder(types);
+
+        Assert.All(built, id => Assert.False(ladder.IsTargetOfAnEdge(id)));
+
+        // And the reason, in the comparisons the rule makes: the engineer
+        // reaches more corridor per gold than the archer even though it is
+        // cheaper, the archer beats the soldier the same way, and the ranger
+        // would have beaten the archer on reach at the same price if the ladder
+        // let it be placed at all.
         int ranger = Widest(map, types.ById(Ranger));
         int archer = Widest(map, types.ById(Archer));
         int soldier = Widest(map, types.ById(Soldier));
+        int engineer = Widest(map, types.ById(Engineer));
 
         Assert.Equal(costs.PriceOf(Purchase.Unit(Archer)), costs.PriceOf(Purchase.Unit(Ranger)));
         Assert.True(ranger > archer);
+        Assert.True(
+            engineer * costs.PriceOf(Purchase.Unit(Archer)) > archer * costs.PriceOf(Purchase.Unit(Engineer)),
+            "The archer reaches " + archer + " route hexes against the engineer's " + engineer + ".");
         Assert.True(
             archer * costs.PriceOf(Purchase.Unit(Soldier)) > soldier * costs.PriceOf(Purchase.Unit(Archer)),
             "The soldier reaches " + soldier + " route hexes against the archer's " + archer + ".");

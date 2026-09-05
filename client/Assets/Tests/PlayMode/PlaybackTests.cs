@@ -183,11 +183,13 @@ namespace Tests.PlayMode
         /// re-simulated with no sink attached and say nothing at all.
         /// </para>
         /// <para>
-        /// The rings are handed over by hand because no shipped row authors a
-        /// bubble, so no match played from <c>content/units.txt</c> would ever
-        /// fire one. What that costs is nothing: what is under test is the
-        /// seek, and a ring put on screen deliberately is a harder starting
-        /// position than one that happened to be there.
+        /// The two rings are still handed over by hand, on top of whatever the
+        /// match has drawn by itself: the Mage's splash is a damage bubble on a
+        /// shipped row, so the committed board fires rings of its own now, and
+        /// the count is read as a delta rather than as a total. An aura pulse
+        /// is the half no shipped row emits, and handing both over keeps this
+        /// about the seek rather than about which shapes happen to be on the
+        /// roster.
         /// </para>
         /// </remarks>
         [Test]
@@ -203,10 +205,15 @@ namespace Tests.PlayMode
 
             int towerId = view.Current.Towers[0].Id;
 
+            int drawnByTheMatch = view.Decorations.RingsDrawn;
+
+            Assert.That(drawnByTheMatch, Is.GreaterThan(0),
+                "the committed board's two Mages splash, so a match this far in has drawn rings already");
+
             view.Decorations.AuraPulsed(towerId, 3000, BubblePayload.Cooldown);
             view.Decorations.BlastLanded(towerId, 3000, BubblePayload.Damage);
 
-            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2),
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(drawnByTheMatch + 2),
                 "the rings were never drawn, so a count that dropped would prove nothing");
 
             int heardBefore = view.Decorations.EventsHeard;

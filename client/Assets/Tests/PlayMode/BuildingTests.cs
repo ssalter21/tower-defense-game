@@ -43,6 +43,35 @@ namespace Tests.PlayMode
 
         private const int RangerId = 14;
 
+        /// <summary>The druid: thirty gold and three and a half hexes, the cheapest reach on the roster.</summary>
+        private const int DruidId = 28;
+
+        /// <summary>The engineer: thirty gold and four hexes, lobbed slowly.</summary>
+        private const int EngineerId = 35;
+
+        /// <summary>The cleric: thirty-two gold and three hexes.</summary>
+        private const int ClericId = 23;
+
+        /// <summary>The barbarian: thirty-three gold and one hex, slow and heavy.</summary>
+        private const int BarbarianId = 17;
+
+        /// <summary>The rogue: thirty-three gold and two hexes, thrown fast.</summary>
+        private const int RogueId = 32;
+
+        /// <summary>The paladin: thirty-seven gold and one hex, holy.</summary>
+        private const int PaladinId = 20;
+
+        /// <summary>
+        /// The bar, in the order it lists: one root per tower line, cheapest
+        /// first and then by id. The eighteen rungs above them are absent
+        /// because each is some edge's target, so offering one would be
+        /// offering a refusal.
+        /// </summary>
+        private static readonly int[] ThePalette =
+        {
+            SoldierId, DruidId, EngineerId, ClericId, BarbarianId, RogueId, PaladinId, ArcherId, MageId,
+        };
+
         /// <summary>
         /// A cell of ground with nothing on it, well away from the corridor and
         /// high enough on the default screen to be nowhere near the chrome.
@@ -70,11 +99,12 @@ namespace Tests.PlayMode
 
             Assert.That(
                 Ids(palette),
-                Is.EqualTo(new[] { SoldierId, ArcherId, MageId }),
-                "The three tier-one towers, cheapest first. The Ranger is some edge's target, so it is "
-                + "reached by upgrading and never placed — offering it would be offering a refusal.");
+                Is.EqualTo(ThePalette),
+                "One root per tower line, cheapest first and then by id. No second or third rung is on "
+                + "the bar: each of the eighteen is some edge's target, so it is reached by upgrading "
+                + "and never placed — offering one would be offering a refusal.");
 
-            Assert.That(root.Palette.Entries.Count, Is.EqualTo(3));
+            Assert.That(root.Palette.Entries.Count, Is.EqualTo(ThePalette.Length));
         }
 
         /// <summary>
@@ -88,8 +118,9 @@ namespace Tests.PlayMode
 
             Assert.That(Wording(root.Palette.Entries[0]), Does.Contain("Soldier"));
             Assert.That(Wording(root.Palette.Entries[0]), Does.Contain("30 gold"));
-            Assert.That(Wording(root.Palette.Entries[1]), Does.Contain("Archer"));
-            Assert.That(Wording(root.Palette.Entries[2]), Does.Contain("Mage"));
+            Assert.That(Wording(root.Palette.Entries[1]), Does.Contain("Druid"));
+            Assert.That(Wording(root.Palette.Entries[7]), Does.Contain("Archer"));
+            Assert.That(Wording(root.Palette.Entries[8]), Does.Contain("Mage"));
 
             foreach (Button entry in root.Palette.Entries)
             {
@@ -213,13 +244,13 @@ namespace Tests.PlayMode
 
             Assert.That(
                 Ids(root.Composing.Palette),
-                Is.EqualTo(new[] { SoldierId, ArcherId, MageId }),
+                Is.EqualTo(ThePalette),
                 "The bar does not shrink when the purse does.");
 
             Assert.That(root.Composing.CanAfford(root.Composing.Palette[0]), Is.True, "A Soldier is 30.");
-            Assert.That(root.Composing.CanAfford(root.Composing.Palette[1]), Is.False, "An Archer is 40.");
+            Assert.That(root.Composing.CanAfford(root.Composing.Palette[7]), Is.False, "An Archer is 40.");
 
-            Assert.That(PriceColour(root.Palette.Entries[1]), Is.Not.EqualTo(PriceColour(root.Palette.Entries[0])));
+            Assert.That(PriceColour(root.Palette.Entries[7]), Is.Not.EqualTo(PriceColour(root.Palette.Entries[0])));
 
             Select(root, ArcherId);
             root.Pointer.Point(ScreenPointOf(root, FreeColumn, FreeRow));
@@ -238,16 +269,16 @@ namespace Tests.PlayMode
         {
             MatchRoot root = Building(Opening());
 
-            Color before = PriceColour(root.Palette.Entries[2]);
+            Color before = PriceColour(root.Palette.Entries[8]);
 
-            Assert.That(root.Composing.CanAfford(root.Composing.Palette[2]), Is.True, "A Mage is 92 of 100.");
+            Assert.That(root.Composing.CanAfford(root.Composing.Palette[8]), Is.True, "A Mage is 92 of 100.");
 
             Select(root, SoldierId);
             root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
 
             Assert.That(root.Composing.Gold, Is.EqualTo(70));
-            Assert.That(root.Composing.CanAfford(root.Composing.Palette[2]), Is.False);
-            Assert.That(PriceColour(root.Palette.Entries[2]), Is.Not.EqualTo(before));
+            Assert.That(root.Composing.CanAfford(root.Composing.Palette[8]), Is.False);
+            Assert.That(PriceColour(root.Palette.Entries[8]), Is.Not.EqualTo(before));
         }
 
         [Test]
@@ -257,15 +288,23 @@ namespace Tests.PlayMode
 
             root.Pointer.Shortcut(1);
 
-            Assert.That(root.Palette.Selected.Id, Is.EqualTo(ArcherId), "The second entry.");
+            Assert.That(root.Palette.Selected.Id, Is.EqualTo(DruidId), "The second entry.");
 
             root.Pointer.Shortcut(1);
 
             Assert.That(root.Palette.Selected, Is.Null);
 
+            // A key past the end of the bar is a no-op, so it is pressed while
+            // nothing is selected: pressed over a selection it would leave that
+            // selection standing and prove nothing about the key.
+            root.Pointer.Shortcut(TowerPalette.ShortcutCount);
+
+            Assert.That(root.Palette.Selected, Is.Null, "There is no tenth tower and no tenth key.");
+
             root.Pointer.Shortcut(TowerPalette.ShortcutCount - 1);
 
-            Assert.That(root.Palette.Selected, Is.Null, "There is no ninth tower.");
+            Assert.That(root.Palette.Selected.Id, Is.EqualTo(MageId),
+                "The ninth entry. Nine lines and nine shortcuts, so the last key reaches the last root.");
         }
 
         /// <summary>
@@ -314,9 +353,17 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// A tower with nothing above it offers nothing, and neither does one
-        /// whose rung the purse cannot cover. Prevention at a hex.
+        /// A tower whose rung the purse cannot cover offers nothing. Prevention
+        /// at a hex.
         /// </summary>
+        /// <remarks>
+        /// <b>The other half of this went with the ninth line.</b> It used to
+        /// open on a Soldier, which had nothing above it at all, and every one
+        /// of the nine roots has two rungs above it now — so a tower with an
+        /// empty ladder is not something the bar can put on the board any more.
+        /// What is left is the purse, which is the half that was ever about
+        /// prevention.
+        /// </remarks>
         [Test]
         public void ATowerWithNoAffordableUpgradeOffersNone()
         {
@@ -324,14 +371,18 @@ namespace Tests.PlayMode
 
             Select(root, SoldierId);
             root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
-            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
-
-            Assert.That(root.Palette.IsOffering, Is.False, "The ladder carries no edge out of a Soldier.");
 
             Select(root, ArcherId);
             root.Pointer.Click(ScreenPointOf(root, SecondColumn, SecondRow));
 
             Assert.That(root.Composing.Gold, Is.EqualTo(35), "A hundred and five, less 30 and 40.");
+
+            Assert.That(root.Composing.UpgradesOn(FreeColumn, FreeRow), Is.Empty, "A Sergeant is 41.");
+
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+
+            Assert.That(root.Palette.IsOffering, Is.False, "A Soldier with no reachable rung offers none.");
+
             Assert.That(root.Composing.UpgradesOn(SecondColumn, SecondRow), Is.Empty, "A Ranger is 40.");
 
             root.Pointer.Click(ScreenPointOf(root, SecondColumn, SecondRow));

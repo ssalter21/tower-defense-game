@@ -3,11 +3,12 @@
 # here: content/units.txt is the roster, docs/roster.md is the design behind it,
 # and this file exists for one reason only.
 #
-# THAT REASON: every row of content/units.txt authors no bubble at all, so
-# nothing in the recorded match is ever slowed, hastened, cursed or shielded --
-# and a frame of the recorded match is therefore a frame of none of that
-# happening. What a slowed creep and a shielded creep look like cannot be
-# photographed off a match in which neither exists.
+# THAT REASON: the only bubble content/units.txt authors is the Mage's splash,
+# which is damage and lands instantly, so nothing in the recorded match is ever
+# slowed, hastened, cursed or shielded -- and a frame of the recorded match is
+# therefore a frame of none of that happening. What a slowed creep and a
+# shielded creep look like cannot be photographed off a match in which neither
+# exists.
 #
 # The rows below are content/units.txt with two of them changed and every other
 # character identical. The ids are the shipped ids, so the recorded board, the
@@ -42,9 +43,32 @@ layout 3
 unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0  0       1        2000          self          friend         30            shield         40               90
 unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0  0       1        none          none          none           0             none           0                0
 unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        0             target        enemy          0             speed          -40              90
-unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        none          none          none           0             none           0                0
+unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        1000          target        enemy          0             damage         0                0
 unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25  0       1        none          none          none           0             none           0                0
 unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0  0       1        none          none          none           0             none           0                0
 unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20  0       1        none          none          none           0             none           0                0
 unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45  0       1        none          none          none           0             none           0                0
 unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit  15   sergeant          placed  0      0      1000   11        7       5          60      90      hitscan     0       0      41    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  16   shield-wall       placed  0      0      1000   11        7       5          60      90      hitscan     0       0      41    impact  none       0  0       1        1000          self          enemy          15            speed          -50              20
+unit  17   barbarian         placed  0      0      1000   45        20      12         200     300     hitscan     0       0      33    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  18   berserker         placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  19   slam              placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        1000          self          enemy          0             damage         0                0
+unit  20   paladin           placed  0      0      1000   24        0       0          120     180     hitscan     0       0      37    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  21   templar           placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  22   blessing          placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        2000          self          friend         30            cooldown       -25              30
+unit  23   cleric            placed  0      0      3200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  24   bishop            placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  25   consecration      placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        3000          self          enemy          30            armour         -30              30
+unit  26   sorcerer          placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             damage         0                0
+unit  27   unravel           placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             armour         -60              150
+unit  28   druid             placed  0      0      3600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  29   elder             placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0
+unit  30   overgrowth        placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        60000         self          enemy          30            speed          -20              30
+unit  31   overwatch         placed  0      0      8000   60        0       0          500     700     hitscan     0       0      60    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit  32   rogue             placed  0      0      2200   9         0       0          40      60      hitscan     0       0      33    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit  33   cutthroat         placed  0      0      2200   7         0       0          40      60      hitscan     0       0      43    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit  34   fan-of-knives     placed  0      0      2200   7         0       0          40      60      hitscan     0       0     129    pierce  none       0  0       3        none          none          none           0             none           0                0
+unit  35   engineer          placed  0      0      4000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  36   artificer         placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  37   mortar            placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        1500          target        enemy          0             damage         0                0

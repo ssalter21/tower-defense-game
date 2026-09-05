@@ -600,6 +600,16 @@ namespace Tests.EditMode
         /// which no other assertion here would notice.
         /// </para>
         /// <para>
+        /// <b>A row on <see cref="UnboundUnits"/>'s list is the one exception,
+        /// and it is held the other way round.</b> An anchor is a point on a
+        /// bone or inside a held prop, so it is chosen by whoever chooses the
+        /// prop — and a row drawing the stand-in is a row nobody has chosen one
+        /// for. Such a row is required to name NO anchor, which is the fixed
+        /// height above its own root, and reads as undressed exactly as its
+        /// empty hands and its bind pose do. Issue #271 empties that list, and
+        /// this assertion covers every placed row again the moment it does.
+        /// </para>
+        /// <para>
         /// Built through the real <see cref="TowerView"/>, so what is asserted
         /// is the resolution the game performs and not a second copy of it.
         /// <c>BuildStatic</c> rather than <c>BuildAnimated</c> because the
@@ -636,6 +646,16 @@ namespace Tests.EditMode
                 }
 
                 UnitArt unit = art.ArtFor(type.Id);
+
+                if (UnboundUnits.Lists(type.Id))
+                {
+                    Assert.That(unit.EffectAnchor.IsSet, Is.False,
+                        $"unit {type.Id} ({type.Label}) is listed as having no art yet and names an "
+                        + "anchor anyway. An anchor is a point on a prop nobody has chosen for this row, "
+                        + "so there is nothing for it to be a point on");
+
+                    continue;
+                }
 
                 Assert.That(unit.EffectAnchor.IsSet, Is.True,
                     $"unit {type.Id} ({type.Label}) stands on the board and shoots, and its art names "

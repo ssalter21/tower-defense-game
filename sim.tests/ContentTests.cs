@@ -72,12 +72,45 @@ public class ContentTests
     /// </summary>
     private const int Mage = 4;
 
+    /// <summary>The Archer line's capstone, which is the longest reach on the roster.</summary>
+    private const int Overwatch = 31;
+
+    /// <summary>The Engineer, whose shell is the longest thing in the air.</summary>
+    private const int Engineer = 35;
+
+    /// <summary>
+    /// The Mage line, which is the one line the cost rule does not price. The
+    /// Mage is priced for a splash the bodies term cannot count, and the two
+    /// rungs above it carry that price scaled by the cooldown they changed, so
+    /// all three sit outside the rule together.
+    /// </summary>
+    private static readonly int[] TheMageLine = { Mage, 26 /* sorcerer */, 27 /* unravel */ };
+
+    /// <summary>
+    /// The nine tower lines: an attack type and three rungs each, in ascending
+    /// order. Transcribed from docs/roster.md's index rather than walked out of
+    /// content/upgrades.txt, because reading the lines off the ladder would be
+    /// checking that file against itself.
+    /// </summary>
+    private static readonly (string Name, AttackType Attack, int[] Rungs)[] TheNineLines =
+    {
+        ("Knight", AttackType.Impact, new[] { 11, 15, 16 }),
+        ("Barbarian", AttackType.Impact, new[] { 17, 18, 19 }),
+        ("Engineer", AttackType.Impact, new[] { 35, 36, 37 }),
+        ("Archer", AttackType.Pierce, new[] { 3, 14, 31 }),
+        ("Rogue", AttackType.Pierce, new[] { 32, 33, 34 }),
+        ("Mage", AttackType.Magic, new[] { 4, 26, 27 }),
+        ("Paladin", AttackType.Magic, new[] { 20, 21, 22 }),
+        ("Cleric", AttackType.Magic, new[] { 23, 24, 25 }),
+        ("Druid", AttackType.Magic, new[] { 28, 29, 30 }),
+    };
+
     [Fact]
     public void The_committed_unit_table_parses()
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(9, table.Count);
+        Assert.Equal(32, table.Count);
         Assert.Equal("minion", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
@@ -85,21 +118,21 @@ public class ContentTests
         Assert.Equal(33, table.ById(4).ProjectileFlightTicks);
 
         // Five of them walk, which is what an offering is drawn out of, and
-        // four stand. The walker count is what lets the ruleset ask for three
-        // ordinary options a round, and it is the tightest it has ever been:
-        // five walkers against three options puts most of the roster on every
-        // menu.
+        // twenty-seven stand -- nine tower lines of three rungs each. The
+        // walker count is what lets the ruleset ask for three ordinary options
+        // a round, and it is the tightest it has ever been: five walkers
+        // against three options puts most of the roster on every menu.
         //
-        // The Ranger is the fourth thing that stands and it changed neither of
-        // those, which is the point of a tier being a row: an offering is drawn
-        // from the walkers alone, so a new tower does not enter a menu and
-        // cannot move a draw.
+        // The twenty-three rows the nine lines added changed neither of those,
+        // which is the point of a tier being a row: an offering is drawn from
+        // the walkers alone, so a new tower does not enter a menu and cannot
+        // move a draw.
         //
         // OBSERVED: change the skeleton's role from moving to placed in
         // content/units.txt. The walker count goes red, 5 against 4, and the
         // offering's own refusal follows it in BuildPhaseTests.
         Assert.Equal(5, table.Types.Count(row => row.Role == UnitRole.Moving));
-        Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
+        Assert.Equal(27, table.Types.Count(row => row.Role == UnitRole.Placed));
 
         // The five retired ids are gone and stay gone. Ids are never reused, so
         // these are not holes waiting to be filled -- a stored record pinning
@@ -143,18 +176,17 @@ public class ContentTests
     [Fact]
     public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
     {
-        // Eight units and no nineteenth column. Every attack type and every
-        // armour type is on the roster, so nothing in the matrix is a cell no
-        // committed unit can reach -- and under the signed roster's one-type-
-        // per-tower-line rule the three attack types are covered exactly once
-        // each rather than lopsidedly, which is what makes a tower's line
+        // Every attack type and every armour type is on the roster, so nothing
+        // in the matrix is a cell no committed unit can reach -- and under the
+        // signed roster's one-type-per-tower-line rule a line carries one type
+        // from its root to its capstone, which is what makes a tower's line
         // readable off the board.
         //
-        // OBSERVED: give the Mage `pierce` instead of `magic` -- one word in
-        // content/units.txt. The distinct-attack-types assertion goes red
-        // straight away, because with three towers and three types there is no
-        // second row carrying magic to hide behind. That is the whole gain of
-        // one type per line: the roster cannot lose a type quietly.
+        // OBSERVED: give the Sorcerer `pierce` instead of `magic` -- one word
+        // in content/units.txt. The per-line assertion below goes red on the
+        // Mage line, because a line's type is held against every rung of it.
+        // That is the whole gain of one type per line: the roster cannot lose a
+        // type quietly.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
         Assert.Equal(UnitTypeTable.CurrentLayout, table.Layout);
@@ -175,9 +207,10 @@ public class ContentTests
 
         // The ends of each axis, named. The Skeleton Scout is the cheapest body
         // and the fastest; the Skeleton Warrior is the dearest, the slowest and
-        // carries the most armour; the Mage outranges the other towers and is
-        // the only one that puts anything in the air; the Soldier is the
-        // shortest-ranged and the cheapest thing that stands.
+        // carries the most armour; Overwatch outranges every other tower at
+        // eight hexes and the Engineer's shell spends the longest in the air;
+        // the Soldier is the cheapest thing that stands and shares the shortest
+        // reach with the three other melee rungs.
         //
         // OBSERVED: take the Warrior's forty-five points of armour down to
         // zero. Its own row goes red, 45 against 0, and the dearest-walker
@@ -191,24 +224,39 @@ public class ContentTests
             table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.SpeedMilliHexPerTick),
             table.ById(13).SpeedMilliHexPerTick);
         Assert.Equal(45, table.ById(13).Armour);
-        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(4).RangeMilliHex);
-        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
-        Assert.Equal(table.Types.Max(row => row.ProjectileFlightTicks), table.ById(4).ProjectileFlightTicks);
+        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(Overwatch).RangeMilliHex);
+        Assert.Equal(8000, table.ById(Overwatch).RangeMilliHex);
+        Assert.Equal(AttackType.Magic, table.ById(Mage).AttackType);
+        Assert.Equal(
+            table.Types.Max(row => row.ProjectileFlightTicks),
+            table.ById(Engineer).ProjectileFlightTicks);
         Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
         Assert.Equal(
             table.Types.Where(row => row.Role == UnitRole.Placed).Min(row => row.RangeMilliHex),
             table.ById(11).RangeMilliHex);
 
-        // One attack type per tower line, spelled out. This is the rule the
+        // One attack type per tower line, line by line. This is the rule the
         // roster was signed under and it is what lets a player read what a
-        // tower does to a body from which line it came from.
+        // tower does to a body from which line it came from. Impact three
+        // times, pierce twice and magic four times: magic is over-represented
+        // on purpose, because the creep side is undead and mostly armoured.
         //
-        // OBSERVED: give the Soldier `pierce`. This goes red on its own row,
-        // Impact against Pierce, and the distinct-types assertion above goes
-        // red with it because impact then belongs to nothing.
-        Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
-        Assert.Equal(AttackType.Pierce, table.ById(3).AttackType);
-        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
+        // OBSERVED: give the Soldier `pierce`. This goes red naming the Knight
+        // line, Impact against Pierce, because a line's type is held against
+        // every rung of it rather than against the set of types on the roster.
+        foreach ((string name, AttackType attack, int[] rungs) in TheNineLines)
+        {
+            Assert.Equal(3, rungs.Length);
+
+            foreach (int rung in rungs)
+            {
+                Assert.Equal(attack, table.ById(rung).AttackType);
+            }
+        }
+
+        Assert.Equal(3, TheNineLines.Count(line => line.Attack == AttackType.Impact));
+        Assert.Equal(2, TheNineLines.Count(line => line.Attack == AttackType.Pierce));
+        Assert.Equal(4, TheNineLines.Count(line => line.Attack == AttackType.Magic));
     }
 
     [Fact]
@@ -289,9 +337,13 @@ public class ContentTests
         // everything else, because no column said how many bodies a shot hit.
         // One does now, so the rule reads the row instead of guessing at it.
         //
-        // What that exposed is the Mage, and it is asserted below rather than
-        // tuned away: see The_mage_is_priced_for_a_splash_nobody_has_authored.
-        // Every other placed row is priced on the shots it actually fires.
+        // What that exposed is the Mage line, and it is asserted below rather
+        // than tuned away: see The_mage_carries_its_splash_and_still_costs
+        // _what_a_splash_is_not_priced_at. The Mage is priced for a splash the
+        // bodies term cannot count, and the Sorcerer and Unravel are that price
+        // scaled by the cooldown they changed -- so the three of them are the
+        // one line the rule does not reach, and every other placed row is
+        // priced on the shots it actually fires.
         //
         // OBSERVED: halve the Archer's cost, 40 to 20, in content/units.txt.
         // This goes red naming it -- "archer costs 20 gold, which is 5 damage a
@@ -300,14 +352,10 @@ public class ContentTests
         // anybody plays a round of it.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        foreach (UnitType tower in table.Types.Where(row => row.Role == UnitRole.Placed && row.Id != Mage))
+        foreach (UnitType tower in table.Types
+                     .Where(row => row.Role == UnitRole.Placed && !TheMageLine.Contains(row.Id)))
         {
-            int bodies = tower.Targets;
-            int average = (tower.DamageMin + tower.DamageMax) / 2;
-
-            // Damage a second, times bodies, at thirty ticks a second. Held as
-            // one integer expression so no division rounds before the compare.
-            int perSecondTimesBodies = average * bodies * Match.TicksPerSecond / tower.CooldownTicks;
+            int perSecondTimesBodies = DamageASecondTimesBodies(tower);
 
             Assert.True(
                 Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
@@ -347,8 +395,7 @@ public class ContentTests
 
         foreach (UnitType tower in table.Types)
         {
-            int perSecondTimesBodies =
-                (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
+            int perSecondTimesBodies = DamageASecondTimesBodies(tower);
 
             Assert.True(
                 Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
@@ -357,35 +404,67 @@ public class ContentTests
     }
 
     [Fact]
-    public void The_mage_is_priced_for_a_splash_nobody_has_authored()
+    public void The_mage_carries_its_splash_and_still_costs_what_a_splash_is_not_priced_at()
     {
-        // THE FINDING, PINNED RATHER THAN TUNED AWAY. The Mage costs 92 gold,
-        // which is three bodies' worth of the cost rule, and it fires one
-        // projectile at one creep: its splash has been a design statement in
-        // docs/roster.md -- "splash of one additional hex", radius 1000 -- and
-        // never a thing the simulation did. The old bodies term guessed three
-        // from the delivery column and hid that; the targets column does not.
+        // THE FINDING, PINNED RATHER THAN TUNED AWAY -- and half of it has now
+        // been answered. The Mage costs 92 gold, which is three bodies' worth
+        // of the cost rule, and for as long as the roster has existed it fired
+        // one projectile at one creep: the splash was a design statement in
+        // docs/roster.md and never a thing the simulation did.
         //
-        // Layout 3 is the first schema that could carry the splash, as a bubble
-        // on the target with a radius and a damage payload. Authoring it, or
-        // repricing the row to what it does, is a design decision, and #216
-        // took neither: this is the standing question in the artefact rather
-        // than a number quietly moved to make an assertion green.
+        // It is a thing the simulation does now. The row carries the bubble the
+        // roster describes -- origin target, radius 1000, payload damage -- so
+        // the shot lands its roll on everything within a hex of what it hit.
         //
-        // OBSERVED: it goes red both ways. Author the Mage a bubble and the
-        // ratio stops being three; reprice it to 30 and the same. Either edit
-        // is somebody deciding what a Mage is, and either edit is meant to
-        // arrive here.
-        UnitType mage = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile)).ById(Mage);
+        // WHAT IS STILL OPEN IS THE PRICE, ON PURPOSE. A bubble is one shot
+        // drawing one roll however many bodies it encloses, so the targets
+        // column is 1 and the rule reads 30 gold against the 92 on the row.
+        // Repricing a tower whose value is a radius is exactly what this rule
+        // is worst at, and the 92 waits on a balance sweep that can derive it.
+        //
+        // OBSERVED: take the bubble off the Mage and the first half goes red;
+        // reprice the row to 30 and the second half does. Either edit is
+        // somebody deciding what a Mage is, and either edit is meant to arrive
+        // here.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UnitType mage = table.ById(Mage);
+
+        Assert.True(mage.Bubble.Present, "the Mage's splash is a bubble on the row");
+        Assert.Equal(1000, mage.Bubble.RadiusMilliHex);
+        Assert.Equal(BubbleOrigin.Target, mage.Bubble.Origin);
+        Assert.Equal(BubbleAffects.Enemy, mage.Bubble.Affects);
+        Assert.Equal(BubblePayload.Damage, mage.Bubble.Payload);
+        Assert.True(mage.Bubble.FiresWithTheAttack, "a splash goes off with the shot rather than on a clock");
 
         Assert.Equal(1, mage.Targets);
-        Assert.False(mage.Bubble.Present);
 
-        int perSecond = (mage.DamageMin + mage.DamageMax) / 2 * Match.TicksPerSecond / mage.CooldownTicks;
+        // The whole line, both numbers, in the order the ids ascend: the Mage,
+        // the Sorcerer and Unravel. The two above it are the Mage at a shorter
+        // cooldown, so 92 scaled by 54 over 40 is the 124 they carry, and the
+        // rule reads 41 against it. Held as two vectors rather than as a
+        // tolerance, because a rung drifting anywhere at all is a rung leaving
+        // this exemption and it should say so by name.
+        Assert.Equal(
+            new[] { 92, 124, 124 },
+            TheMageLine.Select(rung => table.ById(rung).Cost));
 
-        Assert.Equal(30, perSecond / 5);
-        Assert.Equal(92, mage.Cost);
+        Assert.Equal(
+            new[] { 30, 41, 41 },
+            TheMageLine.Select(rung => DamageASecondTimesBodies(table.ById(rung)) / 5));
     }
+
+    /// <summary>
+    /// The top of the cost rule for one placed row: the middle of its damage
+    /// roll, times the bodies one shot hits, over the ticks between its shots,
+    /// at thirty ticks a second. The gold the rule asks for is this over five.
+    /// </summary>
+    /// <remarks>
+    /// One integer expression, so no division rounds before a comparison, and
+    /// one copy of it, so the rule and the two tests that single rows out of it
+    /// cannot drift apart.
+    /// </remarks>
+    private static int DamageASecondTimesBodies(UnitType tower) =>
+        (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
 
     [Fact]
     public void Every_damage_and_health_number_in_the_committed_table_is_at_the_tenfold_scale()

@@ -267,12 +267,25 @@ public class ReplayBundleTests
         // LAYOUT is not a retired record.
         Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
 
-        // FIFTEEN AND NOT TWELVE, and the difference is the whole point of the
-        // plane this version predates. A version-1 bundle carries no levels, so
-        // it replays the folded board flat -- and flat, the towers lose the
-        // height their range was priced with and three more creeps get through.
-        // While the map was flat this assertion could not tell the two apart.
-        Assert.Equal(15, old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked);
+        // IT REPLAYS, AND WHAT IT LEAKS NO LONGER TELLS THE PLANE APART. A
+        // version-1 bundle carries no levels, so it replays the folded board
+        // flat, and flat the towers lose the height their range was priced with:
+        // this leaked fifteen against the folded twelve while the committed
+        // match was tuned to a partial break. It leaks three either way now,
+        // because the Mage's splash stops nearly everything on both boards --
+        // see MatchTests.The_match_is_under_the_partial_break_it_is_tuned_for
+        // _and_that_is_the_splash, which is the same finding read off the same
+        // run.
+        //
+        // The reading is asserted rather than dropped, and so is the fact that
+        // the two agree: what proves the flat branch here is the level plane
+        // above -- every cell at level zero and a map hash that checks out under
+        // layout 1 -- and the leak count is a reading beside it. When the match
+        // is retuned the two will part again, and this goes red saying so.
+        int flat = old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked;
+
+        Assert.Equal(3, flat);
+        Assert.Equal(TheMatch.LeakedInTheCommittedRun, flat);
     }
 
     [Fact]

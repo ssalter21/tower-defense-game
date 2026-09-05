@@ -45,10 +45,11 @@ A spec names an output directory, a sheet width, and the shots:
   same, with the cell under the pointer lit through `BuildBoard.Lit`) or `build-offer` (the upgrade ladder
   open). `build-hover` spends less on creeps than it could, on purpose: a hex lights only where the rules would
   take a tower, so a state that had spent the last of the gold refuses to hover at all.
-- **`place`** — which tower a composed state buys, by its label in `content/units.txt`. The ladder has one edge
-  in it today, so a shot of the upgrade offer is a shot of an **archer** and of nothing else; a shot that asks
-  for the offer and does not get it is refused rather than written, because an offer that did not open renders
-  as an ordinary build phase.
+- **`place`** — which tower a composed state buys, by its label in `content/units.txt`. Every one of the nine
+  roots has a rung above it, so any of them can be the subject of an upgrade shot; the committed sheet stays on
+  the **archer** so that a candidate layout is compared against the same picture. A shot that asks for the
+  offer and does not get it is refused rather than written, because an offer that did not open renders as an
+  ordinary build phase.
 - **`candidate`** — the `UiPreviewCapture.IUiPreviewLayout` to run, by type name. Empty means the chrome the
   game ships, which is what every candidate is compared against.
 

@@ -25,7 +25,7 @@ not an omission, it is the ask** — the blanks are the agenda for the next conv
 `live` — there is a row in `content/units.txt`. `retired` — there was one, and there is not now.
 
 **Ids come from `units.txt`'s one global space and ascend forever.** Never reused, never an index, never
-reserved in advance — the next unit built takes id 15, whatever it is. **A tier is its own id and its own row**;
+reserved in advance — the next unit built takes id 38, whatever it is. **A tier is its own id and its own row**;
 the Sergeant is not the Soldier with a flag set.
 
 ## What things cost
@@ -64,14 +64,21 @@ nothing.
 
 **Scarcity is the grant schedule, not the price, and that is deliberate.** Five of the nine capstones change
 neither the damage roll nor the bodies a shot hits — Shield Wall, Blessing, Consecration, Overgrowth and
-Unravel are auras or debuffs — so the damage rule would price each of them *identically to the rung below it*.
+Unravel are auras or debuffs — so the damage rule prices each of them *identically to the rung below it*.
 That is not an oversight to be corrected with an authored premium. What makes spending a token a decision is
 that there are three of them and nine places to put one. **Do not author a capstone premium**; report what the
 sweep says about a capstone and leave the number alone.
 
-**The four that do move the rule's inputs still price under it** — Slam and Mortar add bodies, Fan of Knives
-sets `targets` to 3, and Overwatch changes the damage roll and the cooldown — but nothing is *charged* that
-price, because a capstone is bought with a token. The rule's output on those rows is a reading, not a bill.
+> **Seven price flat, not five, and the extra two are Slam and Mortar.** Both spread one roll over a bubble,
+> and the rule's bodies term is the `targets` column — which a bubble row must leave at 1, because a damage
+> bubble is *one* shot drawing *one* roll. So the rule counts one body for a swing that hits everything
+> touching the Barbarian, and the row prices flat against the Berserker. **This is the Mage's gap again**, one
+> rung higher: a bubble's worth is a radius, and radius is what the rule does not price. Measured when the
+> rows were authored on 5 September 2026, and left standing.
+
+**The two that do move the rule's inputs still price under it** — Fan of Knives sets `targets` to 3, and
+Overwatch changes the damage roll and the cooldown — but nothing is *charged* that price, because a capstone
+is bought with a token. The rule's output on those rows is a reading, not a bill.
 
 ## The clock
 
@@ -105,29 +112,29 @@ pass that lands between ticks exists as well. A merely-different speed silently 
 | 12 | Skeleton | creep | — | live | `skeleton` |
 | 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` |
 | 14 | Ranger | tower | 2 | live | `ranger` |
-| — | Sergeant | tower | 2 | signed | `sergeant` |
-| — | Shield Wall | tower | 3 | signed | `shield-wall` |
-| — | Barbarian | tower | 1 | signed | `barbarian` |
-| — | Berserker | tower | 2 | signed | `berserker` |
-| — | Slam | tower | 3 | signed | `slam` |
-| — | Paladin | tower | 1 | signed | `paladin` |
-| — | Templar | tower | 2 | signed | `templar` |
-| — | Blessing | tower | 3 | signed | `blessing` |
-| — | Cleric | tower | 1 | signed | `cleric` |
-| — | Bishop | tower | 2 | signed | `bishop` |
-| — | Consecration | tower | 3 | signed | `consecration` |
-| — | Sorcerer | tower | 2 | signed | `sorcerer` |
-| — | Unravel | tower | 3 | signed | `unravel` |
-| — | Druid | tower | 1 | signed | `druid` |
-| — | Elder | tower | 2 | signed | `elder` |
-| — | Overgrowth | tower | 3 | signed | `overgrowth` |
-| — | Overwatch | tower | 3 | signed | `overwatch` |
-| — | Rogue | tower | 1 | signed | `rogue` |
-| — | Cutthroat | tower | 2 | signed | `cutthroat` |
-| — | Fan of Knives | tower | 3 | signed | `fan-of-knives` |
-| — | Engineer | tower | 1 | signed | `engineer` |
-| — | Artificer | tower | 2 | signed | `artificer` |
-| — | Mortar | tower | 3 | signed | `mortar` |
+| 15 | Sergeant | tower | 2 | live | `sergeant` |
+| 16 | Shield Wall | tower | 3 | live | `shield-wall` |
+| 17 | Barbarian | tower | 1 | live | `barbarian` |
+| 18 | Berserker | tower | 2 | live | `berserker` |
+| 19 | Slam | tower | 3 | live | `slam` |
+| 20 | Paladin | tower | 1 | live | `paladin` |
+| 21 | Templar | tower | 2 | live | `templar` |
+| 22 | Blessing | tower | 3 | live | `blessing` |
+| 23 | Cleric | tower | 1 | live | `cleric` |
+| 24 | Bishop | tower | 2 | live | `bishop` |
+| 25 | Consecration | tower | 3 | live | `consecration` |
+| 26 | Sorcerer | tower | 2 | live | `sorcerer` |
+| 27 | Unravel | tower | 3 | live | `unravel` |
+| 28 | Druid | tower | 1 | live | `druid` |
+| 29 | Elder | tower | 2 | live | `elder` |
+| 30 | Overgrowth | tower | 3 | live | `overgrowth` |
+| 31 | Overwatch | tower | 3 | live | `overwatch` |
+| 32 | Rogue | tower | 1 | live | `rogue` |
+| 33 | Cutthroat | tower | 2 | live | `cutthroat` |
+| 34 | Fan of Knives | tower | 3 | live | `fan-of-knives` |
+| 35 | Engineer | tower | 1 | live | `engineer` |
+| 36 | Artificer | tower | 2 | live | `artificer` |
+| 37 | Mortar | tower | 3 | live | `mortar` |
 | — | Necromancer | creep | — | signed | `necromancer` |
 | — | Bone Golem | creep | — | signed | `bone-golem` |
 | — | Black Knight | creep | — | signed | `black-knight` |
@@ -162,7 +169,8 @@ reading the file and for error messages; nothing in the simulation branches on i
 hash.
 
 **The ladder that joins them is [`content/upgrades.txt`](../content/upgrades.txt)**, one `upgrade <from> <to>`
-row per edge, printed by `./tools/show-ladder.ps1`. It holds one edge today: `archer → ranger`.
+row per edge, printed by `./tools/show-ladder.ps1`. It holds **eighteen edges**: two per tower line, so nine
+roots may be placed and every other rung is reached by standing the one below it and upgrading.
 
 ---
 
@@ -225,10 +233,17 @@ and not this one.
 the turret. That is the one place on this page the socket as built does not reach, and it is written on that
 rung's `Needs` line rather than settled here.
 
-**Every tier on this page is authorable as of layout 3 and playable as of #217**, which built the timed
-effect three of them rest on; see [the column
-list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is a name and a set of
-signed numbers.
+**Every tier on this page is a row in `content/units.txt` as of 5 September 2026**, at ids 15 to 37 in the
+order the lines are written above. Layout 3 authors every shape and #217 plays them; see [the column
+list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is its art.
+
+> **Windup and backswing are the one pair of numbers this page has not signed.** The Knight and Barbarian
+> lines carry both, and so do the Mage and the Archer — which the Sorcerer, Unravel and the Ranger inherit.
+> **Sixteen rows carry zero**: the Paladin, Cleric, Druid, Rogue and Engineer lines, which say nothing about
+> either, and Overwatch, whose two rungs below carry 9 and 6 and whose own tuning is a different shape. Zero is
+> a tower that fires the tick it acquires and goes straight back on cooldown — the absence and not a choice.
+> How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
+> ticket that picks a line's clips is where a real number is signed.
 
 ## The Knight line — impact, melee
 
@@ -251,7 +266,7 @@ signed numbers.
 > against 40 — identical value per gold, with a third of the reach. You buy Soldiers because they are cheap,
 > not because they are good, and the melee line earns its identity at tiers 2 and 3 rather than here.
 
-### Sergeant · tier 2 · status signed
+### 15 · Sergeant · tier 2 · status live
 
 - **Does** — swings faster. One stat.
 - **Looks** — `Knight`, `knight_texture_alt_A`, and a `shield_square` in the off hand.
@@ -259,7 +274,7 @@ signed numbers.
 - **Needs** — nothing. A cooldown is a column.
 - **Open** — none.
 
-### Shield Wall · tier 3 · status signed
+### 16 · Shield Wall · tier 3 · status live
 
 - **Does** — every creep touching him walks at half speed while it is touching him, and he keeps swinging.
 - **Looks** — `Knight`, `knight_texture_alt_B`, shield raised (`Melee_Blocking`), visor closed. A persistent
@@ -274,7 +289,7 @@ signed numbers.
 
 ## The Barbarian line — impact, melee, slow and heavy
 
-### Barbarian · tier 1 · status signed
+### 17 · Barbarian · tier 1 · status live
 
 - **Does** — one hex, slow, heavy, one target.
 - **Looks** — `Barbarian`, `axe_2handed`, `Melee_2H_Attack_Chop`.
@@ -282,7 +297,7 @@ signed numbers.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Berserker · tier 2 · status signed
+### 18 · Berserker · tier 2 · status live
 
 - **Does** — hits harder. One stat.
 - **Looks** — `Barbarian`, `barbarian_texture_alt_A`, `axe_2handed_Large`.
@@ -290,7 +305,7 @@ signed numbers.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Slam · tier 3 · status signed
+### 19 · Slam · tier 3 · status live
 
 - **Does** — every swing hits everything touching him. The same roll, every body.
 - **Looks** — the **`Barbarian_Large`** model, `Melee_2H_Slam`. This is the line's second model, and it is on
@@ -304,15 +319,15 @@ signed numbers.
 
 ## The Paladin line — magic, melee
 
-### Paladin · tier 1 · status signed
+### 20 · Paladin · tier 1 · status live
 
 - **Does** — one hex, holy damage, one target.
 - **Looks** — `Paladin`, bare head, `paladin_hammer`.
-- **Numbers** — range 1000, cooldown 24, damage 120–180, hitscan, magic, cost ~37.
+- **Numbers** — range 1000, cooldown 24, damage 120–180, windup `_`, backswing `_`, hitscan, magic, cost ~37.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Templar · tier 2 · status signed
+### 21 · Templar · tier 2 · status live
 
 - **Does** — hits harder. One stat.
 - **Looks** — the **`Paladin_with_Helmet`** model, `paladin_hammer` and `paladin_shield`.
@@ -321,7 +336,7 @@ signed numbers.
 - **Open** — the second model lands at tier 2 here rather than tier 3, because the helmet is the smaller of
   the two changes this line has available and the statue is the larger.
 
-### Blessing · tier 3 · status signed
+### 22 · Blessing · tier 3 · status live
 
 - **Does** — every tower within two hexes fires a quarter faster, always.
 - **Looks** — `Paladin_with_Helmet`, `paladin_texture_B`, `paladin_book` open, and the gold `paladin_statue`
@@ -338,15 +353,15 @@ signed numbers.
 
 ## The Cleric line — magic, ranged
 
-### Cleric · tier 1 · status signed
+### 23 · Cleric · tier 1 · status live
 
 - **Does** — three hexes, holy bolt, one target.
 - **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`.
-- **Numbers** — range 3200, cooldown 30, damage 130–190, hitscan, magic, cost ~32.
+- **Numbers** — range 3200, cooldown 30, damage 130–190, windup `_`, backswing `_`, hitscan, magic, cost ~32.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Bishop · tier 2 · status signed
+### 24 · Bishop · tier 2 · status live
 
 - **Does** — reaches further. One stat.
 - **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`.
@@ -356,7 +371,7 @@ signed numbers.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Consecration · tier 3 · status signed
+### 25 · Consecration · tier 3 · status live
 
 - **Does** — every undead within three hexes loses a third of its armour while it is there.
 - **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`, and the `Cleric_Font` on the tile beside him, light
@@ -409,13 +424,14 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 > gates this row: range may become an input to the cost algorithm, or the algorithm may be replaced by
 > something derived from **many simulations rather than from a row's stats**.
 
-### Overwatch · tier 3 · status signed
+### 31 · Overwatch · tier 3 · status live
 
 - **Does** — sees the whole leg. Slow, enormous single shots from wherever he is stood. **This is where the
   line's slow-and-heavy tuning lives.**
 - **Looks** — the **`Marksman`** model, prone-ish `Ranged_2H_Aiming`, holding **`crossbow_2handed`** from the
   Adventurers pack.
-- **Numbers** — range **8000**, cooldown 60, damage 500–700, hitscan, pierce. Cost ~60.
+- **Numbers** — range **8000**, cooldown 60, damage 500–700, windup `_`, backswing `_`, hitscan, pierce.
+  Cost ~60.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -434,7 +450,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Looks** — the mage, book in hand.
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
-- **Needs** — nothing. The splash is authorable as of layout 3: origin `target`, radius 1000, payload `damage`.
+- **Needs** — nothing. The splash is on the row as of 5 September 2026: origin `target`, radius 1000,
+  payload `damage`.
 - **Answered on 5 September 2026 — author the splash, defer the price.** The bubble is authored: origin
   `target`, radius 1000, payload `damage`. **The cost stays 92 and is not re-derived.** The rule's bodies term
   reads `targets`, which is 1, so the rule says 30 and the row says 92; that gap is now a *known* gap held
@@ -443,22 +460,24 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   trustworthy enough to derive it.** Until then 92 stands and the sweep reports what it is worth.
 - **Open** — the price, and only the price.
 
-### Sorcerer · tier 2 · status signed
+### 26 · Sorcerer · tier 2 · status live
 
 - **Does** — casts faster. One stat.
 - **Looks** — `Mage`, `mage_texture_alt_A`, holding `staff` rather than the open book.
-- **Numbers** — cooldown 54 → **40**. Cost ~124.
+- **Numbers** — cooldown 54 → **40**. Cost **124**, and the splash carries.
 - **Needs** — nothing.
-- **Open** — none.
+- **Open** — the price, as the Mage's is. 124 is the Mage's 92 scaled by the cooldown it changed, so this rung
+  inherits the deferral rather than making a second decision. The damage rule reads 41 against it.
 
-### Unravel · tier 3 · status signed
+### 27 · Unravel · tier 3 · status live
 
 - **Does** — his bolt strips most of the armour off what it hits, for five seconds.
 - **Looks** — the **`Lorekeeper`** model, `Lorekeeper_Tome` open. The Lorekeeper is the one character in the
   roster with **no alternate texture**, which costs nothing: this rung is a model swap.
-- **Numbers** — bubble on target: radius 1000, payload **armour**, magnitude −60, duration 150.
+- **Numbers** — bubble on target: radius 1000, payload **armour**, magnitude −60, duration 150. Cost **124**,
+  the Sorcerer's, since it changes neither the roll nor the bodies.
 - **Needs** — nothing.
-- **Open** — none.
+- **Open** — the price, inherited from the Mage with the rest of the line.
 
 > **The capstone trades the splash for the strip.** One row carries one bubble, so Unravel's bubble replaces
 > the tier-1 splash: the roll lands on one body and the armour strip lands on the hex around it. Keeping both
@@ -471,15 +490,15 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 ## The Druid line — magic, ranged
 
-### Druid · tier 1 · status signed
+### 28 · Druid · tier 1 · status live
 
 - **Does** — three and a half hexes, nature bolt, one target.
 - **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`.
-- **Numbers** — range 3600, cooldown 36, damage 150–210, hitscan, magic, cost ~30.
+- **Numbers** — range 3600, cooldown 36, damage 150–210, windup `_`, backswing `_`, hitscan, magic, cost ~30.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Elder · tier 2 · status signed
+### 29 · Elder · tier 2 · status live
 
 - **Does** — reaches further. One stat.
 - **Looks** — `Druid`, `druid_texture_alt_A`.
@@ -487,7 +506,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Needs** — nothing.
 - **Open** — none.
 
-### Overgrowth · tier 3 · status signed
+### 30 · Overgrowth · tier 3 · status live
 
 - **Does** — the whole board slows a fifth while he stands. Every board.
 - **Looks** — `Druid`, `druid_texture_alt_B`, and a **bare weirwood standing on the tile beside him** —
@@ -514,15 +533,15 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 ## The Rogue line — pierce, short range, very fast
 
-### Rogue · tier 1 · status signed
+### 32 · Rogue · tier 1 · status live
 
 - **Does** — two hexes, three throws a second, light.
 - **Looks** — `Rogue`, `dagger`, the `Throw` clip.
-- **Numbers** — range 2200, cooldown 9, damage 40–60, hitscan, pierce, cost ~33.
+- **Numbers** — range 2200, cooldown 9, damage 40–60, windup `_`, backswing `_`, hitscan, pierce, cost ~33.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Cutthroat · tier 2 · status signed
+### 33 · Cutthroat · tier 2 · status live
 
 - **Does** — throws faster. One stat.
 - **Looks** — the **`Rogue_Hooded`** model, `dagger`.
@@ -531,7 +550,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Open** — the second model lands at tier 2 here, because the hood is this line's smaller change and the
   capstone is carried by a clip and a `targets` column rather than by a body.
 
-### Fan of Knives · tier 3 · status signed
+### 34 · Fan of Knives · tier 3 · status live
 
 - **Does** — three knives a throw, at the three bodies nearest the exit.
 - **Looks** — `Rogue_Hooded`, `rogue_texture_alt_A`, dual `dagger`, `Melee_Dualwield_Attack_Slice` as the
@@ -548,17 +567,18 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 ## The Engineer line — impact, projectile, long range
 
-### Engineer · tier 1 · status signed
+### 35 · Engineer · tier 1 · status live
 
 - **Does** — four hexes, slow lobbed shot, one target.
 - **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing —
   **drawn at 1**, which is 1.13 m tall and 1.00 across, and the shell leaves the top of it at 0.77 m rather
   than leaving the man.
-- **Numbers** — range 4000, cooldown 60, damage 250–350, projectile, flight 45, impact, cost ~30.
+- **Numbers** — range 4000, cooldown 60, damage 250–350, windup `_`, backswing `_`, projectile, flight 45,
+  impact, cost ~30.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
-### Artificer · tier 2 · status signed
+### 36 · Artificer · tier 2 · status live
 
 - **Does** — reaches further. One stat.
 - **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret — the crate is 0.46 m
@@ -568,7 +588,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   ground; until there are two, this rung draws the turret or the crate and not both.
 - **Open** — none.
 
-### Mortar · tier 3 · status signed
+### 37 · Mortar · tier 3 · status live
 
 - **Does** — the shell bursts across a hex and a half.
 - **Looks** — `Engineer`, `engineer_texture_alt_B`, a heavier `turret_base` beside him and the lobbing arc
@@ -887,9 +907,24 @@ the Shade is the fine end of the granularity axis — and the sweep is the Barba
 
 ## The tuning target
 
-**Against the committed defense and wave, twelve of forty creeps leak.** That is deliberate: a defense that
-holds tells you nothing when it changes, and one that collapses tells you nothing either. A partial break makes
-the leak count a number a person can watch, and the band to keep it inside is a quarter to a half.
+**The band is a quarter to a half of the wave, and the committed match is under it.** A defense that holds
+tells you nothing when it changes, and one that collapses tells you nothing either; a partial break makes the
+leak count a number a person can watch. Ten to twenty of forty is the target.
+
+> ⚠️ **Three of forty leak, as of 5 September 2026, and it is the Mage's splash.** The row has been priced for
+> three bodies since the roster was signed and hit one until the bubble was authored; the committed defense is
+> four archers and two mages, so authoring it roughly tripled what the two of them remove. Nothing was retuned
+> to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
+> decisions rather than consequences of authoring a signed row.
+>
+> **Two creep rows are outside their own band with it.** Four hundred gold of one creep against the committed
+> defense returns 60 to 95 percent of its gold for the Scout, the Skeleton Mage and the Skeleton; the Minion
+> returns 25 and the Warrior 41. A splash is worth most against a dense column, and a column of one cheap row
+> is the densest thing that can be sent — so what the splash costs most is the fine end of the granularity
+> axis.
+>
+> Both readings are asserted as *missed* in `sim.tests/MatchTests.cs` rather than widened away, so the day
+> somebody retunes, the tests go red and say which band to put back.
 
 **Measure before you retune.** Two changes have moved this number without any creep row moving — an attack type
 changing line, and the clock dilating while `wave.txt`'s order ticks did not. Both were found by running the
@@ -966,7 +1001,8 @@ art tweak cost a format version and a re-record. These numbers are expected to m
 at them, which is the whole reason they are stored somewhere free to change.
 
 **Measured, rather than assumed.** With those multipliers the tallest body on the board is 1.40 m and the
-shortest tower 2.45 m, so a creep is a little over half the height of the thing shooting it. An edit-mode
+shortest tower 2.20 m — the Prototype Dummy the twenty-three undressed rungs stand in as, ahead of the Archer's
+2.45 m — so a creep is a little under two thirds the height of the thing shooting it. An edit-mode
 test measures both off the geometry and fails if the gap closes to within a fifth, because comparing the two
 multipliers would prove nothing — a half applied to a taller model is not smaller than a one applied to a
 shorter one, and the creeps and the towers come from two different packs.
@@ -1057,10 +1093,13 @@ open.
    so his swing strikes every creep touching him rather than one of them. A corner placement inside a fold
    reaches two legs at once — a positional value the flat corridor could not offer, and the reason he was kept
    rather than retired.
-4. **The Mage's splash is authored and its price is deliberately not.** Answered on 5 September 2026: the
+4. **The Mage's splash is on the row and its price is deliberately not.** Answered on 5 September 2026: the
    bubble lands — origin `target`, radius 1000, payload `damage` — and **the 92 stands untouched** until the
    automated balance sweeps are good enough to derive it. The rule says 30, the row says 92, and that gap is
-   now held open on purpose. It is the one number on this page waiting on a tool rather than on a decision.
+   now held open on purpose. The Sorcerer and Unravel inherit it at 124, and Slam and Mortar are the same gap
+   on a different line — every one of them is a bubble priced at one body. What the deferral has cost since the
+   splash landed is [the tuning target](#the-tuning-target), which is a number a person now has to decide about
+   rather than a tool.
 5. **The three absent shapes have their models, and every unit on this page has a signed one.** Answered on
    5 September 2026 by a person, from a rendered sheet of all 32 candidates — and the Druid's weirwood, the
    one shape that sheet left open, was signed the same day from a sheet of its own:

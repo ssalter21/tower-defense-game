@@ -79,9 +79,10 @@ And one that is **not** a frame of the recorded match:
   in one colour, and the pool standing in front of a creep's health is a second
   segment of a bar above it. Captured with `-Distance 20 -Width 1600` against
   [`effects-roster.txt`](effects-roster.txt), which is the shipped roster with a
-  bubble added to two of its rows — every row of `content/units.txt` authors no
-  bubble at all, so nothing in the recorded match is ever slowed or shielded and
-  a frame of it shows none of this. **What a slowed, hastened, cursed or
+  bubble added to two of its rows — the only bubble `content/units.txt` authors
+  is the Mage's splash, which is damage and lands instantly, so nothing in the
+  recorded match is ever slowed or shielded and a frame of it shows none of
+  this. **What a slowed, hastened, cursed or
   shielded body should actually look like is Sam's to sign**, and this is what
   the plainest first answer looks like on the real board. Five things about it
   are placeholder answers to questions nobody has taken: one colour covers both
