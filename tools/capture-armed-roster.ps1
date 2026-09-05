@@ -21,6 +21,15 @@
 # untracked PNGs for the build gate's tree-clean step to trip over. Regenerate
 # it when you want to look; it is not documentation anybody has to keep.
 #
+# IT ALSO RENDERS A SET THAT IS NOT THE ROSTER. -SetFile points at a candidate
+# set -- a plain-text list of model, right hand, left hand and pose clip, one
+# line per character, with every path relative to client/Assets/Art. Those are
+# characters no row in content/units.txt points at yet, so they cannot come
+# from the roster; they are what a proposal is asking for approval of. The set
+# run writes one PNG per entry plus candidates-sheet.png and
+# candidates-manifest.txt, which says which tile is which. See
+# docs/roster-expansion-candidates.txt for the set the roster expansion put up.
+#
 # -batchmode -executeMethod, so it needs no editor session, no bridge and
 # nobody at a keyboard -- and therefore requires the editor to be CLOSED,
 # because batchmode needs the project lock.
@@ -28,6 +37,7 @@
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
+    [string]$SetFile,
     [int]$Width = 700,
     [string]$LogFile = "$PSScriptRoot\..\capture-armed-roster.log"
 )
@@ -47,6 +57,15 @@ if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
 if (-not $OutDir) { $OutDir = Join-Path (Resolve-Path "$PSScriptRoot\..").Path "docs\frames\roster" }
 if (-not [System.IO.Path]::IsPathRooted($OutDir)) { $OutDir = Join-Path (Get-Location).Path $OutDir }
 
+# The set file has the same trap and needs the same absolute path, for the same
+# reason: the editor's working directory is the Unity project, not the repo.
+# Resolved here rather than in the editor so a typo fails in the shell, in a
+# second, instead of three minutes into a batchmode run.
+if ($SetFile) {
+    if (-not (Test-Path $SetFile)) { throw "No candidate set file at: $SetFile" }
+    $SetFile = (Resolve-Path $SetFile).Path
+}
+
 $unityArgs = @(
     '-batchmode', '-quit',
     '-projectPath', "`"$project`"",
@@ -57,7 +76,13 @@ $unityArgs = @(
 
 $unityArgs += @('-rosterOutDir', "`"$OutDir`"")
 
-Write-Host "drawing the armed roster from $project"
+if ($SetFile) {
+    $unityArgs += @('-rosterSet', "`"$SetFile`"")
+    Write-Host "drawing the candidate set $SetFile from $project"
+}
+else {
+    Write-Host "drawing the armed roster from $project"
+}
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a
 # GUI-subsystem executable and what actually yields its exit code. `& $Unity`

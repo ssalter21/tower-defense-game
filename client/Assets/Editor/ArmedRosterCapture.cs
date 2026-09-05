@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Sim;
 using UnityEditor;
 using UnityEngine;
@@ -30,6 +31,15 @@ namespace View.Editor
     /// oracle: no test compares these, they are for looking at.
     /// </para>
     /// <para>
+    /// <b>It also renders a named set that is not the roster.</b> Given
+    /// <c>-rosterSet</c>, it draws whatever a <see cref="CandidateSet"/> file
+    /// lists instead of the live rows — models nothing in
+    /// <c>content/units.txt</c> points at yet, held and posed as a proposal
+    /// says they would be, so a model can be signed off before a row exists to
+    /// author it against. Same views, same sun, same framing; the only
+    /// difference is where the list comes from.
+    /// </para>
+    /// <para>
     /// <c>-batchmode -executeMethod</c>, so it needs no editor session and no
     /// bridge — and therefore needs the editor CLOSED, because batchmode takes
     /// the project lock.
@@ -41,7 +51,36 @@ namespace View.Editor
 
         private const string WidthArgument = "-rosterWidth";
 
+        private const string SetArgument = "-rosterSet";
+
         private const string DefaultOutDir = "docs/frames/roster";
+
+        /// <summary>How many tiles wide the candidate contact sheet is.</summary>
+        /// <remarks>
+        /// Six, matching <see cref="ArtPreviewCapture"/>'s turntable width, so
+        /// two sheets from the two tools sit side by side at the same rhythm.
+        /// </remarks>
+        private const int SheetColumns = 6;
+
+        /// <summary>How wide one tile of that sheet is, in pixels.</summary>
+        /// <remarks>
+        /// Rendered at this size rather than resampled down from the full
+        /// frame: the camera is already standing where it needs to, so a second
+        /// grab is cheaper than a filter and sharper than one.
+        /// </remarks>
+        private const int SheetTileWidth = 260;
+
+        /// <summary>
+        /// How far through its clip a candidate is posed, in [0,1].
+        /// </summary>
+        /// <remarks>
+        /// Halfway, which is the strike of an attack, the far half of a stride
+        /// and the middle of a hold. Frame zero is the wrong answer for all
+        /// three: every clip in these banks starts from something close to the
+        /// rest pose, so a sheet sampled at zero is thirty-one pictures of the
+        /// same stance holding different props.
+        /// </remarks>
+        private const float ClipPhase = 0.5f;
 
         /// <summary>Portrait, because a unit is taller than it is wide.</summary>
         private const float FrameAspect = 3f / 4f;
@@ -67,16 +106,20 @@ namespace View.Editor
         public static void Run()
         {
             string outDir = BatchArguments.Value(OutDirArgument) ?? DefaultOutDir;
+            string setFile = BatchArguments.Value(SetArgument);
             int width = ParseInt(BatchArguments.Value(WidthArgument), 700);
             int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
+
+            // Read and resolve the whole set BEFORE the first render. A set of
+            // thirty-one takes minutes to draw, and a typo found on entry
+            // thirty is a typo found three minutes late.
+            IReadOnlyList<CandidateSet.Candidate> candidates =
+                setFile == null ? null : CandidateSet.Read(setFile);
 
             Directory.CreateDirectory(outDir);
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.32f, 0.34f, 0.38f, 1f);
-
-            MatchArt art = MatchSceneBuilder.Art();
-            UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
             var host = new GameObject("RosterCaptureRoot");
             var written = new List<string>();
@@ -86,15 +129,13 @@ namespace View.Editor
                 Camera camera = MakeCamera(host.transform);
                 MakeSun(host.transform);
 
-                foreach (UnitType type in types.Types)
+                if (candidates == null)
                 {
-                    string path = Path.Combine(
-                        outDir,
-                        "unit-" + type.Id.ToString("00", CultureInfo.InvariantCulture)
-                        + "-" + type.Label + ".png");
-
-                    File.WriteAllBytes(path, Shoot(host.transform, camera, art, type, width, height));
-                    written.Add(path);
+                    DrawRoster(host.transform, camera, outDir, width, height, written);
+                }
+                else
+                {
+                    DrawSet(host.transform, camera, candidates, setFile, outDir, width, height, written);
                 }
             }
             finally
@@ -107,72 +148,313 @@ namespace View.Editor
                 Debug.Log("[roster] wrote " + path);
             }
 
-            Debug.Log("[roster] " + written.Count + " units drawn into " + outDir);
+            Debug.Log("[roster] " + written.Count + " file(s) drawn into " + outDir);
         }
 
-        /// <summary>
-        /// Builds one unit through its real view, frames it, and renders it.
-        /// The unit is destroyed before the next one, so nothing shares a frame.
-        /// </summary>
-        private static byte[] Shoot(
-            Transform parent, Camera camera, MatchArt art, UnitType type, int width, int height)
+        /// <summary>Every live row in <c>content/units.txt</c>, one PNG each.</summary>
+        private static void DrawRoster(
+            Transform host, Camera camera, string outDir, int width, int height, List<string> written)
         {
-            var stand = new GameObject(type.Label);
-            stand.transform.SetParent(parent, worldPositionStays: false);
+            MatchArt art = MatchSceneBuilder.Art();
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
-            try
+            foreach (UnitType type in types.Types)
             {
+                string path = Path.Combine(
+                    outDir,
+                    "unit-" + type.Id.ToString("00", CultureInfo.InvariantCulture)
+                    + "-" + type.Label + ".png");
+
                 UnitArt unit = art.ArtFor(type.Id);
+                var stand = new GameObject(type.Label);
+                stand.transform.SetParent(host, worldPositionStays: false);
 
-                // Through the shipped views, both of them, because a capture
-                // that instantiated the model itself would not be a picture of
-                // what the match draws -- and attaching the weapons is the half
-                // being reviewed.
-                // Posed, not left in the bind pose. A character imports with
-                // its arms straight out, and a weapon parented to a hand that
-                // is pointing sideways tells you nothing about how the unit
-                // stands holding it -- which is how a review of the first run
-                // of this tool got no further than "hard to say".
-                if (type.Role == UnitRole.Placed)
+                try
                 {
-                    var tower = stand.AddComponent<TowerView>();
-
-                    if (unit.IsPosed)
+                    if (type.Role == UnitRole.Placed)
                     {
-                        tower.BuildAnimated(type.Id, type, unit, Quaternion.identity);
-                        tower.Pose(TowerState.Idle, 0, null);
+                        BuildTower(stand, type.Id, type, unit, 0f);
                     }
                     else
                     {
-                        tower.BuildStatic(type.Id, type, unit, Quaternion.identity);
+                        BuildCreep(stand, unit, art.CreepWalkClip, art.CreepDeathClip, 0.25f);
                     }
+
+                    ReportHeld(stand, "unit " + type.Id);
+                    Frame(camera, Measured(stand));
+
+                    File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
+                    written.Add(path);
                 }
-                else
+                finally
                 {
-                    CreepView creep = stand.AddComponent<CreepView>();
-                    creep.Build(unit, art.CreepWalkClip, art.CreepDeathClip);
+                    Object.DestroyImmediate(stand);
+                }
+            }
+        }
 
-                    // A quarter through the walk cycle: mid-stride, both arms
-                    // away from the body, which is where a carried shield stops
-                    // being edge-on to everything.
-                    creep.Pose(
-                        Vector3.zero,
-                        Quaternion.identity,
-                        MatchTuning.HexesPerWalkCycle * 0.25f,
-                        CreepState.Walking,
-                        0f);
+        /// <summary>
+        /// A named set of candidates: one PNG each, one contact sheet, and a
+        /// manifest saying which tile is which.
+        /// </summary>
+        /// <remarks>
+        /// <b>The sheet carries no captions and the manifest is why.</b> Text
+        /// drawn into a render texture in batchmode means a font asset, a
+        /// runtime panel and several frames of layout to pump — machinery whose
+        /// only output is a word already sitting in the PNG's own filename. The
+        /// sheet is for comparing silhouettes at a glance; the manifest, in the
+        /// same folder, says what row three column four is.
+        /// </remarks>
+        private static void DrawSet(
+            Transform host,
+            Camera camera,
+            IReadOnlyList<CandidateSet.Candidate> candidates,
+            string setFile,
+            string outDir,
+            int width,
+            int height,
+            List<string> written)
+        {
+            // TowerView takes a UnitType, and a candidate has no row to have
+            // one. It reads exactly two fields off it -- the windup and
+            // backswing durations, in StretchedPhase -- and neither is reached
+            // from Idle, which is the state every candidate is posed in. So a
+            // live row stands in for the type, and nothing about that row
+            // reaches the picture.
+            UnitType standIn = FirstTower();
+
+            int tileHeight = Mathf.Max(1, Mathf.RoundToInt(SheetTileWidth / FrameAspect));
+            var tiles = new List<Texture2D>(candidates.Count);
+            var manifest = new List<string>(candidates.Count);
+
+            try
+            {
+                for (var index = 0; index < candidates.Count; index++)
+                {
+                    CandidateSet.Candidate candidate = candidates[index];
+
+                    string path = Path.Combine(
+                        outDir,
+                        "candidate-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
+                        + "-" + candidate.Name + ".png");
+
+                    var stand = new GameObject(candidate.Name);
+                    stand.transform.SetParent(host, worldPositionStays: false);
+
+                    try
+                    {
+                        UnitArt unit = ArtFor(candidate);
+
+                        if (candidate.Side == CandidateSet.Side.Tower)
+                        {
+                            BuildTower(stand, 0, standIn, unit, ClipPhase);
+                        }
+                        else
+                        {
+                            BuildCreep(stand, unit, candidate.Clip, candidate.Clip, ClipPhase);
+                        }
+
+                        ReportHeld(stand, candidate.Name);
+                        Frame(camera, Measured(stand));
+
+                        File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
+                        written.Add(path);
+
+                        tiles.Add(Grab(camera, SheetTileWidth, tileHeight));
+                    }
+                    finally
+                    {
+                        Object.DestroyImmediate(stand);
+                    }
+
+                    manifest.Add(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "{0,2}  row {1} col {2}  {3,-24} {4,-6} {5,-58} {6}",
+                            index + 1,
+                            (index / SheetColumns) + 1,
+                            (index % SheetColumns) + 1,
+                            candidate.Name,
+                            candidate.Side == CandidateSet.Side.Tower ? "tower" : "creep",
+                            candidate.ModelPath,
+                            candidate.ClipName));
                 }
 
-                ReportHeld(stand, type);
-
-                Frame(camera, Measured(stand));
-
-                return Grab(camera, width, height).EncodeToPNG();
+                string sheet = Path.Combine(outDir, "candidates-sheet.png");
+                File.WriteAllBytes(sheet, Stitch(tiles, SheetTileWidth, tileHeight).EncodeToPNG());
+                written.Add(sheet);
             }
             finally
             {
-                Object.DestroyImmediate(stand);
+                foreach (Texture2D tile in tiles)
+                {
+                    Object.DestroyImmediate(tile);
+                }
             }
+
+            string manifestPath = Path.Combine(outDir, "candidates-manifest.txt");
+
+            File.WriteAllLines(
+                manifestPath,
+                new[]
+                {
+                    "# " + candidates.Count + " candidates from " + setFile,
+                    "# Tiles run left to right, " + SheetColumns + " to a row, in candidates-sheet.png.",
+                    "#",
+                    "#  n  where          name                     side   model"
+                    + new string(' ', 54) + "clip",
+                }.Concat(manifest).ToArray());
+
+            written.Add(manifestPath);
+        }
+
+        /// <summary>
+        /// A candidate's art bundle. A tower's three clips are all the one clip
+        /// the set file named — it is posed in a single frame, and three
+        /// references to that frame is what <see cref="UnitArt.IsPosed"/> asks
+        /// for.
+        /// </summary>
+        private static UnitArt ArtFor(CandidateSet.Candidate candidate) =>
+            candidate.Side == CandidateSet.Side.Tower
+                ? UnitArt.Armed(
+                    0,
+                    candidate.Model,
+                    MatchArt.TowerScale,
+                    candidate.RightHand,
+                    candidate.LeftHand,
+                    candidate.Clip,
+                    candidate.Clip,
+                    candidate.Clip,
+                    candidate.RightHandTilt,
+                    candidate.LeftHandTilt)
+                : UnitArt.Armed(
+                    0,
+                    candidate.Model,
+                    MatchArt.CreepScale,
+                    candidate.RightHand,
+                    candidate.LeftHand,
+                    null,
+                    null,
+                    null,
+                    candidate.RightHandTilt,
+                    candidate.LeftHandTilt);
+
+        /// <summary>
+        /// The tower, posed. Idle rather than an attack state, because Idle is
+        /// the one state whose phase comes off the clip's own length instead of
+        /// off the unit type's tick budget — which is what lets a candidate
+        /// with no row be posed at all.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Through the shipped view, because a capture that instantiated the
+        /// model itself would not be a picture of what the match draws — and
+        /// attaching the weapons is the half being reviewed.
+        /// </para>
+        /// <para>
+        /// Posed, not left in the bind pose. A character imports with its arms
+        /// straight out, and a weapon parented to a hand that is pointing
+        /// sideways tells you nothing about how the unit stands holding it —
+        /// which is how a review of the first run of this tool got no further
+        /// than "hard to say".
+        /// </para>
+        /// </remarks>
+        private static void BuildTower(GameObject stand, int id, UnitType type, UnitArt art, float phase)
+        {
+            var tower = stand.AddComponent<TowerView>();
+
+            if (!art.IsPosed)
+            {
+                tower.BuildStatic(id, type, art, Quaternion.identity);
+                return;
+            }
+
+            tower.BuildAnimated(id, type, art, Quaternion.identity);
+
+            float seconds = art.IdleClip.length * phase;
+
+            tower.Pose(TowerState.Idle, Mathf.RoundToInt(seconds * Match.TicksPerSecond), null);
+        }
+
+        /// <summary>
+        /// The creep, posed at <paramref name="phase"/> of its walk clip. A
+        /// quarter through is mid-stride, which is where a carried shield stops
+        /// being edge-on to everything.
+        /// </summary>
+        private static void BuildCreep(
+            GameObject stand, UnitArt art, AnimationClip walk, AnimationClip death, float phase)
+        {
+            CreepView creep = stand.AddComponent<CreepView>();
+
+            creep.Build(art, walk, death);
+            creep.Pose(
+                Vector3.zero,
+                Quaternion.identity,
+                MatchTuning.HexesPerWalkCycle * phase,
+                CreepState.Walking,
+                0f);
+        }
+
+        /// <summary>
+        /// A live placed row, borrowed as the type a candidate tower is built
+        /// with. See <see cref="DrawSet"/> for why nothing about it shows.
+        /// </summary>
+        private static UnitType FirstTower()
+        {
+            foreach (UnitType type in StreamingContent.ReadUnitTypes().Types)
+            {
+                if (type.Role == UnitRole.Placed)
+                {
+                    return type;
+                }
+            }
+
+            throw new IOException(
+                "content/units.txt has no placed row, so there is no unit type to build a "
+                + "candidate tower's view with.");
+        }
+
+        /// <summary>Lays the tiles out into a grid, left to right, top to bottom.</summary>
+        /// <remarks>
+        /// The last row is padded with the sheet's own background rather than
+        /// left transparent, so a short row reads as a short row and not as
+        /// three candidates that failed to render.
+        /// </remarks>
+        private static Texture2D Stitch(List<Texture2D> tiles, int tileWidth, int tileHeight)
+        {
+            int rows = Mathf.Max(1, Mathf.CeilToInt(tiles.Count / (float)SheetColumns));
+            int columns = Mathf.Min(SheetColumns, Mathf.Max(1, tiles.Count));
+
+            var sheet = new Texture2D(
+                columns * tileWidth, rows * tileHeight, TextureFormat.RGB24, false);
+
+            var background = new Color[tileWidth * tileHeight];
+
+            for (var pixel = 0; pixel < background.Length; pixel++)
+            {
+                background[pixel] = SceneFraming.BackgroundColor;
+            }
+
+            for (var row = 0; row < rows; row++)
+            {
+                for (var column = 0; column < columns; column++)
+                {
+                    int index = (row * SheetColumns) + column;
+
+                    // Unity's texture origin is bottom-left and a contact sheet
+                    // is read top-left first, so the rows go in upside down.
+                    sheet.SetPixels(
+                        column * tileWidth,
+                        (rows - 1 - row) * tileHeight,
+                        tileWidth,
+                        tileHeight,
+                        index < tiles.Count ? tiles[index].GetPixels() : background);
+                }
+            }
+
+            sheet.Apply();
+
+            return sheet;
         }
 
         /// <summary>
@@ -186,7 +468,7 @@ namespace View.Editor
         /// expressed in the hand bone's own frame, so a positive Y means the
         /// item reaches up out of the fist and a negative Y means it hangs.
         /// </remarks>
-        private static void ReportHeld(GameObject stand, UnitType type)
+        private static void ReportHeld(GameObject stand, string subject)
         {
             foreach (string bone in new[] { WeaponSocket.MeleeHand, WeaponSocket.OffHand })
             {
@@ -230,7 +512,7 @@ namespace View.Editor
                 }
 
                 Debug.Log(
-                    $"[grip] unit {type.Id} {item.name} on {bone}: "
+                    $"[grip] {subject} {item.name} on {bone}: "
                     + $"min ({min.x:F2}, {min.y:F2}, {min.z:F2}) "
                     + $"max ({max.x:F2}, {max.y:F2}, {max.z:F2})");
             }

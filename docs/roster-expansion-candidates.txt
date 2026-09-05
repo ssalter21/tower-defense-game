@@ -1,0 +1,121 @@
+# The 31 characters the roster expansion assigns, as a candidate set.
+#
+# WHAT THIS IS FOR. docs/roster-expansion-proposal.md assigns 31 of the
+# collection's 61 rigged characters to a tower line or a creep row, and every
+# one of those assignments is a placeholder until Sam has looked at it. This
+# renders them:
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-expansion-candidates.txt
+#
+# One PNG per line into docs/frames/roster (ignored, never committed), plus
+# candidates-sheet.png and candidates-manifest.txt. Nothing here is an oracle
+# and no test reads it. Edit a line, run it again, look again.
+#
+# HOW A LINE READS. Six whitespace-separated fields:
+#
+#     side  name  model  right-hand  left-hand  clip
+#
+#   side        tower or creep -- which of the two shipped views draws it.
+#   name        what the PNG is called. The model's own name, not a unit name:
+#               one model serves up to three tiers and no row exists yet.
+#   model       the character, relative to client/Assets/Art/.
+#   right-hand  what hangs off handslot.r, or - for an empty hand.
+#   left-hand   what hangs off handslot.l, or - for an empty hand.
+#   clip        the pose. Unqualified names are searched for in the
+#               Rig_Medium_* banks; a Large-rig character must say its bank,
+#               as Rig_Large_General/Idle_A, because Idle_A, Walking_A and
+#               Death_A exist in both rigs and the wrong one draws without
+#               complaining.
+#
+# A held prop may carry a turn, written path@x,y,z in Euler degrees. Every
+# weapon in these packs is authored for the right hand, so a bow in the off
+# hand needs @0,180,0, and a staff hangs head-down from the fist until
+# @0,0,-90 stands it up. Both numbers are the ones MatchSceneBuilder already
+# carries for the live rows.
+#
+# THREE PLACES THIS DEPARTS FROM THE PROPOSAL, EACH FLAGGED AT ITS LINE.
+#   - Large-rig characters take the _Large export of their weapon even where
+#     the proposal names the medium one.
+#   - Two rows name a backpack, which is worn and has no hand socket; the
+#     character's sword stands in.
+#   - The Marksman appears twice, once with his rifle and once with the
+#     crossbow the proposal asks for, because that is the comparison being
+#     put up. 32 lines, 31 characters.
+
+# ---------------------------------------------------------------- towers ---
+
+# Knight line. Live as the Soldier at tier 1; what is new is the Sergeant's
+# shield and the Shield Wall's raised guard, so it is posed blocking.
+tower Knight               Characters/Knight.fbx                                          Weapons/sword_1handed.fbx                                    Kaykit/adventurers/shield_square.fbx                                Melee_Blocking
+
+# Barbarian line. The pack ships the size-up as a second model on the Large
+# rig, which is the tier-3 Slam. Posed in the two-handed guard and not in
+# Melee_2H_Slam: the slam is a full-body lunge along the ground, and halfway
+# through it the model is face down behind its own axe -- a picture of the
+# clip, not of the character being signed off.
+tower Barbarian            Kaykit/adventurers/Barbarian.fbx                               Kaykit/adventurers/axe_2handed.fbx                           -                                                                   Melee_2H_Attack_Chop
+tower Barbarian_Large      Kaykit/adventurers/Barbarian_Large.fbx                         Kaykit/adventurers/axe_2handed_Large.fbx                     -                                                                   Rig_Large_CombatMelee/Melee_2H_Idle
+
+# Paladin line. Bare head at tier 1, helmeted and shielded at tier 2.
+tower Paladin              Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx   -                                                                   Melee_1H_Attack_Chop
+tower Paladin_with_Helmet  Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx   Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx          Melee_Block
+
+# Cleric line. One model; the tome is the tier-1 look.
+tower Cleric               Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx               Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx       -                                                                   Ranged_Magic_Shoot
+
+# Mage line. The Mage is live; the Lorekeeper is the tier-3 Unravel.
+tower Mage                 Characters/Mage.fbx                                            Kaykit/adventurers/spellbook_open.fbx                        -                                                                   Ranged_Magic_Spellcasting
+tower Lorekeeper           Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper.fbx       Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper_Tome.fbx -                                                                 Ranged_Magic_Shoot
+
+# Druid line. The Plant Warrior is the tier-3 Overgrowth. The proposal names
+# PlantWarrior_Bow; this is the strung export, which is what the live Ranger's
+# bow is.
+tower Druid                Kaykit/adventurers/Druid.fbx                                   Kaykit/adventurers/druid_staff.fbx@0,0,-90                   -                                                                   Ranged_Magic_Shoot
+tower PlantWarrior         Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior.fbx  -                                                            Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior_Bow_withString.fbx@0,180,0 Ranged_Bow_Aiming_Idle
+
+# Archer line. The Ranger is live at tiers 1 and 2. The Marksman is the
+# tier-3 Overwatch, and whether he keeps his rifle or takes the Adventurers
+# crossbow is the call this pair is here to make.
+tower Ranger               Characters/Ranger.fbx                                          -                                                            Weapons/bow_withString.fbx@0,180,0                                  Ranged_Bow_Idle
+tower Marksman             Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx           Kaykit/mystery-monthly-series-6/marksman/Marksman_Rifle.fbx  -                                                                   Ranged_2H_Aiming
+tower Marksman_Crossbow    Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx           Kaykit/adventurers/crossbow_2handed.fbx                      -                                                                   Ranged_2H_Aiming
+
+# Rogue line. Hooded at tier 2, and the Fan of Knives is the dual-wield slice.
+tower Rogue                Kaykit/adventurers/Rogue.fbx                                   Kaykit/adventurers/dagger.fbx                                -                                                                   Throw
+tower Rogue_Hooded         Kaykit/adventurers/Rogue_Hooded.fbx                            Kaykit/adventurers/dagger.fbx                                Kaykit/adventurers/dagger.fbx                                       Melee_Dualwield_Attack_Slice
+
+# Engineer line. One model all three tiers; the turret and the crate stand
+# beside him and are not held, so they are not on this line.
+tower Engineer             Kaykit/adventurers/Engineer.fbx                                Kaykit/adventurers/engineer_Wrench.fbx                       -                                                                   Idle_A
+
+# ---------------------------------------------------------------- creeps ---
+
+# The four live skeletons, for scale and for comparison against the new bodies.
+creep Skeleton_Minion      Characters/Skeleton_Minion.fbx                                 -                                                            -                                                                   Walking_A
+creep Skeleton_Rogue       Characters/Skeleton_Rogue.fbx                                  -                                                            -                                                                   Walking_A
+creep Skeleton_Warrior     Characters/Skeleton_Warrior.fbx                                Weapons/Skeleton_Blade.fbx                                   Weapons/Skeleton_Shield_Large_B.fbx                                 Walking_A
+creep Skeleton_Mage        Characters/Skeleton_Mage.fbx                                   Weapons/Skeleton_Staff.fbx@0,0,-90                           -                                                                   Walking_A
+
+# The pack's own necromancer, which the proposal moves the name onto.
+creep Necromancer          Kaykit/skeletons/Necromancer.fbx                               Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,-90                 -                                                                   Walking_A
+
+# The five Large-rig bodies. Each takes the _Large export of its weapon; the
+# proposal names the medium one for the Golem and the Frost Wight, which would
+# be a hand-sized axe on a body twice the height.
+creep Skeleton_Golem       Kaykit/skeletons/Skeleton_Golem.fbx                            Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx                -                                                                   Rig_Large_MovementBasic/Walking_A
+creep BlackKnight          Kaykit/mystery-monthly-series-5/black-knight/BlackKnight.fbx    Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Sword_Large.fbx Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Shield_Large.fbx Rig_Large_MovementBasic/Walking_A
+creep FrostGolem           Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem.fbx       Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem_Axe_Large.fbx -                                                            Rig_Large_MovementBasic/Walking_A
+creep Monstrosity          Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity.fbx     -                                                            Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity_BarndoorShield_Large.fbx Rig_Large_MovementBasic/Walking_A
+
+# The dark and hooded. The Fiend and the Grave Robber are proposed holding a
+# backpack -- Tiefling_SwordsBackpack and Hoarder_Backpack -- which is worn on
+# the spine and has no hand socket, so each takes its own sword here instead.
+creep Vampire              Kaykit/mystery-monthly-series-5/vampire/Vampire.fbx             Kaykit/mystery-monthly-series-5/vampire/Vampire_Sword.fbx    -                                                                   Walking_A
+creep Witch                Kaykit/mystery-monthly-series-5/witch/Witch.fbx                 Kaykit/mystery-monthly-series-5/witch/Broom.fbx              -                                                                   Walking_A
+creep Tiefling             Kaykit/mystery-monthly-series-5/tiefling/Tiefling.fbx           Kaykit/mystery-monthly-series-5/tiefling/Tiefling_Sword.fbx  -                                                                   Walking_A
+creep Ninja                Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A
+creep Hoarder              Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx             Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Sword.fbx    -                                                                   Walking_A
+
+# The transformation pair: what walks in, and what it becomes.
+creep Werewolf_Man         Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Man.fbx       Kaykit/mystery-monthly-series-4/werewolf/axe.fbx             -                                                                   Walking_A
+creep Werewolf_Wolf        Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Wolf.fbx      -                                                            -                                                                   Walking_A
