@@ -31,17 +31,42 @@ row that says "drag to tick 1096" are about the same moment.
 ./tools/capture-match-frames.ps1 -Ticks "366,900"      # named ticks
 ./tools/capture-match-frames.ps1 -Yaw 120 -Width 1920  # another heading, wider
 ./tools/capture-match-frames.ps1 -Distance 25          # down among the creeps
+
+./tools/capture-match-frames.ps1 -Ticks "1229,1546" -Distance 22 -Width 1600
 ```
+
+**A frame is a function of its tick and nothing else.** The capture draws every
+tick it steps through rather than only the ones it keeps, because where a tower
+is pointing and where its shot leaves from are both read off the pose it was
+last drawn in. It used to draw only at the kept ticks, which made a sparse tick
+list a photograph of a match whose towers had never moved — and, once effects
+started leaving the model rather than a fixed height above it, put the muzzle
+flash on a rig still standing in its bind pose.
 
 ## What is committed
 
-Two frames, kept as a record of what the match looks like:
+Four frames, kept as a record of what the match looks like:
 
 - `match-tick-1096.png` — the tick the committed landmark table names as the
   first overtake, with the wave strung out along the corridor and a shell in
   flight.
 - `match-tick-2700.png` — the wave spread along the corridor, both kinds of
   tower engaged.
+- `match-tick-1229.png` — an Archer releasing: the muzzle flash sits on the bow
+  in its hand and the tracer runs from there to the creep it hit. Captured with
+  `-Distance 22 -Width 1600`, close enough to see which part of the model the
+  shot left.
+- `match-tick-1546.png` — a Mage casting, captured the same way. The flash is on
+  the head of the staff, which the Mage raises beside its own head — and **the
+  hat covers the staff at the pitch this camera is fixed at**, so what the frame
+  shows is a flash and a tracer at the right place rather than a staff with a
+  light on the end of it. That the anchor is on the staff and not on a height
+  above the root is asserted in `ImportedArtTests`, which logs the measurement
+  for every tower; whether the Mage's silhouette should read better than this is
+  a question for whoever owns the art.
+
+The last two are the pair the effect anchors landed with: before them every
+tower fired from one fixed height above its own root, whatever it was holding.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

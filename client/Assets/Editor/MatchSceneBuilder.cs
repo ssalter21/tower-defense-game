@@ -126,6 +126,50 @@ namespace View.Editor
         private static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
+        /// What a held prop's own transform is called once it is on the bone.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="WeaponSocket"/> names the instance after the asset, and an
+        /// FBX's root node is named after its file, so these are the file names
+        /// above without their folder or extension. An anchor naming one that
+        /// is not there throws when the view is built.
+        /// </remarks>
+        private const string BowNode = "bow_withString";
+
+        private const string StaffNode = "staff";
+
+        private const string SwordNode = "sword_1handed";
+
+        /// <summary>
+        /// Which way along a shafted weapon its far end lies, in the prop's own
+        /// local space.
+        /// </summary>
+        /// <remarks>
+        /// The same axis <see cref="StaffQuarterTurn"/> was measured from: both
+        /// the staff's shaft and the sword's blade run along local +Y with the
+        /// orb and the tip at the +Y end, which is why the <c>[grip]</c> bounds
+        /// could not tell the two apart. The distance is not written down —
+        /// <see cref="EffectAnchor"/> takes it off the prop's own mesh, so a
+        /// re-exported staff moves its own tip.
+        /// </remarks>
+        private static readonly Vector3 AlongTheShaft = Vector3.up;
+
+        /// <summary>
+        /// The bow's own origin, which is the grip the bone puts in the fist and
+        /// the point the string is drawn back from. No tip: an arrow leaves an
+        /// archer's hand and not the end of a limb.
+        /// </summary>
+        private static readonly EffectAnchor Bow = EffectAnchor.At(BowNode);
+
+        /// <summary>The orb on the end of the Mage's staff.</summary>
+        private static readonly EffectAnchor StaffTip =
+            EffectAnchor.AtTipOf(StaffNode, AlongTheShaft);
+
+        /// <summary>The point of the Soldier's sword.</summary>
+        private static readonly EffectAnchor SwordTip =
+            EffectAnchor.AtTipOf(SwordNode, AlongTheShaft);
+
+        /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row of
         /// <c>content/units.txt</c> that has art. A row that has none yet is on
         /// <see cref="UnboundUnits"/>'s list instead and draws the stand-in.
@@ -160,6 +204,14 @@ namespace View.Editor
         /// no clips of their own — nothing in the simulation swings a walker's
         /// weapon.
         /// </para>
+        /// <para>
+        /// <b>The anchor is where the shot leaves, and it names the weapon
+        /// rather than the body.</b> It is what keeps the Mage's spell off the
+        /// point in front of its chest that a height above the root would put it
+        /// at, and what makes the Archer's arrow leave a bow rather than the
+        /// same point on a taller model. A row that walks anchors nowhere:
+        /// nothing in the simulation gives a creep a shot to draw.
+        /// </para>
         /// </remarks>
         private static readonly (
             int unitId,
@@ -171,26 +223,31 @@ namespace View.Editor
             string windup,
             string backswing,
             Vector3 rightTilt,
-            Vector3 leftTilt)[] UnitBindings =
+            Vector3 leftTilt,
+            EffectAnchor anchor)[] UnitBindings =
         {
             (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                null, null, null, null, null, default, default),
+                null, null, null, null, null, default, default, default),
             (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
-                null, null, null, null, null, default, default),
+                null, null, null, null, null, default, default, default),
             (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
-                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
+                StaffTip),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
-                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default),
+                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
-                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
+                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default,
+                SwordTip),
             (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default),
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default, default),
             (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default),
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default, default),
             (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow),
         };
 
         /// <summary>
@@ -655,7 +712,8 @@ namespace View.Editor
                     binding.windup,
                     binding.backswing,
                     binding.rightTilt,
-                    binding.leftTilt);
+                    binding.leftTilt,
+                    binding.anchor);
             }
 
             // A row with no art chosen for it yet: the stand-in at the size its
@@ -684,7 +742,7 @@ namespace View.Editor
         /// shape as <see cref="UnitArt.Of(int, GameObject, float)"/>.
         /// </summary>
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
-            WireUnit(entry, unitId, model, scale, null, null, null, null, null, default, default);
+            WireUnit(entry, unitId, model, scale, null, null, null, null, null, default, default, default);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -705,7 +763,8 @@ namespace View.Editor
             string windup,
             string backswing,
             Vector3 rightTilt,
-            Vector3 leftTilt)
+            Vector3 leftTilt,
+            EffectAnchor anchor)
         {
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
@@ -717,6 +776,14 @@ namespace View.Editor
             entry.FindPropertyRelative("backswingClip").objectReferenceValue = MaybeClip(backswing);
             entry.FindPropertyRelative("rightHandTilt").vector3Value = rightTilt;
             entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
+
+            SerializedProperty anchored = entry.FindPropertyRelative("effectAnchor");
+
+            // The empty string and not null: a serialized string field holds "",
+            // and writing null leaves the previous row's anchor name in the slot
+            // for exactly the reason this method writes every field.
+            anchored.FindPropertyRelative("transformName").stringValue = anchor.TransformName ?? string.Empty;
+            anchored.FindPropertyRelative("tip").vector3Value = anchor.Tip;
         }
 
         /// <summary>
@@ -766,7 +833,8 @@ namespace View.Editor
                     MaybeClip(binding.windup),
                     MaybeClip(binding.backswing),
                     binding.rightTilt,
-                    binding.leftTilt));
+                    binding.leftTilt,
+                    binding.anchor));
             }
 
             units.AddRange(UnboundUnits.StandIns());

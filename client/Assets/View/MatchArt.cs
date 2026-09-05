@@ -58,6 +58,10 @@ namespace View
         [Tooltip("Played across this tower's Backswing. Null on a creep.")]
         private AnimationClip backswingClip;
 
+        [SerializeField]
+        [Tooltip("Where this unit's flashes and tracers leave its art from. Empty for a unit that never fires.")]
+        private EffectAnchor effectAnchor;
+
         /// <summary>A unit that stands there and holds nothing.</summary>
         public static UnitArt Of(int unitId, GameObject model, float scale) =>
             new UnitArt { unitId = unitId, model = model, scale = scale };
@@ -89,7 +93,8 @@ namespace View
             AnimationClip windup,
             AnimationClip backswing,
             Vector3 rightHandTilt = default,
-            Vector3 leftHandTilt = default) =>
+            Vector3 leftHandTilt = default,
+            EffectAnchor effectAnchor = default) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -102,6 +107,7 @@ namespace View
                 backswingClip = backswing,
                 rightHandTilt = rightHandTilt,
                 leftHandTilt = leftHandTilt,
+                effectAnchor = effectAnchor,
             };
 
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
@@ -148,6 +154,18 @@ namespace View
 
         /// <summary>The clip for <see cref="Sim.TowerState.Backswing"/>, or null on a creep.</summary>
         public AnimationClip BackswingClip => backswingClip;
+
+        /// <summary>
+        /// Where this unit's flashes and tracers leave its art from — a bone,
+        /// or a point on what it is holding. Empty for a unit that never fires.
+        /// </summary>
+        /// <remarks>
+        /// Per unit for the same reason the weapon is: a staff tip and a bow
+        /// grip are not the same place on the same rig, and a project-wide
+        /// height above the root is the thing this replaces. It travels with
+        /// the model and the hands because it names a part of them.
+        /// </remarks>
+        public EffectAnchor EffectAnchor => effectAnchor;
 
         /// <summary>
         /// True when both halves are filled in. A zero scale is as incomplete as

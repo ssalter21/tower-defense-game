@@ -203,6 +203,14 @@ where one does not.** Knight, Cleric, Engineer and Druid take the second road.
 > first one. Note that it is not free either way: the client has no `ParticleSystem` and two play-mode tests
 > forbid one, so a glow has to be real mesh geometry or an emissive material.
 
+**A line that shoots names where its shot leaves from, and that is part of choosing the prop.** `UnitArt`
+carries an effect anchor per row — a bone, or a transform inside the held prop, optionally its far end — and
+every flash and tracer is drawn from it. A row without one falls back to a fixed height above its own root,
+which is the thing anchors replaced, so a tier that changes what a tower is holding changes where its shot
+leaves too: a crossbow, a tome and a turret barrel are three different points on three different rigs.
+Anchoring is a view fact and not a signed number, but it is set in the art ticket that chooses the prop,
+because that ticket is the only one that knows what the prop is called.
+
 **Two consequences that are work rather than prose.** A per-row texture does not exist in the view today —
 `UnitArt` has no material field — so tier colour is a small view feature plus an import; the shader path is
 already proven editor-side. And there is **no socket for a prop beside a tower**, only the two hand bones, so

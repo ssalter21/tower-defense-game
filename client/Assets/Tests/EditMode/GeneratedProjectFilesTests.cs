@@ -183,6 +183,19 @@ namespace Tests.EditMode
                 SameTilt(made.RightHandTilt, unit.RightHandTilt, "right-hand item for unit " + unit.UnitId);
                 SameTilt(made.LeftHandTilt, unit.LeftHandTilt, "left-hand item for unit " + unit.UnitId);
 
+                // The anchor, which is two fields and neither is an asset
+                // reference -- so nothing above would have noticed a manifest
+                // still firing every tower from a height above its root.
+                Assert.That(made.EffectAnchor.TransformName, Is.EqualTo(unit.EffectAnchor.TransformName),
+                    GeneratedTestAssets.ManifestPath + " anchors unit " + unit.UnitId
+                    + "'s effects somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+                Assert.That(made.EffectAnchor.Tip, Is.EqualTo(unit.EffectAnchor.Tip),
+                    GeneratedTestAssets.ManifestPath + " takes unit " + unit.UnitId
+                    + "'s anchor from a different end of the same thing than ChosenArt does. "
+                    + "Run tools/build-test-assets.ps1 and commit what it writes.");
+
                 SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);

@@ -380,6 +380,149 @@ namespace Tests.EditMode
         }
 
         /// <summary>
+        /// Every tower's shots leave a point on its own art, and that point is
+        /// on the model or on what the model is holding.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Walked from the shipped unit table rather than from the art</b>,
+        /// for the reason the scale test gives: a walk of the art finds every
+        /// anchor there is and never the row that has none. A placed row is a
+        /// row that shoots, so a placed row with no anchor fires from a fixed
+        /// height above its own root — which is the thing anchors replaced, and
+        /// which no other assertion here would notice.
+        /// </para>
+        /// <para>
+        /// Built through the real <see cref="TowerView"/>, so what is asserted
+        /// is the resolution the game performs and not a second copy of it.
+        /// <c>BuildStatic</c> rather than <c>BuildAnimated</c> because the
+        /// anchor is found before the animator is bound and a Playables graph
+        /// in edit mode would be a second thing that could fail here.
+        /// </para>
+        /// <para>
+        /// The measurements are logged because "leaving the staff tip" is an eye
+        /// check in the end, and the numbers are what tell a reader of a green
+        /// run whether the tip came out at the orb or at the butt.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryTowerFiresFromAPointOnItsOwnArt()
+        {
+            MatchArt art = ChosenArt.Load();
+
+            var measured = 0;
+
+            foreach (UnitType type in StreamingContent.ReadUnitTypes().Types)
+            {
+                if (type.Role != UnitRole.Placed)
+                {
+                    // A row that walks has no shot to draw, so nothing ever
+                    // resolves its anchor and a misspelt one on it would sit in
+                    // two generated files failing nowhere. Held both ways, since
+                    // an anchor that cannot be reached is the one kind this
+                    // cannot make fail by name.
+                    Assert.That(art.ArtFor(type.Id).EffectAnchor.IsSet, Is.False,
+                        $"unit {type.Id} ({type.Label}) walks, and an effect anchor on a walking row is "
+                        + "read by nothing — no creep fires, so it would never resolve and never fail");
+
+                    continue;
+                }
+
+                UnitArt unit = art.ArtFor(type.Id);
+
+                Assert.That(unit.EffectAnchor.IsSet, Is.True,
+                    $"unit {type.Id} ({type.Label}) stands on the board and shoots, and its art names "
+                    + "nowhere for the shot to leave from — so it fires from a height above its own root, "
+                    + "whatever it is holding");
+
+                TowerView tower = BuiltTower(type, unit);
+                Transform anchor = tower.AnchorTransform;
+
+                Assert.That(anchor, Is.Not.Null,
+                    $"unit {type.Id} ({type.Label}) has an anchor that resolved to nothing");
+
+                Assert.That(anchor.IsChildOf(tower.Model.transform), Is.True,
+                    $"unit {type.Id} ({type.Label}) anchors on {anchor.name}, which is not part of its "
+                    + "own model — an effect anchor is a point on the art, not on the scene");
+
+                Vector3 fromRoot = tower.Muzzle - tower.transform.position;
+                float alongTheProp = Vector3.Distance(tower.Muzzle, anchor.position);
+
+                Debug.Log(
+                    $"[anchor] unit {type.Id} ({type.Label}) fires from "
+                    + $"{unit.EffectAnchor.TransformName}, {alongTheProp:F2} m along it, "
+                    + $"{fromRoot.y:F2} m above its base and {fromRoot.magnitude:F2} m from it");
+
+                Assert.That(fromRoot.y, Is.GreaterThan(0f),
+                    $"unit {type.Id} ({type.Label}) fires from below its own feet");
+
+                if (unit.EffectAnchor.Tip != Vector3.zero)
+                {
+                    Assert.That(alongTheProp, Is.GreaterThan(0.05f),
+                        $"unit {type.Id} ({type.Label}) asks for the far end of "
+                        + $"{unit.EffectAnchor.TransformName} and got a point on top of its origin, so "
+                        + "either the prop has no geometry or the tip is being thrown away");
+                }
+
+                measured++;
+            }
+
+            Assert.That(measured, Is.GreaterThan(0),
+                "no row in the shipped table stands still, so this measured nothing at all");
+        }
+
+        /// <summary>
+        /// An anchor naming something the art does not carry stops the view
+        /// being built, and says which name.
+        /// </summary>
+        /// <remarks>
+        /// The alternative is what every silent fallback here would produce: the
+        /// flash and the tracer come out of the model's own origin, which is on
+        /// the floor between the tower's feet, and reads as a bad effect rather
+        /// than as a misspelt string. Same reasoning as
+        /// <see cref="WeaponSocket"/>'s refusal, and the same failure it is
+        /// guarding against — a name that agrees with nothing.
+        /// </remarks>
+        [Test]
+        public void AnAnchorNamingSomethingTheArtDoesNotCarryFailsByName()
+        {
+            UnitArt real = ChosenArt.Load().ArtFor(RangerUnitId);
+
+            UnitArt misspelt = UnitArt.Armed(
+                real.UnitId, real.Model, real.Scale, null, null, null, null, null,
+                default, default, EffectAnchor.At("handslot.left"));
+
+            var host = new GameObject("misspelt-anchor");
+            _spawned.Add(host);
+
+            var tower = host.AddComponent<TowerView>();
+
+            var refused = Assert.Throws<System.InvalidOperationException>(
+                () => tower.BuildStatic(
+                    real.UnitId, TypeOf(RangerUnitId), misspelt, Quaternion.identity));
+
+            Assert.That(refused.Message, Does.Contain("handslot.left"),
+                "the refusal has to name the anchor that was not found, or it sends the reader looking "
+                + "at the art instead of at the string");
+        }
+
+        /// <summary>One tower built the way the game builds it, unposed.</summary>
+        private TowerView BuiltTower(UnitType type, UnitArt art)
+        {
+            var host = new GameObject("tower-" + type.Id);
+            _spawned.Add(host);
+
+            var view = host.AddComponent<TowerView>();
+            view.BuildStatic(type.Id, type, art, Quaternion.identity);
+
+            return view;
+        }
+
+        /// <summary>The shipped row for an id.</summary>
+        private static UnitType TypeOf(int unitId) =>
+            StreamingContent.ReadUnitTypes().Types.First(t => t.Id == unitId);
+
+        /// <summary>
         /// Attaches one held item and measures it. Returns 1 when something was
         /// measured, 0 when the hand was empty.
         /// </summary>

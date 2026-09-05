@@ -100,6 +100,35 @@ namespace Tests.Fixtures
         public static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
+        /// What a held prop's transform is called once <see cref="WeaponSocket"/>
+        /// has put it on the bone: the asset's name, which is the FBX's file
+        /// name. An effect anchor names one of these, or a bone.
+        /// </summary>
+        public const string BowNode = "bow_withString";
+
+        public const string StaffNode = "staff";
+
+        public const string SwordNode = "sword_1handed";
+
+        /// <summary>
+        /// The bow's own origin -- the grip the bone puts in the fist, which is
+        /// where the string is drawn back from.
+        /// </summary>
+        public static readonly EffectAnchor Bow = EffectAnchor.At(BowNode);
+
+        /// <summary>
+        /// The orb on the end of the Mage's staff. The direction is the axis
+        /// <see cref="StaffQuarterTurn"/> was measured from -- shaft along the
+        /// prop's own local +Y, orb at the +Y end -- and the distance is not
+        /// written down anywhere, because <see cref="EffectAnchor"/> reads it
+        /// off the mesh.
+        /// </summary>
+        public static readonly EffectAnchor StaffTip = EffectAnchor.AtTipOf(StaffNode, Vector3.up);
+
+        /// <summary>The point of the Soldier's sword, whose blade runs along the same axis.</summary>
+        public static readonly EffectAnchor SwordTip = EffectAnchor.AtTipOf(SwordNode, Vector3.up);
+
+        /// <summary>
         /// What each row in <c>content/units.txt</c> that has art is drawn as,
         /// and how big, as signed in <c>docs/roster.md</c>. A row that has none
         /// yet is on <see cref="UnboundUnits"/>'s list instead.
@@ -122,24 +151,31 @@ namespace Tests.Fixtures
             string windup,
             string backswing,
             Vector3 rightTilt,
-            Vector3 leftTilt)[] UnitPaths =
+            Vector3 leftTilt,
+            EffectAnchor anchor)[] UnitPaths =
         {
-            (1, MinionModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
-            (2, RogueModelPath, MatchArt.CreepScale, null, null, null, null, null, default, default),
+            (1, MinionModelPath, MatchArt.CreepScale,
+                null, null, null, null, null, default, default, default),
+            (2, RogueModelPath, MatchArt.CreepScale,
+                null, null, null, null, null, default, default, default),
             (3, RangerModelPath, MatchArt.TowerScale,
-                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow),
             (4, MageModelPath, MatchArt.TowerScale,
-                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
+                StaffTip),
             (7, SkeletonMageModelPath, MatchArt.CreepScale,
-                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default),
+                SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default, default),
             (11, KnightModelPath, MatchArt.TowerScale,
-                SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default),
+                SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default,
+                SwordTip),
             (12, MinionModelPath, MatchArt.CreepScale,
-                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default),
+                SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default, default),
             (13, WarriorModelPath, MatchArt.CreepScale,
-                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default),
+                SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default, default),
             (14, RangerModelPath, MatchArt.RangerScale,
-                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -170,7 +206,8 @@ namespace Tests.Fixtures
                     MaybeClip(u.windup),
                     MaybeClip(u.backswing),
                     u.rightTilt,
-                    u.leftTilt))
+                    u.leftTilt,
+                    u.anchor))
                     .Concat(UnboundUnits.StandIns()),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));

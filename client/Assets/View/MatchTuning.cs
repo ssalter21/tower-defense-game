@@ -72,9 +72,16 @@ namespace View
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// How high above a tower's base its shots leave from, in metres. Where
-        /// the tracer starts and the muzzle flash sits.
+        /// How high above a tower's base its shots leave from, in metres, when
+        /// its art names nowhere better.
         /// </summary>
+        /// <remarks>
+        /// A tower with an <see cref="EffectAnchor"/> fires from a bone or from
+        /// a point on what it holds, and every unit whose art is chosen has
+        /// one. This is what a row drawn as the stand-in gets: a mannequin has
+        /// no staff tip to name, and one number for the whole roster is the
+        /// thing anchors replaced.
+        /// </remarks>
         public const float TowerMuzzleHeight = 1.4f;
 
         // ---------------------------------------------------------------

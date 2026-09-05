@@ -1,9 +1,9 @@
-# The capture writes six frames by default; two of them are committed as
-# documentation. README.md says which two and why.
+# The capture writes six frames by default; four of the frames in this folder
+# are committed as documentation. README.md says which four and why.
 #
-# The other four must not be committed, and that cannot be left to whoever runs
-# the capture next. The fourth working agreement is explicit about it: "if a
-# generated file must **not** be committed, that has to be arranged by
+# Everything else it writes must not be committed, and that cannot be left to
+# whoever runs the capture next. The fourth working agreement is explicit about
+# it: "if a generated file must **not** be committed, that has to be arranged by
 # construction — an ignore rule — and not by remembering."
 #
 # Without this file, a plain `tools/capture-match-frames.ps1` leaves four
@@ -11,12 +11,14 @@
 # that fails a push whose run rewrote the repository — goes red for a reason
 # that has nothing to do with the push.
 #
-# The two negations are not load-bearing today, because an ignore rule cannot
-# govern a file git already tracks. They are here so that re-adding either
-# frame after a deliberate deletion works without anybody having to remember
+# The negations are not load-bearing today, because an ignore rule cannot
+# govern a file git already tracks. They are here so that re-adding any of these
+# frames after a deliberate deletion works without anybody having to remember
 # this file exists.
 *.png
 !match-tick-1096.png
+!match-tick-1229.png
+!match-tick-1546.png
 !match-tick-2700.png
 
 # The armed-roster capture's set run writes a manifest beside its PNGs, saying
