@@ -38,6 +38,13 @@ internal static class SweepColumns
     {
         "kind",
         "subject",
+
+        // Beside the subject rather than at the end, because a creep row's
+        // identity is the pair: the same label appears once per wall and the
+        // numbers under it differ by more than any other column in the file.
+        // A wall column somebody has to scroll to is one they will read a row
+        // without.
+        "wall",
         "runs",
         "rounds",
         "wins",
@@ -146,10 +153,24 @@ internal sealed class CsvRow
     /// the failure it is worth spending code on is the quiet one -- a stray
     /// separator shifting every column from one row downwards, which reads as a
     /// balance finding rather than as a broken file.
+    /// <para>
+    /// <b>A full stop is refused for the same reason a comma is</b>, even though
+    /// nothing in this file delimits on one. It is the OTHER decimal separator:
+    /// a spreadsheet opened under a locale that groups on '.' reads a cell
+    /// carrying one as a number, and a reader under a locale that groups on ','
+    /// reads the same cell as two. Every legitimate value here is digits, a hex
+    /// hash or a label off a content file -- and a content file's parser refuses
+    /// a '.' on a data line before it tokenises -- so the only thing this can
+    /// catch is prose assembled in this program, which is exactly the thing that
+    /// has no parser in front of it. It was caught once by a test on the
+    /// committed file alone; this is the same claim where a sweep written
+    /// anywhere else meets it too.
+    /// </para>
     /// </remarks>
     private static string Cell(string value)
     {
         if (value.IndexOf(',') < 0
+            && value.IndexOf('.') < 0
             && value.IndexOf('"') < 0
             && value.IndexOf('\n') < 0
             && value.IndexOf('\r') < 0)

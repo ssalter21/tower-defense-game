@@ -382,11 +382,93 @@ public class CommandLineTests
             rows,
             StringComparer.Ordinal);
 
-        // Two creeps scored, so exactly two creep rows. It was two whole-
+        // Two creeps against three walls, so six creep rows. It was two whole-
         // population rows plus a bin or more under each until #179 deleted the
-        // ingredients axis; a creep's runs are one row again, so a third creep
-        // row would now be a creep nobody asked to score.
-        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
+        // ingredients axis, and two flat until #242 made the wall an axis --
+        // every creep meets every wall, so the rows are the product and a
+        // seventh would be a cell nobody asked to score.
+        Assert.Equal(6, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
+
+        // And the file says how many walls that was, on a coverage row of its
+        // own. A report that carried the wall column without this could be
+        // filtered down to one wall and read as complete.
+        Assert.Contains(
+            new CsvRow()
+                .With("kind", "coverage")
+                .With("subject", "walls")
+                .With("value", "3")
+                .With("of", "3")
+                .With("bounded", "no")
+                .Line,
+            rows,
+            StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public void The_sweep_verb_refuses_a_wall_that_is_not_an_attack_type()
+    {
+        // The whole report hangs off this argument, and the failure of a
+        // defaulted one is the quiet kind: a complete and correct-looking file
+        // scored against walls nobody asked for. A misspelling is how somebody
+        // comparing two reports ends up comparing one against itself.
+        //
+        // OBSERVED: fall back to the roster's own types where a word does not
+        // parse. Both invocations below succeed and write fifteen rows, and the
+        // one that asked for two walls gets three.
+        CommandLineResult unknown = TheCommandLine.Invoke(
+            new[] { "sweep", "--seed", "1", "--walls", "peirce" }.Concat(TheCommandLine.RunContent));
+
+        Assert.NotEqual(0, unknown.ExitCode);
+        Assert.Contains("peirce", unknown.Error + unknown.Output, StringComparison.Ordinal);
+
+        // 'any' is the absence of a restriction rather than a fourth type, so a
+        // file listing it beside pierce would carry two rows a reader would
+        // compare where one is the other's superset.
+        CommandLineResult mixed = TheCommandLine.Invoke(
+            new[] { "sweep", "--seed", "1", "--walls", "any,pierce" }.Concat(TheCommandLine.RunContent));
+
+        Assert.NotEqual(0, mixed.ExitCode);
+
+        // And a wall named twice is the same runs reported again under a
+        // heading nothing tells from the first.
+        CommandLineResult twice = TheCommandLine.Invoke(
+            new[] { "sweep", "--seed", "1", "--walls", "pierce,pierce" }.Concat(TheCommandLine.RunContent));
+
+        Assert.NotEqual(0, twice.ExitCode);
+    }
+
+    [Fact]
+    public void The_sweep_verb_takes_one_unrestricted_wall_where_it_is_asked_for_one()
+    {
+        // The way back to the report this file was before #242: whatever the
+        // defending bot buys, unrestricted. It is a legitimate question -- it
+        // is the wall a run actually meets -- and it is named rather than left
+        // blank so that a one-wall report and a three-wall one cannot be
+        // mistaken for each other by a spreadsheet.
+        //
+        // OBSERVED: leave the wall column blank for the unrestricted wall. The
+        // rows still parse and the file still reads, and every row of it says
+        // nothing about what it was played against.
+        CommandLineResult swept = TheCommandLine.Invoke(
+            new[]
+            {
+                "sweep",
+                "--seed", "20260807",
+                "--runs", "1",
+                "--waves", "2",
+                "--field-size", "1",
+                "--most-creeps", "1",
+                "--no-death",
+                "--walls", "any",
+            }.Concat(TheCommandLine.RunContent))
+            .Succeeded();
+
+        Assert.Contains("\ncreep,minion,any,1,", swept.Output, StringComparison.Ordinal);
+        Assert.Equal(
+            1,
+            swept.Output
+                .Split('\n')
+                .Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -416,7 +498,12 @@ public class CommandLineTests
             .Succeeded();
 
         Assert.StartsWith("kind,subject,", swept.Output, StringComparison.Ordinal);
-        Assert.Contains("\ncreep,minion,2,", swept.Output, StringComparison.Ordinal);
+
+        // The wall is the third cell since #242, and naming it here is the
+        // point: a row that said only "minion" would be one of three with
+        // different numbers under the same heading.
+        Assert.Contains("\ncreep,minion,pierce,2,", swept.Output, StringComparison.Ordinal);
+        Assert.Contains("\ncreep,minion,magic,2,", swept.Output, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -452,11 +539,12 @@ public class CommandLineTests
 
         string[] rows = File.ReadAllText(report).Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        // Two creeps over three seeds, so six runs and the two folded rows they
-        // add up to. Both tables are in one file because the alternative is two
-        // files that can be separated from each other.
-        Assert.Equal(6, rows.Count(row => row.StartsWith("run,", StringComparison.Ordinal)));
-        Assert.Equal(2, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
+        // Two creeps over three seeds against three walls, so eighteen runs and
+        // the six folded rows they add up to. Both tables are in one file
+        // because the alternative is two files that can be separated from each
+        // other.
+        Assert.Equal(18, rows.Count(row => row.StartsWith("run,", StringComparison.Ordinal)));
+        Assert.Equal(6, rows.Count(row => row.StartsWith("creep,", StringComparison.Ordinal)));
 
         // Every one of them names the seed it was played on, which is what
         // makes a row out on the tail something to replay rather than to
