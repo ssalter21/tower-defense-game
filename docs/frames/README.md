@@ -79,10 +79,12 @@ And one that is **not** a frame of the recorded match:
   in one colour, and the pool standing in front of a creep's health is a second
   segment of a bar above it. Captured with `-Distance 20 -Width 1600` against
   [`effects-roster.txt`](effects-roster.txt), which is the shipped roster with a
-  bubble added to two of its rows — the only bubble `content/units.txt` authors
-  is the Mage's splash, which is damage and lands instantly, so nothing in the
-  recorded match is ever slowed or shielded and a frame of it shows none of
-  this. **What a slowed, hastened, cursed or
+  bubble added to two of its rows — the recorded wave sends Minions and Skeleton
+  Scouts against Archers and Mages, and not one of those four rows authors a
+  bubble that lasts. The Mage's splash is damage and lands instantly, and the
+  four creep auras the roster carries are on rows the recorded wave does not
+  send, so nothing in the recorded match is ever slowed or shielded and a frame
+  of it shows none of this. **What a slowed, hastened, cursed or
   shielded body should actually look like is Sam's to sign**, and this is what
   the plainest first answer looks like on the real board. Five things about it
   are placeholder answers to questions nobody has taken: one colour covers both
@@ -98,6 +100,14 @@ overtake has moved twice already — re-capture the pair whenever it does. The
 caption is worth keeping attached to the *landmark* rather than to the number,
 because a superseded tick is usually still a tick of the match, so a stale frame
 goes on looking perfectly reasonable.
+
+**`rendered-from.txt` is what the capture leaves behind saying which content it
+drew.** A re-capture that comes out pixel-identical — which is what happens
+whenever the content that moved is not in this particular frame — leaves nothing
+for a date to see, so a date alone would call a current frame stale.
+[`check-docs.ps1`](../../tools/check-docs.ps1) reads the record where the date
+says no. It is written by the capture and never by hand; see
+[`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
 ## And one sheet that is not a frame at all
 

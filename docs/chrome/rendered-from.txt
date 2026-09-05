@@ -1,0 +1,15 @@
+# What each picture in this directory was drawn from: one line per
+# picture, and a digest over content/map.txt, content/units.txt,
+# content/upgrades.txt and content/dressing.txt as they stood when it
+# was captured.
+#
+# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
+# and only the thing that drew it knows that. tools/check-docs.ps1 reads
+# it where a commit date cannot answer -- a re-render that came out
+# pixel-identical leaves git nothing to date.
+#
+#       picture                        drawn from
+
+picture  as-built-build.png              714C2D52791521AD
+picture  as-built-offer.png              714C2D52791521AD
+picture  as-built-placed.png             714C2D52791521AD

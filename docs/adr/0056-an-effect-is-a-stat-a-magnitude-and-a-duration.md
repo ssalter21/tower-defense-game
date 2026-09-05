@@ -135,8 +135,10 @@ it stands in front of.
 > something had to be chosen for the column to mean anything at all — and what it grants, how long it lasts
 > and whether killing the emitter strips it are shapes of the Necromancer rather than shapes of the
 > simulation. What is written above is the implementer's reading, taken because an implementation cannot
-> leave it blank; it is Sam's to confirm or move, and [the roster](../roster.md#7--necromancer--status-live)
-> carries it as an open question rather than a closed one.
+> leave it blank; it is Sam's to confirm or move, and
+> [the Necromancer](../roster.md#38--necromancer--status-live) is the row it now applies to — the ward aura
+> landed there when the roster widened, and id 7, which had been called the necromancer, took a haste aura
+> and the Skeleton Mage's name instead.
 
 **A floor under the cooldown modifier.** The speed floor exists because a speed of zero is a *termination*
 hazard — nothing else in the simulation has one. A cooldown of zero is an ordinary authoring that the column

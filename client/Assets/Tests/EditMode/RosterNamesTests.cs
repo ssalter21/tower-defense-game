@@ -34,20 +34,19 @@ namespace Tests.EditMode
         /// <remarks>
         /// <b>A row on <see cref="UnboundUnits"/>'s list is here too, and that
         /// is the point.</b> The twenty-three rungs the nine tower lines added
-        /// arrive in the simulation ahead of their art, so they draw the
-        /// stand-in — but their names were signed with the rest of the roster,
-        /// and a name does not wait on a model. What the exemption in the walk
-        /// below covers is a row whose name the index has not signed at all.
+        /// and the twelve creep rows after them arrive in the simulation ahead
+        /// of their art, so they draw the stand-in — but their names were
+        /// signed with the rest of the roster, and a name does not wait on a
+        /// model. What the exemption in the walk below covers is a row whose
+        /// name the index has not signed at all.
         /// </remarks>
         /// <remarks>
-        /// <b>Id 7 is the one row here that is not what the index says, and it
-        /// is deliberate.</b> <c>docs/roster.md</c> renamed it Skeleton Mage to
-        /// free the name for the creep that should carry it, and
-        /// <c>content/units.txt</c> still labels it <c>necromancer</c>: the
-        /// relabel and the new Necromancer row have to land together, because
-        /// two rows cannot share a label. This table follows the file until
-        /// they do, so that it goes on being what a player would read on
-        /// screen.
+        /// <b>Id 7 is Skeleton Mage and the Necromancer is id 38, and the two
+        /// had to move together.</b> <c>docs/roster.md</c> renamed id 7 to free
+        /// the name for the creep that should carry it, and two rows cannot
+        /// share a label — so the relabel waited for the row that wanted the
+        /// name. Both are here now, which is what closes the one disagreement
+        /// this table used to record against the file.
         /// </remarks>
         private static readonly (int Id, string Name)[] TheRoster =
         {
@@ -55,7 +54,7 @@ namespace Tests.EditMode
             (2, "Skeleton Scout"),
             (3, "Archer"),
             (4, "Mage"),
-            (7, "Necromancer"),
+            (7, "Skeleton Mage"),
             (11, "Soldier"),
             (12, "Skeleton"),
             (13, "Skeleton Warrior"),
@@ -83,6 +82,18 @@ namespace Tests.EditMode
             (35, "Engineer"),
             (36, "Artificer"),
             (37, "Mortar"),
+            (38, "Necromancer"),
+            (39, "Bone Golem"),
+            (40, "Black Knight"),
+            (41, "Frost Wight"),
+            (42, "Abomination"),
+            (43, "Vampire"),
+            (44, "Witch"),
+            (45, "Fiend"),
+            (46, "Shade"),
+            (47, "Cursed Villager"),
+            (48, "Werewolf"),
+            (49, "Grave Robber"),
         };
 
         [Test]

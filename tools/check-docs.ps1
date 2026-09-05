@@ -32,7 +32,12 @@
        re-captured in the same commit as the content passes, per rule 4 of
        AGENTS.md. It is a date and not the pixels: a rename or a rebase that
        re-stamps a picture buys it a pass it did not earn, and only a person
-       looking at it can catch that. A sheet docs/chrome/README.md lists as a
+       looking at it can catch that. Where the date says no, the capture's own
+       record is asked -- rendered-from.txt beside the pictures, naming the
+       content each was drawn from -- because a re-render that came out
+       pixel-identical leaves git nothing to date, and that is what happens
+       every time the content that moved is not drawn in that picture. See
+       tools/_rendered-from.ps1. A sheet docs/chrome/README.md lists as a
        chosen arrangement rather than as a baseline is named as exempt and
        reported n/a, because it records a decision rather than describing the
        board; an exemption naming a file that is no longer committed is itself
@@ -206,14 +211,15 @@ if (-not $ghReady) {
 }
 
 # --- 2. A picture is newer than the content it was rendered from --------------
-# The authored content a sheet or a frame draws: the board, the roster, the
-# ladder and the scenery standing on the board.
-$rendered = @(
-    'content/map.txt'
-    'content/units.txt'
-    'content/upgrades.txt'
-    'content/dressing.txt'
-)
+# The authored content a sheet or a frame draws -- the board, the roster, the
+# ladder and the scenery standing on the board -- is named in
+# tools/_rendered-from.ps1, beside the digest the capture tools record against
+# every picture they write. One list, so the capture and this cannot disagree
+# about what a picture is a claim about.
+. (Join-Path $PSScriptRoot '_rendered-from.ps1')
+
+$rendered = Get-DrawnContent
+$drawnStamp = Get-DrawnContentStamp $repoRoot
 
 Write-Host ""
 Write-Host "2. A committed sheet or frame is at least as new as the content it was rendered from."
@@ -271,8 +277,24 @@ foreach ($picture in $pictures) {
     # carries the identical commit stamp.
     if ($when -ge $contentMoved) {
         Checked "$picture was committed $(Day $when), and $newestContent, the last of the content it draws to move, moved $(Day $contentMoved)."
+        continue
+    }
+
+    # A DATE CANNOT SEE A RE-RENDER THAT CAME OUT IDENTICAL. Where the content
+    # that moved is not drawn in this particular picture -- which is most
+    # pictures for most changes -- re-capturing rewrites the same pixels, there
+    # is no diff, and the picture keeps the commit stamp it had. So the capture's
+    # own record is asked second: it names the content each picture was drawn
+    # from, and the tool that drew it is what wrote the line.
+    $recorded = Read-RenderedFrom (Split-Path (Join-Path $repoRoot $picture) -Parent)
+    $name = Split-Path $picture -Leaf
+
+    if (-not $recorded.ContainsKey($name)) {
+        Refuse "$picture was captured $(Day $when) and shows the content as it was then; $newestContent moved on $(Day $contentMoved), and nothing beside the picture says what it was drawn from. Re-capture it -- the capture writes rendered-from.txt as it goes."
+    } elseif ($recorded[$name] -ne $drawnStamp) {
+        Refuse "$picture was drawn from content $($recorded[$name]) and this repository holds $drawnStamp, so the picture is of a game it no longer builds. Re-capture it."
     } else {
-        Refuse "$picture was captured $(Day $when) and shows the content as it was then; $newestContent moved on $(Day $contentMoved), so the picture is of a game this repository no longer builds."
+        Checked "$picture was committed $(Day $when), before $newestContent moved on $(Day $contentMoved) -- and it was drawn from content $drawnStamp, which is what this repository holds, so re-rendering it draws the same pixels."
     }
 }
 

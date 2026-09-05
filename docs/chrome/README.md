@@ -69,7 +69,7 @@ it as *invalid escape character* rather than as a bad path.
 **The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.
-- `as-built-placed.png` — a soldier down and two creeps in the wave, at 44 gold left.
+- `as-built-placed.png` — a soldier down and two creeps in the wave, at 52 gold left.
 - `as-built-offer.png` — the ladder open on an archer, offering a ranger for 40.
 
 The rest is regenerable and not committed, and that is arranged by [`.gitignore`](.gitignore) rather than by
@@ -81,6 +81,11 @@ what stands on it and these three are stale while going on looking entirely reas
 wrong number in it is not a picture that announces itself. Re-capture them whenever `content/units.txt`,
 `content/upgrades.txt`, `content/map.txt` or `content/dressing.txt` moves. Those four are the ones
 [`check-docs.ps1`](../../tools/check-docs.ps1) dates the committed sheets against.
+
+**`rendered-from.txt` is what the capture leaves behind saying which content it drew.** A re-capture that comes
+out pixel-identical — which is what happens whenever the content that moved is not on these sheets — leaves
+nothing for a date to see, so the date alone would call a current sheet stale. The record answers that, and it
+is written by the capture and never by hand. See [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
 ## Two things that had to be measured
 

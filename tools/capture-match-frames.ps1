@@ -44,6 +44,13 @@ $project = Join-Path $repoRoot 'client'
 if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
 if (-not $OutDir) { $OutDir = Join-Path $repoRoot 'docs/frames' }
 
+. (Join-Path $PSScriptRoot '_rendered-from.ps1')
+
+# What is already sitting there, so the frames this run writes can be told from
+# the ones it did not touch. A run captures the ticks it was asked for and says
+# nothing about the others.
+$before = Get-PictureWriteTimes $OutDir
+
 $unityArgs = @(
     '-batchmode', '-quit'
     '-projectPath', "`"$project`""
@@ -76,6 +83,8 @@ if ($proc.ExitCode -ne 0) {
     Write-Host "see $LogFile" -ForegroundColor Red
     exit $proc.ExitCode
 }
+
+Update-RenderedFrom $OutDir (Get-WrittenPictures $OutDir $before) (Get-DrawnContentStamp $repoRoot)
 
 Get-ChildItem -LiteralPath $OutDir -Filter '*.png' | ForEach-Object {
     Write-Host ("  {0}  {1:N0} bytes" -f $_.Name, $_.Length)

@@ -313,7 +313,8 @@ that spends its whole share on a covered route now stops the light end of the ro
 the skeleton scout dealing **0** over eight runs and the minion **2,073**, against 52,687 and 36,847 before.
 A row of zeroes ranks against nothing, carries a cost efficiency of zero that means "never got through" rather
 than "poor value", and cannot disagree with itself across seeds — `SweepTests` had to move its determinism
-assertion to the necromancer to find a number that still moves.
+assertion up the roster to find a number that still moves — first to id 7, and then, once that row gained a
+haste aura and began leaking in full, to the skeleton.
 
 **It is a real reading of the board and not a broken harness**, which is what makes it a question. Three
 shapes it could take: leave it and read a zero as the finding it is; play the sweep against a thinner wall so

@@ -78,6 +78,23 @@ public class ContentTests
     /// <summary>The Engineer, whose shell is the longest thing in the air.</summary>
     private const int Engineer = 35;
 
+    /// <summary>The Shade, which is the cheapest body on the roster and the fastest.</summary>
+    private const int Shade = 46;
+
+    /// <summary>The Bone Golem, which is the dearest body.</summary>
+    private const int BoneGolem = 39;
+
+    /// <summary>The Abomination, which is the slowest.</summary>
+    private const int Abomination = 42;
+
+    /// <summary>The Black Knight, which carries the most armour.</summary>
+    private const int BlackKnight = 40;
+
+    /// <summary>
+    /// The effective health one gold buys a sender at the creep rule's rate.
+    /// </summary>
+    private const int EffectiveHealthPerGold = 160;
+
     /// <summary>
     /// The Mage line, which is the one line the cost rule does not price. The
     /// Mage is priced for a splash the bodies term cannot count, and the two
@@ -110,28 +127,30 @@ public class ContentTests
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(32, table.Count);
+        Assert.Equal(44, table.Count);
         Assert.Equal("minion", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
         Assert.Equal(Delivery.Projectile, table.ById(4).Delivery);
         Assert.Equal(33, table.ById(4).ProjectileFlightTicks);
 
-        // Five of them walk, which is what an offering is drawn out of, and
-        // twenty-seven stand -- nine tower lines of three rungs each. The
+        // Seventeen of them walk, which is what an offering is drawn out of,
+        // and twenty-seven stand -- nine tower lines of three rungs each. The
         // walker count is what lets the ruleset ask for three ordinary options
-        // a round, and it is the tightest it has ever been: five walkers
-        // against three options puts most of the roster on every menu.
+        // a round, and twelve more of them is the loosest it has ever been:
+        // seventeen walkers against three options puts most of the roster off
+        // any one menu.
         //
-        // The twenty-three rows the nine lines added changed neither of those,
-        // which is the point of a tier being a row: an offering is drawn from
-        // the walkers alone, so a new tower does not enter a menu and cannot
-        // move a draw.
+        // The twenty-three rows the nine lines added moved only the second of
+        // those numbers, which is the point of a tier being a row: an offering
+        // is drawn from the walkers alone, so a new tower does not enter a menu
+        // and cannot move a draw. The twelve creep rows move the first, and
+        // that is the same rule read from the other side.
         //
         // OBSERVED: change the skeleton's role from moving to placed in
-        // content/units.txt. The walker count goes red, 5 against 4, and the
+        // content/units.txt. The walker count goes red, 17 against 16, and the
         // offering's own refusal follows it in BuildPhaseTests.
-        Assert.Equal(5, table.Types.Count(row => row.Role == UnitRole.Moving));
+        Assert.Equal(17, table.Types.Count(row => row.Role == UnitRole.Moving));
         Assert.Equal(27, table.Types.Count(row => row.Role == UnitRole.Placed));
 
         // The five retired ids are gone and stay gone. Ids are never reused, so
@@ -205,24 +224,38 @@ public class ContentTests
                 .Distinct()
                 .OrderBy(type => (int)type));
 
-        // The ends of each axis, named. The Skeleton Scout is the cheapest body
-        // and the fastest; the Skeleton Warrior is the dearest, the slowest and
-        // carries the most armour; Overwatch outranges every other tower at
-        // eight hexes and the Engineer's shell spends the longest in the air;
-        // the Soldier is the cheapest thing that stands and shares the shortest
-        // reach with the three other melee rungs.
+        // The ends of each axis, named. The Shade is the cheapest body and the
+        // fastest; the Bone Golem is the dearest, the Abomination the slowest
+        // and the Black Knight carries the most armour; Overwatch outranges
+        // every other tower at eight hexes and the Engineer's shell spends the
+        // longest in the air; the Soldier is the cheapest thing that stands and
+        // shares the shortest reach with the three other melee rungs.
         //
-        // OBSERVED: take the Warrior's forty-five points of armour down to
-        // zero. Its own row goes red, 45 against 0, and the dearest-walker
-        // assertion goes red with it -- at zero armour the Warrior prices at 21
-        // and the Necromancer's 19 is no longer the row it beats by much --
-        // because armour points are half of what a heavy body is.
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(2).Cost);
-        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(2).SpeedMilliHexPerTick);
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(13).Cost);
+        // ALL FOUR WALKER ENDS MOVED WHEN THE ROSTER WIDENED, and every one of
+        // them moved to a different row: the twelve creep rows signed on
+        // 5 September 2026 span 8 to 90 gold, 12 to 84 milli-hexes a tick and 0
+        // to 80 points of armour, where the five before them spanned 9 to 31,
+        // 18 to 56 and 0 to 45. Naming four rows rather than two is what that
+        // costs, and it is what stops one row quietly holding two ends.
+        //
+        // OBSERVED: take the Black Knight's eighty points of armour down to
+        // zero. Its own row goes red, 80 against 0, and nothing else does --
+        // which is the shape of the check: an end is held against the row that
+        // holds it rather than against a number written twice.
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost),
+            table.ById(Shade).Cost);
+        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(Shade).SpeedMilliHexPerTick);
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost),
+            table.ById(BoneGolem).Cost);
         Assert.Equal(
             table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.SpeedMilliHexPerTick),
-            table.ById(13).SpeedMilliHexPerTick);
+            table.ById(Abomination).SpeedMilliHexPerTick);
+        Assert.Equal(
+            table.Types.Max(row => row.Armour),
+            table.ById(BlackKnight).Armour);
+        Assert.Equal(80, table.ById(BlackKnight).Armour);
         Assert.Equal(45, table.ById(13).Armour);
         Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(Overwatch).RangeMilliHex);
         Assert.Equal(8000, table.ById(Overwatch).RangeMilliHex);
@@ -257,6 +290,21 @@ public class ContentTests
         Assert.Equal(3, TheNineLines.Count(line => line.Attack == AttackType.Impact));
         Assert.Equal(2, TheNineLines.Count(line => line.Attack == AttackType.Pierce));
         Assert.Equal(4, TheNineLines.Count(line => line.Attack == AttackType.Magic));
+
+        // And the creep side balances that back: seven armoured, five swift,
+        // five arcane. Magic is over-represented among the towers on purpose
+        // and armoured among the creeps for the same reason, so the two counts
+        // are one decision read from its two ends -- which is why the spread is
+        // held here rather than left to whoever adds the next row.
+        //
+        // OBSERVED: make the Fiend armoured instead of arcane. This goes red,
+        // eight armoured against seven, and nothing else in the file notices --
+        // which is the whole reason the count is written down.
+        UnitType[] walkers = table.Types.Where(row => row.Role == UnitRole.Moving).ToArray();
+
+        Assert.Equal(7, walkers.Count(row => row.ArmourType == ArmourType.Armoured));
+        Assert.Equal(5, walkers.Count(row => row.ArmourType == ArmourType.Swift));
+        Assert.Equal(5, walkers.Count(row => row.ArmourType == ArmourType.Arcane));
     }
 
     [Fact]
@@ -280,15 +328,15 @@ public class ContentTests
 
         foreach (UnitType creep in table.Types.Where(row => row.Role == UnitRole.Moving))
         {
-            int effective = creep.MaxHp * (100 + creep.Armour) / 100;
+            int effective = EffectiveHealth(creep);
 
             Assert.True(
-                Math.Abs(effective - (creep.Cost * 160)) * 10 <= effective,
+                Math.Abs(effective - (creep.Cost * EffectiveHealthPerGold)) * 10 <= effective,
                 creep.Label
                 + " costs "
                 + creep.Cost
                 + " gold, which buys "
-                + (creep.Cost * 160)
+                + (creep.Cost * EffectiveHealthPerGold)
                 + " effective health at the roster's rate, against the "
                 + effective
                 + " it actually carries. Every walking row is within a tenth of it.");
@@ -309,6 +357,14 @@ public class ContentTests
         Assert.Equal(AttackType.None, table.ById(1).AttackType);
         Assert.Equal(0, table.ById(1).Armour);
         Assert.Equal(ArmourType.Swift, table.ById(2).ArmourType);
+
+        // The two speeds nothing is allowed to move. The Scout is exactly twice
+        // the Minion, so the two are level for exactly one tick as one passes
+        // the other -- which is the case the target-selection tiebreak exists
+        // for, and the only case that consults it. Every creep row added since
+        // is authored around this pair rather than over it.
+        Assert.Equal(28, table.ById(1).SpeedMilliHexPerTick);
+        Assert.Equal(56, table.ById(2).SpeedMilliHexPerTick);
 
         // A tower: an attack type, and no armour type because it has no health
         // pool to be protected.
@@ -465,6 +521,122 @@ public class ContentTests
     /// </remarks>
     private static int DamageASecondTimesBodies(UnitType tower) =>
         (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
+
+    /// <summary>
+    /// The pool a walking row stands on against the damage matrix: its health
+    /// times its armour multiplier. It is what the creep price is derived from.
+    /// </summary>
+    /// <remarks>
+    /// <b>A shield is deliberately not in it.</b> A shield is raw -- armour and
+    /// the type chart do not touch it -- and the cost rule has no term for one,
+    /// so the two rows carrying a pool are priced as though they did not. One
+    /// expression, so the rule and the note about what it cannot see are
+    /// reading the same number.
+    /// </remarks>
+    private static int EffectiveHealth(UnitType creep) =>
+        creep.MaxHp * (100 + creep.Armour) / 100;
+
+    [Fact]
+    public void The_four_creep_auras_are_on_the_rows_the_roster_signs_them_on()
+    {
+        // Four walking rows carry a bubble and every one of them is an aura:
+        // a creep never attacks, so there is no shot for a bubble to go off
+        // with and a period is the only clock one can have. What each carries
+        // is transcribed from docs/roster.md rather than derived, so a row
+        // quietly changing what it does arrives here as a named difference.
+        //
+        // THE SIDE A BUBBLE REACHES DEPENDS ON WHAT IS EMITTING IT. Three of
+        // these say `friend` and reach the other creeps; the Frost Wight says
+        // `enemy` and is the one aura on the roster that reaches the tower
+        // side, which is why its payload is a cooldown and theirs are not.
+        //
+        // OBSERVED: give the Witch a payload of `speed` instead of `armour`.
+        // This goes red on her row, and nothing at load refuses it -- a speed
+        // reaching creeps is a legal bubble, so the only thing standing between
+        // the roster and a second haste aura is this list.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        (int Id, string Label, BubbleAffects Affects, BubblePayload Payload, int Magnitude, int Period, int Duration)[] auras =
+        {
+            (7, "skeleton-mage", BubbleAffects.Friend, BubblePayload.Speed, 20, 30, 30),
+            (38, "necromancer", BubbleAffects.Friend, BubblePayload.Shield, 25, 90, 0),
+            (41, "frost-wight", BubbleAffects.Enemy, BubblePayload.Cooldown, 30, 30, 30),
+            (44, "witch", BubbleAffects.Friend, BubblePayload.Armour, 30, 30, 30),
+        };
+
+        foreach ((int id, string label, BubbleAffects affects, BubblePayload payload, int magnitude, int period, int duration) in auras)
+        {
+            UnitType creep = table.ById(id);
+
+            Assert.Equal(label, creep.Label);
+            Assert.Equal(UnitRole.Moving, creep.Role);
+            Assert.True(creep.Bubble.IsAnAura, label + " carries an aura rather than a bubble on a shot");
+            Assert.Equal(BubbleOrigin.Self, creep.Bubble.Origin);
+            Assert.Equal(2000, creep.Bubble.RadiusMilliHex);
+            Assert.Equal(affects, creep.Bubble.Affects);
+            Assert.Equal(payload, creep.Bubble.Payload);
+            Assert.Equal(magnitude, creep.Bubble.Magnitude);
+            Assert.Equal(period, creep.Bubble.PeriodTicks);
+            Assert.Equal(duration, creep.Bubble.DurationTicks);
+        }
+
+        // And those four are all of them, so a fifth is a decision somebody
+        // took rather than a row that slipped in beside four others.
+        Assert.Equal(
+            auras.Select(aura => aura.Id),
+            table.Types.Where(row => row.Role == UnitRole.Moving && row.Bubble.Present).Select(row => row.Id));
+    }
+
+    [Fact]
+    public void The_two_raw_pools_on_the_roster_are_unpriced_and_the_rows_carry_the_gap()
+    {
+        // THE FINDING, PINNED RATHER THAN TUNED AWAY, and it is the creep
+        // side's version of the Mage's. A creep costs its effective health over
+        // a hundred and sixty, and effective health is the pool times the
+        // armour multiplier -- so a shield, which is raw and which armour and
+        // the type chart do not touch, is worth nothing to the price at all.
+        //
+        // Two rows carry one. The Vampire's 1400 is half its own health again
+        // and the Grave Robber's 2000 two thirds of its, and both are priced as
+        // though neither existed: what the defense actually has to spend to
+        // stop them is the sum, and what the sender is charged is the pool
+        // alone.
+        //
+        // THE GAP IS HELD OPEN ON PURPOSE. It is the same family as range and
+        // bubble radius on the tower rule -- a term nobody has a coefficient
+        // for -- and the sweep is what is meant to derive one. Hand-correcting
+        // either cost here would be authoring a creep price, which the roster
+        // says is never authored.
+        //
+        // OBSERVED: reprice the Vampire to cover its shield. Every_walking_row
+        // above goes red rather than this, because that rule is the one being
+        // obeyed and this is the note about what it cannot see.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        UnitType[] pools = table.Types
+            .Where(row => row.Role == UnitRole.Moving && row.Shield > 0)
+            .ToArray();
+
+        Assert.Equal(new[] { "vampire", "grave-robber" }, pools.Select(row => row.Label));
+        Assert.Equal(new[] { 1400, 2000 }, pools.Select(row => row.Shield));
+
+        foreach (UnitType creep in pools)
+        {
+            int priced = EffectiveHealth(creep);
+            int carried = priced + creep.Shield;
+
+            Assert.True(
+                creep.Cost * EffectiveHealthPerGold < carried,
+                creep.Label
+                + " costs "
+                + creep.Cost
+                + " gold, which the rule derived from "
+                + priced
+                + " effective health -- and the body actually stands on "
+                + carried
+                + ", because the shield is raw and the rule has no term for it.");
+        }
+    }
 
     [Fact]
     public void Every_damage_and_health_number_in_the_committed_table_is_at_the_tenfold_scale()

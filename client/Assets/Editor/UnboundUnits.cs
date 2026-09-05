@@ -76,6 +76,16 @@ namespace View.Editor
             (31, MatchArt.TowerScale),
             (32, MatchArt.TowerScale), (33, MatchArt.TowerScale), (34, MatchArt.TowerScale),
             (35, MatchArt.TowerScale), (36, MatchArt.TowerScale), (37, MatchArt.TowerScale),
+
+            // The twelve creep rows the roster widened to, ids 38 to 49, in the
+            // same order. Every one of them walks, so every one of them is a
+            // creep scale — and a stand-in creep is handed the shared walk and
+            // death clips, so these slide down the corridor rather than
+            // standing still the way the rungs above do.
+            (38, MatchArt.CreepScale), (39, MatchArt.CreepScale), (40, MatchArt.CreepScale),
+            (41, MatchArt.CreepScale), (42, MatchArt.CreepScale), (43, MatchArt.CreepScale),
+            (44, MatchArt.CreepScale), (45, MatchArt.CreepScale), (46, MatchArt.CreepScale),
+            (47, MatchArt.CreepScale), (48, MatchArt.CreepScale), (49, MatchArt.CreepScale),
         };
 
         /// <summary>Whether this row is one of the ones with no art yet.</summary>

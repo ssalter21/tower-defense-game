@@ -25,7 +25,7 @@ not an omission, it is the ask** — the blanks are the agenda for the next conv
 `live` — there is a row in `content/units.txt`. `retired` — there was one, and there is not now.
 
 **Ids come from `units.txt`'s one global space and ascend forever.** Never reused, never an index, never
-reserved in advance — the next unit built takes id 38, whatever it is. **A tier is its own id and its own row**;
+reserved in advance — the next unit built takes id 50, whatever it is. **A tier is its own id and its own row**;
 the Sergeant is not the Soldier with a flag set.
 
 ## What things cost
@@ -96,8 +96,13 @@ through three tiers**.
 
 **Two speed relationships are load-bearing.** The Scout walks at exactly **twice** the Minion — 56 against 28 —
 so two bodies are level for exactly one tick as one passes the other, which is the case the target-selection
-tiebreak exists for. The Necromancer at 33 and the Warrior at 18 are deliberately *not* whole multiples, so a
+tiebreak exists for. The Skeleton Mage at 33 and the Warrior at 18 are deliberately *not* whole multiples, so a
 pass that lands between ticks exists as well. A merely-different speed silently deletes one of those two cases.
+
+**The twelve rows added on 5 September 2026 populate both cases and neither is an accident.** The Shade's 84 is
+exactly three Minions and the Bone Golem's 14 exactly half of one, so both are passed on whole ticks; 12, 16,
+22, 44 and 50 are none of them multiples. The roster now spans **a factor of seven in speed**, from the
+Abomination at 12 to the Shade at 84.
 
 ## The index
 
@@ -135,23 +140,24 @@ pass that lands between ticks exists as well. A merely-different speed silently 
 | 35 | Engineer | tower | 1 | live | `engineer` |
 | 36 | Artificer | tower | 2 | live | `artificer` |
 | 37 | Mortar | tower | 3 | live | `mortar` |
-| — | Necromancer | creep | — | signed | `necromancer` |
-| — | Bone Golem | creep | — | signed | `bone-golem` |
-| — | Black Knight | creep | — | signed | `black-knight` |
-| — | Frost Wight | creep | — | signed | `frost-wight` |
-| — | Abomination | creep | — | signed | `abomination` |
-| — | Vampire | creep | — | signed | `vampire` |
-| — | Witch | creep | — | signed | `witch` |
-| — | Fiend | creep | — | signed | `fiend` |
-| — | Shade | creep | — | signed | `shade` |
-| — | Cursed Villager | creep | — | signed | `cursed-villager` |
-| — | Werewolf | creep | — | signed | `werewolf` |
-| — | Grave Robber | creep | — | signed | `grave-robber` |
+| 38 | Necromancer | creep | — | live | `necromancer` |
+| 39 | Bone Golem | creep | — | live | `bone-golem` |
+| 40 | Black Knight | creep | — | live | `black-knight` |
+| 41 | Frost Wight | creep | — | live | `frost-wight` |
+| 42 | Abomination | creep | — | live | `abomination` |
+| 43 | Vampire | creep | — | live | `vampire` |
+| 44 | Witch | creep | — | live | `witch` |
+| 45 | Fiend | creep | — | live | `fiend` |
+| 46 | Shade | creep | — | live | `shade` |
+| 47 | Cursed Villager | creep | — | live | `cursed-villager` |
+| 48 | Werewolf | creep | — | live | `werewolf` |
+| 49 | Grave Robber | creep | — | live | `grave-robber` |
 | 5, 6, 8, 9, 10 | *retired* | — | — | — | see [below](#what-is-retired-and-why) |
 
-> **id 7's label moves as well as its name.** It was `necromancer` and it is `skeleton-mage`, because the new
-> Necromancer row wants that label and two rows cannot share one. Renaming a label moves no hash — nothing in
-> the simulation branches on it — so this is free, and it is the only reason the rename is cheap.
+> **id 7's label moved as well as its name, and both landed with the Necromancer row.** It was `necromancer`
+> and it is `skeleton-mage`, because the new Necromancer row wanted that label and two rows cannot share one —
+> which is why the rename waited for the row. Renaming a label moves no hash; nothing in the simulation
+> branches on it. **What moved the hash is the aura signed with the rename**, and the twelve rows beside it.
 
 > **Tiers 1 and 2 are named for a body; a capstone is named for the upgrade.** Soldier → Sergeant → Shield
 > Wall changes what kind of noun the row is at the top rung, and that is deliberate rather than a slip: a
@@ -609,32 +615,52 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 **Creeps never attack.** `dmgMin`, `dmgMax` and `attack` are zero and `none` on every walking row, and no aura
 below is an exception to that — they buff, shield, hasten and hobble, and none of them deals damage.
 
-> **Seventeen creeps are signed as of 5 September 2026** — the five live rows and twelve new ones. Armour is
-> spread deliberately: **seven armoured, five swift, five arcane**, which balances back a tower side that is
-> four-ninths magic. The warning below about a barely-exercised type chart is what that spread answers.
+> **Seventeen creeps are live as of 5 September 2026** — the five older rows and twelve new ones, at ids 38 to
+> 49. Armour is spread deliberately: **seven armoured, five swift, five arcane**, which balances back a tower
+> side that is four-ninths magic, and which is what closed the warning this section used to carry about a
+> matrix with a single occupant in two of its three columns.
 
 **Every creep with a health pool carries one armour type from the fixed three-way cycle**, so "no armour" is
 not available: `armourValue 0` means the type still applies, at zero points.
 
-**The five signed rows, in full:**
+**All seventeen rows, in full:**
 
-| id | name | maxHp | speed | armour | armourValue | dying | effective hp | cost |
-|---|---|---|---|---|---|---|---|---|
-| 1 | Minion | 1550 | 28 | armoured | 0 | 36 | 1550 | **10** |
-| 2 | Skeleton Scout | 1500 | 56 | swift | 0 | 36 | 1500 | **9** |
-| 7 | Skeleton Mage | 2400 | 33 | arcane | 25 | 36 | 3000 | **19** |
-| 12 | Skeleton | 2200 | 28 | armoured | 20 | 36 | 2640 | **17** |
-| 13 | Skeleton Warrior | 3400 | 18 | armoured | 45 | 48 | 4930 | **31** |
+| id | name | maxHp | speed | armour | armourValue | shield | dying | effective hp | cost |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Minion | 1550 | 28 | armoured | 0 | — | 36 | 1550 | **10** |
+| 2 | Skeleton Scout | 1500 | 56 | swift | 0 | — | 36 | 1500 | **9** |
+| 7 | Skeleton Mage | 2400 | 33 | arcane | 25 | — | 36 | 3000 | **19** |
+| 12 | Skeleton | 2200 | 28 | armoured | 20 | — | 36 | 2640 | **17** |
+| 13 | Skeleton Warrior | 3400 | 18 | armoured | 45 | — | 48 | 4930 | **31** |
+| 38 | Necromancer | 2600 | 28 | arcane | 30 | — | 0 | 3380 | **21** |
+| 39 | Bone Golem | 9000 | 14 | armoured | 60 | — | 0 | 14400 | **90** |
+| 40 | Black Knight | 5000 | 22 | armoured | 80 | — | 0 | 9000 | **56** |
+| 41 | Frost Wight | 6000 | 16 | arcane | 40 | — | 0 | 8400 | **53** |
+| 42 | Abomination | 12000 | 12 | armoured | 0 | — | 0 | 12000 | **75** |
+| 43 | Vampire | 2800 | 44 | swift | 20 | 1400 | 0 | 3360 | **21** |
+| 44 | Witch | 2000 | 33 | arcane | 20 | — | 0 | 2400 | **15** |
+| 45 | Fiend | 3200 | 33 | arcane | 45 | — | 0 | 4640 | **29** |
+| 46 | Shade | 1200 | 84 | swift | 0 | — | 0 | 1200 | **8** |
+| 47 | Cursed Villager | 1800 | 28 | swift | 0 | — | 0 | 1800 | **11** |
+| 48 | Werewolf | 2600 | 50 | swift | 10 | — | 0 | 2860 | **18** |
+| 49 | Grave Robber | 3000 | 22 | armoured | 30 | 2000 | 0 | 3900 | **24** |
 
-> **The Skeleton's price is the one rounding decision on the page.** 2640 ÷ 160 is exactly **16.5** — the only
-> dead tie among the five — and it is resolved **upward to 17**. Every other row lands clearly on one side.
-> Recorded because a tie is the kind of thing someone recomputes later, reads as an error, and silently
-> "corrects" in the other direction.
+> **The effective-health column is what the price is derived from, and it does not include the shield.** The
+> Vampire stands on 3360 plus 1400 raw and the Grave Robber on 3900 plus 2000, and neither is charged for the
+> pool. See [the tuning target](#the-tuning-target).
 
-> ⚠️ **Three armoured, one swift, one arcane.** Two of the three matrix columns have a single occupant, so the
-> type chart is barely exercised by the roster you can actually send — and the committed wave sends only the
-> Minion and the Scout, so arcane never appears in the golden run at all. This is a consequence of scoping to
-> five creeps and it resolves itself the moment the roster grows.
+> **Three rows land on a dead tie, and every one of them is resolved upward.** The Skeleton's 2640 ÷ 160 is
+> exactly **16.5** and goes to 17; the Shade's 1200 ÷ 160 is **7.5** and goes to 8; the Frost Wight's 8400 ÷ 160
+> is **52.5** and goes to 53. Every other row lands clearly on one side. Recorded because a tie is the kind of
+> thing someone recomputes later, reads as an error, and silently "corrects" in the other direction — and one
+> rule for all three is what stops the correction being made row by row.
+
+> ⚠️ **`dying` is UNSIGNED on the twelve new rows, and the zero in the table is the blank showing through
+> rather than an answer.** Four of the five older rows carry 36 and the Warrior 48. This page signs no dying
+> number for the twelve, and the column in `content/units.txt` has to hold something, so it holds zero — the
+> absence, in the same sense the tower rows hold zero windup and backswing for the lines this page does not
+> sign them for. **How long a body takes to die is how a death reads on screen, and it is Sam's to sign**,
+> with the clips. Until then a corpse is gone the tick after it falls.
 
 ### 1 · Minion · status live
 
@@ -693,7 +719,7 @@ would re-baseline every measurement in the sweep.
 
 > **Why the rename is the cheap half of this.** The id does not move, so no hash moves and no stored record is
 > touched; only the new aura does that. The pack's own `Necromancer` model had been sitting unused while the
-> name pointed at a `Skeleton_Mage` body — see [the new Necromancer](#necromancer--status-signed), which takes
+> name pointed at a `Skeleton_Mage` body — see [the new Necromancer](#38--necromancer--status-live), which takes
 > both the model and the shield aura originally designed for this row.
 
 > **Three rules #217 had to pick to build the shield aura at all still stand**, and they now apply to the
@@ -705,15 +731,16 @@ would re-baseline every measurement in the sweep.
 > any of them can be moved without another format version. See
 > [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md).
 
-### Necromancer · status signed
+### 38 · Necromancer · status live
 
 - **Does** — **Ward**: grants creeps within two hexes a shield worth a quarter of their health, every three
   seconds. **Raise**: spawns a Minion beside itself every **150 ticks**, for as long as it lives.
 - **Looks** — the pack's own `Necromancer` model, `Skeleton_Scythe`.
 - **Numbers** — 2600 hp, speed 28, arcane, armourValue 30, cost 21. Ward: origin `self`, affects `friend`,
   payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: one Minion per 150 ticks.
-- **Needs** — **engine.** Ward is authorable today; Raise is not — a creep spawning creeps is a new mechanic
-  and a format version.
+- **Needs** — **engine, for Raise only.** Ward is on the row and pulsing; Raise is not — a creep spawning
+  creeps is a new mechanic, and [#268](https://github.com/ssalter21/tower-defense-game/issues/268) is where it
+  lands.
 - **Open** — none.
 
 > **There is no cap on how many it raises, and that is the decision rather than an omission.** It raises for
@@ -733,7 +760,7 @@ would re-baseline every measurement in the sweep.
 > than assumed. See [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) and the spawn
 > ticket's own ADR.
 
-### Bone Golem · status signed
+### 39 · Bone Golem · status live
 
 - **Does** — nothing but mass. Half the Minion's speed.
 - **Looks** — `Skeleton_Golem`, `Skeleton_Golem_Axe_Large`. On the Large rig, which walks and dies.
@@ -741,7 +768,7 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none. **14 is exactly half the Minion's 28**, so it is passed on whole ticks.
 
-### Black Knight · status signed
+### 40 · Black Knight · status live
 
 - **Does** — the Knight's twin. Nothing but armour.
 - **Looks** — `BlackKnight`, `BlackKnight_Sword_Large`, `BlackKnight_Shield_Large`. Large rig.
@@ -749,7 +776,7 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Frost Wight · status signed
+### 41 · Frost Wight · status live
 
 - **Does** — **Frostbite**: towers within two hexes fire a third slower while it passes. The only creep aura
   that reaches the tower side.
@@ -759,7 +786,7 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Abomination · status signed
+### 42 · Abomination · status live
 
 - **Does** — the biggest body on the board. No armour: flesh, not bone.
 - **Looks** — `Monstrosity`, `Monstrosity_BarndoorShield_Large`. Large rig.
@@ -767,16 +794,18 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Vampire · status signed
+### 43 · Vampire · status live
 
 - **Does** — **Blood**: a raw pool armour does not apply to, spent before health.
 - **Looks** — `Vampire`, `Vampire_Sword`.
 - **Numbers** — 2800 hp, speed 44, swift, armourValue 20, shield 1400, cost 21.
 - **Needs** — nothing.
-- **Open** — **the shield is unpriced.** The cost rule has no term for a pool, so this row is cheaper than it
-  should be. Known gap, same family as radius and range; a sweep target, not something to hand-correct.
+- **Open** — **the shield is unpriced, and the sweep has now measured what that is worth.** The cost rule has
+  no term for a pool, so this row is cheaper than it should be: it returns 94 percent of a column's gold
+  against the committed defense, the highest reading inside the band. Known gap, same family as radius and
+  range; a sweep target, not something to hand-correct.
 
-### Witch · status signed
+### 44 · Witch · status live
 
 - **Does** — **Hex Ward**: creeps within two hexes gain 30 armour.
 - **Looks** — `Witch`, `Broom`.
@@ -785,7 +814,7 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Fiend · status signed
+### 45 · Fiend · status live
 
 - **Does** — an arcane heavy; the Warrior's counterpart on another armour type.
 - **Looks** — `Tiefling`, `Tiefling_SwordsBackpack`. A horned demon rather than an undead body — the theme is
@@ -794,7 +823,7 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing.
 - **Open** — none.
 
-### Shade · status signed
+### 46 · Shade · status live
 
 - **Does** — three times the Minion's speed. The fine end of the granularity axis.
 - **Looks** — `Ninja`, `Ninja_Katana`, **in the darkest of the pack's four atlases**. Read as a silhouette at
@@ -804,21 +833,24 @@ would re-baseline every measurement in the sweep.
 - **Needs** — nothing. The atlas pick rides on the same per-row texture work the tier signal needs.
 - **Open** — none. **84 is exactly three Minions**, so it passes on whole ticks like the Scout does.
 
-### Cursed Villager · status signed
+### 47 · Cursed Villager · status live
 
 - **Does** — a cheap body that is the Werewolf's first form. **On the first damage it takes, it becomes the
   Werewolf.**
 - **Looks** — `Werewolf_Man`, `axe`.
 - **Numbers** — 1800 hp, speed 28, swift, armourValue 0, cost 11.
-- **Needs** — **engine.** A creep becoming another row mid-lane is a new mechanic and a format version.
+- **Needs** — **engine.** A creep becoming another row mid-lane is a new mechanic, and
+  [#267](https://github.com/ssalter21/tower-defense-game/issues/267) is where it lands. The row itself is live
+  and walks as an ordinary cheap body until then.
 - **Open** — none.
 
-### Werewolf · status signed
+### 48 · Werewolf · status live
 
 - **Does** — fast and durable at once. What the Cursed Villager becomes.
 - **Looks** — `Werewolf_Wolf`.
 - **Numbers** — 2600 hp, speed 50, swift, armourValue 10, cost 18.
-- **Needs** — engine, with the Villager.
+- **Needs** — engine, with the Villager. Both rows are live and both walk on their own until
+  [#267](https://github.com/ssalter21/tower-defense-game/issues/267).
 - **Open** — none.
 
 > **A lethal first hit does not kill the Villager; it produces a Werewolf at full health.** The trigger is the
@@ -830,14 +862,16 @@ would re-baseline every measurement in the sweep.
 
 > **This is the pairing `lancer` occupied with no design behind it.** Now the design is the transformation.
 
-### Grave Robber · status signed
+### 49 · Grave Robber · status live
 
 - **Does** — the pack soaks hits: a raw pool in front of ordinary health. **Pays 12 gold to the defender that
   kills it**, mid-match, into the one purse.
 - **Looks** — `Hoarder`, wearing `Hoarder_Backpack`. **The backpack, not the sword** — the pack is what the
   mechanic is about, and a sword on a creep that never attacks reads as a lie.
 - **Numbers** — 3000 hp, speed 22, armoured, armourValue 30, shield 2000, cost 24. Pays **12** on a kill.
-- **Needs** — **engine.** Gold paid on a kill is the first income during a wave.
+- **Needs** — **engine.** Gold paid on a kill is the first income during a wave, and
+  [#269](https://github.com/ssalter21/tower-defense-game/issues/269) is where it lands. The row is live and the
+  pool is on it; the payment is not.
 - **Open** — the shield is unpriced, as the Vampire's is.
 
 > **Twelve is half its own price, and the half is the point.** Paying its full 24 back would make it free to
@@ -917,14 +951,45 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
 > decisions rather than consequences of authoring a signed row.
 >
-> **Two creep rows are outside their own band with it.** Four hundred gold of one creep against the committed
-> defense returns 60 to 95 percent of its gold for the Scout, the Skeleton Mage and the Skeleton; the Minion
-> returns 25 and the Warrior 41. A splash is worth most against a dense column, and a column of one cheap row
-> is the densest thing that can be sent — so what the splash costs most is the fine end of the granularity
-> axis.
+> **Seven creep rows are outside their own band with it.** Four hundred gold of one creep against the
+> committed defense returns 60 to 95 percent of its gold for ten of the seventeen rows; six are under and one
+> is over. The full table, measured on 5 September 2026 with the twelve new rows in:
 >
-> Both readings are asserted as *missed* in `sim.tests/MatchTests.cs` rather than widened away, so the day
-> somebody retunes, the tests go red and say which band to put back.
+> | row | returns | | row | returns |
+> |---|---|---|---|---|
+> | Minion | **25** | | Vampire | 94 |
+> | Skeleton Scout | 77 | | Witch | 84 |
+> | Skeleton Mage | 90 | | Fiend | 84 |
+> | Skeleton | 69 | | Shade | **42** |
+> | Skeleton Warrior | **41** | | Cursed Villager | **36** |
+> | Necromancer | **100** | | Werewolf | 86 |
+> | Bone Golem | **25** | | Grave Robber | 81 |
+> | Black Knight | 71 | | | |
+> | Frost Wight | 71 | | | |
+> | Abomination | **20** | | | |
+>
+> **Under the band, for two opposite reasons.** A splash is worth most against a dense column, and a column of
+> one cheap row is the densest thing that can be sent — so what the Mage's splash costs most is the fine end
+> of the granularity axis: the Minion at forty bodies, the Shade at fifty, the Cursed Villager at thirty-six.
+> The Bone Golem, the Abomination and the Warrior are under it from the coarse end instead: the slowest bodies
+> on the board stand in front of the wall longest and are shot at for longer.
+>
+> **Over the band, one row, and it is the Necromancer — which is the shield and the radius going unpriced at
+> once.** Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the
+> two hexes around it, so the column is handed raw shield faster than four archers and two mages take it off:
+> every one of the nineteen leaks. The cost rule reads health and armour and can see neither the pool nor the
+> reach that spreads it. **The Vampire at 94 is the same gap without the aura** — a raw 1400 in front of 3360
+> the price was derived from — and the Grave Robber's 2000 sits behind an armoured body slow enough to be shot
+> for it.
+>
+> **Nothing here is retuned.** Every reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends
+> of the band, as two exact lists — rather than widened away, so the day somebody retunes, the tests go red
+> and say which band to put back.
+>
+> **And no row deals zero.** The floor of the table is the Abomination at 20, so there is no dead row on the
+> menu; the two rows that never win a round of the sweep are the Minion at 21 dealt per hundred gold and the
+> Cursed Villager at 17, which are the same two ends of the same axis. Against the smaller four-wave field the
+> test fixture plays, the Abomination is the one row that deals nothing at all.
 
 **Measure before you retune.** Two changes have moved this number without any creep row moving — an attack type
 changing line, and the clock dilating while `wave.txt`'s order ticks did not. Both were found by running the
@@ -937,8 +1002,8 @@ simulation constant rather than a content number — could not be fixed from con
 adventurer's deliberate twin, so **the two sides of the board are the two halves of one pack**, and a body reads
 against the tower it is the shadow of. Quaternius's Ultimate Monsters are rejected.
 
-**The pack holds six models and four are assigned**: the Minion and the Skeleton share the minion skin, the
-Warrior takes the warrior, the Scout the rogue and the Necromancer the mage. The Minion and the Skeleton
+**The pack holds six models and four were assigned first**: the Minion and the Skeleton share the minion skin,
+the Warrior takes the warrior, the Scout the rogue and the Skeleton Mage the mage. The Minion and the Skeleton
 sharing is a **kit variation and not a shortage** — the Skeleton is that model with shield and sword, and the
 pack ships the weapons for it.
 

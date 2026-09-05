@@ -261,7 +261,7 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Models, weapons and tower clips are all per unit type.</b> The lookup
-    /// is by the id in <c>content/units.txt</c>, so the Necromancer and the
+    /// is by the id in <c>content/units.txt</c>, so the Skeleton Mage and the
     /// Skeleton Warrior are two different bodies on the board rather than two
     /// rows that happen to draw the same. What is still shared is the creep
     /// animation — one walk and one death for all of them — because all nine

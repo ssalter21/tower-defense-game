@@ -149,22 +149,29 @@ public class SweepTests
         // The attacking direction still meets a whole six-tower wall, which
         // kills some of what it is sent and kills it by rolling.
         //
-        // AND IT IS THE NECROMANCER'S ROW RATHER THAN THE MINION'S, which is
-        // the same kind of statement about the wall. Since #236 the bot stands a
-        // second tower on route it already watches once nothing is unshot at, so
-        // four waves of minions or of scouts now get nothing past a field member
-        // at all -- a row of zeroes on both seeds, which can disagree with
-        // nothing. The necromancer is the first row of the roster that still
-        // leaks, so the sweep is widened by one creep to reach it.
+        // AND IT IS THE SKELETON'S ROW, which is the same kind of statement
+        // about the wall. A row disagrees across two seeds only where the wall
+        // kills SOME of what it is sent: a column the wall stops entirely and a
+        // column that leaks entirely are both the same number on every seed,
+        // and only a partial kill is rolled for. Since #236 the bot stands a
+        // second tower on route it already watches once nothing is unshot at,
+        // which is what pushed the discriminator up the roster in the first
+        // place.
+        //
+        // Id 7 held it until the roster widened on 5 September 2026 and the
+        // haste aura landed on it with its Skeleton Mage name -- a column of
+        // nineteen walking a fifth faster now leaks in full, so its row is the
+        // same number on both seeds. The Skeleton is the next row the wall
+        // still partly kills, so the sweep is one creep wider than it was.
         //
         // OBSERVED: drop the plan's seed out of SweepPlan.SeedOf so a run's seed
         // is derived from its index alone. This goes red -- every number on the
-        // necromancer's whole-population row is identical across the two plans
-        // -- and the determinism test above stays green, which is exactly the
-        // hole it cannot see.
-        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan(mostCreeps: 3)), "necromancer");
+        // Skeleton's whole-population row is identical across the two plans --
+        // and the determinism test above stays green, which is exactly the hole
+        // it cannot see.
+        SweepRow one = TheSweep.Whole(Sweep.Of(TheSweep.Plan(mostCreeps: 4)), "skeleton");
         SweepRow other = TheSweep.Whole(
-            Sweep.Of(TheSweep.Plan(mostCreeps: 3, seed: TheSweep.Seed + 1)), "necromancer");
+            Sweep.Of(TheSweep.Plan(mostCreeps: 4, seed: TheSweep.Seed + 1)), "skeleton");
 
         Assert.NotEqual(one.LeakCostDealt, other.LeakCostDealt);
     }

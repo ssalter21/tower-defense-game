@@ -122,7 +122,7 @@ namespace View.Editor
         /// <b>It is only exactly upright in the pose it was measured in.</b> A
         /// weapon parented to a hand turns with the arm, so no fixed tilt can be
         /// right everywhere. This one was taken in <c>Idle_A</c> at frame 0,
-        /// which is where the Mage stands. The Necromancer is a creep and the
+        /// which is where the Mage stands. The Skeleton Mage is a creep and the
         /// roster capture poses it a quarter of the way through <c>Walking_A</c>,
         /// where the same bone axis is about 43° off vertical: head-up, and
         /// leaning. If a pose ever needs the staff dead upright regardless of
@@ -187,7 +187,7 @@ namespace View.Editor
         /// is chosen here.</b> The assignments are signed in
         /// <c>docs/roster.md</c> — the Minion and the Skeleton share the minion
         /// skin, the Warrior takes the warrior, the Scout the rogue, the
-        /// Necromancer the mage, and the four towers take the Knight, the
+        /// Skeleton Mage the mage, and the four towers take the Knight, the
         /// Ranger twice and the Mage. A builder that reached for "the obvious
         /// model" would be making an art decision unattended, which is a
         /// standing prohibition on this project and not a style preference.
