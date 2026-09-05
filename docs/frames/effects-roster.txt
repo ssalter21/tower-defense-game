@@ -1,0 +1,50 @@
+# A FIXTURE ROSTER, AND NOT CONTENT. Nothing loads this except
+# tools/capture-match-frames.ps1 -Units, and nothing about the game is decided
+# here: content/units.txt is the roster, docs/roster.md is the design behind it,
+# and this file exists for one reason only.
+#
+# THAT REASON: every row of content/units.txt authors no bubble at all, so
+# nothing in the recorded match is ever slowed, hastened, cursed or shielded --
+# and a frame of the recorded match is therefore a frame of none of that
+# happening. What a slowed creep and a shielded creep look like cannot be
+# photographed off a match in which neither exists.
+#
+# The rows below are content/units.txt with two of them changed and every other
+# character identical. The ids are the shipped ids, so the recorded board, the
+# recorded defense, the recorded wave and the recorded seed all play against it
+# unaltered and the art binds by id exactly as it does for the real match.
+#
+# SO IT GOES STALE WHEN content/units.txt MOVES, and the frame beside it goes
+# stale with it -- which is what check-docs.ps1's second invariant catches by
+# dating every committed frame against the content it draws. The way back to
+# green is to copy the roster again, put the two bubbles back on, and re-capture.
+#
+#   unit 1, the Minion, gains an aura: a two-hex sphere on itself, reaching its
+#   own side, granting a pool worth two fifths of a health bar every thirty
+#   ticks. The wave sends ten Minions at once, so most of them are standing in
+#   somebody's sphere and wearing a bar.
+#
+#   unit 3, the Archer, gains a slow: a bubble of no radius on whatever its shot
+#   hit, taking two fifths off its walking speed for ninety ticks. Four of the
+#   six towers in the recorded defense are Archers, so what they are shooting at
+#   is tinted.
+#
+# NEITHER IS A PROPOSAL. The magnitudes and durations are chosen to be visible
+# in a photograph and mean nothing outside one; what the roster's real effects
+# are is signed in docs/roster.md, and what any of it should look like is Sam's.
+#
+# The frames this produces are named effects-roster-tick-NNNN.png rather than
+# match-tick-NNNN.png, because a tick of this is a tick of a match nobody can
+# scrub to -- content/landmarks.txt was made from the other one.
+
+layout 3
+
+unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0  0       1        2000          self          friend         30            shield         40               90
+unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0  0       1        none          none          none           0             none           0                0
+unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        0             target        enemy          0             speed          -40              90
+unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        none          none          none           0             none           0                0
+unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25  0       1        none          none          none           0             none           0                0
+unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0  0       1        none          none          none           0             none           0                0
+unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20  0       1        none          none          none           0             none           0                0
+unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45  0       1        none          none          none           0             none           0                0
+unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0

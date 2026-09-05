@@ -214,6 +214,69 @@ namespace View
         public const float BubbleRingHeight = 0.03f;
 
         // ---------------------------------------------------------------
+        // What a unit is carrying — the marks, not the decoration
+        // ---------------------------------------------------------------
+        //
+        // EVERY NUMBER AND EVERY COLOUR IN THIS SECTION IS A PLACEHOLDER, and
+        // that is a standing rule rather than a caveat: what a slowed, hastened,
+        // cursed or shielded unit should look like is Sam's to sign, and nothing
+        // here is a proposal. These are drawn from the snapshot rather than from
+        // an event -- see ADR-0007 -- so unlike the decoration above them they
+        // are still correct after a scrub, which is the whole reason they are
+        // state and not a moment.
+
+        /// <summary>
+        /// How high above a creep's feet the bar sits, in metres.
+        /// </summary>
+        /// <remarks>
+        /// Above the hit spark, so a shot landing on a shielded creep does not
+        /// go off inside the thing that says it has one.
+        /// </remarks>
+        public const float UnitBarHeight = 1.15f;
+
+        /// <summary>How long a full bar is, in metres — one whole health pool.</summary>
+        public const float UnitBarLength = 0.8f;
+
+        /// <summary>
+        /// How thick a bar is, in metres, in both of the directions that are
+        /// not its length.
+        /// </summary>
+        /// <remarks>
+        /// <b>A stretched box and not a flat quad, for the same reason a tracer
+        /// is one</b>: the camera orbits and nothing here may turn to face it,
+        /// so a bar with no thickness would vanish entirely at a quarter turn.
+        /// It is still read end-on from two of the four quadrants, which is the
+        /// plainest thing that can be said for a first look and is one of the
+        /// things this placeholder exists to be judged on.
+        /// </remarks>
+        public const float UnitBarThickness = 0.09f;
+
+        /// <summary>
+        /// The colour a unit is washed with while a speed modifier is on it.
+        /// </summary>
+        /// <remarks>
+        /// <b>One colour per payload, and the direction is not distinguished.</b>
+        /// A slow and a haste are one field with opposite signs, and telling
+        /// them apart by their look is a design decision nobody has taken —
+        /// the same restraint the bubble ring keeps between a blast and a
+        /// pulse. Inventing a second colour to have used the sign would be
+        /// taking it.
+        /// </remarks>
+        public static Color SpeedEffectTint => new Color(0.55f, 0.78f, 1f, 1f);
+
+        /// <summary>
+        /// The colour a unit is washed with while an armour modifier is on it,
+        /// and nothing has moved its speed.
+        /// </summary>
+        public static Color ArmourEffectTint => new Color(0.82f, 0.62f, 1f, 1f);
+
+        /// <summary>The health segment of the bar.</summary>
+        public static Color HealthSegmentColor => new Color(0.42f, 0.78f, 0.4f, 1f);
+
+        /// <summary>The segment that stands for the pool in front of that health.</summary>
+        public static Color ShieldSegmentColor => new Color(0.55f, 0.85f, 0.95f, 1f);
+
+        // ---------------------------------------------------------------
         // Decoration colours
         // ---------------------------------------------------------------
 

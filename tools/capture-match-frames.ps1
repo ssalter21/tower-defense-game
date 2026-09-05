@@ -17,10 +17,19 @@
 # nobody at a keyboard -- and therefore requires the editor to be CLOSED,
 # because batchmode needs the project lock.
 
+# -Units names a unit table to play the recorded board, defense, wave and seed
+# against instead of the shipped one. It is for photographing something no
+# shipped row does: every row of content/units.txt authors no bubble, so nothing
+# in the recorded match is ever slowed or shielded. Frames from such a run are
+# named after the table rather than after the match, because the tick in a
+# match-tick- filename is a claim about the run content/landmarks.txt was made
+# from.
+
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
     [string]$Ticks,
+    [string]$Units,
     [float]$Yaw = 0,
     [float]$Distance = 0,
     [int]$Width = 1280,
@@ -47,6 +56,11 @@ $unityArgs = @(
 )
 
 if ($Ticks) { $unityArgs += @('-matchFrameTicks', $Ticks) }
+
+if ($Units) {
+    $unitsPath = (Resolve-Path $Units).Path
+    $unityArgs += @('-matchFrameUnits', "`"$unitsPath`"")
+}
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a
 # GUI-subsystem executable and what actually yields its exit code. `& $Unity`

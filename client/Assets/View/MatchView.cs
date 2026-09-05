@@ -78,6 +78,15 @@ namespace View
 
         private Material _projectileMaterial;
 
+        /// <summary>
+        /// The two segments of the bar every creep wears while something has
+        /// granted it a pool. Made once here, because a material per creep is
+        /// an asset instance per creep to destroy again.
+        /// </summary>
+        private Material _healthSegmentMaterial;
+
+        private Material _shieldSegmentMaterial;
+
         private Transform _creepParent;
 
         private Transform _projectileParent;
@@ -175,6 +184,8 @@ namespace View
 
             _route = RoutePath.For(map);
             _projectileMaterial = ViewMaterials.Create("Projectile", MatchTuning.ProjectileColor);
+            _healthSegmentMaterial = ViewMaterials.Create("HealthSegment", MatchTuning.HealthSegmentColor);
+            _shieldSegmentMaterial = ViewMaterials.Create("ShieldSegment", MatchTuning.ShieldSegmentColor);
 
             _creepParent = MakeGroup("Creeps");
             _projectileParent = MakeGroup("Projectiles");
@@ -281,6 +292,16 @@ namespace View
             if (_projectileMaterial != null)
             {
                 Destroy(_projectileMaterial);
+            }
+
+            if (_healthSegmentMaterial != null)
+            {
+                Destroy(_healthSegmentMaterial);
+            }
+
+            if (_shieldSegmentMaterial != null)
+            {
+                Destroy(_shieldSegmentMaterial);
             }
 
             Decorations?.DestroyMaterials();
@@ -392,6 +413,16 @@ namespace View
                     distance,
                     creep.State,
                     DyingFraction(creep, before, paired, alpha));
+
+                // What is on it, straight off the same row and never
+                // interpolated: a magnitude is in force or it is not, and a
+                // pool a creep half has is a pool nothing could spend.
+                view.Marks.Show(
+                    creep.Hp,
+                    _types.ById(creep.TypeId).MaxHp,
+                    creep.Shield,
+                    creep.SpeedMagnitude,
+                    creep.ArmourMagnitude);
             }
 
             _creepPool.EndSync();
@@ -560,7 +591,12 @@ namespace View
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(_art.ArtFor(unitId), _art.CreepWalkClip, _art.CreepDeathClip);
+            view.Build(
+                _art.ArtFor(unitId),
+                _art.CreepWalkClip,
+                _art.CreepDeathClip,
+                _healthSegmentMaterial,
+                _shieldSegmentMaterial);
 
             return view;
         }

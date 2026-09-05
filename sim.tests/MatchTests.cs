@@ -553,7 +553,13 @@ public class MatchTests
 
         // No health, and nothing that could hold a position: both are static
         // data the view loaded once, and the snapshot carries only what moves.
-        Assert.Equal(new[] { "Id", "State", "TargetId", "TicksInState" }, FieldsOf<TowerSnapshot>());
+        // The cooldown modifier is here and the cooldown counter is not, which
+        // is the line ADR-0007 draws: what is on a tower is a fact a view
+        // draws, and where it is in its own wait is a fact only the state hash
+        // watches.
+        Assert.Equal(
+            new[] { "CooldownMagnitude", "Id", "State", "TargetId", "TicksInState" },
+            FieldsOf<TowerSnapshot>());
     }
 
     [Fact]
@@ -562,8 +568,24 @@ public class MatchTests
         // Free 2D never enters the simulation. There is no field here that
         // could hold one, which is what makes that permanent rather than a
         // habit -- and the same is true of what a projectile is aimed at.
+        //
+        // The three that say what is on it are magnitudes and a pool, and none
+        // of them is a position either: a view draws a tint and a bar out of
+        // them, and neither is somewhere to stand.
         Assert.Equal(
-            new[] { "DistanceAlongPath", "Hp", "Id", "LateralOffset", "State", "TicksInState", "TypeId" },
+            new[]
+            {
+                "ArmourMagnitude",
+                "DistanceAlongPath",
+                "Hp",
+                "Id",
+                "LateralOffset",
+                "Shield",
+                "SpeedMagnitude",
+                "State",
+                "TicksInState",
+                "TypeId",
+            },
             FieldsOf<CreepSnapshot>());
 
         Assert.Equal(new[] { "Id", "Kind" }, FieldsOf<TargetRef>());

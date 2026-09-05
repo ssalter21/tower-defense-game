@@ -673,8 +673,11 @@ namespace Sim
                     creep.Distance,
                     creep.Lateral,
                     creep.Hp,
+                    ShieldOf(ref creep),
                     creep.Phase == CreepPhase.Dying ? CreepState.Dying : CreepState.Walking,
-                    creep.TicksInState);
+                    creep.TicksInState,
+                    creep.Effects.SpeedMagnitude,
+                    creep.Effects.ArmourMagnitude);
             }
 
             var towers = new TowerSnapshot[_towers.Length];
@@ -682,7 +685,13 @@ namespace Sim
             for (int index = 0; index < _towers.Length; index++)
             {
                 ref Tower tower = ref _towers[index];
-                towers[index] = new TowerSnapshot(tower.Id, tower.State, tower.TargetId, tower.TicksInState);
+
+                towers[index] = new TowerSnapshot(
+                    tower.Id,
+                    tower.State,
+                    tower.TargetId,
+                    tower.TicksInState,
+                    tower.Effects.CooldownMagnitude);
             }
 
             var projectiles = new ProjectileSnapshot[_projectileCount];
@@ -700,6 +709,25 @@ namespace Sim
             }
 
             return new Snapshot(Tick, creeps, towers, projectiles);
+        }
+
+        /// <summary>
+        /// Everything standing in front of one creep's health: the pool its row
+        /// authored and whatever a shield payload granted it.
+        /// </summary>
+        /// <remarks>
+        /// Saturating, because both halves are bounded only by the ranges they
+        /// come out of -- an authored column and a percentage of a health pool
+        /// -- and a wrapped sum is a full shield reported as a negative one.
+        /// The two are added only here: <see cref="Absorbed"/> spends them in
+        /// order and the fold folds them apart, so nothing that decides
+        /// anything reads them as one number.
+        /// </remarks>
+        private static int ShieldOf(ref Creep creep)
+        {
+            long pool = (long)creep.Shield + creep.Effects.GrantedShield;
+
+            return pool > int.MaxValue ? int.MaxValue : (int)pool;
         }
 
         /// <summary>One tick. The order of these phases is part of the rules.</summary>
@@ -1997,10 +2025,9 @@ namespace Sim
             internal int Hp;
 
             /// <summary>
-            /// What is left of the pool that absorbs first and raw. Internal,
-            /// and in the state hash: no snapshot carries it yet, so it is
-            /// exactly the sort of field a run could drift in while looking
-            /// identical on screen.
+            /// What is left of the pool this row authored, which absorbs raw
+            /// and after the granted one. A snapshot adds the two together and
+            /// the state hash folds them apart.
             /// </summary>
             internal int Shield;
 

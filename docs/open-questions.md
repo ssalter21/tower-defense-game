@@ -232,22 +232,21 @@ uptime holds a creep at the floor indefinitely. With the floor in place that is 
 correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
 per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
 
-**Nothing a view can see says a creep is slowed.** Timed effects landed in
-[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state: they are folded into the
-rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field. The only
-events that mention one are the two [#253](https://github.com/ssalter21/tower-defense-game/issues/253) added,
-and those say a bubble carrying that payload went off rather than that a creep is now carrying it — a moment,
-not a state, and nothing that can be read off a creep already slowed. That is deliberate — events are
-decorative by
-[ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
-[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
-about rules. **It became urgent on 5 September 2026.** Four signed rows slow something — Shield Wall,
-Overgrowth, the Skeleton Mage's haste and the Frost Wight's Frostbite — and a creep walking at four tenths of
-its speed for no visible reason is the sort of thing a playtest reports as a bug. The cheap answer is a field
-on `CreepSnapshot`; the question is which field, because "is it slowed" and "what is on it" are different
-contracts. The [effect-visibility ticket](https://github.com/ssalter21/tower-defense-game/issues/254) lands the
-contract and a placeholder look; **what a slowed or hasted creep actually looks like beyond a first tint is
-still Sam's to sign.**
+**What a slowed creep looks like.** The contract is settled and the look is not. Timed effects landed in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state, visible in no `Snapshot`
+field at all, and [#254](https://github.com/ssalter21/tower-defense-game/issues/254) answered the question of
+*which field* the way that was open between "is it slowed" and "what is on it": a creep carries the two
+percentages in force and the pool in front of its health, a tower carries the percentage its cooldown is
+displaced by, and a magnitude is a displacement whose sign says which way — so one field covers a slow and a
+haste both. They are snapshot fields and not events because a seek re-simulates and hears nothing, so an
+event-driven tint would be right until the first drag of the scrub bar; the reasoning is in
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md) and the line from the other side is in
+[ADR-0008](adr/0008-match-events-are-decorative.md). **What is left open is entirely the look.** The client
+draws a wash of one colour per payload and a two-segment bar, photographed in
+[`docs/frames/effects-roster-tick-0700.png`](frames/README.md); it does not say which way a speed moved, one
+colour covers a slow and a haste, a tower carrying a modifier is not drawn at all, and the bar does not turn to
+face the camera. Every one of those is a placeholder standing where a decision goes, and the decisions are
+Sam's.
 
 **Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
 the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads

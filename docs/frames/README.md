@@ -33,6 +33,10 @@ row that says "drag to tick 1096" are about the same moment.
 ./tools/capture-match-frames.ps1 -Distance 25          # down among the creeps
 
 ./tools/capture-match-frames.ps1 -Ticks "1229,1546" -Distance 22 -Width 1600
+
+# The same board, defense, wave and seed, played against a roster of your own
+./tools/capture-match-frames.ps1 -Units "docs/frames/effects-roster.txt" `
+    -Ticks "700" -Distance 20 -Width 1600
 ```
 
 **A frame is a function of its tick and nothing else.** The capture draws every
@@ -67,6 +71,26 @@ Four frames, kept as a record of what the match looks like:
 
 The last two are the pair the effect anchors landed with: before them every
 tower fired from one fixed height above its own root, whatever it was holding.
+
+And one that is **not** a frame of the recorded match:
+
+- `effects-roster-tick-0700.png` — **a placeholder, and the thing it is
+  showing has not been signed.** A creep the snapshot says is slowed is washed
+  in one colour, and the pool standing in front of a creep's health is a second
+  segment of a bar above it. Captured with `-Distance 20 -Width 1600` against
+  [`effects-roster.txt`](effects-roster.txt), which is the shipped roster with a
+  bubble added to two of its rows — every row of `content/units.txt` authors no
+  bubble at all, so nothing in the recorded match is ever slowed or shielded and
+  a frame of it shows none of this. **What a slowed, hastened, cursed or
+  shielded body should actually look like is Sam's to sign**, and this is what
+  the plainest first answer looks like on the real board. Five things about it
+  are placeholder answers to questions nobody has taken: one colour covers both
+  a slow and a haste, a body carrying a speed modifier *and* an armour one shows
+  only the speed, a tower carrying a modifier is not drawn at all, the bar does
+  not turn to face the camera and so is read end-on from two of the four
+  quadrants of the orbit, and both segments are shares of the health the row
+  authored — so a creep at full health with a pool worth two fifths of it draws
+  one and two fifths of a bar rather than one.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

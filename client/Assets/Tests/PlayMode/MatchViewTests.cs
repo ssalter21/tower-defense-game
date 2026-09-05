@@ -1053,6 +1053,183 @@ namespace Tests.PlayMode
                 $"{most} effects were on screen at once — decoration is accumulating rather than ageing");
         }
 
+        // ---------------------------------------------------------------
+        // What is on a unit
+        // ---------------------------------------------------------------
+
+        /// <summary>
+        /// A creep something has landed on wears it: a wash while a modifier is
+        /// in force, and a bar while a pool stands in front of its health.
+        /// </summary>
+        /// <remarks>
+        /// <b>Played against a fixture roster, and it has to be.</b> Every row
+        /// of <c>content/units.txt</c> authors no bubble at all, so a match of
+        /// the shipped content never slows or shields anything — the same
+        /// reason the simulation's own effect tests are written against fixture
+        /// rows, and the reason the frame capture takes a table of its own.
+        /// The board, the tower cell and the wave shape are real; the two rows
+        /// standing on them are stand-ins and mean nothing outside this file.
+        /// </remarks>
+        [Test]
+        public void ACreepWearsWhatTheSnapshotSaysIsOnIt()
+        {
+            MatchView view = BeginWithEffects();
+
+            RunUntil(view, () => view.Current.Creeps.Any(creep => creep.SpeedMagnitude != 0));
+
+            CreepSnapshot slowed = view.Current.Creeps.First(creep => creep.SpeedMagnitude != 0);
+
+            Assert.That(slowed.SpeedMagnitude, Is.Negative, "the fixture archer's bubble is a slow");
+            Assert.That(
+                view.Creeps.Live[slowed.Id].Marks.Wash,
+                Is.EqualTo(MatchTuning.SpeedEffectTint),
+                "a creep the snapshot says is slowed is drawn in its own colour");
+
+            // And the bar is the pool, as a share of the health pool its row
+            // authored. Asserted against the number in the snapshot rather than
+            // against a width somebody wrote down, so a bar drawn at a fixed
+            // size would go red here and nowhere else.
+            CreepSnapshot shielded = view.Current.Creeps.First(creep => creep.Shield > 0);
+            EffectMarks marks = view.Creeps.Live[shielded.Id].Marks;
+            float pool = shielded.Shield / (float)FixtureMaxHp;
+
+            Assert.That(marks.Bar.gameObject.activeSelf, Is.True, "a creep with a pool wears no bar");
+            Assert.That(
+                marks.ShieldSegment.localScale.x,
+                Is.EqualTo(MatchTuning.UnitBarLength * pool).Within(1e-4f),
+                $"{shielded.Shield} of a {FixtureMaxHp} pool is drawn {marks.ShieldSegment.localScale.x} "
+                + "metres wide");
+
+            // And it is a SECOND segment: the health one is the same share of
+            // the same pool, and the shield starts where it ends. Both are
+            // shares of the authored health, so the two together run past a
+            // whole bar on a creep that has not been hurt yet — which is
+            // deliberate, and one of the things the placeholder is for.
+            float health = shielded.Hp / (float)FixtureMaxHp;
+
+            Assert.That(
+                marks.HealthSegment.localScale.x,
+                Is.EqualTo(MatchTuning.UnitBarLength * health).Within(1e-4f));
+
+            Assert.That(
+                marks.ShieldSegment.localPosition.x - (marks.ShieldSegment.localScale.x / 2f),
+                Is.EqualTo(marks.HealthSegment.localPosition.x + (marks.HealthSegment.localScale.x / 2f))
+                    .Within(1e-4f),
+                "the pool segment does not start where the health segment ends");
+
+            // The bar lies along the world axis whatever the creep is facing,
+            // because the body turns to follow the corridor and a bar that
+            // swung with it would be reporting the route rather than the pool.
+            Assert.That(Quaternion.Angle(marks.Bar.rotation, Quaternion.identity), Is.LessThan(1e-3f));
+        }
+
+        /// <summary>
+        /// The marks are still right after a seek, which is the whole reason
+        /// they are snapshot fields and not events.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is the assertion ADR-0007's new section is about.</b> A seek
+        /// re-simulates and subscribes nobody, so the events of the re-run ticks
+        /// are never built — an "a slow landed" event would be heard once, on
+        /// the tick it landed, and a creep scrubbed back across that tick would
+        /// be slowed in the simulation and undecorated on screen.
+        ///
+        /// OBSERVED: drive the wash off <c>MatchDecorations</c> instead. Every
+        /// assertion above stays green, because a match played forwards hears
+        /// every event exactly once; this goes red the moment the bar is
+        /// dragged.
+        /// </remarks>
+        [Test]
+        public void WhatIsOnACreepSurvivesASeek()
+        {
+            MatchView view = BeginWithEffects();
+
+            RunUntil(view, () => view.Current.Creeps.Any(creep => creep.SpeedMagnitude != 0));
+
+            int tick = view.Current.Tick;
+            int slowed = view.Current.Creeps.First(creep => creep.SpeedMagnitude != 0).Id;
+
+            view.ReSimulateTo(tick + 60);
+            view.ReSimulateTo(tick);
+
+            Assert.That(
+                view.Current.Creeps.Any(creep => creep.Id == slowed && creep.SpeedMagnitude != 0),
+                Is.True,
+                "the same tick played again is a different match");
+
+            Assert.That(
+                view.Creeps.Live[slowed].Marks.Wash,
+                Is.EqualTo(MatchTuning.SpeedEffectTint),
+                "a creep scrubbed back onto the tick it was slowed on is drawn as though it were not");
+        }
+
+        /// <summary>
+        /// Nothing in the shipped content authors a bubble, so nothing in the
+        /// recorded match is ever marked. The marks cost a match that has no
+        /// effects in it exactly nothing on screen.
+        /// </summary>
+        [Test]
+        public void ACreepCarryingNothingWearsNothing()
+        {
+            MatchView view = Begin();
+
+            RunUntil(view, () =>
+            {
+                foreach (CreepView drawn in view.Creeps.Live.Values)
+                {
+                    Assert.That(drawn.Marks.Wash, Is.Null, "a creep with nothing on it was washed");
+                    Assert.That(drawn.Marks.Bar.gameObject.activeSelf, Is.False,
+                        "a creep with no pool wears a bar");
+                }
+
+                return false;
+            });
+
+            Assert.That(view.Current.Tick, Is.GreaterThan(1000), "hardly any of the match was watched");
+        }
+
+        /// <summary>
+        /// The health pool both fixture rows below author, which the bar's two
+        /// segments are shares of.
+        /// </summary>
+        private const int FixtureMaxHp = 1550;
+
+        /// <summary>
+        /// Two rows with the shipped ids, so the art binds and the real board
+        /// takes them: a Minion granting a pool to whatever walks beside it, and
+        /// an Archer whose shot slows what it hits.
+        /// </summary>
+        private const string EffectFixtures =
+            "layout 3\n"
+            + "unit 1 minion moving 1550 28 0 0 0 0 0 0 none 0 36 10 none armoured 0 0 1 "
+            + "2000 self friend 30 shield 40 90\n"
+            + "unit 3 archer placed 0 0 3200 18 9 6 90 150 hitscan 0 0 40 pierce none 0 0 1 "
+            + "0 target enemy 0 speed -40 90\n";
+
+        /// <summary>One Archer, on a cell the recorded defense puts one on.</summary>
+        private const string EffectDefense = "tower 3 4 3";
+
+        /// <summary>A column of Minions, released together so they stand in each other's spheres.</summary>
+        private const string EffectWave = "order 0 1 10 0";
+
+        /// <summary>
+        /// The real board and the real camera, playing the two fixture rows
+        /// above.
+        /// </summary>
+        private MatchView BeginWithEffects()
+        {
+            UnitTypeTable types = UnitTypeTable.Parse("effect fixtures", EffectFixtures);
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("effect defense", EffectDefense, types),
+                WaveScript.Parse("effect wave", EffectWave, types),
+                TheMatchOnScreen.Seed);
+        }
+
         /// <summary>
         /// Every bubble ring standing under the view, found by the name the
         /// pool gives them.

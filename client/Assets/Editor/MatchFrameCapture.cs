@@ -56,6 +56,33 @@ namespace View.Editor
         public const string WidthArgument = "-matchFrameWidth";
 
         /// <summary>
+        /// A unit table to draw the match against instead of the shipped one.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For photographing something no shipped row does.</b> Every row of
+        /// <c>content/units.txt</c> authors no bubble at all, so nothing in the
+        /// recorded match is ever slowed, hastened, cursed or shielded — and a
+        /// frame of it is a frame of none of that happening. A fixture table
+        /// with the same ids and a bubble on two of them plays the same board,
+        /// the same defense, the same wave and the same seed, with the effects
+        /// switched on.
+        /// </para>
+        /// <para>
+        /// <b>The record's gate is skipped and has to be.</b> A bundle stamps
+        /// the content hash it was made against, so a table that is not the
+        /// shipped one is refused by name — correctly, and that refusal is what
+        /// keeps the ordinary path honest. What this reads out of the record
+        /// instead is the four things a match is made of: the board, the
+        /// defense, the wave and the seed. The frames it writes are named after
+        /// the fixture rather than after the match, because the tick in a
+        /// <c>match-tick-</c> filename is a claim about the run
+        /// <c>content/landmarks.txt</c> was made from and this is not that run.
+        /// </para>
+        /// </remarks>
+        public const string UnitsArgument = "-matchFrameUnits";
+
+        /// <summary>
         /// The shape of a frame. Sixteen by nine, the same shape the playback
         /// bar lays itself out for, because these are pictures of what a player
         /// sees.
@@ -91,6 +118,7 @@ namespace View.Editor
             string outDir = BatchArguments.Value(DefaultOutDirArgument)
                 ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "docs", "frames"));
 
+            string units = BatchArguments.Value(UnitsArgument);
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
@@ -119,11 +147,7 @@ namespace View.Editor
                 // with no sides and shows the background through every step.
                 root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
 
-                MatchView view = root.BeginMatch(
-                    StreamingContent.ReadUnitTypes(),
-                    StreamingContent.ReadRuleset(),
-                    record,
-                    art: LoadArt());
+                MatchView view = BeginMatch(root, record, units);
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -181,7 +205,9 @@ namespace View.Editor
 
                     string path = Path.Combine(
                         outDir,
-                        "match-tick-" + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture) + ".png");
+                        NameOf(units)
+                        + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture)
+                        + ".png");
 
                     File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
                     written.Add(path);
@@ -216,6 +242,51 @@ namespace View.Editor
         /// not been rebuilt yet.
         /// </summary>
         private static MatchArt LoadArt() => MatchSceneBuilder.Art();
+
+        /// <summary>
+        /// The match to photograph: the recorded one, or the same board,
+        /// defense, wave and seed played against the unit table at
+        /// <paramref name="units"/>.
+        /// </summary>
+        private static MatchView BeginMatch(MatchRoot root, ReplayBundle record, string units)
+        {
+            Ruleset rules = StreamingContent.ReadRuleset();
+
+            if (string.IsNullOrWhiteSpace(units))
+            {
+                return root.BeginMatch(StreamingContent.ReadUnitTypes(), rules, record, art: LoadArt());
+            }
+
+            if (!File.Exists(units))
+            {
+                throw new FileNotFoundException(
+                    "No unit table at " + units + ". " + UnitsArgument + " names a table to draw the "
+                    + "recorded board, defense and wave against instead of the shipped one, and a capture "
+                    + "that quietly fell back to the shipped table would be a picture of the wrong match.",
+                    units);
+            }
+
+            UnitTypeTable fixtures = UnitTypeTable.ParseUtf8(units, File.ReadAllBytes(units));
+
+            return root.BeginMatch(
+                fixtures,
+                rules,
+                record.Ghost.ToLayout(fixtures),
+                record.Wave.ToScript(fixtures),
+                record.Seed,
+                LoadArt());
+        }
+
+        /// <summary>
+        /// What a frame is called before its tick. The recorded match's frames
+        /// are <c>match-tick-</c>, because that tick is a tick of the run the
+        /// landmark table was made from; a fixture table's are named after the
+        /// fixture, because they are ticks of a match nobody can scrub to.
+        /// </summary>
+        private static string NameOf(string units) =>
+            string.IsNullOrWhiteSpace(units)
+                ? "match-tick-"
+                : Path.GetFileNameWithoutExtension(units) + "-tick-";
 
         private static Texture2D Grab(Camera camera, int width, int height)
         {

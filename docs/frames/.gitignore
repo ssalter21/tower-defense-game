@@ -1,13 +1,14 @@
-# The capture writes six frames by default; four of the frames in this folder
-# are committed as documentation. README.md says which four and why.
+# The capture writes six frames by default; five of the frames in this folder
+# are committed as documentation -- four of the recorded match and one of the
+# effects fixture beside it. README.md says which five and why.
 #
 # Everything else it writes must not be committed, and that cannot be left to
 # whoever runs the capture next. The fourth working agreement is explicit about
 # it: "if a generated file must **not** be committed, that has to be arranged by
 # construction — an ignore rule — and not by remembering."
 #
-# Without this file, a plain `tools/capture-match-frames.ps1` leaves four
-# untracked PNGs sitting in the tree, and the build gate's last step — the one
+# Without this file, a plain `tools/capture-match-frames.ps1` leaves untracked
+# PNGs sitting in the tree, and the build gate's last step — the one
 # that fails a push whose run rewrote the repository — goes red for a reason
 # that has nothing to do with the push.
 #
@@ -20,6 +21,7 @@
 !match-tick-1229.png
 !match-tick-1546.png
 !match-tick-2700.png
+!effects-roster-tick-0700.png
 
 # The armed-roster capture's set run writes a manifest beside its PNGs, saying
 # which tile of the contact sheet is which. Same rule as the frames: it is
