@@ -214,7 +214,8 @@ one additional hex, radius 1000 — and `units.txt` layout 3 is the first schema
 on the target with a damage payload. **#216 authored no such bubble and moved no price**, because either is a
 decision about what a Mage is; the gap is pinned in `ContentTests` with both numbers in it. Three ways out:
 author the splash and accept an unpriced radius, reprice the row to what it does, or make it genuinely fire
-three shots — which is a different tower.
+three shots — which is a different tower. [The expansion proposal](roster-expansion-proposal.md) recommends the first, so
+that the Mage line has its splash from tier 1; it is a recommendation and not the answer.
 
 **Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
 makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing

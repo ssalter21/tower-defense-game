@@ -121,6 +121,10 @@ row per edge, printed by `./tools/show-ladder.ps1`. It holds one edge today: `ar
 
 # Towers
 
+> **A widening is proposed.** [The expansion proposal](roster-expansion-proposal.md) puts nine lines on this
+> page, three stages each, and would retire the Captain, the Hero and the elemental branch below. Until Sam
+> signs it, what follows is current.
+
 Three lines, three tiers each, and **one attack type per line** — Soldier impact, Archer pierce, Mage magic.
 It is what makes the three-way cycle readable off the board: you know what a tower does to a body by knowing
 which line it came from, and it costs nothing, because attack type is a column that already exists.
@@ -384,6 +388,10 @@ would re-baseline every measurement in the sweep.
 invalidates no record; it leaves those bundles pinned to an older roster, which is exactly what they are for.
 
 ## What is deliberately absent
+
+> **Candidates for all three are named in [the expansion proposal](roster-expansion-proposal.md)**, since
+> 5 September 2026, along with six further tower lines and eight further creeps. It is a proposal: this table
+> stands until a row below it is signed.
 
 **Recorded so it is not silently re-proposed.** These are not design rejections — they are shapes that were
 wanted and are not being built yet, and each is blocked on art rather than on argument.

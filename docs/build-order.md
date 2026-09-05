@@ -45,11 +45,13 @@ yet: **composing a wave is not interesting enough, and the build phase has not g
 What it wants is plenty of money to spend and options worth spending it on, and neither is judgeable against
 six walkers and four towers — three of which are equivalent on a one-hex corridor.
 
-**It does not follow that seam 3 is built next, and for one day it was recorded as though it did.** Step 5
-carries it instead: a client that can be clicked and played is what the look and feel is judged from, and
-that judgement is wanted before the roster is deepened rather than after. Seam 3 is parked with its shape
-changed — depth comes from **upgrading the creeps that exist**, in stats and speed, rather than from
-authoring new unit types.
+**Seam 3 is next, and it is widened rather than deepened.** The client can now be clicked and played, so
+the judgement step 5 was waiting for has been made: the game is to be fun to play now, and what that wants is
+breadth — as many towers and creeps as the collection on disk supports, every tower line three stages with a
+capstone at the top. The candidate roster is
+[the expansion proposal](roster-expansion-proposal.md), under review; nothing in it is signed until
+[the roster](roster.md) says so. The reversal is
+[in the decision log](decision-log.md#5-september-2026-later-still--the-roster-widens-and-seam-3-comes-off-the-shelf).
 
 What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
 the special rounds and the per-wave type limit all come out of the played game, and go back when the roster

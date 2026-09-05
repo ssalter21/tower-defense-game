@@ -1521,3 +1521,22 @@ Its four invariants cover issue states, picture freshness, the ADR count and ADR
 document citing a document that no longer exists is not among them — which is why every one of the twenty-eight
 inbound links outside the index was repointed by hand here, in the vision, the build order, open questions, the roster, this
 file, `AGENTS.md`, four ADRs, the archive and the two surviving notes that referenced retired ones.
+
+---
+
+## 5 September 2026, later still — the roster widens, and seam 3 comes off the shelf
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | Seam 3 is parked behind a playable client, and when it resumes its shape is *upgrading the creeps that exist*, in stats and speed, rather than authoring new unit types | **Seam 3 is next, and it is breadth.** As many towers and creeps as the collection supports; every tower line three stages — a base, a single-stat rung, and a capstone that changes how the tower works, drawn from what its model carries | Sam, 5 September 2026: *"I've changed my mind on how to approach the build. I want to make the game fun to play now. I want to now introduce as many towers and creeps as possible."* The client the roster was parked behind exists, so the wait is over |
+| **[The roster](roster.md#what-is-deliberately-absent)** | Three shapes are absent and blocked on art — fast and cheap in numbers, slow and dear and very tough, fast and durable at once | **Candidates are named for all three**, in [the expansion proposal](roster-expansion-proposal.md). The proposal is under review and signs nothing | Every character in the KayKit collection is on disk, so "needs a model" is no longer a blocker; it is a choice |
+
+**What was decided is the direction, and only the direction.** The proposal names 9 tower lines and 17 creeps,
+assigns 31 of the 61 rigged KayKit characters and sets 30 aside. Every name, model and number in it is a
+placeholder until Sam keeps it — per the standing rule that art and gameplay options are his to pick — and the
+five standing proposals it would retire (Captain, Hero, the Pyromancer/Cryomancer branch, the unbuilt Mage
+splash, the tier signal) stand in `roster.md` until he does. Each of those is its own entry here when it moves.
+
+**The theme it fixes on the creep side is undead, plus the dark and hooded.** Skeletons were already the
+creeps; the Mystery Monthly characters that read as gothic monsters or as masked and cloaked join them, and
+everything modern, mechanical or comic is set aside with a one-line reason so it is not re-derived.
