@@ -104,6 +104,14 @@ namespace Tests.EditMode
         private const string AdventurersKnightAtlasPath =
             "Assets/Art/Kaykit/adventurers/knight_texture.png";
 
+        /// <summary>
+        /// The Adventurers pack's own mage sheet, which for the same reason is
+        /// not the copy in <c>Art/Characters</c> the live Mage model binds. The
+        /// <c>spellbook_open</c> is authored on this one and sits beside it.
+        /// </summary>
+        private const string AdventurersMageAtlasPath =
+            "Assets/Art/Kaykit/adventurers/mage_texture.png";
+
         private const string PaladinModelPath =
             "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx";
 
@@ -128,11 +136,24 @@ namespace Tests.EditMode
         private const string ClericAltAtlasPath =
             "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png";
 
+        /// <summary>The Lorekeeper's one sheet — that character ships no alternate.</summary>
+        private const string LorekeeperAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/lorekeeper_texture.png";
+
+        /// <summary>
+        /// The second model proposed for the Druid's tier 3 and set aside on
+        /// issue #250: it read as a different creature rather than as the same
+        /// person promoted, so that line is colour and a prop at every rung.
+        /// Imported, and drawn by nothing.
+        /// </summary>
+        private const string PlantWarriorModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior.fbx";
+
         private const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
 
         private const string DruidAtlasPath = "Assets/Art/Kaykit/adventurers/druid_texture.png";
 
-        private const string DruidAltAtlasPath =
+        private const string DruidAltBAtlasPath =
             "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
 
         /// <summary>The bare weirwood the developer picked on 5 September 2026.</summary>
@@ -172,9 +193,11 @@ namespace Tests.EditMode
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>None of these has a row in <c>content/units.txt</c> yet</b>, so
-        /// there is nowhere else in code for them to be written down: the two
-        /// binding tables carry rows, and these are looks waiting for rows. The
+        /// <b>Three of these are now bound to rows and one is not.</b> The
+        /// Blessing, the Consecration and the Overgrowth have art, so the two
+        /// binding tables carry them and this list holds those three against
+        /// the record a second time; the Engineer's turret is still a look
+        /// waiting for a row, with nowhere else in code to be written down. The
         /// record is <c>docs/roster.md</c>, and
         /// <c>docs/roster-expansion-beside-candidates.txt</c> is the same four
         /// again as something that can be photographed.
@@ -199,7 +222,7 @@ namespace Tests.EditMode
                 PaladinAtlasPath),
             ("the Cleric's Consecration", ClericModelPath, ClericAltAtlasPath, FontPath, 1f,
                 ClericAtlasPath),
-            ("the Druid's Overgrowth", DruidModelPath, DruidAltAtlasPath, WeirwoodPath, WeirwoodScale,
+            ("the Druid's Overgrowth", DruidModelPath, DruidAltBAtlasPath, WeirwoodPath, WeirwoodScale,
                 ForestAtlasPath),
         };
 
@@ -296,6 +319,18 @@ namespace Tests.EditMode
             (FontPath, ClericAtlasPath),
             (DruidModelPath, DruidAtlasPath),
             (WeirwoodPath, ForestAtlasPath),
+
+            // The caster lines' remaining art. The spellbook is authored beside
+            // the Adventurers pack's own mage sheet, which is not the copy in
+            // Art/Characters that the live Mage model binds; the two Cleric
+            // props are on the Cleric's; and the Lorekeeper is a whole
+            // character with its own.
+            (ChosenArt.SpellbookModelPath, AdventurersMageAtlasPath),
+            (ChosenArt.ClericTomeModelPath, ClericAtlasPath),
+            (ChosenArt.ClericMaceModelPath, ClericAtlasPath),
+            (ChosenArt.LorekeeperModelPath, LorekeeperAtlasPath),
+            (ChosenArt.LorekeeperTomeModelPath, LorekeeperAtlasPath),
+            (ChosenArt.DruidStaffModelPath, DruidAtlasPath),
         };
 
         /// <summary>
@@ -303,8 +338,9 @@ namespace Tests.EditMode
         /// and the set a tower gets depends on what it holds — the bow three
         /// for the Archer and the Ranger, rest-and-cast for the Mage,
         /// rest-and-chop for the Soldier, the two-handed chop for the
-        /// Barbarian, the raised guard for the Shield Wall and the slam for the
-        /// Slam. See #44, the 14 August weapon pass and <c>docs/roster.md</c>.
+        /// Barbarian, the raised guard for the Shield Wall, the slam for the
+        /// Slam and the cast for the Cleric and Druid lines. See #44, the
+        /// 14 August weapon pass and <c>docs/roster.md</c>.
         /// </summary>
         /// <remarks>
         /// The bank a name comes out of is asserted separately, in
@@ -322,6 +358,7 @@ namespace Tests.EditMode
             ChosenArt.ChopClipName,
             ChosenArt.TwoHandedChopClipName,
             ChosenArt.BlockingClipName,
+            ChosenArt.ShootClipName,
             SlamClipBareName,
         };
 
@@ -348,6 +385,9 @@ namespace Tests.EditMode
 
         /// <summary>The Slam, which is the only row on the Large rig.</summary>
         private const int SlamUnitId = 19;
+
+        /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
+        private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
 
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
@@ -581,6 +621,47 @@ namespace Tests.EditMode
 
             Assert.That(compared, Is.GreaterThan(0),
                 "no two rows share a model, so this compared nothing at all");
+        }
+
+        /// <summary>
+        /// Every rung of the Druid line is drawn on the Druid, and no row
+        /// anywhere is drawn on the PlantWarrior.
+        /// </summary>
+        /// <remarks>
+        /// <b>A rejection only holds where something reads it.</b> The
+        /// PlantWarrior was proposed as this line's second model and set aside
+        /// on issue #250 — of the six second models it was the only one that
+        /// read as a different creature rather than as the same person promoted
+        /// — so the Druid keeps his own body and is told apart by colour and by
+        /// the weirwood beside him, the way the Knight, the Cleric and the
+        /// Engineer are. The model is imported and the proposal that named it
+        /// is still in <c>docs/</c>, so what keeps it unbound is this rather
+        /// than everybody remembering. Held over the whole table and over the
+        /// beside socket, since a body may stand beside a tower as easily as
+        /// under one.
+        /// </remarks>
+        [Test]
+        public void TheDruidLineIsDrawnOnTheDruidAndNothingOnThePlantWarrior()
+        {
+            MatchArt art = ChosenArt.Load();
+            GameObject druid = Loaded(DruidModelPath);
+            GameObject plantWarrior = Loaded(PlantWarriorModelPath);
+
+            foreach (int unitId in DruidLineUnitIds)
+            {
+                Assert.That(art.ModelFor(unitId), Is.SameAs(druid),
+                    $"unit {unitId} is a rung of the Druid line and docs/roster.md draws every one of "
+                    + "them on the Druid himself — that line has no second model");
+            }
+
+            foreach (UnitArt unit in art.Units)
+            {
+                Assert.That(unit.Model, Is.Not.SameAs(plantWarrior),
+                    $"unit {unit.UnitId} is drawn on the PlantWarrior, which issue #250 set aside");
+
+                Assert.That(unit.Beside.Model, Is.Not.SameAs(plantWarrior),
+                    $"unit {unit.UnitId} stands beside the PlantWarrior, which issue #250 set aside");
+            }
         }
 
         /// <summary>

@@ -49,6 +49,20 @@ namespace Tests.Fixtures
         /// <summary>The folder the Paladin's model, props and atlases all import into.</summary>
         public const string PaladinFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/";
 
+        /// <summary>The folder the Cleric's model, props and both atlases import into.</summary>
+        public const string ClericFolder = "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/";
+
+        /// <summary>The folder the Lorekeeper's model, tome and one atlas import into.</summary>
+        public const string LorekeeperFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/";
+
+        public const string ClericModelPath = ClericFolder + "Cleric.fbx";
+
+        /// <summary>The Unravel's body, and the one character here with no alternate atlas.</summary>
+        public const string LorekeeperModelPath = LorekeeperFolder + "Lorekeeper.fbx";
+
+        public const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
+
         public const string BarbarianModelPath = "Assets/Art/Kaykit/adventurers/Barbarian.fbx";
 
         /// <summary>The Slam's body, and the one thing here on the Large rig.</summary>
@@ -88,6 +102,35 @@ namespace Tests.Fixtures
         /// <summary>The gold statue that stands on the tile beside the Blessing.</summary>
         public const string StatueModelPath = PaladinFolder + "paladin_statue.fbx";
 
+        /// <summary>The open book the Mage holds.</summary>
+        public const string SpellbookModelPath = "Assets/Art/Kaykit/adventurers/spellbook_open.fbx";
+
+        /// <summary>The Cleric's tier-1 tome.</summary>
+        public const string ClericTomeModelPath = ClericFolder + "Cleric_Tome.fbx";
+
+        /// <summary>The mace the Bishop carries in place of the tome.</summary>
+        public const string ClericMaceModelPath = ClericFolder + "Cleric_Mace.fbx";
+
+        /// <summary>The basin that stands on the tile beside the Consecration.</summary>
+        public const string ClericFontModelPath = ClericFolder + "Cleric_Font.fbx";
+
+        /// <summary>The open tome the Unravel holds, off the Lorekeeper's own sheet.</summary>
+        public const string LorekeeperTomeModelPath = LorekeeperFolder + "Lorekeeper_Tome.fbx";
+
+        /// <summary>The Druid's staff, which every rung of his line carries.</summary>
+        public const string DruidStaffModelPath = "Assets/Art/Kaykit/adventurers/druid_staff.fbx";
+
+        /// <summary>The bare weirwood that stands on the tile beside the Overgrowth.</summary>
+        public const string WeirwoodModelPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx";
+
+        /// <summary>
+        /// How big the weirwood is drawn -- the one beside prop not authored
+        /// beside the character it stands with. Signed in
+        /// <c>docs/roster.md</c>, from the measurements issue #274 took.
+        /// </summary>
+        public const float WeirwoodScale = 0.55f;
+
         /// <summary>The Adventurers pack's second ranger colourway.</summary>
         public const string RangerAltAtlasPath = "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
 
@@ -101,6 +144,17 @@ namespace Tests.Fixtures
             "Assets/Art/Kaykit/adventurers/barbarian_texture_alt_A.png";
 
         public const string PaladinAltAtlasPath = PaladinFolder + "paladin_texture_B.png";
+
+        /// <summary>The Adventurers pack's second mage colourway, which the Sorcerer wears.</summary>
+        public const string MageAltAtlasPath = "Assets/Art/Kaykit/adventurers/mage_texture_alt_A.png";
+
+        public const string ClericAltAtlasPath = ClericFolder + "cleric_texture_B.png";
+
+        public const string DruidAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_A.png";
+
+        public const string DruidAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
 
         /// <summary>Where every bank of both rigs is imported.</summary>
         public const string ClipBankFolder = "Assets/Art/Animations/";
@@ -129,6 +183,9 @@ namespace Tests.Fixtures
         public const string BowDrawClipName = "Ranged_Bow_Draw";
         public const string BowReleaseClipName = "Ranged_Bow_Release";
         public const string SpellcastClipName = "Ranged_Magic_Spellcasting";
+
+        /// <summary>The cast the Cleric and Druid lines swing with.</summary>
+        public const string ShootClipName = "Ranged_Magic_Shoot";
         public const string ChopClipName = "Melee_1H_Attack_Chop";
         public const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
 
@@ -191,6 +248,16 @@ namespace Tests.Fixtures
 
         public const string BookNode = "paladin_book";
 
+        public const string SpellbookNode = "spellbook_open";
+
+        public const string ClericTomeNode = "Cleric_Tome";
+
+        public const string ClericMaceNode = "Cleric_Mace";
+
+        public const string LorekeeperTomeNode = "Lorekeeper_Tome";
+
+        public const string DruidStaffNode = "druid_staff";
+
         /// <summary>
         /// The bow's own origin -- the grip the bone puts in the fist, which is
         /// where the string is drawn back from.
@@ -198,7 +265,7 @@ namespace Tests.Fixtures
         public static readonly EffectAnchor Bow = EffectAnchor.At(BowNode);
 
         /// <summary>
-        /// The orb on the end of the Mage's staff. The direction is the axis
+        /// The orb on the end of the Sorcerer's staff. The direction is the axis
         /// <see cref="StaffQuarterTurn"/> was measured from -- shaft along the
         /// prop's own local +Y, orb at the +Y end -- and the distance is not
         /// written down anywhere, because <see cref="EffectAnchor"/> reads it
@@ -225,6 +292,22 @@ namespace Tests.Fixtures
         /// </summary>
         public static readonly EffectAnchor Book = EffectAnchor.At(BookNode);
 
+        /// <summary>The open spellbook in the Mage's hand, held rather than swung.</summary>
+        public static readonly EffectAnchor Spellbook = EffectAnchor.At(SpellbookNode);
+
+        /// <summary>The Cleric's tome, held the same way.</summary>
+        public static readonly EffectAnchor ClericTome = EffectAnchor.At(ClericTomeNode);
+
+        /// <summary>The Unravel's tome, held the same way.</summary>
+        public static readonly EffectAnchor LorekeeperTome = EffectAnchor.At(LorekeeperTomeNode);
+
+        /// <summary>The head of the Bishop's mace, whose shaft runs along the same axis.</summary>
+        public static readonly EffectAnchor MaceHead = EffectAnchor.AtTipOf(ClericMaceNode, Vector3.up);
+
+        /// <summary>The head of the Druid's staff.</summary>
+        public static readonly EffectAnchor DruidStaffTip =
+            EffectAnchor.AtTipOf(DruidStaffNode, Vector3.up);
+
         /// <summary>
         /// What each row in <c>content/units.txt</c> that has art is drawn as,
         /// and how big, as signed in <c>docs/roster.md</c>. A row that has none
@@ -239,27 +322,40 @@ namespace Tests.Fixtures
         /// table and the builder's can disagree about which model a unit takes
         /// but never about what a half is.
         /// <para>
-        /// The Blessing is the one row that stands beside anything: its statue
-        /// is the first of the four beside looks <c>docs/roster.md</c> signs to
-        /// reach a row in <c>content/units.txt</c> with art. The other three
-        /// are on lines nobody has dressed yet.
+        /// Three rows stand beside something: the Blessing's statue, the
+        /// Consecration's font and the Overgrowth's weirwood. The fourth beside
+        /// look <c>docs/roster.md</c> signs, the Engineer's turret, is on a line
+        /// nobody has dressed yet.
         /// </para>
         /// <para>
         /// A rung inherits what the rung below it holds — the Sergeant and the
-        /// Shield Wall carry the Soldier's sword, the Slam the Berserker's axe
-        /// and the Blessing the Templar's shield — because a <c>Looks</c> line
-        /// in <c>docs/roster.md</c> names what changes at that rung and not
-        /// everything the body carries. A colour does not carry the same way:
-        /// it is one of the three things that tell a rung apart, and that page
-        /// gives tier 3 the second model instead wherever one exists, so the
-        /// Slam wears the atlas its own model imports with.
+        /// Shield Wall carry the Soldier's sword, the Slam the Berserker's axe,
+        /// the Blessing the Templar's shield and the Elder and the Overgrowth
+        /// the Druid's staff — because a <c>Looks</c> line in
+        /// <c>docs/roster.md</c> names what changes at that rung and not
+        /// everything the body carries. What it does name replaces what was in
+        /// that hand: the Bishop's mace takes the hand the Cleric's tome was
+        /// in, as the Blessing's book takes the Templar's hammer's — that page
+        /// does not say where the tome goes, and moving it to the off hand
+        /// would be inventing an assignment rather than reading one. A colour
+        /// does not carry at all: it is one of the three things that tell a
+        /// rung apart, and that page gives tier 3 the second model instead
+        /// wherever one exists, so the Slam wears the atlas its own model
+        /// imports with and so does the Unravel — the Lorekeeper has no
+        /// alternate atlas anywhere in the collection, and the Sorcerer's
+        /// belongs to another character's UVs.
         /// </para>
         /// <para>
         /// The three Paladin rows carry no clips. That page names a clip on
-        /// every rung of the Knight and Barbarian lines and none on any rung of
-        /// the Paladin's, whose windup and backswing carry its <c>_</c> for an
-        /// unsigned number, so those rows stand in their bind pose rather than
-        /// being posed by a clip this table picked.
+        /// every rung of the Knight, Barbarian, Cleric and Druid lines and none
+        /// on any rung of the Paladin's, whose windup and backswing carry its
+        /// <c>_</c> for an unsigned number, so those rows stand in their bind
+        /// pose rather than being posed by a clip this table picked. Where it
+        /// does name one it is the swing — <c>Melee_2H_Attack_Chop</c> for the
+        /// Barbarian, <c>Ranged_Magic_Shoot</c> for the Cleric and the Druid —
+        /// so that clip is the windup with <see cref="RestClipName"/> either
+        /// side of it. Where the page means the resting stance it says so, as
+        /// the Shield Wall's raised guard does.
         /// </para>
         /// </remarks>
         public static readonly (
@@ -285,8 +381,8 @@ namespace Tests.Fixtures
                 null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
                 Bow, default),
             (4, MageModelPath, MatchArt.TowerScale, null,
-                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
-                StaffTip, default),
+                SpellbookModelPath, null, RestClipName, SpellcastClipName, RestClipName, default, default,
+                Spellbook, default),
             (7, SkeletonMageModelPath, MatchArt.CreepScale, null,
                 SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default, default, default),
             (11, KnightModelPath, MatchArt.TowerScale, null,
@@ -325,6 +421,31 @@ namespace Tests.Fixtures
             (22, HelmetedPaladinModelPath, MatchArt.TowerScale, PaladinAltAtlasPath,
                 BookModelPath, PaladinShieldModelPath, null, null, null,
                 default, default, Book, (StatueModelPath, 1f, BesideProp.NextTile)),
+            (23, ClericModelPath, MatchArt.TowerScale, null,
+                ClericTomeModelPath, null, RestClipName, ShootClipName, RestClipName,
+                default, default, ClericTome, default),
+            (24, ClericModelPath, MatchArt.TowerScale, ClericAltAtlasPath,
+                ClericMaceModelPath, null, RestClipName, ShootClipName, RestClipName,
+                default, default, MaceHead, default),
+            (25, ClericModelPath, MatchArt.TowerScale, ClericAltAtlasPath,
+                ClericMaceModelPath, null, RestClipName, ShootClipName, RestClipName,
+                default, default, MaceHead, (ClericFontModelPath, 1f, BesideProp.NextTile)),
+            (26, MageModelPath, MatchArt.TowerScale, MageAltAtlasPath,
+                StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName,
+                StaffQuarterTurn, default, StaffTip, default),
+            (27, LorekeeperModelPath, MatchArt.TowerScale, null,
+                LorekeeperTomeModelPath, null, RestClipName, SpellcastClipName, RestClipName,
+                default, default, LorekeeperTome, default),
+            (28, DruidModelPath, MatchArt.TowerScale, null,
+                DruidStaffModelPath, null, RestClipName, ShootClipName, RestClipName,
+                StaffQuarterTurn, default, DruidStaffTip, default),
+            (29, DruidModelPath, MatchArt.TowerScale, DruidAltAAtlasPath,
+                DruidStaffModelPath, null, RestClipName, ShootClipName, RestClipName,
+                StaffQuarterTurn, default, DruidStaffTip, default),
+            (30, DruidModelPath, MatchArt.TowerScale, DruidAltBAtlasPath,
+                DruidStaffModelPath, null, RestClipName, ShootClipName, RestClipName,
+                StaffQuarterTurn, default, DruidStaffTip,
+                (WeirwoodModelPath, WeirwoodScale, BesideProp.NextTile)),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>

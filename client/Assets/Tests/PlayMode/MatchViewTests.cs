@@ -464,6 +464,11 @@ namespace Tests.PlayMode
         /// the art table; this one proves the art table itself is not the thing
         /// that is wrong, which is exactly how the original defect survived —
         /// every layer faithfully carried out an assignment nobody had checked.
+        /// <para>
+        /// What the mage holds instead is the open spellbook
+        /// <c>docs/roster.md</c> signs for that row — "the mage, book in hand".
+        /// The staff is on the Sorcerer, which is the rung above him.
+        /// </para>
         /// </remarks>
         [Test]
         public void TheBowIsHeldByTheArchersAndNotByTheMage()
@@ -483,8 +488,8 @@ namespace Tests.PlayMode
             }
 
             Assert.That(art.ArtFor(Mage).RightHand, Is.Not.Null, "the mage holds nothing");
-            Assert.That(art.ArtFor(Mage).RightHand.name, Does.Contain("staff").IgnoreCase,
-                "the mage holds '" + art.ArtFor(Mage).RightHand.name + "' rather than a staff");
+            Assert.That(art.ArtFor(Mage).RightHand.name, Does.Contain("spellbook").IgnoreCase,
+                "the mage holds '" + art.ArtFor(Mage).RightHand.name + "' rather than a spellbook");
             Assert.That(art.ArtFor(Mage).LeftHand, Is.Null, "the mage still carries something off-hand");
 
             Assert.That(art.ArtFor(Soldier).RightHand, Is.Not.Null, "the soldier holds nothing");

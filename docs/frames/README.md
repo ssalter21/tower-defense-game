@@ -109,7 +109,7 @@ for a date to see, so a date alone would call a current frame stale.
 says no. It is written by the capture and never by hand; see
 [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
-## And two sheets that are not frames at all
+## And three sheets that are not frames at all
 
 - [`roster/beside-props-sheet.png`](roster/beside-props-sheet.png) — the four props that stand on the ground
   beside a tower, drawn through the real `TowerView` by
@@ -160,6 +160,47 @@ says no. It is written by the capture and never by hand; see
   Like the sheet above it, it draws no board, no price and no roster row — a set sheet is drawn from its set
   file — which is why `check-docs.ps1` exempts it from being dated against the authored content. Regenerate
   it with the command above and copy `candidates-sheet.png` over it.
+
+- [`roster/caster-lines-sheet.png`](roster/caster-lines-sheet.png) — the nine rungs of the Cleric, the Mage
+  and the Druid, drawn through the real `TowerView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-caster-lines.txt`. Nine tiles in the order
+  [`roster.md`](../roster.md) writes them: Cleric, Bishop, Consecration; Mage, Sorcerer, Unravel; Druid,
+  Elder, Overgrowth. It is the melee sheet's question asked of the other three lines — whether a rung reads
+  as a rung above the one below it once it is wearing its atlas and holding its props.
+
+  **Every tile is a transcription, and this sheet needs no framing exception.** All nine rows are posed, so
+  unlike the three Paladin rows on the sheet above, none of them had to be given a clip it is not bound with
+  in order to photograph. What is shown is each row's idle.
+
+  **The windup and backswing numbers are the one thing this pass was asked for and did not answer.**
+  `roster.md` puts the `_` on the Cleric and Druid blocks and says the art ticket that picks a line's clips
+  is where a real number is signed. This is that ticket, and how long a tower winds up is how it feels — a
+  number a person signs and not one a binding table derives. The clips are bound; the two numbers are still
+  open.
+
+  **Six things on it are questions rather than results, and two of them are asks for
+  [`roster.md`](../roster.md) rather than for the eye.**
+  **The Bishop puts the tome down.** That page's tier-2 line names `Cleric_Mace` and does not say where
+  `Cleric_Tome` goes; a hand holds one thing, so the mace takes the hand the tome was in, the way the
+  Blessing's book takes the Templar's hammer's. Moving the tome to the off hand instead would be inventing an
+  assignment rather than reading one. The visible consequence is that a *hitscan magic* bolt now leaves the
+  head of a blunt weapon, because the anchor follows the prop.
+  **The Elder is colour and nothing else.** That page says "tier 2 is colour plus a prop", and its own Elder
+  block names `druid_texture_alt_A` and no prop, with `Open — none`. The row is bound as its block is
+  written; the block and the rule disagree, and which gives is not this sheet's to settle.
+  The **Lorekeeper's `Lorekeeper_Tome`** is a lectern rather than a hand book — it hangs off the fist and
+  covers the body from the chest down, which is the whole silhouette of the Unravel tile.
+  The **Mage's `spellbook_open`** comes to rest edge-on at the hip and reads as a closed book at the camera's
+  fixed pitch, which is the same complaint issue #252 recorded about the staff the hat covers.
+  The **Cleric's font** stands a tile away at knee height, 0.81 m against a body of 2.35, and whether that
+  carries as a tier-3 signal at match framing is an eye check and not a measurement.
+  And **the weirwood comes out dark grey-brown**, which is the beside-props sheet's finding above,
+  unchanged: this pack's eight colourway folders hold byte-identical atlases, so a colourway is where a
+  model's UVs land and not a sheet of its own.
+
+  Like the two sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
+  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture

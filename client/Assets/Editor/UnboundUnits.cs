@@ -64,12 +64,9 @@ namespace View.Editor
         /// </remarks>
         public static readonly (int UnitId, float Scale)[] Rows =
         {
-            // The tower rungs waiting for art: ids 23 to 37, in the order
+            // The tower rungs waiting for art: ids 31 to 37, in the order
             // content/units.txt carries them. Every one of them stands, so
             // every one of them is a tower scale.
-            (23, MatchArt.TowerScale), (24, MatchArt.TowerScale), (25, MatchArt.TowerScale),
-            (26, MatchArt.TowerScale), (27, MatchArt.TowerScale),
-            (28, MatchArt.TowerScale), (29, MatchArt.TowerScale), (30, MatchArt.TowerScale),
             (31, MatchArt.TowerScale),
             (32, MatchArt.TowerScale), (33, MatchArt.TowerScale), (34, MatchArt.TowerScale),
             (35, MatchArt.TowerScale), (36, MatchArt.TowerScale), (37, MatchArt.TowerScale),

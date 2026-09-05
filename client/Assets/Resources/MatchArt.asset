@@ -72,20 +72,20 @@ MonoBehaviour:
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 919132149155446097, guid: 9228eef15095ca048b270c1b2024af8b, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: d560a11a8213a0e46b03461151259102, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: -90}
+      rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: staff
-        tip: {x: 0, y: 1, z: 0}
+        transformName: spellbook_open
+        tip: {x: 0, y: 0, z: 0}
     - unitId: 7
       model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
       scale: 0.5
@@ -321,10 +321,10 @@ MonoBehaviour:
         transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
     - unitId: 23
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 267a9b9e7a148f04081594f9f88ca98c, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -332,17 +332,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: Cleric_Tome
         tip: {x: 0, y: 0, z: 0}
     - unitId: 24
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 5f8828d7a1733b544804fd17d7d79ccd, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 6e7bd71d55723d741b92f35efff0632a, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -350,53 +350,53 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: Cleric_Mace
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 25
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 5f8828d7a1733b544804fd17d7d79ccd, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 6e7bd71d55723d741b92f35efff0632a, type: 3}
       leftHand: {fileID: 0}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: 6d77bd05f6145f34eb0852d180490ab7, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: Cleric_Mace
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 26
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: d8907db333df80b479994956493ca1cc, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 9228eef15095ca048b270c1b2024af8b, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: staff
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 27
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 80187777141e9f7de458d31115fc8143, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 16762a38e285a4b4284f99f0fe620577, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -404,66 +404,66 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: Lorekeeper_Tome
         tip: {x: 0, y: 0, z: 0}
     - unitId: 28
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 29
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 17b7d1d4095a118409cdeeba1e571304, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 30
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 589d95ce09d973a4da7649f4b4726a30, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
       leftHand: {fileID: 0}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: 340079b6b4d461e46b2a77c913a578e1, type: 3}
+        scale: 0.55
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 31
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 1
