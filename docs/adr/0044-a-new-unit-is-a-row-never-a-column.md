@@ -57,7 +57,7 @@ own header and the reason `--upgrades` is required rather than optional on every
 
 **A second table keyed by unit id, one per lever.** It reads as cheaper than a column and is worse: two files
 that must agree about which ids exist, with nothing checking them, which is exactly Warcraft III's `ureq`
-against `uupt` in [the survey](../research/upgrade-graph-representation-in-shipped-tower-defenses.md). The
+against `uupt`. The
 edge file is not this — it holds a relation nothing else can hold, and both of its ids are refused at load if
 they name no row in `units.txt`.
 

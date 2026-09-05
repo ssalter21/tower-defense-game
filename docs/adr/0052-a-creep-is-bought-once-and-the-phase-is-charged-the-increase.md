@@ -3,7 +3,7 @@
 A build phase composed a wave out of its own slots and paid for all of it, every round. So a run's seventh wave
 could be smaller than its sixth, an early purchase bought one round of leak cost and nothing after it, and the
 attacking half of the game had no compounding in it at all — the one thing every deep send system in the genre
-is built on ([the survey](../research/attack-composition-and-sending.md#11-the-one-purse-problem-stated-precisely)).
+is built on ([the sending survey](../open-questions.md#what-the-design-research-found)).
 Found on 14 August 2026 by playing it. This is how permanence was put in without giving the record a second
 shape to carry.
 

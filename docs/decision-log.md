@@ -28,7 +28,7 @@ Three claims were written before the walking skeleton existed, and reading the f
 
 ## 6 August 2026 — six reversals
 
-Made after [the skill note](research/fun-and-skill-expression.html) audited which of the genre's skill axes
+Made after [the skill note](open-questions.md#what-the-design-research-found) audited which of the genre's skill axes
 this design could still charge the player for. Four of the six exist to buy back an axis the design had deleted
 or inverted.
 
@@ -396,7 +396,7 @@ the committed content.
 ### The Skeletons pack has six models and the roster document says four
 
 [`docs/roster.md`](roster.md) states that KayKit's four skeleton models are exactly spent. The repo's own
-[character roster note](research/kaykit-character-roster.md) lists **six**, and the two unnamed there are a
+character roster note listed **six**, and the two unnamed there are a
 dedicated **Necromancer** and a **Skeleton Golem**. The count is corrected; no assignment moves. The Minion
 and the Skeleton sharing a base model was never the shortage it looked like — the Skeleton is that model with
 shield and sword, which is a kit variation the pack ships weapons for, and `roster.md` said so all along.
@@ -1475,3 +1475,49 @@ freshness, the ADR count and ADR citations from source. Nothing checks whether a
 three weeks in the file that outranks every other file in the repository. A fifth invariant — a document
 claiming a mechanism exists when no code implements it — is not obviously mechanisable, and is not filed as a
 ticket here because nobody has yet said what it would read.
+
+---
+
+## 5 September 2026, later — fifteen research notes are retired
+
+The vision was cut to its decisions in the morning. `docs/research/` had the same problem in a larger form:
+**twenty-four notes, 809 KB, of which nine were load-bearing.** Fifteen are deleted, leaving 90 KB — the
+directory is 89% smaller and the count is down by well over half.
+
+**The test was not age.** It was whether anything still needed the file. A note stays if code, a content file
+or an ADR cites it — `sim/FieldPool.cs` and `content/field.txt` both point at the canned-field note, and the
+number in `units.txt` is unreadable without the cost note — or if it holds a measurement that costs real time
+to take again, which is why the hot-reload timings survive at nine kilobytes. Everything else was a survey
+whose verdict had already been read.
+
+**A survey that has been read is finished work.** Its findings were written into the vision, an ADR or open
+questions on the day it landed, which is what a research note is *for*; the note is the working, and keeping
+the working beside the answer gives a reader two places to look with no rule for which is current. Three of
+the retired design notes had already grown supersession banners saying their premise had moved — the corridor,
+the camera, the one-purse problem — which is the same fact arriving as maintenance cost. Commissioning a fresh
+survey against the design as it now stands is cheaper than reading an old one and subtracting its banners.
+
+| What went | Why it could |
+|---|---|
+| **Nine design surveys** — build depth, the attacking half, towers-versus-squads, upgrade graphs, creep variety, Element TD's ancestry, and the three HTML notes on fun, the planning phase and generated maps | Every verdict is in [open questions](open-questions.md#what-the-design-research-found), which had already carried five of them in a summary table. Three said of themselves that they decided nothing; three carried banners saying their premise had moved. The upgrade-graph survey landed whole into ADRs 0043, 0044 and 0045, each of which names the shape it rules out in its own words |
+| **Three Unity build notes** — the agent workflow, project settings, sim-library integration | All three were adopted and then outlived by something that cannot go stale. `AGENTS.md` rule 3 now *forbids* the editor bridge the workflow note recommended; `tools/check-project-settings.ps1` asserts what the settings note chose; the integration note had corrected itself in four amendments |
+| **The software factory** | It asked for the autonomy gradient to be written down. It was, on 3 September, as `AGENTS.md` rule 6. The rule outlives the argument for it |
+| **Two KayKit listings** — the model index and the character roster | The index transcribed 2,252 model names; all 4,247 models are now imported at `client/Assets/Art/Kaykit/`, so `ls` answers the question against the files instead of against a copy of them. The character roster declared itself superseded on the numbers by the collection inventory, which stays |
+
+**One thing was salvaged rather than summarised.** The planning-phase note catalogued fourteen uses of a
+re-runnable 2.75 ms match as design material — six with no equivalent in the genre — and that list existed
+nowhere else. It is now a ranked table in [open
+questions](open-questions.md#what-a-275-ms-match-could-be-spent-on), which is where an undecided menu of
+options belongs anyway.
+
+**What this costs, stated rather than discovered later.** The primary sources are gone with the notes: a
+citation chased from an ADR now stops at the ADR's own sentence, and re-establishing a claim means finding the
+source again. That is the deliberate trade — the ADRs assert the findings they used in their own words, and a
+footnote nobody follows is not worth 322 KB of prose to keep followable. Recovering any note is
+`git show <sha>:<path>`; nothing is lost, only unindexed.
+
+**`check-docs.ps1` would not have caught the drift this removes**, and it will not catch its absence either.
+Its four invariants cover issue states, picture freshness, the ADR count and ADR citations from source. A
+document citing a document that no longer exists is not among them — which is why every one of the twenty-eight
+inbound links outside the index was repointed by hand here, in the vision, the build order, open questions, the roster, this
+file, `AGENTS.md`, four ADRs, the archive and the two surviving notes that referenced retired ones.

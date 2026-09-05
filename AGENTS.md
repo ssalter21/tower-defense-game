@@ -121,8 +121,8 @@ The gate covers the simulation completely and, as rule 2 says, counts the client
 so an agent working alone has hard evidence about one half of this repository and thin evidence about the
 other. **Match the autonomy to what would actually catch the change being wrong**, per the gradient below.
 Treating every area alike is what fails quietly: hold a change a player will see to the simulation's standard
-and every check still passes, on an artefact nobody has looked at. The evidence is in
-[The software factory](docs/research/the-software-factory.html), which asked for this rule, and
+and every check still passes, on an artefact nobody has looked at. The rule was asked for by
+the software-factory note, since retired; the evidence that survives it is
 [What agents can build unattended](docs/research/what-agents-can-build-unattended.md), which names the
 instruments each row rests on and the standing rules the last row cites.
 

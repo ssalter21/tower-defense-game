@@ -550,8 +550,8 @@ open.
    rows that exist, not new unit types. An **arcane shield** is expected and is two things at once — a pool a
    creep carries in its own right, and a pool the Necromancer grants to creeps entering its range that would
    not otherwise have one. The second half is the aura in
-   [what this roster needs](#what-this-roster-needs-that-the-schema-does-not-have). See [creep upgrade
-   systems](research/creep-wave-variety-and-creep-upgrade-systems.md). **Creeps get no prerequisite chain** —
+   [what this roster needs](#what-this-roster-needs-that-the-schema-does-not-have). See [what the creep-variety
+   survey found](open-questions.md#what-the-design-research-found). **Creeps get no prerequisite chain** —
    the gating came out precisely because it held back testing, and a chain on the sending side puts a version
    of it straight back.
 3. **The Soldier keeps his hex.** Answered by [#213](https://github.com/ssalter21/tower-defense-game/issues/213): one hex of range, plus a self-centred bubble,

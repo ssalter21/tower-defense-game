@@ -27,55 +27,52 @@ is real — and every mode of it is the same machine at a different latency.*
 ## Research notes
 
 In [`research/`](research/). They are **evidence, not design documents**: each resolves one question, cites
-primary sources, and decides nothing. Where the vision has since moved past one, the note says so in a banner
-at its top rather than being rewritten.
+primary sources, and decides nothing.
 
-**Design research**, commissioned against the vision's depth direction and open questions:
+**Nine remain of twenty-four.** [Fifteen were
+retired](decision-log.md#5-september-2026-later--fifteen-research-notes-are-retired) on 5 September 2026, and
+the test each one was held to was not its age but whether anything still needed it: a note stays if code, a
+content file or an ADR cites it, or if it holds a measurement that costs real time to take again. A survey
+whose verdict has been read and written into the vision, an ADR or [open
+questions](open-questions.md#what-the-design-research-found) is finished work, and keeping the working beside
+the answer only gives a reader two places to look and one of them stale.
 
-| Note | The question it answers |
-|---|---|
-| [Build depth in tower defense](research/build-depth-in-tower-defense.md) | How do TD games produce extreme, combinatorial build depth, and which mechanisms survive this project's constraints? |
-| [The attacking half](research/attack-composition-and-sending.md) | How is sending made deep — and has anyone gated the attacking options on the player's defensive build? |
-| [Creep wave variety and creep upgrade systems](research/creep-wave-variety-and-creep-upgrade-systems.md) | Which games went deep on creep variety, and does anything let you upgrade creeps the way you upgrade towers? |
-| [Element TD's ancestry](research/element-td-ancestry-and-wc3-tower-mechanics.md) | Which WC3 map inspired Element TD, and what were the original's tower mechanics? |
-| [Upgrade graphs in shipped tower defenses](research/upgrade-graph-representation-in-shipped-tower-defenses.md) | How do shipped games represent a tower's upgrade ladder, and what survives an upgrade? |
-| [Towers, or placed squads?](research/towers-versus-placed-squads.md) | Does the defending side have to be towers, or could placements be flanking walls with archer squads? |
-| [Why tower defense is fun, and where the skill is](research/fun-and-skill-expression.html) *(HTML)* | Why is the genre fun, and where does its skill expression actually live? |
-| [Making the plan the game](research/planning-phase-and-simulated-stats.html) *(HTML)* | How do you make a build phase carry a whole game, and what can a 2.75 ms sim be spent on as design material? |
-| [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html) *(HTML)* | How do you generate maps worth playing, seed them cheaply, and pick a rotation cadence? |
-| [The character roster: KayKit and Quaternius](research/kaykit-character-roster.md) | What 102 character models do the two packs actually contain, and which read as towers and which as creeps? |
-
-**Simulation research**, measured in this repository rather than commissioned:
+**Simulation research**, measured in this repository rather than commissioned. Each of these is cited from the
+code or the content file whose number it explains:
 
 | Note | The question it answers |
 |---|---|
-| [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
-| [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
 | [Cost is not a balance lever under a one-for-one leak](research/cost-is-not-a-balance-lever-under-a-one-for-one-leak.md) | If a leak charges what the creep cost, what does the cost column actually control? |
 | [A canned field of one collapses the bands](research/a-canned-field-of-one-collapses-the-bands.md) | Four authored performance bands behave as two. Is the mechanism wrong, or the stand-in field? |
+| [A wall kills a count, not a share](research/a-wall-kills-a-count-not-a-share.md) | What does an opponent who buys its column again every round cost a run, and can a run build its way out? |
+| [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
+| [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
 
 **Asset research**, on the art that is actually on the machine:
 
 | Note | The question it answers |
 |---|---|
-| [What is actually inside The Complete KayKit Collection v6.1](research/kaykit-collection-inventory.md) | What does the downloaded bundle really contain — packs, rigs, clips, characters, triangle counts — read from the archive rather than from a listing? |
-| [The KayKit model index](research/kaykit-model-index.md) | Does KayKit have a *thing*, and what is the file called? All 2,252 distinct model names |
+| [What is actually inside The Complete KayKit Collection v6.1](research/kaykit-collection-inventory.md) | What does the bundle really contain — packs, rigs, clips, characters, triangle counts — read from the archive rather than from a listing? |
 
 **Build research**, on the tools rather than the game:
 
 | Note | The question it answers |
 |---|---|
-| [Claude Code inside a Unity 6 project](research/unity-agent-workflow.md) | What can a terminal-only agent do inside Unity, and what must be done by hand? |
-| [Unity 6 project-creation settings](research/unity-project-settings.md) | Which settings are expensive to change later? |
-| [How the Unity project consumes the sim library](research/unity-sim-library-integration.md) | Precompiled DLL, or sources inside Unity? Carries [amendments](research/unity-sim-library-integration.md#amendments) |
-| [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
 | [A player build measures no text without a PanelSettings asset](research/a-player-build-measures-no-text-without-a-panelsettings-asset.md) | A build drew none of its HUD while the editor drew all of it. What is different about a player? |
-| [The software factory, assessed against this repository](research/the-software-factory.html) *(HTML)* | What is the software-factory approach, which of it applies here, and what should change as a result? |
-| [What agents can build unattended](research/what-agents-can-build-unattended.md) | With the tracker empty and step 5 half-built, which seams can an `/afk` run take to green, what proves each, and what must a person hand over first? |
+| [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
+| [What agents can build unattended](research/what-agents-can-build-unattended.md) | Which seams can an `/afk` run take to green, what proves each, and what must a person hand over first? |
 
-> **One caveat the three Unity notes carry.** `unity.com` returns 403 to automated fetching, so every licence
-> and pricing claim in them was read via a browser user-agent as extracted text. A human should confirm those
-> in a real browser before relying on them commercially.
+> **One caveat the hot-reload note carries.** `unity.com` returns 403 to automated fetching, so every licence
+> and pricing claim written against it was read via a browser user-agent as extracted text. A human should
+> confirm those in a real browser before relying on them commercially.
+
+**Where the retired notes went.** The nine design surveys are summarised, verdict by verdict, in [open
+questions](open-questions.md#what-the-design-research-found), which also carries the one thing in them that had
+not been written down anywhere else: the fourteen uses a 2.75 ms match could be put to. The three Unity
+build notes had all been adopted and then enforced by something that cannot go stale — `AGENTS.md` rule 3
+forbids the editor bridge one of them recommended, and `tools/check-project-settings.ps1` asserts the settings
+another chose. The two KayKit listings were superseded by the inventory above and by
+`client/Assets/Art/Kaykit/`, which is the collection itself.
 
 ## The archive
 

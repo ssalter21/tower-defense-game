@@ -86,8 +86,8 @@ directly, so an Archer must stand before a Ranger can.
 - **It does not decide the match format in full before building anything.** Steps 1–3 are the smallest form of
   seam 1's ruleset that can be played, chosen so that being wrong costs a text file rather than an effort.
 - **It does not commit to the generative roster.**
-  [The depth research](research/build-depth-in-tower-defense.md) ranks it first and the reasoning holds, but it
-  signs a content bill of **25 to 56 authored units** decided by rule rather than taste. The note says the
+  [The depth research](open-questions.md#what-the-design-research-found) ranked it first and the reasoning
+  holds, but it signs a content bill of **25 to 56 authored units** decided by rule rather than taste. The
   authored-pool direction composes onto the generative one later at no cost, so nothing is lost by starting
   flat.
 - **It does not build the multiplayer.** Async round-robin is the same loop at a different latency
@@ -138,8 +138,8 @@ tokens a gate hands over. The question the sweep is owed is the one a capacity b
 round.
 
 **The cheapest coherent starting point is already identified**, and it is what steps 1–3 build:
-[the sending research](research/attack-composition-and-sending.md) ranks *universal roster — the wave **is** the
-order and the clock* first, because its cost is approximately zero. The ordered wave, the tie-break rule and
+[the sending research](open-questions.md#what-the-design-research-found) ranked *universal roster — the wave
+**is** the order and the clock* first, because its cost is approximately zero. The ordered wave, the tie-break rule and
 the overtake landmark all exist and are tested.
 
 ### 2 · The submission barrier
@@ -322,8 +322,8 @@ generation and rotation are deferred behind the first hand-authored map** — [#
   this seam wants charting before step 5.
 - **The first map is hand-authored**, and **generation and rotation wait behind it** — seed-to-map as a pure
   function, a `simcli` mode to invoke it, the sweep-scored archive, and the schedule that draws from it, all
-  downstream of one map that is demonstrably good to score candidates against. Surveyed in
-  [Generated maps, and how often they turn over](research/generated-maps-and-rotation.html).
+  downstream of one map that is demonstrably good to score candidates against. What the survey found is in
+  [open questions](open-questions.md#what-the-design-research-found).
 
 **Nothing before step 5 needs it, and everything after step 5 is shaped by it.** Steps 1–4 run against the
 corridor that exists, so **the numbers they produce are provisional by construction** — stated where they are
