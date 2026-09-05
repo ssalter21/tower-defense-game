@@ -126,8 +126,9 @@ namespace View.Editor
         private static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
-        /// What each unit type is drawn as, and how big — one entry per row in
-        /// <c>content/units.txt</c>.
+        /// What each unit type is drawn as, and how big — one entry per row of
+        /// <c>content/units.txt</c> that has art. A row that has none yet is on
+        /// <see cref="UnboundUnits"/>'s list instead and draws the stand-in.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -637,24 +638,38 @@ namespace View.Editor
         private static void WireArt(SerializedObject serialized)
         {
             SerializedProperty units = Field(serialized, "units");
-            units.arraySize = UnitBindings.Length;
+            units.arraySize = UnitBindings.Length + UnboundUnits.Rows.Length;
 
             for (var i = 0; i < UnitBindings.Length; i++)
             {
                 var binding = UnitBindings[i];
-                SerializedProperty entry = units.GetArrayElementAtIndex(i);
 
-                entry.FindPropertyRelative("unitId").intValue = binding.unitId;
-                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(binding.model);
-                entry.FindPropertyRelative("scale").floatValue = binding.scale;
-                entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(binding.rightHand);
-                entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(binding.leftHand);
-                entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(binding.idle);
-                entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(binding.windup);
-                entry.FindPropertyRelative("backswingClip").objectReferenceValue =
-                    MaybeClip(binding.backswing);
-                entry.FindPropertyRelative("rightHandTilt").vector3Value = binding.rightTilt;
-                entry.FindPropertyRelative("leftHandTilt").vector3Value = binding.leftTilt;
+                WireUnit(
+                    units.GetArrayElementAtIndex(i),
+                    binding.unitId,
+                    binding.model,
+                    binding.scale,
+                    binding.rightHand,
+                    binding.leftHand,
+                    binding.idle,
+                    binding.windup,
+                    binding.backswing,
+                    binding.rightTilt,
+                    binding.leftTilt);
+            }
+
+            // A row with no art chosen for it yet: the stand-in at the size its
+            // role is drawn at, empty hands and no clips. The list is empty at
+            // rest, so this loop usually writes nothing.
+            for (var i = 0; i < UnboundUnits.Rows.Length; i++)
+            {
+                var row = UnboundUnits.Rows[i];
+
+                WireUnit(
+                    units.GetArrayElementAtIndex(UnitBindings.Length + i),
+                    row.UnitId,
+                    UnboundUnits.StandInModelPath,
+                    row.Scale);
             }
 
             foreach ((string field, string asset, string clip) in SharedBindings)
@@ -662,6 +677,46 @@ namespace View.Editor
                 Field(serialized, field).objectReferenceValue =
                     clip == null ? LoadModel(asset) : LoadClip(clip);
             }
+        }
+
+        /// <summary>
+        /// Writes one entry that stands there and holds nothing — the same
+        /// shape as <see cref="UnitArt.Of(int, GameObject, float)"/>.
+        /// </summary>
+        private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
+            WireUnit(entry, unitId, model, scale, null, null, null, null, null, default, default);
+
+        /// <summary>
+        /// Writes one entry of the serialized unit list.
+        /// </summary>
+        /// <remarks>
+        /// Every field, every time. Growing a serialized array copies the last
+        /// element into the new slots, so an entry that set only the fields it
+        /// cared about would inherit the previous row's weapons and clips.
+        /// </remarks>
+        private static void WireUnit(
+            SerializedProperty entry,
+            int unitId,
+            string model,
+            float scale,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt)
+        {
+            entry.FindPropertyRelative("unitId").intValue = unitId;
+            entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
+            entry.FindPropertyRelative("scale").floatValue = scale;
+            entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(rightHand);
+            entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(leftHand);
+            entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(idle);
+            entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(windup);
+            entry.FindPropertyRelative("backswingClip").objectReferenceValue = MaybeClip(backswing);
+            entry.FindPropertyRelative("rightHandTilt").vector3Value = rightTilt;
+            entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
         }
 
         /// <summary>
@@ -697,7 +752,7 @@ namespace View.Editor
         /// </remarks>
         public static MatchArt Art()
         {
-            var units = new List<UnitArt>(UnitBindings.Length);
+            var units = new List<UnitArt>(UnitBindings.Length + UnboundUnits.Rows.Length);
 
             foreach (var binding in UnitBindings)
             {
@@ -713,6 +768,8 @@ namespace View.Editor
                     binding.rightTilt,
                     binding.leftTilt));
             }
+
+            units.AddRange(UnboundUnits.StandIns());
 
             return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));
         }

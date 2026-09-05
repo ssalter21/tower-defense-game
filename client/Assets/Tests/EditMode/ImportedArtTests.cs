@@ -6,6 +6,7 @@ using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
 using View;
+using View.Editor;
 
 namespace Tests.EditMode
 {
@@ -121,6 +122,12 @@ namespace Tests.EditMode
             (ChosenArt.SkeletonMageModelPath, SkeletonAtlasPath),
             (ChosenArt.KnightModelPath, "Assets/Art/Characters/knight_texture.png"),
             (ChosenArt.MageModelPath, "Assets/Art/Characters/mage_texture.png"),
+
+            // The stand-in a row with no art yet draws as. It comes from a
+            // different pack and wears that pack's own atlas, which is the
+            // failure this table exists for: a model drawn against the wrong
+            // atlas draws confetti, and one drawn against none draws magenta.
+            (UnboundUnits.StandInModelPath, "Assets/Art/Kaykit/prototype/prototypebits_texture.png"),
         };
 
         /// <summary>

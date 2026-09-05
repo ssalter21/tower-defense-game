@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using View;
+using View.Editor;
 
 namespace Tests.Fixtures
 {
@@ -99,8 +100,9 @@ namespace Tests.Fixtures
         public static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
-        /// What each row in <c>content/units.txt</c> is drawn as, and how big,
-        /// as signed in <c>docs/roster.md</c>.
+        /// What each row in <c>content/units.txt</c> that has art is drawn as,
+        /// and how big, as signed in <c>docs/roster.md</c>. A row that has none
+        /// yet is on <see cref="UnboundUnits"/>'s list instead.
         /// </summary>
         /// <remarks>
         /// The Minion and the Skeleton share the minion skin, and the Archer
@@ -144,7 +146,18 @@ namespace Tests.Fixtures
         [InitializeOnLoadMethod]
         private static void Install() => MatchArtSource.Use(new Adapter());
 
-        /// <summary>Every asset above, loaded now.</summary>
+        /// <summary>
+        /// Every asset above, loaded now, and a stand-in for each row that has
+        /// no art yet.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="UnboundUnits"/> is the one thing here that is taken from
+        /// the builder's side of the seam rather than written out again. The
+        /// duplication above exists so that two tables can disagree about which
+        /// model a unit takes; a row with no art has no such choice in it, and
+        /// two lists of which rows those are could only ever disagree by one of
+        /// them being stale.
+        /// </remarks>
         public static MatchArt Load() =>
             MatchArt.Of(
                 UnitPaths.Select(u => UnitArt.Armed(
@@ -157,7 +170,8 @@ namespace Tests.Fixtures
                     MaybeClip(u.windup),
                     MaybeClip(u.backswing),
                     u.rightTilt,
-                    u.leftTilt)),
+                    u.leftTilt))
+                    .Concat(UnboundUnits.StandIns()),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));
 
