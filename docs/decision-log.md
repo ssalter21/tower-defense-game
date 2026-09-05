@@ -1540,3 +1540,69 @@ splash, the tier signal) stand in `roster.md` until he does. Each of those is it
 **The theme it fixes on the creep side is undead, plus the dark and hooded.** Skeletons were already the
 creeps; the Mystery Monthly characters that read as gothic monsters or as masked and cloaked join them, and
 everything modern, mechanical or comic is set aside with a one-line reason so it is not re-derived.
+
+---
+
+## 5 September 2026, last — Sam signs the roster, and six standing proposals move
+
+The [expansion proposal](roster-expansion-proposal.md) was reviewed by Sam in full and taken. The entry above
+recorded the *direction* and said each of the five standing proposals it would retire "is its own entry here
+when it moves". They moved. A sixth reversal — the capstone token — was not in the proposal and arrived in the
+review.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The roster](roster.md#proposals-retired-on-5-september-2026)** — Captain and Hero | The Soldier line's tier 2 is an attack-speed aura and its tier 3 a 360° sweep | **Both retired as proposals.** The aura is the **Paladin's Blessing**; the sweep is the **Barbarian's Slam** | A tier 2 is one stat now, and both mechanics belong on models that ship the prop for them — a book and a statue, a two-handed slam clip. Neither row ever reached `units.txt`, so no id is burned |
+| **[The roster](roster.md#proposals-retired-on-5-september-2026)** — the elemental branch | The Mage line forks at tier 2 into Pyromancer and Cryomancer and rejoins at the Frostfire Archmage | **The branch is retired.** Tier 2 is the **Sorcerer**, one stat; tier 3 is **Unravel**. The area slow is the **Druid's Overgrowth** | Three stages, no branch. It closes the roster's own open question that the tier-2 element pick was temporary, and it makes *one line, three stages* an invariant with no exception. Two roads ending at one tower made the pick a tempo decision rather than a build decision |
+| **[The roster](roster.md#4--mage--tier-1--status-live)** — the Mage's splash | Author the splash, reprice the row, or make it fire three shots — "picking one is a signature rather than a fix" | **The splash is authored** — origin `target`, radius 1000, payload `damage` — **and the price is deliberately not touched.** The row stays at 92 against a rule that says 30 | Sam, 5 September 2026: *"The only thing on the mage thats deferred is the appropriate costing, all the functionality stays, it needs the splash."* Repricing a row whose value is a splash radius is what the cost rule is worst at; the price waits for the automated balance sweeps to be good enough to derive it. The gap is now held open on purpose rather than unanswered |
+| **[The roster](roster.md#7--skeleton-mage--status-live)** — id 7 | id 7 is the **Necromancer**, wearing `Skeleton_Mage`, and the pack's dedicated Necromancer model "is left unused, which is a choice and not an oversight" | **id 7 is relabelled Skeleton Mage** and its long-unsigned aura is signed as **haste** (+20 speed, friend, radius 2000). A new **Necromancer** row wears the Necromancer model and takes the shield aura originally designed for id 7 | The pack's own necromancer should be the necromancer. The id does not move so no hash moves; only the new aura does that. The `units.txt` label moves too — `necromancer` becomes `skeleton-mage` — because two rows cannot share one, and renaming a label is free |
+| **[The roster](roster.md#the-tier-signal-is-never-size)** — the tier signal | "Size is the tier signal, and it is the only one." The Ranger is the Archer at 1.5 scale | **Size is retired as a tier signal.** A rung is told apart by **colour, a prop, or a second model** — never by how big it is. Size now tells the two *sides* apart and nothing else | Sam, 5 September 2026: *"I dont like the size upgrade any more, I want it reverted. There needs to be changes to the assets, maybe new equipment or a new continuous aura or glow on the tower, colour change that makes sense."* Scaling a Paladin 1.5x when the pack ships a helmeted Paladin wastes the pack |
+| **[The roster](roster.md#what-things-cost)** — what a capstone costs | The gates were **deleted, not switched off**, on 13 August, and the per-wave type limit went with them | **A capstone token comes back as a plain currency**: +1 at rounds 3, 6 and 9, spent on a capstone edge. **No gate comes back with it** — no capacity schedule, no per-wave type limit, no offering | The 14 August entry re-proposed gates carrying *both* a capacity schedule and a token; **only the token half is taken.** Sam, 5 September 2026: *"You get a capstone token on round 3 6 9. Its fine that they are not priced in, it's limited by the increments."* Nine capstones against three tokens is what makes the choice of line a decision |
+
+**Scarcity is the grant schedule, not the price, and that is a decision rather than a gap.** Five of the nine
+capstones — Shield Wall, Blessing, Consecration, Overgrowth, Unravel — change neither the damage roll nor the
+bodies a shot hits, so the cost rule would price each identically to the rung below it. **No capstone premium
+is to be authored.** An authored fudge factor inside a file whose whole claim is that both sides of the purse
+are arithmetic would be a worse artefact than a flat number the sweep can report.
+
+**The three engine asks were decided with the rest.** The **Cursed Villager becomes the Werewolf on the first
+damage it takes**, and a lethal first hit does not kill it — the change resolves ahead of the death, so the
+Werewolf enters on its own full 2600 and no Villager can ever be one-shot. The **Necromancer raises a Minion
+every 150 ticks with no cap**, bounded only by how long it lives. The **Grave Robber pays 12 gold** to the
+defender that kills it, half its own price, and a leaked one pays nothing.
+
+> **The uncapped Necromancer was raised as a problem and kept as a trade-off.** A slowed Necromancer raises
+> *more* — the speed floor is a tenth, so a fully-slowed one crosses in ~17,000 ticks instead of ~1,545 and
+> raises on the order of a hundred Minions instead of ten. Shield Wall and Overgrowth are slows, so the two
+> capstones built to handle a push are the two that make this body worst. Sam, 5 September 2026: *"I dont care
+> that it gets stronger in theory if you slow it, thats an interesting trade off to spamming or stacking
+> slows."* Recorded because it will look like an oversight to whoever meets it in a sweep.
+>
+> **What it does cost is a proof.** `Match.RequireItArrives` guarantees at construction that every *authored*
+> order reaches the exit inside the tick ceiling, at the floor speed — and a creep spawned at runtime is in no
+> order. Nothing runs away, because a Minion does not itself raise, but the arithmetic has to be re-derived
+> over the spawner's own floored crossing time rather than assumed. That is the spawn ticket's ADR.
+
+**Names: all 35 kept as proposed, and the grammar asymmetry is deliberate.** Tiers 1 and 2 are named for a
+body — Sergeant, Templar, Bishop, Sorcerer, Elder, Cutthroat, Artificer — and every capstone is named for a
+move: Shield Wall, Slam, Blessing, Consecration, Unravel, Overgrowth, Overwatch, Fan of Knives, Mortar. That
+was put to Sam as a problem, since a row is a unit and every other row is named for the thing on the tile. He
+kept it: *"the towers are tier 1 and 2 but the capstone is the name of an upgrade instead."* A capstone is the
+one rung bought with a different currency and it is not a new body — it is a thing the tower learns to do.
+
+**Models: all confirmed from a rendered sheet, with three changes.** The **Marksman holds `crossbow_2handed`,
+not his rifle** — the only firearm the roster would touch, and it puts the top of the Archer line in a
+different century. The **Grave Robber wears `Hoarder_Backpack`, not the sword** — the pack is what the mechanic
+is about, and a sword on a creep that never attacks reads as a lie. And the **PlantWarrior is set aside**: it
+was proposed as the Druid's tier 3 and was the only one of the six second models that read as a *different
+creature* rather than the same person promoted. The Druid keeps his body and gains a **bare weirwood** on the
+tile beside him — `Tree_Bare_*_Color8` from the Forest Nature pack, cream-white trunk under a red canopy.
+
+**What the signing bought that is work rather than prose.** A per-row texture does not exist in the view —
+`UnitArt` has no material field — so tier colour is a small view feature plus an import of the alternate
+textures, none of which are in the repo. There is **no socket for a prop beside a tower**, only two hand
+bones, so the Engineer's turret, the Paladin's statue, the Cleric's font and the Druid's tree have nowhere to
+stand; the Engineer line cannot be drawn as designed at any tier without one. And a **glow is deliberately not
+a tier signal** — it is reserved for reading *"this tower is projecting an aura"*, which is the meaning that
+matters in play; the client has no `ParticleSystem` and two play-mode tests forbid one, so it would have to be
+real mesh geometry either way.

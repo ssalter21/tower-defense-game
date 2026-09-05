@@ -26,7 +26,7 @@ not an omission, it is the ask** — the blanks are the agenda for the next conv
 
 **Ids come from `units.txt`'s one global space and ascend forever.** Never reused, never an index, never
 reserved in advance — the next unit built takes id 15, whatever it is. **A tier is its own id and its own row**;
-the Captain is not the Soldier with a flag set.
+the Sergeant is not the Soldier with a flag set.
 
 ## What things cost
 
@@ -50,19 +50,28 @@ signing **damage, cooldown and how many bodies it hits**.
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
-**The rule does not reach a capstone, because gold does not buy one.**
-[A gate hands the player one token](vision.md#the-gates) at waves 3, 6 and 9, and the
-token is the whole price: three capstones a run, and the decision is which tower line to spend one on rather
-than what it costs. The cost column prices what gold buys, and the top of a line is not in it. That retires
-the shallow-U exemption this section used to reserve — an exemption to a gold rule, for a thing gold does not
-buy, is a clause about nothing.
+**The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone token
+at rounds 3, 6 and 9** — three a run against nine capstones — and the token is the whole price. The cost
+column prices what gold buys, and the top of a line is not in it. That retires the shallow-U exemption this
+section used to reserve: an exemption to a gold rule, for a thing gold does not buy, is a clause about
+nothing.
 
-**What that leaves this file owing is the tiers themselves**: a capstone per tower line, none of them a strict
-upgrade on another, each strong enough that spending one of three tokens on it is a real decision — and a
-statement of how a capstone's numbers get chosen, since the damage rule no longer chooses them. **No capstone
-exists yet**, so this is intent rather than a clause: `units.txt` states the pricing rule plainly and says
-nothing about exceptions, because a stated exemption with no instance is a rule nobody can check. The first
-capstone is where it gets written down.
+> **The token is a currency, not a gate.** It goes up on those three rounds and it is spent on a capstone
+> edge; that is the whole mechanic. The gates were deleted on
+> [13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
+> and they are not coming back with it — no capacity schedule, no per-wave type limit, no offering. The
+> [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.**
+
+**Scarcity is the grant schedule, not the price, and that is deliberate.** Five of the nine capstones change
+neither the damage roll nor the bodies a shot hits — Shield Wall, Blessing, Consecration, Overgrowth and
+Unravel are auras or debuffs — so the damage rule would price each of them *identically to the rung below it*.
+That is not an oversight to be corrected with an authored premium. What makes spending a token a decision is
+that there are three of them and nine places to put one. **Do not author a capstone premium**; report what the
+sweep says about a capstone and leave the number alone.
+
+**The four that do move the rule's inputs still price under it** — Slam and Mortar add bodies, Fan of Knives
+sets `targets` to 3, and Overwatch changes the damage roll and the cooldown — but nothing is *charged* that
+price, because a capstone is bought with a token. The rule's output on those rows is a reading, not a bill.
 
 ## The clock
 
@@ -91,18 +100,56 @@ pass that lands between ticks exists as well. A merely-different speed silently 
 | 2 | Skeleton Scout | creep | — | live | `skeleton-scout` |
 | 3 | Archer | tower | 1 | live | `archer` |
 | 4 | Mage | tower | 1 | live | `mage` |
-| 7 | Necromancer | creep | — | live | `necromancer` |
+| 7 | **Skeleton Mage** | creep | — | live | `skeleton-mage` |
 | 11 | Soldier | tower | 1 | live | `soldier` |
 | 12 | Skeleton | creep | — | live | `skeleton` |
 | 13 | Skeleton Warrior | creep | — | live | `skeleton-warrior` |
 | 14 | Ranger | tower | 2 | live | `ranger` |
-| — | Captain | tower | 2 | proposed | — |
-| — | Pyromancer | tower | 2a | proposed | — |
-| — | Cryomancer | tower | 2b | proposed | — |
-| — | Hero | tower | 3 | proposed | — |
-| — | Marksman | tower | 3 | proposed | — |
-| — | Frostfire Archmage | tower | 3 | proposed | — |
+| — | Sergeant | tower | 2 | signed | `sergeant` |
+| — | Shield Wall | tower | 3 | signed | `shield-wall` |
+| — | Barbarian | tower | 1 | signed | `barbarian` |
+| — | Berserker | tower | 2 | signed | `berserker` |
+| — | Slam | tower | 3 | signed | `slam` |
+| — | Paladin | tower | 1 | signed | `paladin` |
+| — | Templar | tower | 2 | signed | `templar` |
+| — | Blessing | tower | 3 | signed | `blessing` |
+| — | Cleric | tower | 1 | signed | `cleric` |
+| — | Bishop | tower | 2 | signed | `bishop` |
+| — | Consecration | tower | 3 | signed | `consecration` |
+| — | Sorcerer | tower | 2 | signed | `sorcerer` |
+| — | Unravel | tower | 3 | signed | `unravel` |
+| — | Druid | tower | 1 | signed | `druid` |
+| — | Elder | tower | 2 | signed | `elder` |
+| — | Overgrowth | tower | 3 | signed | `overgrowth` |
+| — | Overwatch | tower | 3 | signed | `overwatch` |
+| — | Rogue | tower | 1 | signed | `rogue` |
+| — | Cutthroat | tower | 2 | signed | `cutthroat` |
+| — | Fan of Knives | tower | 3 | signed | `fan-of-knives` |
+| — | Engineer | tower | 1 | signed | `engineer` |
+| — | Artificer | tower | 2 | signed | `artificer` |
+| — | Mortar | tower | 3 | signed | `mortar` |
+| — | Necromancer | creep | — | signed | `necromancer` |
+| — | Bone Golem | creep | — | signed | `bone-golem` |
+| — | Black Knight | creep | — | signed | `black-knight` |
+| — | Frost Wight | creep | — | signed | `frost-wight` |
+| — | Abomination | creep | — | signed | `abomination` |
+| — | Vampire | creep | — | signed | `vampire` |
+| — | Witch | creep | — | signed | `witch` |
+| — | Fiend | creep | — | signed | `fiend` |
+| — | Shade | creep | — | signed | `shade` |
+| — | Cursed Villager | creep | — | signed | `cursed-villager` |
+| — | Werewolf | creep | — | signed | `werewolf` |
+| — | Grave Robber | creep | — | signed | `grave-robber` |
 | 5, 6, 8, 9, 10 | *retired* | — | — | — | see [below](#what-is-retired-and-why) |
+
+> **id 7's label moves as well as its name.** It was `necromancer` and it is `skeleton-mage`, because the new
+> Necromancer row wants that label and two rows cannot share one. Renaming a label moves no hash — nothing in
+> the simulation branches on it — so this is free, and it is the only reason the rename is cheap.
+
+> **Tiers 1 and 2 are named for a body; a capstone is named for the upgrade.** Soldier → Sergeant → Shield
+> Wall changes what kind of noun the row is at the top rung, and that is deliberate rather than a slip: a
+> capstone is the one rung bought with a different currency, and it is not a new body but a thing the tower
+> learns to do. Read the capstone rows as the name of what the token buys.
 
 **The file interleaves towers and creeps, and it has gaps.** Ids ascend strictly down the file and ascend past
 the roles, so two creeps sit below a tower and 5, 6, 8, 9 and 10 are permanently absent. Both are deliberate:
@@ -121,20 +168,53 @@ row per edge, printed by `./tools/show-ladder.ps1`. It holds one edge today: `ar
 
 # Towers
 
-> **A widening is proposed.** [The expansion proposal](roster-expansion-proposal.md) puts nine lines on this
-> page, three stages each, and would retire the Captain, the Hero and the elemental branch below. Until Sam
-> signs it, what follows is current.
+> **The widening is signed.** [The expansion proposal](roster-expansion-proposal.md) was taken on
+> **5 September 2026**: nine lines, three stages each. The Captain, the Hero and the elemental branch are
+> retired with it, and their mechanics moved to capstones on models that ship the prop for them.
 
-Three lines, three tiers each, and **one attack type per line** — Soldier impact, Archer pierce, Mage magic.
-It is what makes the three-way cycle readable off the board: you know what a tower does to a body by knowing
-which line it came from, and it costs nothing, because attack type is a column that already exists.
+**Nine lines, three tiers each, and one attack type per line.** It is what makes the three-way cycle readable
+off the board: you know what a tower does to a body by knowing which line it came from, and it costs nothing,
+because attack type is a column that already exists.
+
+Impact ×3 — Knight, Barbarian, Engineer. Pierce ×2 — Archer, Rogue. Magic ×4 — Mage, Druid, Cleric, Paladin.
+**Magic is over-represented on purpose**: the creep side is undead and mostly armoured, and magic is what
+beats armoured. The creep table balances it back with swift and arcane bodies.
+
+**The second stage is one stat. The third stage is a capstone that changes how the tower works**, and each
+capstone is drawn from what its model is holding or wearing.
+
+### The tier signal is never size
+
+**Size is retired as a tier signal**, reversed on 5 September 2026. A rung is told apart by **what the body
+wears, holds or stands beside** — never by how big it is. Three materials, in the order they are reached for:
+
+| Material | What it is | Where it applies |
+|---|---|---|
+| **Colour** | The pack's alternate texture for that character, applied per row | Every line. 8 of the 9 base characters ship one; only the Lorekeeper does not, and it is a model swap anyway |
+| **A prop** | A different or additional thing in a hand, or standing on the tile beside the tower | Every line |
+| **A second model** | A different character, the same person promoted | Knight, Cleric and Engineer have none anywhere in the collection; the other six do |
+
+**Tier 2 is colour plus a prop. Tier 3 is the second model where one exists, and colour plus a signature prop
+where one does not.** Knight, Cleric, Engineer and Druid take the second road.
+
+> **A glow is not a tier signal, and that is a reservation rather than an omission.** A persistent glow is
+> reserved for reading *"this tower is projecting an aura"* — Shield Wall, Blessing, Consecration and
+> Overgrowth. If it also meant "tier 3" the two readings would collide on exactly the rows that need the
+> first one. Note that it is not free either way: the client has no `ParticleSystem` and two play-mode tests
+> forbid one, so a glow has to be real mesh geometry or an emissive material.
+
+**Two consequences that are work rather than prose.** A per-row texture does not exist in the view today —
+`UnitArt` has no material field — so tier colour is a small view feature plus an import; the shader path is
+already proven editor-side. And there is **no socket for a prop beside a tower**, only the two hand bones, so
+`turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's tree have nowhere to stand until one is built.
+The Engineer line cannot be drawn as designed at any tier without it.
 
 **Every tier on this page is authorable as of layout 3 and playable as of #217**, which built the timed
 effect three of them rest on; see [the column
 list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is a name and a set of
 signed numbers.
 
-## The Soldier line — impact
+## The Knight line — impact, melee
 
 ### 11 · Soldier · tier 1 · status live
 
@@ -155,30 +235,127 @@ signed numbers.
 > against 40 — identical value per gold, with a third of the reach. You buy Soldiers because they are cheap,
 > not because they are good, and the melee line earns its identity at tiers 2 and 3 rather than here.
 
-### Captain · tier 2 · status proposed
+### Sergeant · tier 2 · status signed
 
-- **Does** — on first engagement and every 10 s after, for 5 s, raises the attack speed of every tower within
-  2 hexes.
-- **Looks** — adds a shield, visor open, particle effect while the aura is up.
-- **Numbers** — radius 2000. Period, duration and magnitude `_`.
-- **Needs** — **nothing but numbers.** Layout 3 authors this row and #217 plays it: origin `self`, affects
-  `friend`, payload `cooldown`, a negative magnitude, a period and a duration. Two Captains in range of one
-  tower do not stack — the stronger magnitude wins and the timer refreshes — so the aura is a floor on attack
-  speed rather than a multiplier on the count of them.
-- **Open** — does "first engagement" mean the tower's first shot or the wave's first contact? Deterministic
-  either way, but they are different rules. **And the period and duration are in seconds here** — at 30 ticks a
-  second, write them as ticks when they are signed.
+- **Does** — swings faster. One stat.
+- **Looks** — `Knight`, `knight_texture_alt_A`, and a `shield_square` in the off hand.
+- **Numbers** — cooldown 15 → **11**, every other number the Soldier's. Cost ~41.
+- **Needs** — nothing. A cooldown is a column.
+- **Open** — none.
 
-### Hero · tier 3 · status proposed
+### Shield Wall · tier 3 · status signed
 
-- **Does** — attacks sweep 360°, hitting everything in range rather than one target.
-- **Looks** — helm off, two-handed greatsword.
-- **Numbers** — `_`
-- **Needs** — nothing. A shot that resolves against every body in a radius is a bubble with origin `self` and
-  payload `damage`, which is the Soldier's sweep at a bigger radius — and the tick loop resolves that shape
-  today. Whether the radius equals the range is still a design call.
-- **Open** — it was the natural answer to the swarm, and [there is no swarm](#what-is-deliberately-absent). So
-  what is it the answer to now?
+- **Does** — every creep touching him walks at half speed while it is touching him, and he keeps swinging.
+- **Looks** — `Knight`, `knight_texture_alt_B`, shield raised (`Melee_Blocking`), visor closed. A persistent
+  glow reads the aura once one exists.
+- **Numbers** — aura: origin `self`, radius 1000, affects `enemy`, payload `speed`, magnitude −50, period 15,
+  duration 20. The Sergeant's damage and cooldown carry.
+- **Needs** — nothing. Layout 3 authors it and #217 plays it.
+- **Open** — none.
+
+> **It is the one slow in the game that costs no range.** Purely positional, and it bunches bodies under
+> whatever stands beside him. On a fold, that is the Barbarian.
+
+## The Barbarian line — impact, melee, slow and heavy
+
+### Barbarian · tier 1 · status signed
+
+- **Does** — one hex, slow, heavy, one target.
+- **Looks** — `Barbarian`, `axe_2handed`, `Melee_2H_Attack_Chop`.
+- **Numbers** — range 1000, cooldown 45, damage 200–300, windup 20, backswing 12, hitscan, impact, cost ~33.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Berserker · tier 2 · status signed
+
+- **Does** — hits harder. One stat.
+- **Looks** — `Barbarian`, `barbarian_texture_alt_A`, `axe_2handed_Large`.
+- **Numbers** — damage 200–300 → **300–450**. Cost ~50.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Slam · tier 3 · status signed
+
+- **Does** — every swing hits everything touching him. The same roll, every body.
+- **Looks** — the **`Barbarian_Large`** model, `Melee_2H_Slam`. This is the line's second model, and it is on
+  the **Large rig**, so it needs that rig's clip bank.
+- **Numbers** — bubble: origin `self`, radius 1000, payload `damage`. The Berserker's roll.
+- **Needs** — nothing.
+- **Open** — none.
+
+> **This is where the Hero's 360° sweep went.** It was retired from the Soldier line on 5 September 2026 and
+> landed here, on a model that ships a two-handed slam clip for it.
+
+## The Paladin line — magic, melee
+
+### Paladin · tier 1 · status signed
+
+- **Does** — one hex, holy damage, one target.
+- **Looks** — `Paladin`, bare head, `paladin_hammer`.
+- **Numbers** — range 1000, cooldown 24, damage 120–180, hitscan, magic, cost ~37.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Templar · tier 2 · status signed
+
+- **Does** — hits harder. One stat.
+- **Looks** — the **`Paladin_with_Helmet`** model, `paladin_hammer` and `paladin_shield`.
+- **Numbers** — damage 120–180 → **180–270**. Cost ~56.
+- **Needs** — nothing.
+- **Open** — the second model lands at tier 2 here rather than tier 3, because the helmet is the smaller of
+  the two changes this line has available and the statue is the larger.
+
+### Blessing · tier 3 · status signed
+
+- **Does** — every tower within two hexes fires a quarter faster, always.
+- **Looks** — `Paladin_with_Helmet`, `paladin_texture_B`, `paladin_book` open, and the gold `paladin_statue`
+  standing on the tile beside him.
+- **Numbers** — aura: origin `self`, radius 2000, affects `friend`, payload `cooldown`, magnitude −25,
+  period 30, duration 30.
+- **Needs** — **the beside slot.** The statue has nowhere to stand until a third socket exists.
+- **Open** — none.
+
+> **Two Blessings over one tower do not stack; the timer refreshes.** That is the rule the effect model
+> already has, and it is what stops a ring of Paladins running away. This is where the Captain's attack-speed
+> aura went when it was retired.
+
+## The Cleric line — magic, ranged
+
+### Cleric · tier 1 · status signed
+
+- **Does** — three hexes, holy bolt, one target.
+- **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`.
+- **Numbers** — range 3200, cooldown 30, damage 130–190, hitscan, magic, cost ~32.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Bishop · tier 2 · status signed
+
+- **Does** — reaches further. One stat.
+- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`.
+- **Numbers** — range 3200 → **4200**. Cost 32 — **range is unpriced**, so the rung costs what the Cleric
+  costs. Same shape as `archer → ranger`, and the ladder prints a flat-price note against it for the same
+  reason.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Consecration · tier 3 · status signed
+
+- **Does** — every undead within three hexes loses a third of its armour while it is there.
+- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`, and the `Cleric_Font` on the tile beside him, light
+  on the ground. The Cleric has **no second model anywhere in the collection**, so this line is colour and
+  props at every rung.
+- **Numbers** — aura: origin `self`, radius 3000, affects `enemy`, payload `armour`, magnitude −30, period 30,
+  duration 30.
+- **Needs** — **the beside slot**, for the font.
+- **Open** — none.
+
+> **Zeal is the successor, not the alternative.** *Every tower within two hexes deals more damage* is the
+> better holy aura and it is written down here so it is not re-invented: it needs the sixth `bubblePayload`
+> value — a damage **modifier**, as distinct from the roll a damage bubble spreads — which does not exist.
+> **The keyword's name is deliberately not chosen**, because naming a payload word nobody is implementing
+> this effort would be signing a word blind. Name it when it is built. Consecration is what the Cleric has
+> until then, and it is not a placeholder — it ships.
 
 ## The Archer line — pierce
 
@@ -190,14 +367,15 @@ signed numbers.
 - **Needs** — nothing.
 - **Open** — none.
 
-**The line's identity is fast-and-modest**, and the home for slow-and-heavy is the Marksman at tier 3. Four of
+**The line's identity is fast-and-modest**, and the home for slow-and-heavy is Overwatch at tier 3. Four of
 the six committed defense slots are Archers, so retuning this row moves most of what the golden trace measures.
 
 ### 14 · Ranger · tier 2 · status live
 
 - **Does** — +1 hex of range.
-- **Looks** — the Archer's model at **1.5 scale**. The rows are identical in everything but range, so size is
-  what separates the rungs on sight.
+- **Looks** — `Ranger`, `ranger_texture_alt_A`, and a `quiver`. **The 1.5 scale is reverted** — size is no
+  longer a tier signal anywhere on this page, and the colour and the quiver are what separate the rungs on
+  sight. The revert and the replacement land in the same commit, so no build ever ships two identical rungs.
 - **Numbers** — range 4200, and every other number the Archer's: cooldown 18, damage 90–150, windup 9,
   backswing 6, hitscan, pierce, **cost 40**.
 - **Needs** — nothing. It is the only tier on this page that is purely a number.
@@ -214,17 +392,22 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 > gates this row: range may become an input to the cost algorithm, or the algorithm may be replaced by
 > something derived from **many simulations rather than from a row's stats**.
 
-### Marksman · tier 3 · status proposed
+### Overwatch · tier 3 · status signed
 
-- **Does** — multishot: picks three targets in range per volley. **This is where the line's slow-and-heavy
-  tuning lives.**
-- **Looks** — fades slightly while shooting, to read as speed.
-- **Numbers** — targets 3. Range and damage `_`.
-- **Needs** — nothing. `targets` landed with layout 3 and target selection answers an ordered *n* under the
-  same total order it always answered one under.
-- **Answered** — three shots at one damage each. `targets` of *n* fires *n* shots at *n* creeps and draws *n*
-  damage rolls; one shot split *n* ways is the other shape, and it is a bubble. **The cost rule's bodies term
-  reads this column**, so a Marksman is priced on arrival rather than at a single-target Archer's price.
+- **Does** — sees the whole leg. Slow, enormous single shots from wherever he is stood. **This is where the
+  line's slow-and-heavy tuning lives.**
+- **Looks** — the **`Marksman`** model, prone-ish `Ranged_2H_Aiming`, holding **`crossbow_2handed`** from the
+  Adventurers pack.
+- **Numbers** — range **8000**, cooldown 60, damage 500–700, hitscan, pierce. Cost ~60.
+- **Needs** — nothing.
+- **Open** — none.
+
+> **The rifle is rejected and the crossbow is signed.** `Marksman_Rifle` is the only firearm in the collection
+> the roster would touch, and it puts the top of the Archer line in a different century from every other body
+> on the board. The crossbow is a different pack's art style, which is the smaller break of the two.
+
+> **Multishot moved to the Rogue.** It was this row's mechanic until 5 September 2026; it belongs to the model
+> that throws knives, and the Marksman got the long single shot instead.
 
 ## The Mage line — magic
 
@@ -235,49 +418,157 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
 - **Needs** — nothing. The splash is authorable as of layout 3: origin `target`, radius 1000, payload `damage`.
-- **Open, and now visible in a test.** The cost rule's bodies term used to guess three from the delivery
-  column; since #216 it reads `targets`, and the Mage's row fires one shot at one creep. **So the rule prices
-  this row at 30 gold and it costs 92** — the difference is three bodies under a splash the simulation has
-  never had. #216 authored no bubble here and moved no price, because either is a decision about what a Mage
-  is; `ContentTests` pins both numbers so the question stands rather than being silently answered. Author the
-  splash and accept an unpriced radius, reprice the row, or make it genuinely fire three shots.
+- **Answered on 5 September 2026 — author the splash, defer the price.** The bubble is authored: origin
+  `target`, radius 1000, payload `damage`. **The cost stays 92 and is not re-derived.** The rule's bodies term
+  reads `targets`, which is 1, so the rule says 30 and the row says 92; that gap is now a *known* gap held
+  open on purpose rather than an unanswered question. Repricing a row whose value is a splash radius is
+  exactly what the cost rule is worst at, and **the price waits for the automated balance sweeps to be
+  trustworthy enough to derive it.** Until then 92 stands and the sweep reports what it is worth.
+- **Open** — the price, and only the price.
 
-### Pyromancer · tier 2a · status proposed
+### Sorcerer · tier 2 · status signed
 
-- **Does** — the fire branch. Extra damage.
-- **Looks** — red palette, fire particles.
-- **Numbers** — `_`
-- **Needs** — nothing, if "extra damage" is a bigger damage roll.
-- **Open** — is the extra damage flat, or is it `bonusVsTag` against one armour type?
+- **Does** — casts faster. One stat.
+- **Looks** — `Mage`, `mage_texture_alt_A`, holding `staff` rather than the open book.
+- **Numbers** — cooldown 54 → **40**. Cost ~124.
+- **Needs** — nothing.
+- **Open** — none.
 
-### Cryomancer · tier 2b · status proposed
+### Unravel · tier 3 · status signed
 
-- **Does** — the frost branch. Adds a slow to the splash area.
-- **Looks** — blue palette, frost particles.
-- **Numbers** — slow magnitude `_`, duration `_`.
-- **Needs** — **nothing but numbers.** She is a bubble of radius 0, origin `target`, affects `enemy`, payload
-  `speed`, a negative magnitude and a positive duration — no dedicated slow columns exist and none are coming.
-  #217 built the timed effect behind it, so the row plays.
-- **Open** — none about the mechanic. A slow does not stack: strongest-wins with the timer refreshed, which is
-  what [#217](decision-log.md#16-august-2026-last--a-stat-can-move-while-a-match-is-running-and-a-floor-stops-that-ending-it)
-  made true. **A creep never drops below a tenth of its authored speed**, so a magnitude past -90 buys nothing
-  and the deepest useful slow is bounded by a rule rather than by taste.
+- **Does** — his bolt strips most of the armour off what it hits, for five seconds.
+- **Looks** — the **`Lorekeeper`** model, `Lorekeeper_Tome` open. The Lorekeeper is the one character in the
+  roster with **no alternate texture**, which costs nothing: this rung is a model swap.
+- **Numbers** — bubble on target: radius 1000, payload **armour**, magnitude −60, duration 150.
+- **Needs** — nothing.
+- **Open** — none.
 
-### Frostfire Archmage · tier 3 · status proposed
+> **The capstone trades the splash for the strip.** One row carries one bubble, so Unravel's bubble replaces
+> the tier-1 splash: the roll lands on one body and the armour strip lands on the hex around it. Keeping both
+> would need a second bubble column, which is a format version. **That trade is the choice the token buys**,
+> and it is the reason this capstone is not a strict upgrade on the rung below it.
 
-- **Does** — both branches at once, both stronger.
-- **Looks** — fire and frost on the same attack.
-- **Numbers** — `_`
-- **Needs** — whatever the Pyromancer and Cryomancer need.
-- **Open** — **this makes the tier-2 element choice temporary.** If both roads end at the same tower, the pick
-  is a tempo decision rather than a build decision. Is that the intent, or should one branch stay chosen?
+> **This is the only armour strip on the tower side**, against a creep table that is seven-armoured out of
+> seventeen. Consecration is the other one, by a different geometry — an aura around the Cleric rather than a
+> bolt on a body — and having both is a pairing rather than a duplicate.
+
+## The Druid line — magic, ranged
+
+### Druid · tier 1 · status signed
+
+- **Does** — three and a half hexes, nature bolt, one target.
+- **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`.
+- **Numbers** — range 3600, cooldown 36, damage 150–210, hitscan, magic, cost ~30.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Elder · tier 2 · status signed
+
+- **Does** — reaches further. One stat.
+- **Looks** — `Druid`, `druid_texture_alt_A`.
+- **Numbers** — range 3600 → **4600**. Cost 30 — range is unpriced, same shape as `archer → ranger`.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Overgrowth · tier 3 · status signed
+
+- **Does** — the whole board slows a fifth while he stands. Every board.
+- **Looks** — `Druid`, `druid_texture_alt_B`, and a **bare weirwood standing on the tile beside him** —
+  `Tree_Bare_*_Color8` from the Forest Nature pack, the cream-white trunk under a red canopy. Roots on every
+  hex once they are drawn.
+- **Numbers** — aura: origin `self`, radius 60000, affects `enemy`, payload `speed`, magnitude −20, period 30,
+  duration 30.
+- **Needs** — **the beside slot**, for the tree. The exact tree *shape* is an art pick and is not made here:
+  the pack ships two bare forms with several variants each, and nobody has seen them rendered beside a Druid.
+  The Druid art ticket carries that render as its own approval step.
+- **Open** — none but the shape.
+
+> **The Druid keeps his own body, and the PlantWarrior is set aside.** It was proposed as this line's second
+> model and it is rejected: of the six second models it was the only one that read as a *different creature*
+> rather than the same person promoted. So this line has no model swap, and it is colour and a prop at every
+> rung, like the Knight, the Cleric and the Engineer.
+
+> **A whole-board pulse is one row.** The roster has said so since layout 3 and nobody had built one. This is
+> where the retired elemental branch's area slow went. **A creep never drops below a tenth of its authored
+> speed** — a floor binding every effect at once — so stacking Overgrowth with Shield Wall has a bounded
+> bottom rather than an open one.
+
+## The Rogue line — pierce, short range, very fast
+
+### Rogue · tier 1 · status signed
+
+- **Does** — two hexes, three throws a second, light.
+- **Looks** — `Rogue`, `dagger`, the `Throw` clip.
+- **Numbers** — range 2200, cooldown 9, damage 40–60, hitscan, pierce, cost ~33.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Cutthroat · tier 2 · status signed
+
+- **Does** — throws faster. One stat.
+- **Looks** — the **`Rogue_Hooded`** model, `dagger`.
+- **Numbers** — cooldown 9 → **7**. Cost ~43.
+- **Needs** — nothing.
+- **Open** — the second model lands at tier 2 here, because the hood is this line's smaller change and the
+  capstone is carried by a clip and a `targets` column rather than by a body.
+
+### Fan of Knives · tier 3 · status signed
+
+- **Does** — three knives a throw, at the three bodies nearest the exit.
+- **Looks** — `Rogue_Hooded`, `rogue_texture_alt_A`, dual `dagger`, `Melee_Dualwield_Attack_Slice` as the
+  throw.
+- **Numbers** — `targets` 3. Cost ~129, **since bodies are priced** — this is one of the four capstones the
+  damage rule's inputs actually move under.
+- **Needs** — nothing. `targets` landed with layout 3, and target selection answers an ordered *n* under the
+  same total order it always answered one under.
+- **Open** — none.
+
+> **Three shots at one roll each, not one roll split three ways.** `targets` of *n* fires *n* shots at *n*
+> creeps and draws *n* damage rolls; one shot split *n* ways is the other shape, and it is a bubble. This is
+> where the Marksman's multishot went.
+
+## The Engineer line — impact, projectile, long range
+
+### Engineer · tier 1 · status signed
+
+- **Does** — four hexes, slow lobbed shot, one target.
+- **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing.
+- **Numbers** — range 4000, cooldown 60, damage 250–350, projectile, flight 45, impact, cost ~30.
+- **Needs** — **the beside slot.** This line cannot be drawn as designed at any rung without it.
+- **Open** — none.
+
+### Artificer · tier 2 · status signed
+
+- **Does** — reaches further. One stat.
+- **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret.
+- **Numbers** — range 4000 → **5000**. Cost 30 — range is unpriced.
+- **Needs** — the beside slot.
+- **Open** — none.
+
+### Mortar · tier 3 · status signed
+
+- **Does** — the shell bursts across a hex and a half.
+- **Looks** — `Engineer`, `engineer_texture_alt_B`, a heavier `turret_base` beside him and the lobbing arc
+  drawn. The Engineer has **no second model anywhere in the collection**, so this line is colour and props at
+  every rung.
+- **Numbers** — bubble on target: radius 1500, payload `damage`.
+- **Needs** — the beside slot.
+- **Open** — none.
+
+> **Two blasts on the board, and they are not the same tool.** The Mage's is magic at radius 1000 and lands at
+> tier 1; this one is impact at radius 1500 and costs a token. The impact one is the answer to arcane bodies
+> the Mage cannot chew.
 
 ---
 
 # Creeps
 
-**Creeps never attack.** `dmgMin`, `dmgMax` and `attack` are zero and `none` on every walking row, and the
-Necromancer's aura is not an exception to that — it buffs, it does not deal damage.
+**Creeps never attack.** `dmgMin`, `dmgMax` and `attack` are zero and `none` on every walking row, and no aura
+below is an exception to that — they buff, shield, hasten and hobble, and none of them deals damage.
+
+> **Seventeen creeps are signed as of 5 September 2026** — the five live rows and twelve new ones. Armour is
+> spread deliberately: **seven armoured, five swift, five arcane**, which balances back a tower side that is
+> four-ninths magic. The warning below about a barely-exercised type chart is what that spread answers.
 
 **Every creep with a health pool carries one armour type from the fixed three-way cycle**, so "no armour" is
 not available: `armourValue 0` means the type still applies, at zero points.
@@ -288,7 +579,7 @@ not available: `armourValue 0` means the type still applies, at zero points.
 |---|---|---|---|---|---|---|---|---|
 | 1 | Minion | 1550 | 28 | armoured | 0 | 36 | 1550 | **10** |
 | 2 | Skeleton Scout | 1500 | 56 | swift | 0 | 36 | 1500 | **9** |
-| 7 | Necromancer | 2400 | 33 | arcane | 25 | 36 | 3000 | **19** |
+| 7 | Skeleton Mage | 2400 | 33 | arcane | 25 | 36 | 3000 | **19** |
 | 12 | Skeleton | 2200 | 28 | armoured | 20 | 36 | 2640 | **17** |
 | 13 | Skeleton Warrior | 3400 | 18 | armoured | 45 | 48 | 4930 | **31** |
 
@@ -346,28 +637,170 @@ would re-baseline every measurement in the sweep.
 
 **Exactly twice the Minion's speed, and that is load-bearing rather than tidy.** See [the clock](#the-clock).
 
-### 7 · Necromancer · status live
+### 7 · Skeleton Mage · status live
 
-- **Does** — walks. **The aura is not signed** — see below.
-- **Looks** — the mage skeleton, staff, casting continuously. A large arcane bubble showing the radius.
-- **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19.
-- **Needs** — nothing but numbers. Origin `self`, affects `friend`, payload `shield`, a period and a
-  duration, measured in hex distance so it reaches the neighbouring leg of a fold. #217 built the effect state
-  behind it.
-- **Open** — the magnitude and the period, and a signature on three rules #217 had to pick to build anything
-  at all. What it built: the granted pool **persists until spent or until its duration ends**, whichever
-  comes first, with a duration of zero meaning until spent; it does **not** move with the Necromancer, so
-  killing one stops the pulses and what is already granted is spent or times out rather than vanishing; and
-  the magnitude is **a share of the health it stands in front of**, because a pool has no rate of its own for
-  a percentage to be a percentage of. All three are the implementer's reading rather than a decision — an
-  implementation cannot leave a column blank — and any of them can be moved without another format version.
-  See [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md).
+**Relabelled from `necromancer` on 5 September 2026, and its aura signed with the rename.**
 
-> **The row lands and the mechanic is built; what is missing is the numbers.** What is in `units.txt` is a
-> walking arcane body with no bubble on it. The second health pool arrived with layout 3 — `shield`, absorbing
-> first and raw — the columns that describe the aura came with it, and #217 built the machinery that grants
-> one unit's pool from another unit's bubble over a duration. Signing the radius, the period, the magnitude
-> and the duration is a gameplay decision and nobody has taken it.
+- **Does** — **Haste**: every creep within two hexes walks a fifth faster.
+- **Looks** — `Skeleton_Mage`, `Skeleton_Staff`, casting continuously.
+- **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19. Aura: origin `self`, affects
+  `friend`, payload `speed`, magnitude **+20**, radius 2000, period 30, duration 30.
+- **Needs** — nothing. Layout 3 authors it and #217 plays it.
+- **Open** — none. **The aura is signed**; it had stood unsigned since the row went live.
+
+> **Why the rename is the cheap half of this.** The id does not move, so no hash moves and no stored record is
+> touched; only the new aura does that. The pack's own `Necromancer` model had been sitting unused while the
+> name pointed at a `Skeleton_Mage` body — see [the new Necromancer](#necromancer--status-signed), which takes
+> both the model and the shield aura originally designed for this row.
+
+> **Three rules #217 had to pick to build the shield aura at all still stand**, and they now apply to the
+> Necromancer rather than here: the granted pool **persists until spent or until its duration ends**,
+> whichever comes first, with a duration of zero meaning until spent; it does **not** move with its source, so
+> killing the source stops the pulses and what is already granted is spent or times out rather than vanishing;
+> and the magnitude is **a share of the health it stands in front of**, because a pool has no rate of its own
+> for a percentage to be a percentage of. All three were the implementer's reading rather than a decision, and
+> any of them can be moved without another format version. See
+> [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md).
+
+### Necromancer · status signed
+
+- **Does** — **Ward**: grants creeps within two hexes a shield worth a quarter of their health, every three
+  seconds. **Raise**: spawns a Minion beside itself every **150 ticks**, for as long as it lives.
+- **Looks** — the pack's own `Necromancer` model, `Skeleton_Scythe`.
+- **Numbers** — 2600 hp, speed 28, arcane, armourValue 30, cost 21. Ward: origin `self`, affects `friend`,
+  payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: one Minion per 150 ticks.
+- **Needs** — **engine.** Ward is authorable today; Raise is not — a creep spawning creeps is a new mechanic
+  and a format version.
+- **Open** — none.
+
+> **There is no cap on how many it raises, and that is the decision rather than an omission.** It raises for
+> as long as it is alive and walking, so the board is what bounds it: at speed 28 across the 51-hex corridor
+> it lives about 1,545 ticks and raises **roughly ten**. A hundred gold of bodies from a twenty-one gold row
+> is a sweep finding, and it is left standing.
+>
+> **A slowed Necromancer raises more, and that is a live trade-off against stacking slows.** The speed floor
+> is a tenth, so a fully-slowed one crosses in about 17,000 ticks and raises **on the order of a hundred**.
+> Shield Wall and Overgrowth are slows, so the two capstones built to handle a push are the two that make this
+> body worst. Spamming or stacking slows is supposed to cost something; here is where it costs.
+>
+> **The arithmetic that guarantees a match ends does not cover this**, and extending it is the spawn ticket's
+> job. `Match.RequireItArrives` proves at construction that every *authored* order reaches the exit inside the
+> tick ceiling, at the floor speed; a creep spawned at runtime is in no order. Nothing runs away — a Minion
+> does not itself raise — but the proof has to be re-derived over the spawner's floored crossing time rather
+> than assumed. See [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) and the spawn
+> ticket's own ADR.
+
+### Bone Golem · status signed
+
+- **Does** — nothing but mass. Half the Minion's speed.
+- **Looks** — `Skeleton_Golem`, `Skeleton_Golem_Axe_Large`. On the Large rig, which walks and dies.
+- **Numbers** — 9000 hp, speed 14, armoured, armourValue 60, cost 90.
+- **Needs** — nothing.
+- **Open** — none. **14 is exactly half the Minion's 28**, so it is passed on whole ticks.
+
+### Black Knight · status signed
+
+- **Does** — the Knight's twin. Nothing but armour.
+- **Looks** — `BlackKnight`, `BlackKnight_Sword_Large`, `BlackKnight_Shield_Large`. Large rig.
+- **Numbers** — 5000 hp, speed 22, armoured, armourValue 80, cost 56.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Frost Wight · status signed
+
+- **Does** — **Frostbite**: towers within two hexes fire a third slower while it passes. The only creep aura
+  that reaches the tower side.
+- **Looks** — `FrostGolem`, `FrostGolem_Axe`. Large rig.
+- **Numbers** — 6000 hp, speed 16, arcane, armourValue 40, cost 53. Aura: origin `self`, affects **`enemy`**,
+  payload `cooldown`, magnitude +30, radius 2000, period 30, duration 30.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Abomination · status signed
+
+- **Does** — the biggest body on the board. No armour: flesh, not bone.
+- **Looks** — `Monstrosity`, `Monstrosity_BarndoorShield_Large`. Large rig.
+- **Numbers** — 12000 hp, speed 12, armoured, armourValue 0, cost 75.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Vampire · status signed
+
+- **Does** — **Blood**: a raw pool armour does not apply to, spent before health.
+- **Looks** — `Vampire`, `Vampire_Sword`.
+- **Numbers** — 2800 hp, speed 44, swift, armourValue 20, shield 1400, cost 21.
+- **Needs** — nothing.
+- **Open** — **the shield is unpriced.** The cost rule has no term for a pool, so this row is cheaper than it
+  should be. Known gap, same family as radius and range; a sweep target, not something to hand-correct.
+
+### Witch · status signed
+
+- **Does** — **Hex Ward**: creeps within two hexes gain 30 armour.
+- **Looks** — `Witch`, `Broom`.
+- **Numbers** — 2000 hp, speed 33, arcane, armourValue 20, cost 15. Aura: origin `self`, affects `friend`,
+  payload `armour`, magnitude +30, radius 2000, period 30, duration 30.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Fiend · status signed
+
+- **Does** — an arcane heavy; the Warrior's counterpart on another armour type.
+- **Looks** — `Tiefling`, `Tiefling_SwordsBackpack`. A horned demon rather than an undead body — the theme is
+  *undead, and the dark or hooded*, and this is the dark half, the same licence the Witch and the Vampire use.
+- **Numbers** — 3200 hp, speed 33, arcane, armourValue 45, cost 29.
+- **Needs** — nothing.
+- **Open** — none.
+
+### Shade · status signed
+
+- **Does** — three times the Minion's speed. The fine end of the granularity axis.
+- **Looks** — `Ninja`, `Ninja_Katana`, **in the darkest of the pack's four atlases**. Read as a silhouette at
+  gameplay distance it stops being a ninja; that is the whole reason the model is admissible, and the atlas
+  pick is not optional decoration.
+- **Numbers** — 1200 hp, speed 84, swift, armourValue 0, cost 8.
+- **Needs** — nothing. The atlas pick rides on the same per-row texture work the tier signal needs.
+- **Open** — none. **84 is exactly three Minions**, so it passes on whole ticks like the Scout does.
+
+### Cursed Villager · status signed
+
+- **Does** — a cheap body that is the Werewolf's first form. **On the first damage it takes, it becomes the
+  Werewolf.**
+- **Looks** — `Werewolf_Man`, `axe`.
+- **Numbers** — 1800 hp, speed 28, swift, armourValue 0, cost 11.
+- **Needs** — **engine.** A creep becoming another row mid-lane is a new mechanic and a format version.
+- **Open** — none.
+
+### Werewolf · status signed
+
+- **Does** — fast and durable at once. What the Cursed Villager becomes.
+- **Looks** — `Werewolf_Wolf`.
+- **Numbers** — 2600 hp, speed 50, swift, armourValue 10, cost 18.
+- **Needs** — engine, with the Villager.
+- **Open** — none.
+
+> **A lethal first hit does not kill the Villager; it produces a Werewolf at full health.** The trigger is the
+> first damage taken, and the change resolves ahead of the death — so the Werewolf enters on its own full
+> 2600 rather than on whatever the Villager had left, and **no Cursed Villager can ever be one-shot**. The
+> pair is therefore worth 1800 + 2600 = 4400 effective health *always*, not as a worst case, and it must be
+> priced and swept as a pair. What else carries over at the change — position, route progress — is the
+> transform ticket's ADR.
+
+> **This is the pairing `lancer` occupied with no design behind it.** Now the design is the transformation.
+
+### Grave Robber · status signed
+
+- **Does** — the pack soaks hits: a raw pool in front of ordinary health. **Pays 12 gold to the defender that
+  kills it**, mid-match, into the one purse.
+- **Looks** — `Hoarder`, wearing `Hoarder_Backpack`. **The backpack, not the sword** — the pack is what the
+  mechanic is about, and a sword on a creep that never attacks reads as a lie.
+- **Numbers** — 3000 hp, speed 22, armoured, armourValue 30, shield 2000, cost 24. Pays **12** on a kill.
+- **Needs** — **engine.** Gold paid on a kill is the first income during a wave.
+- **Open** — the shield is unpriced, as the Vampire's is.
+
+> **Twelve is half its own price, and the half is the point.** Paying its full 24 back would make it free to
+> send. Half means killing it refunds half of what the attacker laid out, so it is a body that rewards being
+> killed without being one you are glad to see. **A leaked Grave Robber pays nothing.** This is the first
+> income inside a wave and it moves the leak exchange rate, which is the gold ticket's ADR.
 
 ---
 
@@ -380,8 +813,26 @@ would re-baseline every measurement in the sweep.
 | 5 | `wisp` | The swarm. 57 bodies for 400 gold — one end of the granularity axis. Out of scope with the roster at five creeps |
 | 6 | `bulwark` | The wall. 8 bodies for the same 400 — the other end. Same reason |
 | 8 | `lancer` | A swift heavy with no designed counterpart |
-| 9 | `sniper` | **Magic, in a line that is now pierce.** One attack type per line retires it as written; it may return as the Marksman |
-| 10 | `sieger` | An impact projectile whose line's tier 3 is the Hero — a 360° melee sweep, which a slow siege shell is not |
+| 9 | `sniper` | **Magic, in a line that is now pierce.** One attack type per line retires it as written; the long single shot returned as Overwatch, on pierce |
+| 10 | `sieger` | An impact projectile whose line's tier 3 was the Hero — a 360° melee sweep, which a slow siege shell is not. The shape returned as the Engineer's Mortar, on its own line |
+
+### Proposals retired on 5 September 2026
+
+**These never reached `units.txt`, so no id is burned and nothing is pinned to them.** They are recorded
+because each was written down here for weeks and would otherwise be re-proposed.
+
+| row | was | where it went |
+|---|---|---|
+| Captain | tower, tier 2, attack-speed aura | The aura is the **Paladin's Blessing**, on a model that ships a book and a statue for it. A tier 2 is one stat now |
+| Hero | tower, tier 3, 360° sweep | The sweep is the **Barbarian's Slam**, on a model that ships a two-handed slam clip |
+| Pyromancer | tower, tier 2a, fire branch | Retired with the branch |
+| Cryomancer | tower, tier 2b, frost branch | Retired with the branch. The area slow is the **Druid's Overgrowth** |
+| Frostfire Archmage | tower, tier 3, both branches | Retired with the branch |
+
+> **The branch is what was actually retired.** Three stages, no branch — which closes the open question that
+> said the tier-2 element pick was temporary, and leaves *one line, three stages* an invariant with no
+> exception. It also stops two roads ending at one tower, which made the pick a tempo decision rather than a
+> build decision.
 
 **Nothing structural breaks.** Stored bundles carry their own copy of the unit table —
 `content/golden/defense-0.units` is still in the fifteen-column layout 1 and still replays — so retiring a row
@@ -389,27 +840,27 @@ invalidates no record; it leaves those bundles pinned to an older roster, which 
 
 ## What is deliberately absent
 
-> **Candidates for all three are named in [the expansion proposal](roster-expansion-proposal.md)**, since
-> 5 September 2026, along with six further tower lines and eight further creeps. It is a proposal: this table
-> stands until a row below it is signed.
+> **All three are filled as of 5 September 2026.** They were blocked on models, and the models arrived with
+> [the expansion](roster-expansion-proposal.md). The table below is kept as the record of what was absent and
+> what closed it.
 
-**Recorded so it is not silently re-proposed.** These are not design rejections — they are shapes that were
-wanted and are not being built yet, and each is blocked on art rather than on argument.
+**Recorded so it is not silently re-proposed.** These were never design rejections — they were shapes that
+were wanted and blocked on art rather than on argument.
 
-| shape | what it was for | what it needs |
+| shape | what it was for | what filled it |
 |---|---|---|
-| **Fast and cheap, in numbers** | The fine end of the granularity axis — many light bodies, so a purse is a decision about *shape* rather than a lookup | A model. The Skeleton Golem and the pack's own Necromancer are the two unassigned |
-| **Slow, dear and very tough** | The coarse end — a few heavy bodies, priced the same | A model |
-| **Fast and durable at once** | The pairing `lancer` occupied without a design behind it | A model |
+| **Fast and cheap, in numbers** | The fine end of the granularity axis — many light bodies, so a purse is a decision about *shape* rather than a lookup | The **Shade**, at speed 84 and 8 gold |
+| **Slow, dear and very tough** | The coarse end — a few heavy bodies, priced the same | The **Bone Golem** at 9000 and the **Abomination** at 12000 |
+| **Fast and durable at once** | The pairing `lancer` occupied without a design behind it | The **Werewolf**, and the design behind it is the transformation |
 
 > **These are named by their levers on purpose.** *Swarm* and *wall* were the words until 13 August 2026 and
 > they are rejected: speed, health and armour are the levers, and the two ends of the granularity axis are
 > just the ends of it. A category name invites a category the schema does not have. Same reasoning as
 > [§12's *ordinary* and *game changer*](vision.md).
 
-**Two consequences worth carrying.** With five creeps and `offering 3 3`, three fifths of the roster is on
-every menu, so the draw is barely a draw — accepted deliberately rather than overlooked. And the Hero's 360°
-sweep was proposed as the swarm's answer, so until a swarm exists it is answering a question nobody asked.
+**Both consequences this section used to carry are gone.** The thin-draw one went with the offering, deleted
+on 13 August 2026; the other was that the Hero's 360° sweep answered a swarm that did not exist. It does now —
+the Shade is the fine end of the granularity axis — and the sweep is the Barbarian's Slam.
 
 ## The tuning target
 
@@ -435,8 +886,15 @@ pack ships the weapons for it.
 
 The two not named above are a dedicated **Necromancer** and a **Skeleton Golem**, the second of which the
 publisher sells as a boss; the [collection inventory](research/kaykit-collection-inventory.md) counts all six.
-The Necromancer keeps **`Skeleton_Mage`**, and the dedicated Necromancer model is left unused, which is a
-choice and not an oversight.
+**Both are assigned as of 5 September 2026** — the Necromancer model to the new Necromancer row, the Golem to
+the Bone Golem — and id 7 was relabelled **Skeleton Mage** to free the name for the body that should have
+carried it.
+
+**The two-halves-of-one-pack rule is extended rather than replaced.** The expansion pulls sixteen further
+characters from the Mystery Monthly series, and the line it draws is the same one: **the ones that read as
+heroes join the tower side; the ones that read as undead, dark or hooded join the creeps.** That admits the
+Vampire, the Witch, the Tiefling and the Werewolf, which are not undead but are unmistakably the dark half.
+Quaternius's Ultimate Monsters are still rejected.
 
 ### The assignments are signed
 
@@ -457,18 +915,26 @@ imports are copied out of it by hand.
 > being hitscan, hold nothing and stand in their bind pose.
 >
 > **This was not chosen; it is what the delivery rule already did**, showing through now that the models are
-> right. Fixing it is three decisions nobody has made and none of them is on this page: which prop the Mage
-> holds, which prop the Soldier and the two archers hold, and which clips a hitscan tower is posed by — the
-> ranged bank has bow and magic sets, the melee bank a `Melee_1H_*` set, and picking between them is an art
-> decision. Recorded here rather than guessed at.
+> right. **All three decisions were taken on 5 September 2026** and they are on this page now: every block
+> above names its model, what is in each hand, and the clip it is posed by. The Mage holds `spellbook_open`,
+> the Soldier `sword_1handed` and `shield_square`, the archers a bow and a quiver. **What is left is the
+> plumbing** — the prop is still chosen per *delivery* rather than per row, so wiring it to the row is view
+> work the art tickets carry, not another decision.
 
-**Size is the tier signal, and it is the only one.** Three multipliers, applied to the model as it is drawn:
+**Size tells the two sides apart and nothing else.** It was the tier signal until 5 September 2026 and it is
+**retired as one** — see [the tier signal](#the-tier-signal-is-never-size). Two multipliers remain, applied to
+the model as it is drawn:
 
 | What | Scale | Why |
 |---|---|---|
 | Towers | **1.0** | the baseline everything else is read against |
 | Every creep | **0.5** | a creep is unmistakably smaller than the thing shooting it, at any camera angle |
-| Ranger (14) | **1.5** | the Archer's upgrade shares its model, so nothing but size separates the rungs |
+
+> **`RangerScale` at 1.5 goes.** Four places transcribe it and all four move together: the constant in
+> `MatchArt`, the binding row in `MatchSceneBuilder`, the remark there that says *"the scale is the tier
+> signal and it is the only one"*, and the edit-mode test `EveryUnitTypeIsDrawnAtItsRosterScale`, which
+> asserts it. The test does not simply lose a case — it is the thing that would keep the old signal alive —
+> so it is rewritten to assert **two** multipliers rather than three.
 
 **Scale lives in `MatchArt` and never in `content/units.txt`.** Visual size is a view fact under
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and a column in the content tables would make every
@@ -506,9 +972,9 @@ all the same shape: a bubble that emits something. The reasoning is
 | `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative. The signed table also allowed **a flat damage amount**, which nothing implements — same open question |
 | `bubbleDuration` | Ticks. 0 = instant, and for a shield it means "until spent" |
 
-**What that authors.** The Cryomancer needs no dedicated slow columns at all: she is a bubble of radius 0,
-origin `target`, payload `speed`, negative magnitude, positive duration. The Captain is the same mechanic with
-a period and origin `self`. A mortar is origin `target` with a real radius and payload `damage`. The
+**What that authors.** A slow needs no dedicated columns at all: it is a bubble of radius 0, origin `target`,
+payload `speed`, negative magnitude, positive duration. Blessing is the same mechanic with a period and origin
+`self`. A mortar is origin `target` with a real radius and payload `damage`. The
 Necromancer grants shield to the creeps around it — origin `self`, affects `friend`, payload `shield` —
 measured in hex distance rather than along the marching column, so it reaches the neighbouring leg of a fold. A
 tower that pulses over the whole board is one row.
@@ -524,7 +990,8 @@ cannot end unreachable by arithmetic rather than by careful authoring. Built in 
 loop could read on its own — `shield`, `targets`, and a damage bubble that fires with the attack and lands
 instantly — and a row authoring anything else parsed, folded, stored and refused by name the moment a match
 was built out of it. #217 built the rest and deleted that refusal, so **every shape these nine columns can
-author now plays**. What is left for all six proposed towers is a name and a set of signed numbers.
+author now plays**. Every one of the twenty-three towers signed on 5 September 2026 authors under these nine
+columns; the three that do not are creeps, and they are the three engine asks.
 
 A new unit is still a row, and a new column is still a format version with every stored record made under the
 old one retired. **This is the last widening the roster asks for before the map has been measured.**
@@ -549,7 +1016,7 @@ open.
 ## Open questions
 
 1. **Layout 3 and its machinery have both landed, and the queue is now a design queue rather than a schema
-   one.** Every one of the six proposed towers is *authorable* and *playable* — the columns exist, the
+   one.** Every one of the twenty-three signed towers is *authorable* and *playable* — the columns exist, the
    fixtures prove each shape [parses](../sim.tests/ContentTests.cs) and [plays](../sim.tests/EffectTests.cs).
    What is left is what was always left: naming them and signing their numbers. The ladder itself is built.
 2. **Towers get nine states and creeps get five flat rows** — and the answer, from
@@ -566,10 +1033,16 @@ open.
    so his swing strikes every creep touching him rather than one of them. A corner placement inside a fold
    reaches two legs at once — a positional value the flat corridor could not offer, and the reason he was kept
    rather than retired.
-4. **The Mage's price rests on a splash nobody has authored, and the guess propping it up is gone.** The cost
-   rule's bodies term read three off the delivery column until
-   [#216](https://github.com/ssalter21/tower-defense-game/issues/216); it reads `targets` now, and the Mage's
-   row fires one shot at one creep. **The rule prices it at 30 gold and it costs 92.** Author the splash as a
-   bubble and accept that a radius is unpriced, reprice the row, or make it genuinely fire three shots — three
-   different towers, and picking one is a signature rather than a fix.
-5. **The three absent shapes need models**, and art is not chosen unattended.
+4. **The Mage's splash is authored and its price is deliberately not.** Answered on 5 September 2026: the
+   bubble lands — origin `target`, radius 1000, payload `damage` — and **the 92 stands untouched** until the
+   automated balance sweeps are good enough to derive it. The rule says 30, the row says 92, and that gap is
+   now held open on purpose. It is the one number on this page waiting on a tool rather than on a decision.
+5. **The three absent shapes have their models, and every unit on this page has a signed one.** Answered on
+   5 September 2026 by a person, from a rendered sheet of all 32 candidates. What is *not* signed is the
+   shape of the Druid's weirwood — the pack ships several bare forms, nobody has seen them beside a Druid,
+   and the Druid art ticket carries that render as its own approval step.
+6. **A capstone token exists as a rule and not yet as code.** The cost section above states it; nothing
+   grants or spends one. Until [the token ticket](https://github.com/ssalter21/tower-defense-game/issues/273)
+   lands, the nine capstone rows can be authored and drawn but not bought.
+7. **The beside slot gates four looks.** The Engineer's turret at every rung, the Paladin's statue, the
+   Cleric's font and the Druid's tree all need a socket that is not a hand bone, and there is not one.
