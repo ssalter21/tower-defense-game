@@ -104,6 +104,22 @@ namespace View.Editor
 
             /// <summary>The model path as the set file spelled it, for the manifest.</summary>
             public string ModelPath { get; internal set; }
+
+            /// <summary>
+            /// The right-hand prop as the set file spelled it, turn and all,
+            /// or <c>-</c>.
+            /// </summary>
+            /// <remarks>
+            /// Kept as text beside the loaded object because the manifest is
+            /// what tells a reader which prop a tile is holding, and the thing
+            /// being signed off is the pairing of character and prop. A
+            /// <see cref="GameObject"/>'s name is the asset's, not the path
+            /// the set file chose it by, and two packs ship an <c>axe</c>.
+            /// </remarks>
+            public string RightHandPath { get; internal set; }
+
+            /// <summary>The left-hand prop as the set file spelled it, or <c>-</c>.</summary>
+            public string LeftHandPath { get; internal set; }
         }
 
         /// <summary>
@@ -188,6 +204,8 @@ namespace View.Editor
             {
                 Name = fields[1],
                 ModelPath = fields[2],
+                RightHandPath = fields[3],
+                LeftHandPath = fields[4],
                 ClipName = fields[5],
             };
 
@@ -200,12 +218,24 @@ namespace View.Editor
                     break;
             }
 
-            candidate.Model = Model(where, "model", fields[2], faults, out _);
-            candidate.RightHand = Model(where, "right hand", fields[3], faults, out Vector3 right);
-            candidate.LeftHand = Model(where, "left hand", fields[4], faults, out Vector3 left);
+            // A turn is a fact about a held prop and means nothing on the
+            // character itself, so a '@' here is refused rather than ignored.
+            // Ignoring it would turn a misplaced correction into a candidate
+            // that draws untilted and says nothing about why -- which is the
+            // whole failure this file's reader is built to avoid.
+            if (fields[2].IndexOf('@') >= 0)
+            {
+                faults.Add(
+                    where + ": model '" + fields[2] + "' carries a turn. A '@x,y,z' belongs on a "
+                    + "held prop, not on the character.");
+            }
+
+            candidate.Model = LoadModel(where, "model", fields[2], faults, out _);
+            candidate.RightHand = LoadModel(where, "right hand", fields[3], faults, out Vector3 right);
+            candidate.LeftHand = LoadModel(where, "left hand", fields[4], faults, out Vector3 left);
             candidate.RightHandTilt = right;
             candidate.LeftHandTilt = left;
-            candidate.Clip = Clip(where, fields[5], faults);
+            candidate.Clip = FindClip(where, fields[5], faults);
 
             return faults.Count == before ? candidate : null;
         }
@@ -215,7 +245,7 @@ namespace View.Editor
         /// naming the path that found nothing. A <c>@x,y,z</c> suffix comes
         /// back in <paramref name="tilt"/>.
         /// </summary>
-        private static GameObject Model(
+        private static GameObject LoadModel(
             string where, string field, string spec, List<string> faults, out Vector3 tilt)
         {
             tilt = Vector3.zero;
@@ -270,7 +300,7 @@ namespace View.Editor
         /// The named clip out of the banks, or a fault naming it and listing
         /// what the banks searched do hold.
         /// </summary>
-        private static AnimationClip Clip(string where, string spec, List<string> faults)
+        private static AnimationClip FindClip(string where, string spec, List<string> faults)
         {
             int slash = spec.IndexOf('/');
             string bank = slash < 0 ? null : spec.Substring(0, slash);

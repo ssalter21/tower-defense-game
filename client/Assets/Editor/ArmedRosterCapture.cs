@@ -183,7 +183,7 @@ namespace View.Editor
                     ReportHeld(stand, "unit " + type.Id);
                     Frame(camera, Measured(stand));
 
-                    File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
+                    Write(path, Grab(camera, width, height));
                     written.Add(path);
                 }
                 finally
@@ -257,7 +257,7 @@ namespace View.Editor
                         ReportHeld(stand, candidate.Name);
                         Frame(camera, Measured(stand));
 
-                        File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
+                        Write(path, Grab(camera, width, height));
                         written.Add(path);
 
                         tiles.Add(Grab(camera, SheetTileWidth, tileHeight));
@@ -270,18 +270,20 @@ namespace View.Editor
                     manifest.Add(
                         string.Format(
                             CultureInfo.InvariantCulture,
-                            "{0,2}  row {1} col {2}  {3,-24} {4,-6} {5,-58} {6}",
+                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8}",
                             index + 1,
                             (index / SheetColumns) + 1,
                             (index % SheetColumns) + 1,
                             candidate.Name,
                             candidate.Side == CandidateSet.Side.Tower ? "tower" : "creep",
+                            candidate.ClipName,
                             candidate.ModelPath,
-                            candidate.ClipName));
+                            candidate.RightHandPath,
+                            candidate.LeftHandPath));
                 }
 
                 string sheet = Path.Combine(outDir, "candidates-sheet.png");
-                File.WriteAllBytes(sheet, Stitch(tiles, SheetTileWidth, tileHeight).EncodeToPNG());
+                Write(sheet, Stitch(tiles, SheetTileWidth, tileHeight));
                 written.Add(sheet);
             }
             finally
@@ -299,10 +301,11 @@ namespace View.Editor
                 new[]
                 {
                     "# " + candidates.Count + " candidates from " + setFile,
-                    "# Tiles run left to right, " + SheetColumns + " to a row, in candidates-sheet.png.",
+                    "# Tiles run left to right, " + SheetColumns + " to a row, in",
+                    "# candidates-sheet.png; rNcM is the row and column of the tile.",
                     "#",
-                    "#  n  where          name                     side   model"
-                    + new string(' ', 54) + "clip",
+                    "#   n  tile  name                   side   clip"
+                    + "                           model | right hand | left hand",
                 }.Concat(manifest).ToArray());
 
             written.Add(manifestPath);
@@ -377,10 +380,28 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The creep, posed at <paramref name="phase"/> of its walk clip. A
-        /// quarter through is mid-stride, which is where a carried shield stops
-        /// being edge-on to everything.
+        /// The creep, posed at <paramref name="phase"/> of its walk clip.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The two callers pass different phases, and both are right.</b>
+        /// The live roster passes a quarter, which is mid-stride and where a
+        /// carried shield stops being edge-on to everything; it has been that
+        /// since the tool was written and the committed measurements in
+        /// <c>Tests.Fixtures.ChosenArt</c> were taken in that pose, so moving it
+        /// would silently invalidate them. A candidate passes
+        /// <see cref="ClipPhase"/>, because a candidate's clip is often not a
+        /// walk at all — it is whatever pose the proposal is asking about — and
+        /// halfway is where an action clip is doing the action.
+        /// </para>
+        /// <para>
+        /// <b>A candidate passes one clip for both slots.</b>
+        /// <see cref="CreepView.Build"/> refuses a null death clip, and a
+        /// candidate sheet never draws a death: the second slot is weighted
+        /// zero in every frame this tool takes, so the same clip in both is a
+        /// reference and not a second animation.
+        /// </para>
+        /// </remarks>
         private static void BuildCreep(
             GameObject stand, UnitArt art, AnimationClip walk, AnimationClip death, float phase)
         {
@@ -591,6 +612,31 @@ namespace View.Editor
             sun.shadowStrength = SceneFraming.SunShadowStrength;
             holder.transform.rotation = Quaternion.Euler(
                 SceneFraming.SunPitchDegrees, SceneFraming.SunYawDegrees, 0f);
+        }
+
+        /// <summary>
+        /// Encodes a texture to the path and then destroys it.
+        /// </summary>
+        /// <remarks>
+        /// <b>A <see cref="Texture2D"/> made in script is not collected.</b> It
+        /// is a managed handle on native memory, and the garbage collector will
+        /// take the handle and leave the memory — so every frame this tool
+        /// grabbed used to stay resident for the length of the run. That was
+        /// nine textures when the tool only drew the roster, and is forty-one
+        /// with a set of thirty-two: one full frame and one tile each, plus the
+        /// sheet. Batchmode exits and the leak goes with it, which is exactly
+        /// why nothing ever caught it.
+        /// </remarks>
+        private static void Write(string path, Texture2D frame)
+        {
+            try
+            {
+                File.WriteAllBytes(path, frame.EncodeToPNG());
+            }
+            finally
+            {
+                Object.DestroyImmediate(frame);
+            }
         }
 
         private static Texture2D Grab(Camera camera, int width, int height)

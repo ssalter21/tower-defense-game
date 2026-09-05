@@ -42,13 +42,20 @@ namespace Tests.EditMode
         /// plus the Marksman a second time holding the crossbow the proposal
         /// asks about instead of his rifle.
         /// </summary>
+        /// <remarks>
+        /// Written out by hand, the way <see cref="RosterNamesTests"/> writes
+        /// out the roster: the point is to catch a line that fell out of the
+        /// file rather than to re-count the file against itself. Editing the
+        /// set is expected and turns this red once; the way back to green is to
+        /// change this number, which is a person saying the line was meant to
+        /// go.
+        /// </remarks>
         private const int CommittedEntries = 32;
 
         [Test]
         public void TheCommittedSetResolvesEveryModelPropAndClip()
         {
-            IReadOnlyList<CandidateSet.Candidate> candidates =
-                CandidateSet.Read(Path.Combine(RepositoryRoot(), CommittedSet));
+            IReadOnlyList<CandidateSet.Candidate> candidates = TheCommittedSet();
 
             Assert.That(candidates, Has.Count.EqualTo(CommittedEntries));
 
@@ -78,12 +85,21 @@ namespace Tests.EditMode
                 "Barbarian_Large", "Skeleton_Golem", "BlackKnight", "FrostGolem", "Monstrosity",
             };
 
-            IReadOnlyList<CandidateSet.Candidate> candidates =
-                CandidateSet.Read(Path.Combine(RepositoryRoot(), CommittedSet));
+            IReadOnlyList<CandidateSet.Candidate> candidates = TheCommittedSet();
 
             foreach (string name in largeRigged)
             {
-                CandidateSet.Candidate candidate = Named(candidates, name);
+                // Absent rather than required. The set file exists to be edited
+                // -- dropping a candidate is the expected way to answer "not
+                // that one" -- so a name that has gone is not a failure. What
+                // is a failure is one that is still there posed by a Medium
+                // clip.
+                CandidateSet.Candidate candidate = MaybeNamed(candidates, name);
+
+                if (candidate == null)
+                {
+                    continue;
+                }
 
                 Assert.That(
                     candidate.ClipName,
@@ -95,8 +111,7 @@ namespace Tests.EditMode
         [Test]
         public void APropCarriesItsOwnTurn()
         {
-            IReadOnlyList<CandidateSet.Candidate> candidates =
-                CandidateSet.Read(Path.Combine(RepositoryRoot(), CommittedSet));
+            IReadOnlyList<CandidateSet.Candidate> candidates = TheCommittedSet();
 
             // Every weapon in these packs is authored for the right hand, so
             // the one bow in the off hand needs the half turn or it draws with
@@ -132,27 +147,34 @@ namespace Tests.EditMode
                 {
                     "# a comment, and a blank line, both skipped",
                     string.Empty,
-                    "tower Ghost Kaykit/adventurers/Ghost.fbx - - Idle_A",
+                    // A name no import can ever produce, so this fixture does
+                    // not quietly stop testing the day somebody adds a Ghost.
+                    "tower Ghost Characters/__no-such-model__.fbx - - Idle_A",
                     "creep Knight Characters/Knight.fbx - - Walking_Z",
                     "sideways Knight Characters/Knight.fbx - - Idle_A",
                     "tower Knight Characters/Knight.fbx - Idle_A",
                     "tower Knight Characters/Knight.fbx Weapons/sword_1handed.fbx@up - Idle_A",
+                    "tower Knight Characters/Knight.fbx@0,90,0 - - Idle_A",
                 });
 
             try
             {
                 IOException thrown = Assert.Throws<IOException>(() => CandidateSet.Read(path));
 
-                Assert.That(thrown.Message, Does.Contain("Kaykit/adventurers/Ghost.fbx"));
+                Assert.That(thrown.Message, Does.Contain("Characters/__no-such-model__.fbx"));
                 Assert.That(thrown.Message, Does.Contain("Walking_Z"));
                 Assert.That(thrown.Message, Does.Contain("'sideways'"));
                 Assert.That(thrown.Message, Does.Contain("5 fields, not 6"));
                 Assert.That(thrown.Message, Does.Contain("@0,180,0"));
 
+                // A turn on the character rather than on a held prop is a
+                // fault and not a thing quietly ignored.
+                Assert.That(thrown.Message, Does.Contain("carries a turn"));
+
                 // Line numbers, because a fault in a thirty-two line file is
                 // only actionable if it says which line.
                 Assert.That(thrown.Message, Does.Contain(":3:"));
-                Assert.That(thrown.Message, Does.Contain(":7:"));
+                Assert.That(thrown.Message, Does.Contain(":8:"));
             }
             finally
             {
@@ -170,7 +192,16 @@ namespace Tests.EditMode
                 Does.Contain(path));
         }
 
+        private static IReadOnlyList<CandidateSet.Candidate> TheCommittedSet() =>
+            CandidateSet.Read(Path.Combine(RepositoryRoot(), CommittedSet));
+
         private static CandidateSet.Candidate Named(
+            IReadOnlyList<CandidateSet.Candidate> candidates, string name) =>
+            MaybeNamed(candidates, name)
+            ?? throw new AssertionException(
+                "The committed set has no candidate called " + name + ".");
+
+        private static CandidateSet.Candidate MaybeNamed(
             IReadOnlyList<CandidateSet.Candidate> candidates, string name)
         {
             foreach (CandidateSet.Candidate candidate in candidates)
@@ -181,7 +212,7 @@ namespace Tests.EditMode
                 }
             }
 
-            throw new AssertionException("The committed set has no candidate called " + name + ".");
+            return null;
         }
 
         /// <summary>
