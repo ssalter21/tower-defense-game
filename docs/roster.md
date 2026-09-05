@@ -211,11 +211,12 @@ leaves too: a crossbow, a tome and a turret barrel are three different points on
 Anchoring is a view fact and not a signed number, but it is set in the art ticket that chooses the prop,
 because that ticket is the only one that knows what the prop is called.
 
-**Two consequences that are work rather than prose.** A per-row texture does not exist in the view today —
-`UnitArt` has no material field — so tier colour is a small view feature plus an import; the shader path is
-already proven editor-side. And there is **no socket for a prop beside a tower**, only the two hand bones, so
-`turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's tree have nowhere to stand until one is built.
-The Engineer line cannot be drawn as designed at any tier without it.
+**One consequence that is work rather than prose.** A per-row texture is built: `UnitArt` carries the atlas a
+row wears, the two views put it on the body before anything goes in a hand, and the alternate atlases the rows
+above name are imported beside their own packs. There is still **no socket for a prop beside a tower**, only
+the two hand bones, so `turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's tree have nowhere to
+stand until one is built. The Engineer line cannot be drawn as designed at any tier without it — and the
+quiver the Ranger carries is in its fist for the same reason.
 
 **Every tier on this page is authorable as of layout 3 and playable as of #217**, which built the timed
 effect three of them rest on; see [the column
@@ -938,11 +939,12 @@ the model as it is drawn:
 | Towers | **1.0** | the baseline everything else is read against |
 | Every creep | **0.5** | a creep is unmistakably smaller than the thing shooting it, at any camera angle |
 
-> **`RangerScale` at 1.5 goes.** Four places transcribe it and all four move together: the constant in
-> `MatchArt`, the binding row in `MatchSceneBuilder`, the remark there that says *"the scale is the tier
-> signal and it is the only one"*, and the edit-mode test `EveryUnitTypeIsDrawnAtItsRosterScale`, which
-> asserts it. The test does not simply lose a case — it is the thing that would keep the old signal alive —
-> so it is rewritten to assert **two** multipliers rather than three.
+> **`RangerScale` at 1.5 is gone**, and the two multipliers above are the whole of what size says. What
+> replaced it on the Ranger is a colour and a prop, landed in the same commit so no build ever shipped two
+> identical rungs. The edit-mode test that held the old number,
+> `EveryUnitTypeIsDrawnAtItsRosterScale`, asserts two multipliers rather than three, and
+> `TheTwoRowsOnOneModelAreToldApartWithoutSize` is what stands where it stood: the Archer and the Ranger
+> share a model and a scale, so one of the three materials must separate them.
 
 **Scale lives in `MatchArt` and never in `content/units.txt`.** Visual size is a view fact under
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), and a column in the content tables would make every

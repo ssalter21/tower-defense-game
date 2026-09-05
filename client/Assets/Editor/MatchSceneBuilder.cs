@@ -50,6 +50,13 @@ namespace View.Editor
 
         private const string SkeletonShieldBPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
 
+        /// <summary>The Ranger's quiver, in the fist for want of a socket on the spine.</summary>
+        private const string QuiverPath = "Assets/Art/Kaykit/adventurers/quiver.fbx";
+
+        /// <summary>The Adventurers pack's second ranger colourway.</summary>
+        private const string RangerAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
+
         private const string WalkClipName = "Walking_A";
 
         private const string DeathClipName = "Death_A";
@@ -186,11 +193,19 @@ namespace View.Editor
         /// standing prohibition on this project and not a style preference.
         /// </para>
         /// <para>
-        /// <b>The scale is the tier signal and it is the only one.</b> Towers
-        /// draw at 1, every creep at a half, and the Ranger — which shares the
-        /// Archer's model and differs from it in one stat — at one and a half.
-        /// The numbers are <see cref="MatchArt"/>'s, so the two tables that
-        /// carry these rows cannot disagree about what a half is.
+        /// <b>Size says which side a row is on and nothing else.</b> Towers
+        /// draw at 1 and every creep at a half; no rung of a line is drawn
+        /// bigger than the rung below it. The numbers are
+        /// <see cref="MatchArt"/>'s, so the two tables that carry these rows
+        /// cannot disagree about what a half is.
+        /// </para>
+        /// <para>
+        /// <b>A tier is told apart by colour, by a prop or by a second
+        /// model.</b> The Archer and the Ranger are the pair that proves it:
+        /// one model, one scale, and what separates them on sight is the
+        /// Ranger's own atlas and the quiver in its hand. The atlas covers the
+        /// body only — a prop is its own import off its own pack's atlas, and
+        /// this quiver is authored on the rogue's.
         /// </para>
         /// <para>
         /// <b>What each unit holds, and the clips it holds it with, are the
@@ -217,6 +232,7 @@ namespace View.Editor
             int unitId,
             string model,
             float scale,
+            string texture,
             string rightHand,
             string leftHand,
             string idle,
@@ -226,27 +242,27 @@ namespace View.Editor
             Vector3 leftTilt,
             EffectAnchor anchor)[] UnitBindings =
         {
-            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
                 null, null, null, null, null, default, default, default),
-            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
+            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale, null,
                 null, null, null, null, null, default, default, default),
-            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
+            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, null,
                 null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
                 Bow),
-            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
+            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, null,
                 StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
                 StaffTip),
-            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
+            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale, null,
                 SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default),
-            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
+            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, null,
                 SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default,
                 SwordTip),
-            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
+            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
                 SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default, default),
-            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
+            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale, null,
                 SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default, default),
-            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, RangerAltAtlasPath,
+                QuiverPath, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
                 Bow),
         };
 
@@ -706,6 +722,7 @@ namespace View.Editor
                     binding.unitId,
                     binding.model,
                     binding.scale,
+                    binding.texture,
                     binding.rightHand,
                     binding.leftHand,
                     binding.idle,
@@ -742,7 +759,8 @@ namespace View.Editor
         /// shape as <see cref="UnitArt.Of(int, GameObject, float)"/>.
         /// </summary>
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
-            WireUnit(entry, unitId, model, scale, null, null, null, null, null, default, default, default);
+            WireUnit(
+                entry, unitId, model, scale, null, null, null, null, null, null, default, default, default);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -757,6 +775,7 @@ namespace View.Editor
             int unitId,
             string model,
             float scale,
+            string texture,
             string rightHand,
             string leftHand,
             string idle,
@@ -769,6 +788,7 @@ namespace View.Editor
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
             entry.FindPropertyRelative("scale").floatValue = scale;
+            entry.FindPropertyRelative("texture").objectReferenceValue = MaybeTexture(texture);
             entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(rightHand);
             entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(leftHand);
             entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(idle);
@@ -834,7 +854,8 @@ namespace View.Editor
                     MaybeClip(binding.backswing),
                     binding.rightTilt,
                     binding.leftTilt,
-                    binding.anchor));
+                    binding.anchor,
+                    MaybeTexture(binding.texture)));
             }
 
             units.AddRange(UnboundUnits.StandIns());
@@ -855,6 +876,29 @@ namespace View.Editor
 
         /// <summary>The named clip, or null when the name is null — a creep.</summary>
         private static AnimationClip MaybeClip(string clip) => clip == null ? null : LoadClip(clip);
+
+        /// <summary>
+        /// The atlas at a path, or null when the path is null — a row drawn in
+        /// the one its model imported wearing.
+        /// </summary>
+        private static Texture2D MaybeTexture(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null)
+            {
+                throw new IOException(
+                    "Nothing imported at " + path + ". A row naming an atlas it has not got draws in "
+                    + "the one its model came with, which is the rung below it wearing the same face.");
+            }
+
+            return texture;
+        }
 
         /// <summary>The imported model at a path, or a throw naming it.</summary>
         private static GameObject LoadModel(string path)

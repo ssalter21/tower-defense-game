@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using View.Editor;
 
@@ -13,9 +14,9 @@ namespace Tests.EditMode
     /// <para>
     /// <b>The committed set is the test that matters.</b>
     /// <c>docs/roster-expansion-candidates.txt</c> names a model, up to two
-    /// props and a clip on each of its thirty-two lines, all by path, and the
-    /// whole point of it is that somebody can run the capture and look at the
-    /// result. None of those references is checked
+    /// props, a clip and sometimes an atlas on each of its thirty-five lines,
+    /// all by path, and the whole point of it is that somebody can run the
+    /// capture and look at the result. None of those references is checked
     /// by a compiler and none of them is checked by the build gate, so the day
     /// a model is moved out of <c>Assets/Art/Kaykit</c> the file silently stops
     /// naming it and the failure surfaces as a three-minute batchmode run that
@@ -40,7 +41,8 @@ namespace Tests.EditMode
         /// <summary>
         /// How many lines it carries: the proposal's 31 assigned characters,
         /// plus the Marksman a second time holding the crossbow the proposal
-        /// asks about instead of his rifle.
+        /// asks about instead of his rifle, plus the Ninja three more times
+        /// for the three atlases beyond the one his model imports wearing.
         /// </summary>
         /// <remarks>
         /// Written out by hand, the way <see cref="RosterNamesTests"/> writes
@@ -50,7 +52,7 @@ namespace Tests.EditMode
         /// change this number, which is a person saying the line was meant to
         /// go.
         /// </remarks>
-        private const int CommittedEntries = 32;
+        private const int CommittedEntries = 35;
 
         [Test]
         public void TheCommittedSetResolvesEveryModelPropAndClip()
@@ -108,6 +110,29 @@ namespace Tests.EditMode
             }
         }
 
+        /// <summary>
+        /// A line may name the atlas its body wears, and a line that does not
+        /// resolves to none rather than to something.
+        /// </summary>
+        /// <remarks>
+        /// The colour is the first of the three materials a tier is told apart
+        /// by, and it is the one a picture of a model and two props cannot
+        /// show: the character comes out wearing the atlas it imported with,
+        /// which is the rung below it.
+        /// </remarks>
+        [Test]
+        public void ALineMayNameTheAtlasItsBodyWears()
+        {
+            IReadOnlyList<CandidateSet.Candidate> candidates = TheCommittedSet();
+
+            Assert.That(
+                Named(candidates, "Knight").Texture,
+                Is.SameAs(AssetDatabase.LoadAssetAtPath<Texture2D>(
+                    "Assets/Art/Kaykit/adventurers/knight_texture_alt_B.png")));
+
+            Assert.That(Named(candidates, "Barbarian").Texture, Is.Null);
+        }
+
         [Test]
         public void APropCarriesItsOwnTurn()
         {
@@ -153,6 +178,7 @@ namespace Tests.EditMode
                     "creep Knight Characters/Knight.fbx - - Walking_Z",
                     "sideways Knight Characters/Knight.fbx - - Idle_A",
                     "tower Knight Characters/Knight.fbx - Idle_A",
+                    "tower Knight Characters/Knight.fbx - - Idle_A Kaykit/__no-such-atlas__.png",
                     "tower Knight Characters/Knight.fbx Weapons/sword_1handed.fbx@up - Idle_A",
                     "tower Knight Characters/Knight.fbx@0,90,0 - - Idle_A",
                 });
@@ -164,17 +190,18 @@ namespace Tests.EditMode
                 Assert.That(thrown.Message, Does.Contain("Characters/__no-such-model__.fbx"));
                 Assert.That(thrown.Message, Does.Contain("Walking_Z"));
                 Assert.That(thrown.Message, Does.Contain("'sideways'"));
-                Assert.That(thrown.Message, Does.Contain("5 fields, not 6"));
+                Assert.That(thrown.Message, Does.Contain("5 fields, not 6 or 7"));
+                Assert.That(thrown.Message, Does.Contain("Kaykit/__no-such-atlas__.png"));
                 Assert.That(thrown.Message, Does.Contain("@0,180,0"));
 
                 // A turn on the character rather than on a held prop is a
                 // fault and not a thing quietly ignored.
                 Assert.That(thrown.Message, Does.Contain("carries a turn"));
 
-                // Line numbers, because a fault in a thirty-two line file is
-                // only actionable if it says which line.
+                // Line numbers, because a fault in a file this long is only
+                // actionable if it says which line.
                 Assert.That(thrown.Message, Does.Contain(":3:"));
-                Assert.That(thrown.Message, Does.Contain(":8:"));
+                Assert.That(thrown.Message, Does.Contain(":9:"));
             }
             finally
             {

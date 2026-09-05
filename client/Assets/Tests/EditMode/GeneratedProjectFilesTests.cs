@@ -198,6 +198,12 @@ namespace Tests.EditMode
 
                 SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
+
+                // The atlas, which is neither a model nor a clip and would
+                // otherwise drift the way the tilts once did -- leaving the
+                // player path drawing a tier in the colour of the rung below it
+                // while every editor path drew it right.
+                SameOrBothEmpty(made.Texture, unit.Texture, "atlas for unit " + unit.UnitId);
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
                 SameOrBothEmpty(

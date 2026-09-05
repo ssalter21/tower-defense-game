@@ -73,7 +73,10 @@ namespace Tests.EditMode
         /// <summary>The bank the three tower-state clips come out of.</summary>
         public const string RangedBankPath = ChosenArt.RangedBankPath;
 
-        /// <summary>The unit id the Ranger's one-and-a-half is written against in the roster.</summary>
+        /// <summary>The tier-1 Archer.</summary>
+        private const int ArcherUnitId = 3;
+
+        /// <summary>The tier-2 Ranger, which stands on the Archer's model.</summary>
         private const int RangerUnitId = 14;
 
         /// <summary>The atlas shared by the Ranger and the bow it holds.</summary>
@@ -227,10 +230,11 @@ namespace Tests.EditMode
         /// nothing at all.
         /// </para>
         /// <para>
-        /// The scales are checked against the role rather than written out per
-        /// unit, because "towers 1, every creep a half" is the rule and the
-        /// Ranger is its one stated exception. That makes this a third
-        /// transcription of the roster, after the scene builder's table and the
+        /// <b>Two multipliers and no exceptions.</b> "Towers 1, every creep a
+        /// half" is the whole rule: size says which side a row is on and never
+        /// which rung of a line it is. The role is read off the shipped table
+        /// rather than written out per unit, which makes this a third
+        /// transcription of the roster after the scene builder's and the
         /// fixture's, and deliberately so: an assertion that read either table
         /// would be checking it against itself.
         /// </para>
@@ -245,14 +249,80 @@ namespace Tests.EditMode
                 Assert.That(art.ModelFor(type.Id), Is.Not.Null,
                     $"unit {type.Id} ({type.Label}) has no model");
 
-                float expected =
-                    type.Role == UnitRole.Moving ? MatchArt.CreepScale
-                    : type.Id == RangerUnitId ? MatchArt.RangerScale
+                float expected = type.Role == UnitRole.Moving
+                    ? MatchArt.CreepScale
                     : MatchArt.TowerScale;
 
                 Assert.That(art.ScaleFor(type.Id), Is.EqualTo(expected),
                     $"unit {type.Id} ({type.Label}) is drawn at the wrong size for its role");
             }
+        }
+
+        /// <summary>
+        /// Every atlas a row names is imported, and imported as a texture.
+        /// </summary>
+        /// <remarks>
+        /// A row naming an atlas that is not there is the flat-magenta failure
+        /// this class exists for, one row further along: the material is built
+        /// on a null map and the body draws in the base colour alone.
+        /// </remarks>
+        [Test]
+        public void EveryAtlasARowNamesIsImported()
+        {
+            foreach (string path in ChosenArt.TexturePaths)
+            {
+                Assert.That(AssetDatabase.LoadAssetAtPath<Texture2D>(path), Is.Not.Null,
+                    $"{path} is not in the project — a row names an atlas nothing imported");
+            }
+        }
+
+        /// <summary>
+        /// The two rows that share a model are told apart by something other
+        /// than size.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Nothing else in this project holds the two rungs apart.</b> The
+        /// Archer and the Ranger are one model at one scale, so a build that
+        /// gave the Ranger no colour, no prop and no second body would ship two
+        /// rungs a player cannot tell apart — and every other test here would
+        /// stay green over it.
+        /// </para>
+        /// <para>
+        /// <b>Both halves, not either.</b> <c>docs/roster.md</c> signs this
+        /// rung as a colour <i>and</i> a prop, and an assertion satisfied by
+        /// whichever of the two happened to survive would let the other go
+        /// back to null with every runner green. Which atlas and which prop
+        /// stay unnamed here: those are the developer's to move, and naming
+        /// them would make this test the place the art is decided.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheTwoRowsOnOneModelAreToldApartWithoutSize()
+        {
+            MatchArt art = ChosenArt.Load();
+
+            UnitArt archer = art.ArtFor(ArcherUnitId);
+            UnitArt ranger = art.ArtFor(RangerUnitId);
+
+            Assert.That(ranger.Model, Is.SameAs(archer.Model),
+                "these are the two rows that share a model; if they no longer do, this test is "
+                + "asserting nothing and the roster has moved under it");
+
+            Assert.That(ranger.Scale, Is.EqualTo(archer.Scale),
+                "size is not a tier signal, so the two rungs of the Archer line draw at one scale");
+
+            Assert.That(ranger.Texture, Is.Not.Null,
+                "the Ranger shares the Archer's model and its size, so its own atlas is the colour "
+                + "half of what tells the two rungs apart — see docs/roster.md");
+
+            Assert.That(ranger.Texture, Is.Not.SameAs(archer.Texture),
+                "the Ranger draws in the atlas the Archer draws in, so the colour separates nothing");
+
+            Assert.That(
+                ranger.RightHand != archer.RightHand || ranger.LeftHand != archer.LeftHand,
+                Is.True,
+                "the Ranger holds exactly what the Archer holds, so the prop separates nothing");
         }
 
         /// <summary>

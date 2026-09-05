@@ -58,6 +58,8 @@ namespace View
 
         private SimDrivenAnimator _animator;
 
+        private Material _skin;
+
         private AnchoredPoint _effectAnchor;
 
         private Quaternion _restingRotation = Quaternion.identity;
@@ -130,6 +132,10 @@ namespace View
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
+            // Before the hands, because the row's atlas covers the body and a
+            // prop wears its own pack's.
+            _skin = DrawnModel.Wear(Model, art.Texture);
+
             Hold(art);
 
             _effectAnchor = art.EffectAnchor.ResolveOn(Model);
@@ -164,6 +170,10 @@ namespace View
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
+            // Before the hands, because the row's atlas covers the body and a
+            // prop wears its own pack's.
+            _skin = DrawnModel.Wear(Model, art.Texture);
+
             // What it holds goes on the bones before the graph is built, so the
             // first pose the tower is ever drawn in already has it in hand.
             Hold(art);
@@ -180,6 +190,16 @@ namespace View
                 Model, art.IdleClip, art.WindupClip, art.BackswingClip);
 
             transform.rotation = resting;
+        }
+
+        /// <summary>
+        /// Destroys the material this made, because whoever made one destroys
+        /// it. A tower wearing the atlas it imported with made none.
+        /// </summary>
+        private void OnDestroy()
+        {
+            DrawnModel.Discard(_skin);
+            _skin = null;
         }
 
         /// <summary>Puts whatever the art names into whichever hands it names.</summary>

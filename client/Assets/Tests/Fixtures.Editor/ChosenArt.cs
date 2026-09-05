@@ -54,6 +54,12 @@ namespace Tests.Fixtures
         public const string SkeletonShieldAModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_A.fbx";
         public const string SkeletonShieldBModelPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
 
+        /// <summary>The Ranger's quiver, in the fist for want of a socket on the spine.</summary>
+        public const string QuiverModelPath = "Assets/Art/Kaykit/adventurers/quiver.fbx";
+
+        /// <summary>The Adventurers pack's second ranger colourway.</summary>
+        public const string RangerAltAtlasPath = "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
+
         public const string MovementBankPath = "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx";
         public const string GeneralBankPath = "Assets/Art/Animations/Rig_Medium_General.fbx";
         public const string RangedBankPath = "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx";
@@ -135,16 +141,18 @@ namespace Tests.Fixtures
         /// </summary>
         /// <remarks>
         /// The Minion and the Skeleton share the minion skin, and the Archer
-        /// and the Ranger share the ranger — which is what the Ranger's scale
-        /// is for, since nothing else separates the two rungs. The scale
-        /// numbers come from <see cref="MatchArt"/> rather than being typed
-        /// again here, so this table and the builder's can disagree about which
-        /// model a unit takes but never about what a half is.
+        /// and the Ranger share the ranger — told apart by the Ranger's own
+        /// atlas and the quiver in its hand, because size says which side a row
+        /// is on and nothing else. The scale numbers come from
+        /// <see cref="MatchArt"/> rather than being typed again here, so this
+        /// table and the builder's can disagree about which model a unit takes
+        /// but never about what a half is.
         /// </remarks>
         public static readonly (
             int unitId,
             string model,
             float scale,
+            string texture,
             string rightHand,
             string leftHand,
             string idle,
@@ -154,28 +162,28 @@ namespace Tests.Fixtures
             Vector3 leftTilt,
             EffectAnchor anchor)[] UnitPaths =
         {
-            (1, MinionModelPath, MatchArt.CreepScale,
+            (1, MinionModelPath, MatchArt.CreepScale, null,
                 null, null, null, null, null, default, default, default),
-            (2, RogueModelPath, MatchArt.CreepScale,
+            (2, RogueModelPath, MatchArt.CreepScale, null,
                 null, null, null, null, null, default, default, default),
-            (3, RangerModelPath, MatchArt.TowerScale,
+            (3, RangerModelPath, MatchArt.TowerScale, null,
                 null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
                 Bow),
-            (4, MageModelPath, MatchArt.TowerScale,
+            (4, MageModelPath, MatchArt.TowerScale, null,
                 StaffModelPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
                 StaffTip),
-            (7, SkeletonMageModelPath, MatchArt.CreepScale,
+            (7, SkeletonMageModelPath, MatchArt.CreepScale, null,
                 SkeletonStaffModelPath, null, null, null, null, StaffQuarterTurn, default, default),
-            (11, KnightModelPath, MatchArt.TowerScale,
+            (11, KnightModelPath, MatchArt.TowerScale, null,
                 SwordModelPath, null, RestClipName, ChopClipName, RestClipName, default, default,
                 SwordTip),
-            (12, MinionModelPath, MatchArt.CreepScale,
+            (12, MinionModelPath, MatchArt.CreepScale, null,
                 SkeletonBladeModelPath, SkeletonShieldAModelPath, null, null, null, default, default, default),
-            (13, WarriorModelPath, MatchArt.CreepScale,
+            (13, WarriorModelPath, MatchArt.CreepScale, null,
                 SkeletonBladeModelPath, SkeletonShieldBModelPath, null, null, null, default, default, default),
-            (14, RangerModelPath, MatchArt.RangerScale,
-                null, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
-                Bow),
+            (14, RangerModelPath, MatchArt.TowerScale, RangerAltAtlasPath,
+                QuiverModelPath, BowModelPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName,
+                default, BowFlip, Bow),
         };
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -207,12 +215,38 @@ namespace Tests.Fixtures
                     MaybeClip(u.backswing),
                     u.rightTilt,
                     u.leftTilt,
-                    u.anchor))
+                    u.anchor,
+                    MaybeTexture(u.texture)))
                     .Concat(UnboundUnits.StandIns()),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));
 
         private static GameObject MaybeModel(string path) => path == null ? null : Model(path);
+
+        /// <summary>Every atlas a row in the table above names, each named once.</summary>
+        public static IEnumerable<string> TexturePaths =>
+            UnitPaths.Select(u => u.texture).Where(t => t != null).Distinct();
+
+        /// <summary>
+        /// The atlas at a path, or null for a row drawn in the one its model
+        /// imported wearing.
+        /// </summary>
+        private static Texture2D MaybeTexture(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null)
+            {
+                throw new InvalidOperationException("Nothing imported at " + path);
+            }
+
+            return texture;
+        }
 
         /// <summary>
         /// A clip by name from whichever bank holds it. The fixture searches

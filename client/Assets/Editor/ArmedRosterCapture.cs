@@ -34,9 +34,9 @@ namespace View.Editor
     /// <b>It also renders a named set that is not the roster.</b> Given
     /// <c>-rosterSet</c>, it draws whatever a <see cref="CandidateSet"/> file
     /// lists instead of the live rows — models nothing in
-    /// <c>content/units.txt</c> points at yet, held and posed as a proposal
-    /// says they would be, so a model can be signed off before a row exists to
-    /// author it against. Same views, same sun, same framing; the only
+    /// <c>content/units.txt</c> points at yet, held, posed and coloured as a
+    /// proposal says they would be, so a model can be signed off before a row
+    /// exists to author it against. Same views, same sun, same framing; the only
     /// difference is where the list comes from.
     /// </para>
     /// <para>
@@ -270,7 +270,7 @@ namespace View.Editor
                     manifest.Add(
                         string.Format(
                             CultureInfo.InvariantCulture,
-                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8}",
+                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8} | {9}",
                             index + 1,
                             (index / SheetColumns) + 1,
                             (index % SheetColumns) + 1,
@@ -279,7 +279,8 @@ namespace View.Editor
                             candidate.ClipName,
                             candidate.ModelPath,
                             candidate.RightHandPath,
-                            candidate.LeftHandPath));
+                            candidate.LeftHandPath,
+                            candidate.TexturePath));
                 }
 
                 string sheet = Path.Combine(outDir, "candidates-sheet.png");
@@ -305,7 +306,7 @@ namespace View.Editor
                     "# candidates-sheet.png; rNcM is the row and column of the tile.",
                     "#",
                     "#   n  tile  name                   side   clip"
-                    + "                           model | right hand | left hand",
+                    + "                           model | right hand | left hand | texture",
                 }.Concat(manifest).ToArray());
 
             written.Add(manifestPath);
@@ -329,7 +330,9 @@ namespace View.Editor
                     candidate.Clip,
                     candidate.Clip,
                     candidate.RightHandTilt,
-                    candidate.LeftHandTilt)
+                    candidate.LeftHandTilt,
+                    default,
+                    candidate.Texture)
                 : UnitArt.Armed(
                     0,
                     candidate.Model,
@@ -340,7 +343,9 @@ namespace View.Editor
                     null,
                     null,
                     candidate.RightHandTilt,
-                    candidate.LeftHandTilt);
+                    candidate.LeftHandTilt,
+                    default,
+                    candidate.Texture);
 
         /// <summary>
         /// The tower, posed. Idle rather than an attack state, because Idle is

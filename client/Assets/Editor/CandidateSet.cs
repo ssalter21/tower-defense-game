@@ -9,7 +9,8 @@ namespace View.Editor
 {
     /// <summary>
     /// A named set of characters to render: one line per character, saying
-    /// which model, what it holds in each hand, and what clip it is posed in.
+    /// which model, what it holds in each hand, what clip it is posed in and,
+    /// where the look being asked about is a colour, which atlas it wears.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -37,6 +38,16 @@ namespace View.Editor
     /// fact about the prop: the same scythe wants the same turn in whosever
     /// hand it is. Only exactly right in one pose, since a weapon parented to a
     /// hand turns with the arm.
+    /// </para>
+    /// <para>
+    /// <b>The atlas is a seventh field and it is optional.</b> A tier is told
+    /// apart by colour, a prop or a second model, and the first of those cannot
+    /// be photographed by naming a model and two props — the character would
+    /// come out in the atlas it imported wearing, which is the rung below it.
+    /// So a line may carry a texture path after its clip. Six fields is a line
+    /// asking about a silhouette and seven is a line asking about a colour;
+    /// both are legal, and a set written before this column existed still
+    /// reads.
     /// </para>
     /// <para>
     /// <b>The clip may name its bank, and for a Large rig it must.</b>
@@ -99,6 +110,12 @@ namespace View.Editor
             /// <summary>The clip it is posed in.</summary>
             public AnimationClip Clip { get; internal set; }
 
+            /// <summary>The atlas it wears, or null for the model's own.</summary>
+            public Texture2D Texture { get; internal set; }
+
+            /// <summary>The atlas as the set file spelled it, or <c>-</c>.</summary>
+            public string TexturePath { get; internal set; }
+
             /// <summary>The clip as the set file spelled it, for the manifest.</summary>
             public string ClipName { get; internal set; }
 
@@ -160,11 +177,12 @@ namespace View.Editor
                 string[] fields = line.Split(
                     new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (fields.Length != 6)
+                if (fields.Length != 6 && fields.Length != 7)
                 {
                     faults.Add(
-                        where + ": " + fields.Length + " fields, not 6. A line is "
-                        + "'side name model right-hand left-hand clip', with '-' for an empty hand.");
+                        where + ": " + fields.Length + " fields, not 6 or 7. A line is "
+                        + "'side name model right-hand left-hand clip [texture]', with '-' for an "
+                        + "empty hand and the texture left off for the model's own atlas.");
                     continue;
                 }
 
@@ -207,6 +225,7 @@ namespace View.Editor
                 RightHandPath = fields[3],
                 LeftHandPath = fields[4],
                 ClipName = fields[5],
+                TexturePath = fields.Length > 6 ? fields[6] : Empty,
             };
 
             switch (fields[0])
@@ -236,6 +255,7 @@ namespace View.Editor
             candidate.RightHandTilt = right;
             candidate.LeftHandTilt = left;
             candidate.Clip = FindClip(where, fields[5], faults);
+            candidate.Texture = LoadTexture(where, candidate.TexturePath, faults);
 
             return faults.Count == before ? candidate : null;
         }
@@ -274,6 +294,28 @@ namespace View.Editor
             }
 
             return model;
+        }
+
+        /// <summary>
+        /// The atlas at an art-relative path, null for <c>-</c>, or a fault
+        /// naming the path that found nothing.
+        /// </summary>
+        private static Texture2D LoadTexture(string where, string spec, List<string> faults)
+        {
+            if (spec == Empty)
+            {
+                return null;
+            }
+
+            string path = ArtRoot + spec;
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null)
+            {
+                faults.Add(where + ": texture '" + spec + "' — nothing imported at " + path);
+            }
+
+            return texture;
         }
 
         /// <summary>Three comma-separated Euler degrees, or false.</summary>

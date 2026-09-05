@@ -48,6 +48,8 @@ namespace View
 
         private SimDrivenAnimator _animator;
 
+        private Material _skin;
+
         /// <summary>The instantiated model, once built.</summary>
         public GameObject Model { get; private set; }
 
@@ -133,6 +135,10 @@ namespace View
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
 
+            // Before the hands, because the row's atlas covers the body and a
+            // prop wears its own pack's.
+            _skin = DrawnModel.Wear(Model, art.Texture);
+
             // What it carries goes on before the graph is built, so it is in
             // hand for the first frame the creep is ever drawn in. A creep's
             // weapon is scenery -- nothing in the simulation swings it, because
@@ -158,6 +164,21 @@ namespace View
             // the body and what it is holding is part of the body by now.
             Marks = new EffectMarks();
             Marks.Build(transform, Model, healthSegment, shieldSegment);
+        }
+
+        /// <summary>
+        /// Destroys the material this made, because whoever made one destroys
+        /// it. A creep wearing the atlas it imported with made none.
+        /// </summary>
+        /// <remarks>
+        /// One per pooled view rather than one per creep: a view is built once
+        /// for its variant and then handed out again for the length of the
+        /// match.
+        /// </remarks>
+        private void OnDestroy()
+        {
+            DrawnModel.Discard(_skin);
+            _skin = null;
         }
 
         /// <summary>

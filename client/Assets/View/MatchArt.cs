@@ -12,7 +12,13 @@ namespace View
     /// <b>The scale is here and not in <c>content/units.txt</c>.</b> Visual size
     /// is a view fact under ADR-0007, and a column in the content tables would
     /// make every art tweak a format version and a re-recording of every stored
-    /// match. The three numbers it takes are on <see cref="MatchArt"/>.
+    /// match. The two numbers it takes are on <see cref="MatchArt"/>.
+    /// </para>
+    /// <para>
+    /// <b>Size says which side a unit is on and nothing else.</b> A tier is
+    /// told apart by <see cref="Texture"/>, by what the unit holds, or by
+    /// being a different model — never by being bigger. So two rows sharing a
+    /// model share a scale, and what separates them is one of the other three.
     /// </para>
     /// </remarks>
     [Serializable]
@@ -29,6 +35,10 @@ namespace View
         [SerializeField]
         [Tooltip("Multiplied into the imported model's own scale.")]
         private float scale;
+
+        [SerializeField]
+        [Tooltip("Drawn over the model's own atlas. Null for a unit wearing the one it imported with.")]
+        private Texture2D texture;
 
         [SerializeField]
         [Tooltip("Hung off handslot.r. Null for a unit that carries nothing there.")]
@@ -94,12 +104,14 @@ namespace View
             AnimationClip backswing,
             Vector3 rightHandTilt = default,
             Vector3 leftHandTilt = default,
-            EffectAnchor effectAnchor = default) =>
+            EffectAnchor effectAnchor = default,
+            Texture2D texture = null) =>
             new UnitArt
             {
                 unitId = unitId,
                 model = model,
                 scale = scale,
+                texture = texture,
                 rightHand = rightHand,
                 leftHand = leftHand,
                 idleClip = idle,
@@ -118,6 +130,26 @@ namespace View
 
         /// <summary>How much bigger or smaller than the imported model this draws.</summary>
         public float Scale => scale;
+
+        /// <summary>
+        /// The atlas this row is drawn in, or null for the one the model
+        /// imported wearing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The packs ship several atlases per character and the rows pick
+        /// between them, so two rows on one model are two colours rather than
+        /// two sizes. Which atlas goes on which row is signed in
+        /// <c>docs/roster.md</c> and nothing chooses one here.
+        /// </para>
+        /// <para>
+        /// It covers the body and not what the body is holding. A prop is its
+        /// own import off its own pack's atlas — the Adventurers quiver is
+        /// authored on the rogue's — so a character atlas painted over it
+        /// would draw the prop in swatches meant for a torso.
+        /// </para>
+        /// </remarks>
+        public Texture2D Texture => texture;
 
         /// <summary>What goes on <c>handslot.r</c>, or null.</summary>
         public GameObject RightHand => rightHand;
@@ -246,12 +278,6 @@ namespace View
         /// than the thing shooting at it from any camera angle.
         /// </summary>
         public const float CreepScale = 0.5f;
-
-        /// <summary>
-        /// The Ranger's size. It shares the Archer's model and differs from it
-        /// in one stat, so size is the only thing separating the two rungs.
-        /// </summary>
-        public const float RangerScale = 1.5f;
 
         [Header("Per unit type")]
         [SerializeField]

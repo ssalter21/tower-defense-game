@@ -11,9 +11,9 @@
 # candidates-sheet.png and candidates-manifest.txt. Nothing here is an oracle
 # and no test reads it. Edit a line, run it again, look again.
 #
-# HOW A LINE READS. Six whitespace-separated fields:
+# HOW A LINE READS. Six whitespace-separated fields, or seven:
 #
-#     side  name  model  right-hand  left-hand  clip
+#     side  name  model  right-hand  left-hand  clip  [texture]
 #
 #   side        tower or creep -- which of the two shipped views draws it.
 #   name        what the PNG is called. The model's own name, not a unit name:
@@ -26,6 +26,13 @@
 #               as Rig_Large_General/Idle_A, because Idle_A, Walking_A and
 #               Death_A exist in both rigs and the wrong one draws without
 #               complaining.
+#   texture     the atlas the body wears, or left off for the one the model
+#               imported with. A tier is told apart by colour, a prop or a
+#               second model, and a colour cannot be photographed by naming a
+#               model and two props -- the character comes out wearing the rung
+#               below it. So the rows whose signed look in docs/roster.md is a
+#               colour name their atlas here. It covers the body only: a prop
+#               is its own import off its own pack's atlas.
 #
 # A held prop may carry a turn, written path@x,y,z in Euler degrees. Every
 # weapon in these packs is authored for the right hand, so a bow in the off
@@ -57,13 +64,20 @@
 #     Bow, matching the live Ranger.
 #   - The Marksman appears twice, once with his rifle and once with the
 #     crossbow the proposal asks about, because that is the comparison being
-#     put up. 32 lines, 31 characters.
+#     put up.
+#   - The Ninja appears four times, once in each of his pack's four atlases.
+#     roster.md signs the Shade as "the darkest of the pack's four atlases"
+#     and does not say which one that is, and an atlas is a sheet of swatches
+#     -- how dark the body comes out depends on which of them his UVs land on,
+#     so it is not a thing measurable off the file. The four go up and the
+#     answer is whichever one reads as a silhouette. 35 lines, 31 characters.
 
 # ---------------------------------------------------------------- towers ---
 
 # Knight line. Live as the Soldier at tier 1; what is new is the Sergeant's
-# shield and the Shield Wall's raised guard, so it is posed blocking.
-tower Knight               Characters/Knight.fbx                                          Weapons/sword_1handed.fbx                                    Kaykit/adventurers/shield_square.fbx                                Melee_Blocking
+# shield and the Shield Wall's raised guard, so it is posed blocking -- and in
+# knight_texture_alt_B, which is the atlas the Shield Wall is signed for.
+tower Knight               Characters/Knight.fbx                                          Weapons/sword_1handed.fbx                                    Kaykit/adventurers/shield_square.fbx                                Melee_Blocking               Kaykit/adventurers/knight_texture_alt_B.png
 
 # Barbarian line. The pack ships the size-up as a second model on the Large
 # rig, which is the tier-3 Slam. Posed in the two-handed guard and not in
@@ -97,9 +111,10 @@ tower Ranger               Characters/Ranger.fbx                                
 tower Marksman             Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx           Kaykit/mystery-monthly-series-6/marksman/Marksman_Rifle.fbx  -                                                                   Ranged_2H_Aiming
 tower Marksman_Crossbow    Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx           Kaykit/adventurers/crossbow_2handed.fbx                      -                                                                   Ranged_2H_Aiming
 
-# Rogue line. Hooded at tier 2, and the Fan of Knives is the dual-wield slice.
+# Rogue line. Hooded at tier 2, and the Fan of Knives is the dual-wield slice,
+# in rogue_texture_alt_A, which is the atlas that capstone is signed for.
 tower Rogue                Kaykit/adventurers/Rogue.fbx                                   Kaykit/adventurers/dagger.fbx                                -                                                                   Throw
-tower Rogue_Hooded         Kaykit/adventurers/Rogue_Hooded.fbx                            Kaykit/adventurers/dagger.fbx                                Kaykit/adventurers/dagger.fbx                                       Melee_Dualwield_Attack_Slice
+tower Rogue_Hooded         Kaykit/adventurers/Rogue_Hooded.fbx                            Kaykit/adventurers/dagger.fbx                                Kaykit/adventurers/dagger.fbx                                       Melee_Dualwield_Attack_Slice Kaykit/adventurers/rogue_texture_alt_A.png
 
 # Engineer line. One model all three tiers; the turret and the crate stand
 # beside him and are not held, so they are not on this line.
@@ -130,10 +145,16 @@ creep Monstrosity          Kaykit/mystery-monthly-series-6/monstrosity/Monstrosi
 # The dark and hooded. The Fiend and the Grave Robber are proposed holding a
 # backpack -- Tiefling_SwordsBackpack and Hoarder_Backpack -- which is worn on
 # the spine and has no hand socket, so each takes its own sword here instead.
+# The Ninja is the Shade, and the Shade is only admissible as a creep if it
+# reads as a silhouette, so his four atlases are the question this set asks
+# about him. A names the one the model imports wearing.
 creep Vampire              Kaykit/mystery-monthly-series-5/vampire/Vampire.fbx             Kaykit/mystery-monthly-series-5/vampire/Vampire_Sword.fbx    -                                                                   Walking_A
 creep Witch                Kaykit/mystery-monthly-series-5/witch/Witch.fbx                 Kaykit/mystery-monthly-series-5/witch/Broom.fbx              -                                                                   Walking_A
 creep Tiefling             Kaykit/mystery-monthly-series-5/tiefling/Tiefling.fbx           Kaykit/mystery-monthly-series-5/tiefling/Tiefling_Sword.fbx  -                                                                   Walking_A
-creep Ninja                Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A
+creep Ninja                Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A                    Kaykit/mystery-monthly-series-4/ninja/ninja_texture_A.png
+creep Ninja_B              Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A                    Kaykit/mystery-monthly-series-4/ninja/ninja_texture_B.png
+creep Ninja_C              Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A                    Kaykit/mystery-monthly-series-4/ninja/ninja_texture_C.png
+creep Ninja_D              Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                 Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx       -                                                                   Walking_A                    Kaykit/mystery-monthly-series-4/ninja/ninja_texture_D.png
 creep Hoarder              Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx             Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Sword.fbx    -                                                                   Walking_A
 
 # The transformation pair: what walks in, and what it becomes.

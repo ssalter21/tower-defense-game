@@ -17,6 +17,7 @@ MonoBehaviour:
     - unitId: 1
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
     - unitId: 2
       model: {fileID: 919132149155446097, guid: 09960b6ddb684d8794ac0d6cd80f54d1, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -43,6 +45,7 @@ MonoBehaviour:
     - unitId: 3
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 919132149155446097, guid: 4005f62aa0fde624488afe406fdf3100, type: 3}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -56,6 +59,7 @@ MonoBehaviour:
     - unitId: 4
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: 9228eef15095ca048b270c1b2024af8b, type: 3}
       leftHand: {fileID: 0}
       rightHandTilt: {x: 0, y: 0, z: -90}
@@ -69,6 +73,7 @@ MonoBehaviour:
     - unitId: 7
       model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: 65a8c4c28a1c42b4693df2e0f808cd28, type: 3}
       leftHand: {fileID: 0}
       rightHandTilt: {x: 0, y: 0, z: -90}
@@ -82,6 +87,7 @@ MonoBehaviour:
     - unitId: 11
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
       leftHand: {fileID: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -95,6 +101,7 @@ MonoBehaviour:
     - unitId: 12
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: ba3a7513da985fd429f287c7723bb15d, type: 3}
       leftHand: {fileID: 919132149155446097, guid: f6d2dd31e033a104f8a209fda538d4ed, type: 3}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -108,6 +115,7 @@ MonoBehaviour:
     - unitId: 13
       model: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: ba3a7513da985fd429f287c7723bb15d, type: 3}
       leftHand: {fileID: 919132149155446097, guid: 47dbeb155298afc49a4d8c7ad99eb93e, type: 3}
       rightHandTilt: {x: 0, y: 0, z: 0}
@@ -120,8 +128,9 @@ MonoBehaviour:
         tip: {x: 0, y: 0, z: 0}
     - unitId: 14
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
-      scale: 1.5
-      rightHand: {fileID: 0}
+      scale: 1
+      texture: {fileID: 2800000, guid: f9bf033a50f99cf4db7466cd35fceb92, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: e5a9aafd38beee84f8719e0a7a39ec58, type: 3}
       leftHand: {fileID: 919132149155446097, guid: 4005f62aa0fde624488afe406fdf3100, type: 3}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 180, z: 0}
