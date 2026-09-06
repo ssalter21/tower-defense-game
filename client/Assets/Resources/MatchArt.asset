@@ -32,6 +32,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 2
       model: {fileID: 919132149155446097, guid: 09960b6ddb684d8794ac0d6cd80f54d1, type: 3}
       scale: 0.5
@@ -50,6 +52,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 3
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1
@@ -68,6 +72,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: bow_withString
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 4
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
@@ -86,6 +92,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: spellbook_open
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 7
       model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
       scale: 0.5
@@ -104,6 +112,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 11
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
@@ -122,6 +132,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 12
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
@@ -140,6 +152,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 13
       model: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
       scale: 0.5
@@ -158,6 +172,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 14
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1
@@ -176,6 +192,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: bow_withString
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 15
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
@@ -194,6 +212,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 16
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
@@ -212,6 +232,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 17
       model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
       scale: 1
@@ -230,6 +252,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 18
       model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
       scale: 1
@@ -248,6 +272,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed_Large
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 19
       model: {fileID: 919132149155446097, guid: 054d80a70404355df9877d170ee6b2bc, type: 3}
       scale: 1
@@ -266,6 +292,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed_Large
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 20
       model: {fileID: 919132149155446097, guid: ec52b260b4b3a8903446599ff028f37a, type: 3}
       scale: 1
@@ -284,6 +312,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 21
       model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
       scale: 1
@@ -302,6 +332,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 22
       model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
       scale: 1
@@ -320,6 +352,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 23
       model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
@@ -338,6 +372,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Tome
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 24
       model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
@@ -356,6 +392,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Mace
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 25
       model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
       scale: 1
@@ -374,6 +412,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Mace
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 26
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
@@ -392,6 +432,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: staff
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 27
       model: {fileID: 919132149155446097, guid: 80187777141e9f7de458d31115fc8143, type: 3}
       scale: 1
@@ -410,6 +452,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: Lorekeeper_Tome
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 28
       model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
@@ -428,6 +472,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 29
       model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
@@ -446,6 +492,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 30
       model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
       scale: 1
@@ -464,6 +512,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 31
       model: {fileID: 919132149155446097, guid: c56010cf956c462ffa927b5904a3e0cb, type: 3}
       scale: 1
@@ -482,6 +532,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: crossbow_2handed
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 32
       model: {fileID: 919132149155446097, guid: 153a069e75ea3b11174c3551a744c99a, type: 3}
       scale: 1
@@ -500,6 +552,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 33
       model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
       scale: 1
@@ -518,6 +572,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 34
       model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
       scale: 1
@@ -536,6 +592,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 35
       model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
@@ -554,6 +612,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 36
       model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
@@ -572,6 +632,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 37
       model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
@@ -590,6 +652,128 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 39
+      model: {fileID: 919132149155446097, guid: 2bed188c35d0c43f59d567bd639c9161, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 635ff339fd5894a4688e306fcccfddd8, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 40
+      model: {fileID: 919132149155446097, guid: 09d8ab70d9b2afc2bdd646efc0e8aa79, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 2afc349e4fc9bd34cb57f0270d23e1be, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 59f8f8a284190f84e953b6d63c9a8a5a, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 41
+      model: {fileID: 919132149155446097, guid: 32d13ae9cf112900c5b937800cf3bbc0, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 618bdf5e587e49748b9a18406f26e647, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 42
+      model: {fileID: 919132149155446097, guid: 30843bd7d8654731bbde36058bb3b00c, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 0}
+      leftHand: {fileID: 919132149155446097, guid: 193751c5397bd404fae347bbbe0c5380, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 45
+      model: {fileID: 919132149155446097, guid: 88f19ca59eea5111057747ae89bdb1df, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 40773528795a468428694f314d7c3236, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 46
+      model: {fileID: 919132149155446097, guid: 039912c3bb9db1b8760391d4bf20312d, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: be610404eb9921a4ba50733784350534, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 38
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -608,78 +792,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-    - unitId: 39
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
-    - unitId: 40
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
-    - unitId: 41
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
-    - unitId: 42
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 43
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -698,6 +812,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 44
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -716,42 +832,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-    - unitId: 45
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
-    - unitId: 46
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
-      scale: 0.5
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
-      beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
-      rightHandTilt: {x: 0, y: 0, z: 0}
-      leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
-      effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 47
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -770,6 +852,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 48
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -788,6 +872,8 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 49
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5
@@ -806,5 +892,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}

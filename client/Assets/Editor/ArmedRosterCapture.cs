@@ -177,7 +177,8 @@ namespace View.Editor
                     }
                     else
                     {
-                        BuildCreep(stand, unit, art.CreepWalkClip, art.CreepDeathClip, 0.25f);
+                        BuildCreep(
+                            stand, unit, art.WalkClipFor(type.Id), art.DeathClipFor(type.Id), 0.25f);
                     }
 
                     ReportHeld(stand, "unit " + type.Id);

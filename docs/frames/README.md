@@ -264,6 +264,57 @@ says no. It is written by the capture and never by hand; see
   its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 
+- [`roster/creep-bodies-sheet.png`](roster/creep-bodies-sheet.png) — the six creep bodies of ids 39 to 46,
+  drawn through the real `CreepView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-creep-bodies.txt`. Ten tiles: the Bone Golem, the
+  Black Knight, the Frost Wight and the Abomination on the top row with the Fiend and the Shade, then the
+  Shade's other three atlases and the Frost Wight's other axe on the second. **It is the first sheet of
+  creeps**, and the first drawn through the walking view rather than the standing one — every tile is posed
+  halfway through the walk cycle its row is actually bound with, so nothing here is a framing clip.
+
+  **Four of the six are on the Large rig and take that rig's walk.** `Walking_A` and `Death_A` are in both
+  rigs' banks, so a Large body handed the shared medium pair drives bones that skeleton has not got and
+  slides down the corridor in its bind pose. `UnitArt` gained a per-row walk and death for that, and the
+  Golem, the Black Knight, the Frost Wight and the Abomination name
+  `Rig_Large_MovementBasic/Walking_A` and `Rig_Large_General/Death_A` in both binding tables, and
+  `EveryClipComesOutOfTheBankForItsRowsRig` holds each of the four to naming one at all — the silent failure
+  here is not a misspelt name but an override nobody wrote.
+
+  **Five things on it are questions rather than results.**
+  **The four Large-rig bodies are as tall as the towers, and that broke a test.** At the signed creep scale
+  of 0.5 the Black Knight draws **2.56 m**, the Bone Golem 2.32, the Abomination 2.24 and the Frost Wight
+  2.09, against a shortest tower — the Unravel — of **2.31 m**. `EveryCreepStandsUnmistakablyLowerThanEveryTower`
+  asks for a fifth of clear air and is red over it. Nothing here is miswired: these four are the pack's
+  size-up rig, authored at 4.2 to 5.1 m where a medium character is 2.3 to 2.9, and half of a size-up is a
+  tower. [`roster.md`](../roster.md) signs two multipliers and no exceptions and gives the 0.5 the reason
+  *"a creep is unmistakably smaller than the thing shooting it, at any camera angle"* — which these four do
+  not satisfy. Which moves is that page's call and not this sheet's.
+  **The Shade's atlas is unpicked.** That row asks for "the darkest of the pack's four" and names none of
+  them. The bound tile is `ninja_texture_A`, the sheet the model imports wearing: black gi, red sash, bare
+  tan face and forearms. The three below it are `B`, `C` and `D` on the same body — blue over brown, green,
+  and orange over tan. Which reads as a silhouette at gameplay distance is the answer, and whole-atlas mean
+  luminance (116, 118, 123, 135 for A to D) is not it: an atlas is a swatch sheet and how dark a body comes
+  out depends where its UVs land.
+  **The Frost Wight's axe is the medium export, as signed.** That row names `FrostGolem_Axe` where the other
+  three Large bodies are each signed for their own `_Large` weapon, and the pack ships
+  `FrostGolem_Axe_Large` too. Both are on the sheet, and `EverythingHeldIsOnItsBoneAndBigEnoughToSee`
+  measures the difference: the medium axe spans **30%** of the body holding it, against **52%**, **54%** and
+  **47%** for the Golem's axe, the Black Knight's sword and the Abomination's barndoor. It clears the test's
+  tenth, so nothing fails — it is simply the smallest thing any of these four carries. At this camera it is
+  largely behind the body either way.
+  **The Fiend's backpack is held rather than worn.** `Tiefling_SwordsBackpack` is a scabbarded pair authored
+  for the back and this project has two bone sockets rather than three — the same gap
+  [`roster.md`](../roster.md) names on the Ranger's quiver. So it hangs off the melee hand and reads as a
+  bundle of blades at the hip, in front of the body, rather than as anything worn. The pack's own
+  `Tiefling_Sword` is what a hand would take.
+  **The Fiend is the brightest thing on the sheet.** Red skin, teal hair and a white vest, against a theme
+  that page states as *undead, and the dark or hooded*. That row already argues the licence — it is the dark
+  half rather than the undead half — and whether the colour carries it is an eye check.
+
+  Like the four sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
+  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  Regenerate it with the command above and copy `candidates-sheet.png` over it.
+
 The rest of the default set is regenerable and not committed — and that is
 arranged by [`.gitignore`](.gitignore) rather than by whoever runs the capture
 next remembering to delete four files. Left to memory, a plain

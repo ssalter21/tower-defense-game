@@ -593,8 +593,8 @@ namespace View
             var view = host.AddComponent<CreepView>();
             view.Build(
                 _art.ArtFor(unitId),
-                _art.CreepWalkClip,
-                _art.CreepDeathClip,
+                _art.WalkClipFor(unitId),
+                _art.DeathClipFor(unitId),
                 _healthSegmentMaterial,
                 _shieldSegmentMaterial);
 

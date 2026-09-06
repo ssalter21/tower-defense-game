@@ -225,6 +225,15 @@ namespace Tests.EditMode
                 SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
                 SameOrBothEmpty(
                     made.BackswingClip, unit.BackswingClip, "backswing clip for unit " + unit.UnitId);
+
+                // The per-row walk and death, which only the four Large-rig
+                // creeps carry. A manifest that dropped them would fall back to
+                // the shared medium pair and draw those four sliding down the
+                // corridor in their bind pose -- in the player only, with every
+                // editor path drawing them right, which is exactly how the
+                // staffs' tilt drifted.
+                SameOrBothEmpty(made.WalkClip, unit.WalkClip, "walk clip for unit " + unit.UnitId);
+                SameOrBothEmpty(made.DeathClip, unit.DeathClip, "death clip for unit " + unit.UnitId);
             }
 
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));

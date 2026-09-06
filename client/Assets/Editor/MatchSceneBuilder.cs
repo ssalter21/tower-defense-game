@@ -177,9 +177,77 @@ namespace View.Editor
         private const string EngineerAltBAtlasPath =
             "Assets/Art/Kaykit/adventurers/engineer_texture_alt_B.png";
 
+        /// <summary>The Bone Golem's body, off the same pack as the skeletons it walks with.</summary>
+        private const string SkeletonGolemPath = "Assets/Art/Kaykit/skeletons/Skeleton_Golem.fbx";
+
+        /// <summary>The axe it carries, in the export sized for the Large rig.</summary>
+        private const string SkeletonGolemAxePath =
+            "Assets/Art/Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx";
+
+        /// <summary>The folder the Black Knight's body, both weapons and its atlas import into.</summary>
+        private const string BlackKnightFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/";
+
+        private const string BlackKnightPath = BlackKnightFolder + "BlackKnight.fbx";
+
+        private const string BlackKnightSwordPath = BlackKnightFolder + "BlackKnight_Sword_Large.fbx";
+
+        private const string BlackKnightShieldPath = BlackKnightFolder + "BlackKnight_Shield_Large.fbx";
+
+        /// <summary>The folder the Frost Wight's body, its two axes and its atlas import into.</summary>
+        private const string FrostGolemFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/";
+
+        private const string FrostGolemPath = FrostGolemFolder + "FrostGolem.fbx";
+
+        /// <summary>
+        /// The axe the Frost Wight carries. <c>docs/roster.md</c> signs
+        /// <c>FrostGolem_Axe</c>, which is the medium export; the pack also
+        /// ships <c>FrostGolem_Axe_Large</c> and the other three Large bodies
+        /// are each signed for their own <c>_Large</c> weapon. Bound as signed.
+        /// </summary>
+        private const string FrostGolemAxePath = FrostGolemFolder + "FrostGolem_Axe.fbx";
+
+        /// <summary>The folder the Abomination's body, its shields and its atlas import into.</summary>
+        private const string MonstrosityFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/";
+
+        private const string MonstrosityPath = MonstrosityFolder + "Monstrosity.fbx";
+
+        private const string MonstrosityShieldPath =
+            MonstrosityFolder + "Monstrosity_BarndoorShield_Large.fbx";
+
+        /// <summary>The folder the Fiend's body, its sword, its backpack and its atlas import into.</summary>
+        private const string TieflingFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/";
+
+        private const string TieflingPath = TieflingFolder + "Tiefling.fbx";
+
+        /// <summary>
+        /// The scabbarded pair the Fiend wears. It is a back piece and this
+        /// project has no spine socket, so it hangs off the melee hand the way
+        /// the Ranger's quiver does.
+        /// </summary>
+        private const string TieflingBackpackPath = TieflingFolder + "Tiefling_SwordsBackpack.fbx";
+
+        /// <summary>The folder the Shade's body, its katana and all four of its atlases import into.</summary>
+        private const string NinjaFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/ninja/";
+
+        private const string NinjaPath = NinjaFolder + "Ninja.fbx";
+
+        private const string NinjaKatanaPath = NinjaFolder + "Ninja_Katana.fbx";
+
         private const string WalkClipName = "Walking_A";
 
         private const string DeathClipName = "Death_A";
+
+        /// <summary>
+        /// <see cref="WalkClipName"/> on the Large rig, and
+        /// <see cref="DeathClipName"/> likewise: the same two names out of the
+        /// other rig's banks, driving the other rig's bones.
+        /// </summary>
+        private const string LargeWalkClipName = "Rig_Large_MovementBasic/Walking_A";
+
+        private const string LargeDeathClipName = "Rig_Large_General/Death_A";
 
         /// <summary>The clip a tower rests in between shots, whatever it holds.</summary>
         private const string RestClipName = "Idle_A";
@@ -556,6 +624,43 @@ namespace View.Editor
         /// same point on a taller model. A row that walks anchors nowhere:
         /// nothing in the simulation gives a creep a shot to draw.
         /// </para>
+        /// <para>
+        /// <b>The six creep bodies carry no clips at all, and that is the shape
+        /// of a creep rather than an unsigned number.</b> The three clip
+        /// columns are a tower's Idle, Windup and Backswing, and nothing in the
+        /// simulation puts a walker in any of those states. What a creep is
+        /// animated by is the walk and the death, which are shared — see
+        /// <see cref="LargeRigClips"/> for the four whose rig means they are
+        /// not.
+        /// </para>
+        /// <para>
+        /// <b>A shield goes in the off hand and everything else in the melee
+        /// hand.</b> <c>docs/roster.md</c> names each row's props and does not
+        /// say which hand holds which, so the Black Knight's shield and the
+        /// Abomination's barndoor are hung the way the Skeleton's, the
+        /// Sergeant's and the Templar's already are, leaving the melee hand for
+        /// the weapon. The Abomination's look names the shield alone, so its
+        /// melee hand is empty.
+        /// </para>
+        /// <para>
+        /// <b>The Fiend's backpack is in its fist for want of a socket on the
+        /// spine.</b> <c>Tiefling_SwordsBackpack</c> is a scabbarded pair worn
+        /// on the back, and there are two bone sockets here rather than three
+        /// — the same gap the Ranger's quiver sits in, and named on that row in
+        /// <c>docs/roster.md</c> as a spine socket this project has not got.
+        /// The pack's own <c>Tiefling_Sword</c> is what a hand would take, and
+        /// swapping to it would be this table choosing the prop.
+        /// </para>
+        /// <para>
+        /// <b>The Shade wears the atlas its model imports with, because the one
+        /// it is signed for has not been picked.</b> Its <c>Looks</c> line asks
+        /// for "the darkest of the pack's four" and names none of them, and
+        /// which of four swatch sheets draws a body darkest is not measurable
+        /// off the files — it depends where that body's UVs land. All four are
+        /// imported and on the sheet as a comparison; until one is chosen the
+        /// row draws in the base sheet, which is a question left open rather
+        /// than a colour decided here.
+        /// </para>
         /// </remarks>
         private static readonly (
             int unitId,
@@ -665,7 +770,69 @@ namespace View.Editor
             (37, EngineerPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
                 WrenchPath, null, null, null, null, default, default,
                 TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (39, SkeletonGolemPath, MatchArt.CreepScale, null,
+                SkeletonGolemAxePath, null, null, null, null, default, default, default, default),
+            (40, BlackKnightPath, MatchArt.CreepScale, null,
+                BlackKnightSwordPath, BlackKnightShieldPath, null, null, null, default, default,
+                default, default),
+            (41, FrostGolemPath, MatchArt.CreepScale, null,
+                FrostGolemAxePath, null, null, null, null, default, default, default, default),
+            (42, MonstrosityPath, MatchArt.CreepScale, null,
+                null, MonstrosityShieldPath, null, null, null, default, default, default, default),
+            (45, TieflingPath, MatchArt.CreepScale, null,
+                TieflingBackpackPath, null, null, null, null, default, default, default, default),
+            (46, NinjaPath, MatchArt.CreepScale, null,
+                NinjaKatanaPath, null, null, null, null, default, default, default, default),
         };
+
+        /// <summary>
+        /// The rows whose model is on <c>Rig_Large</c>, and the walk and death
+        /// they take out of that rig's own banks. Every row not named here is
+        /// drawn with <see cref="SharedBindings"/>' pair.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Which rig a body is on is not a look, so it is not a column of
+        /// the table above.</b> <c>docs/roster.md</c> signs four creeps onto
+        /// the Large rig — the Bone Golem, the Black Knight, the Frost Wight
+        /// and the Abomination — and signs no clip for any of them, because a
+        /// creep only walks and dies and both of those are shared. What is per
+        /// row is the bank those two names come out of.
+        /// </para>
+        /// <para>
+        /// <b>Nothing fails if this is wrong, which is why it is written
+        /// down.</b> <c>Walking_A</c> and <c>Death_A</c> are in both rigs'
+        /// banks, so the shared medium pair on a Large body drives bones that
+        /// skeleton has not got: it slides down the corridor in its bind pose
+        /// and reads as a bad model rather than as a wrong clip. The Slam is
+        /// the same rig and is not here — it is a tower, and a tower neither
+        /// walks nor dies.
+        /// </para>
+        /// </remarks>
+        private static readonly (int unitId, string walk, string death)[] LargeRigClips =
+        {
+            (39, LargeWalkClipName, LargeDeathClipName),
+            (40, LargeWalkClipName, LargeDeathClipName),
+            (41, LargeWalkClipName, LargeDeathClipName),
+            (42, LargeWalkClipName, LargeDeathClipName),
+        };
+
+        /// <summary>
+        /// The walk and death one row is drawn with, or two nulls for a row
+        /// drawn with the shared pair.
+        /// </summary>
+        private static (string walk, string death) RigClipsFor(int unitId)
+        {
+            foreach ((int id, string walk, string death) in LargeRigClips)
+            {
+                if (id == unitId)
+                {
+                    return (walk, death);
+                }
+            }
+
+            return (null, null);
+        }
 
         /// <summary>
         /// Everything on <c>MatchArt</c> that is not per unit type, as field
@@ -1098,6 +1265,7 @@ namespace View.Editor
             for (var i = 0; i < UnitBindings.Length; i++)
             {
                 var binding = UnitBindings[i];
+                (string walk, string death) = RigClipsFor(binding.unitId);
 
                 WireUnit(
                     units.GetArrayElementAtIndex(i),
@@ -1113,7 +1281,9 @@ namespace View.Editor
                     binding.rightTilt,
                     binding.leftTilt,
                     binding.anchor,
-                    binding.beside);
+                    binding.beside,
+                    walk,
+                    death);
             }
 
             // A row with no art chosen for it yet: the stand-in at the size its
@@ -1144,7 +1314,7 @@ namespace View.Editor
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
             WireUnit(
                 entry, unitId, model, scale, null, null, null, null, null, null, default, default, default,
-                default);
+                default, null, null);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -1168,7 +1338,9 @@ namespace View.Editor
             Vector3 rightTilt,
             Vector3 leftTilt,
             EffectAnchor anchor,
-            (string model, float scale, Vector3 offset) beside)
+            (string model, float scale, Vector3 offset) beside,
+            string walk,
+            string death)
         {
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
@@ -1181,6 +1353,8 @@ namespace View.Editor
             entry.FindPropertyRelative("backswingClip").objectReferenceValue = MaybeClip(backswing);
             entry.FindPropertyRelative("rightHandTilt").vector3Value = rightTilt;
             entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
+            entry.FindPropertyRelative("walkClip").objectReferenceValue = MaybeClip(walk);
+            entry.FindPropertyRelative("deathClip").objectReferenceValue = MaybeClip(death);
 
             SerializedProperty anchored = entry.FindPropertyRelative("effectAnchor");
 
@@ -1234,6 +1408,8 @@ namespace View.Editor
 
             foreach (var binding in UnitBindings)
             {
+                (string walk, string death) = RigClipsFor(binding.unitId);
+
                 units.Add(UnitArt.Armed(
                     binding.unitId,
                     LoadModel(binding.model),
@@ -1248,7 +1424,9 @@ namespace View.Editor
                     binding.anchor,
                     MaybeTexture(binding.texture),
                     BesideProp.Standing(
-                        MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset)));
+                        MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset),
+                    MaybeClip(walk),
+                    MaybeClip(death)));
             }
 
             units.AddRange(UnboundUnits.StandIns());

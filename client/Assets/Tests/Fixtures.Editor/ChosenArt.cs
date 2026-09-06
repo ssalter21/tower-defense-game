@@ -198,6 +198,64 @@ namespace Tests.Fixtures
         public const string EngineerAltBAtlasPath =
             "Assets/Art/Kaykit/adventurers/engineer_texture_alt_B.png";
 
+        /// <summary>The Bone Golem's body, off the same pack as the skeletons it walks with.</summary>
+        public const string SkeletonGolemModelPath = "Assets/Art/Kaykit/skeletons/Skeleton_Golem.fbx";
+
+        /// <summary>The axe it carries, in the export sized for the Large rig.</summary>
+        public const string SkeletonGolemAxeModelPath =
+            "Assets/Art/Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx";
+
+        /// <summary>The folder the Black Knight's body, both weapons and its atlas import into.</summary>
+        public const string BlackKnightFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/";
+
+        public const string BlackKnightModelPath = BlackKnightFolder + "BlackKnight.fbx";
+
+        public const string BlackKnightSwordModelPath =
+            BlackKnightFolder + "BlackKnight_Sword_Large.fbx";
+
+        public const string BlackKnightShieldModelPath =
+            BlackKnightFolder + "BlackKnight_Shield_Large.fbx";
+
+        /// <summary>The folder the Frost Wight's body, its two axes and its atlas import into.</summary>
+        public const string FrostGolemFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/";
+
+        public const string FrostGolemModelPath = FrostGolemFolder + "FrostGolem.fbx";
+
+        /// <summary>
+        /// The axe the Frost Wight carries. <c>docs/roster.md</c> signs
+        /// <c>FrostGolem_Axe</c>, the medium export, where the other three Large
+        /// bodies are each signed for their own <c>_Large</c> weapon.
+        /// </summary>
+        public const string FrostGolemAxeModelPath = FrostGolemFolder + "FrostGolem_Axe.fbx";
+
+        /// <summary>The folder the Abomination's body, its shields and its atlas import into.</summary>
+        public const string MonstrosityFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/";
+
+        public const string MonstrosityModelPath = MonstrosityFolder + "Monstrosity.fbx";
+
+        public const string MonstrosityShieldModelPath =
+            MonstrosityFolder + "Monstrosity_BarndoorShield_Large.fbx";
+
+        /// <summary>The folder the Fiend's body, its sword, its backpack and its atlas import into.</summary>
+        public const string TieflingFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/";
+
+        public const string TieflingModelPath = TieflingFolder + "Tiefling.fbx";
+
+        /// <summary>
+        /// The scabbarded pair the Fiend wears. A back piece, hung off the melee
+        /// hand for want of a socket on the spine, as the Ranger's quiver is.
+        /// </summary>
+        public const string TieflingBackpackModelPath = TieflingFolder + "Tiefling_SwordsBackpack.fbx";
+
+        /// <summary>The folder the Shade's body, its katana and all four of its atlases import into.</summary>
+        public const string NinjaFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/ninja/";
+
+        public const string NinjaModelPath = NinjaFolder + "Ninja.fbx";
+
+        public const string NinjaKatanaModelPath = NinjaFolder + "Ninja_Katana.fbx";
+
         /// <summary>Where every bank of both rigs is imported.</summary>
         public const string ClipBankFolder = "Assets/Art/Animations/";
 
@@ -211,11 +269,14 @@ namespace Tests.Fixtures
 
         public const string LargeMeleeBankPath = ClipBankFolder + "Rig_Large_CombatMelee.fbx";
 
+        /// <summary>Where the Large rig's walk cycle is, as the medium one is in its own movement bank.</summary>
+        public const string LargeMovementBankPath = ClipBankFolder + "Rig_Large_MovementBasic.fbx";
+
         /// <summary>Every bank of both rigs, which a qualified name is matched against.</summary>
         private static readonly string[] AllBankPaths =
         {
             MovementBankPath, GeneralBankPath, RangedBankPath, MeleeBankPath,
-            LargeGeneralBankPath, LargeMeleeBankPath,
+            LargeGeneralBankPath, LargeMeleeBankPath, LargeMovementBankPath,
         };
 
         public const string WalkClipName = "Walking_A";
@@ -251,6 +312,14 @@ namespace Tests.Fixtures
 
         /// <summary><see cref="RestClipName"/> out of the other rig's bank.</summary>
         public const string LargeRestClipName = "Rig_Large_General/Idle_A";
+
+        /// <summary>
+        /// <see cref="WalkClipName"/> and <see cref="DeathClipName"/> out of the
+        /// other rig's banks, for the four creeps whose bodies are on it.
+        /// </summary>
+        public const string LargeWalkClipName = "Rig_Large_MovementBasic/Walking_A";
+
+        public const string LargeDeathClipName = "Rig_Large_General/Death_A";
 
         /// <summary>The bow's half turn -- it is the only left-hand weapon.</summary>
         public static readonly Vector3 BowFlip = new Vector3(0f, 180f, 0f);
@@ -458,6 +527,22 @@ namespace Tests.Fixtures
         /// with another weapon's action. What is unsigned there is a second
         /// clip, not a way of reaching this one.
         /// </para>
+        /// <para>
+        /// The six creep bodies carry no clips at all. The three columns are a
+        /// tower's Idle, Windup and Backswing and nothing puts a walker in any
+        /// of those states; what animates a creep is the walk and the death,
+        /// which are shared except on <see cref="LargeRigClips"/>' four. A
+        /// shield goes in the off hand and everything else in the melee hand,
+        /// the way the Skeleton's, the Sergeant's and the Templar's already do
+        /// — <c>docs/roster.md</c> names each row's props and not which hand
+        /// takes which. The Abomination's look names the barndoor alone, so its
+        /// melee hand is empty; the Fiend's backpack is worn on the back and
+        /// hangs off its fist for want of a spine socket, which is where the
+        /// Ranger's quiver already sits; and the Shade draws in the atlas its
+        /// model imports with, because "the darkest of the pack's four" names
+        /// none of them and which sheet draws a body darkest is not readable off
+        /// the files.
+        /// </para>
         /// </remarks>
         public static readonly (
             int unitId,
@@ -568,7 +653,64 @@ namespace Tests.Fixtures
             (37, EngineerModelPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
                 WrenchModelPath, null, null, null, null,
                 default, default, TurretMuzzle, (TurretModelPath, 1f, BesideProp.NextTile)),
+            (39, SkeletonGolemModelPath, MatchArt.CreepScale, null,
+                SkeletonGolemAxeModelPath, null, null, null, null,
+                default, default, default, default),
+            (40, BlackKnightModelPath, MatchArt.CreepScale, null,
+                BlackKnightSwordModelPath, BlackKnightShieldModelPath, null, null, null,
+                default, default, default, default),
+            (41, FrostGolemModelPath, MatchArt.CreepScale, null,
+                FrostGolemAxeModelPath, null, null, null, null,
+                default, default, default, default),
+            (42, MonstrosityModelPath, MatchArt.CreepScale, null,
+                null, MonstrosityShieldModelPath, null, null, null,
+                default, default, default, default),
+            (45, TieflingModelPath, MatchArt.CreepScale, null,
+                TieflingBackpackModelPath, null, null, null, null,
+                default, default, default, default),
+            (46, NinjaModelPath, MatchArt.CreepScale, null,
+                NinjaKatanaModelPath, null, null, null, null,
+                default, default, default, default),
         };
+
+        /// <summary>
+        /// The rows whose model is on <c>Rig_Large</c>, and the walk and death
+        /// they take out of that rig's own banks. Every other row is drawn with
+        /// the shared pair.
+        /// </summary>
+        /// <remarks>
+        /// Which rig a body is on is not a look, so it is not a column of the
+        /// table above. <c>Walking_A</c> and <c>Death_A</c> are in both rigs'
+        /// banks and the shared pair is the medium one, so a Large body handed
+        /// it drives bones that skeleton has not got — it slides down the
+        /// corridor in its bind pose, and nothing throws. The Slam is on the
+        /// same rig and is not here: it is a tower, and a tower neither walks
+        /// nor dies.
+        /// </remarks>
+        private static readonly (int unitId, string walk, string death)[] LargeRigClips =
+        {
+            (39, LargeWalkClipName, LargeDeathClipName),
+            (40, LargeWalkClipName, LargeDeathClipName),
+            (41, LargeWalkClipName, LargeDeathClipName),
+            (42, LargeWalkClipName, LargeDeathClipName),
+        };
+
+        /// <summary>
+        /// The walk and death one row is drawn with, or two nulls for a row
+        /// drawn with the shared pair.
+        /// </summary>
+        private static (string walk, string death) RigClipsFor(int unitId)
+        {
+            foreach ((int id, string walk, string death) in LargeRigClips)
+            {
+                if (id == unitId)
+                {
+                    return (walk, death);
+                }
+            }
+
+            return (null, null);
+        }
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
         [InitializeOnLoadMethod]
@@ -588,23 +730,45 @@ namespace Tests.Fixtures
         /// </remarks>
         public static MatchArt Load() =>
             MatchArt.Of(
-                UnitPaths.Select(u => UnitArt.Armed(
-                    u.unitId,
-                    Model(u.model),
-                    u.scale,
-                    MaybeModel(u.rightHand),
-                    MaybeModel(u.leftHand),
-                    MaybeClip(u.idle),
-                    MaybeClip(u.windup),
-                    MaybeClip(u.backswing),
-                    u.rightTilt,
-                    u.leftTilt,
-                    u.anchor,
-                    MaybeTexture(u.texture),
-                    BesideProp.Standing(MaybeModel(u.beside.model), u.beside.scale, u.beside.offset)))
-                    .Concat(UnboundUnits.StandIns()),
+                UnitPaths.Select(Armed).Concat(UnboundUnits.StandIns()),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));
+
+        /// <summary>One row of <see cref="UnitPaths"/>, with every path it names loaded.</summary>
+        private static UnitArt Armed(
+            (int unitId,
+            string model,
+            float scale,
+            string texture,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt,
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside) row)
+        {
+            (string walk, string death) = RigClipsFor(row.unitId);
+
+            return UnitArt.Armed(
+                row.unitId,
+                Model(row.model),
+                row.scale,
+                MaybeModel(row.rightHand),
+                MaybeModel(row.leftHand),
+                MaybeClip(row.idle),
+                MaybeClip(row.windup),
+                MaybeClip(row.backswing),
+                row.rightTilt,
+                row.leftTilt,
+                row.anchor,
+                MaybeTexture(row.texture),
+                BesideProp.Standing(MaybeModel(row.beside.model), row.beside.scale, row.beside.offset),
+                MaybeClip(walk),
+                MaybeClip(death));
+        }
 
         private static GameObject MaybeModel(string path) => path == null ? null : Model(path);
 

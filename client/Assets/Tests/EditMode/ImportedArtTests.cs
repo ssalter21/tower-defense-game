@@ -85,6 +85,33 @@ namespace Tests.EditMode
         /// <summary>The atlas the Skeletons 1.1 characters were authored against.</summary>
         private const string SkeletonAtlasPath = "Assets/Art/Characters/skeleton_texture_A.png";
 
+        /// <summary>
+        /// The same sheet again, in the pack folder the whole collection was
+        /// imported into. Byte for byte the one above; which of the two a model
+        /// binds is decided by which folder it sits in, and the Bone Golem sits
+        /// in this one.
+        /// </summary>
+        private const string PackSkeletonAtlasPath =
+            "Assets/Art/Kaykit/skeletons/skeleton_texture_A.png";
+
+        private const string BlackKnightAtlasPath =
+            ChosenArt.BlackKnightFolder + "blackknight_texture.png";
+
+        private const string FrostGolemAtlasPath =
+            ChosenArt.FrostGolemFolder + "frostgolem_texture.png";
+
+        private const string MonstrosityAtlasPath =
+            ChosenArt.MonstrosityFolder + "monstrosity_texture_A.png";
+
+        private const string TieflingAtlasPath = ChosenArt.TieflingFolder + "tiefling_texture.png";
+
+        /// <summary>
+        /// The sheet the Ninja imports wearing, which is the one the Shade draws
+        /// in until the darkest of the four is picked. The other three are
+        /// imported and bound to nothing.
+        /// </summary>
+        private const string NinjaAtlasPath = ChosenArt.NinjaFolder + "ninja_texture_A.png";
+
         private const string EngineerModelPath = ChosenArt.EngineerModelPath;
 
         private const string TurretPath = ChosenArt.TurretModelPath;
@@ -338,6 +365,27 @@ namespace Tests.EditMode
             (ChosenArt.DaggerModelPath, RogueAtlasPath),
             (ChosenArt.CrossbowModelPath, RogueAtlasPath),
             (ChosenArt.WrenchModelPath, EngineerAtlasPath),
+
+            // The six creep bodies and what they carry, each off its own pack's
+            // sheet. Five packs between them, so this is where a body wearing
+            // another character's UVs would show: the Bone Golem takes the copy
+            // of the skeleton sheet in the pack folder rather than the one in
+            // Art/Characters the live skeletons bind, because the importer's
+            // search walks a model's own folder first and the two files are
+            // identical bytes under one name.
+            (ChosenArt.SkeletonGolemModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.SkeletonGolemAxeModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.BlackKnightModelPath, BlackKnightAtlasPath),
+            (ChosenArt.BlackKnightSwordModelPath, BlackKnightAtlasPath),
+            (ChosenArt.BlackKnightShieldModelPath, BlackKnightAtlasPath),
+            (ChosenArt.FrostGolemModelPath, FrostGolemAtlasPath),
+            (ChosenArt.FrostGolemAxeModelPath, FrostGolemAtlasPath),
+            (ChosenArt.MonstrosityModelPath, MonstrosityAtlasPath),
+            (ChosenArt.MonstrosityShieldModelPath, MonstrosityAtlasPath),
+            (ChosenArt.TieflingModelPath, TieflingAtlasPath),
+            (ChosenArt.TieflingBackpackModelPath, TieflingAtlasPath),
+            (ChosenArt.NinjaModelPath, NinjaAtlasPath),
+            (ChosenArt.NinjaKatanaModelPath, NinjaAtlasPath),
         };
 
         /// <summary>
@@ -405,17 +453,39 @@ namespace Tests.EditMode
             ChosenArt.MeleeBankPath,
             ChosenArt.LargeGeneralBankPath,
             ChosenArt.LargeMeleeBankPath,
+            ChosenArt.LargeMovementBankPath,
         };
 
-        /// <summary>The banks of the second rig, which one row is drawn on.</summary>
+        /// <summary>The banks of the second rig, which five rows are drawn on.</summary>
         private static readonly string[] LargeBankPaths =
         {
             ChosenArt.LargeGeneralBankPath,
             ChosenArt.LargeMeleeBankPath,
+            ChosenArt.LargeMovementBankPath,
         };
 
-        /// <summary>The Slam, which is the only row on the Large rig.</summary>
+        /// <summary>The Slam, the one tower on the Large rig.</summary>
         private const int SlamUnitId = 19;
+
+        /// <summary>
+        /// Every row drawn on the Large rig: the Slam, and the Bone Golem, the
+        /// Black Knight, the Frost Wight and the Abomination.
+        /// </summary>
+        /// <remarks>
+        /// Written out rather than read off the models, because what this is
+        /// held against is the binding tables' own idea of which rows are on
+        /// which rig — and taking that from the tables would be asserting they
+        /// agree with themselves.
+        /// </remarks>
+        private static readonly int[] LargeRigUnitIds = { SlamUnitId, 39, 40, 41, 42 };
+
+        /// <summary>
+        /// The Large-rig rows that walk, which are the ones that must name a
+        /// walk and a death of their own. Every one of them but the Slam: a
+        /// tower neither walks nor dies.
+        /// </summary>
+        private static readonly int[] LargeRigCreepUnitIds =
+            LargeRigUnitIds.Where(id => id != SlamUnitId).ToArray();
 
         /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
         private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
@@ -715,6 +785,16 @@ namespace Tests.EditMode
         /// held is "unmistakably smaller" and a creep that measured one percent
         /// shorter would satisfy a strict inequality while reading as the same
         /// size.
+        /// </para>
+        /// <para>
+        /// <b>What decides this is which models the roster signs, not the two
+        /// multipliers.</b> The collection is authored at two scales: a
+        /// <c>Rig_Medium</c> character stands 2.3 to 2.9 m and the
+        /// <c>Rig_Large</c> size-up of one stands 4.2 to 5.1 m. Half of a
+        /// size-up is the height of a whole medium body, so a creep row signed
+        /// onto the Large rig draws as tall as a tower while obeying the creep
+        /// multiplier exactly. Where that leaves the rule is a line in
+        /// <c>docs/roster.md</c>'s scale table and not a number to move here.
         /// </para>
         /// </remarks>
         [Test]
@@ -1487,6 +1567,16 @@ namespace Tests.EditMode
         /// what catches a medium row that gained a bank prefix by being copied
         /// from the row above it.
         /// </para>
+        /// <para>
+        /// <b>The creep's walk and death are held here too, and they are the
+        /// sharper half.</b> A tower's three clips are named per row, so a
+        /// missing bank prefix is at least visible in the table; a creep's pair
+        /// is shared, and a Large body that names no override of its own is
+        /// silently handed the medium walk — no name to misspell and nothing to
+        /// read wrong. So each of the four Large-rig creeps is required to name
+        /// its own, and every row that names one is held to its rig the same
+        /// way a posed row is.
+        /// </para>
         /// </remarks>
         [Test]
         public void EveryClipComesOutOfTheBankForItsRowsRig()
@@ -1504,13 +1594,30 @@ namespace Tests.EditMode
             Assert.That(slam.IsPosed, Is.True,
                 $"unit {SlamUnitId} carries no clips, so the rig this test is about is not exercised");
 
+            foreach (int unitId in LargeRigCreepUnitIds)
+            {
+                UnitArt creep = art.ArtFor(unitId);
+
+                Assert.That(creep.WalkClip, Is.Not.Null,
+                    $"unit {unitId} is drawn on the Large rig and names no walk of its own, so it is "
+                    + "handed the shared medium one — it slides down the corridor in its bind pose, and "
+                    + "nothing anywhere throws");
+
+                Assert.That(creep.DeathClip, Is.Not.Null,
+                    $"unit {unitId} is drawn on the Large rig and names no death of its own, so it dies "
+                    + "in the medium rig's clip, which drives none of its bones");
+            }
+
             var measured = 0;
 
             foreach (UnitArt unit in art.Units)
             {
-                bool onTheLargeRig = unit.UnitId == SlamUnitId;
+                bool onTheLargeRig = LargeRigUnitIds.Contains(unit.UnitId);
 
-                foreach (AnimationClip clip in new[] { unit.IdleClip, unit.WindupClip, unit.BackswingClip })
+                foreach (AnimationClip clip in new[]
+                {
+                    unit.IdleClip, unit.WindupClip, unit.BackswingClip, unit.WalkClip, unit.DeathClip,
+                })
                 {
                     if (clip == null)
                     {

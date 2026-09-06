@@ -77,6 +77,14 @@ namespace View
         [Tooltip("Where this unit's flashes and tracers leave its art from. Empty for a unit that never fires.")]
         private EffectAnchor effectAnchor;
 
+        [SerializeField]
+        [Tooltip("This row's own walk cycle. Null for a creep drawn with MatchArt's shared pair.")]
+        private AnimationClip walkClip;
+
+        [SerializeField]
+        [Tooltip("This row's own death. Null for a creep drawn with MatchArt's shared pair.")]
+        private AnimationClip deathClip;
+
         /// <summary>A unit that stands there and holds nothing.</summary>
         public static UnitArt Of(int unitId, GameObject model, float scale) =>
             new UnitArt { unitId = unitId, model = model, scale = scale };
@@ -111,7 +119,9 @@ namespace View
             Vector3 leftHandTilt = default,
             EffectAnchor effectAnchor = default,
             Texture2D texture = null,
-            BesideProp beside = default) =>
+            BesideProp beside = default,
+            AnimationClip walk = null,
+            AnimationClip death = null) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -127,6 +137,8 @@ namespace View
                 rightHandTilt = rightHandTilt,
                 leftHandTilt = leftHandTilt,
                 effectAnchor = effectAnchor,
+                walkClip = walk,
+                deathClip = death,
             };
 
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
@@ -227,6 +239,26 @@ namespace View
         public EffectAnchor EffectAnchor => effectAnchor;
 
         /// <summary>
+        /// The walk cycle this row is drawn with, or null for the shared one on
+        /// <see cref="MatchArt.CreepWalkClip"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Set only where the body is on a rig the shared pair was not
+        /// authored for.</b> The collection ships <c>Rig_Medium</c> and
+        /// <c>Rig_Large</c>, and <c>Walking_A</c> and <c>Death_A</c> exist in
+        /// both — so the shared pair is the medium one, and a Large body handed
+        /// it drives bones that skeleton has not got and slides down the
+        /// corridor in its bind pose. Nothing throws, which is why the override
+        /// is per row and named rather than derived from the model.
+        /// </para>
+        /// </remarks>
+        public AnimationClip WalkClip => walkClip;
+
+        /// <summary>The death this row is drawn with, or null for the shared one.</summary>
+        public AnimationClip DeathClip => deathClip;
+
+        /// <summary>
         /// True when both halves are filled in. A zero scale is as incomplete as
         /// a null model: it draws the unit at no size at all, which on screen is
         /// a unit that never appeared.
@@ -263,10 +295,12 @@ namespace View
     /// <b>Models, weapons and tower clips are all per unit type.</b> The lookup
     /// is by the id in <c>content/units.txt</c>, so the Skeleton Mage and the
     /// Skeleton Warrior are two different bodies on the board rather than two
-    /// rows that happen to draw the same. What is still shared is the creep
-    /// animation — one walk and one death for all of them — because all nine
-    /// models are on <c>Rig_Medium</c> and a clip from any bank drives any of
-    /// them.
+    /// rows that happen to draw the same. The creep animation is shared — one
+    /// walk and one death — with a per-row override for the bodies on the
+    /// second rig: a clip drives the skeleton it was authored for and reads as
+    /// a broken model on any other, so the shared pair is <c>Rig_Medium</c>'s
+    /// and the Large-rig rows name their own. <see cref="WalkClipFor"/> is
+    /// where the two meet.
     /// </para>
     /// <para>
     /// <b>The tower's weapon and clips were shared once, and that was the bug.</b>
@@ -345,11 +379,26 @@ namespace View
         /// <summary>Every unit type that has art, in the order it was wired.</summary>
         public IReadOnlyList<UnitArt> Units => units;
 
-        /// <summary>The walk cycle.</summary>
+        /// <summary>The walk cycle shared by every row that does not name one.</summary>
         public AnimationClip CreepWalkClip => Required(creepWalkClip, nameof(creepWalkClip));
 
-        /// <summary>The death clip.</summary>
+        /// <summary>The death shared by every row that does not name one.</summary>
         public AnimationClip CreepDeathClip => Required(creepDeathClip, nameof(creepDeathClip));
+
+        /// <summary>
+        /// The walk cycle one row is drawn with: its own where it names one,
+        /// and the shared clip otherwise.
+        /// </summary>
+        /// <remarks>
+        /// The fallback lives here rather than at the three call sites, so a
+        /// caller that draws a creep cannot draw it with the wrong rig's clip
+        /// by forgetting the override exists. See
+        /// <see cref="UnitArt.WalkClip"/> for what makes a row name its own.
+        /// </remarks>
+        public AnimationClip WalkClipFor(int unitId) => For(unitId).WalkClip ?? CreepWalkClip;
+
+        /// <summary>The death one row is drawn with, on the same rule.</summary>
+        public AnimationClip DeathClipFor(int unitId) => For(unitId).DeathClip ?? CreepDeathClip;
 
         /// <summary>
         /// Everything one unit type is drawn with — its model, its size, what
