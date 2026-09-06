@@ -62,6 +62,18 @@ namespace View.Editor
     /// the rotation its importer gave it.
     /// </para>
     /// <para>
+    /// <b>A model may name mesh parts to leave out, written
+    /// <c>path!Node_A,Node_B</c>.</b> Some of these characters carry their
+    /// kit in the body mesh rather than in a hand — the Grave Robber's sword
+    /// sits in a child called <c>Hoarder_FrontPouch_Sword</c>, not on
+    /// <c>handslot.r</c> — so "with and without it" is not two models and
+    /// cannot be asked by naming one. The named children are hidden for the
+    /// render and nothing on disk changes; a name that matches nothing is a
+    /// fault rather than a silent no-op, because a candidate that came out
+    /// still wearing the thing under discussion is exactly the picture this
+    /// file exists to prevent.
+    /// </para>
+    /// <para>
     /// <b>The clip may name its bank, and for a Large rig it must.</b>
     /// <c>Idle_A</c>, <c>Walking_A</c> and <c>Death_A</c> exist in the Medium
     /// banks and again in the Large ones, and a Large-rig character posed by a
@@ -139,6 +151,12 @@ namespace View.Editor
 
             /// <summary>The model path as the set file spelled it, for the manifest.</summary>
             public string ModelPath { get; internal set; }
+
+            /// <summary>
+            /// Mesh children to hide for this render, from the model field's
+            /// <c>!</c> suffix. Empty when the whole body is drawn.
+            /// </summary>
+            public IReadOnlyList<string> Hidden { get; internal set; }
 
             /// <summary>
             /// The right-hand prop as the set file spelled it, turn and all,
@@ -236,10 +254,23 @@ namespace View.Editor
         private static Candidate Resolve(string where, string[] fields, List<string> faults)
         {
             var before = faults.Count;
+
+            // The '!' comes off before anything else looks at the model field,
+            // so the path that is loaded and the path the manifest prints are
+            // both the model and neither carries the question being asked of
+            // it.
+            int bang = fields[2].IndexOf('!');
+            string modelPath = bang < 0 ? fields[2] : fields[2].Substring(0, bang);
+            string[] hidden = bang < 0
+                ? System.Array.Empty<string>()
+                : fields[2].Substring(bang + 1)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries);
+
             var candidate = new Candidate
             {
                 Name = fields[1],
-                ModelPath = fields[2],
+                ModelPath = modelPath,
+                Hidden = hidden,
                 RightHandPath = fields[3],
                 LeftHandPath = fields[4],
                 ClipName = fields[5],
@@ -268,12 +299,28 @@ namespace View.Editor
                     + "held prop, not on the character.");
             }
 
-            candidate.Model = LoadModel(where, "model", fields[2], faults, out _);
+            // A '!' on anything but the model is refused for the same reason
+            // the '@' is: a hand holds a whole prop, so there is no part of one
+            // to leave out, and ignoring the suffix would draw the prop entire
+            // and say nothing about why.
+            foreach ((string field, string spec) in
+                new[] { ("right hand", fields[3]), ("left hand", fields[4]) })
+            {
+                if (spec.IndexOf('!') >= 0)
+                {
+                    faults.Add(
+                        where + ": " + field + " '" + spec + "' leaves a part out. A '!Node' belongs "
+                        + "on the character, whose body carries its own kit, not on a held prop.");
+                }
+            }
+
+            candidate.Model = LoadModel(where, "model", modelPath, faults, out _);
             candidate.RightHand = LoadModel(where, "right hand", fields[3], faults, out Vector3 right);
             candidate.LeftHand = LoadModel(where, "left hand", fields[4], faults, out Vector3 left);
             candidate.RightHandTilt = right;
             candidate.LeftHandTilt = left;
             candidate.Clip = FindClip(where, fields[5], faults);
+            VerifyHidden(where, candidate.Model, hidden, faults);
             candidate.Texture = LoadTexture(where, candidate.TexturePath, faults);
             candidate.Beside = LoadBeside(where, candidate.BesidePath, faults, out float besideScale);
             candidate.BesideScale = besideScale;
@@ -412,6 +459,46 @@ namespace View.Editor
             }
 
             return texture;
+        }
+
+        /// <summary>
+        /// Checks that every name a <c>!</c> suffix leaves out is actually a
+        /// child of the model, and lists what the body does carry when one is
+        /// not.
+        /// </summary>
+        /// <remarks>
+        /// Checked here, off the imported asset, rather than at render time
+        /// against the built view: a misspelled node found during the render
+        /// is a set of candidates drawn wrong and looked at anyway, and this
+        /// file's whole contract is that a set either draws completely or
+        /// draws nothing and says why. The listing is worth its width — these
+        /// node names are the pack's, not this project's, and nothing else
+        /// prints them.
+        /// </remarks>
+        private static void VerifyHidden(
+            string where, GameObject model, IReadOnlyList<string> hidden, List<string> faults)
+        {
+            if (model == null || hidden.Count == 0)
+            {
+                return;
+            }
+
+            var parts = new List<string>();
+
+            foreach (Transform part in model.GetComponentsInChildren<Transform>(true))
+            {
+                parts.Add(part.name);
+            }
+
+            foreach (string name in hidden)
+            {
+                if (!parts.Contains(name))
+                {
+                    faults.Add(
+                        where + ": model has no child '" + name + "' to leave out. It carries: "
+                        + string.Join(", ", parts));
+                }
+            }
         }
 
         /// <summary>Three comma-separated Euler degrees, or false.</summary>

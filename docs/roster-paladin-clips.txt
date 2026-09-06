@@ -1,0 +1,101 @@
+# The Paladin line's three rungs, in every clip a hammer or a book could be
+# swung with.
+#
+# WHAT THIS IS FOR. Ids 20, 21 and 22 are bound in MatchSceneBuilder with
+# null, null, null where every other posed row carries a rest clip, a swing
+# and a rest clip. That is the record speaking and not an omission --
+# docs/roster.md names a clip on every rung of the Knight, Barbarian, Cleric,
+# Druid and Rogue lines and none on any rung of this one -- but the
+# consequence is that the Paladin, the Templar and the Blessing stand in their
+# import bind pose in the shipped game today, arms straight out. This is the
+# one item on issue #278 that is a bug until it is answered rather than an
+# unsigned look.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-paladin-clips.txt
+#
+# NOTHING HERE PICKS ONE. Every clip in the Medium banks that a one-handed
+# hammer, a shield or a held book could plausibly be posed by is on the sheet,
+# so the answer comes off looking at thirty-two pictures rather than off an
+# agent reading clip names. The clips left out are the ones that name another
+# weapon in their own title -- the 2H swings, the dual-wield slices, the bow
+# and rifle draws -- and the movement bank, which is a walk and this is a
+# tower.
+#
+# EVERY CLIP NAME HERE IS QUALIFIED, AND THAT IS THE POINT OF THE FILE'S
+# SHAPE. Idle_A, Walking_A and Death_A exist in the Medium banks and again in
+# the Large ones, and CandidateSet's unqualified search covers Rig_Medium_*
+# only -- which is right for this rig and silently wrong for the next one.
+# Issue #258 found that collision the hard way. Writing the bank on every line
+# means no line here depends on which rig the searcher happened to default to,
+# and a reader comparing this sheet against a Large-rig set is comparing two
+# files that both say what they mean. The Paladin is a Medium rig, so
+# Rig_Medium_* is what every line names; a Large-rig body would need
+# Rig_Large_* and would draw, wrongly and without complaining, if it did not.
+#
+# HOW THE THREE RUNGS ARE DRESSED. Exactly as MatchSceneBuilder binds them
+# today, so what changes across the sheet is the pose and only the pose:
+#
+#   20 Paladin   Paladin.fbx, hammer, bare head, no atlas override.
+#   21 Templar   Paladin_with_Helmet.fbx, hammer and shield.
+#   22 Blessing  Paladin_with_Helmet.fbx in paladin_texture_B, book and
+#                shield, with the statue standing on the next tile.
+#
+# The Blessing takes the magic clips and not the swings: its Looks line names a
+# book and its row is an aura, so a hammer chop is not a pose it can be in. The
+# other two take the swings and the guards. All three take the two idles and
+# Use_Item, which are the nearest thing in these banks to a tower standing
+# still doing its job.
+#
+# THE BLOCK CLIPS ARE ON THE BARE PALADIN TOO, ON PURPOSE. It carries no
+# shield, so a raised guard is an odd thing for it to hold -- and ruling that
+# out is a thing to do by looking, which is what this sheet is. Leaving them
+# off rung 20 would be this file deciding the question it was written to ask.
+#
+# WHAT IS NOT HERE. The windup and backswing DURATIONS, which docs/roster.md
+# carries a _ for on all three rows. A clip is what the tower does; a duration
+# is how many ticks it gets to do it in, and one is not readable off a still.
+
+# ------------------------------------------------------------- 20 Paladin ---
+
+tower Paladin_Chop            Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_1H_Attack_Chop
+tower Paladin_Jump_Chop       Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_1H_Attack_Jump_Chop
+tower Paladin_Slice_Diagonal  Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_1H_Attack_Slice_Diagonal
+tower Paladin_Slice_Horiz     Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_1H_Attack_Slice_Horizontal
+tower Paladin_Stab            Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_1H_Attack_Stab
+tower Paladin_Block           Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_Block
+tower Paladin_Block_Attack    Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_Block_Attack
+tower Paladin_Block_Hit       Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_Block_Hit
+tower Paladin_Blocking        Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_CombatMelee/Melee_Blocking
+tower Paladin_Idle_A          Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_General/Idle_A
+tower Paladin_Idle_B          Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_General/Idle_B
+tower Paladin_Use_Item        Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx             Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Rig_Medium_General/Use_Item
+
+# ------------------------------------------------------------- 21 Templar ---
+
+tower Templar_Chop            Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_1H_Attack_Chop
+tower Templar_Jump_Chop       Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_1H_Attack_Jump_Chop
+tower Templar_Slice_Diagonal  Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_1H_Attack_Slice_Diagonal
+tower Templar_Slice_Horiz     Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_1H_Attack_Slice_Horizontal
+tower Templar_Stab            Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_1H_Attack_Stab
+tower Templar_Block           Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_Block
+tower Templar_Block_Attack    Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_Block_Attack
+tower Templar_Block_Hit       Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_Block_Hit
+tower Templar_Blocking        Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatMelee/Melee_Blocking
+tower Templar_Idle_A          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_A
+tower Templar_Idle_B          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_B
+tower Templar_Use_Item        Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Use_Item
+
+# ------------------------------------------------------------ 22 Blessing ---
+#
+# In paladin_texture_B with the statue on the next tile, which is how the row
+# is bound. The statue is scenery and takes its scale from the beside column
+# the way every other ground prop does.
+
+tower Blessing_Raise          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Raise           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Shoot          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Shoot           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Spellcasting   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting     Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Casting_Long   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting_Long Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Summon         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Summon          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Idle_A         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_A                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Idle_B         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_B                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Use_Item       Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Use_Item                          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1

@@ -28,7 +28,17 @@
 # from the roster; they are what a proposal is asking for approval of. The set
 # run writes one PNG per entry plus candidates-sheet.png and
 # candidates-manifest.txt, which says which tile is which. See
-# docs/roster-expansion-candidates.txt for the set the roster expansion put up.
+# docs/roster-expansion-candidates.txt for the set the roster expansion put up,
+# which is also where the line format is written out in full -- including the
+# atlas and beside-prop columns and the two suffixes, @x,y,z to turn a held
+# prop and !Node to leave a part of the body out of the render.
+#
+# THE SETS THAT ARE STANDING QUESTIONS, rather than one effort's proposal:
+#   docs/roster-paladin-clips.txt        ids 20, 21 and 22, which ship posed
+#                                        by nothing and stand in a bind pose
+#   docs/roster-prop-turns.txt           the Witch's broom and the
+#                                        Necromancer's scythe, which lie flat
+#   docs/roster-grave-robber-sword.txt   id 49's sheathed sword, on and off
 #
 # -batchmode -executeMethod, so it needs no editor session, no bridge and
 # nobody at a keyboard -- and therefore requires the editor to be CLOSED,
@@ -53,7 +63,7 @@ if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
 # the repository root -- so a default of "docs/frames/roster" quietly writes
 # client/docs/frames/roster, outside the ignore rule that is supposed to cover
 # it, and leaves untracked PNGs for the gate's tree-clean step to fail on.
-# capture-match-frames.ps1 has the same trap; this one closes it here.
+# capture-match-frames.ps1 had the same trap and now closes it the same way.
 if (-not $OutDir) { $OutDir = Join-Path (Resolve-Path "$PSScriptRoot\..").Path "docs\frames\roster" }
 if (-not [System.IO.Path]::IsPathRooted($OutDir)) { $OutDir = Join-Path (Get-Location).Path $OutDir }
 

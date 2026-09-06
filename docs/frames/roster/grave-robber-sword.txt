@@ -1,0 +1,38 @@
+# grave-robber-sword-sheet.png
+
+**What it is.** The Grave Robber (id 49) five ways, walking. Left to right: as shipped; without the
+sheathed sword; holding the proposed backpack; holding the backpack with the sheathed sword gone;
+and with the sword taken out of the pouch and put in the hand.
+`grave-robber-sword/candidates-manifest.txt` names every tile.
+
+**The question it asks.** Whether the sword stays. Id 49's own line in `docs/roster.md` calls it a
+lie — the Grave Robber never attacks, and it walks the corridor wearing a blade it will not draw.
+Nothing here picks one.
+
+**A finding this sheet made on its own: tiles three and four are byte-identical.** With the
+backpack in the hand, the pack covers the whole front of the body from the camera the game uses,
+so the pouch sword cannot be seen either way. If the backpack is taken, the sword question does not
+need answering; it only exists for a Grave Robber whose hands stay empty. That is a measurement off
+the render, not a reading of it — `cmp` says the two PNGs are the same file.
+
+**Why this needed a change to the set-file reader.** Both of the Hoarder's hands are empty in the
+shipped binding: the blade sits in a child of the body mesh called `Hoarder_FrontPouch_Sword`, at
+the belt. "Without it" cannot be asked by naming one fewer prop, and the pack ships no second body
+with the pouch empty. So the model field grew a `!Node` suffix — `Hoarder.fbx!Hoarder_FrontPouch_Sword`
+— which hides the named children for the render and touches nothing on disk. `CandidateSet` checks
+every such name against the model before anything draws, so a misspelling is a fault listing what
+the body does carry, rather than a picture that still has the sword in it.
+
+**Rendered from.** `docs/roster-grave-robber-sword.txt`, through the game's own `CreepView`.
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-grave-robber-sword.txt `
+    -OutDir docs/frames/roster/grave-robber-sword
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-grave-robber-sword.txt `
+    -OutDir docs/frames/roster/grave-robber-sword-1x -Width 28
+```
+
+**Two framings, and the small one decides.** The `-Width 28` pass is gameplay size — about the 24
+pixels a body gets at 1600×900, measured off `docs/frames/played-run/a-slow-nobody-can-see.png`.
+The sword is a small thing at the belt, so whether removing it is visible at all is exactly the
+kind of question the big picture answers wrongly.

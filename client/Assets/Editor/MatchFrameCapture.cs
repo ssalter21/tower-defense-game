@@ -47,6 +47,23 @@ namespace View.Editor
         public const string YawArgument = "-matchFrameYaw";
 
         /// <summary>
+        /// How far the camera looks down, in degrees. Defaults to
+        /// <see cref="SceneFraming.CameraDefaultPitchDegrees"/>, which is the
+        /// pitch the game ships at.
+        /// </summary>
+        /// <remarks>
+        /// Here because the shipped pitch is what decides whether one model
+        /// occludes another's kit, and that is not visible from any other
+        /// picture this project takes: <c>match-tick-1546.png</c> shows the
+        /// Mage's hat covering the head of its own staff, and whether a
+        /// steeper camera fixes it cannot be argued from the frame that has
+        /// the problem in it. Every other knob here already moves the camera;
+        /// this is the one axis that did not, and the frames it takes are for
+        /// comparing against the default rather than for replacing it.
+        /// </remarks>
+        public const string PitchArgument = "-matchFramePitch";
+
+        /// <summary>
         /// How far the camera sits from the middle of the floor, in metres.
         /// Zero, the default, means the distance the whole floor fits at.
         /// </summary>
@@ -182,6 +199,8 @@ namespace View.Editor
             string wave = BatchArguments.Value(WaveArgument);
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
+            float pitch = ParseFloat(
+                BatchArguments.Value(PitchArgument), SceneFraming.CameraDefaultPitchDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
             int width = ParseInt(BatchArguments.Value(WidthArgument), 1280);
             int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
@@ -222,7 +241,7 @@ namespace View.Editor
 
                 root.CameraRig.PointAt(
                     yaw,
-                    SceneFraming.CameraDefaultPitchDegrees,
+                    pitch,
                     distance > 0f ? distance : root.CameraRig.FramedDistance);
 
                 // A warm-up render, thrown away. The first render in a fresh

@@ -9,7 +9,7 @@
 # letting a human see the match at a named tick.
 #
 # It draws through the real MatchRoot, the real floor, the real camera rig
-# pointed where -Yaw and -Distance say and the real MatchView stepping the real
+# pointed where -Yaw, -Pitch and -Distance say and the real MatchView stepping the real
 # simulation, because a capture path that built its own approximation of the
 # scene would be a picture of something this project does not ship.
 #
@@ -53,6 +53,7 @@ param(
     [string]$Defense,
     [string]$Wave,
     [float]$Yaw = 0,
+    [float]$Pitch = 0,
     [float]$Distance = 0,
     [int]$Width = 1280,
     [string]$LogFile = "$PSScriptRoot\..\capture-match-frames.log"
@@ -64,7 +65,17 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $project = Join-Path $repoRoot 'client'
 
 if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
+# ABSOLUTE, ALWAYS. A relative path handed to -executeMethod is resolved against
+# the editor's working directory, which is the Unity project and not the
+# repository root -- so -OutDir docs/frames/roster/x quietly writes
+# client/docs/frames/roster/x, outside the ignore rule that is supposed to cover
+# it, and this script then fails looking for pictures in a directory nothing
+# created. capture-armed-roster.ps1 closed this trap on its own arguments and
+# left a note saying this script still had it; measured here on 6 September
+# 2026, it did.
 if (-not $OutDir) { $OutDir = Join-Path $repoRoot 'docs/frames' }
+if (-not [System.IO.Path]::IsPathRooted($OutDir)) { $OutDir = Join-Path (Get-Location).Path $OutDir }
+New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 
 . (Join-Path $PSScriptRoot '_rendered-from.ps1')
 
@@ -85,6 +96,18 @@ $unityArgs = @(
 )
 
 if ($Ticks) { $unityArgs += @('-matchFrameTicks', $Ticks) }
+
+# UNLIKE -Yaw AND -Distance, THIS ONE IS ONLY PASSED WHEN IT IS ASKED FOR. Both
+# of those have a meaning at zero -- yaw zero is the heading the game ships at,
+# and distance zero means "as far back as the whole floor needs" -- so the
+# capture is handed them on every run. A pitch of zero is a camera looking level
+# at the horizon, which is not a candidate anybody wants and is certainly not
+# the shipped framing; so an unset -Pitch stays out of the argument list and
+# SceneFraming.CameraDefaultPitchDegrees answers for it.
+if ($Pitch -ne 0) {
+    $unityArgs += @(
+        '-matchFramePitch', $Pitch.ToString([Globalization.CultureInfo]::InvariantCulture))
+}
 
 if ($Units) {
     $unitsPath = (Resolve-Path $Units).Path

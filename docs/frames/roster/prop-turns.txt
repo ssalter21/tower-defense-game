@@ -1,0 +1,33 @@
+# prop-turns-sheet.png
+
+**What it is.** The Witch's broom (id 43) and the Necromancer's scythe (id 38) at five turns each,
+walking. Row one is the broom, row two the scythe; in each, left to right: flat as bound today,
+`@0,0,-90`, `@0,0,90`, `@0,0,180`, `@0,0,-45`. `prop-turns/candidates-manifest.txt` names every
+tile.
+
+**The question it asks.** Which turn each prop hangs at. Nothing here picks one.
+
+**Why five and not one.** Both props lie flat in the fist, because neither carries a turn in its
+binding and the pack authors them along the shaft. `docs/roster-creep-bodies-rest.txt` already put
+the upright `@0,0,-90` up — the number the Mage's and the Druid's staffs use — as one candidate
+each. One candidate is a proposal, not a choice. A weapon parented to a hand turns with the arm, so
+a turn is only exactly right in one pose, and `-90` and `+90` differ by which end of the prop ends
+up above the fist: a broom bristles-up is a different object from a broom bristles-down, and
+neither is readable off the number.
+
+**Rendered from.** `docs/roster-prop-turns.txt`, through the game's own `CreepView`, posed in
+`Walking_A` — which is what both rows are actually drawn in, since neither swings anything. A turn
+that reads in an idle and buries the shaft in the body mid-stride is the failure this sheet is
+looking for.
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-prop-turns.txt `
+    -OutDir docs/frames/roster/prop-turns
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-prop-turns.txt `
+    -OutDir docs/frames/roster/prop-turns-1x -Width 28
+```
+
+**Two framings, and the small one decides.** The sheet is the magnification. The `-Width 28` pass
+is gameplay size — a body is about 24 pixels tall at 1600×900 in the built player, measured off
+`docs/frames/played-run/a-slow-nobody-can-see.png` — and is what says whether a turn is a thing a
+player can see or a thing only a contact sheet can.

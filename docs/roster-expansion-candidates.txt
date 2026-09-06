@@ -42,6 +42,16 @@
 #               How far beside is not in this file: everything stands one tile
 #               away, which is BesideProp.NextTile.
 #
+# A MODEL MAY LEAVE MESH PARTS OUT, written path!Node_A,Node_B. Some of these
+# characters carry their kit in the body mesh rather than in a hand -- the
+# Grave Robber's sword sits in a child called Hoarder_FrontPouch_Sword, not on
+# handslot.r -- so "with it and without it" is not two models and cannot be
+# asked by naming one fewer prop. The named children are hidden for the render
+# and nothing on disk changes. A name that matches no child of the model is a
+# fault, listing what the body does carry, rather than a picture that still
+# has the thing under discussion in it.
+# docs/roster-grave-robber-sword.txt is the set that uses it.
+#
 # A held prop may carry a turn, written path@x,y,z in Euler degrees. Every
 # weapon in these packs is authored for the right hand, so a bow in the off
 # hand needs @0,180,0, and a staff hangs head-down from the fist until

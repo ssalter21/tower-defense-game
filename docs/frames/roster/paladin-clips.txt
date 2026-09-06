@@ -1,0 +1,41 @@
+# paladin-clips-sheet.png
+
+**What it is.** The Paladin line's three rungs — 20 Paladin, 21 Templar, 22 Blessing — posed in
+thirty-two clips, twelve for each of the two hammer rungs and eight for the book. Six tiles to a
+row, read left to right; `paladin-clips/candidates-manifest.txt` names every tile.
+
+**The question it asks.** Which clip each rung swings, or holds. Nothing here picks one.
+
+**Why it is a bug and not only an unsigned look.** `MatchSceneBuilder` binds ids 20, 21 and 22 with
+`null, null, null` where every other posed row carries a rest clip, a swing and a rest clip, so all
+three stand in their import bind pose — arms straight out — in the shipped game today. That binding
+is the record speaking rather than an omission: `docs/roster.md` names a clip on every rung of the
+Knight, Barbarian, Cleric, Druid and Rogue lines and none on any rung of this one. The consequence
+is on the board either way.
+
+**Rendered from.** `docs/roster-paladin-clips.txt`, through the game's own `TowerView` with the art
+the scene is wired from. Every clip name in that file is bank-qualified, so no line depends on
+which rig the unqualified searcher defaults to; the Paladin is a Medium rig and `Rig_Medium_*` is
+what every line names.
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-paladin-clips.txt `
+    -OutDir docs/frames/roster/paladin-clips
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-paladin-clips.txt `
+    -OutDir docs/frames/roster/paladin-clips-1x -Width 28
+```
+
+**Two framings, and the small one decides.** The sheet and the 700-pixel portraits beside it are
+the magnification — they are what makes a stab tell apart from a chop. The `-Width 28` pass is
+gameplay size: a body is about 24 pixels tall at 1600×900 in the built player, measured off
+`docs/frames/played-run/a-slow-nobody-can-see.png`, and a 28-pixel portrait puts it there. Look at
+those at 100%. A clip that is only legible in the big picture has not answered the question, which
+is the finding [#270](https://github.com/ssalter21/tower-defense-game/issues/270) already made
+about a slowed body.
+
+**What is not here.** The windup and backswing *durations*, which `docs/roster.md` carries a `_`
+for on all three rows. A clip is what the tower does; a duration is how many ticks it gets to do it
+in, and one is not readable off a still.
+
+Neither is the Engineer line, which `MatchSceneBuilder` binds with no clips for the same reason and
+which this ticket did not name.

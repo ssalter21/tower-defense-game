@@ -1,0 +1,39 @@
+# The Witch's broom and the Necromancer's scythe, at every quarter turn.
+#
+# WHAT THIS IS FOR. Both props lie flat in the fist, because neither carries a
+# turn in its binding and the pack authors them along the shaft. The upright
+# @0,0,-90 -- the number the Mage's staff and the Druid's staff already use --
+# is on docs/roster-creep-bodies-rest.txt as one candidate each. One candidate
+# is a proposal, not a choice: this puts the flat binding, the two upright
+# quarter turns and the two the other way beside each other so the turn is
+# picked by looking down a row.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-prop-turns.txt
+#
+# WHY BOTH DIRECTIONS. A weapon parented to a hand turns with the arm, so a
+# turn is only exactly right in one pose, and -90 and +90 differ by which end
+# of the prop ends up above the fist -- a broom bristles-up is a different
+# object from a broom bristles-down, and neither is readable off the number.
+# The 180 is here because a shaft laid flat can be laid flat the other way
+# round, which is the cheapest thing to rule out and the easiest to miss.
+#
+# BOTH ROWS WALK, WHICH IS THE POSE THAT MATTERS. Walking_A is what these two
+# creeps are actually drawn in -- neither swings anything -- so a turn that
+# reads in an idle and buries the shaft in the body mid-stride is the failure
+# this sheet is looking for.
+
+# ------------------------------------------------------------- the Witch ---
+
+creep witch-broom-flat        Kaykit/mystery-monthly-series-5/witch/Witch.fbx Kaykit/mystery-monthly-series-5/witch/Broom.fbx           - Walking_A
+creep witch-broom-up          Kaykit/mystery-monthly-series-5/witch/Witch.fbx Kaykit/mystery-monthly-series-5/witch/Broom.fbx@0,0,-90   - Walking_A
+creep witch-broom-up-other    Kaykit/mystery-monthly-series-5/witch/Witch.fbx Kaykit/mystery-monthly-series-5/witch/Broom.fbx@0,0,90    - Walking_A
+creep witch-broom-reversed    Kaykit/mystery-monthly-series-5/witch/Witch.fbx Kaykit/mystery-monthly-series-5/witch/Broom.fbx@0,0,180   - Walking_A
+creep witch-broom-shouldered  Kaykit/mystery-monthly-series-5/witch/Witch.fbx Kaykit/mystery-monthly-series-5/witch/Broom.fbx@0,0,-45   - Walking_A
+
+# ------------------------------------------------------- the Necromancer ---
+
+creep necro-scythe-flat       Kaykit/skeletons/Necromancer.fbx Kaykit/skeletons/Skeleton_Scythe.fbx          - Walking_A
+creep necro-scythe-up         Kaykit/skeletons/Necromancer.fbx Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,-90  - Walking_A
+creep necro-scythe-up-other   Kaykit/skeletons/Necromancer.fbx Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,90   - Walking_A
+creep necro-scythe-reversed   Kaykit/skeletons/Necromancer.fbx Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,180  - Walking_A
+creep necro-scythe-shouldered Kaykit/skeletons/Necromancer.fbx Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,-45  - Walking_A

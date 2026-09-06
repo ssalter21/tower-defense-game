@@ -1,0 +1,55 @@
+# mage-hat-pitch-20.png, mage-hat-pitch-35-shipped.png, mage-hat-pitch-55.png
+
+**What they are.** Tick 1546 of the recorded match — a Mage casting — at three camera pitches. The
+tick, the distance and the width are the committed `docs/frames/match-tick-1546.png`'s: `-Ticks
+1546 -Distance 22 -Width 1600`. The only thing that moves is how far the camera looks down.
+`35.264390` is `SceneFraming.CameraDefaultPitchDegrees`, the pitch the game ships at.
+
+**The question they ask.** Whether the Mage's silhouette should read better than it does. The
+flash sits on the head of the staff, which the Mage raises beside its own head, and the hat covers
+the staff at the pitch this camera is fixed at — so the frame shows a flash and a tracer at the
+right place rather than a staff with a light on the end of it. That the anchor is on the staff and
+not on a height above the root is asserted in `ImportedArtTests`. Nothing here picks a pitch.
+
+**What the sweep says, and it is a direction rather than an answer.** Seven pitches were rendered —
+20, 25, 30, the shipped 35.264390, 45, 55 and 65. Looking down *more* makes it strictly worse: at
+55 the Mage is a purple disc with a body under it, and at 65 more so. Looking down *less* is the
+only direction that helps, and it costs the board: at 20 the Mage reads as a mage — face, robe,
+book, and the flash clear of the brim — and the far half of the corridor has gone behind the near
+rim, so the whole 51-hex board no longer fits the frame. **The staff head is still under the hat at
+20.** So a pitch alone does not fix the thing the frame was taken about; it trades a legible tower
+for an illegible board and gets partway.
+
+**Drawn from content `F3896E6D53F411C4`**, which is what this repository holds — the same digest
+the committed `docs/frames/match-tick-1546.png` carries, so these three and it are pictures of the
+same match. The capture writes that record itself, into a `rendered-from.txt` beside the PNGs it
+draws; it is quoted here because the three kept frames were copied out of seven working directories
+that are not committed, and a provenance file this document wrote by hand would be a claim nothing
+measured.
+
+**Three committed, seven rendered.** The bracket and the baseline. The other four come back from:
+
+```powershell
+foreach ($p in @('20','25','30','35.264390','45','55','65')) {
+    ./tools/capture-match-frames.ps1 -Ticks "1546" -Distance 22 -Width 1600 -Pitch $p `
+        -OutDir "docs/frames/roster/mage-hat-pitch-$p"
+}
+```
+
+`-Pitch` is new, and unlike `-Yaw` and `-Distance` it is only passed to the editor when it is
+asked for: a pitch of zero is a camera looking level at the horizon, which is not a candidate
+anybody wants, so an unset `-Pitch` leaves `SceneFraming.CameraDefaultPitchDegrees` to answer.
+
+**Two of the three candidates on the ticket are not here, and why.**
+
+- **The hatless Mage: the pack ships none.** `Assets/Art/Characters/` holds one `Mage.fbx` and the
+  Adventurers pack ships `mage_texture.png` and `mage_texture_alt_A.png` but no second body. An
+  atlas cannot take a hat off. So the candidate does not exist to be rendered, and swapping to
+  another character's body is a different question from this one.
+- **A different anchor could not be rendered under this ticket's own constraint.** The effect
+  anchors are baked into `MatchArt.asset` by `MatchSceneBuilder` at scene-build time, so drawing
+  the flash anywhere but the staff tip means rebinding that asset — and this ticket renders
+  candidates without changing `roster.md`, `MatchArt.asset` or any content file. Moving the anchor
+  is also the decision itself rather than a picture of it. It wants either a batch-argument
+  override on `MatchFrameCapture` or a ticket of its own; the pitch sheet does not settle it,
+  because the pitch sweep shows a pitch alone will not.

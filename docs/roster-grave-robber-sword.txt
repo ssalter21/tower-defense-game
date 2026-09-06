@@ -1,0 +1,31 @@
+# The Grave Robber, with the sheathed sword and without it.
+#
+# WHAT THIS IS FOR. Id 49's own line in docs/roster.md calls the sword a lie:
+# the Grave Robber never attacks, and it walks the corridor wearing a blade it
+# will not draw. The question is whether that reads as a body carrying its kit
+# or as a creep whose weapon nobody wired up, and it is answered by putting the
+# two side by side.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-grave-robber-sword.txt
+#
+# THE SWORD IS NOT IN A HAND, WHICH IS WHY THIS NEEDED A NEW COLUMN. Both of
+# the Hoarder's hands are empty in the shipped binding -- the blade sits in a
+# child of the body mesh called Hoarder_FrontPouch_Sword, at the belt. So
+# "without it" cannot be asked by naming one fewer prop, and the pack ships no
+# second body with the pouch empty. The model field's !Node suffix hides the
+# named children for the render and touches nothing on disk; CandidateSet
+# checks the name against the model before anything draws, so a misspelling is
+# a fault rather than a picture that still has the sword in it.
+#
+# THE BACKPACK IS THE THIRD TILE AND IS A DIFFERENT QUESTION. The roster
+# expansion proposed the Grave Robber holding Hoarder_Backpack, which is worn
+# on the spine and has no hand socket; docs/roster-creep-bodies-rest.txt
+# already put it in a hand as grave-robber-pack-held. It is here as well so
+# that the sheet showing the sword going away also shows what the row would
+# carry instead, rather than making that a second sheet.
+
+creep grave-robber-as-shipped       Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx                            -                                                            - Walking_A
+creep grave-robber-no-sword         Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx!Hoarder_FrontPouch_Sword    -                                                            - Walking_A
+creep grave-robber-pack-held        Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx                            Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Backpack.fbx - Walking_A
+creep grave-robber-pack-no-sword    Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx!Hoarder_FrontPouch_Sword    Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Backpack.fbx - Walking_A
+creep grave-robber-sword-in-hand    Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx!Hoarder_FrontPouch_Sword    Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Sword.fbx     - Walking_A

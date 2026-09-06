@@ -74,6 +74,33 @@
 # them as the two questions that sheet asks. Same naming rule again.
 !roster/creep-bodies-rest-sheet.png
 
+# And three out of the roster sign-off's first prototype ticket, each the one
+# sheet its own question is asked on. Same naming rule as every sheet above --
+# the tool writes candidates-sheet.png on every set run, so a committed copy
+# carries a name nothing else writes.
+#
+#   the Paladin line's three rungs in thirty-two clips, because ids 20, 21 and
+#   22 ship posed by nothing and stand in their import bind pose;
+#   the Witch's broom and the Necromancer's scythe at five turns each, because
+#   both lie flat in the fist;
+#   the Grave Robber with the sheathed sword and without, which needed the
+#   set file's !Node suffix because the blade is in the body mesh.
+!roster/paladin-clips-sheet.png
+!roster/prop-turns-sheet.png
+!roster/grave-robber-sword-sheet.png
+
+# And three frames of the recorded match at tick 1546, the same tick and the
+# same distance as the committed match-tick-1546.png, at three camera pitches.
+# NOT a sheet -- the armed-roster tool stitches contact sheets and the match
+# capture does not, and the thing being compared is a whole 1600x900 frame
+# rather than a body on a plain ground. Three and not the seven that were
+# rendered: the shipped pitch, the shallowest that still frames the board and
+# one steeper, which is the bracket. The other four regenerate from the one
+# command in roster/mage-hat-pitch.txt.
+!roster/mage-hat-pitch-20.png
+!roster/mage-hat-pitch-35-shipped.png
+!roster/mage-hat-pitch-55.png
+
 # And the ten screen captures of the built player, which no capture tool writes
 # and nothing here regenerates: a whole ten-wave run on the wide roster, driven
 # by synthetic input. Named one at a time like every exception above, so the

@@ -256,6 +256,7 @@ namespace View.Editor
                             BuildCreep(stand, unit, candidate.Clip, candidate.Clip, ClipPhase);
                         }
 
+                        Hide(stand, candidate.Hidden);
                         ReportHeld(stand, candidate.Name);
                         ReportBeside(stand, candidate.Name);
                         Frame(camera, Measured(stand));
@@ -273,7 +274,7 @@ namespace View.Editor
                     manifest.Add(
                         string.Format(
                             CultureInfo.InvariantCulture,
-                            "{0,3}  r{1}c{2}  {3,-22} {4,-6} {5,-30} {6} | {7} | {8} | {9} | {10}",
+                            "{0,3}  r{1}c{2}  {3,-28} {4,-6} {5,-38} {6} | {7} | {8} | {9} | {10} | {11}",
                             index + 1,
                             (index / SheetColumns) + 1,
                             (index % SheetColumns) + 1,
@@ -284,7 +285,10 @@ namespace View.Editor
                             candidate.RightHandPath,
                             candidate.LeftHandPath,
                             candidate.TexturePath,
-                            candidate.BesidePath));
+                            candidate.BesidePath,
+                            candidate.Hidden.Count == 0
+                                ? "whole body"
+                                : "without " + string.Join(", ", candidate.Hidden)));
                 }
 
                 string sheet = Path.Combine(outDir, "candidates-sheet.png");
@@ -309,8 +313,9 @@ namespace View.Editor
                     "# Tiles run left to right, " + SheetColumns + " to a row, in",
                     "# candidates-sheet.png; rNcM is the row and column of the tile.",
                     "#",
-                    "#   n  tile  name                   side   clip"
-                    + "                           model | right hand | left hand | texture | beside",
+                    "#   n  tile  name                         side   clip"
+                    + "                                   model | right hand | left hand | texture"
+                    + " | beside | body",
                 }.Concat(manifest).ToArray());
 
             written.Add(manifestPath);
@@ -448,6 +453,42 @@ namespace View.Editor
             throw new IOException(
                 "content/units.txt has no placed row, so there is no unit type to build a "
                 + "candidate tower's view with.");
+        }
+
+        /// <summary>
+        /// Takes the named mesh children out of the picture, for a candidate
+        /// whose question is what the body looks like without them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Disabled on the built view, never on the asset.</b> The stand is
+        /// thrown away at the end of the loop, so nothing here reaches disk and
+        /// the next candidate gets the whole body back. Editing the imported
+        /// prefab to answer a question about it would leave the question's
+        /// answer standing in the project after the sheet was looked at.
+        /// </para>
+        /// <para>
+        /// <b>The renderer goes, not the transform.</b> A hidden node may still
+        /// be a parent — the Grave Robber's pouch sword hangs off the body's
+        /// own hierarchy — and deactivating it would take its children with it.
+        /// <see cref="CandidateSet"/> has already checked every name against
+        /// the model, so a name reaching here matches something.
+        /// </para>
+        /// </remarks>
+        private static void Hide(GameObject stand, IReadOnlyList<string> hidden)
+        {
+            if (hidden.Count == 0)
+            {
+                return;
+            }
+
+            foreach (Renderer renderer in stand.GetComponentsInChildren<Renderer>(true))
+            {
+                if (hidden.Contains(renderer.transform.name))
+                {
+                    renderer.enabled = false;
+                }
+            }
         }
 
         /// <summary>Lays the tiles out into a grid, left to right, top to bottom.</summary>
