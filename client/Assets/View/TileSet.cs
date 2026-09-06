@@ -4,13 +4,14 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The six models a floor is built from, and the material they wear.
+    /// The eleven models a floor is built from, and the material they wear.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>One shape of tile set, two fillings.</b> Either it holds imported
-    /// models — a straight, a curve, a hairpin, a dead end, a ramp and plain
-    /// ground — or it holds the generated blockout six times over. Everything
+    /// models — plain ground, a straight, a curve, a hairpin, a dead end, two
+    /// road ramps, two grass slopes and a bare column of earth — or it holds
+    /// the generated blockout ten times over. Everything
     /// downstream asks the same two questions of both, so
     /// <see cref="HexFloor"/> has one code path and no opinion about whether
     /// the art has arrived.
@@ -53,8 +54,28 @@ namespace View
         private Mesh deadEnd;
 
         [SerializeField]
-        [Tooltip("A straight climbing one tier. KayKit hex_road_A_sloped_high.")]
+        [Tooltip("A straight climbing a whole block, which is two levels. KayKit hex_road_A_sloped_high.")]
         private Mesh straightRamp;
+
+        [SerializeField]
+        [Tooltip("A straight climbing one level, which is half a block. KayKit hex_road_A_sloped_low.")]
+        private Mesh straightHalfRamp;
+
+        [SerializeField]
+        [Tooltip("Pathless ground climbing one level. KayKit hex_grass_sloped_low.")]
+        private Mesh groundSlopeLow;
+
+        [SerializeField]
+        [Tooltip("Pathless ground climbing a whole block. KayKit hex_grass_sloped_high.")]
+        private Mesh groundSlopeHigh;
+
+        [SerializeField]
+        [Tooltip("A metre of earth with no walkable face, stacked to make a cliff. KayKit hex_grass_bottom.")]
+        private Mesh cliff;
+
+        [SerializeField]
+        [Tooltip("Standing water, its surface a little below the tile face. KayKit hex_water.")]
+        private Mesh water;
 
         [SerializeField]
         [Tooltip("Drawn on every tile of an imported set. The pack's atlas.")]
@@ -85,6 +106,11 @@ namespace View
             Mesh hairpin,
             Mesh deadEnd,
             Mesh straightRamp,
+            Mesh straightHalfRamp,
+            Mesh groundSlopeLow,
+            Mesh groundSlopeHigh,
+            Mesh cliff,
+            Mesh water,
             Material surface) =>
             new TileSet
             {
@@ -94,6 +120,11 @@ namespace View
                 hairpin = hairpin,
                 deadEnd = deadEnd,
                 straightRamp = straightRamp,
+                straightHalfRamp = straightHalfRamp,
+                groundSlopeLow = groundSlopeLow,
+                groundSlopeHigh = groundSlopeHigh,
+                cliff = cliff,
+                water = water,
                 surface = surface,
             };
 
@@ -120,6 +151,11 @@ namespace View
                 hairpin = generated,
                 deadEnd = generated,
                 straightRamp = generated,
+                straightHalfRamp = generated,
+                groundSlopeLow = generated,
+                groundSlopeHigh = generated,
+                cliff = generated,
+                water = generated,
                 road = roadMaterial,
                 grass = grassMaterial,
             };
@@ -140,6 +176,11 @@ namespace View
             && hairpin != null
             && deadEnd != null
             && straightRamp != null
+            && straightHalfRamp != null
+            && groundSlopeLow != null
+            && groundSlopeHigh != null
+            && cliff != null
+            && water != null
             && surface != null;
 
         /// <summary>The model for a piece.</summary>
@@ -152,6 +193,11 @@ namespace View
                 TilePiece.Hairpin => hairpin,
                 TilePiece.DeadEnd => deadEnd,
                 TilePiece.StraightRamp => straightRamp,
+                TilePiece.StraightHalfRamp => straightHalfRamp,
+                TilePiece.GroundSlopeLow => groundSlopeLow,
+                TilePiece.GroundSlopeHigh => groundSlopeHigh,
+                TilePiece.Cliff => cliff,
+                TilePiece.Water => water,
                 _ => throw new ArgumentOutOfRangeException(nameof(piece), piece, "No tile for this piece."),
             };
 
@@ -166,8 +212,26 @@ namespace View
                 return surface;
             }
 
-            return piece == TilePiece.Ground ? grass : road;
+            return IsGround(piece) ? grass : road;
         }
+
+        /// <summary>
+        /// Whether a piece has no path on it, and so wears grass rather than
+        /// road on the blockout.
+        /// </summary>
+        /// <remarks>
+        /// Written out rather than compared against
+        /// <see cref="TilePiece.Ground"/>, which is what it used to be: the
+        /// grass slopes and the cliff column are pathless too, and a blockout
+        /// that drew them as road would paint a brown streak up every hillside
+        /// on a checkout with no art imported.
+        /// </remarks>
+        private static bool IsGround(TilePiece piece) =>
+            piece == TilePiece.Ground
+            || piece == TilePiece.GroundSlopeLow
+            || piece == TilePiece.GroundSlopeHigh
+            || piece == TilePiece.Cliff
+            || piece == TilePiece.Water;
 
         /// <summary>
         /// The material corridor cells are drawn with, for a test that wants to

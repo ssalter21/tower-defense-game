@@ -36,6 +36,12 @@ namespace View.Editor
         /// <summary>Everything else's material.</summary>
         public const string GrassMaterialPath = "Assets/Materials/Grass.mat";
 
+        /// <summary>Where the skybox material is written.</summary>
+        public const string SkyMaterialPath = "Assets/Materials/Sky.mat";
+
+        /// <summary>Where the material for the plain around the board is written.</summary>
+        public const string LandMaterialPath = "Assets/Materials/Land.mat";
+
         private const string BowPath = "Assets/Art/Weapons/bow_withString.fbx";
 
         private const string StaffPath = "Assets/Art/Weapons/staff.fbx";
@@ -246,21 +252,54 @@ namespace View.Editor
         /// </remarks>
         public const string DressingAssetPath = "Assets/Settings/BoardDressing.asset";
 
-        /// <summary>The texture every tile wears. The pack's own atlas.</summary>
-        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval.png";
+        /// <summary>The texture every tile wears.</summary>
+        /// <remarks>
+        /// <b>The summer cut, and not the one the pack calls default.</b> All
+        /// four seasons are the same geometry against the same UVs, so this is a
+        /// texture and never an import -- and <c>hexagons_medieval.png</c> puts
+        /// an olive-yellow in the swatch the grass tiles sample, which at
+        /// whole-board framing reads as scorched rather than green.
+        /// <c>_Summer</c> puts an actual green there. It is one line and it is
+        /// the largest single change to how this board looks; see the contact
+        /// sheet in <c>docs/prototypes/scenery/</c>, where the control is the
+        /// only frame still wearing the shipped one.
+        /// </remarks>
+        private const string TileAtlasPath = "Assets/Art/Buildings/hexagons_medieval_Summer.png";
 
         /// <summary>
         /// The serialized field on <c>TileSet</c> for each tile, and the model
         /// it is filled from.
         /// </summary>
         /// <remarks>
-        /// <b>Six models and nine pieces left behind.</b> KayKit's road set has
-        /// thirteen pieces, A to M, and nine of them are junctions of three
-        /// edges or more. The corridor assertion in <c>HexMap</c> gives every
-        /// corridor cell one or two corridor neighbours, so a junction can never
-        /// be selected and importing one would be shipping art nothing draws and
-        /// nothing checks. What the letters mean was read off the meshes rather
-        /// than off the pack's user guide; see issue #224.
+        /// <para>
+        /// <b>Eleven models and nine road pieces left behind.</b> KayKit's road
+        /// set has thirteen pieces, A to M, and nine of them are junctions of
+        /// three edges or more. The corridor assertion in <c>HexMap</c> gives
+        /// every corridor cell one or two corridor neighbours, so a junction can
+        /// never be selected and importing one would be shipping art nothing
+        /// draws and nothing checks. What the letters mean was read off the
+        /// meshes rather than off the pack's user guide; see issue #224.
+        /// </para>
+        /// <para>
+        /// <b>The <c>_sloped_low</c> pieces arrived when a level became half a
+        /// block.</b> The pack cuts every ramp twice -- one topping out at
+        /// <c>+0.5</c> and one at <c>+1.0</c> -- and for as long as a level was
+        /// a whole metre only the tall one had a level to land on, so the short
+        /// one was left in the archive. It is the piece that lets a road climb
+        /// without a step in it.
+        /// </para>
+        /// <para>
+        /// <b>The cliff column is <c>hex_grass</c> again, and the pack's own
+        /// <c>hex_grass_bottom</c> is not it.</b> <c>HexFloor</c> repeats a tile
+        /// straight down where a drop is deeper than the metre of earth one
+        /// carries, so what that piece needs is a metre of earth -- and
+        /// <c>hex_grass</c> has exactly that under its face. The obvious
+        /// candidate does not: on this atlas <c>hex_grass_bottom</c> is mapped
+        /// to the grass swatch on every side, so a stack of them drew a column
+        /// of lawn under every ridge. Measured by looking at it. The ordinary
+        /// tile's own green cap is buried inside the tile above it and is never
+        /// seen.
+        /// </para>
         /// </remarks>
         private static readonly (TilePiece piece, string field, string asset)[] TileBindings =
         {
@@ -270,6 +309,11 @@ namespace View.Editor
             (TilePiece.Hairpin, "hairpin", "Assets/Art/Tiles/hex_road_C.fbx"),
             (TilePiece.DeadEnd, "deadEnd", "Assets/Art/Tiles/hex_road_M.fbx"),
             (TilePiece.StraightRamp, "straightRamp", "Assets/Art/Tiles/hex_road_A_sloped_high.fbx"),
+            (TilePiece.StraightHalfRamp, "straightHalfRamp", "Assets/Art/Tiles/hex_road_A_sloped_low.fbx"),
+            (TilePiece.GroundSlopeLow, "groundSlopeLow", "Assets/Art/Tiles/hex_grass_sloped_low.fbx"),
+            (TilePiece.GroundSlopeHigh, "groundSlopeHigh", "Assets/Art/Tiles/hex_grass_sloped_high.fbx"),
+            (TilePiece.Cliff, "cliff", "Assets/Art/Tiles/hex_grass.fbx"),
+            (TilePiece.Water, "water", "Assets/Art/Tiles/hex_water.fbx"),
         };
 
         /// <summary>
@@ -290,30 +334,50 @@ namespace View.Editor
         /// border where it frames the board instead of standing in front of it.
         /// </para>
         /// <para>
-        /// <b>The pack's hills are not here, and that is not an oversight.</b>
-        /// Its <c>hill_single</c> models are shells authored to cap a hex that
-        /// is already raised; standing one on flat ground draws its inside,
-        /// which reads as a crater. Nor are the smallest props — a bucket, a
-        /// sack, a stump — which at the distance a whole board is framed from
-        /// are a pixel and a half of noise. Both were imported, looked at on a
-        /// contact sheet, and dropped again.
+        /// <b>The pack's hills are here now, and they are a group of their
+        /// own.</b> They were dropped once for reading as a crater on flat
+        /// ground, which is what they do: a <c>hill_single</c> is a cap for a
+        /// rim rather than a lump for a field. That is exactly the job the
+        /// <c>Hill</c> group gives them — sat astride the edge where a cell
+        /// falls to a lower neighbour, where the open side faces into the
+        /// hillside and the closed side is the shoulder of it. Standing one in
+        /// the middle of a flat hex is still wrong and nothing does it.
+        /// </para>
+        /// <para>
+        /// <b>The mountains come in two dressings and the groves in three
+        /// shapes.</b> A border of bare grey rock reads as a wall; the
+        /// <c>_grass</c> and <c>_grass_trees</c> cuts of the same three
+        /// mountains read as the country continuing past the board. The grove
+        /// list carries wooded mounds and felled stands beside the plain stands
+        /// of trees, so a field of them has a silhouette instead of a texture.
         /// </para>
         /// </remarks>
         private static readonly (string field, string[] assets)[] SceneryBindings =
         {
             ("rimProps", new[]
             {
-                "rock_single_B", "rock_single_C", "rock_single_D", "rock_single_E",
-                "tree_single_A", "tree_single_B",
-                "barrel", "crate_A_big", "haybale",
+                "rock_single_A", "rock_single_B", "rock_single_C", "rock_single_D", "rock_single_E",
+                "tree_single_A", "tree_single_B", "tree_single_A_cut", "tree_single_B_cut",
+                "barrel", "crate_A_big", "crate_B_big", "crate_long_A", "haybale",
+                "sack", "pallet", "bucket_water", "trough", "ladder",
+                "resource_lumber", "resource_stone",
             }),
             ("camp", new[] { "tent", "weaponrack", "target", "wheelbarrow" }),
             ("groves", new[]
             {
                 "trees_A_small", "trees_A_medium", "trees_A_large",
                 "trees_B_small", "trees_B_medium", "trees_B_large",
+                "trees_A_cut", "trees_B_cut",
+                "hills_A_trees", "hills_B_trees", "hills_C_trees",
+                "hills_A", "hills_B", "hills_C",
             }),
-            ("peaks", new[] { "mountain_A", "mountain_B", "mountain_C" }),
+            ("peaks", new[]
+            {
+                "mountain_A", "mountain_B", "mountain_C",
+                "mountain_A_grass", "mountain_B_grass", "mountain_C_grass",
+                "mountain_A_grass_trees", "mountain_B_grass_trees", "mountain_C_grass_trees",
+            }),
+            ("hills", new[] { "hill_single_A", "hill_single_B", "hill_single_C" }),
             ("clouds", new[] { "cloud_big", "cloud_small" }),
         };
 
@@ -396,14 +460,28 @@ namespace View.Editor
         /// The board's scenery, loaded from the project rather than from a
         /// scene. The frame capture's, for the reason <see cref="Tiles"/> is.
         /// </summary>
-        public static SceneryModels Scenery() =>
+        public static SceneryModels Scenery() => Scenery(TileMaterial());
+
+        /// <summary>
+        /// The same models wearing a material somebody else made.
+        /// </summary>
+        /// <remarks>
+        /// For the prototype capture, which draws the board under each of the
+        /// pack's four seasonal atlases. Those are one texture against the same
+        /// UVs, so a season is a material and never an import -- but the
+        /// material the project ships is an asset on disk, and writing a texture
+        /// into it to take a picture would leave the checkout dirty and the next
+        /// test run reporting a change nobody made.
+        /// </remarks>
+        public static SceneryModels Scenery(Material surface) =>
             SceneryModels.Of(
                     Group("rimProps"),
                     Group("camp"),
                     Group("groves"),
                     Group("peaks"),
+                    Group("hills"),
                     Group("clouds"),
-                    TileMaterial())
+                    surface)
                 .With(SceneryCatalogue.Bind(StreamingContent.ReadDressing().Names()));
 
         private static Mesh[] Group(string field)
@@ -460,12 +538,16 @@ namespace View.Editor
         /// The floor's tiles, loaded from the project rather than from a scene.
         /// </summary>
         /// <remarks>
-        /// <b>The same six assets the scene is wired with, from the same list.</b>
+        /// <b>The same eleven assets the scene is wired with, from the same list.</b>
         /// An editor tool that assembles its own root — the frame capture — needs
         /// the tiles too, and building a second list for it is how a capture ends
         /// up being a picture of a floor the game does not have.
         /// </remarks>
-        public static TileSet Tiles() =>
+        public static TileSet Tiles() => Tiles(TileMaterial());
+
+        /// <summary>The same tiles wearing a material somebody else made.</summary>
+        /// <remarks>For the reason <see cref="Scenery(Material)"/> gives.</remarks>
+        public static TileSet Tiles(Material surface) =>
             TileSet.Of(
                 TileMesh(TilePiece.Ground),
                 TileMesh(TilePiece.Straight),
@@ -473,7 +555,12 @@ namespace View.Editor
                 TileMesh(TilePiece.Hairpin),
                 TileMesh(TilePiece.DeadEnd),
                 TileMesh(TilePiece.StraightRamp),
-                TileMaterial());
+                TileMesh(TilePiece.StraightHalfRamp),
+                TileMesh(TilePiece.GroundSlopeLow),
+                TileMesh(TilePiece.GroundSlopeHigh),
+                TileMesh(TilePiece.Cliff),
+                TileMesh(TilePiece.Water),
+                surface);
 
         /// <summary>
         /// The model one piece is drawn with, on its own.
@@ -592,6 +679,8 @@ namespace View.Editor
         {
             Material road = WriteMaterial(RoadMaterialPath, "Road", SceneFraming.RoadColor);
             Material grass = WriteMaterial(GrassMaterialPath, "Grass", SceneFraming.GrassColor);
+            Material land = WriteMatte(LandMaterialPath, "Land", SceneFraming.LandColor);
+            Material sky = WriteSky();
 
             UnityEngine.SceneManagement.Scene scene =
                 EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -602,6 +691,8 @@ namespace View.Editor
             var serialized = new SerializedObject(matchRoot);
             serialized.FindProperty("roadMaterial").objectReferenceValue = road;
             serialized.FindProperty("grassMaterial").objectReferenceValue = grass;
+            serialized.FindProperty("skyMaterial").objectReferenceValue = sky;
+            serialized.FindProperty("landMaterial").objectReferenceValue = land;
             WireArt(serialized);
             WireTiles(serialized);
             WireScenery(serialized);
@@ -788,11 +879,16 @@ namespace View.Editor
         /// site, so the committed asset and the committed constant cannot
         /// drift. An edit-mode test asserts they have not.
         /// </summary>
-        private static Material WriteMaterial(string path, string name, Color color)
+        private static Material WriteMatte(string path, string name, Color color) =>
+            Write(path, ViewMaterials.Matte(name, color));
+
+        private static Material WriteMaterial(string path, string name, Color color) =>
+            Write(path, ViewMaterials.Create(name, color));
+
+        private static Material Write(string path, Material material)
         {
             EnsureFolder(Path.GetDirectoryName(path));
 
-            Material material = ViewMaterials.Create(name, color);
             var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
 
             if (existing == null)
@@ -805,6 +901,50 @@ namespace View.Editor
             // Rewriting in place rather than deleting and recreating: the asset
             // GUID is what the scene points at, and a new GUID would silently
             // null the reference in a scene nobody rebuilt.
+            existing.shader = material.shader;
+            existing.CopyPropertiesFromMaterial(material);
+            EditorUtility.SetDirty(existing);
+            Object.DestroyImmediate(material);
+
+            return existing;
+        }
+
+        /// <summary>
+        /// Writes the skybox asset, or leaves the scene without one.
+        /// </summary>
+        /// <remarks>
+        /// <b>Committed as an asset rather than found at runtime, for the
+        /// reason <see cref="MatchRoot"/> gives about its two plain
+        /// materials.</b> A shader only ever reached through
+        /// <c>Shader.Find</c> can be stripped out of a player build, and a
+        /// stripped skybox is a magenta sky. An asset in the scene is a
+        /// reference the build's shader scan can see.
+        /// </remarks>
+        private static Material WriteSky()
+        {
+            EnsureFolder(Path.GetDirectoryName(SkyMaterialPath));
+
+            Material material = SkyMaterial.Create("Sky");
+
+            if (material == null)
+            {
+                Debug.LogWarning(
+                    "MatchSceneBuilder: no " + View.SkyMaterial.ShaderName + " shader in this "
+                    + "project, so the scene gets no sky and the camera clears to a flat colour. "
+                    + "The board still draws.");
+
+                return null;
+            }
+
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(SkyMaterialPath);
+
+            if (existing == null)
+            {
+                AssetDatabase.CreateAsset(material, SkyMaterialPath);
+
+                return AssetDatabase.LoadAssetAtPath<Material>(SkyMaterialPath);
+            }
+
             existing.shader = material.shader;
             existing.CopyPropertiesFromMaterial(material);
             EditorUtility.SetDirty(existing);

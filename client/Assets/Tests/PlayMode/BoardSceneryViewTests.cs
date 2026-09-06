@@ -161,7 +161,8 @@ namespace Tests.PlayMode
         {
             Mesh[] one = { HexTileMesh.Create() };
 
-            return SceneryModels.Of(one, one, one, one, one, ViewMaterials.Create("Scenery", Color.white));
+            return SceneryModels.Of(
+                one, one, one, one, one, one, ViewMaterials.Create("Scenery", Color.white));
         }
     }
 }

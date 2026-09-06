@@ -263,7 +263,7 @@ public class ReplayGateTests
         // nothing to do with restaging, and this assertion proved less than it
         // looked like it did.
         Assert.Equal(
-            "F1B4F0BAC3B39D51",
+            "4BC6DB8D6F5AFB95",
             restaged.Match.Resolve().RollingStateHash.ToString());
     }
 

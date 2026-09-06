@@ -318,22 +318,23 @@ public class HexMapTests
     }
 
     [Fact]
-    public void A_level_outside_the_three_tiers_refuses_to_load_and_a_digit_is_one()
+    public void A_level_above_the_top_of_the_board_refuses_to_load_and_a_digit_is_one()
     {
         // The level grid holds no numbers either, which is the half of that
-        // rule a second block could quietly have lost. 'd' is the other half:
-        // there are three tiers and a fourth is not flattened onto the third.
+        // rule a second block could quietly have lost. The letter past the top
+        // is the other half: there are nine levels and a tenth is not flattened
+        // onto the ninth.
         ContentException tier = Assert.Throws<ContentException>(() => HexMap.Parse("""
             .....
             .S#E.
             .....
 
             aaaaa
-            aadaa
+            aajaa
             aaaaa
             """));
 
-        Assert.Contains("'d'", tier.Message, StringComparison.Ordinal);
+        Assert.Contains("'j'", tier.Message, StringComparison.Ordinal);
         Assert.Equal(6, tier.Line);
 
         ContentException digit = Assert.Throws<ContentException>(() => HexMap.Parse("""
@@ -411,13 +412,29 @@ public class HexMapTests
     }
 
     [Fact]
-    public void The_committed_map_climbs_through_all_three_tiers()
+    public void The_committed_map_climbs_two_whole_blocks_and_never_steps_one()
     {
         // The board climbs, and this is the test that says so. It replaces the
         // one that held the map flat: that assertion existed because every
-        // number was priced on the flat and a tier appearing would move all of
+        // number was priced on the flat and a climb appearing would move all of
         // them at once, which is exactly what drawing the fold did -- so the
         // guard is now that the climb is still there rather than that it is not.
+        //
+        // AND IT SPENDS THE HALF STEP, WHICH IS THE NEW HALF OF THE CLAIM. This
+        // assertion used to read `0, 2, 4` and to say in as many words that the
+        // board had not spent the odd levels -- written that way so that a
+        // regrade could not happen quietly, because it retires every stored
+        // record. The regrade happened, deliberately: the committed map is the
+        // rolling-country prototype, and it uses every level from 0 to 4.
+        //
+        // THE SECOND HALF IS WHAT THE REGRADE WAS FOR. No two touching cells
+        // differ by more than one level, so every change of height on this board
+        // is half a block -- which is exactly the step the tile pack cuts a low
+        // ramp and two grass slopes for. A whole-block face has no piece cut for
+        // it and draws as a bare sawn edge, and the board this replaced had 121
+        // of them. That is a claim about the terrain rather than about the view,
+        // so it is asserted here where the map is, and it is what goes red if
+        // somebody regrades again without meaning to.
         HexMap map = HexMap.Parse(File.ReadAllText(RepoLayout.MapFile));
 
         var standing = new HashSet<int>();
@@ -430,7 +447,31 @@ public class HexMapTests
             }
         }
 
-        Assert.Equal(new[] { 0, 1, 2 }, standing.OrderBy(level => level));
+        Assert.Equal(new[] { 0, 1, 2, 3, 4 }, standing.OrderBy(level => level));
+
+        for (int row = 0; row < map.Height; row++)
+        {
+            for (int column = 0; column < map.Width; column++)
+            {
+                Hex hex = Hex.FromOddRowOffset(column, row);
+                int here = map.LevelAt(column, row);
+
+                for (int direction = 0; direction < Hex.DirectionCount; direction++)
+                {
+                    Hex.ToOddRowOffset(hex.Neighbour(direction), out int other, out int otherRow);
+
+                    if (other < 0 || other >= map.Width || otherRow < 0 || otherRow >= map.Height)
+                    {
+                        continue;
+                    }
+
+                    Assert.True(
+                        Math.Abs(here - map.LevelAt(other, otherRow)) <= 1,
+                        $"The cells at {column},{row} and {other},{otherRow} are a whole block apart, "
+                        + "and nothing in the tile pack is cut to cover that step.");
+                }
+            }
+        }
     }
 
     [Fact]

@@ -221,6 +221,31 @@ public class DerivationTests
         // changing no step, every other line untouched -- the fingerprint is
         // 4B15804EC1BEDE48, and with the rule in it is the value below.
         (10u, 0x13EB7A4673B75F21UL),
+
+        // Version 11 is the half step. A level was a whole block of height and
+        // is now half of one, so Reach.MilliHexPerLevel went from 500 to 250 and
+        // HexMap.LevelCount from three to nine. The pair is deliberate: two
+        // levels is one block and two times 250 is the 500 that was there
+        // before, so a map ported by doubling its levels gives every tower
+        // exactly the reach it had. What is new is that the levels in between
+        // now exist, and terrain that could only jump a block can rise through
+        // one of them.
+        //
+        // IT IS A RULE CHANGE ANYWAY, and this row is why. A stored record
+        // carries its map inline at whatever levels it was written with, and
+        // under the new value every one of those levels is worth half what the
+        // record was played at -- so a defense that reached the route no longer
+        // does. Nothing in any content file had to move for that to be true,
+        // which is the case this table exists to tell apart from a retune, and
+        // content/map.txt moving as well is a second and separate retirement
+        // that the map hash already covers.
+        //
+        // OBSERVED, both ways round, on this build. With MilliHexPerLevel back
+        // at 500 -- every other line of the change left in, the level count
+        // included -- the fingerprint is 13EB7A4673B75F21, which is version
+        // 10's, because a wider alphabet of levels no map in the scenario uses
+        // is not a rule. With the halving in it, it is the value below.
+        (11u, 0x323FC7D7E95AF97FUL),
     };
 
     /// <summary>

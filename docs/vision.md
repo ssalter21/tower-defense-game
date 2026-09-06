@@ -135,20 +135,23 @@ Creeps get **classes and roles** — tanks, damage, support, swarm, specialists 
 
 ### The board is a maze
 
-**A maze at three elevation levels, and a goal that is far less solvable.**
+**A maze that climbs, and a goal that is far less solvable.** The grid is half a block per level and nine
+levels deep.
 
 - **A map folds; it never branches.** Exactly one path in to out, and building never alters the route.
 - **No pathfinder and no line of sight, permanently.**
-- **Range is a signed difference**: shooting down a tier buys half a hex, shooting up costs one. Anything with
-  a radius reads as a sphere, where height only ever costs.
+- **Range is a signed difference**, `± 250` milli-hex per level: shooting down a whole block buys half a hex,
+  shooting up one costs half a hex. Anything with a radius reads as a sphere, where height only ever costs.
 - **Elevation is a coordinate the map carries, not the tower.**
 - **Maps are generated and rotate** *(designed, not built)*. A map is a **seed, not an asset**; everyone in a
   cycle plays the same one; candidates are **filtered by sweeping them rather than by taste**. The first map
   is hand-authored. Cadence and how the `(map, stage)` pool survives a turnover are
   [open questions](open-questions.md).
 
-**Until the maze lands the board is a hand-drawn 51-hex corridor one cell wide**, and every number priced
-against it is provisional by construction.
+**Until the maze lands the board is a hand-drawn 51-hex corridor one cell wide that folds and climbs two whole
+blocks**, and every number priced against it is provisional by construction. It spends five of the nine levels
+available to it, and every change of height on it is a single level -- half a block -- so nothing on it steps a
+whole one.
 
 ### How a shot resolves
 

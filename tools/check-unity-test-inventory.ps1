@@ -23,7 +23,7 @@
     METHOD per `[Test]` or `[UnityTest]`, read out of the source text. A method
     whose parameters carry `[Values]` or `[ValueSource]` runs as one case per
     value, so the editor's own totals are at least these and can be larger --
-    `RoadTilingMeshTests` is three methods and six cases. Counting cases would
+    `RoadTilingMeshTests` is four methods and nine cases. Counting cases would
     mean resolving the arrays they come from, which is a C# compiler's job.
     Methods are what can be counted honestly by reading, so methods are the
     unit. An attribute that declares a test method WITHOUT `[Test]` is a
@@ -51,10 +51,10 @@ $declaration = @'
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
  11  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
-  5  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
+  6  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
  10  client/Assets/Tests/EditMode/ImportedArtTests.cs
   4  client/Assets/Tests/EditMode/MatchContentTests.cs
-  3  client/Assets/Tests/EditMode/RoadTilingMeshTests.cs
+  4  client/Assets/Tests/EditMode/RoadTilingMeshTests.cs
   3  client/Assets/Tests/EditMode/RosterNamesTests.cs
  10  client/Assets/Tests/EditMode/RoutePathTests.cs
   4  client/Assets/Tests/EditMode/SceneRootTests.cs
@@ -64,6 +64,7 @@ $declaration = @'
   2  client/Assets/Tests/PlayMode/ChromeLayoutTests.cs
   8  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
+  5  client/Assets/Tests/PlayMode/HorizonTests.cs
   2  client/Assets/Tests/PlayMode/LocomotionTests.cs
  20  client/Assets/Tests/PlayMode/MatchViewTests.cs
   2  client/Assets/Tests/PlayMode/ParityRunTests.cs

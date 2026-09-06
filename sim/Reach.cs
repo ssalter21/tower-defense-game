@@ -8,9 +8,9 @@ namespace Sim
     /// <remarks>
     /// <para>
     /// <b>Height is a relationship and never a property.</b> A shot's range is
-    /// the signed difference <c>baseRange + (fromLevel - targetLevel) * 500</c>
-    /// -- shooting down a tier buys half a hex and shooting up one costs half a
-    /// hex -- so a tower on a cliff is better at shooting the valley and worse
+    /// the signed difference <c>baseRange + (fromLevel - targetLevel) * 250</c>
+    /// -- shooting down a block buys half a hex and shooting up one costs half
+    /// a hex -- so a tower on a cliff is better at shooting the valley and worse
     /// at shooting the ridge above it. A flat bonus for standing high would
     /// have made it better at both. See
     /// <c>docs/adr/0054-height-is-a-relationship-and-a-radius-is-a-sphere.md</c>.
@@ -18,7 +18,7 @@ namespace Sim
     /// <para>
     /// <b>Anything with a radius is a sphere</b>, where the level term is a
     /// magnitude rather than a difference: <c>hexDistance * 1000 +
-    /// |levelDifference| * 500 &lt;= radius</c>. Height only ever costs a
+    /// |levelDifference| * 250 &lt;= radius</c>. Height only ever costs a
     /// radius, which is what stops a bubble centred on a cliff blanketing the
     /// board. Both rules are one expression with two level terms, because the
     /// difference between them is exactly the sign and nothing else.
@@ -63,15 +63,40 @@ namespace Sim
         private const int MilliHexPerHex = 1000;
 
         /// <summary>
-        /// What one tier of height is worth, in milli-hexes: half a hex.
+        /// What one level of height is worth, in milli-hexes: a quarter of a
+        /// hex, because a level is half a block.
         /// </summary>
         /// <remarks>
-        /// Half a hex rather than a whole one, so that the shape of a fold
-        /// matters more than its height map. At a whole hex per tier an archer
-        /// swings between 1.2 and 5.2 hexes across the three tiers, which makes
-        /// the height of a placement dominate every other thing about it.
+        /// <para>
+        /// <b>A level used to be a whole block and is now half of one.</b> The
+        /// board could only step a whole block at a time, so every change of
+        /// height was a metre of bare vertical face and the ground read as a
+        /// stack of plates rather than as a hill. A level is now the half step
+        /// the tile pack was authored for -- its <c>*_sloped_low</c> pieces
+        /// climb exactly half of what its <c>*_sloped_high</c> pieces do -- and
+        /// terrain that used to jump a block can rise through an intermediate
+        /// cell instead.
+        /// </para>
+        /// <para>
+        /// <b>Halving the step halved this, so a block of climb is worth what
+        /// it always was.</b> Two levels is one block and two times 250 is the
+        /// 500 that was here before, which is what makes the change a
+        /// re-gridding of the terrain rather than a rebalance of every tower.
+        /// A map is ported by doubling its levels and nothing about reach
+        /// moves. The reasoning for the block being worth half a hex in the
+        /// first place still stands: at a whole hex per block an archer swings
+        /// between 1.2 and 5.2 hexes across the board's relief, which makes the
+        /// height of a placement dominate every other thing about it.
+        /// </para>
+        /// <para>
+        /// <b>The floor does more work now, and that is intended.</b> A single
+        /// half step costs a quarter hex, which the adjacency floor forgives
+        /// outright -- so smoothing a cliff into two half steps does not
+        /// quietly tax a tower standing beside it. Only relief that a player
+        /// can actually see costs range.
+        /// </para>
         /// </remarks>
-        private const int MilliHexPerLevel = 500;
+        private const int MilliHexPerLevel = 250;
 
         /// <summary>
         /// Whether a thing standing on one hex, with a range, can shoot a
