@@ -357,3 +357,24 @@ deriving it against.
 
 **It is the third silence of the same kind**, beside the Mage's splash and the Vampire's shield, and it is the
 loudest of the three by an order of magnitude. Nothing is retuned either way while it stands.
+
+### Two asks the roster hands back, which had no home until now
+
+**Raised by the whole-branch review at the end of the unattended run**, which found both recorded in commit
+messages and in `docs/frames/README.md` and nowhere a reader of the record would look. Neither was edited into
+a signed block, which was right — but a deferral nobody can find is not deferred, it is lost.
+
+**The Elder is colour and nothing else.** `roster.md` states the rule as *"tier 2 is colour plus a prop"*, and
+the Elder's own block names `druid_texture_alt_A`, no prop, and `Open — none`. The block and the rule
+disagree. [#259](https://github.com/ssalter21/tower-defense-game/issues/259) bound the block as written rather
+than inventing a prop to satisfy the rule, which leaves the contradiction standing where a reader can see it.
+Either the Elder gains a prop or the rule admits an exception; both are Sam's.
+
+**The Paladin line's three clips are unsigned, so those rows stand in their bind pose.** `roster.md` names a
+clip on every rung of the Knight and Barbarian lines and none on any rung of the Paladin's, whose windup and
+backswing carry this page's `_`. [#258](https://github.com/ssalter21/tower-defense-game/issues/258) bound ids
+20, 21 and 22 with model, props, atlas, statue and anchor and **null clips**, rather than guessing a
+plausible-looking clip name — so in play a Blessing fires without moving. The same is true of the whole
+Engineer line ([#260](https://github.com/ssalter21/tower-defense-game/issues/260)), and the Cleric and Druid
+lines carry a nought-tick windup, which the simulation enters and leaves inside one tick, so they never
+visibly wind up either ([#265](https://github.com/ssalter21/tower-defense-game/issues/265)).

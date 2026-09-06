@@ -11,7 +11,12 @@ namespace View.Editor
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>This list is a temporary allowance and it is empty.</b> A row can
+    /// <b>This list is a temporary allowance and it is empty.</b> It was
+    /// emptied early, by the ticket that bound the last six creeps rather than
+    /// by the one that opened it; retiring the mechanism itself is
+    /// <see href="https://github.com/ssalter21/tower-defense-game/issues/271">issue
+    /// 271</see>, which also owns the now-unreachable <c>Lists</c> branch in
+    /// <c>ImportedArtTests.EveryTowerFiresFromAPointOnItsOwnArt</c>. A row can
     /// land in the simulation before its art does, and for as long as that gap
     /// is open the row has to be drawable as something. An id written here says
     /// so out loud; an id nobody wrote here and nobody gave art to still

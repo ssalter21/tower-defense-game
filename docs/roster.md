@@ -1280,12 +1280,24 @@ the model as it is drawn:
 art tweak cost a format version and a re-record. These numbers are expected to move once somebody has looked
 at them, which is the whole reason they are stored somewhere free to change.
 
-**Measured, rather than assumed.** With those multipliers the tallest body on the board is 1.40 m and the
-shortest tower 2.20 m — the Prototype Dummy the twenty-three undressed rungs stand in as, ahead of the Archer's
-2.45 m — so a creep is a little under two thirds the height of the thing shooting it. An edit-mode
-test measures both off the geometry and fails if the gap closes to within a fifth, because comparing the two
-multipliers would prove nothing — a half applied to a taller model is not smaller than a one applied to a
-shorter one, and the creeps and the towers come from two different packs.
+**Measured, rather than assumed — and the measurement now fails.** An edit-mode test measures both off the
+geometry and fails if the gap closes to within a fifth, because comparing the two multipliers would prove
+nothing: a half applied to a taller model is not smaller than a one applied to a shorter one, and the creeps
+and the towers come from two different packs. That test is **red**, and the numbers are why.
+
+With every row now drawn, the tallest body on the board is the **Black Knight at 2.56 m** and the shortest
+tower the **Unravel at 2.31 m** — so the tallest creep is *taller than the shortest tower*, and the threshold
+the test asks for is 1.85 m. The Bone Golem (2.32 m), the Abomination (2.24 m) and the Frost Wight (2.09 m)
+are the other three over it. All four are Large-rig bodies, and that is the whole cause: the collection is
+authored at two scales — a `Rig_Medium` character is 2.3–2.9 m, a `Rig_Large` size-up 4.2–5.1 m — so **half of
+a size-up is a whole tower**. The signed multiplier of 0.5 is obeyed exactly; the read it exists for is gone.
+
+A played run says what that actually looks like: a Black Knight walks past four towers with its helmet at
+their head height and reads as a fifth adventurer in dark armour, not as a broken import
+(`docs/frames/played-run/black-knight-beside-towers.png`). Three ways out, all of them numbers a player sees
+and so none of them taken here: a third multiplier for the Large rig, different models for those four rows, or
+dropping the "unmistakably smaller" clause. See
+[#261](https://github.com/ssalter21/tower-defense-game/issues/261).
 
 **There is no plinth, and no rule about which units are people and which are buildings.** That distinction was
 considered and dropped: it is not a thing this page needs to have an opinion about.
