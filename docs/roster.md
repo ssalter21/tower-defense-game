@@ -51,7 +51,7 @@ signing **damage, cooldown and how many bodies it hits**.
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
 **The rule does not reach a capstone, because gold does not buy one.**
-[A gate hands the player one token](vision.md#a-capstone-is-granted-never-earned) at waves 3, 6 and 9, and the
+[A gate hands the player one token](vision.md#the-gates) at waves 3, 6 and 9, and the
 token is the whole price: three capstones a run, and the decision is which tower line to spend one on rather
 than what it costs. The cost column prices what gold buys, and the top of a line is not in it. That retires
 the shallow-U exemption this section used to reserve — an exemption to a gold rule, for a thing gold does not
@@ -120,6 +120,10 @@ row per edge, printed by `./tools/show-ladder.ps1`. It holds one edge today: `ar
 ---
 
 # Towers
+
+> **A widening is proposed.** [The expansion proposal](roster-expansion-proposal.md) puts nine lines on this
+> page, three stages each, and would retire the Captain, the Hero and the elemental branch below. Until Sam
+> signs it, what follows is current.
 
 Three lines, three tiers each, and **one attack type per line** — Soldier impact, Archer pierce, Mage magic.
 It is what makes the three-way cycle readable off the board: you know what a tower does to a body by knowing
@@ -385,6 +389,10 @@ invalidates no record; it leaves those bundles pinned to an older roster, which 
 
 ## What is deliberately absent
 
+> **Candidates for all three are named in [the expansion proposal](roster-expansion-proposal.md)**, since
+> 5 September 2026, along with six further tower lines and eight further creeps. It is a proposal: this table
+> stands until a row below it is signed.
+
 **Recorded so it is not silently re-proposed.** These are not design rejections — they are shapes that were
 wanted and are not being built yet, and each is blocked on art rather than on argument.
 
@@ -550,8 +558,8 @@ open.
    rows that exist, not new unit types. An **arcane shield** is expected and is two things at once — a pool a
    creep carries in its own right, and a pool the Necromancer grants to creeps entering its range that would
    not otherwise have one. The second half is the aura in
-   [what this roster needs](#what-this-roster-needs-that-the-schema-does-not-have). See [creep upgrade
-   systems](research/creep-wave-variety-and-creep-upgrade-systems.md). **Creeps get no prerequisite chain** —
+   [what this roster needs](#what-this-roster-needs-that-the-schema-does-not-have). See [what the creep-variety
+   survey found](open-questions.md#what-the-design-research-found). **Creeps get no prerequisite chain** —
    the gating came out precisely because it held back testing, and a chain on the sending side puts a version
    of it straight back.
 3. **The Soldier keeps his hex.** Answered by [#213](https://github.com/ssalter21/tower-defense-game/issues/213): one hex of range, plus a self-centred bubble,

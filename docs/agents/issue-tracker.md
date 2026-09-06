@@ -14,6 +14,10 @@ Issues and PRDs for this repo live as GitHub Issues in `ssalter21/tower-defense-
   actioned). This repo carries no `needs-triage` / `needs-info` / `ready-for-human` labels — a ticket that is
   not `ready-for-agent` is simply unlabelled for triage. Create the label before using it rather than assuming
   it exists.
+- `regenerated-deliberately` goes on a pull request whose branch moves a golden artefact — the trace, the
+  landmark table, `content/golden/`, the sweep, the run outcome, the replay or the command list. The build
+  gate's `tools/check-golden-label.ps1` step is red without it, so the label is a person saying they read
+  the regenerated diff.
 - Native issue state is the source of truth for open/closed — there is no separate `Status:` line. "Resolved"
   means the issue is closed with an `## Answer` comment; "claimed" means it is open and assigned.
 - Comments and conversation history are ordinary GitHub issue comments.

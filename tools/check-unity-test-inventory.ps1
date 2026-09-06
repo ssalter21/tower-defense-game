@@ -47,7 +47,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $declaration = @'
   4  client/Assets/Tests/EditMode/BoardBakeTests.cs
   7  client/Assets/Tests/EditMode/BoardDraftTests.cs
-  8  client/Assets/Tests/EditMode/BoardDressingTests.cs
+ 10  client/Assets/Tests/EditMode/BoardDressingTests.cs
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
  11  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
@@ -71,9 +71,11 @@ $declaration = @'
   4  client/Assets/Tests/PlayMode/PlayableHeadPoisonTests.cs
  10  client/Assets/Tests/PlayMode/PlayablesSamplingTests.cs
   5  client/Assets/Tests/PlayMode/PlaybackTests.cs
+  3  client/Assets/Tests/PlayMode/PlayfieldRebuildTests.cs
   3  client/Assets/Tests/PlayMode/RealRigSamplingTests.cs
  14  client/Assets/Tests/PlayMode/RunLoopTests.cs
   2  client/Assets/Tests/PlayMode/SimPluginTests.cs
+  5  client/Assets/Tests/PlayMode/StoredPoolTests.cs
  21  client/Assets/Tests/PlayMode/WaveTests.cs
   4  client/Assets/Tests/PlayMode/WeaponSocketTests.cs
 '@

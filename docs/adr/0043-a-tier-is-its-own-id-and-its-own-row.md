@@ -77,7 +77,6 @@ rather than shared machinery: it is the *offensive* gate, one take per round, fr
 to a Captain and it eats a Soldier.
 
 **A `was` pointer on the upgraded placement.** It is a reference that can go stale and a chain somebody has to
-walk to sum a career. Identity gives the same answer with nothing to keep consistent, and of every game in
-[the survey](../research/upgrade-graph-representation-in-shipped-tower-defenses.md) only GemCraft stores a
-link back to what a tower used to be — and a gem *is* its two parents, which is a different mechanic wearing
+walk to sum a career. Identity gives the same answer with nothing to keep consistent, and of every game surveyed for this record
+only GemCraft stores a link back to what a tower used to be — and a gem *is* its two parents, which is a different mechanic wearing
 the same word.

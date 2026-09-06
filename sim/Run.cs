@@ -25,11 +25,12 @@ namespace Sim
     /// </remarks>
     public sealed class RoundReport
     {
-        internal RoundReport(RoundOutcome outcome, Build build, WavePayment payment)
+        internal RoundReport(RoundOutcome outcome, Build build, WavePayment payment, FieldDraw field)
         {
             Outcome = outcome;
             Build = build;
             Payment = payment;
+            Field = field;
         }
 
         /// <summary>What this round's wave got past the field, and what the field got past it.</summary>
@@ -40,6 +41,12 @@ namespace Sim
 
         /// <summary>What the wave paid the purse, line by line, and the purse afterwards.</summary>
         public WavePayment Payment { get; }
+
+        /// <summary>
+        /// The K opponents this round met: which of the stage's stored rounds
+        /// were drawn, and how many slots the stand-in filled.
+        /// </summary>
+        public FieldDraw Field { get; }
 
         public override string ToString() =>
             Outcome.ToString()
@@ -167,8 +174,9 @@ namespace Sim
         /// the one prerequisite a run enforces.
         /// </param>
         /// <param name="pool">
-        /// The population a round's field of K is drawn from, and the one the
-        /// performance bonus is measured against. See <see cref="Field"/>.
+        /// The population a round's field of K is drawn from -- the rounds
+        /// stored at each stage, and the stand-in that fills a stage holding
+        /// fewer than K. See <see cref="Field"/>.
         /// </param>
         /// <param name="seed">The one seed every draw in the run is derived from.</param>
         /// <param name="waves">
@@ -272,8 +280,8 @@ namespace Sim
         /// decision on whether the measurement is kept.
         /// </para>
         /// <para>
-        /// <b>It comes out of the pool, so swapping the canned stand-in for a
-        /// real ghost pool is the pool argument and nothing else.</b> Measuring
+        /// <b>It comes out of the pool, so the stored rounds and the stand-in
+        /// alike are in it.</b> Measuring
         /// it is <see cref="MeasureField"/> -- a run cannot be handed a pool and
         /// a distribution that disagree, because there is only the one of them.
         /// </para>
@@ -430,10 +438,10 @@ namespace Sim
 
             RequireUnfinished();
 
-            (RoundOutcome outcome, WavePayment payment) = Play(
+            (RoundOutcome outcome, WavePayment payment, FieldDraw field) = Play(
                 orders, build.Purse, build.Board);
 
-            return new RoundReport(outcome, build, payment);
+            return new RoundReport(outcome, build, payment, field);
         }
 
         /// <summary>
@@ -531,7 +539,7 @@ namespace Sim
 
             return MatchFor(
                 _sent[round],
-                _pool.At(round, FieldFor(round)[opponent]),
+                FieldFor(round).Members[opponent],
                 round,
                 opponent,
                 attacking ? Side.Attacking : Side.Defending);
@@ -562,28 +570,27 @@ namespace Sim
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
         /// <param name="board">What stands after whatever the round built.</param>
-        private (RoundOutcome Outcome, WavePayment Payment) Play(
+        private (RoundOutcome Outcome, WavePayment Payment, FieldDraw Field) Play(
             RoundOrders orders,
             Purse purse,
             Board board)
         {
             int round = _rounds.Count;
-            int[] drawn = FieldFor(round);
+            FieldDraw drawn = FieldFor(round);
+            IReadOnlyList<RoundOrders> against = drawn.Members;
             long dealt = 0;
             long taken = 0;
 
-            for (int index = 0; index < drawn.Length; index++)
+            for (int index = 0; index < against.Count; index++)
             {
-                RoundOrders against = _pool.At(round, drawn[index]);
-
-                dealt += LeakCost(orders, against, round, index, Side.Attacking);
-                taken += LeakCost(orders, against, round, index, Side.Defending);
+                dealt += LeakCost(orders, against[index], round, index, Side.Attacking);
+                taken += LeakCost(orders, against[index], round, index, Side.Defending);
             }
 
             // The average rather than the sum, on both sides. Summed, one round
             // against ten opponents would cost ten rounds' worth of health, and
             // a field would be a punishment for being in one.
-            var outcome = new RoundOutcome((int)(dealt / drawn.Length), (int)(taken / drawn.Length));
+            var outcome = new RoundOutcome((int)(dealt / against.Count), (int)(taken / against.Count));
 
             // Interest, the flat base, and a share of what this round's offense
             // got past on top. Nothing is taken off anybody to pay it: the wave
@@ -593,7 +600,7 @@ namespace Sim
 
             Commit(orders, outcome, payment.Purse, board, FoldedWith(outcome));
 
-            return (outcome, payment);
+            return (outcome, payment, drawn);
         }
 
         /// <summary>
@@ -621,9 +628,12 @@ namespace Sim
         }
 
         /// <summary>
-        /// Which K of the pool this round is fought against.
+        /// Which K of the pool this round is fought against: the stage's stored
+        /// rounds, no two of them the same, and the stand-in for whatever the
+        /// stage could not fill.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// One stream, started at a position derived from the run's seed and the
         /// round rather than continued from wherever the last draw left it. Two
         /// things follow, and both are the point: round seven's field does not
@@ -631,17 +641,76 @@ namespace Sim
         /// its record and a server can re-validate one round of it; and no draw
         /// of any kind happens inside a match, so a match's stream position stays
         /// a running count of the shots fired in it.
+        /// </para>
+        /// <para>
+        /// <b>Stored rounds are met without replacement and the stand-in with
+        /// it.</b> A field of ten drawn out of a stage of twenty is ten
+        /// different opponents rather than ten draws that may repeat, which is
+        /// what makes a wide pool a wide field; the same draw off the same seed
+        /// meets the same ten. What a stage cannot fill is the stand-in's, drawn
+        /// one slot at a time with replacement -- so a stage nobody has stored a
+        /// round at is the canned field, exactly as every stage was before there
+        /// was a folder to read.
+        /// </para>
         /// </remarks>
-        private int[] FieldFor(int round) => FieldOf(round, _pool.SizeAt(round));
+        private FieldDraw FieldFor(int round)
+        {
+            var dice = new Pcg32(FieldSeed(round));
+            int stored = _pool.StoredAt(round);
+            int met = stored < FieldSize ? stored : FieldSize;
+            var members = new RoundOrders[FieldSize];
+            var drawn = new int[FieldSize];
+            var bag = new int[stored];
+
+            for (int index = 0; index < bag.Length; index++)
+            {
+                bag[index] = index;
+            }
+
+            // A partial shuffle of the stage's stored rounds: one of the members
+            // nobody has met yet is swapped into each slot in turn, so the first
+            // `met` slots hold distinct members in an order the run's seed
+            // decides. It stops at `met`, so the work is the field's width and
+            // not the folder's.
+            for (int index = 0; index < met; index++)
+            {
+                int pick = index + (int)dice.NextBelow((uint)(stored - index));
+                int held = bag[pick];
+
+                bag[pick] = bag[index];
+                bag[index] = held;
+
+                drawn[index] = held;
+                members[index] = _pool.StoredAt(round, held);
+            }
+
+            // What the stage could not fill, filled by the stand-in and drawn
+            // exactly as every field was drawn before any round was stored: one
+            // draw per slot, with replacement, off the same stream. A stage with
+            // nothing stored therefore consumes the stream it always consumed
+            // and meets the field it always met.
+            for (int index = met; index < FieldSize; index++)
+            {
+                drawn[index] = FieldDraw.StoodIn;
+                members[index] = _pool.StandingIn(
+                    round, (int)dice.NextBelow((uint)_pool.StandInsAt(round)));
+            }
+
+            return new FieldDraw(members, drawn);
+        }
 
         /// <summary>
-        /// One field draw: K members out of a population this many wide, off the
-        /// stream that round's position starts. The width is an argument because
-        /// a round draws from the members recorded at its own round and the
-        /// measurement draws from the whole population -- one draw shape, two
-        /// populations, rather than two loops that have to stay the same.
+        /// One measurement draw: <see cref="FieldSize"/> members out of a
+        /// population this many wide, with replacement, off the stream that
+        /// sample's position starts.
         /// </summary>
-        private int[] FieldOf(int round, int size)
+        /// <remarks>
+        /// Not the draw a round makes, because the two answer different
+        /// questions. A round meets one stage and is topped up where that stage
+        /// is thin; the measurement reads the whole population at once and has
+        /// no stage to be thin at, so there is nothing for a stand-in to fill.
+        /// </remarks>
+        private int[] SampleOf(int round, int size)
         {
             var dice = new Pcg32(FieldSeed(round));
             var drawn = new int[FieldSize];
@@ -704,7 +773,7 @@ namespace Sim
             for (int sample = 0; sample < worth.Length; sample++)
             {
                 RoundOrders member = _pool.At((int)dice.NextBelow((uint)_pool.Size));
-                int[] field = FieldOf(sample, _pool.Size);
+                int[] field = SampleOf(sample, _pool.Size);
                 long dealt = 0;
 
                 for (int index = 0; index < field.Length; index++)

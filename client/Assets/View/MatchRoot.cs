@@ -245,6 +245,7 @@ namespace View
         /// and drawing it with art the caller supplies.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// What a test calls, for two reasons. The folder, so a run played by a
         /// test does not write over the one a person played; and the art, which
         /// is the same seam and the same reason as
@@ -252,6 +253,15 @@ namespace View
         /// has the assets in hand and no generated scene to read them from would
         /// otherwise get nothing on exactly the checkout where somebody is
         /// trying to see whether the run works.
+        /// </para>
+        /// <para>
+        /// <b>The folder is where the pool comes from as well.</b> A run is
+        /// resolved against the stored rounds beside it, so a fixture pinning a
+        /// run's numbers has to control which rounds those are — otherwise
+        /// somebody who has played, or run <c>tools/seed-pool.ps1</c>, turns
+        /// every such fixture red for a reason that has nothing to do with the
+        /// code. <see cref="PoolDirectory"/> is what this points somewhere else.
+        /// </para>
         /// </remarks>
         public RunLoop BeginRun(ulong seed, string directory, MatchArt art)
         {
@@ -273,15 +283,48 @@ namespace View
                     + "resuming one, so a second is a fresh scene rather than a second call.");
             }
 
+            PoolDirectory = System.IO.Path.Combine(directory, StreamingContent.PoolFolderName);
             Loop = RunLoop.Build(this, art, () => RunOn(seed), directory);
 
             return Loop;
         }
 
         /// <summary>
+        /// Where this root's runs draw their opponents from.
+        /// </summary>
+        /// <remarks>
+        /// The shipped pool beside the streaming content, which is where
+        /// <c>tools/seed-pool.ps1</c> fills one and where a player reads it —
+        /// until <see cref="BeginRun(ulong, string, MatchArt)"/> points it at
+        /// the folder that caller named, which is a fixture's own scratch.
+        /// </remarks>
+        public string PoolDirectory { get; private set; } = StreamingContent.PoolDirectory;
+
+        /// <summary>
+        /// The folder's rounds, read once and kept.
+        /// </summary>
+        /// <remarks>
+        /// <b>Once, because a run has to be the same run twice.</b> A session is
+        /// proved by building a second run on the same seed and holding it
+        /// against what the player was shown, and a population that had grown
+        /// between the two -- by this very run storing its own rounds on the way
+        /// out, say -- would make the two runs differ for a reason that is not a
+        /// determinism bug. So the pool a root plays against is the pool as it
+        /// stood when the root's first run was built.
+        /// </remarks>
+        private StoredRounds _pool;
+
+        /// <summary>
         /// A run on <paramref name="seed"/> with nothing played into it, over
         /// this object's playfield and the shipped content.
         /// </summary>
+        /// <remarks>
+        /// <b>Its opponents come out of <see cref="PoolDirectory"/>.</b> Each
+        /// round draws K of the rounds stored at its own stage, and the canned
+        /// field stands in for whatever that stage cannot fill -- so a player
+        /// with no pool plays against the canned field exactly as this always
+        /// did, and a player who has one plays against people.
+        /// </remarks>
         public Run RunOn(ulong seed)
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
@@ -293,15 +336,21 @@ namespace View
                 rules,
                 types,
                 ladder,
-                FieldPool.Canned(
-                    Map,
-                    rules,
-                    types,
-                    ladder,
-                    StreamingContent.ReadDefense(types),
-                    StreamingContent.ReadField(types)),
+                FieldPool
+                    .Canned(
+                        Map,
+                        rules,
+                        types,
+                        ladder,
+                        StreamingContent.ReadDefense(types),
+                        StreamingContent.ReadField(types))
+                    .Storing(Pool(types).ByStage),
                 seed);
         }
+
+        /// <summary>The stored rounds beside the player, read once. See <see cref="_pool"/>.</summary>
+        private StoredRounds Pool(UnitTypeTable types) =>
+            _pool ??= StreamingContent.ReadPool(PoolDirectory, Map, types);
 
         /// <summary>
         /// Puts the build chrome up over a round the caller composed. What a
@@ -579,9 +628,17 @@ namespace View
         }
 
         /// <summary>
-        /// Takes one piece of chrome or one drawn thing off the screen now and
-        /// out of memory at the end of the frame.
+        /// Takes one piece of chrome or one drawn thing off the screen now, and
+        /// out of memory as soon as the engine allows.
         /// </summary>
+        /// <remarks>
+        /// <b>Deactivated first, and that is the half that has to happen now.</b>
+        /// A play-mode <c>Destroy</c> is deferred to the end of the frame it was
+        /// asked in, and that is a frame a capture can be reading. Outside play
+        /// mode there is no end of frame to defer to, so the destroy is
+        /// immediate — which is what lets an editor tool call
+        /// <see cref="Build"/> as well as a running game.
+        /// </remarks>
         private static void Retire(Component component)
         {
             if (component == null)
@@ -589,8 +646,17 @@ namespace View
                 return;
             }
 
-            component.gameObject.SetActive(false);
-            Destroy(component.gameObject);
+            GameObject host = component.gameObject;
+            host.SetActive(false);
+
+            if (Application.isPlaying)
+            {
+                Destroy(host);
+            }
+            else
+            {
+                DestroyImmediate(host);
+            }
         }
 
         /// <summary>
@@ -598,10 +664,25 @@ namespace View
         /// map, then the light, then the camera framed on the floor.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Public and taking the map rather than reading it, so a test can draw
         /// a floor from a map it wrote itself without a file being involved.
         /// The order matters in one place only: the camera is framed on bounds
         /// the floor reports, so the floor goes first.
+        /// </para>
+        /// <para>
+        /// <b>Building again replaces the playfield rather than adding a second
+        /// one, and that is a correctness matter.</b> <see cref="Awake"/> builds
+        /// as soon as this component exists — which in play mode is the moment
+        /// <c>AddComponent</c> returns — so an editor tool that adds the
+        /// component and then calls this with the real tiles was leaving the
+        /// blockout floor standing underneath, in the same place. Two floors at
+        /// one height z-fight into a chequerboard of triangles, and two suns
+        /// light the board twice. That is what the chrome sheets were pictures
+        /// of; the match frames were clean only because <c>Awake</c> does not
+        /// run in an edit-mode editor, so there the second build was the only
+        /// one. See #240.
+        /// </para>
         /// </remarks>
         public void Build(
             HexMap map,
@@ -611,8 +692,14 @@ namespace View
             BoardDressing authored = null,
             SkySettings sky = default)
         {
+            ClearPlayfield();
+
             Map = map;
-            TileMesh = HexTileMesh.Create();
+
+            // Kept across a rebuild rather than made again. It is handed to
+            // BuildBoard, which outlives this call, so a fresh mesh here would
+            // leave that one drawing a destroyed one.
+            TileMesh = TileMesh != null ? TileMesh : HexTileMesh.Create();
 
             Floor = HexFloor.Build(
                 transform,
@@ -639,6 +726,21 @@ namespace View
 
             CameraRig = OrbitCameraRig.Build(transform, Floor.WorldBounds);
             Horizon.Frame(CameraRig.Camera);
+        }
+
+        /// <summary>
+        /// Takes down the floor, the sun and the camera a previous
+        /// <see cref="Build"/> left standing. Does nothing the first time.
+        /// </summary>
+        private void ClearPlayfield()
+        {
+            Retire(Floor);
+            Retire(Sun);
+            Retire(CameraRig);
+
+            Floor = null;
+            Sun = null;
+            CameraRig = null;
         }
 
         /// <summary>

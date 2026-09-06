@@ -38,8 +38,26 @@ jobs:
     name: simulation
     runs-on: ubuntu-latest
 
+    # Read of the pull requests, for the golden-artefact step below: it asks
+    # GitHub which open pull request has this branch as its head. Read of the
+    # issues, for the documentary step: it asks whether an issue a document
+    # calls open is open. Naming the permissions at all narrows this job to
+    # these three, since a block here replaces the defaults rather than adding
+    # to them -- so a step that starts asking GitHub something new needs its
+    # scope added here or it gets a 403 and nothing else.
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+
     steps:
+      # All of the history, not the single commit a gate normally needs. The
+      # golden-artefact step compares this branch against its merge base with
+      # origin/main, and a shallow checkout has neither the base nor a merge
+      # base to find.
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v5
         with:
@@ -63,6 +81,25 @@ jobs:
         shell: pwsh
         run: ./tools/check-project-settings.ps1
 
+      # The only step here that is about the prose. Everything else asks
+      # whether the code still does what it did; a document goes stale when
+      # some other file moves, so the drift never appears in its own diff and
+      # no test has an opinion about it. Four claims are settled mechanically:
+      # an issue called open is open, a committed sheet or frame is newer than
+      # the content it was rendered from, the record count docs/README.md
+      # quotes is the record count, and an ADR a source comment points at
+      # exists. The rest of docs/ is still a person's job -- AGENTS.md rule 6
+      # says so -- and this is the part of it a person should never have had.
+      #
+      # It reads issue state through gh, so it needs the same token the
+      # golden-artefact step below uses. Off a runner, on a machine with no
+      # gh, that one invariant reports itself SKIPPED rather than passing.
+      - name: The documents agree with the repository
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./tools/check-docs.ps1
+
       # The step that is about the tests this gate cannot run. It launches no
       # editor either: a test method is counted by its [Test] or [UnityTest]
       # attribute in the source text. Methods and not cases, because a
@@ -76,6 +113,27 @@ jobs:
       - name: The Unity tests this gate does not run are named and counted
         shell: pwsh
         run: ./tools/check-unity-test-inventory.ps1
+
+      # The step that guards the golden artefacts -- the trace, the landmarks,
+      # content/golden/, the sweep, the run outcome, the replay and the command
+      # list -- against being quietly rewritten. Everything else here asks
+      # whether the simulation still produces them; nothing else can ask
+      # whether they were meant to move, because a rules change plus a
+      # regeneration is a green gate on this job and on all six matrix rows.
+      #
+      # IT IS A LABEL AND NOT A FIX ON PURPOSE. The alternative -- a check that
+      # decides for itself whether a regeneration was legitimate -- would be a
+      # gate that can never go red on a deliberate content change, which is the
+      # hole the dark factory fell through in section 4.2 of the software
+      # factory note. So the escape hatch is made loud instead of closed: a
+      # diff touching a golden artefact is a diff a person reads, and the
+      # `regenerated-deliberately` label on the branch's pull request is where
+      # that person says so.
+      - name: A moved golden artefact is labelled as deliberate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./tools/check-golden-label.ps1
 
       # The content the player ships with is a generated copy of the content
       # in content/, committed like a lockfile. There is an edit-mode test that

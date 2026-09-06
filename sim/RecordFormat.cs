@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Sim
 {
-    /// <summary>Which of the four record kinds a run of bytes is.</summary>
+    /// <summary>Which of the five record kinds a run of bytes is.</summary>
     public enum RecordKind
     {
         /// <summary>A defense: the towers, and the map they were placed on, by hash.</summary>
@@ -20,6 +20,12 @@ namespace Sim
         /// <c>(wave index, decision)</c> pairs.
         /// </summary>
         Command = 3,
+
+        /// <summary>
+        /// A stored round: the stage it was played at, the wall that stood and
+        /// the wave that walked.
+        /// </summary>
+        Round = 4,
     }
 
     /// <summary>
@@ -150,6 +156,37 @@ namespace Sim
         public const int WaveVersion = 0;
 
         /// <summary>
+        /// The stored-round layout, version 0: <c>u16 stage</c>, a whole
+        /// defense record and a whole wave record, in that order.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It inlines the two records rather than restating their fields.</b>
+        /// A stored round is a wall and a wave, and both of those already have
+        /// a reader, a canonical order and a format version of their own -- so
+        /// this kind carries their bytes and neither the tower loop nor the
+        /// order loop exists twice. It is the arrangement
+        /// <see cref="ReplayVersion"/> uses for the same two halves, and the
+        /// cross-check that the three headers name one ruleset comes with it.
+        /// </para>
+        /// <para>
+        /// <b>The stage is the field this kind adds, and it is the whole reason
+        /// the kind exists.</b> A pool is drawn from per stage -- a run at its
+        /// seventh round meets rounds recorded at a seventh -- so a stored
+        /// round that did not say which one it was played at could be drawn
+        /// against any of them.
+        /// </para>
+        /// <para>
+        /// <b>The map is named by the defense inside, and not again here.</b>
+        /// A defense already carries the map hash that pins its geometry and
+        /// the handle that looks one up, so a second copy would be a second
+        /// thing to keep in agreement -- the argument
+        /// <see cref="ReplayBundle"/> makes about the handle, one level up.
+        /// </para>
+        /// </remarks>
+        public const int RoundVersion = 0;
+
+        /// <summary>
         /// The replay bundle layout, version 2: the version-1 fields with a
         /// second plane of map bytes -- one level per cell, row-major -- after
         /// the cells.
@@ -272,6 +309,9 @@ namespace Sim
                 case RecordKind.Command:
                     return "CMDS";
 
+                case RecordKind.Round:
+                    return "RUND";
+
                 default:
                     throw NoSuchKind(kind);
             }
@@ -293,6 +333,9 @@ namespace Sim
 
                 case RecordKind.Command:
                     return "command stream";
+
+                case RecordKind.Round:
+                    return "stored round";
 
                 default:
                     throw NoSuchKind(kind);
@@ -346,6 +389,9 @@ namespace Sim
 
                 case RecordKind.Command:
                     return CommandVersion;
+
+                case RecordKind.Round:
+                    return RoundVersion;
 
                 default:
                     throw NoSuchKind(kind);
@@ -416,6 +462,9 @@ namespace Sim
                         || formatVersion == 2
                         || formatVersion == 3;
 
+                case RecordKind.Round:
+                    return formatVersion == 0;
+
                 default:
                     throw NoSuchKind(kind);
             }
@@ -448,6 +497,12 @@ namespace Sim
                 return true;
             }
 
+            if (string.Equals(magic, MagicOf(RecordKind.Round), StringComparison.Ordinal))
+            {
+                kind = RecordKind.Round;
+                return true;
+            }
+
             kind = RecordKind.Ghost;
             return false;
         }
@@ -455,7 +510,7 @@ namespace Sim
         private static ArgumentOutOfRangeException NoSuchKind(RecordKind kind) =>
             new ArgumentOutOfRangeException(
                 nameof(kind),
-                "There are four record kinds and "
+                "There are five record kinds and "
                 + ((int)kind).ToString(CultureInfo.InvariantCulture)
                 + " is not one of them.");
     }

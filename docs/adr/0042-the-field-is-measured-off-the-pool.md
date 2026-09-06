@@ -64,8 +64,35 @@
 > 500 → 552 gold and then stops, because the route is covered so nothing can be placed and every placement is
 > the dearest row so nothing can be upgraded. Worse, the dearer wall is a **weaker** wall — the committed run's
 > total dealt rose 331 → 375 — because the bot upgrades archers into mages without knowing what either is
-> worth. That is left standing rather than tuned away, as
-> [an open question](../open-questions.md#does-the-scripted-players-upgrade-half-need-to-know-what-a-tower-is-worth).
+> worth.
+>
+> **Amended by [#236](https://github.com/ssalter21/tower-defense-game/issues/236), 3 September 2026: the bot
+> buys by value on a covered route.** Both halves of the paragraph above are gone. It scores a second tower on
+> covered route and an upgrade by one number and buys the higher, so the stand-in's wall grows in nine rounds
+> of ten — 384 gold to 872 — and the committed run's total dealt fell 375 → **0**. The numbers are in
+> [the decision-log entry](../decision-log.md).
+>
+> **Amended by [#237](https://github.com/ssalter21/tower-defense-game/issues/237), 3 September 2026: the pool
+> is a folder of stored rounds and the canned field is what stands in where one is thin.** The sentence this
+> ADR still stood on — *swapping the canned stand-in for a real ghost pool is that one argument and nothing
+> else* — has been spent, and it held: `Run` still takes one `FieldPool` and nothing beside it, and what
+> changed is what a pool is made of. See
+> [ADR-0057](0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md).
+>
+> **The stand-in did not go and could not.** A stage nobody has stored a round at still has to resolve, so the
+> canned opponent fills the slots a stage cannot — which is why every measurement below, and every committed
+> artefact taken under it, is unmoved by a folder nobody has seeded.
+>
+> **What the measurement now reads is wider.** `MeasureField` draws over the whole population with the stage
+> structure flattened away, and that population is now the stored rounds *and* the stand-ins rather than the
+> stand-ins alone. Nothing prices off it, so nothing moved; what it costs is that the spread a populated pool
+> reports is a spread over a mixture, and resolution 1 above is still the answer if anything ever prices off
+> it again.
+>
+> **The open question is untouched.** `PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField` and
+> the `run-measure/1` draw are all still here and still have no consumer; #237 neither deleted them nor gave
+> them one. Whether the machinery is kept is still
+> [a decision for a human](../open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it).
 >
 > The rest of this file is left as it was written. It describes rules that were in force and is a record of
 > them, not a description of the build.

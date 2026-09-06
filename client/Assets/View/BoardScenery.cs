@@ -49,9 +49,25 @@ namespace View
             float offsetZ,
             float turn,
             float scale)
+            : this(group, variant, null, column, row, offsetX, offsetY, offsetZ, turn, scale)
+        {
+        }
+
+        private SceneryPlacement(
+            SceneryGroup group,
+            int variant,
+            string model,
+            int column,
+            int row,
+            float offsetX,
+            float offsetY,
+            float offsetZ,
+            float turn,
+            float scale)
         {
             Group = group;
             Variant = variant;
+            Model = model;
             Column = column;
             Row = row;
             OffsetX = offsetX;
@@ -61,11 +77,48 @@ namespace View
             Scale = scale;
         }
 
-        /// <summary>Which family.</summary>
+        /// <summary>
+        /// A piece that names one model out of the imported art, rather than
+        /// asking a family for its n-th.
+        /// </summary>
+        /// <remarks>
+        /// <b>The two addressings answer different questions and neither
+        /// replaces the other.</b> The generator scatters a board it has never
+        /// seen, so it must be able to ask for "a grove" without knowing what
+        /// groves exist — that is <see cref="Group"/> and <see cref="Variant"/>,
+        /// and it stays exactly as it was. A person placing a thing has already
+        /// looked at it and means <em>that one</em>; giving them an index into a
+        /// list of four thousand would be asking them to count. So a named piece
+        /// carries its name, and the family it does not belong to is
+        /// <see cref="SceneryGroup.RimProp"/> only because the field cannot be
+        /// absent.
+        /// </remarks>
+        public static SceneryPlacement Named(
+            string model,
+            int column,
+            int row,
+            float offsetX,
+            float offsetY,
+            float offsetZ,
+            float turn,
+            float scale) =>
+            new SceneryPlacement(
+                SceneryGroup.RimProp, 0, model, column, row, offsetX, offsetY, offsetZ, turn, scale);
+
+        /// <summary>Which family. Meaningless where <see cref="Model"/> is set.</summary>
         public SceneryGroup Group { get; }
 
         /// <summary>Which model within that family, by index. Wrapped by the set.</summary>
         public int Variant { get; }
+
+        /// <summary>
+        /// The catalogue name of the one model meant, or null where this piece
+        /// came from a family. <see cref="IsNamed"/> is the question to ask.
+        /// </summary>
+        public string Model { get; }
+
+        /// <summary>True where this piece names its model rather than a family.</summary>
+        public bool IsNamed => !string.IsNullOrEmpty(Model);
 
         /// <summary>The cell it belongs to, so a tower standing here can clear it.</summary>
         public int Column { get; }

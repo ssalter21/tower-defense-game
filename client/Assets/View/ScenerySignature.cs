@@ -37,17 +37,45 @@ namespace View
         [Tooltip("Which model of that family, counted from the scene builder's list and wrapped.")]
         private int variant;
 
-        /// <summary>Which family.</summary>
+        [SerializeField]
+        [Tooltip("Set instead of the family, where a person named one model out of the imported art.")]
+        private string model;
+
+        /// <summary>Which family. Meaningless where <see cref="Model"/> is set.</summary>
         public SceneryGroup Group => group;
 
         /// <summary>Which model of it.</summary>
         public int Variant => variant;
+
+        /// <summary>
+        /// The catalogue name this piece was drawn from, or empty where it came
+        /// out of a family.
+        /// </summary>
+        public string Model => model;
+
+        /// <summary>True where this piece names its model rather than a family.</summary>
+        public bool IsNamed => !string.IsNullOrEmpty(model);
 
         /// <summary>Stamps a freshly drawn piece.</summary>
         public void Wrote(SceneryGroup wasGroup, int wasVariant)
         {
             group = wasGroup;
             variant = wasVariant;
+            model = null;
+        }
+
+        /// <summary>
+        /// Stamps a piece that names one model out of the imported art.
+        /// </summary>
+        /// <remarks>
+        /// The family is left at whatever it was and is not read again while
+        /// <see cref="Model"/> is set. Recording both would invite a bake to
+        /// pick the one that happened to be checked first, which is the
+        /// ambiguity this component exists to remove.
+        /// </remarks>
+        public void WroteNamed(string wasModel)
+        {
+            model = wasModel;
         }
     }
 }

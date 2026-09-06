@@ -84,6 +84,7 @@ namespace Sim
         internal SweepRow(
             int typeId,
             string label,
+            string wall,
             int runs,
             int rounds,
             int wins,
@@ -99,6 +100,7 @@ namespace Sim
         {
             TypeId = typeId;
             Label = label;
+            Wall = wall;
             Runs = runs;
             Rounds = rounds;
             Wins = wins;
@@ -118,6 +120,18 @@ namespace Sim
 
         /// <summary>That creep's label, for a person reading a spreadsheet.</summary>
         public string Label { get; }
+
+        /// <summary>
+        /// What the opponents' towers in this row's runs were made of.
+        /// </summary>
+        /// <remarks>
+        /// <b>Two rows are comparable when this matches and not otherwise.</b>
+        /// A creep meets every wall the sweep carries, so the same label appears
+        /// once per wall with different numbers under it -- and reading one of
+        /// them as "what this creep does" is the mistake the column exists to
+        /// make impossible. See <see cref="SweepWall"/>.
+        /// </remarks>
+        public string Wall { get; }
 
         /// <summary>How many runs fell in this row.</summary>
         public int Runs { get; }
@@ -205,6 +219,8 @@ namespace Sim
 
         public override string ToString() =>
             Label
+            + " against "
+            + Wall
             + " over "
             + Runs.ToString(CultureInfo.InvariantCulture)
             + " runs: "
@@ -239,6 +255,7 @@ namespace Sim
         internal SweepRunRow(
             int typeId,
             string label,
+            string wall,
             ulong seed,
             int rounds,
             bool won,
@@ -252,6 +269,7 @@ namespace Sim
         {
             TypeId = typeId;
             Label = label;
+            Wall = wall;
             Seed = seed;
             Rounds = rounds;
             Won = won;
@@ -269,6 +287,9 @@ namespace Sim
 
         /// <summary>That creep's label, for a person reading a spreadsheet.</summary>
         public string Label { get; }
+
+        /// <summary>What the opponents' towers in this run were made of.</summary>
+        public string Wall { get; }
 
         /// <summary>The seed this run was played on.</summary>
         public ulong Seed { get; }
@@ -302,6 +323,8 @@ namespace Sim
 
         public override string ToString() =>
             Label
+            + " against "
+            + Wall
             + " on seed "
             + Seed.ToString(CultureInfo.InvariantCulture)
             + ": "
@@ -353,7 +376,12 @@ namespace Sim
         public IReadOnlyList<CoverageBound> Coverage => _coverage;
 
         /// <summary>How many runs went into the whole report.</summary>
-        public int Runs => Plan.Creeps.Count * Plan.RunsPerCreep;
+        /// <remarks>
+        /// Every creep meets every wall over the whole sample, so the count is
+        /// the product of all three axes rather than of the two it was before
+        /// the wall became one.
+        /// </remarks>
+        public int Runs => Plan.Walls.Count * Plan.Creeps.Count * Plan.RunsPerCreep;
 
         public override string ToString() =>
             _rows.Length.ToString(CultureInfo.InvariantCulture)

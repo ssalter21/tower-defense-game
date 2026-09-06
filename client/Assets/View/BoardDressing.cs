@@ -85,6 +85,34 @@ namespace View
             _sky ?? (IReadOnlyList<SceneryPlacement>)Array.Empty<SceneryPlacement>();
 
         /// <summary>
+        /// Every model this file names, once each, in the order first met.
+        /// </summary>
+        /// <remarks>
+        /// What the scene builder resolves into the catalogue it ships, so that
+        /// what reaches a scene is the models this board actually stands on and
+        /// not the four thousand it could have. Order is first-met rather than
+        /// sorted so that the catalogue's diff follows the file's.
+        /// </remarks>
+        public IReadOnlyList<string> Names()
+        {
+            var names = new List<string>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+
+            foreach (KeyValuePair<(int Column, int Row), List<SceneryPlacement>> cell in _cells)
+            {
+                foreach (SceneryPlacement piece in cell.Value)
+                {
+                    if (piece.IsNamed && seen.Add(piece.Model))
+                    {
+                        names.Add(piece.Model);
+                    }
+                }
+            }
+
+            return names;
+        }
+
+        /// <summary>
         /// Parses the file. Refuses by naming the line, because a mistyped
         /// coordinate that was quietly skipped would present as "my tree did not
         /// save".
@@ -120,6 +148,10 @@ namespace View
                         Place(fileName, index + 1, word, cells);
                         break;
 
+                    case "model":
+                        Model(fileName, index + 1, word, cells);
+                        break;
+
                     case "clear":
                         Clear(fileName, index + 1, word, cells);
                         break;
@@ -131,7 +163,7 @@ namespace View
 
                     default:
                         throw Bad(fileName, index + 1, "starts with " + word[0]
-                            + ", which is not one of place, clear or cloud");
+                            + ", which is not one of place, model, clear or cloud");
                 }
             }
 
@@ -190,6 +222,21 @@ namespace View
 
                 foreach (SceneryPlacement piece in cell.Value)
                 {
+                    if (piece.IsNamed)
+                    {
+                        written.Append("model  ")
+                            .Append(Pad(piece.Column, 4))
+                            .Append(Pad(piece.Row, 4))
+                            .Append(piece.Model.PadRight(52))
+                            .Append(Pad(Millimetres(piece.OffsetX), 8))
+                            .Append(Pad(Millimetres(piece.OffsetZ), 8))
+                            .Append(Pad(Degrees(piece.Turn), 6))
+                            .Append(Pad(Percent(piece.Scale), 6))
+                            .Append('\n');
+
+                        continue;
+                    }
+
                     written.Append("place  ")
                         .Append(Pad(piece.Column, 4))
                         .Append(Pad(piece.Row, 4))
@@ -250,6 +297,60 @@ namespace View
                 Number(fileName, line, word[6], "north") / MillimetresPerMetre,
                 Number(fileName, line, word[7], "turn"),
                 Number(fileName, line, word[8], "scale") / (float)ScalePercentAtAuthoredSize);
+
+            if (!cells.TryGetValue((column, row), out List<SceneryPlacement> on))
+            {
+                on = new List<SceneryPlacement>();
+                cells[(column, row)] = on;
+            }
+
+            on.Add(placement);
+        }
+
+        /// <summary>
+        /// A piece that names one model out of the imported art.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A second verb rather than a wider <c>place</c>.</b> The two lines
+        /// address different things — a family and an index against one model by
+        /// name — and squeezing both into <c>place</c> would mean telling them
+        /// apart by counting words, which is a rule nobody can read off the file
+        /// and a parser that guesses wrong on the first name somebody types that
+        /// happens to be a number.
+        /// </para>
+        /// <para>
+        /// <b>The name is not checked here.</b> This file is parsed by the
+        /// simulation-side reader, which has no asset database and no idea what
+        /// is imported; a name that binds to nothing is caught where the models
+        /// are, and draws nothing in the meantime. That is the same tolerance
+        /// scenery has everywhere else.
+        /// </para>
+        /// </remarks>
+        private static void Model(
+            string fileName,
+            int line,
+            string[] word,
+            Dictionary<(int, int), List<SceneryPlacement>> cells)
+        {
+            if (word.Length != 8)
+            {
+                throw Bad(fileName, line, "has " + (word.Length - 1)
+                    + " values after 'model'; it wants 7: col row name east north turn scale");
+            }
+
+            int column = Number(fileName, line, word[1], "col");
+            int row = Number(fileName, line, word[2], "row");
+
+            var placement = SceneryPlacement.Named(
+                word[3],
+                column,
+                row,
+                Number(fileName, line, word[4], "east") / MillimetresPerMetre,
+                0f,
+                Number(fileName, line, word[5], "north") / MillimetresPerMetre,
+                Number(fileName, line, word[6], "turn"),
+                Number(fileName, line, word[7], "scale") / (float)ScalePercentAtAuthoredSize);
 
             if (!cells.TryGetValue((column, row), out List<SceneryPlacement> on))
             {
@@ -389,6 +490,7 @@ namespace View
             + "#\n"
             + "# clear <col> <row>                    the hex stands empty\n"
             + "# place <col> <row> <what> <variant> <east> <north> <turn> <scale>\n"
+            + "# model <col> <row> <name> <east> <north> <turn> <scale>\n"
             + "# cloud <variant> <east> <up> <north> <turn> <scale>\n"
             + "#\n"
             + "# ONE cloud LINE REPLACES THE WHOLE SKY. Clouds belong to no cell, so there\n"
@@ -399,7 +501,16 @@ namespace View
             + "#        is the variant, counted from the lists in MatchSceneBuilder and\n"
             + "#        wrapped, so a variant past the end of a family is not an error.\n"
             + "#\n"
+            + "# name : ONE model, addressed directly -- its path under\n"
+            + "#        client/Assets/Art/Kaykit without the .fbx, as in\n"
+            + "#        city-builder/wall_corner. place asks a family for its n-th and is\n"
+            + "#        what the generator writes; model means that one, and is what\n"
+            + "#        Tools > Board > Scenery writes when a person picks something.\n"
+            + "#        A name nothing is imported for draws nothing and is reported by\n"
+            + "#        the bake, not by the parser, which has no asset database to ask.\n"
+            + "#\n"
             + "#       col row  what      variant east    north   turn  scale\n"
+            + "#       col row  name                                                east    north   turn  scale\n"
             + "\n";
     }
 }

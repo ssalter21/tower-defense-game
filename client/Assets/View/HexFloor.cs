@@ -396,36 +396,83 @@ namespace View
 
             foreach (SceneryPlacement placement in BoardScenery.For(map, settings, dressing))
             {
-                Mesh mesh = models.MeshFor(placement.Group, placement.Variant);
-
-                if (mesh == null)
-                {
-                    continue;
-                }
-
-                Transform host = placement.Group == SceneryGroup.Cloud
-                    ? Sky()
-                    : SceneryHost(map, placement.Column, placement.Row);
-
-                var piece = new GameObject(placement.Group + " " + mesh.name);
-                piece.transform.SetParent(host, worldPositionStays: false);
-                piece.AddComponent<ScenerySignature>().Wrote(placement.Group, placement.Variant);
-                piece.transform.localPosition =
-                    new Vector3(placement.OffsetX, placement.OffsetY, placement.OffsetZ);
-                piece.transform.localRotation = Quaternion.Euler(0f, placement.Turn, 0f);
-                piece.transform.localScale = Vector3.one * placement.Scale;
-
-                piece.AddComponent<MeshFilter>().sharedMesh = mesh;
-
-                var renderer = piece.AddComponent<MeshRenderer>();
-
-                // A cloud's shadow crossing the board is the whole reason to
-                // have a cloud; everything else casts because everything in this
-                // project does.
-                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                renderer.receiveShadows = true;
-                renderer.sharedMaterial = models.Surface;
+                Stand(placement, models);
             }
+        }
+
+        /// <summary>
+        /// Draws one piece of scenery and returns it, or null where nothing is
+        /// bound to draw it with.
+        /// </summary>
+        /// <remarks>
+        /// <b>Public so the scenery palette can add one without a redraw.</b>
+        /// The alternative was for the palette to write the line and re-dress
+        /// the whole board, which would be a second path that draws pieces --
+        /// and the first thing a second path does is disagree with this one
+        /// about a material or a signature.
+        /// </remarks>
+        public GameObject Stand(SceneryPlacement placement, SceneryModels models)
+        {
+            if (models == null || _scenery == null)
+            {
+                return null;
+            }
+
+            SceneryModels.CataloguedModel named =
+                placement.IsNamed ? models.Named(placement.Model) : default;
+
+            Mesh mesh = placement.IsNamed
+                ? named.Mesh
+                : models.MeshFor(placement.Group, placement.Variant);
+
+            if (mesh == null)
+            {
+                return null;
+            }
+
+            // A named model wears the atlas of the pack it came out of; only a
+            // family piece can assume the board's one surface, because only
+            // families are built out of the one pack the tiles come from.
+            Material material = placement.IsNamed ? named.Material : models.Surface;
+
+            if (material == null)
+            {
+                return null;
+            }
+
+            Transform host = !placement.IsNamed && placement.Group == SceneryGroup.Cloud
+                ? Sky()
+                : SceneryHost(Map, placement.Column, placement.Row);
+
+            var piece = new GameObject(
+                placement.IsNamed ? placement.Model : placement.Group + " " + mesh.name);
+            piece.transform.SetParent(host, worldPositionStays: false);
+
+            var signature = piece.AddComponent<ScenerySignature>();
+            signature.Wrote(placement.Group, placement.Variant);
+
+            if (placement.IsNamed)
+            {
+                signature.WroteNamed(placement.Model);
+            }
+
+            piece.transform.localPosition =
+                new Vector3(placement.OffsetX, placement.OffsetY, placement.OffsetZ);
+            piece.transform.localRotation = Quaternion.Euler(0f, placement.Turn, 0f);
+            piece.transform.localScale = Vector3.one * placement.Scale;
+
+            piece.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+            var renderer = piece.AddComponent<MeshRenderer>();
+
+            // A cloud's shadow crossing the board is the whole reason to have a
+            // cloud; everything else casts because everything in this project
+            // does.
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
+            renderer.sharedMaterial = material;
+
+            return piece;
         }
 
         /// <summary>

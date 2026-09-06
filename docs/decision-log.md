@@ -120,7 +120,7 @@ Three claims were written before the walking skeleton existed, and reading the f
 
 ## 6 August 2026 — six reversals
 
-Made after [the skill note](research/fun-and-skill-expression.html) audited which of the genre's skill axes
+Made after [the skill note](open-questions.md#what-the-design-research-found) audited which of the genre's skill axes
 this design could still charge the player for. Four of the six exist to buy back an axis the design had deleted
 or inverted.
 
@@ -375,7 +375,7 @@ of the reversals is of this file's own companion.
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[The build order](build-order.md#the-sequence)**, on why step 5 is fifth | *Is the economy tense, is composing a wave interesting, does send order matter, is the roster varied* — "every one is answerable from a command line and a spreadsheet" | **Half of them are.** The economy and the roster answered from a shell. **Composing a wave and send order did not**, and the reason is structural rather than a gap in the verb | The CLI will never carry the visual elements — video replays, range indicators — and building them there is not worth it. What a person would learn from them there, the simulation can compute and summarise instead |
-| **[§3 — three anchors, a shape and a filling](vision.md#three-gates-at-waves-3-6-and-9)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
+| **[§3 — three anchors, a shape and a filling](vision.md#the-gates)**, and the take gate with it | A public anchor schedule injects major variance at fixed known waves; one take per round, mandatory, bounding what may be fielded | **Deferred, not repealed.** Both come out of the played game until the roster has the depth to make a gate worth having | *There is no point in gating before we have the depth, it just holds back the early testing and experience.* The destination is unchanged; what moved is when it is built |
 | **§3 — one purse** | The economy is the sharp decision the game is built around | **Not tense yet, and that is accepted rather than fixed** | Attack performance is rewarded, so spending on attack is the long-term investment and nothing argues against it. The expected correction is already in the design: health falls, and the run eventually has to pivot its spending. Not worth tuning before the roster can be judged |
 | **[Open questions](open-questions.md)** — is placement worth having on this geometry | Thin until the maze lands, per [#142](https://github.com/ssalter21/tower-defense-game/issues/142), and possibly not worth the tickets | **Placement earns its place**, and is expected to get more interesting as elevation lands | Played rather than argued. This does **not** settle the separate question of whether the defending side has to be *towers* — squads on a rampart are still live |
 
@@ -488,7 +488,7 @@ the committed content.
 ### The Skeletons pack has six models and the roster document says four
 
 [`docs/roster.md`](roster.md) states that KayKit's four skeleton models are exactly spent. The repo's own
-[character roster note](research/kaykit-character-roster.md) lists **six**, and the two unnamed there are a
+character roster note listed **six**, and the two unnamed there are a
 dedicated **Necromancer** and a **Skeleton Golem**. The count is corrected; no assignment moves. The Minion
 and the Skeleton sharing a base model was never the shortage it looked like — the Skeleton is that model with
 shield and sword, which is a kit variation the pack ships weapons for, and `roster.md` said so all along.
@@ -806,7 +806,7 @@ gate widens the wave, deepens what a slot may hold, and pays for a capstone.**
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **The purse and a public capacity schedule.** A wave opens carrying two slots at ten apiece, and each gate adds two slots and ten count | A purse alone lets compounding gold end every run as one enormous box of whatever is most cost-efficient, which deletes send order as a decision by leaving one thing to order |
-| **[§3 — the gate rounds](vision.md#three-gates-at-waves-3-6-and-9)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
+| **[§3 — the gate rounds](vision.md#the-gates)** | *Nothing bounds how many slots a wave carries* — written when the anchor-derived widths came out with the anchors | **Bounded again, on the same three rounds.** 2, 4, 6, 8 slots and 10, 20, 30, 40 count, fixed and public before a run starts | The widths were deleted as collateral of deleting the menu rather than on their own merits. What they lacked was a reason to exist that was not the menu, and capacity is one |
 | **[§3 — one purse](vision.md#one-purse)**, and [6 August](#6-august-2026--six-reversals)'s settled answer | One currency; a second was priced and declined the same day | **Still one *income* currency.** A second thing exists, is granted three times a run, has no exchange rate and buys exactly one object | The 6 August rejection was of two *wallets fed by income* — the thing that makes every purchase a question about which pool to feed. A grant with a single sink is not that |
 | **[The roster](roster.md#what-things-cost)** | Capstones are expected to break the pricing rule downward, and the first one is where the exemption gets written down | **There is no exemption, because gold does not buy a capstone.** The token is the whole price | An exemption to a gold rule, for a thing gold does not buy, is a clause about nothing |
 | **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | The per-wave type limit is deleted rather than deferred, along with the forced pick, the round menu and the special rounds | **The first of the four to be redesigned.** It returns as a capacity schedule with a second dimension; the other three stay deleted | Deleting it was right and restoring it unchanged would have been wrong. It was a bound with no clock on it, and a gate is the clock |
@@ -1401,3 +1401,234 @@ for want of anything to buy, so the late rounds a defense that scales was suppos
 growing wave against a still wall. What moved is that the freeze is now a property of the *player* rather than
 of the pool, which is one place to fix instead of two — it is
 [filed as an open question](open-questions.md) and not carried here as done.
+
+---
+
+## 29 August 2026 — the whole collection is imported
+
+**What it said:** [the collection inventory](research/kaykit-collection-inventory.md) — "It is not in this
+repository and should not go in whole", and the import pattern is "pull the individual files a scene needs,
+commit those, leave the rest outside."
+
+**What is true now:** every model in the 21 packs that ship an `fbx(unity)` export is committed, at
+`client/Assets/Art/Kaykit/` — 4,247 models and 171 textures, 154 MB.
+
+**Why it moved.** The 606 MB the original claim was priced against is four redundant export formats. One of
+them is the one this project imports, and it is a quarter of the weight; the other three-quarters is `.blend`
+sources, glTF, OBJ, user guides and contact sheets, none of which Unity ever reads. Nothing about the
+5 MB-per-file tripwire moved — the largest file in the whole import is 443 KB.
+
+**What it cost, and what it bought.** It costs every clone 154 MB it did not carry before, and that is a real
+price with no undo. What it buys is that choosing scenery stops being an import request. The selective pattern
+was correct while dressing the board meant picking six trees; it is the wrong shape the moment somebody is
+dressing a board by hand and wants to look at what is available, because every candidate cost a round trip
+through a copy step before it could be looked at *in situ*.
+
+**The two things that had to change with it.** Both were latent and neither was a bug until now:
+
+- **One material for all scenery.** `SceneryModels` held a single `surface`, the Medieval Hexagon atlas, which
+  was correct while every model came from that pack. Every other pack ships its own atlas, so a City Builder
+  crate drawn against the hexagon texture is not a slightly-wrong crate, it is confetti. A named model now
+  carries its own material, resolved from the atlas its own importer bound.
+- **A family and a variant number cannot address 4,247 models.** The generator asks for "a grove" and an
+  index, and must keep doing so — it is scattering a board it has never seen. A person has already looked at
+  the thing and means *that one*. So `content/dressing.txt` gained a second verb: `model <col> <row> <name>
+  …`, addressing one model by its path under `Assets/Art/Kaykit`. `place` is untouched, the generator is
+  untouched, and the committed board bakes byte-for-byte identical.
+
+**What is deliberately not done.** The scene carries only the models the dressing file actually names, not the
+catalogue — four thousand mesh references in `Match.unity` to draw the six somebody placed would be a scene
+nobody could merge. The consequence is that `Bake` now names `tools/build-match-scene.ps1` in its own log
+line, because the file and the scene are two artifacts and only the first one it writes itself.
+
+---
+
+## 3 September 2026 — the wall is bought by value, and the report's dealt column mostly empties
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[`docs/open-questions.md`](open-questions.md)** — does the scripted player's upgrade half need to know what a tower is worth? | An open question with three answers: score an upgrade by value, refuse an upgrade that lowers damage a tick, or leave it | **Answered: score it by value.** `CoverThenUpgradeBot` scores every purchase left on a covered route the same way and buys the highest — the middle of a row's damage roll over the ticks between its shots, times the bodies one shot hits, times the route hexes it reaches from that cell, per gold that row costs above whatever stands on it | [#236](https://github.com/ssalter21/tower-defense-game/issues/236), decided by Sam. One rule for both halves of the phase is the one that stays right when the roster grows; the price-alone rule was buying a mage for no reason but that it was dearer |
+| **the 29 August entry** — the two caps on the stand-in's wall | A rule that only places where something is unshot at has nowhere to put a seventh tower however rich it gets, and a rule that upgrades into the dearest row runs out of rows | **Neither cap is there.** Once nothing on the route is unshot the bot may stand a second tower on route something already watches, scored by that same number — so a redundant place and an upgrade are two candidates in one comparison rather than two phases | The same ticket. Redundant coverage is a real defensive move and the bot had no way to make it, which is what froze the stand-in's wall from round six |
+
+### What the stand-in now builds
+
+**Fourteen towers by round five, and dearer every round after.** The wall the canned pool opens behind is the
+committed six, and half of every round's purse goes on it: **384 gold of wall in round one, then 464, 544,
+624, 664, 716, 768, 768, 820 and 872** — against 344, 396, 448, 448, 500 and then 552 frozen from round six.
+Nine of the ten rounds now buy something. Where the old rule bought the dearest row it could reach, this one
+buys archers until the cells worth standing on are gone and then climbs into mages: round ten stands eight
+archers and six mages.
+
+### And the wave stops getting through
+
+**The committed run now deals nothing at all.** Round by round its `dealt` went **0, 36, 126, 213 → 0, 0, 0,
+0**, and its whole total **375 → 0**. What it *took* has not moved by a gold — 100, 200, 290, 387 in both —
+so it still dies at wave four with 0 of 800 health left, and for the same reason: what kills it is the ghost's
+wave, and that has not moved.
+
+**The sweep loses one of its five rows outright and thins the other four.** Leak cost dealt over eight runs a
+creep: minion **36,847 → 2,073**, scout **52,687 → 0**, necromancer **48,944 → 31,337**, skeleton **43,588 →
+25,810**, warrior **38,468 → 22,769**. Taken falls with it — 37,305 → 27,289, 36,122 → 27,289, 35,844 →
+19,794, 36,913 → 22,898, 36,913 → 21,267 — because a run's own wall is built by this rule too and now kills
+what arrives. Cost efficiency follows dealt: 318 → 28, 386 → 0, 383 → 321, 351 → 259, 336 → 257. Win rate is
+still zero on all five rows.
+
+**A scout row of zeroes is a row that cannot answer anything**, and it is the finding rather than a reason to
+retune: no price and no ruleset number moved here. The two lightest creeps are the ones a wall of archers
+chews, so the report now says the fast cheap end of the roster does not survive contact with a defense that
+spends its whole share — which is a statement about the roster and the board, made by a bot both sides play
+by. `SweepTests.A_sweep_on_another_seed_is_another_population_of_runs` had to move to the necromancer's row to
+find a number that still disagrees across two seeds, which is the same finding seen from the suite.
+
+### Two readings of the decided sentence, and which one was built
+
+**"The reach it already has" is the reach of the row being bought.** An upgrade is scored on what the *new*
+row would watch from that cell and never on what the old one watches — a mage reaching 4,600 thousandths of a
+hex where the archer under it reaches 3,200, so the extra reach is a large part of why any upgrade is bought
+at all. The other reading — score the new row's damage against the old row's reach — describes no tower that
+ever stands, and it has nothing to say at all about a second tower on an empty cell, which Sam's decision
+scores by the same rule. **"Over" is read as "across" and not as "divided by"** for the same reason: dividing
+by reach would make a wide tower worth less than a narrow one, which is the opposite of what the cover half
+does.
+
+**The phase opens when nothing more *can* be covered**, which is not the same sentence as "nothing on the
+route is unshot". A route hex no legal cell reaches would otherwise hold the bot in the covering phase forever
+and leave it unable to buy anything at all. On the committed board the two are the same moment.
+
+### The stepping stone, which is the rule's own consequence
+
+**The bot will buy a tower and climb out of it in the same round.** The score divides by what a row costs
+*above* the one under it, while a build phase charges the row's whole price — an upgrade costs its target's
+full price and always has, see `content/upgrades.txt`. So a cheap tower is a cheap way to make an upgrade look
+good: a 30-gold soldier stood and then turned into an archer is 70 gold spent on a 40-gold archer. It is
+asserted rather than hidden, in
+`BuildPolicyTests.Once_the_route_is_covered_the_bot_buys_the_most_damage_over_the_route_per_gold`, because it
+is the kind of thing somebody finds in the report and reads as a bug.
+
+**Whether that denominator should be the gold actually paid is left open** and is
+[filed as a question](open-questions.md) rather than decided here: the rule as decided says *price
+difference*, and a rule rewritten on the way past is not the rule anybody chose.
+
+---
+
+## 5 September 2026 — the vision is cut to its decisions, and three sections learn to say they are not built
+
+No design moved here. **The document did.** [The vision](vision.md) went from 780 lines and 8,758 words to
+279 and 2,318 — a 74% cut by words — and everything removed was argument rather than decision.
+
+The header of this file has said the reason since it was written: *"This file exists so the vision can stay
+readable. It grows; the vision should not."* It had been growing anyway. Every claim in it arrived in the same
+shape — a bold assertion, then *Three consequences*, *Two limits*, *The objection it must answer*, a warning
+block — so 57 bold-lead paragraphs and 9 of those blocks were carrying roughly 900 words of actual decision.
+The justification already had three homes: this log, 57 ADRs and 20 research notes. The vision was a fourth
+copy of all three, and the copy with no test on it.
+
+### What was wrong rather than merely long
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[§3 — the gates](vision.md#the-gates)** | The capacity schedule and the capstone, stated as *"fixed, public and known before it starts"* with no mention of status | **The same design, marked *(designed, not built)*** | `grep -ri capstone sim/` is empty and `BuildPhase` still says *nothing bounds how many slots a wave carries*. The design was settled [on 14 August](#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant); the vision never said it was unbuilt, so three documents read as disagreeing about whether it existed |
+| **[Bottom line, claim 4](vision.md#bottom-line)** | *"All four, none deferred."* | **"The multiplayer is real, and all of it is deferred."** | [The build order](build-order.md) calls deferring the multiplayer *the largest scope deletion available* and defers all four. Co-op was listed as Unspecified in the vision's own table two sections later. A standing document cannot claim *none deferred* about four things three of which are deferred |
+| **[§3 — the board](vision.md#the-board-is-a-maze)**, generation and rotation | Stated flat, with the deferral in a warning aside below it | **Marked *(designed, not built)*** | Same defect as the gates, and the aside was doing the work a status marker should do |
+| **[§7 — the service](vision.md#7-what-runs-it)** | Stated flat | **Marked *(not built)*** | Nothing in the repository serves anything |
+| **Numbers — base, bonus, health, interest, purse, snapshot price** | Restated in the vision with the measurement narrative that produced each one | **Named, not quoted.** The vision says a bonus is paid on leak cost dealt; what the rate *is* is [`content/ruleset.txt`](../content/ruleset.txt) | Every one of those numbers was argued three times — in the ruleset's own comments, here on the day it moved, and again in the vision. The ruleset is the only one of the three that cannot go stale |
+
+### What was cut without anything being lost
+
+The Sources section (32 lines and 17 comparison games), the objection-and-answer paragraphs, the three
+eliminated damage candidates ([ADR-0001](adr/0001-fixed-point-arithmetic.md) and this log hold them), the
+capstone's *three things it buys the design*, §4's costs table, and the derivations behind the Latin square
+and the ×10 scale. **One comparison game survives in the whole document** — Element TD, as the depth target,
+where naming it is shorter than describing it.
+
+Two mechanics were dropped in a first pass and put back on review, because they are decisions rather than
+argument: **a lobby smaller than ten is topped up from the pool**, and **the gate schedule's shape holds for a
+rotation while its filling is drawn per run**.
+
+### The anchors, and what was left to rot deliberately
+
+Ninety links pointed into the vision. The nine numbered sections and four sub-sections — `#one-purse`,
+`#depth-is-the-point`, `#the-board-is-a-maze`, `#how-a-shot-resolves` — were kept as anchors for that reason
+as much as for their content. The twelve live links that named a heading which no longer exists were
+retargeted, in [the build order](build-order.md), [open questions](open-questions.md),
+[the roster](roster.md) and this file.
+
+**The fifty-one links from [`research/`](research/) and [`archive/`](archive/README.md) were not.** Those are
+frozen evidence notes that already carry banners saying the vision has moved past them; an unresolved anchor
+lands a reader at the top of the vision, which is the right place for a note written against a version of it
+that no longer exists. Rewriting them would be churn in the two directories that exist precisely so the
+standing document does not have to carry their history.
+
+### What this does not fix
+
+**`check-docs.ps1` would not have caught any of it.** Its four invariants cover issue states, picture
+freshness, the ADR count and ADR citations from source. Nothing checks whether a document's claim about the
+*simulation* is true, which is why a section describing an unbuilt mechanism as fixed and public survived
+three weeks in the file that outranks every other file in the repository. A fifth invariant — a document
+claiming a mechanism exists when no code implements it — is not obviously mechanisable, and is not filed as a
+ticket here because nobody has yet said what it would read.
+
+---
+
+## 5 September 2026, later — fifteen research notes are retired
+
+The vision was cut to its decisions in the morning. `docs/research/` had the same problem in a larger form:
+**twenty-four notes, 809 KB, of which nine were load-bearing.** Fifteen are deleted, leaving 90 KB — the
+directory is 89% smaller and the count is down by well over half.
+
+**The test was not age.** It was whether anything still needed the file. A note stays if code, a content file
+or an ADR cites it — `sim/FieldPool.cs` and `content/field.txt` both point at the canned-field note, and the
+number in `units.txt` is unreadable without the cost note — or if it holds a measurement that costs real time
+to take again, which is why the hot-reload timings survive at nine kilobytes. Everything else was a survey
+whose verdict had already been read.
+
+**A survey that has been read is finished work.** Its findings were written into the vision, an ADR or open
+questions on the day it landed, which is what a research note is *for*; the note is the working, and keeping
+the working beside the answer gives a reader two places to look with no rule for which is current. Three of
+the retired design notes had already grown supersession banners saying their premise had moved — the corridor,
+the camera, the one-purse problem — which is the same fact arriving as maintenance cost. Commissioning a fresh
+survey against the design as it now stands is cheaper than reading an old one and subtracting its banners.
+
+| What went | Why it could |
+|---|---|
+| **Nine design surveys** — build depth, the attacking half, towers-versus-squads, upgrade graphs, creep variety, Element TD's ancestry, and the three HTML notes on fun, the planning phase and generated maps | Every verdict is in [open questions](open-questions.md#what-the-design-research-found), which had already carried five of them in a summary table. Three said of themselves that they decided nothing; three carried banners saying their premise had moved. The upgrade-graph survey landed whole into ADRs 0043, 0044 and 0045, each of which names the shape it rules out in its own words |
+| **Three Unity build notes** — the agent workflow, project settings, sim-library integration | All three were adopted and then outlived by something that cannot go stale. `AGENTS.md` rule 3 now *forbids* the editor bridge the workflow note recommended; `tools/check-project-settings.ps1` asserts what the settings note chose; the integration note had corrected itself in four amendments |
+| **The software factory** | It asked for the autonomy gradient to be written down. It was, on 3 September, as `AGENTS.md` rule 6. The rule outlives the argument for it |
+| **Two KayKit listings** — the model index and the character roster | The index transcribed 2,252 model names; all 4,247 models are now imported at `client/Assets/Art/Kaykit/`, so `ls` answers the question against the files instead of against a copy of them. The character roster declared itself superseded on the numbers by the collection inventory, which stays |
+
+**One thing was salvaged rather than summarised.** The planning-phase note catalogued fourteen uses of a
+re-runnable 2.75 ms match as design material — six with no equivalent in the genre — and that list existed
+nowhere else. It is now a ranked table in [open
+questions](open-questions.md#what-a-275-ms-match-could-be-spent-on), which is where an undecided menu of
+options belongs anyway.
+
+**What this costs, stated rather than discovered later.** The primary sources are gone with the notes: a
+citation chased from an ADR now stops at the ADR's own sentence, and re-establishing a claim means finding the
+source again. That is the deliberate trade — the ADRs assert the findings they used in their own words, and a
+footnote nobody follows is not worth 322 KB of prose to keep followable. Recovering any note is
+`git show <sha>:<path>`; nothing is lost, only unindexed.
+
+**`check-docs.ps1` would not have caught the drift this removes**, and it will not catch its absence either.
+Its four invariants cover issue states, picture freshness, the ADR count and ADR citations from source. A
+document citing a document that no longer exists is not among them — which is why every one of the twenty-eight
+inbound links outside the index was repointed by hand here, in the vision, the build order, open questions, the roster, this
+file, `AGENTS.md`, four ADRs, the archive and the two surviving notes that referenced retired ones.
+
+---
+
+## 5 September 2026, later still — the roster widens, and seam 3 comes off the shelf
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | Seam 3 is parked behind a playable client, and when it resumes its shape is *upgrading the creeps that exist*, in stats and speed, rather than authoring new unit types | **Seam 3 is next, and it is breadth.** As many towers and creeps as the collection supports; every tower line three stages — a base, a single-stat rung, and a capstone that changes how the tower works, drawn from what its model carries | Sam, 5 September 2026: *"I've changed my mind on how to approach the build. I want to make the game fun to play now. I want to now introduce as many towers and creeps as possible."* The client the roster was parked behind exists, so the wait is over |
+| **[The roster](roster.md#what-is-deliberately-absent)** | Three shapes are absent and blocked on art — fast and cheap in numbers, slow and dear and very tough, fast and durable at once | **Candidates are named for all three**, in [the expansion proposal](roster-expansion-proposal.md). The proposal is under review and signs nothing | Every character in the KayKit collection is on disk, so "needs a model" is no longer a blocker; it is a choice |
+
+**What was decided is the direction, and only the direction.** The proposal names 9 tower lines and 17 creeps,
+assigns 31 of the 61 rigged KayKit characters and sets 30 aside. Every name, model and number in it is a
+placeholder until Sam keeps it — per the standing rule that art and gameplay options are his to pick — and the
+five standing proposals it would retire (Captain, Hero, the Pyromancer/Cryomancer branch, the unbuilt Mage
+splash, the tier signal) stand in `roster.md` until he does. Each of those is its own entry here when it moves.
+
+**The theme it fixes on the creep side is undead, plus the dark and hooded.** Skeletons were already the
+creeps; the Mystery Monthly characters that read as gothic monsters or as masked and cloaked join them, and
+everything modern, mechanical or comic is set aside with a one-line reason so it is not re-derived.

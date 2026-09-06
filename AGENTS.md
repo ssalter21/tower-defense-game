@@ -2,7 +2,7 @@
 
 Working rules for anything — human or agent — doing execution work in this repo.
 
-Five rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
+Six rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
 most to find later. Keep this file short: it is loaded into every agent's context, so anything that is a
 *finding* rather than an *instruction* belongs in [`docs/research/`](docs/research/).
 
@@ -33,14 +33,23 @@ matching the tests on disk. It counts them; it does not compile them — a test 
 test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
 every gate step will still pass.
 
+**A scheduled task runs all three overnight, so a break shows up the morning after rather than weeks later.**
+`register-nightly-unity.ps1` puts `nightly-unity.ps1` on the machine at 03:00, and it writes one line per
+runner — date, runner, pass or fail, tests run, exit code — to `client/Logs/nightly.log`, which git ignores.
+It tests one checkout as it stood at 03:00, so it is a catch and not a substitute for running the one you
+changed.
+
 ## 3. Every automation has a static command-line entry point
 
 Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
 `run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
-`run-player-tests.ps1`, `build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `render-map.ps1`,
-`capture-match-frames.ps1`, `capture-art-previews.ps1`, `check-file-sizes.ps1`,
-`check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
+`run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
+`build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
+`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
+`render-map.ps1`, `run-sweep.ps1`, `show-ladder.ps1`,
+`capture-match-frames.ps1`, `capture-art-previews.ps1`, `capture-ui-previews.ps1`,
+`capture-armed-roster.ps1`, `check-docs.ps1`, `check-file-sizes.ps1`,
+`check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
 **Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
 editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on
@@ -54,6 +63,17 @@ simulation's own sentence and cannot drift from it. Loading the committed board 
 asserted to be byte-for-byte identical -- `BoardDraftTests` -- because a bake that moved the board by a space
 would invalidate `defense.txt`, `match.replay`, the landmark table and the cell coordinates in seventeen
 `sim.tests` files for no visible reason. The bake names that chain and runs none of it.
+
+**The whole KayKit collection is imported, and a model is addressed by name.** `client/Assets/Art/Kaykit/`
+holds all 4,247 models of the 21 packs that ship an `fbx(unity)` export. `Tools > Board > Scenery` is the
+palette: search it, pick one, place it on a cell. In `content/dressing.txt` that is a **`model`** line naming
+the path under that folder -- `model 3 4 city-builder/building_A 0 0 0 100` -- as against a **`place`** line,
+which asks a *family* for its n-th and is what the generator writes. Both verbs stay: a generator scattering a
+board it has never seen must be able to ask for "a grove", and a person who has looked at the thing means that
+one. **Each pack ships its own atlas**, so a named model carries its own material and only family pieces wear
+the board's one surface; drawing a City Builder crate against the hexagon atlas produces confetti, not a
+slightly-wrong crate. **The scene carries only the models the dressing file names**, resolved at scene-build
+time -- so a bake that adds a model needs `build-match-scene.ps1` after it, which the bake's own log line says.
 
 **The board's dressing is the one thing edited by hand, and it still obeys this.** `Tools > Board > Dress`
 draws the real floor and scenery into the open scene so a human can move things; `Bake` writes what they left to
@@ -94,6 +114,27 @@ second is an orphan.
 
 Delete the branch too once its pull request merges. GitHub drops the remote branch on merge, but the local one
 is yours to remove; `git branch --merged origin/main` lists everything that has already landed.
+
+## 6. What verifies an area decides how much of it an agent may do unattended
+
+The gate covers the simulation completely and, as rule 2 says, counts the client's tests without running them,
+so an agent working alone has hard evidence about one half of this repository and thin evidence about the
+other. **Match the autonomy to what would actually catch the change being wrong**, per the gradient below.
+Treating every area alike is what fails quietly: hold a change a player will see to the simulation's standard
+and every check still passes, on an artefact nobody has looked at. The rule was asked for by
+the software-factory note, since retired; the evidence that survives it is
+[What agents can build unattended](docs/research/what-agents-can-build-unattended.md), which names the
+instruments each row rests on and the standing rules the last row cites.
+
+| Area | What verifies it | Autonomy |
+|---|---|---|
+| `sim/`, `sim.tests/`, `sim.poison/` | The gate, the matrix, the IL scan, the golden trace | Full — a green gate is sufficient |
+| `content/*.txt` | The trace moves and must be regenerated deliberately | Full to change; never to regenerate in order to get green |
+| `simcli/`, `tools/` | The gate runs seven of these scripts; every other one runs from a shell | Full — run the one you changed |
+| `docs/` | `check-docs.ps1`, on four claims a document makes about other files | Full to draft; a person's review is the gate |
+| `client/`, non-visual | The three Unity runners, editor closed, counts reported | Full — the agent runs the runners itself |
+| `client/`, visual | A captured frame or sheet, and a person | Agent proposes; a person decides |
+| Art, names, numbers a player sees | Nothing automatable | Human only — the standing rules |
 
 ## Waiting on Unity
 
