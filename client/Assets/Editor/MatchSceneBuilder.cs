@@ -902,27 +902,29 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The rows whose bubble is drawn as something of its own, and what.
-        /// Every row not named here draws the shared disc.
+        /// The rows whose effects are drawn as something of their own, and
+        /// what. Every row not named here draws the shared disc and the shared
+        /// tracer.
         /// </summary>
         /// <remarks>
         /// <para>
         /// <b>A table of its own rather than a column of
         /// <see cref="UnitBindings"/>, for the reason
-        /// <see cref="LargeRigClips"/> is one:</b> three rows of fifty-five
-        /// carry one, so a column would be fifty-two <c>default</c>s written
-        /// out to say nothing.
+        /// <see cref="LargeRigClips"/> is one:</b> five rows of fifty-five
+        /// carry one, so a column would be fifty <c>default</c>s written out to
+        /// say nothing.
         /// </para>
         /// <para>
-        /// <b>The three are the capstones whose look <c>docs/roster.md</c>
-        /// signs and whose emitter an event can name.</b> The Shield Wall's
-        /// slow and the Blessing's haste are auras, which pulse from their own
-        /// emitter; the Slam's sweep is centred on the man who swung. The
-        /// Mortar's blast is the fourth signed shape and is not here — it is
-        /// centred on the body its shell arrived at, so the event names the
-        /// victim and no row can be reached from it. See
-        /// <see cref="MatchDecorations.BlastLanded"/>, which draws that one off
-        /// the shape of the event instead.
+        /// <b>Every one is a capstone whose look <c>docs/roster.md</c> signs
+        /// and whose emitter an event can name.</b> The Shield Wall's slow and
+        /// the Blessing's haste are auras, which pulse from their own emitter;
+        /// the Slam's sweep is centred on the man who swung; and a shot names
+        /// the tower that fired it, which is what lets the Overwatch and the
+        /// Fan of Knives be bound here at all. The Mortar's burst is the sixth
+        /// signed shape and is not here — its blast is centred on the body its
+        /// shell arrived at, so the event names the victim and no row can be
+        /// reached from it. See <see cref="MatchDecorations.BlastLanded"/>,
+        /// which draws that one off the shape of the event instead.
         /// </para>
         /// </remarks>
         private static readonly (int unitId, EffectSignature signature)[] Signatures =
@@ -930,11 +932,13 @@ namespace View.Editor
             (16, EffectSignature.SlowRing),
             (19, EffectSignature.GroundShock),
             (22, EffectSignature.TowerGlow),
+            (31, EffectSignature.LongShot),
+            (34, EffectSignature.ThrownKnife),
         };
 
         /// <summary>
-        /// What one row's bubble is drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shared disc.
+        /// What one row's effects are drawn as, or
+        /// <see cref="EffectSignature.None"/> for the shared shapes.
         /// </summary>
         private static EffectSignature SignatureFor(int unitId)
         {

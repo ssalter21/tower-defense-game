@@ -1302,6 +1302,257 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// Every rung of the Archer and Rogue lines flashes at the point on its
+        /// own art its shot leaves from, and sparks on the body its shot lands
+        /// on.
+        /// </summary>
+        /// <remarks>
+        /// The same claim <see cref="EveryRowOnTheseFourLinesFiresFromItsAnchorAndSparksOnWhatItHits"/>
+        /// makes about the impact and melee rows, on the six rows that throw
+        /// and shoot. It is asserted a second time rather than folded into one
+        /// test over eighteen rows because the two defenses cannot stand on the
+        /// board together: eighteen towers next to a corridor of fifty-one
+        /// cells is more than the cells beside it, and a row that could not be
+        /// placed would be a row this quietly stopped covering.
+        /// </remarks>
+        [Test]
+        public void EveryRowOnThePierceLinesFiresFromItsAnchorAndSparksOnWhatItHits()
+        {
+            MatchView view = BeginWithThePierceLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            foreach (TowerView tower in view.Towers.Values)
+            {
+                view.Decorations.Clear();
+                view.Decorations.TowerFired(tower.Id, creepId);
+
+                Assert.That(view.Decorations.FlashesDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fired and nothing left it");
+
+                Assert.That(tower.AnchorTransform, Is.Not.Null,
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) has no anchor, so its flash is at a "
+                    + "height above its own root whatever it is holding");
+
+                Transform flash = Pieces(view, "MuzzleFlash").Single();
+
+                Assert.That(Vector3.Distance(flash.position, tower.Muzzle), Is.LessThan(1e-3f),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fires from {tower.Muzzle} and its flash "
+                    + $"is at {flash.position}");
+
+                view.Decorations.CreepDamaged(creepId, 10);
+
+                Assert.That(view.Decorations.SparksDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) landed damage and nothing landed with it");
+
+                Transform spark = Pieces(view, "Spark").Single();
+
+                Assert.That(
+                    Vector3.Distance(spark.position, walks + (Vector3.up * MatchTuning.HitSparkHeight)),
+                    Is.LessThan(1e-3f),
+                    "the landing is not on the creep the shot landed on");
+            }
+
+            Assert.That(view.Towers.Count, Is.EqualTo(6), "the two pierce lines are six rows");
+        }
+
+        /// <summary>
+        /// The Overwatch's shot is one bar the whole length of the leg it
+        /// crossed and holds that length; the Fan of Knives' throw is three
+        /// knives leaving its hand and arriving on three bodies. Every other
+        /// row on those two lines draws the tracer they share.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Neither of these capstones authors a bubble, so neither is
+        /// reached the way the four before them were.</b> The Shield Wall, the
+        /// Slam and the Blessing are found through a blast or an aura naming
+        /// the row; <c>content/units.txt</c> gives rows 31 and 34 no bubble at
+        /// all — the Overwatch is a long single shot and the Fan of Knives is a
+        /// <c>targets</c> of three — so what names the row here is the shot,
+        /// which carries the tower that fired it.
+        /// </para>
+        /// <para>
+        /// <b>Three shots and not one.</b> A <c>targets</c> of three fires
+        /// three shots at three bodies with three rolls, which is three
+        /// <c>TowerFired</c> events on one tick, so three knives is what the
+        /// event stream produces rather than something this decoration has to
+        /// know to fan out.
+        /// </para>
+        /// <para>
+        /// OBSERVED: let the long shot age like a tracer. Every assertion above
+        /// the last block stays green and a bar standing for eight hexes
+        /// reports a shorter leg on every tick but its first — the bug #253
+        /// found in the ring, in the one shape here whose length is a distance.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EachPierceCapstoneDrawsItsOwnShot()
+        {
+            MatchView view = BeginWithThePierceLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount >= 3);
+
+            int[] bodies = view.Current.Creeps.Take(3).Select(creep => creep.Id).ToArray();
+
+            Assert.That(bodies.Length, Is.EqualTo(3),
+                "fewer than three bodies are walking, so the throw has nothing to fan out over");
+
+            Vector3[] at = bodies
+                .Select(id => view.Creeps.Live[id].transform.position
+                    + (Vector3.up * MatchTuning.HitSparkHeight))
+                .ToArray();
+
+            // The Archer, which is the bottom of one of these two lines and
+            // carries no signature: the tracer every hitscan row has always
+            // drawn, and neither capstone's shape.
+            view.Decorations.Clear();
+            view.Decorations.TowerFired(Standing(view, 3).Id, bodies[0]);
+
+            Assert.That(view.Decorations.TracersDrawn, Is.EqualTo(1),
+                "the Archer fired and drew no tracer");
+
+            Assert.That(view.Decorations.LongShotsDrawn + view.Decorations.KnivesDrawn, Is.EqualTo(0),
+                "a rung below the capstone is drawing the capstone's shape, so the binding is on the "
+                + "line rather than on the row");
+
+            // The Overwatch: one bar from the crossbow to the body.
+            view.Decorations.Clear();
+
+            TowerView overwatch = Standing(view, 31);
+
+            view.Decorations.TowerFired(overwatch.Id, bodies[0]);
+
+            Assert.That(view.Decorations.LongShotsDrawn, Is.EqualTo(1),
+                "the Overwatch fired and drew no shot of its own");
+
+            Assert.That(view.Decorations.TracersDrawn, Is.EqualTo(0),
+                "the Overwatch fell back to the shared tracer, so its binding was not read");
+
+            Transform shot = Pieces(view, "LongShot").Single();
+            float leg = Vector3.Distance(overwatch.Muzzle, at[0]);
+
+            Assert.That(
+                Vector3.Distance(shot.position, (overwatch.Muzzle + at[0]) * 0.5f),
+                Is.LessThan(1e-3f),
+                "the shot is not drawn between the crossbow and the body it was aimed at");
+
+            Assert.That(shot.localScale.z, Is.EqualTo(leg).Within(1e-3f),
+                $"the shot crossed {leg} metres and is {shot.localScale.z} long");
+
+            Assert.That(shot.localScale.x, Is.EqualTo(MatchTuning.LongShotThickness).Within(1e-4f));
+
+            Assert.That(
+                shot.localScale.x, Is.GreaterThan(MatchTuning.TracerThickness),
+                "the Overwatch's shot is no heavier than the tracer every other row draws, so nothing "
+                + "on the board tells them apart");
+
+            // The Fan of Knives: one throw, three shots, three knives.
+            view.Decorations.Clear();
+
+            TowerView fanOfKnives = Standing(view, 34);
+
+            foreach (int body in bodies)
+            {
+                view.Decorations.TowerFired(fanOfKnives.Id, body);
+            }
+
+            Assert.That(view.Decorations.KnivesDrawn, Is.EqualTo(3),
+                "three shots left the Fan of Knives and three knives did not");
+
+            Assert.That(view.Decorations.TracersDrawn, Is.EqualTo(0),
+                "the Fan of Knives fell back to the shared tracer, so its binding was not read");
+
+            Transform[] knives = Pieces(view, "ThrownKnife").ToArray();
+
+            Assert.That(knives.Length, Is.EqualTo(3));
+
+            foreach (Transform knife in knives)
+            {
+                Assert.That(Vector3.Distance(knife.position, fanOfKnives.Muzzle), Is.LessThan(1e-3f),
+                    "a knife did not leave the hand it was thrown from");
+            }
+
+            // And it crosses to the body over its life rather than being a
+            // line drawn between the two.
+            for (var tick = 1; tick < MatchTuning.KnifeFlightTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+            }
+
+            foreach (Vector3 body in at)
+            {
+                Assert.That(
+                    knives.Min(knife => Vector3.Distance(knife.position, body)),
+                    Is.LessThan(1e-3f),
+                    $"no knife arrived at the body at {body}");
+            }
+
+            // The long shot held its length for the whole of its life. A bar
+            // that says how far a shot went may not say a shorter distance
+            // every tick, which is the ring's own bug in another shape.
+            view.Decorations.Clear();
+            view.Decorations.TowerFired(overwatch.Id, bodies[0]);
+
+            shot = Pieces(view, "LongShot").Single();
+            Vector3 drawnAt = shot.localScale;
+
+            for (var tick = 1; tick < MatchTuning.LongShotTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+
+                Assert.That(shot.localScale, Is.EqualTo(drawnAt),
+                    $"the shot is {shot.localScale.z} metres long {tick} ticks after crossing "
+                    + $"{drawnAt.z} metres");
+            }
+        }
+
+        /// <summary>
+        /// A seek re-runs the ticks it passes over in silence, so no shot it
+        /// passes over is drawn a second time.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ASeekDrawsNoSignatureASecondTime"/>'s claim, on the two
+        /// shapes an event stream reaches through a shot rather than through a
+        /// bubble. The counter that answers for it is the same one:
+        /// <see cref="MatchDecorations.EventsHeard"/>, which a clear does not
+        /// reset.
+        /// </remarks>
+        [Test]
+        public void ASeekDrawsNoPierceShotASecondTime()
+        {
+            MatchView view = BeginWithThePierceLines();
+
+            RunUntil(view, () => view.Decorations.LongShotsDrawn > 0 && view.Decorations.KnivesDrawn > 0);
+
+            Assert.That(view.Decorations.LongShotsDrawn, Is.GreaterThan(0),
+                "the Overwatch never fired in the whole match, so this proves nothing");
+
+            Assert.That(view.Decorations.KnivesDrawn, Is.GreaterThan(0),
+                "no knife was ever thrown in the whole match, so this proves nothing");
+
+            int tick = view.Current.Tick;
+            int heard = view.Decorations.EventsHeard;
+
+            view.ReSimulateTo(tick + 90);
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heard),
+                "a seek heard the events of the ticks it re-ran, so every shot between here and the "
+                + "start was drawn again");
+
+            Assert.That(view.Decorations.LongShotsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.KnivesDrawn, Is.EqualTo(0));
+
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
+                "an effect from before the seek is still on screen, and the tick it belongs to is now "
+                + "in the future");
+        }
+
+        /// <summary>
         /// Decoration does not pile up over a whole match. The count on screen
         /// stays bounded by what the last few ticks produced, because aging
         /// happens where the simulation advances rather than where somebody
@@ -1573,6 +1824,53 @@ namespace Tests.PlayMode
                 StreamingContent.ReadRuleset(),
                 types,
                 TowerLayout.Parse("four lines", FourLinesDefense, types),
+                StreamingContent.ReadWave(types),
+                TheMatchOnScreen.Seed);
+        }
+
+        /// <summary>
+        /// The three rungs of each of the two pierce lines, standing on cells
+        /// of the real board, in the order the loader wants them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The six are bunched round the entrance on purpose.</b> The
+        /// shortest reach here is the Rogue line's two hexes, and what these
+        /// tests need is bodies inside every one of the six at the same tick —
+        /// three of them at once, for the throw that goes to three bodies. The
+        /// stretch of corridor leaving the entrance is where the wave is
+        /// densest, so it is the one stretch that answers that.
+        /// </para>
+        /// <para>
+        /// <b><c>docs/frames/pierce-lines.txt</c> is the same six rows on the
+        /// same cells</b>, so the frames of these lines are frames of what this
+        /// asserts about — two copies for the reason
+        /// <see cref="FourLinesDefense"/> has two.
+        /// </para>
+        /// </remarks>
+        private const string PierceLinesDefense =
+            "tower  3  3  0\n"
+            + "tower 14  5  0\n"
+            + "tower 31  2  2\n"
+            + "tower 32  5  2\n"
+            + "tower 33  2  4\n"
+            + "tower 34  7  4\n";
+
+        /// <summary>
+        /// The real board, the real roster and the real wave, with the six rows
+        /// of the Archer and Rogue lines standing on it instead of the recorded
+        /// six.
+        /// </summary>
+        private MatchView BeginWithThePierceLines()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("pierce lines", PierceLinesDefense, types),
                 StreamingContent.ReadWave(types),
                 TheMatchOnScreen.Seed);
         }

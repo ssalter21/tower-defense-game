@@ -777,27 +777,30 @@ namespace Tests.Fixtures
         }
 
         /// <summary>
-        /// The rows whose bubble is drawn as something of its own, and what.
-        /// Every row not named here draws the shared disc.
+        /// The rows whose effects are drawn as something of their own, and
+        /// what. Every row not named here draws the shared disc and the shared
+        /// tracer.
         /// </summary>
         /// <remarks>
         /// Written out here a second time for the reason every path above is:
         /// a fixture that read the builder's table could not catch the builder
-        /// binding the Slam's shock to the Berserker. The three are the
-        /// capstones whose emitter an event names; the Mortar's blast is
-        /// centred on the body its shell arrived at and reaches no row at all,
-        /// so it is not a binding on either side.
+        /// binding the Slam's shock to the Berserker. The five are the
+        /// capstones whose emitter an event names — three bubbles and two
+        /// shots; the Mortar's blast is centred on the body its shell arrived
+        /// at and reaches no row at all, so it is not a binding on either side.
         /// </remarks>
         private static readonly (int unitId, EffectSignature signature)[] Signatures =
         {
             (16, EffectSignature.SlowRing),
             (19, EffectSignature.GroundShock),
             (22, EffectSignature.TowerGlow),
+            (31, EffectSignature.LongShot),
+            (34, EffectSignature.ThrownKnife),
         };
 
         /// <summary>
-        /// What one row's bubble is drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shared disc.
+        /// What one row's effects are drawn as, or
+        /// <see cref="EffectSignature.None"/> for the shared shapes.
         /// </summary>
         private static EffectSignature SignatureFor(int unitId)
         {

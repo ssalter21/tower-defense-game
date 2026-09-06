@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &619337730
+--- !u!1 &1280680167
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 619337732}
-  - component: {fileID: 619337731}
+  - component: {fileID: 1280680169}
+  - component: {fileID: 1280680168}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &619337731
+--- !u!114 &1280680168
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619337730}
+  m_GameObject: {fileID: 1280680167}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -738,7 +738,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: crossbow_2handed
         tip: {x: 0, y: 0, z: 0}
-      signature: 0
+      signature: 4
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 32
@@ -801,7 +801,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
-      signature: 0
+      signature: 5
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 35
@@ -1121,13 +1121,13 @@ MonoBehaviour:
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &619337732
+--- !u!4 &1280680169
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619337730}
+  m_GameObject: {fileID: 1280680167}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1140,4 +1140,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 619337732}
+  - {fileID: 1280680169}

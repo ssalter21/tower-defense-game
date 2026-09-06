@@ -703,8 +703,8 @@ namespace View
         }
 
         /// <summary>
-        /// What the tower with this id draws its bubble as, or null when the id
-        /// is not a tower.
+        /// What the tower with this id draws its own effects as, or null when
+        /// the id is not a tower.
         /// </summary>
         /// <remarks>
         /// <b>Null and <see cref="EffectSignature.None"/> are different

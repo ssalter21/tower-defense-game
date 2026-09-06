@@ -557,7 +557,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: crossbow_2handed
         tip: {x: 0, y: 0, z: 0}
-      signature: 0
+      signature: 4
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 32
@@ -620,7 +620,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
-      signature: 0
+      signature: 5
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 35

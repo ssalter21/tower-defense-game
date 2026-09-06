@@ -1024,10 +1024,19 @@ namespace Tests.EditMode
                 Vector3 fromRoot = tower.Muzzle - tower.transform.position;
                 float alongTheProp = Vector3.Distance(tower.Muzzle, anchor.position);
 
+                // What the anchor hangs off is logged as well as what it is
+                // named, because a name can find more than one thing: the Fan
+                // of Knives carries two daggers and both are called `dagger`,
+                // so which hand its knives leave from is readable here and
+                // nowhere else. "nothing" is the tower root itself, which has
+                // no parent and is the one thing here that could have none.
+                string hangsOff = anchor.parent == null ? "nothing" : anchor.parent.name;
+
                 Debug.Log(
                     $"[anchor] unit {type.Id} ({type.Label}) fires from "
-                    + $"{unit.EffectAnchor.TransformName}, {alongTheProp:F2} m along it, "
-                    + $"{fromRoot.y:F2} m above its base and {fromRoot.magnitude:F2} m from it");
+                    + $"{unit.EffectAnchor.TransformName} under {hangsOff}, "
+                    + $"{alongTheProp:F2} m along it, {fromRoot.y:F2} m above its base and "
+                    + $"{fromRoot.magnitude:F2} m from it");
 
                 Assert.That(fromRoot.y, Is.GreaterThan(0f),
                     $"unit {type.Id} ({type.Label}) fires from below its own feet");

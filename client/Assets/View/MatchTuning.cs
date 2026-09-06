@@ -214,23 +214,27 @@ namespace View
         public const float BubbleRingHeight = 0.03f;
 
         // ---------------------------------------------------------------
-        // Capstone signatures — the shapes a row's bubble is drawn as
+        // Capstone signatures — the shapes a row's own effects are drawn as
         // ---------------------------------------------------------------
         //
-        // FOUR SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
+        // SIX SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
         // PLACEHOLDER. What was signed is that the Shield Wall's slow leaves a
         // ring, the Slam's swing shocks the ground across the hex, the
-        // Blessing glows on every tower it reaches and the Mortar bursts at the
-        // radius it landed in. How wide a band, how many cracks, how long any
-        // of it lasts and what colour it comes out are nobody's decision yet --
-        // the same standing rule the bubble ring above and the marks below are
-        // held to. A number here is the plainest thing that draws the signed
-        // shape, and is not a proposal about how it should look.
+        // Blessing glows on every tower it reaches, the Mortar bursts at the
+        // radius it landed in, the Overwatch's single shot draws a tracer the
+        // length of the leg it crossed and the Fan of Knives throws three
+        // knives at three bodies. How wide a band, how many cracks, how long a
+        // knife is, how long any of it lasts and what colour it comes out are
+        // nobody's decision yet -- the same standing rule the bubble ring above
+        // and the marks below are held to. A number here is the plainest thing
+        // that draws the signed shape, and is not a proposal about how it
+        // should look.
         //
-        // THE ONES THAT STAND FOR A RADIUS DO NOT SHRINK, and that is not a
+        // THE ONES THAT STAND FOR A DISTANCE DO NOT SHRINK, and that is not a
         // number here but a flag on the effect: a ring, a shock and a burst all
-        // say how far the bubble reached, so closing one down over its life
-        // would report a reach the bubble did not have.
+        // say how far the bubble reached and the long shot says how far the
+        // shot went, so closing one down over its life would report a reach
+        // that was never had.
 
         /// <summary>
         /// How many bars the ring is made of. Enough that it reads as a circle
@@ -300,6 +304,56 @@ namespace View
         /// <summary>How long the burst lasts, in ticks.</summary>
         public const int MortarBurstTicks = 8;
 
+        /// <summary>
+        /// How thick the Overwatch's shot is, in metres.
+        /// </summary>
+        /// <remarks>
+        /// Thicker than <see cref="TracerThickness"/>, which is the whole of
+        /// what separates this row's shot from the one every other hitscan row
+        /// draws: both run muzzle to body, and eight hexes of the ordinary
+        /// tracer would read as a longer thread rather than as a heavier shot.
+        /// </remarks>
+        public const float LongShotThickness = 0.13f;
+
+        /// <summary>
+        /// How long the Overwatch's shot stays up, in ticks.
+        /// </summary>
+        /// <remarks>
+        /// Longer than <see cref="TracerTicks"/> for the reason the ring lasts
+        /// longer than a spark: it is eight hexes long and wants a moment to be
+        /// read along, where a tracer three hexes long is taken in at once.
+        /// </remarks>
+        public const int LongShotTicks = 12;
+
+        /// <summary>How long one of the Fan of Knives' knives is, in metres.</summary>
+        public const float KnifeLength = 0.55f;
+
+        /// <summary>How wide the blade is, as a share of that length.</summary>
+        public const float KnifeBladeWidthFraction = 0.13f;
+
+        /// <summary>How far the crossguard reaches, as a share of that length.</summary>
+        public const float KnifeGuardFraction = 0.3f;
+
+        /// <summary>
+        /// How deep the blade, the guard and the grip are, as a share of that
+        /// length.
+        /// </summary>
+        public const float KnifeThicknessFraction = 0.05f;
+
+        /// <summary>
+        /// How many ticks a knife spends crossing from the hand to the body.
+        /// </summary>
+        /// <remarks>
+        /// <b>The flight is decoration and not the shot.</b> The row is hitscan
+        /// — the damage landed on the tick it was fired, and the spark on the
+        /// body is already drawn — so this is how long the knife is <i>seen</i>
+        /// crossing and says nothing about when anything arrived. Six ticks is
+        /// a fifth of a second at thirty ticks per second, which is long enough
+        /// to read as a throw and short enough that two throws of a row on a
+        /// seven-tick cooldown do not overlap.
+        /// </remarks>
+        public const int KnifeFlightTicks = 6;
+
         /// <summary>The Shield Wall's slow ring. Cold, because it is a slow.</summary>
         public static Color SlowRingColor => new Color(0.45f, 0.72f, 1f, 1f);
 
@@ -311,6 +365,12 @@ namespace View
 
         /// <summary>The Mortar's burst.</summary>
         public static Color MortarBurstColor => new Color(1f, 0.55f, 0.2f, 1f);
+
+        /// <summary>The Overwatch's shot.</summary>
+        public static Color LongShotColor => new Color(0.95f, 0.98f, 0.75f, 1f);
+
+        /// <summary>One of the Fan of Knives' knives.</summary>
+        public static Color KnifeColor => new Color(0.78f, 0.82f, 0.88f, 1f);
 
         // ---------------------------------------------------------------
         // What a unit is carrying — the marks, not the decoration

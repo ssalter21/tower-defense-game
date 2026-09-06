@@ -4,9 +4,9 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The three shapes a capstone's signature is drawn with, generated in
-    /// code: a ring, a set of cracks running out from a centre, and a burst of
-    /// shards. Each one is a single mesh made of solid bars.
+    /// The shapes a capstone's signature is drawn with, generated in code: a
+    /// ring, a set of cracks running out from a centre, a burst of shards and a
+    /// thrown knife. Each one is a single mesh made of solid bars.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -24,11 +24,14 @@ namespace View
     /// expressible as one primitive.
     /// </para>
     /// <para>
-    /// <b>Every mesh is built at an outer radius of
+    /// <b>Every mesh that stands for a radius is built at an outer radius of
     /// <see cref="OuterRadius"/>.</b> That is a half, so a caller scales by a
     /// diameter and gets exactly the radius it asked for, which is the same
     /// arithmetic the bubble ring's cylinder already does. Nothing here knows
-    /// what a hex is or how big a bubble was.
+    /// what a hex is or how big a bubble was. <see cref="Knife"/> is the one
+    /// shape that is not a radius — it is an object of a size somebody picked
+    /// rather than a reach the simulation reported — so it is built one unit
+    /// long instead, and its caller scales by the length it wants.
     /// </para>
     /// <para>
     /// <b>Each bar is six four-cornered faces with its own vertices, so the
@@ -110,6 +113,64 @@ namespace View
             }
 
             return builder.ToMesh("EffectBurst");
+        }
+
+        /// <summary>
+        /// A knife lying along +Z, one unit from the butt of its grip to its
+        /// point and centred on its own origin: a blade, a crossguard across
+        /// it, and a grip behind that.
+        /// </summary>
+        /// <param name="bladeWidth">How wide the blade is, in mesh units.</param>
+        /// <param name="guardSpan">How far the crossguard reaches, end to end.</param>
+        /// <param name="thickness">How deep all three bars are.</param>
+        /// <remarks>
+        /// <para>
+        /// Three bars, because that is the fewest that reads as a knife rather
+        /// than as a stick: a bar on its own is what the ordinary tracer
+        /// already is, and what makes this shape a knife is the crossguard
+        /// interrupting it and the grip being narrower than the blade.
+        /// </para>
+        /// <para>
+        /// <b>Where the three meet along the knife is fixed here and how thick
+        /// they are is the caller's.</b> The split points are what a knife
+        /// <i>is</i> — a blade taking most of the length with a short grip
+        /// behind a guard — and reproportioning them would be drawing a
+        /// different weapon; the widths are how big it is drawn, which is the
+        /// kind of number this project keeps in <see cref="MatchTuning"/>.
+        /// </para>
+        /// <para>
+        /// Along +Z so that a caller aims it with
+        /// <c>Quaternion.LookRotation</c>, which is the same arithmetic the
+        /// stretched box of a tracer is already pointed with.
+        /// </para>
+        /// </remarks>
+        public static Mesh Knife(float bladeWidth, float guardSpan, float thickness)
+        {
+            // Measured from the butt at -0.5 to the point at +0.5.
+            const float GuardAt = -0.2f;
+            const float GripEnd = -0.14f;
+
+            var builder = new Bars();
+
+            builder.Add(
+                new Vector3(0f, 0f, GripEnd),
+                new Vector3(0f, 0f, 0.5f),
+                bladeWidth * 0.5f,
+                thickness * 0.5f);
+
+            builder.Add(
+                new Vector3(-guardSpan * 0.5f, 0f, GuardAt),
+                new Vector3(guardSpan * 0.5f, 0f, GuardAt),
+                thickness * 0.5f,
+                thickness * 0.5f);
+
+            builder.Add(
+                new Vector3(0f, 0f, -0.5f),
+                new Vector3(0f, 0f, GuardAt),
+                thickness * 0.5f,
+                thickness * 0.5f);
+
+            return builder.ToMesh("EffectKnife");
         }
 
         /// <summary>

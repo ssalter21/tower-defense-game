@@ -1,8 +1,8 @@
 namespace View
 {
     /// <summary>
-    /// What one row's bubble is drawn as, so that a capstone reads as itself
-    /// rather than as the shape every bubble in the game shares.
+    /// What one row's effects are drawn as, so that a capstone reads as itself
+    /// rather than as the shape every row in the game shares.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -19,23 +19,35 @@ namespace View
     /// nothing else about how it looks.
     /// </para>
     /// <para>
+    /// <b>One field, two moments.</b> A shape below is either what a row's
+    /// <i>bubble</i> leaves or what its <i>shot</i> is drawn as, and that
+    /// decides which event reaches it: a bubble shape is picked when a blast or
+    /// an aura names the row, a shot shape when the row fires. A row selecting
+    /// the shape of the other moment draws the shared one, which is what a row
+    /// with no signature at all draws. One field rather than two because no row
+    /// on this roster carries a bubble and a shot worth telling apart at once —
+    /// the four rows with a bubble signature author no shots of their own shape
+    /// and the two with a shot signature author no bubble.
+    /// </para>
+    /// <para>
     /// <b>A signature is reached through the entity the event named, so only a
-    /// tower's is reachable.</b> An aura pulses from its emitter and a sweep is
-    /// centred on the tower that swung, so both name a row the view is holding
-    /// art for. A blast centred on the body a shot arrived at names the body —
-    /// the shooter is not in the event at all, deliberately, since an event
-    /// carries an entity id and never a position or a reference to hold on to.
-    /// That one case is drawn as a burst at the radius it reached, and is the
-    /// one signature no row selects; see
-    /// <see cref="MatchDecorations.BlastLanded"/>.
+    /// tower's is reachable.</b> An aura pulses from its emitter, a sweep is
+    /// centred on the tower that swung, and a shot names the tower that fired
+    /// it, so all three name a row the view is holding art for. A blast centred
+    /// on the body a shot arrived at names the body — the shooter is not in the
+    /// event at all, deliberately, since an event carries an entity id and
+    /// never a position or a reference to hold on to. That one case is drawn as
+    /// a burst at the radius it reached, and is the one signature no row
+    /// selects; see <see cref="MatchDecorations.BlastLanded"/>.
     /// </para>
     /// </remarks>
     public enum EffectSignature
     {
         /// <summary>
-        /// The plain disc on the ground that every bubble had before any row
-        /// had a signature of its own — as wide as the bubble reached and
-        /// saying nothing else. Still what a row without a signature draws.
+        /// The plain shapes every row had before any row had a signature of its
+        /// own — a disc on the ground as wide as the bubble reached, and a thin
+        /// tracer from the muzzle to the body. Still what a row without a
+        /// signature draws.
         /// </summary>
         None = 0,
 
@@ -59,5 +71,20 @@ namespace View
         /// drawn on the things a bubble found rather than on the bubble.
         /// </summary>
         TowerGlow = 3,
+
+        /// <summary>
+        /// One heavy bar the whole length of the shot, held at that length for
+        /// the whole of its life. The Overwatch's, whose read is the distance a
+        /// single shot crossed — eight hexes of it, against the three the
+        /// bottom of that line has.
+        /// </summary>
+        LongShot = 4,
+
+        /// <summary>
+        /// A knife that leaves the hand and crosses to the body the shot found.
+        /// The Fan of Knives', which fires three shots at three bodies in one
+        /// throw, so one throw draws three of these.
+        /// </summary>
+        ThrownKnife = 5,
     }
 }

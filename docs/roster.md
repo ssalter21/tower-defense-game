@@ -251,10 +251,10 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 > How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
 > ticket that picks a line's clips is where a real number is signed.
 
-### What a capstone's bubble is drawn as
+### What a capstone is drawn as
 
-Every bubble in the game drew one shared disc on the ground until #263. Four shapes are signed now, one per
-capstone of the four impact and melee lines, and **the shape is all that is signed** — every colour, size and
+Every bubble in the game drew one shared disc on the ground and every hitscan shot one shared tracer until
+#263 and #264. Six shapes are signed now, and **the shape is all that is signed** — every colour, size and
 duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
 disc and the marks on a creep already are.
 
@@ -263,24 +263,37 @@ disc and the marks on a creep already are.
 | 16 · Shield Wall | A ring lying on the ground at the edge of the slow, open in the middle so the bodies caught inside stay visible | Under the tower that pulsed |
 | 19 · Slam | Cracks running out from the middle to the edge of the swing | Under the man who swung |
 | 22 · Blessing | A ring over the head of every tower the pulse reached, the emitter included | On what the bubble found, not on the bubble |
+| 31 · Overwatch | One heavy bar the length of the leg the shot crossed | From the crossbow to the body it was aimed at |
+| 34 · Fan of Knives | One knife per shot, crossing to the body it found — three knives where the throw found three bodies | From the hand to each body |
 | 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
 
-**Three of the four are bound per row and the fourth cannot be.** A signature is reached through the entity
-the event names: an aura pulses from its own emitter and a sweep is centred on the tower that swung, so those
-three name a row. A blast centred on its target names the *body the shot arrived at* — the shooter is not in
-the event and deliberately never will be, because an event carries an entity id and nothing to hold on to. So
-the burst is what any target-centred blast draws, and the Mage's and the Sorcerer's splash wear it too. That
-is the same restraint the disc kept between a blast and a pulse, moved one step along.
+**Five of the six are bound per row and the sixth cannot be.** A signature is reached through the entity the
+event names: an aura pulses from its own emitter, a sweep is centred on the tower that swung, and a shot names
+the tower that fired it, so those five name a row. A blast centred on its target names the *body the shot
+arrived at* — the shooter is not in the event and deliberately never will be, because an event carries an
+entity id and nothing to hold on to. So the burst is what any target-centred blast draws, and the Mage's and
+the Sorcerer's splash wear it too. That is the same restraint the disc kept between a blast and a pulse, moved
+one step along.
+
+**Neither pierce capstone is a bubble, so neither had that problem.** The Overwatch is a long single shot and
+the Fan of Knives is a `targets` of three; `content/units.txt` gives both of them `none` in the radius column.
+Three shots at three bodies is three `TowerFired` events on one tick, each naming the tower and one body, so
+three knives is what the event stream produces rather than something the view has to know how to fan out.
 
 **None of it is a `ParticleSystem` and none of it can be.** The client has none anywhere and two play-mode
 tests forbid one, for the reason the glow reservation above gives: the camera orbits and nothing may turn to
-face it. Each shape is a mesh of solid bars generated in `EffectMeshes`, lit by the one directional light
-everything else on the board is lit by.
+face it. Each shape is a mesh of solid bars generated in `EffectMeshes`, or — for the two that are simply
+straight — a stretched box, lit by the one directional light everything else on the board is lit by.
 
-**A shape that stands for a radius does not shrink as it ages.** The shared ageing closes a tracer, a flash
+**A shape that stands for a distance does not shrink as it ages.** The shared ageing closes a tracer, a flash
 and a spark down to nothing, because their size is how loud they are; a ring, a shock and a burst say how far
-the bubble reached, so one that shrank would report a reach the bubble did not have on every tick but its
-first. That is #253's finding and every shape added since is held to it by a test.
+the bubble reached and the Overwatch's shot says how far the shot went, so one that shrank would report a
+reach that was never had. That is #253's finding and every shape added since is held to it by a test.
+
+**One thing moves rather than staying where it was drawn, and it is the knife.** It carries the two points it
+was drawn between and crosses between them on the tick, over six of them — so a body that dies mid-throw
+leaves a knife finishing the throw it was drawn for. The flight is a picture of a throw and not the shot: the
+row is hitscan, and the damage landed on the tick it was fired.
 
 ## The Knight line — impact, melee
 
@@ -469,7 +482,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — sees the whole leg. Slow, enormous single shots from wherever he is stood. **This is where the
   line's slow-and-heavy tuning lives.**
 - **Looks** — the **`Marksman`** model, prone-ish `Ranged_2H_Aiming`, holding **`crossbow_2handed`** from the
-  Adventurers pack.
+  Adventurers pack. Every shot draws one heavy bar from the crossbow to the body, the whole length of the leg
+  it crossed — which is the line's own read, since eight hexes against the Archer's three is what this row is.
 - **Numbers** — range **8000**, cooldown 60, damage 500–700, windup `_`, backswing `_`, hitscan, pierce.
   Cost ~60.
 - **Needs** — nothing.
@@ -594,12 +608,18 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 - **Does** — three knives a throw, at the three bodies nearest the exit.
 - **Looks** — `Rogue_Hooded`, `rogue_texture_alt_A`, dual `dagger`, `Melee_Dualwield_Attack_Slice` as the
-  throw.
+  throw. Each shot draws a knife leaving the hand and crossing to the body it found, so a throw that finds
+  three bodies puts three knives in the air at once.
 - **Numbers** — `targets` 3. Cost ~129, **since bodies are priced** — this is one of the four capstones the
   damage rule's inputs actually move under.
 - **Needs** — nothing. `targets` landed with layout 3, and target selection answers an ordered *n* under the
   same total order it always answered one under.
-- **Open** — none.
+- **Open** — **which hand the knives leave from.** Both daggers are the same asset under the same node name,
+  the anchor names that node, and it resolves to whichever the lookup reaches first — measured as
+  `handslot.l`, the off hand, where this row's own two rungs below throw from `handslot.r`. It is
+  deterministic and it is not a decision: naming the other hand, or alternating them, is picking a hand and
+  that is not the view's to pick. `ImportedArtTests` logs what every row's anchor resolved under, so a green
+  run says which hand it is.
 
 > **Three shots at one roll each, not one roll split three ways.** `targets` of *n* fires *n* shots at *n*
 > creeps and draws *n* damage rolls; one shot split *n* ways is the other shape, and it is a bubble. This is

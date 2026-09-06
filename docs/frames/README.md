@@ -41,14 +41,21 @@ row that says "drag to tick 1096" are about the same moment.
 # The same board, wave and seed, with a defense of your own standing on it
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/four-lines.txt" `
     -Ticks "572,780" -Width 1600
+
+./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
+    -Ticks "673" -Distance 18 -Width 1600
 ```
 
 **Finding the tick a capstone went off on is what the log line is for.** A
-signature is drawn on one tick and gone eight later, so hunting one by opening
-pictures means opening most of them. Every kept tick's line in
-`capture-match-frames.log` carries the running slow-ring, ground-shock, glow and
-burst counts; ask for a run of consecutive ticks, read the line where one of
-those numbers moves, and then capture that tick on its own at the size you want.
+signature is drawn on one tick and gone six or eight later, so hunting one by
+opening pictures means opening most of them. Every kept tick's line in
+`capture-match-frames.log` carries the running slow-ring, ground-shock, glow,
+burst, long-shot and knife counts; ask for a run of consecutive ticks, read the
+line where one of those numbers moves, and then capture that tick on its own at
+the size you want. **The knife count is the one that says how many bodies a
+throw found** — it goes up by three where the Fan of Knives had three in range
+and by one or two where it had fewer, so a frame of *three* knives is found by
+looking for a step of three.
 
 **A frame is a function of its tick and nothing else.** The capture draws every
 tick it steps through rather than only the ones it keeps, because where a tower
@@ -150,6 +157,53 @@ does not put a body beside all twelve at any tick; that each row fires from a
 point on its own art rather than from a height above its root is measured for
 every one of them by `ImportedArtTests`, which logs the distance, and asserted
 on this board by `MatchViewTests`.
+
+And three of the recorded board with the **six rows of the Archer and Rogue
+lines** standing on it, out of [`pierce-lines.txt`](pierce-lines.txt), all at
+`-Width 1600`. **Every shape in them is a placeholder and none of it is
+signed.** What issue #264 signed is two shapes — the Overwatch's single shot
+drawing a tracer the length of the leg it crossed, and the Fan of Knives
+throwing three knives at three bodies — and every colour, size and duration they
+are drawn at is the plainest thing that draws that shape, declared as a
+placeholder in `MatchTuning`.
+
+- `pierce-lines-tick-0673.png` — **the one to look at first**, at
+  `-Distance 18`. The Fan of Knives, hooded in blue, has just thrown: three
+  pale knives are strung out across the corridor, one to each of the three
+  skeletons nearest the exit, two ticks into a six-tick crossing. The long pale
+  bar running out of the top-left corner is the Overwatch's shot, fired one tick
+  earlier from a crossbow the frame does not quite hold, and ending on the
+  skeleton furthest along the corridor.
+
+- `pierce-lines-tick-0516.png` — the lower rungs at work, at `-Distance 18`. The
+  Archer and the Ranger are both at full draw on the bow, one tick of the
+  nine-tick windup they share, and knives are crossing the corridor beside the
+  skeletons walking it. **The four rungs that are not capstones draw the thin
+  tracer every hitscan row has always drawn**, and four ticks of it is short
+  enough that catching one in a still is luck — what is worth reading here is
+  that the bow is drawn and the shot leaves it, which
+  `ImportedArtTests` measures for every row and `MatchViewTests` asserts on this
+  board.
+
+- `pierce-lines-tick-0674.png` — the whole-floor framing, so all six rows are in
+  one picture with the Overwatch's shot crossing it. **It is the length of the
+  leg**, which is what that row is for: eight hexes of range against the
+  Archer's three, and the bar says so by being that long rather than by being
+  any other colour.
+
+**Three things about them are results rather than questions.** **The Rogue's
+`Throw` and the Fan of Knives' slice are bound into a nought-tick windup**, so
+neither ever plays on the board and a firing frame of those rows is a body in
+its resting pose with a knife leaving its hand; **the Overwatch's one signed
+clip is a stance** — `Ranged_2H_Aiming`, held through all three states, because
+its windup and backswing are unsigned — so its firing frame is that same
+sighted pose whatever the tick. Both are `docs/roster.md` speaking rather than
+an omission here. And **the Fan of Knives carries two identically named daggers,
+so all three knives leave one hand — `handslot.l`, the off hand**, which is
+whichever of the two the lookup reaches first and not a hand anybody picked. Its
+own two rungs below throw from `handslot.r`. `ImportedArtTests` logs what every
+row's anchor was found under, which is where that measurement comes from; which
+hand the capstone *should* throw from is on `roster.md` as a question.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

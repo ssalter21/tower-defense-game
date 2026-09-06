@@ -50,11 +50,12 @@ namespace View
     /// problem.
     /// </para>
     /// <para>
-    /// <b>A row's bubble is drawn as its own row says.</b> Every bubble drew
-    /// one shared disc until the capstones needed telling apart; now the entity
-    /// an event names is turned into the row that emitted it and that row's
+    /// <b>A row's bubble and a row's shot are drawn as its own row says.</b>
+    /// Every bubble drew one shared disc and every shot one shared tracer until
+    /// the capstones needed telling apart; now the entity an event names is
+    /// turned into the row that emitted it and that row's
     /// <see cref="EffectSignature"/> picks the shape. What a row with no
-    /// signature draws is still the disc, unchanged.
+    /// signature draws is still the disc and the tracer, unchanged.
     /// </para>
     /// </remarks>
     public sealed class MatchDecorations : IMatchEvents
@@ -102,12 +103,12 @@ namespace View
         /// in.
         /// </param>
         /// <param name="towerSignature">
-        /// What the tower with this id draws its bubble as, or null when the id
-        /// is not a tower the view is holding. <b>The null is load-bearing and
-        /// is not the same answer as <see cref="EffectSignature.None"/>:</b> a
-        /// tower that draws the plain disc and a creep that a shell arrived at
-        /// are different cases and <see cref="BlastLanded"/> draws them
-        /// differently.
+        /// What the tower with this id draws its own effects as, or null when
+        /// the id is not a tower the view is holding. <b>The null is
+        /// load-bearing and is not the same answer as
+        /// <see cref="EffectSignature.None"/>:</b> a tower that draws the plain
+        /// disc and a creep that a shell arrived at are different cases and
+        /// <see cref="BlastLanded"/> draws them differently.
         /// </param>
         /// <param name="towersWithin">
         /// Where every tower standing within so many metres of an entity is —
@@ -140,6 +141,8 @@ namespace View
             _materials[Piece.TowerGlow] = ViewMaterials.Create("TowerGlow", MatchTuning.BlessingGlowColor);
             _materials[Piece.MortarBurst] =
                 ViewMaterials.Create("MortarBurst", MatchTuning.MortarBurstColor);
+            _materials[Piece.LongShot] = ViewMaterials.Create("LongShot", MatchTuning.LongShotColor);
+            _materials[Piece.ThrownKnife] = ViewMaterials.Create("ThrownKnife", MatchTuning.KnifeColor);
         }
 
         /// <summary>
@@ -158,6 +161,8 @@ namespace View
             GroundShock,
             TowerGlow,
             MortarBurst,
+            LongShot,
+            ThrownKnife,
         }
 
         /// <summary>How many effects are on screen. For tests.</summary>
@@ -214,7 +219,51 @@ namespace View
         /// <summary>How many bursts have been drawn since the last clear. For tests.</summary>
         public int BurstsDrawn => Drawn(Piece.MortarBurst);
 
-        /// <summary>A tower released a shot: a tracer if it is hitscan, a flash either way.</summary>
+        /// <summary>
+        /// How many of the Overwatch's shots have been drawn since the last
+        /// clear. For tests, and counted apart from
+        /// <see cref="TracersDrawn"/> — a row falling back to the plain tracer
+        /// is exactly the failure this reports.
+        /// </summary>
+        public int LongShotsDrawn => Drawn(Piece.LongShot);
+
+        /// <summary>
+        /// How many knives have been drawn since the last clear. For tests. One
+        /// per shot, so one throw of the Fan of Knives counts three.
+        /// </summary>
+        public int KnivesDrawn => Drawn(Piece.ThrownKnife);
+
+        /// <summary>
+        /// A tower released a shot: a flash at the point on its art the shot
+        /// leaves from, and — where the shot has a body to reach — the emitting
+        /// row's own shape crossing to it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The flash is the same for every row and the crossing is not.</b>
+        /// A muzzle flash says a row fired and where from, which is the same
+        /// sentence whatever the row is; what crosses to the body is where a
+        /// line can read as itself, so it is picked off the shooter's
+        /// <see cref="EffectSignature"/>. A row with none draws the thin tracer
+        /// every hitscan row drew before any row had a signature.
+        /// </para>
+        /// <para>
+        /// <b>The shooter is in this event, unlike a blast's.</b> A shot names
+        /// the tower that fired it and the body it was aimed at, so the row is
+        /// reachable and a signature can be bound to it — which is exactly what
+        /// <see cref="BlastLanded"/> cannot do for a bubble centred on its
+        /// victim. Nothing is held on to across the call: the ids are turned
+        /// into two positions out of the frame the view last drew, and the
+        /// effect knows nothing else.
+        /// </para>
+        /// <para>
+        /// <b>A projectile row draws the shared tracer, exactly as it always
+        /// has.</b> Its shell is a real snapshot entity flying the same line,
+        /// so the two overlap; that is how this has drawn since before any row
+        /// had a signature, and no projectile row carries one, so nothing here
+        /// is a new opinion about a shell.
+        /// </para>
+        /// </remarks>
         public void TowerFired(int towerId, int targetId)
         {
             EventsHeard++;
@@ -234,10 +283,15 @@ namespace View
 
             Vector3? target = _creepPosition(targetId);
 
-            if (target.HasValue)
+            if (!target.HasValue)
             {
-                Tracer(muzzle.Value, target.Value + (Vector3.up * MatchTuning.HitSparkHeight));
+                return;
             }
+
+            Crossing(
+                _towerSignature(towerId) ?? EffectSignature.None,
+                muzzle.Value,
+                target.Value + (Vector3.up * MatchTuning.HitSparkHeight));
         }
 
         /// <summary>Damage landed: a spark on the creep it landed on.</summary>
@@ -401,6 +455,18 @@ namespace View
                     effect.Transform.localScale = effect.FullScale * remaining;
                 }
 
+                if (effect.Travels)
+                {
+                    // Over one tick fewer than the lifetime, so the last tick
+                    // it is drawn on is the tick it is on the body. Dividing by
+                    // the lifetime would retire it a step short of arriving,
+                    // every time.
+                    effect.Transform.position = Vector3.Lerp(
+                        effect.From,
+                        effect.To,
+                        effect.Elapsed / (float)Mathf.Max(1, effect.Lifetime - 1));
+                }
+
                 _active[index] = effect;
             }
         }
@@ -451,7 +517,52 @@ namespace View
             _meshes.Clear();
         }
 
-        private void Tracer(Vector3 from, Vector3 to)
+        /// <summary>
+        /// What one row's shot is drawn as on its way to the body: the emitting
+        /// row's own shape, or the thin tracer every row shares.
+        /// </summary>
+        private void Crossing(EffectSignature signature, Vector3 from, Vector3 to)
+        {
+            switch (signature)
+            {
+                // The Overwatch's: one heavy bar the whole length of the leg
+                // the shot crossed. It stands for a distance, so it holds that
+                // length for its whole life -- the rule every shape reporting a
+                // reach is held to.
+                case EffectSignature.LongShot:
+                    Bar(
+                        Piece.LongShot,
+                        from,
+                        to,
+                        MatchTuning.LongShotThickness,
+                        MatchTuning.LongShotTicks,
+                        shrinks: false);
+                    break;
+
+                // The Fan of Knives': one knife leaving the hand and crossing
+                // to the body. That row fires three shots at three bodies in
+                // one throw, so one throw arrives here three times.
+                case EffectSignature.ThrownKnife:
+                    Knife(from, to);
+                    break;
+
+                default:
+                    Bar(
+                        Piece.Tracer,
+                        from,
+                        to,
+                        MatchTuning.TracerThickness,
+                        MatchTuning.TracerTicks,
+                        shrinks: true);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// A box stretched from one point to the other, as thick as it is deep.
+        /// </summary>
+        private void Bar(
+            Piece piece, Vector3 from, Vector3 to, float thickness, int lifetimeTicks, bool shrinks)
         {
             Vector3 along = to - from;
             float length = along.magnitude;
@@ -461,14 +572,59 @@ namespace View
                 return;
             }
 
-            Transform box = Take(Piece.Tracer);
+            Transform box = Take(piece);
             box.SetPositionAndRotation(
                 (from + to) * 0.5f,
                 Quaternion.LookRotation(along / length, Vector3.up));
 
-            var scale = new Vector3(MatchTuning.TracerThickness, MatchTuning.TracerThickness, length);
+            Stays(piece, box, new Vector3(thickness, thickness, length), lifetimeTicks, shrinks);
+        }
 
-            Draw(Piece.Tracer, box, scale, MatchTuning.TracerTicks, shrinks: true);
+        /// <summary>
+        /// One knife, leaving <paramref name="from"/> pointed at
+        /// <paramref name="to"/> and crossing to it as it ages.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It is the same size wherever it is thrown</b>, unlike everything
+        /// a bubble leaves: a knife is an object rather than a reach being
+        /// reported, so a longer throw draws the same knife going further and
+        /// not a bigger one.
+        /// </para>
+        /// <para>
+        /// <b>Both ends are read once, here.</b> The knife carries the two
+        /// points it was drawn between and crosses between them on the tick,
+        /// so it never asks the snapshot anything again — a body that dies
+        /// mid-throw leaves a knife finishing the throw it was drawn for, which
+        /// is decoration behaving as decoration rather than a second opinion
+        /// about where a creep is.
+        /// </para>
+        /// <para>
+        /// <b>And the flight is not the shot.</b> The row is hitscan: the
+        /// damage landed on the tick it was fired and the spark on the body is
+        /// already drawn. What crosses here is a picture of a throw, which is
+        /// why it may take ticks the shot did not.
+        /// </para>
+        /// </remarks>
+        private void Knife(Vector3 from, Vector3 to)
+        {
+            Vector3 along = to - from;
+
+            if (along.sqrMagnitude < 1e-8f)
+            {
+                return;
+            }
+
+            Transform knife = Take(Piece.ThrownKnife);
+            knife.SetPositionAndRotation(from, Quaternion.LookRotation(along.normalized, Vector3.up));
+
+            Flies(
+                Piece.ThrownKnife,
+                knife,
+                Vector3.one * MatchTuning.KnifeLength,
+                MatchTuning.KnifeFlightTicks,
+                from,
+                to);
         }
 
         private void Sphere(Piece piece, Vector3 at, float radius, int lifetimeTicks)
@@ -476,11 +632,13 @@ namespace View
             Transform sphere = Take(piece);
             sphere.position = at;
 
-            Draw(piece, sphere, Vector3.one * (radius * 2f), lifetimeTicks, shrinks: true);
+            Stays(piece, sphere, Vector3.one * (radius * 2f), lifetimeTicks, shrinks: true);
         }
 
         /// <summary>
-        /// The shape one row's bubble leaves, at the size the bubble reached.
+        /// The shape one row's bubble leaves, at the size the bubble reached. A
+        /// row carrying a shot's shape rather than a bubble's draws the disc
+        /// here, which is what a row carrying nothing draws.
         /// </summary>
         private void Signature(EffectSignature signature, int centreId, int radiusMilliHex)
         {
@@ -553,7 +711,7 @@ namespace View
             // goes into x and z unchanged and the thickness is halved into y.
             var scale = new Vector3(diameter, MatchTuning.BubbleRingThickness * 0.5f, diameter);
 
-            Draw(Piece.BubbleRing, disc, scale, MatchTuning.BubbleRingTicks, shrinks: false);
+            Stays(Piece.BubbleRing, disc, scale, MatchTuning.BubbleRingTicks, shrinks: false);
         }
 
         /// <summary>
@@ -596,7 +754,7 @@ namespace View
                 Transform glow = Take(Piece.TowerGlow);
                 glow.position = reached[index] + (Vector3.up * MatchTuning.BlessingGlowHeight);
 
-                Draw(
+                Stays(
                     Piece.TowerGlow,
                     glow,
                     Flattened(MatchTuning.BlessingGlowDiameter),
@@ -622,7 +780,7 @@ namespace View
             // Uniform, unlike the flat shapes: a burst leaves the ground as
             // well as crossing it, so its height is part of the radius it is
             // reporting.
-            Draw(
+            Stays(
                 Piece.MortarBurst,
                 burst,
                 Vector3.one * diameter,
@@ -644,7 +802,7 @@ namespace View
             Transform drawn = Take(piece);
             drawn.position = at + (Vector3.up * MatchTuning.BubbleRingHeight);
 
-            Draw(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
+            Stays(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
         }
 
         /// <summary>
@@ -683,18 +841,10 @@ namespace View
         }
 
         /// <summary>
-        /// Sizes, surfaces and registers one effect that has already been
-        /// placed.
+        /// Draws one effect that has been placed and stays where it was put.
         /// </summary>
-        private void Draw(Piece piece, Transform drawn, Vector3 scale, int lifetimeTicks, bool shrinks)
-        {
-            drawn.localScale = scale;
-            drawn.GetComponent<MeshRenderer>().sharedMaterial = _materials[piece];
-
-            _drawn.TryGetValue(piece, out int already);
-            _drawn[piece] = already + 1;
-
-            _active.Add(new Effect
+        private void Stays(Piece piece, Transform drawn, Vector3 scale, int lifetimeTicks, bool shrinks) =>
+            Draw(new Effect
             {
                 Transform = drawn,
                 FullScale = scale,
@@ -702,6 +852,39 @@ namespace View
                 Piece = piece,
                 Shrinks = shrinks,
             });
+
+        /// <summary>
+        /// Draws one effect that crosses from <paramref name="from"/> to
+        /// <paramref name="to"/> over its life instead.
+        /// </summary>
+        private void Flies(
+            Piece piece, Transform drawn, Vector3 scale, int lifetimeTicks, Vector3 from, Vector3 to) =>
+            Draw(new Effect
+            {
+                Transform = drawn,
+                FullScale = scale,
+                Lifetime = lifetimeTicks,
+                Piece = piece,
+                Shrinks = false,
+                Travels = true,
+                From = from,
+                To = to,
+            });
+
+        /// <summary>
+        /// Sizes, surfaces and registers one effect. <b>The single place an
+        /// effect joins the tally</b>, so a shape written next cannot draw
+        /// correctly while reporting nothing.
+        /// </summary>
+        private void Draw(Effect effect)
+        {
+            effect.Transform.localScale = effect.FullScale;
+            effect.Transform.GetComponent<MeshRenderer>().sharedMaterial = _materials[effect.Piece];
+
+            _drawn.TryGetValue(effect.Piece, out int already);
+            _drawn[effect.Piece] = already + 1;
+
+            _active.Add(effect);
         }
 
         /// <summary>How many of one kind have been drawn since the last clear.</summary>
@@ -725,9 +908,9 @@ namespace View
         /// asked for.
         /// </summary>
         /// <remarks>
-        /// Lazily, because a match whose roster authors no bubble should not
-        /// pay for three meshes it never draws — which is every match of the
-        /// shipped content that stands no capstone.
+        /// Lazily, because a match that stands no capstone should not pay for
+        /// meshes it never draws — which is every match of the shipped
+        /// defense.
         /// </remarks>
         private Mesh MeshFor(Piece piece)
         {
@@ -747,6 +930,13 @@ namespace View
                 Piece.MortarBurst => EffectMeshes.Burst(
                     MatchTuning.MortarBurstShards,
                     MatchTuning.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
+
+                // The one mesh here built a unit long rather than at an outer
+                // radius, because a knife is an object and not a reach.
+                Piece.ThrownKnife => EffectMeshes.Knife(
+                    MatchTuning.KnifeBladeWidthFraction,
+                    MatchTuning.KnifeGuardFraction,
+                    MatchTuning.KnifeThicknessFraction),
 
                 // The slow ring and the tower glow are one ring at two sizes,
                 // so they are one mesh. Their pools stay separate because their
@@ -773,7 +963,7 @@ namespace View
 
             GameObject instance = piece switch
             {
-                Piece.Tracer => GameObject.CreatePrimitive(PrimitiveType.Cube),
+                Piece.Tracer or Piece.LongShot => GameObject.CreatePrimitive(PrimitiveType.Cube),
                 Piece.MuzzleFlash => GameObject.CreatePrimitive(PrimitiveType.Sphere),
                 Piece.Spark => GameObject.CreatePrimitive(PrimitiveType.Sphere),
                 Piece.BubbleRing => GameObject.CreatePrimitive(PrimitiveType.Cylinder),
@@ -856,9 +1046,29 @@ namespace View
             /// leaves does not, and that is the one place the two differ — its
             /// size is the whole of what it says, so one that shrank would be
             /// reporting a reach the bubble did not have for every tick but its
-            /// first.
+            /// first. The Overwatch's long shot is the same case with a
+            /// distance in place of a radius.
             /// </remarks>
             public bool Shrinks;
+
+            /// <summary>
+            /// Whether it crosses from <see cref="From"/> to <see cref="To"/>
+            /// as it ages rather than staying where it was drawn.
+            /// </summary>
+            /// <remarks>
+            /// One thing does: the thrown knife, whose whole read is a body
+            /// being crossed to. Both ends were read out of the frame the view
+            /// last drew, once, when the event arrived — so this is arithmetic
+            /// on two numbers the effect owns and not a second look at the
+            /// snapshot.
+            /// </remarks>
+            public bool Travels;
+
+            /// <summary>Where it was drawn, for one that travels.</summary>
+            public Vector3 From;
+
+            /// <summary>Where it is going, for one that travels.</summary>
+            public Vector3 To;
         }
     }
 }

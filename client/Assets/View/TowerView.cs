@@ -87,14 +87,15 @@ namespace View
         public GameObject Beside { get; private set; }
 
         /// <summary>
-        /// What this tower's bubble is drawn as, off its own row's art.
+        /// What this tower's own effects are drawn as — its bubble, or its
+        /// shot — off its own row's art.
         /// </summary>
         /// <remarks>
-        /// Read where the event stream is handled, because a bubble names the
-        /// entity it is centred on and the view has to turn that id into the
-        /// row that emitted it. Kept here rather than looked up out of
-        /// <see cref="MatchArt"/> per event, for the same reason the anchor is
-        /// resolved once: an event is a tick-loop caller.
+        /// Read where the event stream is handled, because an event names an
+        /// entity and the view has to turn that id into the row that emitted
+        /// it. Kept here rather than looked up out of <see cref="MatchArt"/>
+        /// per event, for the same reason the anchor is resolved once: an event
+        /// is a tick-loop caller.
         /// </remarks>
         public EffectSignature Signature { get; private set; }
 

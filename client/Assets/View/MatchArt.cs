@@ -245,15 +245,15 @@ namespace View
         public EffectAnchor EffectAnchor => effectAnchor;
 
         /// <summary>
-        /// What this row's bubble is drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shared disc.
+        /// What this row's own effects are drawn as, or
+        /// <see cref="EffectSignature.None"/> for the shapes every row shares.
         /// </summary>
         /// <remarks>
         /// Per unit for the reason the anchor is: it is what makes a tier three
-        /// read as itself rather than as the shape every bubble in the game
-        /// shares, so it belongs beside the atlas and the props that do the
-        /// same job. A row with no bubble at all is unaffected either way —
-        /// nothing ever asks.
+        /// read as itself rather than as the shape every bubble and every shot
+        /// in the game shares, so it belongs beside the atlas and the props
+        /// that do the same job. A row whose signature is a shape for a moment
+        /// it never has is unaffected either way — nothing ever asks.
         /// </remarks>
         public EffectSignature Signature => signature;
 

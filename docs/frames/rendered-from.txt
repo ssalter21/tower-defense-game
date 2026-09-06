@@ -18,3 +18,6 @@ picture  match-tick-1096.png             714C2D52791521AD
 picture  match-tick-1229.png             714C2D52791521AD
 picture  match-tick-1546.png             714C2D52791521AD
 picture  match-tick-2700.png             714C2D52791521AD
+picture  pierce-lines-tick-0516.png      714C2D52791521AD
+picture  pierce-lines-tick-0673.png      714C2D52791521AD
+picture  pierce-lines-tick-0674.png      714C2D52791521AD

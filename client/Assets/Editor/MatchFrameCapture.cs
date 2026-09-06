@@ -257,7 +257,9 @@ namespace View.Editor
                         + view.Decorations.SlowRingsDrawn + " slow / "
                         + view.Decorations.ShocksDrawn + " shock / "
                         + view.Decorations.GlowsDrawn + " glow / "
-                        + view.Decorations.BurstsDrawn + " burst -> " + path);
+                        + view.Decorations.BurstsDrawn + " burst / "
+                        + view.Decorations.LongShotsDrawn + " long shot / "
+                        + view.Decorations.KnivesDrawn + " knife -> " + path);
 
                     next++;
                 }
