@@ -38,7 +38,8 @@
 #   20 Paladin   Paladin.fbx, hammer, bare head, no atlas override.
 #   21 Templar   Paladin_with_Helmet.fbx, hammer and shield.
 #   22 Blessing  Paladin_with_Helmet.fbx in paladin_texture_B, book and
-#                shield, with the statue standing on the next tile.
+#                shield. Its row also stands a statue on the next tile; this
+#                sheet leaves that off, and the section below says why.
 #
 # The Blessing takes the magic clips and not the swings: its Looks line names a
 # book and its row is an aura, so a hammer chop is not a pose it can be in. The
@@ -87,15 +88,26 @@ tower Templar_Use_Item        Kaykit/mystery-monthly-series-4/paladin/Paladin_wi
 
 # ------------------------------------------------------------ 22 Blessing ---
 #
-# In paladin_texture_B with the statue on the next tile, which is how the row
-# is bound. The statue is scenery and takes its scale from the beside column
-# the way every other ground prop does.
+# In paladin_texture_B, with the book and the shield -- and WITHOUT the statue
+# that its row is actually bound with.
+#
+# THE STATUE IS LEFT OFF ON PURPOSE AND IT COST A RE-RENDER TO LEARN WHY. The
+# first run of this file carried it, because the point of a sheet is usually to
+# show the rung as it ships. But the capture frames the whole stand, so a
+# statue standing on the next tile put two bodies in the picture and drew the
+# Blessing at half the size of the Paladin and the Templar above it. Eight
+# tiles that differ, in which the difference cannot be seen, is the exact
+# failure this sheet exists to avoid.
+#
+# The statue is not an open question here anyway: it is on the beside sheet,
+# docs/roster-expansion-beside-candidates.txt, which is where how-big-a-ground-
+# prop-should-be is asked. This file asks one thing, which is the pose.
 
-tower Blessing_Raise          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Raise           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Shoot          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Shoot           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Spellcasting   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting     Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Casting_Long   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting_Long Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Summon         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Summon          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Idle_A         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_A                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Idle_B         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_B                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
-tower Blessing_Use_Item       Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Use_Item                          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1
+tower Blessing_Raise          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Raise           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Shoot          Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Shoot           Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Spellcasting   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting     Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Casting_Long   Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Spellcasting_Long Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Summon         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_CombatRanged/Ranged_Magic_Summon          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Idle_A         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_A                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Idle_B         Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Idle_B                            Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
+tower Blessing_Use_Item       Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Rig_Medium_General/Use_Item                          Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png
