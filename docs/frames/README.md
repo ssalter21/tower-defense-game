@@ -295,7 +295,9 @@ than any of #263 to #265 made, and `MatchTuning`'s own header says so.
   to two hexes each. The green-and-blue bars over the bodies are **not** an
   effect of this ticket: they are the two-segment bar #254 already draws, and
   the blue half is a pool — some of it the Vampire's and the Grave Robber's own
-  and some of it what the Necromancer just granted.
+  and some of it what the Necromancer just granted. **The Minions in the knot
+  were not sent**: the wave releases six rows and none of them is a Minion, so
+  every one on screen is a body a Necromancer raised.
 
 - `creep-auras-tick-0276.png` — the same knot at `-Distance 14`, down among the
   bodies, four ticks later. What is worth reading here is that a haste ring

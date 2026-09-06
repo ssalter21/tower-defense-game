@@ -247,6 +247,28 @@ public class DerivationTests
         // untouched -- the fingerprint is 5AC52DFE9393CC7D, and with the rule in
         // it is the value below.
         (11u, 0x4A90FFAD025E6DA7UL),
+
+        // Version 12 is #268 -- a creep raises a creep. A row names the row it
+        // puts on the corridor beside itself and the cadence it does it on, so a
+        // body arrives that no wave order released, in no order, priced by
+        // nobody; and the tick loop grew a phase for it, beside the wave's own
+        // release and after everything else in the tick. Which clock a creep
+        // raises on and whether it was raised joined the per-tick fold with it,
+        // so match-state/4 went to match-state/5 and every stored record's
+        // rolling hash stops reproducing whether or not its roster authors a
+        // raise.
+        //
+        // IT CAUGHT THE HOLE A NINTH TIME, in the same half and for the same
+        // reason as the seventh and the eighth: the sixth half's roster is where
+        // a rule the other five cannot author gets authored, and no row on it
+        // raised anything. So the warden gained a raise and the roster gained
+        // the row it puts down, and the label went to rule-fingerprint/10.
+        //
+        // OBSERVED, both ways round, on this build. With the raise phase struck
+        // out of Match.Step -- the two columns read, linked and folded, and the
+        // tick loop never putting a body down -- the fingerprint is
+        // 79786A8DE9C1F0A2, and with the phase in it is the value below.
+        (12u, 0xC3B4DE54701BCD2DUL),
     };
 
     /// <summary>
@@ -313,7 +335,7 @@ public class DerivationTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Layout 3, because no earlier layout can say any of this.</b> That is
+    /// <b>Layout 5, because no earlier layout can say any of this.</b> That is
     /// the whole reason this half exists: the five above it are fought over
     /// layout-1 and layout-2 rosters, where a shield is not a column, a shot
     /// count is not a column and a bubble is not a column -- so #216's rules
@@ -326,15 +348,23 @@ public class DerivationTests
     /// runs the whole of the effect machinery and sees none of it -- which is
     /// the shape of hole this table has had six times.
     /// </para>
+    /// <para>
+    /// <b>And the warden raises the thrall, which is #268's.</b> The successor
+    /// belongs to the walker and the raise to the warden because a row a body
+    /// becomes may not raise -- so the two mechanics sit on the two walking rows
+    /// this roster already had, and the bodies the warden puts down are shot at,
+    /// slowed, swept and counted by everything else in this half.
+    /// </para>
     /// </remarks>
     private const string FingerprintShotUnits = """
-        layout 4
-        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0    6
-        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90   none
-        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0    none
-        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0    none
-        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60   none
-        unit  6  risen   moving  160  41  0     0  0  0  0  0  none     0  9  6   none    swift     0  0   1  none  none   none    0   none    0    0    none
+        layout 5
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0    6     none  0
+        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90   none  7     40
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0    none  none  0
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0    none  none  0
+        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60   none  none  0
+        unit  6  risen   moving  160  41  0     0  0  0  0  0  none     0  9  6   none    swift     0  0   1  none  none   none    0   none    0    0    none  none  0
+        unit  7  thrall  moving  90   19  0     0  0  0  0  0  none     0  6  3   none    arcane    0  0   1  none  none   none    0   none    0    0    none  none  0
         """;
 
     /// <summary>
@@ -848,6 +878,13 @@ public class DerivationTests
     /// that spends part of the match as one row and the rest of it as another,
     /// through a shot shape, a shield and a slow that all see it change.
     /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/10</c> is the fourth, and the sixth half's roster a
+    /// fourth time. #268's rule is reached only by a row naming a row it raises,
+    /// so the warden gained one and the roster gained the thrall. What that half
+    /// now folds is bodies arriving mid-match that no order released, walking a
+    /// corridor the towers are already shooting down.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -857,7 +894,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/9").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/10").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -905,6 +942,13 @@ public class DerivationTests
     /// every other rule in this half then resolves against. The successor is
     /// swift where the walker is armoured, so the matrix cell moves as well as
     /// the pool.
+    /// </para>
+    /// <para>
+    /// <b>And a fourth for #268.</b> The warden raises a thrall every forty
+    /// ticks for as long as it walks, so this half is the only one in the table
+    /// where the number of bodies on the corridor is not the number the wave
+    /// sent -- and every one of them is acquired, shot, slowed and folded like
+    /// any other.
     /// </para>
     /// <para>
     /// <b>Both shot shapes, the shield, the slow and the aura are in one match

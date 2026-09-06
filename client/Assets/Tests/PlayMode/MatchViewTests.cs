@@ -2026,6 +2026,72 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A body raised mid-lane is drawn from the tick it arrives, and a seek
+        /// back across that tick takes it off screen again.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The arrival needs no event, and that is what this measures.</b> A
+        /// raised creep is an entity in the snapshot, so the pool claims a view
+        /// for it by subtraction the moment it appears -- and a seek
+        /// re-simulates with nobody subscribed, so a scrub back to a tick before
+        /// the raise has to put the view away again with no decoration having
+        /// been heard.
+        /// </para>
+        /// <para>
+        /// The Necromancer and the Minion are shipped rows and not a fixture,
+        /// for the reason the transforming pair is: what the recorded wave lacks
+        /// is not the authoring but the sending.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void ARaisedBodyIsDrawnOnItsTickAndASeekTakesItBackOffScreen()
+        {
+            MatchArt art = TheMatchOnScreen.Art();
+            MatchView view = BeginWithTheSpawner();
+
+            RunUntil(view, () => view.Current.Creeps.Any(creep => creep.TypeId == Minion));
+
+            CreepSnapshot risen = view.Current.Creeps.First(creep => creep.TypeId == Minion);
+            int body = risen.Id;
+            int tick = view.Current.Tick;
+
+            Assert.That(tick, Is.GreaterThan(1), "nothing had time to be raised");
+            Assert.That(
+                view.Current.Creeps.Any(creep => creep.TypeId == Necromancer),
+                Is.True,
+                "the raiser is gone, so this is not a raise");
+
+            AssertDrawnAs(view, body, art, Minion);
+
+            // One tick earlier it does not exist, so nothing is drawn for it --
+            // which is the pool being told what exists rather than being told
+            // what changed.
+            view.ReSimulateTo(tick - 1);
+
+            Assert.That(
+                view.Current.Creeps.Any(creep => creep.Id == body),
+                Is.False,
+                "the body was already on the corridor a tick before it was raised");
+
+            Assert.That(
+                view.Creeps.Live.ContainsKey(body),
+                Is.False,
+                "a view is still being drawn for a body that does not exist yet");
+
+            // Forward across the raise and back over it again. Neither
+            // direction is special.
+            view.ReSimulateTo(tick + 30);
+            AssertDrawnAs(view, body, art, Minion);
+
+            view.ReSimulateTo(tick - 1);
+            Assert.That(view.Creeps.Live.ContainsKey(body), Is.False);
+
+            view.ReSimulateTo(tick);
+            AssertDrawnAs(view, body, art, Minion);
+        }
+
+        /// <summary>
         /// That the body with this id is drawn as the row with that id: the
         /// model asset the row's art names, and whatever that row puts in its
         /// hands.
@@ -2606,7 +2672,7 @@ namespace Tests.PlayMode
         /// <summary>The Skeleton Mage, whose haste is the first creep aura.</summary>
         private const int SkeletonMage = 7;
 
-        /// <summary>The Necromancer, whose ward grants a pool.</summary>
+        /// <summary>The Necromancer, whose ward grants a pool and whose raise puts a Minion down.</summary>
         private const int Necromancer = 38;
 
         /// <summary>The Frost Wight, whose frostbite is the one aura reaching towers.</summary>
@@ -2640,6 +2706,33 @@ namespace Tests.PlayMode
         private const string TransformDefense = "tower 3 4 3";
 
         private const string TransformWave = "order 0 47 3 0";
+
+        /// <summary>The Minion, which the Necromancer raises.</summary>
+        private const int Minion = 1;
+
+        /// <summary>
+        /// One Archer on a cell of the recorded defense, and one Necromancer
+        /// walking past it. One rather than a column, so the Minions on screen
+        /// are unambiguously the ones it raised.
+        /// </summary>
+        private const string SpawnerDefense = "tower 3 4 3";
+
+        private const string SpawnerWave = "order 0 38 1 0";
+
+        /// <summary>The real board and the real roster, with the spawner walking it.</summary>
+        private MatchView BeginWithTheSpawner()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("spawner defense", SpawnerDefense, types),
+                WaveScript.Parse("spawner wave", SpawnerWave, types),
+                TheMatchOnScreen.Seed);
+        }
 
         /// <summary>The real board and the real roster, with the pair walking it.</summary>
         private MatchView BeginWithTheTransformingPair()

@@ -58,8 +58,10 @@ namespace Sim
             int armour,
             int shield,
             int targets,
-            Bubble bubble)
+            Bubble bubble,
+            int raisePeriodTicks)
         {
+            RaisePeriodTicks = raisePeriodTicks;
             Cost = cost;
             AttackType = attackType;
             ArmourType = armourType;
@@ -220,6 +222,51 @@ namespace Sim
             Becomes = successor;
         }
 
+        /// <summary>
+        /// The row a body of this one puts on the board beside itself every
+        /// <see cref="RaisePeriodTicks"/> ticks for as long as it walks, or null
+        /// for a row that raises nothing. Null on every row of every layout
+        /// before 5.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A resolved row rather than an id</b>, linked once by the table
+        /// after it has read them all, for the reason <see cref="Becomes"/> is:
+        /// nothing looks a number up while a match is running.
+        /// </para>
+        /// <para>
+        /// <b>What a raise puts on the board raises nothing in its turn.</b>
+        /// The table refuses a raised row that raises, and a raised row that
+        /// becomes one -- so what one order can put on the corridor is its own
+        /// bodies and one generation after them. That is what keeps the
+        /// termination bound arithmetic over four rows rather than a walk over a
+        /// graph.
+        /// </para>
+        /// <para>
+        /// <b>There is no cap on how many one body raises.</b> The board is what
+        /// bounds a spawner: it raises for as long as it is walking, so a slowed
+        /// one raises more. See
+        /// <c>docs/adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// </para>
+        /// </remarks>
+        public UnitType? Raises { get; private set; }
+
+        /// <summary>
+        /// Ticks between one raise and the next, counted from the tick the body
+        /// arrived. Zero on a row that raises nothing, and on every row of every
+        /// layout before 5.
+        /// </summary>
+        public int RaisePeriodTicks { get; }
+
+        /// <summary>
+        /// Points this row at the row it raises. Called once, by the table,
+        /// after every row has been read.
+        /// </summary>
+        internal void LinkRaises(UnitType raised)
+        {
+            Raises = raised;
+        }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
@@ -257,7 +304,12 @@ namespace Sim
                     return RadialFold(hash);
 
                 case 4:
-                    return RadialFold(hash).Add(Becomes is null ? 0 : Becomes.Id);
+                    return SuccessorFold(hash);
+
+                case 5:
+                    return SuccessorFold(hash)
+                        .Add(Raises is null ? 0 : Raises.Id)
+                        .Add(RaisePeriodTicks);
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -287,5 +339,12 @@ namespace Sim
         /// </summary>
         private Hash64 RadialFold(Hash64 hash) =>
             Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
+
+        /// <summary>
+        /// The one column layout 4 added, after the nine before it. Layout 5
+        /// folds it in the same place and appends its two after it.
+        /// </summary>
+        private Hash64 SuccessorFold(Hash64 hash) =>
+            RadialFold(hash).Add(Becomes is null ? 0 : Becomes.Id);
     }
 }

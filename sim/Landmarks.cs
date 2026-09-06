@@ -268,6 +268,11 @@ namespace Sim
         }
 
         /// <inheritdoc/>
+        public void CreepRaised(int creepId, int raisedCreepId)
+        {
+        }
+
+        /// <inheritdoc/>
         public void ProjectileOrphaned(int projectileId) => Note(Orphaned, projectileId, 0);
 
         /// <inheritdoc/>

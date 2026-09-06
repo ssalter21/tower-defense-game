@@ -444,6 +444,25 @@ namespace View
         }
 
         /// <summary>
+        /// A creep put another body on the corridor. Nothing is drawn here, for
+        /// the two reasons the transformation is not drawn either.
+        /// </summary>
+        /// <remarks>
+        /// <b>The body arriving is not a decoration.</b> A raised creep is an
+        /// entity in the snapshot from the tick it is raised, so it is claimed,
+        /// posed and given its bar by the ordinary draw -- and a scrub back
+        /// across the tick takes it off screen again without this method being
+        /// called at all.
+        /// <b>And what would go on top of it has not been chosen.</b> A grave
+        /// bursting, a green flash or a column of light at the raise is an art
+        /// decision, and inventing one here is not this ticket's to make.
+        /// </remarks>
+        public void CreepRaised(int creepId, int raisedCreepId)
+        {
+            EventsHeard++;
+        }
+
+        /// <summary>
         /// A shot lost its target mid-flight. Nothing is drawn, and that is the
         /// interesting case rather than an omission: the projectile stops being
         /// in the snapshot on this tick, so its object is already going back in

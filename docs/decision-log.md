@@ -1649,3 +1649,53 @@ Two retirements, both deliberate, and the label bumps that come with them.
 and never by its column count, so the replay bundle, the ghost, the wave and the command stream all carry the
 new hash in the field they already had.
 
+---
+
+## 6 September 2026 — a creep raises creeps, and the layout row moves a second time in a day
+
+[#268](https://github.com/ssalter21/tower-defense-game/issues/268) built the second of the three engine asks
+signed on 5 September: the Necromancer raises a Minion beside itself every 150 ticks, uncapped. One claim this
+repository had written down moves with it, and one number it had estimated turns out to be wrong in the
+direction that matters.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 was "the last widening before the map is measured", and [#267](https://github.com/ssalter21/tower-defense-game/issues/267) already recorded that layout 4 broke it | **Layout 5, hours later, and the map is still not measured.** A creep putting a creep on the board cannot be said in any arrangement of the twenty-nine columns: every one of them describes what a body *is*, and `becomes` is one body changing row rather than a second body arriving. So `raises` and `raisePeriod` are the thirtieth and thirty-first, layout 4 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired again |
+| **[The roster](roster.md)** — the Necromancer | "It lives about 1,545 ticks and raises **roughly ten**"; a fully-slowed one raises "on the order of a hundred" | **Eleven against the committed defense, and about a hundred and seventy at the floor speed.** The estimate was close and the reading it implies was not: four hundred gold of Necromancers returns **1200%** of its gold against a band of 60 to 95, where it returned 100 before. Nineteen bodies are sent and **228** leak |
+
+**Uncapped is the decision and the reading is the finding.** [#250](https://github.com/ssalter21/tower-defense-game/issues/250)
+signed the cadence and signed the absence of a cap in the same sentence, with the trade-off written beside
+it: *a slowed one raises ten times as many, kept as a trade-off*. Shield Wall and Overgrowth are slows, so the
+two capstones built to handle a push are the two that make this body worst. **No cap, decay or diminishing
+return was added to make the number look better**, and no creep number was retuned: the return band was
+already asserted as MISSED at both ends and the Necromancer's entry in the over list is updated from 100 to
+1200 rather than converted to a pass.
+
+**Two decisions the ticket had to take, both recorded in [ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).**
+
+- **A raised body enters the array at the end, with the next entity id**, so the array stays in ascending id
+  order — which `ReportPasses`, `Acquire` and the fold all read as part of the rules. The tiebreak follows
+  from that and follows in the conservative direction: a body raised level with its raiser has the higher id
+  and **loses every tie**, so a tower looking at both shoots the raiser.
+- **A raised body's leak charges health, at the price of the row it is.** A body reaching the exit takes as
+  much health off a defense whether or not anybody bought it, so charging nothing would make the raise free in
+  the run economy. What nobody paid is the *sender's* half: creep cost is derived from effective health and a
+  spawner's price cannot see what it spawns, so 21 gold of Necromancer arrives with 110 gold of Minions behind
+  it. That gap is [open](open-questions.md#what-is-a-spawner-worth) and held open, beside the Mage's splash and
+  the Vampire's shield.
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 4` → `layout 5`, and `unit-types/4` → `unit-types/5`, for the two columns.
+- `SimulationVersion` **11 → 12**, because the tick loop grew a phase: a body puts a body on the corridor at
+  the close of a tick, beside the wave's own release.
+- `match-state/4` → `match-state/5`. The clock each creep raises on joins the per-tick fold, and the running
+  count of leaks nobody sent joins the totals — so a run one tick from putting a body down stops hashing like
+  one that is two ticks from it.
+- `rule-fingerprint/9` → `rule-fingerprint/10`, the fourth bump taken for the scenario rather than the shape
+  of the fold: no roster in `DerivationTests` raised anything, so the rule ran nowhere.
+
+**What is free is every record format.** `RecordFormat` is untouched, for the reason #267 gives: a roster is
+pinned by its content hash and never by its column count.

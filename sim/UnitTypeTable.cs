@@ -46,7 +46,7 @@ namespace Sim
         public const int DefaultLayout = 1;
 
         /// <summary>The layout the columns documented on <see cref="UnitType"/> describe.</summary>
-        public const int CurrentLayout = 4;
+        public const int CurrentLayout = 5;
 
         private const string Keyword = "unit";
 
@@ -84,6 +84,12 @@ namespace Sim
         /// itself. The same spelling of "nothing" the columns above use.
         /// </summary>
         private const string BecomesNobodyWord = NoTypeWord;
+
+        /// <summary>
+        /// What the <c>raises</c> column carries where a row puts nothing on the
+        /// board. The same spelling of "nothing" again.
+        /// </summary>
+        private const string RaisesNobodyWord = NoTypeWord;
 
         /// <summary>
         /// The payload a bubble may not carry, spelled out so the refusal can
@@ -161,10 +167,11 @@ namespace Sim
 
             var types = new List<UnitType>();
 
-            // The successor each row named and the line it named it on, in row
-            // order. Kept beside the rows rather than on them because the row
-            // being named may not have been read yet.
+            // The successor and the raised row each row named, and the line it
+            // named them on, in row order. Kept beside the rows rather than on
+            // them because the row being named may not have been read yet.
             var becomes = new List<int>();
+            var raises = new List<int>();
             var lines = new List<int>();
             int previousId = 0;
             int layout = DefaultLayout;
@@ -188,7 +195,7 @@ namespace Sim
                     throw WrongColumnCount(source, row.Line, layout, fields.Length);
                 }
 
-                UnitType type = ReadRow(source, row.Line, fields, layout, out int successor);
+                UnitType type = ReadRow(source, row.Line, fields, layout, out int successor, out int raised);
 
                 if (type.Id == previousId)
                 {
@@ -218,6 +225,7 @@ namespace Sim
                 previousId = type.Id;
                 types.Add(type);
                 becomes.Add(successor);
+                raises.Add(raised);
                 lines.Add(row.Line);
             }
 
@@ -226,7 +234,7 @@ namespace Sim
                 throw new ContentException(source, 0, "has no unit types in it at all.");
             }
 
-            Link(source, types, becomes, lines);
+            Link(source, types, becomes, raises, lines);
 
             Hash64 hash = Hash64.Start(HashLabelOf(layout)).Add(types.Count);
 
@@ -239,8 +247,8 @@ namespace Sim
         }
 
         /// <summary>
-        /// Points every row that named a successor at the row it named, once
-        /// every row has been read.
+        /// Points every row that named another row -- a successor, a raised row,
+        /// or both -- at the row it named, once every row has been read.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -257,7 +265,12 @@ namespace Sim
         /// id -- so a table that refuses here never produces a hash at all.
         /// </para>
         /// </remarks>
-        private static void Link(string source, List<UnitType> types, List<int> becomes, List<int> lines)
+        private static void Link(
+            string source,
+            List<UnitType> types,
+            List<int> becomes,
+            List<int> raises,
+            List<int> lines)
         {
             for (int index = 0; index < types.Count; index++)
             {
@@ -318,6 +331,117 @@ namespace Sim
                 }
 
                 types[index].LinkBecomes(successor);
+            }
+
+            LinkRaises(source, types, becomes, raises, lines);
+        }
+
+        /// <summary>
+        /// Points every row that raises at the row it puts on the board.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Two clauses, and between them one wave order names one raised
+        /// row.</b> What a raise puts on the board raises nothing in its turn,
+        /// so the generations stop at one; and a row a body becomes may not
+        /// raise, so a lineage has a raise on one half of it at most. The first
+        /// is what makes the population bounded at all. The second is what makes
+        /// a leak of a raised body priceable: a leak charges what the thing that
+        /// leaked was worth, and the only thing that says which row a raised body
+        /// is, once it has left, is the order it descends from.
+        /// </para>
+        /// <para>
+        /// Runs after the successors are linked, because both clauses read them.
+        /// </para>
+        /// </remarks>
+        private static void LinkRaises(
+            string source,
+            List<UnitType> types,
+            List<int> becomes,
+            List<int> raises,
+            List<int> lines)
+        {
+            for (int index = 0; index < types.Count; index++)
+            {
+                // Every successor named here resolved in the loop above, so the
+                // index is a row rather than a lookup that might miss.
+                int successor = becomes[index] == 0 ? -1 : IndexOf(types, becomes[index]);
+
+                if (successor >= 0 && raises[successor] != 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "becomes "
+                        + types[successor].ToString()
+                        + ", which raises. A body changes row once and raises on one clock: a lineage "
+                        + "carrying a raise on both halves would put two different rows on the corridor "
+                        + "out of one wave order, and a leak of either could not be priced from the order "
+                        + "it descends from.");
+                }
+            }
+
+            for (int index = 0; index < types.Count; index++)
+            {
+                int wanted = raises[index];
+
+                if (wanted == 0)
+                {
+                    continue;
+                }
+
+                int found = IndexOf(types, wanted);
+
+                if (found < 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "raises type "
+                        + wanted.ToString(CultureInfo.InvariantCulture)
+                        + ", which is not a row of this table. A body cannot put a row nobody authored on "
+                        + "the board, and an id is never an index into anything here.");
+                }
+
+                UnitType raised = types[found];
+
+                if (raised.Role != UnitRole.Moving)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "raises "
+                        + raised.ToString()
+                        + ", which stands where it was put. What a raise puts on the board walks the "
+                        + "corridor from where the body that raised it was standing, and nothing that "
+                        + "stands is ever placed by anything but a build.");
+                }
+
+                if (raised.MaxHp <= 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "raises "
+                        + raised.ToString()
+                        + ", which has no health pool. A body nothing can damage walks to the exit "
+                        + "whatever stands in front of it, and a spawner making them is a leak nothing "
+                        + "can answer.");
+                }
+
+                if (raises[found] != 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "raises "
+                        + raised.ToString()
+                        + ", which raises in its turn. What a raise puts on the board raises nothing: a "
+                        + "second generation is a population no arithmetic bounds, so a match holding one "
+                        + "could not be proved to end.");
+                }
+
+                types[index].LinkRaises(raised);
             }
         }
 
@@ -392,7 +516,7 @@ namespace Sim
         /// </remarks>
         public static bool IsKnownLayout(int layout)
         {
-            return layout == 1 || layout == 2 || layout == 3 || layout == 4;
+            return layout == 1 || layout == 2 || layout == 3 || layout == 4 || layout == 5;
         }
 
         /// <summary>Fields per row, keyword included, in that layout.</summary>
@@ -411,6 +535,9 @@ namespace Sim
 
                 case 4:
                     return 29;
+
+                case 5:
+                    return 31;
 
                 default:
                     throw NoSuchLayout(layout);
@@ -437,6 +564,9 @@ namespace Sim
 
                 case 4:
                     return "unit-types/4";
+
+                case 5:
+                    return "unit-types/5";
 
                 default:
                     throw NoSuchLayout(layout);
@@ -645,7 +775,8 @@ namespace Sim
             int line,
             string[] fields,
             int layout,
-            out int becomes)
+            out int becomes,
+            out int raises)
         {
             int id = DataText.IntegerInRange(source, line, "the type id", fields[1], MinimumId, MaximumId);
             string label = DataText.Label(source, line, "the label", fields[2]);
@@ -730,6 +861,18 @@ namespace Sim
                 becomes = ReadBecomes(source, line, fields[28], id, role, maxHp);
             }
 
+            // And what a row before layout 5 carries: a body that puts nothing
+            // on the board. Zero is the absence of an id again, and the period
+            // beside it is zero because a row that raises nothing has no clock.
+            raises = 0;
+            int raisePeriod = 0;
+
+            if (layout >= 5)
+            {
+                raises = ReadRaises(source, line, fields[29], id, role);
+                raisePeriod = ReadRaisePeriod(source, line, fields[30], raises);
+            }
+
             return new UnitType(
                 id,
                 label,
@@ -751,7 +894,8 @@ namespace Sim
                 armourPoints,
                 shield,
                 targets,
-                bubble);
+                bubble,
+                raisePeriod);
         }
 
         /// <summary>
@@ -808,6 +952,86 @@ namespace Sim
             }
 
             return becomes;
+        }
+
+        /// <summary>
+        /// The column naming the row a body of this one puts on the board, as an
+        /// id that has not been resolved yet -- the raised row can sit anywhere
+        /// in the file, so it is looked up once every row is read.
+        /// </summary>
+        /// <remarks>
+        /// What is checked here is everything about the raising row, because
+        /// that is everything this line can see. What is checked about the row
+        /// it names is in <see cref="LinkRaises"/>.
+        /// </remarks>
+        private static int ReadRaises(string source, int line, string field, int id, UnitRole role)
+        {
+            if (string.Equals(field, RaisesNobodyWord, StringComparison.Ordinal))
+            {
+                return 0;
+            }
+
+            int raises = DataText.IntegerInRange(source, line, "the row it raises", field, MinimumId, MaximumId);
+
+            if (raises == id)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "raises itself. A body that puts a copy of itself on the board every so often is a "
+                    + "population that doubles on a clock, and no arithmetic bounds it -- so a match "
+                    + "holding one could not be proved to end.");
+            }
+
+            if (role != UnitRole.Moving)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "stands where it was put and names a row it raises. A raise puts a body on the "
+                    + "corridor where the body that raised it is standing, and nothing that stands is on "
+                    + "the corridor at all.");
+            }
+
+            return raises;
+        }
+
+        /// <summary>
+        /// The column saying how often the raise fires, checked against whether
+        /// there is anything to fire.
+        /// </summary>
+        /// <remarks>
+        /// The two columns are required to agree in both directions, which is
+        /// the rule every other unread column in this file is refused by: a
+        /// period nobody reads would still move the content hash, and a raise
+        /// with no clock would be a body that arrives once at a moment nobody
+        /// chose.
+        /// </remarks>
+        private static int ReadRaisePeriod(string source, int line, string field, int raises)
+        {
+            int period = DataText.IntegerInRange(source, line, "the raise period", field, 0, int.MaxValue);
+
+            if (raises == 0 && period != 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "raises nothing and carries a raise period of "
+                    + period.ToString(CultureInfo.InvariantCulture)
+                    + " ticks. A cadence for a raise that never happens is a number read by nothing that "
+                    + "would still move the content hash.");
+            }
+
+            if (raises != 0 && period <= 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "raises a row every nothing ticks. A raise is a cadence, so a period of zero is a "
+                    + "body put on the board on every tick of the match rather than a raise nobody timed.");
+            }
+
+            return period;
         }
 
         /// <summary>

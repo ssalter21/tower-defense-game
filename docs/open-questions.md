@@ -337,3 +337,23 @@ is decoration; on death, it is a body that has to be killed twice and the first 
 for. They feel different and they price differently, and the second is a bigger creep than anything else on
 the roster for eleven gold. **Nothing is retuned either way** — the price is derived, and a transforming pair
 is the third thing the rule cannot see, beside the Mage's splash and the Vampire's shield.
+
+### What is a spawner worth?
+
+**Raised by [#268](https://github.com/ssalter21/tower-defense-game/issues/268) building the raise
+[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed.** Creep cost is effective health
+over 160, per row, derived and never authored — so the Necromancer's 21 gold is its own 3380 effective health
+and cannot see a single Minion. Measured: one Necromancer raises **11** Minions before it leaks, so 21 gold of
+body arrives with **110 gold** of bodies behind it, and four hundred gold of them returns **1200%** against a
+band of 60 to 95.
+
+**A raised body's leak *is* charged**, at the price of the row it is, so the defending half of the exchange is
+honest. What is not priced is the sending half. Three shapes the answer could take: a term in the creep rule
+that multiplies a row's price by what it raises over the crossing time, which prices a spawner against one
+corridor and is the thing this project has twice refused to guess; a cap or a decay on the raise, which
+[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed against in as many words; or leave
+it, read the 1200 as the finding it is, and let the sweep derive a coefficient once there is a board worth
+deriving it against.
+
+**It is the third silence of the same kind**, beside the Mage's splash and the Vampire's shield, and it is the
+loudest of the three by an order of magnitude. Nothing is retuned either way while it stands.

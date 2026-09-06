@@ -189,15 +189,24 @@ public class MatchTests
         //   one -- a Werewolf reached by sending Werewolves is the row nobody
         //   buys.
         //
-        //   OVER THE BAND, one row, and it is the Necromancer. Nineteen of them
-        //   walk together and every one pulses a shield worth a quarter of a
-        //   body's health over the two hexes around it, so the column is handed
-        //   raw pool faster than four archers and two mages take it off and
-        //   every one of the nineteen leaks. THE PRICE CANNOT SEE EITHER HALF
-        //   OF THAT: the creep rule reads health and armour, and a granted pool
-        //   and an aura radius are both outside it. Same silence the tower rule
-        //   keeps about range and radius, and the sweep is what is meant to
-        //   derive a term for it.
+        //   OVER THE BAND, one row, and it is the Necromancer -- by twelve
+        //   times, since #268. Nineteen of them walk together and every one
+        //   pulses a shield worth a quarter of a body's health over the two
+        //   hexes around it, so the column is handed raw pool faster than four
+        //   archers and two mages take it off and every one of the nineteen
+        //   leaks. That alone was the 100 this list carried. What #268 added is
+        //   that each of the nineteen also raises a Minion every hundred and
+        //   fifty ticks for as long as it walks, so 209 bodies nobody sent walk
+        //   the corridor behind them and 209 more leaks are charged on top of
+        //   the nineteen.
+        //
+        //   THE PRICE CANNOT SEE ANY OF THE THREE: the creep rule reads health
+        //   and armour, and a granted pool, an aura radius and a raise are all
+        //   outside it. Same silence the tower rule keeps about range and
+        //   radius, and the sweep is what is meant to derive a term for it. THE
+        //   NUMBER IS NOT SOFTENED AND THE RAISE IS NOT CAPPED: an uncapped
+        //   spawner is what docs/roster.md signs, this is what it costs, and the
+        //   reading is the finding rather than the bug.
         //
         // So the band is asserted as MISSED at both ends rather than widened.
         // The day somebody retunes, one of these two lists changes and the test
@@ -254,7 +263,7 @@ public class MatchTests
             },
             under);
 
-        Assert.Equal(new[] { "necromancer at 100" }, over);
+        Assert.Equal(new[] { "necromancer at 1200" }, over);
     }
 
     [Fact]
@@ -820,6 +829,7 @@ public class MatchTests
                 "CreepDied",
                 "CreepLeaked",
                 "CreepOvertook",
+                "CreepRaised",
                 "CreepTransformed",
                 "ProjectileOrphaned",
                 "TowerFired",

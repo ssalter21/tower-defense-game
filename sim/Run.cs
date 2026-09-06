@@ -792,6 +792,19 @@ namespace Sim
         /// to send, one for one, so what got past is the wave's own orders read
         /// off the cost table.
         /// </summary>
+        /// <remarks>
+        /// <b>A body nobody sent is charged at the price of the row it was
+        /// raised as.</b> A
+        /// spawner puts bodies on the corridor that no order paid for, and one of
+        /// those reaching the exit takes exactly as much health off a defense as
+        /// one that was bought -- so it is charged, and charged at what the raised
+        /// row costs rather than at what the order that raised it costs. That the
+        /// sender never paid the difference is the pricing gap this mechanic
+        /// opens, and it is held open rather than closed: cost is derived from
+        /// health and armour and is never authored, and a spawner's price cannot
+        /// see what it spawns. See
+        /// <c>docs/adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// </remarks>
         private int LeakCost(RoundOrders sent, RoundOrders against, int round, int opponent, Side side)
         {
             Match match = MatchFor(sent, against, round, opponent, side);
@@ -799,11 +812,19 @@ namespace Sim
 
             WaveScript wave = Walking(sent, against, side);
             IReadOnlyList<int> leaked = match.LeakedByOrder;
+            IReadOnlyList<int> raised = match.LeakedRaisedByOrder;
             long cost = 0;
 
             for (int index = 0; index < leaked.Count; index++)
             {
-                cost += Costs.PriceOf(Purchase.Unit(wave.Orders[index].TypeId), leaked[index]);
+                UnitType type = wave.Orders[index].Type;
+
+                cost += Costs.PriceOf(Purchase.Unit(type.Id), leaked[index]);
+
+                if (type.Raises is UnitType puts)
+                {
+                    cost += Costs.PriceOf(Purchase.Unit(puts.Id), raised[index]);
+                }
             }
 
             if (cost > int.MaxValue)

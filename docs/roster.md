@@ -864,30 +864,44 @@ would re-baseline every measurement in the sweep.
   seconds. **Raise**: spawns a Minion beside itself every **150 ticks**, for as long as it lives.
 - **Looks** — the pack's own `Necromancer` model, `Skeleton_Scythe`.
 - **Numbers** — 2600 hp, speed 28, arcane, armourValue 30, cost 21. Ward: origin `self`, affects `friend`,
-  payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: one Minion per 150 ticks.
-- **Needs** — **engine, for Raise only.** Ward is on the row and pulsing; Raise is not — a creep spawning
-  creeps is a new mechanic, and [#268](https://github.com/ssalter21/tower-defense-game/issues/268) is where it
-  lands.
+  payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: `raises` 1, `raisePeriod` 150.
+- **Needs** — nothing. Both are on the row and playing as of
+  [#268](https://github.com/ssalter21/tower-defense-game/issues/268).
 - **Draws** — a pale blue cage of arcs standing over the two hexes the ward covers, for ten ticks. It is the
   moment the pool went out and not the pool: what a body then carries is the bar above it. **Unsigned**.
 - **Open** — none.
 
-> **There is no cap on how many it raises, and that is the decision rather than an omission.** It raises for
-> as long as it is alive and walking, so the board is what bounds it: at speed 28 across the 51-hex corridor
-> it lives about 1,545 ticks and raises **roughly ten**. A hundred gold of bodies from a twenty-one gold row
-> is a sweep finding, and it is left standing.
+> **The first raise is a whole period after it arrives**, and every one after that a period apart — where an
+> aura pulses on the tick its emitter spawns. The two are deliberately different: a pulse costs a body nothing
+> to have arrived, and a raise that fired on the arrival tick would mean a Necromancer that shows up already
+> accompanied. *Every 150 ticks* is read as 150 ticks after it gets there.
 >
-> **A slowed Necromancer raises more, and that is a live trade-off against stacking slows.** The speed floor
-> is a tenth, so a fully-slowed one crosses in about 17,000 ticks and raises **on the order of a hundred**.
+> **The body arrives beside it**: at the Necromancer's own distance along the route, in the next lane offset,
+> on a full Minion pool and carrying whatever a Minion's row authors. It is a body that spawned rather than a
+> body that was handed anything, and it walks and is shot at from the tick after. It enters the creep array
+> behind everything already standing, so **it loses every target-selection tie it is in** — a tower looking at
+> both shoots the Necromancer.
+>
+> **There is no cap on how many it raises, and that is the decision rather than an omission.** It raises for
+> as long as it is alive and walking, so the board is what bounds it: against the committed defense one
+> Necromancer raises **11** before it leaks. A hundred and ten gold of bodies from a twenty-one gold row is a
+> sweep finding, and it is left standing.
+>
+> **A slowed Necromancer raises more, and that is a live trade-off against stacking slows.** With the
+> committed Overgrowth on the board — a board-wide twenty percent slow — it raises **15**; at the speed floor,
+> which is a tenth, it crosses in about 25,000 ticks and raises **on the order of a hundred and seventy**.
 > Shield Wall and Overgrowth are slows, so the two capstones built to handle a push are the two that make this
 > body worst. Spamming or stacking slows is supposed to cost something; here is where it costs.
 >
-> **The arithmetic that guarantees a match ends does not cover this**, and extending it is the spawn ticket's
-> job. `Match.RequireItArrives` proves at construction that every *authored* order reaches the exit inside the
-> tick ceiling, at the floor speed; a creep spawned at runtime is in no order. Nothing runs away — a Minion
-> does not itself raise — but the proof has to be re-derived over the spawner's floored crossing time rather
-> than assumed. See [ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) and the spawn
-> ticket's own ADR.
+> **A leak of a raised Minion charges health at the Minion's own 10 gold**, so the defending half of the
+> exchange is honest; what nobody paid is the sending half, and that gap is
+> [open](open-questions.md#what-is-a-spawner-worth). It is why this row's band reading is 1200.
+>
+> **The arithmetic that guarantees a match ends covers it, and covers arrival rather than population.** A body
+> raises only while it walks and a Minion raises nothing, so the last body raised is at the exit within one
+> floored crossing of the latest its raiser could still have been walking — which is what
+> `Match.RequireItArrives` now proves at construction. How many arrive between here and there is deliberately
+> unbounded. See [ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
 
 ### 39 · Bone Golem · status live
 
@@ -1103,9 +1117,10 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
 > decisions rather than consequences of authoring a signed row.
 >
-> **Six creep rows are outside their own band with it.** Four hundred gold of one creep against the
+> **Six creep rows are outside their own band with it, and one of the six is out by an order of
+> magnitude.** Four hundred gold of one creep against the
 > committed defense returns 60 to 95 percent of its gold for eleven of the seventeen rows; five are under and
-> one is over. The full table, measured on 6 September 2026 with the transformation in:
+> one is over. The full table, measured on 6 September 2026 with the transformation and the raise in:
 >
 > | row | returns | | row | returns |
 > |---|---|---|---|---|
@@ -1114,7 +1129,7 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > | Skeleton Mage | 90 | | Fiend | 84 |
 > | Skeleton | 69 | | Shade | **42** |
 > | Skeleton Warrior | **41** | | Cursed Villager | 88 |
-> | Necromancer | **100** | | Werewolf | 86 |
+> | Necromancer | **1200** | | Werewolf | 86 |
 > | Bone Golem | **25** | | Grave Robber | 81 |
 > | Black Knight | 71 | | | |
 > | Frost Wight | 71 | | | |
@@ -1132,25 +1147,35 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's 1800. The Werewolf's
 > own 86 is unchanged, because nothing sends a Werewolf.
 >
-> **Over the band, one row, and it is the Necromancer — which is the shield and the radius going unpriced at
-> once.** Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the
-> two hexes around it, so the column is handed raw shield faster than four archers and two mages take it off:
-> every one of the nineteen leaks. The cost rule reads health and armour and can see neither the pool nor the
-> reach that spreads it. **The Vampire at 94 is the same gap without the aura** — a raw 1400 in front of 3360
-> the price was derived from — and the Grave Robber's 2000 sits behind an armoured body slow enough to be shot
-> for it.
+> **Over the band, one row, and it is the Necromancer — which is now three unpriced things at once.**
+> Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the two hexes
+> around it, so the column is handed raw shield faster than four archers and two mages take it off: every one
+> of the nineteen leaks, which is the 100 this row read before
+> [#268](https://github.com/ssalter21/tower-defense-game/issues/268). Each of the nineteen also raises a
+> Minion every 150 ticks for as long as it walks, so **209 bodies nobody sent leak behind them** and the
+> reading is **1200**. The cost rule reads health and armour and can see the pool, the reach that spreads it,
+> or the raise — none of the three. **The Vampire at 94 is the same gap without the aura** — a raw 1400 in
+> front of 3360 the price was derived from — and the Grave Robber's 2000 sits behind an armoured body slow
+> enough to be shot for it.
 >
 > **Nothing here is retuned.** Every reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends
 > of the band, as two exact lists — rather than widened away, so the day somebody retunes, the tests go red
 > and say which band to put back.
 >
 > **And no row deals zero.** The floor of the table is the Abomination at 20, so there is no dead row on the
-> menu. **One row never wins a round of the sweep: the Minion, at 21 dealt per hundred gold.** The Cursed
-> Villager was the other, at 17 and nought of eight runs won, and the transformation moved it further than it
-> moved anything else — **398 dealt per hundred gold and eight of eight**, level with the Skeleton Mage, above
-> the Werewolf's 389 and behind only the Vampire and the Necromancer. It is the same body at the same 11 gold;
-> what changed is that a defense now has to kill two rows to be rid of it. Against the smaller four-wave field
-> the test fixture plays, the Abomination is the one row that deals nothing at all.
+> menu. **Two rows never win a round of the sweep, for opposite reasons.** The Minion is the old one, at 21
+> dealt per hundred gold: it deals too little. The Necromancer is the new one, at **1399** — the highest
+> figure in the report by a factor of three — and it wins nothing because the sweep plays a row against
+> *itself*. Both sides send Necromancers, both sides get eleven free Minions a body, and what a run takes goes
+> from 2652 to **7670** against a health pool of 800. **An uncapped spawner is symmetric, and that is the
+> sharpest thing #268 measured**: the row is not strong, it is a mirror nobody survives. Its own reading went
+> 444 → 1399 and eight of eight wins → nought of eight, and nothing else in the report moved a digit.
+>
+> The Cursed Villager was the third row that never won, at 17 and nought of eight, and the transformation
+> moved it further than it moved anything else — **398 dealt per hundred gold and eight of eight**, level with
+> the Skeleton Mage, above the Werewolf's 389 and behind only the Vampire. It is the same body at the same 11
+> gold; what changed is that a defense now has to kill two rows to be rid of it. Against the smaller four-wave
+> field the test fixture plays, the Abomination is the one row that deals nothing at all.
 
 **Measure before you retune.** Two changes have moved this number without any creep row moving — an attack type
 changing line, and the clock dilating while `wave.txt`'s order ticks did not. Both were found by running the
@@ -1240,13 +1265,15 @@ considered and dropped: it is not a thing this page needs to have an opinion abo
 
 **Decided, fixed as a list, and built.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)
 fixed the list; [#216](https://github.com/ssalter21/tower-defense-game/issues/216) landed it, and
-`content/units.txt` was layout 3 from 16 August 2026 and is layout 4 from 6 September 2026, when
-[#267](https://github.com/ssalter21/tower-defense-game/issues/267) added the `becomes` column. **The schema
-does not lack these any more** — the section title is kept because the table below is what every block above
-points at. The five levers became **nine columns**, and three of the five collapsed into one mechanic, because
-a sweep, a blast and an aura are all the same shape: a bubble that emits something. The reasoning is
-[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md), and the tenth column's is
-[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
+`content/units.txt` was layout 3 from 16 August 2026, layout 4 from 6 September 2026, when
+[#267](https://github.com/ssalter21/tower-defense-game/issues/267) added the `becomes` column, and layout 5
+from later the same day, when [#268](https://github.com/ssalter21/tower-defense-game/issues/268) added the two
+raise columns. **The schema does not lack these any more** — the section title is kept because the table below
+is what every block above points at. The five levers became **nine columns**, and three of the five collapsed
+into one mechanic, because a sweep, a blast and an aura are all the same shape: a bubble that emits something.
+The reasoning is [ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md), the tenth column's is
+[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md), and the eleventh and twelfth's is
+[ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
 
 | Column | Meaning |
 |---|---|
@@ -1260,6 +1287,8 @@ a sweep, a blast and an aura are all the same shape: a bubble that emits somethi
 | `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative. The signed table also allowed **a flat damage amount**, which nothing implements — same open question |
 | `bubbleDuration` | Ticks. 0 = instant, and for a shield it means "until spent" |
 | `becomes` | The id of the row a body of this one turns into the first time damage reaches its health, or `none`. The change resolves ahead of the damage; the named row must walk, must have a pool of its own, and may not name one in its turn |
+| `raises` | The id of the row a body of this one puts on the corridor beside itself, or `none`. It arrives at the raiser's own distance, in the next lane, on a full pool, and behind everything already standing — so it loses every target-selection tie. The named row must walk, must have a pool, may not raise in its turn, and no row a body `becomes` may raise |
+| `raisePeriod` | Ticks between one raise and the next, counted from the tick the body arrived, so the first comes a whole period in. 0 on a row that raises nothing, and a row that raises may not carry 0. **There is no cap on the total** — the board is what bounds a spawner |
 
 **What that authors.** A slow needs no dedicated columns at all: it is a bubble of radius 0, origin `target`,
 payload `speed`, negative magnitude, positive duration. Blessing is the same mechanic with a period and origin
@@ -1280,10 +1309,13 @@ loop could read on its own — `shield`, `targets`, and a damage bubble that fir
 instantly — and a row authoring anything else parsed, folded, stored and refused by name the moment a match
 was built out of it. #217 built the rest and deleted that refusal, so **every shape these nine columns can
 author now plays**. Every one of the twenty-three towers signed on 5 September 2026 authors under these nine
-columns; the three that do not are creeps, and they are the three engine asks.
+columns; the three that do not are creeps, and they are the three engine asks — two of which are now built,
+in #267 and #268.
 
 A new unit is still a row, and a new column is still a format version with every stored record made under the
-old one retired. **This is the last widening the roster asks for before the map has been measured.**
+old one retired. **"The last widening before the map has been measured" was written here of layout 3 and has
+now been broken twice in one day**, by the two engine asks the roster itself signed. Both are recorded in the
+[decision log](decision-log.md).
 
 **The upgrade edge is not on this list.** It is [`content/upgrades.txt`](../content/upgrades.txt), a file of its
 own rather than a column, and the reasoning is in

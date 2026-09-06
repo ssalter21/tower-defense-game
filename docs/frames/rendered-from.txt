@@ -10,22 +10,22 @@
 #
 #       picture                        drawn from
 
-picture  creep-auras-tick-0094.png       37C269DDB7C95E86
-picture  creep-auras-tick-0271.png       37C269DDB7C95E86
-picture  creep-auras-tick-0272.png       37C269DDB7C95E86
-picture  creep-auras-tick-0276.png       37C269DDB7C95E86
-picture  effects-roster-tick-0700.png    37C269DDB7C95E86
-picture  four-lines-tick-0572.png        37C269DDB7C95E86
-picture  four-lines-tick-0780.png        37C269DDB7C95E86
-picture  four-lines-tick-0813.png        37C269DDB7C95E86
-picture  magic-lines-tick-0311.png       37C269DDB7C95E86
-picture  magic-lines-tick-0331.png       37C269DDB7C95E86
-picture  magic-lines-tick-0342.png       37C269DDB7C95E86
-picture  magic-lines-tick-0344.png       37C269DDB7C95E86
-picture  match-tick-1096.png             37C269DDB7C95E86
-picture  match-tick-1229.png             37C269DDB7C95E86
-picture  match-tick-1546.png             37C269DDB7C95E86
-picture  match-tick-2700.png             37C269DDB7C95E86
-picture  pierce-lines-tick-0516.png      37C269DDB7C95E86
-picture  pierce-lines-tick-0673.png      37C269DDB7C95E86
-picture  pierce-lines-tick-0674.png      37C269DDB7C95E86
+picture  creep-auras-tick-0094.png       AF29ECF2EF382EE0
+picture  creep-auras-tick-0271.png       AF29ECF2EF382EE0
+picture  creep-auras-tick-0272.png       AF29ECF2EF382EE0
+picture  creep-auras-tick-0276.png       AF29ECF2EF382EE0
+picture  effects-roster-tick-0700.png    AF29ECF2EF382EE0
+picture  four-lines-tick-0572.png        AF29ECF2EF382EE0
+picture  four-lines-tick-0780.png        AF29ECF2EF382EE0
+picture  four-lines-tick-0813.png        AF29ECF2EF382EE0
+picture  magic-lines-tick-0311.png       AF29ECF2EF382EE0
+picture  magic-lines-tick-0331.png       AF29ECF2EF382EE0
+picture  magic-lines-tick-0342.png       AF29ECF2EF382EE0
+picture  magic-lines-tick-0344.png       AF29ECF2EF382EE0
+picture  match-tick-1096.png             AF29ECF2EF382EE0
+picture  match-tick-1229.png             AF29ECF2EF382EE0
+picture  match-tick-1546.png             AF29ECF2EF382EE0
+picture  match-tick-2700.png             AF29ECF2EF382EE0
+picture  pierce-lines-tick-0516.png      AF29ECF2EF382EE0
+picture  pierce-lines-tick-0673.png      AF29ECF2EF382EE0
+picture  pierce-lines-tick-0674.png      AF29ECF2EF382EE0
