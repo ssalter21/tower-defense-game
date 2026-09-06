@@ -2,9 +2,39 @@
 #
 # ONE ROW SAYS THAT ONE UNIT FOLLOWS ANOTHER. A row names a source id and a
 # target id, both of them ids in content/units.txt, and it means that a built
-# source may be swapped for a target by paying the target's full price. That is
-# the whole content of an edge: no tier number, no direction marker, no cost.
+# source may be swapped for a target. That is the whole content of an edge: no
+# tier number and no direction marker.
 # Reasoning in docs/adr/0045-the-ladder-is-a-graph-not-a-list.md.
+#
+# THE KEYWORD SAYS WHICH CURRENCY BUYS THE EDGE, AND THERE ARE TWO.
+#
+#   upgrade  -- the target row's full `cost` column, in gold, out of the one
+#               purse. Every rung below the top of a line.
+#
+#   capstone -- ONE CAPSTONE TOKEN AND NO GOLD AT ALL. A run is granted one at
+#               rounds 3, 6 and 9 and can spend it on nothing else, so three
+#               tokens meet nine capstones and which line reaches its top is a
+#               decision. The target's `cost` column is still authored -- every
+#               row has one -- and nothing charges it. That is why a capstone
+#               is not priced by the damage rule and why no premium is authored
+#               to compensate: scarcity is the schedule, not the price.
+#               Reasoning in docs/adr/0061-a-capstone-costs-a-token.md, and the
+#               design side in docs/roster.md's "What things cost".
+#
+# THE PRICE IS THE EDGE AND NOT THE ROW IT LANDS ON. Every capstone row below
+# happens to be the top of its line, and nothing here says it has to be: a row
+# reached along two edges could be a token up one and gold up the other, and it
+# would cost what the edge that was climbed says. That is why the keyword is on
+# the edge, and it is why a refusal names the edge rather than the row.
+#
+# THE KEYWORD IS WHY THIS IS ROW LAYOUT 2. The field count did not move -- a row
+# is still a keyword and two ids -- but what the keyword column means did, and
+# two files whose keyword means two different things under one layout label is
+# the silent-misread class content/units.txt states the rule about. So the price
+# joins the fold from layout 2, under the label `upgrade-ladder/2`, and a
+# layout-1 file still reads and still hashes to the value it always did: one
+# keyword, every edge in gold, which is what those files always said. A
+# `capstone` row in a layout-1 file is refused rather than read.
 #
 # INTEGERS ONLY, AND NO DECIMAL POINT. Same rule as content/units.txt and
 # content/ruleset.txt, same reason, and the same parser enforces it: a '.' or a
@@ -13,6 +43,8 @@
 # ONE EDGE PER ROW AND THE ARITY IS FIXED AT TWO IDS. A row whose field count
 # is not two is refused rather than read against shifted fields. Two rows naming
 # the same target are how a diamond is stated -- two lines, not a wider one.
+# What an edge costs is the keyword rather than a third id, so a second currency
+# arrived without widening a row.
 #
 # THE TARGET ID MUST EXCEED THE SOURCE ID. Ids in units.txt ascend strictly down
 # the file and are never reused, so a target above its source makes a cycle
@@ -37,8 +69,10 @@
 # used to stand here said so; the anchor schedule was the only prerequisite the
 # game had and this file was an annotation beside it. Deleting the schedule left
 # the ladder as the one prerequisite there is, so a run is handed one and
-# BuildPhase.Resolve asks it a question: A UNIT SOME EDGE POINTS AT MAY NOT BE
-# PLACED. It is reached by standing the rung below it and upgrading into it.
+# BuildPhase.Resolve asks it two questions. A UNIT SOME EDGE POINTS AT MAY NOT
+# BE PLACED -- it is reached by standing the rung below it and upgrading into
+# it. And WHAT DOES THIS EDGE COST, which is the keyword above and is the one
+# place either currency's price is written down.
 #
 # WHAT THAT COSTS. A stored record is now retired by an edit to this file, the
 # same way it is by an edit to content/ruleset.txt: a command stream carries a
@@ -70,30 +104,34 @@
 #   and none of them is ever judged.
 #
 #     ROOT -- a unit with no incoming edge. LEAF -- a unit with no outgoing edge.
-#     FLAT OR FALLING PRICE -- the target costs no more than the source.
+#     FLAT OR FALLING PRICE -- the target's cost column is no higher than the
+#     source's. It fires on a capstone edge too, and says so differently there:
+#     on a gold edge it is what the upgrade costs, and on a capstone edge it is
+#     how the damage rule scores a rung nothing charges gold for. Seven of the
+#     nine capstones read flat, which docs/roster.md's cost section explains.
 #
 # ./tools/show-ladder.ps1 prints the edges, then the notes, then the faults, and
 # always exits zero.
 #
 #      from  to
 
-layout 1
+layout 2
 
 upgrade    3  14
 upgrade    4  26
 upgrade   11  15
-upgrade   14  31
-upgrade   15  16
+capstone  14  31
+capstone  15  16
 upgrade   17  18
-upgrade   18  19
+capstone  18  19
 upgrade   20  21
-upgrade   21  22
+capstone  21  22
 upgrade   23  24
-upgrade   24  25
-upgrade   26  27
+capstone  24  25
+capstone  26  27
 upgrade   28  29
-upgrade   29  30
+capstone  29  30
 upgrade   32  33
-upgrade   33  34
+capstone  33  34
 upgrade   35  36
-upgrade   36  37
+capstone  36  37

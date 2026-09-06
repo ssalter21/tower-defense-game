@@ -38,6 +38,12 @@ namespace Tests.PlayMode
     public class WaveTests : ViewTest
     {
         /// <summary>Walking rows of <c>content/units.txt</c>, named so the tests read.</summary>
+        /// <summary>
+        /// What a round-one run holds of the second currency. The first grant is
+        /// at round three, and nothing on the wave bar is bought with one.
+        /// </summary>
+        private const int NoCapstoneTokens = 0;
+
         private const int MinionId = 1;
 
         private const int SkeletonScoutId = 2;
@@ -896,6 +902,7 @@ namespace Tests.PlayMode
                 carried ?? WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(gold),
+                NoCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 StreamingContent.ReadMap(),
@@ -940,6 +947,7 @@ namespace Tests.PlayMode
                 WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(100),
+                NoCapstoneTokens,
                 CostTable.From(StreamingContent.ReadRuleset(), types),
                 types,
                 StreamingContent.ReadMap(),

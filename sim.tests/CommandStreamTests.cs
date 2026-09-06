@@ -734,6 +734,95 @@ public class CommandStreamTests
         return CommandStream.Of(run, commands);
     }
 
+    [Fact]
+    public void A_run_that_spends_a_capstone_token_replays_from_its_record()
+    {
+        // The token rides in the record without a byte of its own. What the
+        // schedule granted is a function of the wave index the stream already
+        // carries, and what a decision spent is a function of the actions it
+        // already stores -- so a stored count would be a second copy of a
+        // derivation, and there is none. The proof is that a stream whose third
+        // round climbs a capstone comes back off its own bytes as the same run.
+        //
+        // OBSERVED: hand every phase the tokens the run opened with -- drop the
+        // fold at the bottom of CommandStream.Check's loop and pass `tokens`
+        // unchanged. The walk then admits a stream that climbs a capstone in
+        // round one, and the round-one clause below goes red having caught
+        // nothing.
+        Run recorded = TheCommands.Fresh();
+        IReadOnlyList<RecordCommand> decisions = Climbing(recorded, GrantRound);
+
+        Run live = TheCommands.Fresh();
+
+        for (int index = 0; index < decisions.Count; index++)
+        {
+            live.Advance(decisions[index].ToPhase());
+        }
+
+        Run fromRecord = TheCommands.Fresh();
+        CommandStream.FromBytes(CommandStream.Of(recorded, decisions).ToBytes()).Replay(fromRecord);
+
+        Assert.Equal(live.Outcome.Rounds, fromRecord.Outcome.Rounds);
+        Assert.Equal(live.Purse.Gold, fromRecord.Purse.Gold);
+        Assert.Equal(live.Board.Count, fromRecord.Board.Count);
+
+        // One token granted at round three and one spent there, so both runs end
+        // holding nothing -- and they hold nothing for the same reason, which is
+        // the half a purse comparison cannot see.
+        Assert.Equal(live.CapstoneTokens, fromRecord.CapstoneTokens);
+        Assert.Equal(0, fromRecord.CapstoneTokens);
+
+        // The same three actions one round too early. Nothing about the bytes
+        // says a token was involved, so this is the walk deriving the schedule
+        // off the wave index the stream stores and refusing before a round is
+        // played.
+        Run early = TheCommands.Fresh();
+
+        Assert.Contains(
+            "costs a capstone token the round does not hold",
+            Assert.Throws<SimulationException>(
+                () => CommandStream
+                    .FromBytes(
+                        CommandStream.Of(early, Climbing(early, GrantRound - 1)).ToBytes())
+                    .Replay(TheCommands.Fresh()))
+                .Message,
+            StringComparison.Ordinal);
+    }
+
+    /// <summary>The first round <see cref="Run.CapstoneTokenRounds"/> grants at.</summary>
+    private const int GrantRound = 3;
+
+    /// <summary>The committed archer, the root of the line these decisions climb.</summary>
+    private const int ArcherId = 3;
+
+    /// <summary>Its second rung, bought with gold.</summary>
+    private const int RangerId = 14;
+
+    /// <summary>Its capstone, bought with the token.</summary>
+    private const int OverwatchId = 31;
+
+    /// <summary>A ground cell of the committed map these decisions build on.</summary>
+    private const int FreeColumn = 0;
+
+    /// <summary>Its row.</summary>
+    private const int FreeRow = 0;
+
+    /// <summary>
+    /// The stream's usual decisions, with a whole line climbed to its top in one
+    /// named round: place, upgrade, capstone, on one cell.
+    /// </summary>
+    private static IReadOnlyList<RecordCommand> Climbing(Run run, int wave)
+    {
+        var commands = new List<RecordCommand>(TheCommands.Decisions(run));
+
+        commands[wave - 1] = commands[wave - 1]
+            .With(BuildAction.Of(ActionKind.Place, ArcherId, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, RangerId, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, OverwatchId, FreeColumn, FreeRow));
+
+        return commands;
+    }
+
     /// <summary>
     /// A carried wave as slots, with <paramref name="more"/> extra of one creep
     /// in it. What a round that adds to its wave and gives nothing up looks

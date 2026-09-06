@@ -51,16 +51,19 @@ signing **damage, cooldown and how many bodies it hits**.
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
 **The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone token
-at rounds 3, 6 and 9** — three a run against nine capstones — and the token is the whole price. The cost
-column prices what gold buys, and the top of a line is not in it. That retires the shallow-U exemption this
-section used to reserve: an exemption to a gold rule, for a thing gold does not buy, is a clause about
-nothing.
+at rounds 3, 6 and 9** — three a run against nine capstones — and the token is the whole price. **A capstone
+row therefore carries no gold price**: it has a `cost` column like every other row, nothing ever charges it,
+and `show-ladder` prints `1 capstone token` where it prints a number of gold on every other edge. That
+retires the shallow-U exemption this section used to reserve: an exemption to a gold rule, for a thing gold
+does not buy, is a clause about nothing.
 
 > **The token is a currency, not a gate.** It goes up on those three rounds and it is spent on a capstone
 > edge; that is the whole mechanic. The gates were deleted on
 > [13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
 > and they are not coming back with it — no capacity schedule, no per-wave type limit, no offering. The
-> [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.**
+> [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.** Built on
+> 6 September 2026 — `content/upgrades.txt` layout 2, a `capstone` keyword, and
+> [ADR-0061](adr/0061-a-capstone-costs-a-token.md).
 
 **Scarcity is the grant schedule, not the price, and that is deliberate.** Five of the nine capstones change
 neither the damage roll nor the bodies a shot hits — Shield Wall, Blessing, Consecration, Overgrowth and
@@ -69,12 +72,21 @@ That is not an oversight to be corrected with an authored premium. What makes sp
 that there are three of them and nine places to put one. **Do not author a capstone premium**; report what the
 sweep says about a capstone and leave the number alone.
 
+**What the sweep says, as of 6 September 2026, is nothing** — `content/sweep.csv` came back byte-identical when
+the token landed. The scripted player's cover phase keeps buying cheap first rungs, so a ten-round run ends on
+fourteen towers and not one of them is a rung above another; with nothing to climb from, all three tokens go
+unspent. The instrument cannot reach this mechanic yet, which is a fact about the player and not about the
+price. See [the decision log](decision-log.md).
+
 > **Seven price flat, not five, and the extra two are Slam and Mortar.** Both spread one roll over a bubble,
 > and the rule's bodies term is the `targets` column — which a bubble row must leave at 1, because a damage
 > bubble is *one* shot drawing *one* roll. So the rule counts one body for a swing that hits everything
 > touching the Barbarian, and the row prices flat against the Berserker. **This is the Mage's gap again**, one
 > rung higher: a bubble's worth is a radius, and radius is what the rule does not price. Measured when the
-> rows were authored on 5 September 2026, and left standing.
+> rows were authored on 5 September 2026, and left standing. `show-ladder` now prints those seven differently
+> from the four flat notes on rungs gold *does* buy — *the rule prices the capstone at what it replaces, and
+> nothing charges that, because a token buys it* — so the count is readable off the tool rather than only off
+> this page.
 
 **The two that do move the rule's inputs still price under it** — Fan of Knives sets `targets` to 3, and
 Overwatch changes the damage roll and the cooldown — but nothing is *charged* that price, because a capstone
@@ -1382,9 +1394,15 @@ open.
    5 September 2026 by a person, from a rendered sheet of all 32 candidates — and the Druid's weirwood, the
    one shape that sheet left open, was signed the same day from a sheet of its own:
    [`Tree_Bare_1_C_Color8`](https://github.com/ssalter21/tower-defense-game/issues/274#issuecomment-5552677475).
-6. **A capstone token exists as a rule and not yet as code.** The cost section above states it; nothing
-   grants or spends one. Until [the token ticket](https://github.com/ssalter21/tower-defense-game/issues/273)
-   lands, the nine capstone rows can be authored and drawn but not bought.
+6. **The capstone token is built, and what a run holds is not on screen anywhere.** Answered on
+   6 September 2026 by [#273](https://github.com/ssalter21/tower-defense-game/issues/273) and
+   [ADR-0061](adr/0061-a-capstone-costs-a-token.md): `content/upgrades.txt` goes to layout 2, a `capstone` row
+   costs one token and no gold, and the grant lands at the opening of rounds 3, 6 and 9 so all three are
+   spendable in a nine-round run. **What is left open is the client.** A rung the round can pay for reads
+   `Shield Wall   1 capstone token` on the hex it is offered at, and one it cannot is simply not offered — so
+   a player holding no token sees a line stop at its second rung with nothing saying why. The run header
+   shows gold and has no second counter beside it. That is a visual decision rather than a rule, so it is
+   proposed here rather than taken.
 7. **The beside slot is built and one rung wants two of it.** The Engineer's turret, the Paladin's statue,
    the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
    down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —

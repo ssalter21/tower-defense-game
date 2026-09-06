@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace Sim
 {
@@ -124,6 +125,33 @@ namespace Sim
         public const int DefaultFieldSize = 10;
 
         /// <summary>
+        /// The rounds a run is handed a capstone token at, ascending.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Three of them against nine capstones, which is what makes the
+        /// choice of line a decision.</b> A capstone edge costs one token and no
+        /// gold -- see <see cref="EdgePrice.CapstoneToken"/> -- so what is
+        /// scarce about the top of a line is the schedule and never the price.
+        /// </para>
+        /// <para>
+        /// <b>A token lands at the opening of its round and is spendable in
+        /// it.</b> Gold arrives when a wave closes because a wave has to be
+        /// fought before anybody knows what it earned; a token is earned by
+        /// nothing and depends on nothing, so holding it back a round would be a
+        /// third token no nine-round run could ever spend.
+        /// </para>
+        /// <para>
+        /// <b>Here rather than in <c>content/ruleset.txt</c>.</b> A ruleset
+        /// column would be a ruleset layout and a new stamp, which retires every
+        /// replay bundle that names the old one -- a price worth paying for a
+        /// number somebody tunes, and this is not one. See
+        /// <c>docs/adr/0061-a-capstone-costs-a-token.md</c>.
+        /// </para>
+        /// </remarks>
+        public static readonly IReadOnlyList<int> CapstoneTokenRounds = new[] { 3, 6, 9 };
+
+        /// <summary>
         /// How many of the pool's own rounds are played to measure what a round
         /// of it is worth. Ten samples put the percentiles on the deciles; it is
         /// a number about the measurement and not about the run, so it moves
@@ -162,6 +190,14 @@ namespace Sim
         private RunOutcome _outcome;
 
         private PerformanceField? _field;
+
+        /// <summary>
+        /// How many capstone tokens this run's build phases have spent. What it
+        /// still holds is the schedule's grants less this -- see
+        /// <see cref="CapstoneTokens"/> -- rather than a second counter free to
+        /// disagree with the rounds that were played.
+        /// </summary>
+        private int _capstoneTokensSpent;
 
         /// <summary>
         /// Builds a run. Everything it will ever know arrives here: nothing in
@@ -326,6 +362,85 @@ namespace Sim
         public Purse Purse { get; private set; }
 
         /// <summary>
+        /// The capstone tokens the next round may spend: what
+        /// <see cref="CapstoneTokenRounds"/> has granted by the round about to
+        /// be played, less what the rounds already played spent.
+        /// </summary>
+        /// <remarks>
+        /// <b>The second scarcity, and it is on the tower side alone.</b> The
+        /// purse is still the only thing bounding what a round sends; what this
+        /// bounds is how many tops of lines a run reaches, and nothing else is
+        /// priced in it.
+        /// </remarks>
+        public int CapstoneTokens =>
+            CapstoneTokensGrantedThrough(Round + 1) - _capstoneTokensSpent;
+
+        /// <summary>
+        /// How many capstone tokens a run has been granted by the time round
+        /// <paramref name="wave"/> builds: the grant rounds at or below it.
+        /// </summary>
+        /// <remarks>
+        /// A count over <see cref="CapstoneTokenRounds"/> rather than a division,
+        /// so the schedule is the list and not a rule that happens to reproduce
+        /// it -- a fourth grant round is a fourth entry and nothing else. A wave
+        /// number below the first grant is none, which is what an opening round
+        /// holds.
+        /// </remarks>
+        public static int CapstoneTokensGrantedThrough(int wave)
+        {
+            int granted = 0;
+
+            for (int index = 0; index < CapstoneTokenRounds.Count; index++)
+            {
+                if (CapstoneTokenRounds[index] <= wave)
+                {
+                    granted++;
+                }
+            }
+
+            return granted;
+        }
+
+        /// <summary>
+        /// How many capstone tokens the schedule hands out at the opening of one
+        /// round: one on a grant round and none on any other.
+        /// </summary>
+        /// <remarks>
+        /// The difference between two <see cref="CapstoneTokensGrantedThrough"/>
+        /// readings, said once here so that a walk folding tokens forward a
+        /// round at a time -- <see cref="CommandStream.Check"/>,
+        /// <see cref="FieldPool.Canned"/> -- takes the schedule from the same
+        /// place a run does.
+        /// </remarks>
+        public static int CapstoneTokensGrantedAt(int wave) =>
+            CapstoneTokensGrantedThrough(wave) - CapstoneTokensGrantedThrough(wave - 1);
+
+        /// <summary>
+        /// The grant schedule as a sentence reads it: <c>3, 6 and 9</c>.
+        /// </summary>
+        /// <remarks>
+        /// Here rather than wherever a refusal is written, so that a fourth
+        /// grant round makes every message that names the schedule say so. See
+        /// <see cref="BuildPhase.Resolve"/>, which is the one caller.
+        /// </remarks>
+        public static string CapstoneTokenRoundsInWords()
+        {
+            var said = new StringBuilder();
+
+            for (int index = 0; index < CapstoneTokenRounds.Count; index++)
+            {
+                if (index > 0)
+                {
+                    said.Append(index == CapstoneTokenRounds.Count - 1 ? " and " : ", ");
+                }
+
+                said.Append(CapstoneTokenRounds[index].ToString(CultureInfo.InvariantCulture));
+            }
+
+            return said.ToString();
+        }
+
+        /// <summary>
         /// The most any one round of this run could be paid for killing: a
         /// ceiling for whoever has to bound a purse without playing anything.
         /// </summary>
@@ -412,7 +527,7 @@ namespace Sim
         /// <para>
         /// The decision is checked against this run's upgrade ladder, this run's
         /// board and map, and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, int, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
@@ -463,13 +578,14 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Round + 1, Carrying, Ladder, Purse, Costs, Types, Map, Board);
+            Build build = phase.Resolve(
+                Round + 1, Carrying, Ladder, Purse, CapstoneTokens, Costs, Types, Map, Board);
             RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();
 
             (RoundOutcome outcome, WavePayment payment, FieldDraw field) = Play(
-                orders, build.Purse, build.Board);
+                orders, build.Purse, build.CapstoneTokensSpent, build.Board);
 
             return new RoundReport(outcome, build, payment, field);
         }
@@ -599,10 +715,12 @@ namespace Sim
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
+        /// <param name="tokensSpent">How many capstone tokens the round's decision took.</param>
         /// <param name="board">What stands after whatever the round built.</param>
         private (RoundOutcome Outcome, WavePayment Payment, FieldDraw Field) Play(
             RoundOrders orders,
             Purse purse,
+            int tokensSpent,
             Board board)
         {
             int round = _rounds.Count;
@@ -643,7 +761,7 @@ namespace Sim
             // a bounty comes out of nowhere rather than out of the sender.
             WavePayment payment = purse.CloseWave(Rules, outcome.LeakCostDealt, outcome.BountyEarned);
 
-            Commit(orders, outcome, payment.Purse, board, FoldedWith(outcome));
+            Commit(orders, outcome, payment.Purse, tokensSpent, board, FoldedWith(outcome));
 
             return (outcome, payment, drawn);
         }
@@ -662,12 +780,14 @@ namespace Sim
             RoundOrders orders,
             RoundOutcome outcome,
             Purse purse,
+            int tokensSpent,
             Board board,
             RunOutcome folded)
         {
             _rounds.Add(outcome);
             _sent.Add(orders);
             Purse = purse;
+            _capstoneTokensSpent += tokensSpent;
             Board = board;
             _outcome = folded;
         }

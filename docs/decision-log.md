@@ -1777,3 +1777,133 @@ not: capturing `-Ticks "342,344"` and `-Ticks "311,342,344"` produce different b
 reproducibly, and only the three-tick list reproduces what is committed. #268 measured the same thing and
 recorded it in a commit message; the README now says it, and its magic-lines recipe is the list that actually
 made those frames.
+
+---
+
+## 6 September 2026, later — a capstone costs a token, and the 14 August proposal is half taken
+
+[#273](https://github.com/ssalter21/tower-defense-game/issues/273) built the second currency the roster has
+been describing since the nine tower lines were signed: **a capstone token, granted one at rounds 3, 6 and 9,
+and the whole price of a capstone edge.** Three tokens against nine capstones, so which line reaches its top
+is the decision.
+
+**This is the [14 August proposal](#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant)
+half taken, and the half is deliberate.** That entry brought the gate rounds back carrying two things at once:
+a **capacity schedule** — 2, 4, 6, 8 slots and 10, 20, 30, 40 count — and a **grant** that pays for a capstone.
+Only the grant is built. The capacity half is not deferred pending a ticket and is not scheduled; it is where
+[13 August](#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster) left it. **Read
+that entry as partly taken from here on.**
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **Still true, and it is now a sentence about one side of the board.** Nothing bounds a wave; what gained a second scarcity is the tower side, and only the top of a line |
+| **The 14 August table's second row** | Waves 3, 6 and 9 widen the wave and deepen what a slot may hold | **Rounds 3, 6 and 9 hand over one token and do nothing else.** No slot count, no per-slot depth, no menu, no offering. The rounds are a schedule and not a gate |
+| **[The roster](roster.md#what-things-cost)** | The token is a rule stated on that page and not yet code | **It is code.** A capstone row carries no gold price at all, and what is left open there is the client: a player holding no token sees a line stop at its second rung with nothing saying why |
+| **[`content/upgrades.txt`](../content/upgrades.txt)** | *That is the whole content of an edge: no tier number, no direction marker, no cost* | **The keyword is the cost.** `upgrade` is the target's gold price and `capstone` is one token; the arity is still two ids, and the file is layout 2 |
+
+### The keyword is a layout even though no column moved
+
+`content/units.txt` states the rule that **adding or moving a column is a new layout and a new label**, because
+two different column counts under one label is a silent misread nothing here could detect. This is the narrower
+case: the count did not move and **what the keyword column means did**. Two ladders whose rows mean two
+different things, both calling themselves layout 1, is the same class of thing — so `content/upgrades.txt` goes
+to **layout 2** under `upgrade-ladder/2`, the price joins the fold there and not before, and layout 1 is kept
+as a branch that reads every edge in gold and hashes to exactly what it always did.
+
+**A keyword rather than a third column, and rather than reading the shape of the ladder.** A third column would
+widen all eighteen rows to carry a price nine of them have. Deriving a capstone from the graph — the top of a
+line is a unit with no outgoing edge — would make the price a property of what somebody authored *above* a row:
+a fourth rung would silently re-price the third, and a line deliberately two rungs deep would silently make its
+second rung free.
+
+**That last clause about layout 1 needed an assertion of its own.** Regenerating the goldens copies
+`content/upgrades.txt` over `content/golden/defense-1.upgrades`, so the moment the committed file moved to
+layout 2 there was no committed layout-1 ladder left for the older branch to be measured against.
+`UpgradeLadderTests` now pins that branch's hash as a literal, the way `ContentTests` pins the oldest unit
+table's.
+
+### What the record did not need
+
+**No record format moved and none had to.** A command stream already carries the wave index every grant is a
+function of and the actions every spend is a function of, and the ladder hash in its header pins which edges
+cost a token — so a stored token count would be a second copy of a derivation, free to disagree with the
+first. `CommandStream.Check` folds the balance forward beside the purse and the board, **exactly rather than at
+a ceiling**, because nothing about a token depends on how a round played. `RecordFormat.CommandVersion` stays
+3 and its reader branches are untouched. [ADR-0061](adr/0061-a-capstone-costs-a-token.md) states that decision.
+
+**And one rule is left uncovered by every hash in this repository, named rather than fixed.** *Which* edges
+cost a token is in the ladder hash; *how many tokens a round holds* is a list in `sim/Run.cs`, and moving it
+would make refused streams legal with every stamp on every record still agreeing. The rule fingerprint cannot
+reach it — the scenario it folds over has a ladder with no edges, so no capstone is ever priced there — and
+widening that scenario would be a `SimulationVersion` bump for a rule that has not moved, which is the mistake
+`DerivationTests`' own remarks name. So the schedule is pinned by an assertion there whose comment says what a
+change to it owes.
+
+### The capstone is unpriced on purpose, and the tool now says how unpriced
+
+**Seven of the nine capstones price flat against the rung below, not five.** Five change neither term of the
+damage rule — Shield Wall, Blessing, Consecration, Overgrowth and Unravel are auras or debuffs. **Slam and
+Mortar are the other two**, and the reason is
+[#256](https://github.com/ssalter21/tower-defense-game/issues/256)'s: the rule's bodies term is the `targets`
+column, a damage-bubble row must leave `targets` at 1 because a bubble is one shot drawing one roll, so the
+rule counts one body for a swing that hits everything touching the Barbarian. Seven is what `show-ladder`
+prints and seven is what `docs/roster.md` says.
+
+**No premium was authored to compensate**, which is what the ticket asked for and what the cost section already
+argued. Scarcity is the grant schedule and not the price. What changed instead is what the tool *says* on those
+seven: the flat-price note now ends *the rule prices the capstone at what it replaces — and nothing charges
+that, because a token buys it*, so a reading and a bill are no longer the same sentence.
+
+### The scripted player had to learn to spend one, and what it will not spend
+
+`CoverThenUpgradeBot` builds both walls in the balance report, so a bot that could not spend a token would
+leave the mechanic unmeasured — and, worse, would compose phases the rules refuse: its gold loop would still
+have scored Fan of Knives and Overwatch on their cost columns and bought them with money nothing charges.
+
+It spends a token the round it arrives, in a loop of its own after the gold, on the capstone that puts the most
+damage on the route **per tick** — the gold loops' score with the gold taken out. **The one clause that is not
+the gold loops' rule is the comparison against what is standing**: a capstone consumes the rung under it, so
+one that scores worse would make a wall worse for a token. That clause was added after watching it happen: the
+first build of the loop bought a capstone that lowered the stand-in's wall, and the committed run's fourth
+round moved from 160 dealt to 187 — an instrument getting dumber rather than a finding about the roster.
+
+**What the bot will not spend is most of them.** Five of the nine change no damage roll and no body count at
+all, and the bot's score is damage — so those tokens go unspent, and the report says so by reporting a run that
+did not spend them. That is the score's known blindness rather than a statement about the roster.
+
+### And the sweep cannot see this mechanic at all
+
+**`content/sweep.csv` came back byte-identical**, over seventeen rows and a hundred and thirty-six runs. That is
+the reading, and it is a fact about the instrument rather than about the token.
+
+**A ten-round bot run from an empty board ends on fourteen towers and every one of them is a line's *first*
+rung** — five soldiers, four rogues, three clerics and a druid, measured on seed 20260807. The cover phase goes
+on finding a cheap root that watches route nothing watches yet, and never climbs; with no rung 2 standing there
+is no capstone edge to climb, so all three tokens are held to the end of the run. The canned stand-in *does*
+reach a rung 2 — it opens behind `content/defense.txt` with a purse of its own — and the capstone above that
+rung scores exactly what the rung scores, which is precisely the swap the "must beat what is standing" clause
+declines.
+
+**This is [6 September's bounty finding](#6-september-2026--a-kill-pays-and-both-balance-instruments-turn-out-to-be-blind-to-it)
+a second time, in a different structure.** A mechanic can be built, tested and correct and still be invisible to
+the balance report, because the report is played by one scripted player and that player's rule does not reach
+it. Nothing was retuned and no number was softened to produce a movement: **what a reading of this needs is a
+player that climbs**, which is a change to `CoverThenUpgradeBot`'s cover phase and not to anything this ticket
+decided.
+
+### The bill
+
+One retirement, deliberate, and one label bump with it.
+
+- `content/upgrades.txt` `layout 1` → `layout 2`, and `upgrade-ladder/1` → `upgrade-ladder/2`, for the second
+  keyword. The ladder hash goes `6C432E189630BF3C` → `A52476D83A039248` and the content hash it folds into
+  goes `CEAD5CE53790DD40` → `FAA0B1831B2CE190`.
+- **`SimulationVersion` stays 13.** Nothing in a tick loop moved, and every stream recorded before this is
+  already retired at the content stamp.
+- **Every record format is free**, again.
+
+**The committed match is untouched by the mechanic** — it is a defense and a wave read off files, with no build
+phase in it: 3 of 40 leaked, tick 5302, state `441D37E128517F3D`, the same four landmarks. What moved is its
+header, where the content stamp and the defense and wave hashes that fold the roster's content hash all
+followed the ladder. **The committed run is untouched too**, and that is a fact about `content/commands.txt`
+rather than about the rule: its four rounds place archers and never climb a line.

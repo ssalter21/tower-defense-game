@@ -263,6 +263,52 @@ public class ContentTests
     }
 
     [Fact]
+    public void The_committed_ladder_prices_the_top_of_every_line_in_tokens_and_nothing_else()
+    {
+        // Nine lines, nine capstones, nine capstone edges -- and no other edge
+        // priced in tokens. The lines are read out of the roster.md
+        // transcription above rather than out of the ladder, for the reason
+        // TheNineLines exists: reading them off content/upgrades.txt would be
+        // checking that file against itself.
+        //
+        // This IS a census and the fault check above deliberately is not, and
+        // the difference is which way the file is expected to grow. A tenth
+        // tower line is a tenth entry in TheNineLines, which docs/roster.md's
+        // index already has to gain; a token price appearing on a middle rung is
+        // a capstone somebody spelled onto the wrong row, and nothing else in
+        // this repository would say so.
+        //
+        // OBSERVED: change one `capstone` row of content/upgrades.txt back to
+        // `upgrade`. This goes red naming the pair, and that line's top starts
+        // charging its cost column -- 41 gold for a Shield Wall, out of the
+        // purse, in any round that can afford it.
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UpgradeLadder ladder = UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
+
+        var tops = new List<(int From, int To)>();
+
+        foreach ((string name, AttackType attack, int[] rungs) in TheNineLines)
+        {
+            Assert.True(
+                ladder.IsCapstoneEdge(rungs[1], rungs[2]),
+                "The " + name + " line's top rung is not priced in capstone tokens.");
+            Assert.False(
+                ladder.IsCapstoneEdge(rungs[0], rungs[1]),
+                "The " + name + " line's second rung is priced in capstone tokens.");
+
+            tops.Add((rungs[1], rungs[2]));
+        }
+
+        Assert.Equal(
+            tops.OrderBy(top => top.From).ToArray(),
+            ladder.Edges
+                .Where(edge => edge.Price == EdgePrice.CapstoneToken)
+                .Select(edge => (edge.From, edge.To))
+                .OrderBy(top => top.From)
+                .ToArray());
+    }
+
+    [Fact]
     public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
     {
         // Every attack type and every armour type is on the roster, so nothing

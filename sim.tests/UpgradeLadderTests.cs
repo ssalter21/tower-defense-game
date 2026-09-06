@@ -46,6 +46,40 @@ public class UpgradeLadderTests
         upgrade 6 7
         """;
 
+    /// <summary>
+    /// The Archer's rung and the capstone above it, in the layout that can spell
+    /// a token price. Two keywords, three fields each, and the arity of a row
+    /// unmoved.
+    /// </summary>
+    private const string OneRungAndACapstone = """
+        layout 2
+        upgrade 2 3
+        capstone 3 7
+        """;
+
+    /// <summary>
+    /// What <see cref="OneRung"/> hashes to, and what it hashed to before there
+    /// was a second currency to spell.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>Pinned as a literal because it is the whole of what keeping the
+    /// layout-1 branch buys.</b> A layout-1 file has one keyword and prices
+    /// every edge in gold; if reading one through this build folded anything the
+    /// old build did not, every record stamped against such a ladder would be
+    /// retired without anybody deciding to retire it -- and no other assertion
+    /// in this repository would notice, because the branch has no committed file
+    /// left to compare against once <c>content/upgrades.txt</c> moved to
+    /// layout 2.
+    /// </para>
+    /// <para>
+    /// Read off this build under layout 1 and transcribed. See
+    /// <see cref="ContentTests"/>, which pins a unit table's oldest layout for
+    /// the same reason.
+    /// </para>
+    /// </remarks>
+    private const ulong LayoutOneHashOfOneRung = 0x127C49EE27004EEEUL;
+
     private static UnitTypeTable Types() => UnitTypeTable.Parse("planted roster", Roster);
 
     private static UpgradeLadder Parse(string text) => UpgradeLadder.Parse(text, Types());
@@ -277,11 +311,16 @@ public class UpgradeLadderTests
     public void A_layout_this_reader_has_no_branch_for_refuses_to_load()
     {
         ContentException thrown = Assert.Throws<ContentException>(
-            () => Parse(PlantedText.Replace(OneRung, "layout 1", "layout 2")));
+            () => Parse(PlantedText.Replace(OneRung, "layout 1", "layout 3")));
 
-        Assert.Contains("declares row layout 2", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declares row layout 3", thrown.Message, StringComparison.Ordinal);
         Assert.False(UpgradeLadder.IsKnownLayout(0));
-        Assert.False(UpgradeLadder.IsKnownLayout(2));
+        Assert.False(UpgradeLadder.IsKnownLayout(3));
+
+        // Both branches that exist, named. The one below the current is here
+        // because a file written in it is still legal and still hashes to what
+        // it always did, which is the whole of what keeping a branch means.
+        Assert.True(UpgradeLadder.IsKnownLayout(UpgradeLadder.GoldOnlyLayout));
         Assert.True(UpgradeLadder.IsKnownLayout(UpgradeLadder.CurrentLayout));
     }
 
@@ -423,5 +462,98 @@ public class UpgradeLadderTests
             """);
 
         Assert.Single(UpgradeLadder.Parse("layout 1\nupgrade 1 2", types).Edges);
+    }
+
+    [Fact]
+    public void The_keyword_a_row_opens_with_says_which_currency_buys_the_edge()
+    {
+        // The whole of what layout 2 added. Two keywords, the same three fields
+        // each, and an edge that carries a price without carrying an amount:
+        // gold is the target row's own cost column and a token is one token.
+        //
+        // OBSERVED: read every row as EdgePrice.Gold in UpgradeLadder.Parse --
+        // drop the capstone branch off the edge it adds. The Price assertion
+        // goes red, Gold against CapstoneToken, and every capstone in
+        // content/upgrades.txt silently starts charging its cost column again.
+        UpgradeLadder ladder = Parse(OneRungAndACapstone);
+
+        Assert.Equal(UpgradeLadder.CurrentLayout, ladder.Layout);
+        Assert.Equal(2, ladder.Count);
+        Assert.Equal(EdgePrice.Gold, ladder.Edges[0].Price);
+        Assert.Equal(EdgePrice.CapstoneToken, ladder.Edges[1].Price);
+
+        Assert.False(ladder.IsCapstoneEdge(2, 3));
+        Assert.True(ladder.IsCapstoneEdge(3, 7));
+
+        // A pair no edge joins is not a capstone edge, which is the answer that
+        // keeps a caller to one question: an action climbing no edge is refused
+        // for climbing no edge and never reaches a price at all.
+        //
+        // OBSERVED: return true from IsCapstoneEdge when the scan finds nothing.
+        // This clause goes red, and a build phase then charges a token for an
+        // upgrade the ladder never carried.
+        Assert.False(ladder.IsCapstoneEdge(2, 7));
+    }
+
+    [Fact]
+    public void A_capstone_row_in_a_layout_one_file_is_refused_rather_than_read()
+    {
+        // Layout 1 has one keyword and prices every edge in gold. A token price
+        // written into such a file is a row claiming something the layout it
+        // declared cannot say, and it is refused for that rather than for the
+        // word being unknown -- the word IS known, in the layout above.
+        //
+        // OBSERVED: drop the layout guard from UpgradeLadder.Parse. The refusal
+        // goes red having caught nothing, and a layout-1 ladder starts pricing
+        // edges in a currency its own hash label does not fold.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => Parse(PlantedText.Replace(OneRung, "upgrade 2 3", "capstone 2 3")));
+
+        Assert.Contains("is a 'capstone' row", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declared row layout 1", thrown.Message, StringComparison.Ordinal);
+        Assert.Equal(2, thrown.Line);
+    }
+
+    [Fact]
+    public void A_layout_one_ladder_hashes_to_the_value_it_hashed_to_before_there_were_two_currencies()
+    {
+        // The branch below the current one, and what keeping it is for. Every
+        // record stamped against a layout-1 ladder is stamped with this number;
+        // a build that folded the price into it as well would retire all of them
+        // while reading exactly the same edges.
+        //
+        // OBSERVED: fold edge.Price under every layout in UpgradeLadder.Parse
+        // rather than from layout 2. This goes red, 127C49EE27004EEE against
+        // 370A93B61A0CF8AE, and every ladder ever written in layout 1 moves for
+        // a currency it has never heard of.
+        Assert.Equal(Hash64.FromValue(LayoutOneHashOfOneRung), Parse(OneRung).ContentHash);
+
+        // And the layouts do not collide. The same one edge, read through two
+        // branches, is two different ladders: one where the file could not have
+        // said "capstone" and one where it could and did not.
+        //
+        // OBSERVED: return "upgrade-ladder/1" from both cases of HashLabelOf.
+        // This clause goes red, and a layout-2 file that priced everything in
+        // gold would replay under a stamp taken from a layout-1 file.
+        Assert.NotEqual(
+            Parse(OneRung).ContentHash,
+            Parse(PlantedText.Replace(OneRung, "layout 1", "layout 2")).ContentHash);
+    }
+
+    [Fact]
+    public void Two_ladders_with_the_same_edges_and_different_prices_do_not_hash_equal()
+    {
+        // What the price being in the fold buys. Without it, re-pricing every
+        // capstone in the roster would leave every stored run replayable against
+        // a ladder that charges differently -- the confidently-wrong result the
+        // ladder stamp exists to prevent.
+        //
+        // OBSERVED: fold only From and To under layout 2. This goes red, the two
+        // hashes equal, and content/run.commands stops noticing that a capstone
+        // became a gold edge underneath it.
+        Assert.NotEqual(
+            Parse(OneRungAndACapstone).ContentHash,
+            Parse(PlantedText.Replace(OneRungAndACapstone, "capstone 3 7", "upgrade 3 7"))
+                .ContentHash);
     }
 }

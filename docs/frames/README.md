@@ -32,6 +32,12 @@ row that says "drag to tick 1096" are about the same moment.
 ./tools/capture-match-frames.ps1 -Yaw 120 -Width 1920  # another heading, wider
 ./tools/capture-match-frames.ps1 -Distance 25          # down among the creeps
 
+# The two committed frames at the default framing. NOT the default ticks:
+# MatchFrameCapture.DefaultTicks is 60, 200, 366, 700, 900 and 1400, none of
+# which is committed, and a plain run writes six pictures the .gitignore keeps
+# out of the tree.
+./tools/capture-match-frames.ps1 -Ticks "1096,2700"
+
 ./tools/capture-match-frames.ps1 -Ticks "1229,1546" -Distance 22 -Width 1600
 
 # The same board, defense, wave and seed, played against a roster of your own
@@ -43,7 +49,7 @@ row that says "drag to tick 1096" are about the same moment.
     -Ticks "572,780" -Width 1600
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
-    -Ticks "673" -Distance 18 -Width 1600
+    -Ticks "516,673" -Distance 18 -Width 1600
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
     -Ticks "311,342,344" -Distance 22 -Width 1600
@@ -79,8 +85,14 @@ Measured twice, reproducibly: `-Ticks "342,344"` and `-Ticks "311,342,344"` give
 different bytes for 0342 and 0344, and only the three-tick list reproduces what
 is committed. So **re-capture a fixture with the whole tick list above and not
 one tick at a time**, and expect a frame to move if you do not. Where a frame is
-listed on a line of its own below — 0813, 0674, 0331 — that line is its whole
-list.
+listed on a line of its own below — 0813, 0674, 0331, 0276, 0271, 0094 — that
+line is its whole list.
+
+**Measured again on 6 September 2026, on a change that drew none of these.** Every
+one of the nineteen came back byte-identical except `pierce-lines-tick-0673.png`,
+captured as `-Ticks "673"` because that is what the recipe above said: it lands
+87 bytes larger, reproducibly, and `-Ticks "516,673"` reproduces the committed
+file exactly. The recipe now says the pair.
 
 ## What is committed
 
@@ -196,7 +208,9 @@ are drawn at is the plainest thing that draws that shape, declared as a
 placeholder in `MatchTuning`.
 
 - `pierce-lines-tick-0673.png` — **the one to look at first**, at
-  `-Distance 18`. The Fan of Knives, hooded in blue, has just thrown: three
+  `-Distance 18`, and it shares its list with 0516: capturing 673 on its own
+  reproducibly gives other bytes, which is the coupling this section names.
+  The Fan of Knives, hooded in blue, has just thrown: three
   pale knives are strung out across the corridor, one to each of the three
   skeletons nearest the exit, two ticks into a six-tick crossing. The long pale
   bar running out of the top-left corner is the Overwatch's shot, fired one tick

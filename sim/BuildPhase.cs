@@ -170,6 +170,12 @@ namespace Sim
         /// <summary>How many of one tower an action buys. An action names one cell.</summary>
         private const int OneTower = 1;
 
+        /// <summary>
+        /// What a capstone edge costs, in tokens. One, and there is no column
+        /// anywhere that could make it another number.
+        /// </summary>
+        private const int OneCapstone = 1;
+
         private static readonly BuildAction[] NoActions = new BuildAction[0];
 
         private readonly WaveSlot[] _slots;
@@ -358,13 +364,26 @@ namespace Sim
         /// simulation never walks one; it is now false by intent. A unit that is
         /// any edge's target cannot be <c>place</c>d and has to be reached by
         /// <c>upgrade</c> from the rung below it, which is the one prerequisite
-        /// this game has. An upgrade still pays the target row's full price.
+        /// this game has.
+        /// </para>
+        /// <para>
+        /// <b>An upgrade pays the target row's full gold price, unless the edge
+        /// it climbs is a capstone.</b> A capstone edge costs one capstone token
+        /// and no gold at all -- see <see cref="EdgePrice"/> -- so the tower
+        /// side has a second scarcity and the sending side still has one. The
+        /// token is refused the way the gold is: an action nobody can pay for is
+        /// refused where the decision is read.
         /// </para>
         /// </remarks>
         /// <param name="wave">Which round this is, for the refusals to name.</param>
         /// <param name="carried">What the round already fields and is not charged for again.</param>
         /// <param name="ladder">The upgrade edges a <c>place</c> and an <c>upgrade</c> are both refused against.</param>
         /// <param name="purse">What the run has to spend.</param>
+        /// <param name="capstoneTokens">
+        /// How many capstone tokens the round holds. See
+        /// <see cref="Run.CapstoneTokens"/>, which is where the schedule that
+        /// grants them lives.
+        /// </param>
         /// <param name="costs">What everything is priced at, units and snapshots alike.</param>
         /// <param name="types">The roster an action's type id names a row of.</param>
         /// <param name="map">The map an action's cell is on, or is not.</param>
@@ -374,6 +393,7 @@ namespace Sim
             WaveScript carried,
             UpgradeLadder ladder,
             Purse purse,
+            int capstoneTokens,
             CostTable costs,
             UnitTypeTable types,
             HexMap map,
@@ -414,12 +434,26 @@ namespace Sim
                 throw new ArgumentNullException(nameof(board));
             }
 
+            if (capstoneTokens < 0)
+            {
+                throw new SimulationException(
+                    "A build phase at wave "
+                    + wave.ToString(CultureInfo.InvariantCulture)
+                    + " was handed "
+                    + capstoneTokens.ToString(CultureInfo.InvariantCulture)
+                    + " capstone tokens. A token is granted whole and spent whole, so a count below zero "
+                    + "is a capstone somebody was charged for twice rather than a debt this economy "
+                    + "has a spelling for.");
+            }
+
             Purse left = purse;
             Board built = board;
+            int tokens = capstoneTokens;
 
             for (int index = 0; index < _actions.Length; index++)
             {
-                (built, left) = Applied(_actions[index], wave, built, left, costs, types, map, ladder);
+                (built, left, tokens) =
+                    Applied(_actions[index], wave, built, left, tokens, costs, types, map, ladder);
             }
 
             // What the board cost, taken off the purse the actions left rather
@@ -553,6 +587,7 @@ namespace Sim
                 left,
                 purse.Gold - left.Gold,
                 defense,
+                capstoneTokens - tokens,
                 WaveScript.FromSlots(orders.ToArray()),
                 built);
         }
@@ -601,14 +636,24 @@ namespace Sim
         /// <para>
         /// <b>Paid as it is applied, in the order it was written.</b> A phase
         /// carries no credit between its own actions, so the second of two
-        /// towers is priced against the purse the first one left.
+        /// towers is priced against the purse the first one left, and the second
+        /// of two capstones against the tokens the first one left.
+        /// </para>
+        /// <para>
+        /// <b>Which currency an action pays in is the edge it climbs and never
+        /// the row it lands on.</b> A capstone row is the target of a capstone
+        /// edge, so asking the ladder about the pair is asking the one place the
+        /// price is written down -- and a row reached along a gold edge would
+        /// still cost gold, which is what keeps this a statement about the file
+        /// rather than about which ids happen to be tops of lines.
         /// </para>
         /// </remarks>
-        private static (Board Built, Purse Left) Applied(
+        private static (Board Built, Purse Left, int Tokens) Applied(
             BuildAction action,
             int wave,
             Board built,
             Purse left,
+            int tokens,
             CostTable costs,
             UnitTypeTable types,
             HexMap map,
@@ -616,6 +661,7 @@ namespace Sim
         {
             string naming = Naming(action, wave);
             UnitType type = types.Require(action.TypeId, UnitRole.Placed, naming);
+            bool onAToken = false;
 
             if (action.Kind == ActionKind.Place)
             {
@@ -663,9 +709,31 @@ namespace Sim
                         + "standing is a tier with no tier under it, which is the thing refusing the "
                         + "place exists to prevent.");
                 }
+
+                onAToken = !(beneath is null) && ladder.IsCapstoneEdge(beneath.Id, action.TypeId);
             }
 
             Board after = Standing(built, action, type, wave);
+
+            if (onAToken)
+            {
+                if (tokens < OneCapstone)
+                {
+                    throw new SimulationException(
+                        naming
+                        + " into type id "
+                        + action.TypeId.ToString(CultureInfo.InvariantCulture)
+                        + " along a capstone edge, which costs a capstone token the round does not hold. "
+                        + "A run is handed one at rounds "
+                        + Run.CapstoneTokenRoundsInWords()
+                        + " and spends it on a capstone or on nothing -- there is no buying one with gold "
+                        + "and no credit in this economy, so a capstone nobody can pay for is refused "
+                        + "where the decision is read.");
+                }
+
+                return (after, left, tokens - OneCapstone);
+            }
+
             int price = costs.PriceOf(Purchase.Unit(action.TypeId), OneTower);
 
             if (price > left.Gold)
@@ -681,7 +749,7 @@ namespace Sim
                     + "is refused rather than dropped from a phase somebody else's numbers then describe.");
             }
 
-            return (after, left.Spend(costs, Purchase.Unit(action.TypeId), OneTower));
+            return (after, left.Spend(costs, Purchase.Unit(action.TypeId), OneTower), tokens);
         }
 
         /// <summary>
@@ -746,12 +814,14 @@ namespace Sim
             Purse purse,
             int spent,
             int defense,
+            int capstoneTokensSpent,
             WaveScript wave,
             Board board)
         {
             Purse = purse;
             Spent = spent;
             Defense = defense;
+            CapstoneTokensSpent = capstoneTokensSpent;
             Wave = wave;
             Board = board;
         }
@@ -777,6 +847,14 @@ namespace Sim
         /// <c>docs/adr/0041</c>.
         /// </remarks>
         public int Defense { get; }
+
+        /// <summary>
+        /// How many capstone tokens the phase's actions took. Never part of
+        /// <see cref="Spent"/> or <see cref="Defense"/>: a token is a second
+        /// currency and adding one to a pile of gold would be a total nobody
+        /// could spend.
+        /// </summary>
+        public int CapstoneTokensSpent { get; }
 
         /// <summary>The wave the filled slots compose. Empty where every slot was left so.</summary>
         public WaveScript Wave { get; }

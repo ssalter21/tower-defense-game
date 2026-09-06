@@ -4,21 +4,41 @@ using System.Globalization;
 
 namespace Sim
 {
+    /// <summary>What buys one edge of the ladder.</summary>
+    /// <remarks>
+    /// Two currencies and no third. Gold is what every rung below the top of a
+    /// line is bought with, out of the one purse; a capstone token is granted
+    /// on a schedule and buys nothing else. Which one an edge takes is the
+    /// keyword its row opens with -- see <see cref="UpgradeLadder"/>.
+    /// </remarks>
+    public enum EdgePrice
+    {
+        /// <summary>The target row's full <see cref="UnitType.Cost"/>, in gold.</summary>
+        Gold,
+
+        /// <summary>One capstone token, and no gold at all.</summary>
+        CapstoneToken,
+    }
+
     /// <summary>
-    /// One row of the ladder: the id of the unit a swap consumes, and the id of
-    /// the unit it becomes.
+    /// One row of the ladder: the id of the unit a swap consumes, the id of the
+    /// unit it becomes, and which currency buys the swap.
     /// </summary>
     /// <remarks>
-    /// Two ids and nothing else. No tier number, no cost and no direction
-    /// marker: the target's price is its own row's <see cref="UnitType.Cost"/>,
-    /// and the direction is which of the two ids is written first.
+    /// No tier number and no direction marker: the direction is which of the two
+    /// ids is written first. No cost either -- <see cref="Price"/> names a
+    /// currency rather than an amount, because both amounts are already
+    /// somewhere else. Gold is the target's own row's
+    /// <see cref="UnitType.Cost"/>, and a capstone token is one token, which is
+    /// the only number a token price can be.
     /// </remarks>
     public readonly struct UpgradeEdge
     {
-        internal UpgradeEdge(int from, int to)
+        internal UpgradeEdge(int from, int to, EdgePrice price)
         {
             From = from;
             To = to;
+            Price = price;
         }
 
         /// <summary>The unit a swap consumes.</summary>
@@ -26,6 +46,9 @@ namespace Sim
 
         /// <summary>The unit it becomes. Always the larger of the two ids.</summary>
         public int To { get; }
+
+        /// <summary>Which currency buys this swap.</summary>
+        public EdgePrice Price { get; }
 
         public override string ToString() =>
             From.ToString(CultureInfo.InvariantCulture)
@@ -149,6 +172,16 @@ namespace Sim
     /// open a file, so a caller reads the bytes and hands them over.
     /// </para>
     /// <para>
+    /// <b>The keyword a row opens with says which currency buys the edge.</b>
+    /// <c>upgrade</c> is the target row's full gold price and <c>capstone</c> is
+    /// one capstone token and no gold at all -- see <see cref="EdgePrice"/>.
+    /// The arity did not move: a row is still a keyword and two ids. What moved
+    /// is what the keyword column means, which is the same silent-misread class
+    /// a column count moving is, so it is a row layout of its own. Layout 1 has
+    /// the one keyword and prices every edge in gold, which is what those files
+    /// always said, and its branch reads them unchanged.
+    /// </para>
+    /// <para>
     /// <b>An edge joins two unit ids, not two towers.</b> Neither end is
     /// required to be a <see cref="UnitRole.Placed"/> unit, so a ladder of
     /// creeps stays structurally possible; whether the two ends agree on a role
@@ -177,10 +210,15 @@ namespace Sim
     /// </remarks>
     public sealed class UpgradeLadder
     {
-        /// <summary>The one row layout this file has ever been written in.</summary>
-        public const int CurrentLayout = 1;
+        /// <summary>The row layout the writer of this file uses now.</summary>
+        public const int CurrentLayout = 2;
+
+        /// <summary>The layout that had one edge keyword, and priced every edge in gold.</summary>
+        public const int GoldOnlyLayout = 1;
 
         private const string Keyword = "upgrade";
+
+        private const string CapstoneKeyword = "capstone";
 
         private const string LayoutKeyword = "layout";
 
@@ -188,7 +226,13 @@ namespace Sim
         private const int FieldCount = 3;
 
         /// <summary>The words a row here may open with.</summary>
-        private static readonly string[] RowWords = { Keyword, LayoutKeyword };
+        /// <remarks>
+        /// All three in every layout, so a <c>capstone</c> row in a layout-1
+        /// file is refused for the reason it is actually wrong -- the layout it
+        /// was written under has no such price -- rather than as a word nobody
+        /// has ever heard of.
+        /// </remarks>
+        private static readonly string[] RowWords = { Keyword, CapstoneKeyword, LayoutKeyword };
 
         /// <summary>Ids are <c>u16</c> in the record format, and zero means "no unit".</summary>
         private const int MinimumId = 1;
@@ -255,19 +299,49 @@ namespace Sim
         /// climbed from, and without it "reached by upgrading the rung below
         /// it" is a sentence in a comment rather than a rule -- any standing
         /// tower would do, which makes the rung below no prerequisite at all.
-        /// A linear scan, for the reason given above.
         /// </remarks>
-        public bool HasEdge(int fromTypeId, int toTypeId)
+        public bool HasEdge(int fromTypeId, int toTypeId) => Carrying(fromTypeId, toTypeId) >= 0;
+
+        /// <summary>
+        /// Whether the edge from the first row to the second is bought with a
+        /// capstone token rather than with gold.
+        /// </summary>
+        /// <remarks>
+        /// False for a pair no edge joins, which is the answer that keeps every
+        /// caller to one question: an action that climbs no edge is refused for
+        /// climbing no edge -- see <see cref="BuildPhase.Resolve"/> -- and is
+        /// never reached by a purse asking what it costs.
+        /// </remarks>
+        public bool IsCapstoneEdge(int fromTypeId, int toTypeId)
+        {
+            int at = Carrying(fromTypeId, toTypeId);
+
+            return at >= 0 && _edges[at].Price == EdgePrice.CapstoneToken;
+        }
+
+        /// <summary>
+        /// Where the edge joining these two rows sits, or below zero for a pair
+        /// no edge joins.
+        /// </summary>
+        /// <remarks>
+        /// The one scan both questions about a pair are answered by, so
+        /// "is there an edge" and "what does it cost" cannot come to disagree
+        /// about which row they read. A linear scan, on the arrangement the rest
+        /// of this file is built on: a ladder is a handful of rows and the
+        /// alternative is a hashed collection whose enumeration order is an
+        /// implementation detail.
+        /// </remarks>
+        private int Carrying(int fromTypeId, int toTypeId)
         {
             for (int index = 0; index < _edges.Length; index++)
             {
                 if (_edges[index].From == fromTypeId && _edges[index].To == toTypeId)
                 {
-                    return true;
+                    return index;
                 }
             }
 
-            return false;
+            return -1;
         }
 
         /// <summary>Which row layout this ladder was written in and read through.</summary>
@@ -344,7 +418,29 @@ namespace Sim
 
                 if (fields.Length != FieldCount)
                 {
-                    throw DataText.WrongFieldCount(source, row.Line, Keyword, FieldCount, fields.Length);
+                    throw DataText.WrongFieldCount(source, row.Line, row.Keyword, FieldCount, fields.Length);
+                }
+
+                // The shape of the row before what it claims, which is the order
+                // every other refusal here reads in: a row nobody can parse is
+                // refused for that rather than for a price nobody could have
+                // read off it.
+                bool capstone = string.Equals(row.Keyword, CapstoneKeyword, StringComparison.Ordinal);
+
+                if (capstone && layout == GoldOnlyLayout)
+                {
+                    throw new ContentException(
+                        source,
+                        row.Line,
+                        "is a '"
+                        + CapstoneKeyword
+                        + "' row in a file that declared row layout "
+                        + GoldOnlyLayout.ToString(CultureInfo.InvariantCulture)
+                        + ", where every edge is bought with the target's gold price and there is no "
+                        + "second currency to spell. A token price is layout "
+                        + CurrentLayout.ToString(CultureInfo.InvariantCulture)
+                        + " and up, so the file says which of the two it is written in before any row "
+                        + "claims a price the layout does not have.");
                 }
 
                 int from = DataText.IntegerInRange(
@@ -397,7 +493,8 @@ namespace Sim
 
                 previousFrom = from;
                 previousTo = to;
-                edges.Add(new UpgradeEdge(from, to));
+                edges.Add(new UpgradeEdge(
+                    from, to, capstone ? EdgePrice.CapstoneToken : EdgePrice.Gold));
             }
 
             if (!declared)
@@ -416,6 +513,16 @@ namespace Sim
             foreach (UpgradeEdge edge in edges)
             {
                 hash = hash.Add(edge.From, edge.To);
+
+                // The price joins the fold from layout 2 and not before, so a
+                // layout-1 file hashes to exactly the value it always did --
+                // which is what content/golden/defense-1.upgrades is committed
+                // to prove. Layout 1 has one price and folding a constant would
+                // say nothing anyway.
+                if (layout != GoldOnlyLayout)
+                {
+                    hash = hash.Add((int)edge.Price);
+                }
             }
 
             return new UpgradeLadder(edges.ToArray(), layout, hash);
@@ -432,6 +539,9 @@ namespace Sim
             {
                 case 1:
                     return "upgrade-ladder/1";
+
+                case 2:
+                    return "upgrade-ladder/2";
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -503,12 +613,21 @@ namespace Sim
 
                 if (to.Cost <= from.Cost)
                 {
+                    // The cost columns are compared whichever currency buys the
+                    // edge, because this note is a reading of the pricing rule
+                    // rather than a bill: on a capstone edge it is how the rule
+                    // scores a rung nothing charges gold for, which is exactly
+                    // the reading docs/roster.md's cost section rests on.
                     notes.Add(new LadderFinding(
                         LadderRemark.FlatOrFallingPrice,
                         from.Id,
                         to.Id,
                         from.ToString() + " costs " + Gold(from.Cost) + " and " + to.ToString() + " costs "
-                        + Gold(to.Cost) + ", so the upgrade is not dearer than what it replaces."));
+                        + Gold(to.Cost)
+                        + (edge.Price == EdgePrice.CapstoneToken
+                            ? ", so the rule prices the capstone at what it replaces -- and nothing "
+                                + "charges that, because a token buys it."
+                            : ", so the upgrade is not dearer than what it replaces.")));
                 }
 
                 int source = IndexOf(types, from);
@@ -594,7 +713,8 @@ namespace Sim
         /// <see cref="UnitTypeTable.IsKnownLayout"/> is: these are the branches
         /// that exist rather than the branches that ought to.
         /// </remarks>
-        public static bool IsKnownLayout(int layout) => layout == 1;
+        public static bool IsKnownLayout(int layout) =>
+            layout == GoldOnlyLayout || layout == CurrentLayout;
 
         /// <summary>
         /// Reads the layout a file declares. It comes before every row it
@@ -634,6 +754,8 @@ namespace Sim
                     "declares row layout "
                     + layout.ToString(CultureInfo.InvariantCulture)
                     + ", and this reader has a branch for "
+                    + GoldOnlyLayout.ToString(CultureInfo.InvariantCulture)
+                    + " and "
                     + CurrentLayout.ToString(CultureInfo.InvariantCulture)
                     + " alone. A layout that was skipped, or a branch somebody deleted, is refused here "
                     + "rather than read against whichever field order happened to be nearest.");

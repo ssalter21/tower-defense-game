@@ -98,6 +98,16 @@ namespace View
         public static string Gold(int gold) =>
             gold.ToString(CultureInfo.InvariantCulture) + " gold";
 
+        /// <summary>What a capstone edge costs, in words: <c>1 capstone token</c>.</summary>
+        /// <remarks>
+        /// Beside <see cref="Gold"/> for the reason that is here: it is
+        /// player-facing wording, and a second surface that showed a token would
+        /// otherwise invent its own name for it. It takes no amount because
+        /// there is none to take — a capstone edge costs one token and there is
+        /// no column anywhere that could make it another number.
+        /// </remarks>
+        public static string CapstoneToken() => "1 capstone token";
+
         /// <summary>
         /// How many of one creep a wave box is sending: <c>x3</c>.
         /// </summary>

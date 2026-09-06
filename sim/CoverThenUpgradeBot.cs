@@ -14,7 +14,15 @@ namespace Sim
     /// of them per gold; once nothing more can be covered, buy whichever scores
     /// most damage over the route per gold -- an upgrade, or a second tower on
     /// route something already watches. Stop at the first action the half will
-    /// not pay for, and bank the rest.
+    /// not pay for, and bank the rest. Then, out of the capstone tokens the
+    /// round holds and out of no gold at all, climb the capstone that puts the
+    /// most damage on the route, once per token.
+    /// </para>
+    /// <para>
+    /// <b>A token is spent the round it arrives, because there is nothing else
+    /// to do with one.</b> Gold banked earns interest and buys a creep instead;
+    /// a token earns nothing, buys one kind of thing and is the only way to buy
+    /// it. A bot that held one back would be reporting a run nobody would play.
     /// </para>
     /// <para>
     /// <b>Half is a constant here and not in <c>content/ruleset.txt</c>.</b>
@@ -118,7 +126,8 @@ namespace Sim
                 throw new ArgumentNullException(nameof(run));
             }
 
-            return Decide(run.Map, run.Types, run.Costs, run.Ladder, run.Board, run.Purse);
+            return Decide(
+                run.Map, run.Types, run.Costs, run.Ladder, run.Board, run.Purse, run.CapstoneTokens);
         }
 
         /// <summary>
@@ -136,13 +145,15 @@ namespace Sim
         /// <param name="ladder">The edges that say which rows are reached by upgrading rather than placed.</param>
         /// <param name="board">What stands before this round builds.</param>
         /// <param name="purse">What is held before this round builds, of which the wall takes a share.</param>
+        /// <param name="capstoneTokens">How many capstone tokens the round holds, all of them spendable.</param>
         public static IReadOnlyList<BuildAction> Decide(
             HexMap map,
             UnitTypeTable types,
             CostTable costs,
             UpgradeLadder ladder,
             Board board,
-            Purse purse)
+            Purse purse,
+            int capstoneTokens)
         {
             if (map is null)
             {
@@ -179,6 +190,7 @@ namespace Sim
             bool[] covered = CoveredBy(map, board);
             var actions = new List<BuildAction>();
             int left = BudgetOf(purse);
+            int spare = capstoneTokens;
 
             // Cover: the type that reaches the most route nothing reaches for
             // what it costs, until nothing on any free cell reaches any more of it.
@@ -245,6 +257,27 @@ namespace Sim
                     ? board.Place(type, column, row)
                     : board.Upgrade(type, column, row);
                 left -= price;
+            }
+
+            // Then spend the tokens, one at a time, on the capstone that puts
+            // the most damage on the route per tick. Not weighed against
+            // anything above: a score per gold has no denominator for a thing
+            // gold does not buy, and a token buys a capstone or it buys nothing
+            // at all, so there is nothing to bank it against. Last, so the
+            // capstone climbs the board the gold finished building rather than a
+            // cell the gold would then have scored differently.
+            while (spare > 0)
+            {
+                (UnitType? into, int column, int row) = BestCapstone(map, board, byPrice, ladder);
+
+                if (into is null)
+                {
+                    break;
+                }
+
+                actions.Add(BuildAction.Of(ActionKind.Upgrade, into.Id, column, row));
+                board = board.Upgrade(into, column, row);
+                spare--;
             }
 
             return actions;
@@ -425,7 +458,15 @@ namespace Sim
                     UnitType into = byPrice[other];
                     int over = costs.PriceOf(Purchase.Unit(into.Id)) - standing;
 
-                    if (over <= 0 || !Climbs(ladder, placement.Type, into))
+                    // A capstone is left out of this half whatever its cost
+                    // column says, because gold does not buy one: pricing it
+                    // here would score a free thing against a paid one and,
+                    // where the columns happen to differ, compose a phase the
+                    // rules refuse for want of a token. It is bought in the
+                    // token loop or not at all.
+                    if (over <= 0
+                        || ladder.IsCapstoneEdge(placement.Type.Id, into.Id)
+                        || !Climbs(ladder, placement.Type, into))
                     {
                         continue;
                     }
@@ -449,6 +490,96 @@ namespace Sim
             }
 
             return (bestType, bestKind, bestColumn, bestRow);
+        }
+
+        /// <summary>
+        /// The capstone edge a standing placement can climb that puts the most
+        /// damage on the route per tick, and the cell it is climbed on. A null
+        /// type is a board where no capstone would improve on what is standing,
+        /// which is where the token loop stops.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The gold loops' score with the gold taken out of it.</b> Every
+        /// candidate costs one token, so what a candidate is worth divides by
+        /// the ticks between its shots and by nothing else. Compared by
+        /// cross-multiplying, which is their order in integers that never round.
+        /// </para>
+        /// <para>
+        /// <b>The row standing on the cell is the score to beat, and that is not
+        /// the same rule as the gold loops'.</b> There, a candidate is measured
+        /// against every other candidate and the cell is free or the upgrade
+        /// costs its difference; here the capstone consumes what is under it,
+        /// and a capstone can score below the rung it replaces -- a shorter
+        /// reach, or a roll spread over a bubble the score cannot see. Taking
+        /// one anyway would make a wall worse for a token, and a bot that did
+        /// that would report the roster as weaker than it is rather than
+        /// reporting what a token is worth.
+        /// </para>
+        /// <para>
+        /// <b>What this cannot see is the whole of what a capstone often
+        /// is.</b> Five of the nine change no damage roll and no body count at
+        /// all -- they are auras and debuffs -- so this rule leaves their tokens
+        /// unspent, and the balance report says so by reporting a run that did
+        /// not spend them. That is the score's known blindness rather than a
+        /// statement about the roster; see <c>docs/roster.md</c>.
+        /// </para>
+        /// <para>
+        /// The placements are walked in the canonical order and the rows by
+        /// price, and a candidate has to beat the score standing to take it, so
+        /// a tie goes to the first of them -- a total order with no sort and no
+        /// comparator, as everywhere else here.
+        /// </para>
+        /// </remarks>
+        private static (UnitType? Type, int Column, int Row) BestCapstone(
+            HexMap map,
+            Board board,
+            UnitType[] byPrice,
+            UpgradeLadder ladder)
+        {
+            UnitType? bestType = null;
+            int bestColumn = 0;
+            int bestRow = 0;
+            long bestDamage = 0;
+            long bestTicks = 1;
+
+            for (int index = 0; index < board.Placements.Count; index++)
+            {
+                Placement placement = board.Placements[index];
+                long standingDamage = DamageOverRoute(
+                    map, placement.Type, placement.Column, placement.Row);
+                long standingTicks = placement.Type.CooldownTicks;
+
+                for (int other = 0; other < byPrice.Length; other++)
+                {
+                    UnitType into = byPrice[other];
+                    long ticks = into.CooldownTicks;
+
+                    // A row that never shoots divides by zero rather than
+                    // scoring badly, exactly as it does in the gold half.
+                    if (ticks <= 0
+                        || standingTicks <= 0
+                        || !ladder.IsCapstoneEdge(placement.Type.Id, into.Id))
+                    {
+                        continue;
+                    }
+
+                    long damage = DamageOverRoute(map, into, placement.Column, placement.Row);
+
+                    if (damage * standingTicks <= standingDamage * ticks)
+                    {
+                        continue;
+                    }
+
+                    if (damage * bestTicks > bestDamage * ticks)
+                    {
+                        (bestType, bestColumn, bestRow) = (into, placement.Column, placement.Row);
+                        (bestDamage, bestTicks) = (damage, ticks);
+                    }
+                }
+            }
+
+            return (bestType, bestColumn, bestRow);
         }
 
         /// <summary>

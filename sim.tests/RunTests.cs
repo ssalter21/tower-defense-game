@@ -35,6 +35,31 @@ public class RunTests
         { "a server re-validating", true, false, false, true },
     };
 
+    /// <summary>The first round <see cref="Run.CapstoneTokenRounds"/> grants at.</summary>
+    private const int FirstCapstoneRound = 3;
+
+    /// <summary>The committed archer, the root of the line the token assertions climb.</summary>
+    private const int ArcherId = 3;
+
+    /// <summary>Its second rung, bought with gold.</summary>
+    private const int RangerId = 14;
+
+    /// <summary>Its capstone, bought with the token.</summary>
+    private const int OverwatchId = 31;
+
+    /// <summary>A ground cell of the committed map the token assertions build on.</summary>
+    private const int TokenColumn = 0;
+
+    /// <summary>Its row.</summary>
+    private const int TokenRow = 0;
+
+    /// <summary>
+    /// The rounds a capstone token arrives at, read off the run rather than off
+    /// the schedule. Three of them over ten rounds, and each one is held from
+    /// the round it lands in until something spends it.
+    /// </summary>
+    private static readonly int[] CapstoneTokensRoundByRound = { 0, 0, 1, 1, 1, 2, 2, 2, 3, 3 };
+
 
 
     [Theory]
@@ -1629,6 +1654,80 @@ public class RunTests
         }
 
         return run;
+    }
+
+    [Fact]
+    public void A_run_is_granted_a_capstone_token_at_rounds_three_six_and_nine()
+    {
+        // The second currency, and the whole of its supply side. It goes up by
+        // one at three rounds of a ten-round run and never at any other, so
+        // three tokens meet nine capstones and which line reaches its top is a
+        // decision rather than an accumulation.
+        //
+        // The token lands at the OPENING of its round and is spendable in it,
+        // which is what the vector below reads: the count is taken before each
+        // round is advanced. Gold arrives when a wave closes because a wave has
+        // to be fought first; nothing has to happen for a token to be granted.
+        //
+        // OBSERVED: grant at the close instead -- read
+        // CapstoneTokensGrantedThrough(Round) rather than Round + 1 in
+        // Run.CapstoneTokens. This goes red at round three, 0 against 1, and the
+        // third token arrives at round ten, which a nine-round run never
+        // reaches.
+        Run run = TheRun.Fresh(waves: 10, fieldSize: 1, deathEndsTheRun: false);
+        var held = new List<int>();
+
+        while (!run.IsOver)
+        {
+            held.Add(run.CapstoneTokens);
+            run.Advance(TheBuild.BuyingNothing(run));
+        }
+
+        Assert.Equal(CapstoneTokensRoundByRound, held);
+        Assert.Equal(new[] { 3, 6, 9 }, Run.CapstoneTokenRounds);
+
+        // Nothing was spent, so what the run holds at the end is every token the
+        // schedule ever handed it. A run that outlasts the schedule is granted
+        // no more: the list is the whole supply.
+        //
+        // OBSERVED, on this clause: count grant rounds with `wave % 3 == 0`
+        // instead of walking CapstoneTokenRounds. Nothing here goes red at ten
+        // rounds and everything past round nine silently starts earning again,
+        // which is why the schedule is a list rather than a rule that
+        // reproduces one.
+        Assert.Equal(Run.CapstoneTokenRounds.Count, run.CapstoneTokens);
+        Assert.Equal(
+            Run.CapstoneTokenRounds.Count,
+            Run.CapstoneTokensGrantedThrough(run.Waves * 2));
+    }
+
+    [Fact]
+    public void A_capstone_a_round_climbs_comes_off_the_tokens_the_run_holds()
+    {
+        // The spending side. A run is not a purse and a token is not gold, so
+        // this is the one place the two halves meet: what a build phase took is
+        // written to the run where everything else a round moves is written, and
+        // what the run holds afterwards is the grant less the spend.
+        //
+        // OBSERVED: drop the `_capstoneTokensSpent += tokensSpent` line from
+        // Run.Commit. This goes red, 1 against 0, and one token buys a capstone
+        // every round for the rest of the run.
+        Run run = TheRun.Fresh(waves: 10, fieldSize: 1, deathEndsTheRun: false);
+
+        while (run.Round < FirstCapstoneRound - 1)
+        {
+            run.Advance(TheBuild.BuyingNothing(run));
+        }
+
+        Assert.Equal(1, run.CapstoneTokens);
+
+        RoundReport climbed = run.Advance(TheBuild.BuyingNothing(run)
+            .With(BuildAction.Of(ActionKind.Place, ArcherId, TokenColumn, TokenRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, RangerId, TokenColumn, TokenRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, OverwatchId, TokenColumn, TokenRow)));
+
+        Assert.Equal(1, climbed.Build.CapstoneTokensSpent);
+        Assert.Equal(0, run.CapstoneTokens);
     }
 
     /// <summary>What a wall costs to stand: every tower on it, at the price of its row.</summary>

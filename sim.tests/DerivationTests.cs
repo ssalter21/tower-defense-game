@@ -501,6 +501,14 @@ public class DerivationTests
     /// </summary>
     private const int FingerprintComposedGold = 100000;
 
+    /// <summary>
+    /// The capstone tokens the composition half resolves under: none, because
+    /// <see cref="FingerprintComposedLadder"/> carries no edge and therefore no
+    /// capstone edge for one to buy. Handing over a token would fold a number
+    /// nothing in the scenario can spend.
+    /// </summary>
+    private const int FingerprintCapstoneTokens = 0;
+
     /// <summary>What the purse the payment half is folded through carries in.</summary>
     private const int FingerprintBank = 4321;
 
@@ -689,6 +697,42 @@ public class DerivationTests
         Assert.Equal(
             Hash64.FromValue(declared.Fingerprint),
             RuleFingerprint());
+    }
+
+    [Fact]
+    public void The_capstone_grant_schedule_is_a_rule_and_no_hash_in_this_repository_covers_it()
+    {
+        // The one rule a stored run's replay depends on that nothing else here
+        // pins. Which edges cost a token is in the ladder hash and therefore in
+        // the content hash; HOW MANY tokens a round holds is neither -- it is a
+        // list in sim/Run.cs, and moving it would make streams legal that were
+        // refused, and refuse streams that were legal, with every stamp on every
+        // record still agreeing.
+        //
+        // The fingerprint above cannot reach it: it is folded over a scenario
+        // whose ladder has no edges, so no capstone is ever priced there and no
+        // token is ever spent. Widening that scenario to cover this would be a
+        // SimulationVersion bump for a rule that has not moved, which is exactly
+        // the mistake the fingerprint's own remarks name.
+        //
+        // So this is the assertion that names what a change to the schedule
+        // owes: a SimulationVersion bump and a BehaviourByVersion row, taken
+        // deliberately, because every stored run made under the old schedule is
+        // retired by it. See docs/adr/0061-a-capstone-costs-a-token.md.
+        //
+        // OBSERVED: add a fourth grant round to Run.CapstoneTokenRounds. This
+        // goes red naming the list, and every other assertion in this repository
+        // stays green -- content/run.commands still replays, every hash still
+        // agrees, and a run that could not afford its second capstone can.
+        Assert.Equal(new[] { 3, 6, 9 }, Run.CapstoneTokenRounds);
+
+        // And the reading of the list, which is the other half of the rule: a
+        // grant lands at the opening of its round and none lands anywhere else.
+        Assert.Equal(0, Run.CapstoneTokensGrantedThrough(2));
+        Assert.Equal(1, Run.CapstoneTokensGrantedThrough(3));
+        Assert.Equal(1, Run.CapstoneTokensGrantedAt(3));
+        Assert.Equal(0, Run.CapstoneTokensGrantedAt(4));
+        Assert.Equal(Run.CapstoneTokenRounds.Count, Run.CapstoneTokensGrantedThrough(Run.DefaultWaves));
     }
 
     [Fact]
@@ -1274,6 +1318,7 @@ public class DerivationTests
                 WaveScript.Nothing,
                 ladder,
                 Purse.Holding(FingerprintComposedGold),
+                FingerprintCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 map,
@@ -1309,6 +1354,7 @@ public class DerivationTests
                 composed.Wave,
                 ladder,
                 Purse.Holding(FingerprintComposedGold),
+                FingerprintCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 map,

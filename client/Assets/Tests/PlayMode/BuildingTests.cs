@@ -43,6 +43,18 @@ namespace Tests.PlayMode
 
         private const int RangerId = 14;
 
+        /// <summary>The overwatch: the archer line's capstone, bought with a token and no gold.</summary>
+        private const int OverwatchId = 31;
+
+        /// <summary>
+        /// What a round-one run holds of the second currency. The first grant is
+        /// at round three, so every test here that is about gold opens on none.
+        /// </summary>
+        private const int NoCapstoneTokens = 0;
+
+        /// <summary>One capstone token: what a capstone edge costs, and all a grant round hands out.</summary>
+        private const int OneCapstoneToken = 1;
+
         /// <summary>The druid: thirty gold and three and a half hexes, the cheapest reach on the roster.</summary>
         private const int DruidId = 28;
 
@@ -353,6 +365,64 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A capstone is offered only where the round holds a token, and the
+        /// button says what it costs in the currency that buys it.
+        /// </summary>
+        /// <remarks>
+        /// Prevention at a hex again, in the second currency: the offer is
+        /// filtered by resolving the candidate, so a rung nobody can pay for
+        /// drops out through exactly the call that would refuse it. What is new
+        /// is that the price on the button is read off the ladder rather than
+        /// off the target's cost column — the overwatch has one, sixty gold, and
+        /// nothing charges it.
+        /// </remarks>
+        [Test]
+        public void ACapstoneIsOfferedOnlyWithATokenAndSaysWhatItCosts()
+        {
+            MatchRoot root = Building(Opening(gold: 1000, tokens: NoCapstoneTokens));
+
+            Select(root, ArcherId);
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+            root.Palette.Take(Types().ById(RangerId));
+
+            root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
+
+            Assert.That(
+                root.Composing.UpgradesOn(FreeColumn, FreeRow),
+                Is.Empty,
+                "A capstone was offered to a round holding no token, out of a purse holding a thousand.");
+            Assert.That(
+                root.Palette.IsOffering,
+                Is.False,
+                "A ranger with no token above it offers none, exactly as one with no gold does.");
+
+            MatchRoot held = Building(Opening(gold: 1000, tokens: OneCapstoneToken));
+
+            Select(held, ArcherId);
+            held.Pointer.Click(ScreenPointOf(held, FreeColumn, FreeRow));
+            held.Pointer.Click(ScreenPointOf(held, FreeColumn, FreeRow));
+            held.Palette.Take(Types().ById(RangerId));
+
+            held.Pointer.Click(ScreenPointOf(held, FreeColumn, FreeRow));
+
+            Assert.That(held.Palette.Rungs.Count, Is.EqualTo(1));
+            Assert.That(held.Palette.Rungs[0].text, Does.Contain("Overwatch"));
+            Assert.That(held.Palette.Rungs[0].text, Does.Contain("1 capstone token"));
+            Assert.That(
+                held.Palette.Rungs[0].text,
+                Does.Not.Contain("gold"),
+                "A capstone carries no gold price, so the button must not name one.");
+
+            int gold = held.Composing.Gold;
+
+            held.Palette.Take(Types().ById(OverwatchId));
+
+            Assert.That(held.Composing.StandingOn(FreeColumn, FreeRow).Id, Is.EqualTo(OverwatchId));
+            Assert.That(held.Composing.Gold, Is.EqualTo(gold), "A capstone took gold out of the purse.");
+        }
+
+        /// <summary>
         /// A tower whose rung the purse cannot cover offers nothing. Prevention
         /// at a hex.
         /// </summary>
@@ -568,7 +638,8 @@ namespace Tests.PlayMode
         /// A round opening on an empty board with as much gold as the caller
         /// says, priced and laddered out of the shipped content.
         /// </summary>
-        private static ComposedRound Opening(int gold = 100, WaveScript carried = null)
+        private static ComposedRound Opening(
+            int gold = 100, WaveScript carried = null, int tokens = NoCapstoneTokens)
         {
             UnitTypeTable types = Types();
             Ruleset rules = StreamingContent.ReadRuleset();
@@ -578,6 +649,7 @@ namespace Tests.PlayMode
                 carried ?? WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(gold),
+                tokens,
                 CostTable.From(rules, types),
                 types,
                 StreamingContent.ReadMap(),
