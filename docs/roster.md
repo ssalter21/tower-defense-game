@@ -1266,7 +1266,7 @@ the model as it is drawn:
 | What | Scale | Why |
 |---|---|---|
 | Towers | **1.0** | the baseline everything else is read against |
-| Every creep | **0.5** | a creep is unmistakably smaller than the thing shooting it, at any camera angle |
+| Every creep | **0.5** | a medium-rig creep reads as smaller than the thing shooting it, at any camera angle — a size-up rig does not, and that is allowed |
 
 > **`RangerScale` at 1.5 is gone**, and the two multipliers above are the whole of what size says. What
 > replaced it on the Ranger is a colour and a prop, landed in the same commit so no build ever shipped two
@@ -1280,24 +1280,31 @@ the model as it is drawn:
 art tweak cost a format version and a re-record. These numbers are expected to move once somebody has looked
 at them, which is the whole reason they are stored somewhere free to change.
 
-**Measured, rather than assumed — and the measurement now fails.** An edit-mode test measures both off the
-geometry and fails if the gap closes to within a fifth, because comparing the two multipliers would prove
-nothing: a half applied to a taller model is not smaller than a one applied to a shorter one, and the creeps
-and the towers come from two different packs. That test is **red**, and the numbers are why.
+**A creep is no longer asserted to be shorter than a tower.** From 6 September 2026 the "unmistakably
+smaller" clause is **retired**, and the edit-mode test that held it —
+`EveryCreepStandsUnmistakablyLowerThanEveryTower` — is deleted rather than loosened. Sam's words on
+[#261](https://github.com/ssalter21/tower-defense-game/issues/261): *"remove the assert, I think this was
+something built out of something I said but I'm not attached to it. Maybe in the future some bosses will be
+larger than towers."* So the two multipliers in the table above are the whole of what this page signs about
+size, and **the 0.5 is a multiplier and not a promise about the result**: the reason column's "unmistakably
+smaller than the thing shooting it" describes what it does to a medium body and is not a rule anything holds
+it to.
 
-With every row now drawn, the tallest body on the board is the **Black Knight at 2.56 m** and the shortest
-tower the **Unravel at 2.31 m** — so the tallest creep is *taller than the shortest tower*, and the threshold
-the test asks for is 1.85 m. The Bone Golem (2.32 m), the Abomination (2.24 m) and the Frost Wight (2.09 m)
-are the other three over it. All four are Large-rig bodies, and that is the whole cause: the collection is
-authored at two scales — a `Rig_Medium` character is 2.3–2.9 m, a `Rig_Large` size-up 4.2–5.1 m — so **half of
-a size-up is a whole tower**. The signed multiplier of 0.5 is obeyed exactly; the read it exists for is gone.
+**What that leaves standing is a deliberate opening.** A row on the pack's `Rig_Large` size-up draws at tower
+height while obeying the creep multiplier exactly — the collection is authored at two scales, a `Rig_Medium`
+character at 2.3–2.9 m and a size-up at 4.2–5.1 m, so half of a size-up is a whole tower. Four shipped rows
+are already there: the **Black Knight at 2.56 m**, the Bone Golem at 2.32, the Abomination at 2.24 and the
+Frost Wight at 2.09, against a shortest tower — the Unravel — of 2.31 m. A played run shows what it reads as:
+a Black Knight walking past four towers with its helmet at their head height
+(`docs/frames/played-run/black-knight-beside-towers.png`). That is now **allowed rather than tolerated**, and
+a boss larger than a tower is a shape this page expects to sign later rather than a thing to design around.
 
-A played run says what that actually looks like: a Black Knight walks past four towers with its helmet at
-their head height and reads as a fifth adventurer in dark armour, not as a broken import
-(`docs/frames/played-run/black-knight-beside-towers.png`). Three ways out, all of them numbers a player sees
-and so none of them taken here: a third multiplier for the Large rig, different models for those four rows, or
-dropping the "unmistakably smaller" clause. See
-[#261](https://github.com/ssalter21/tower-defense-game/issues/261).
+**Nothing measures height any more, and that is the cost.** The deleted test instantiated every row and
+measured its renderers' world bounds, which was the only thing on the project comparing two packs' authoring
+scales against each other; the multipliers alone prove nothing, since a half applied to a taller model is not
+smaller than a one applied to a shorter one. So a row imported at the wrong scale is no longer caught by a
+runner — it is caught by looking. If a size rule ever returns, it returns as a *band* per rig rather than as
+an ordering between the two roles.
 
 **There is no plinth, and no rule about which units are people and which are buildings.** That distinction was
 considered and dropped: it is not a thing this page needs to have an opinion about.

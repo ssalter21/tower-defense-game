@@ -546,15 +546,15 @@ says no. It is written by the capture and never by hand; see
   `EveryClipComesOutOfTheBankForItsRowsRig` holds each of the four to naming one at all — the silent failure
   here is not a misspelt name but an override nobody wrote.
 
-  **Five things on it are questions rather than results.**
-  **The four Large-rig bodies are as tall as the towers, and that broke a test.** At the signed creep scale
+  **Five things on it were questions rather than results, and the first has since been answered.**
+  **The four Large-rig bodies are as tall as the towers, and that is now allowed.** At the signed creep scale
   of 0.5 the Black Knight draws **2.56 m**, the Bone Golem 2.32, the Abomination 2.24 and the Frost Wight
-  2.09, against a shortest tower — the Unravel — of **2.31 m**. `EveryCreepStandsUnmistakablyLowerThanEveryTower`
-  asks for a fifth of clear air and is red over it. Nothing here is miswired: these four are the pack's
-  size-up rig, authored at 4.2 to 5.1 m where a medium character is 2.3 to 2.9, and half of a size-up is a
-  tower. [`roster.md`](../roster.md) signs two multipliers and no exceptions and gives the 0.5 the reason
-  *"a creep is unmistakably smaller than the thing shooting it, at any camera angle"* — which these four do
-  not satisfy. Which moves is that page's call and not this sheet's.
+  2.09, against a shortest tower — the Unravel — of **2.31 m**. Nothing here is miswired: these four are the
+  pack's size-up rig, authored at 4.2 to 5.1 m where a medium character is 2.3 to 2.9, and half of a size-up
+  is a tower. An edit-mode test used to assert a fifth of clear air between the tallest creep and the
+  shortest tower and was red over these four; on 6 September 2026 [`roster.md`](../roster.md) retired the
+  rule and the test was deleted, leaving room for a boss taller than a tower. So these heights are a
+  measurement this sheet records and no longer a failure it reports.
   **The Shade's atlas is unpicked.** That row asks for "the darkest of the pack's four" and names none of
   them. The bound tile is `ninja_texture_A`, the sheet the model imports wearing: black gi, red sash, bare
   tan face and forearms. The three below it are `B`, `C` and `D` on the same body — blue over brown, green,

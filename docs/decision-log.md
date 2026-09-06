@@ -1907,3 +1907,44 @@ phase in it: 3 of 40 leaked, tick 5302, state `441D37E128517F3D`, the same four 
 header, where the content stamp and the defense and wave hashes that fold the roster's content hash all
 followed the ladder. **The committed run is untouched too**, and that is a fact about `content/commands.txt`
 rather than about the rule: its four rounds place archers and never climb a line.
+
+---
+
+## 6 September 2026, last — a creep may be as tall as a tower, and the rule that said otherwise is deleted
+
+`ImportedArtTests.EveryCreepStandsUnmistakablyLowerThanEveryTower` had been red since the Black Knight landed
+on [#261](https://github.com/ssalter21/tower-defense-game/issues/261), and the whole roster effort finished
+around it: the ticket stayed open, the integrate ticket
+[#271](https://github.com/ssalter21/tower-defense-game/issues/271) stayed blocked behind it, and no agent
+touched the assertion, because every way out was a number or a rule a player sees and
+[AGENTS.md](../AGENTS.md) rule 6 puts those with Sam.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **`roster.md`**, the scale table | Every creep is drawn at 0.5 because *"a creep is unmistakably smaller than the thing shooting it, at any camera angle"* | **The multiplier holds; the promise does not.** 0.5 is what is applied, and what it produces depends on which rig the model was authored on. A `Rig_Large` body at 0.5 draws at tower height, and that is allowed. |
+| **`ImportedArtTests`** | The tallest creep measures under four-fifths of the shortest tower, or the suite is red | **Deleted.** Not loosened to a threshold the four current bodies happen to clear — a weaker number would have been the same rule with a worse reason. |
+
+**Sam's words, and they name the reason the threshold was never the point:** *"remove the assert, I think this
+was something built out of something I said but I'm not attached to it. Maybe in the future some bosses will
+be larger than towers."* The rule was a reading of an earlier remark about size, hardened into an assertion by
+somebody building against it, and asserting it back was the mistake — a test can hold a decision, but it
+cannot make one.
+
+**Three ways out were on the table and none of them was taken.** A third multiplier for the Large rig,
+different models for those four rows, or dropping the clause. The first two are the shape of a project
+protecting an invariant it never wanted; the third is the one that leaves room for the thing Sam actually
+wants, which is a boss that towers over the board. **A future boss row is now a content decision rather than a
+test to argue with.**
+
+**What is lost is real and is written down.** That test instantiated every shipped row and measured its
+renderers' world bounds, and it was the only thing on the project comparing two packs' authoring scales
+against each other — the multipliers alone prove nothing, since a half applied to a taller model is not
+smaller than a one applied to a shorter one. A row imported at the wrong scale is now caught by looking at it.
+That is a real gap, and the honest version of closing it is a *band per rig* rather than an ordering between
+the two roles, which is a rule nobody has needed yet.
+
+**Nothing else moved.** No model, no multiplier, no content file, no golden: the deleted test asserted about
+art the branch already ships and changing it changes no byte a simulation reads. What follows is that
+[#261](https://github.com/ssalter21/tower-defense-game/issues/261) closes and
+[#271](https://github.com/ssalter21/tower-defense-game/issues/271) unblocks, which is the whole of the roster
+expansion waiting on one sentence from the person whose call it was.
