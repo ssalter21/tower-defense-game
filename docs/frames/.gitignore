@@ -126,3 +126,12 @@
 # somebody does mean to keep here is not swallowed by a rule written for this
 # one.
 candidates-manifest.txt
+
+# And the index its -Strip run writes beside the filmstrips, saying how many
+# frames each one holds and how long its clip is. Same rule, and it earned the
+# line the hard way: the strips themselves are covered by *.png, so the first
+# run left exactly one unignored file per output directory and a `git add -A`
+# swept six of them into a commit. Named exactly rather than as *.txt, so a
+# file somebody does mean to keep here is not swallowed by a rule written for
+# this one.
+strip-index.txt
