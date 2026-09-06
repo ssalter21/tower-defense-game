@@ -53,6 +53,22 @@ namespace View.Editor
 
         private const string SetArgument = "-rosterSet";
 
+        /// <summary>
+        /// How many frames across a candidate's clip to draw into a filmstrip
+        /// beside its still. One, the default, writes no strip.
+        /// </summary>
+        /// <remarks>
+        /// <b>Because a clip cannot be judged from one frame of it.</b> The
+        /// still this tool has always written is posed at
+        /// <see cref="ClipPhase"/>, which is the strike of an attack — and at
+        /// the strike, a chop and a diagonal slice are two pictures of a body
+        /// holding a hammer. What tells them apart is the path the hammer takes
+        /// to get there, and that is not in any one frame. So a set whose
+        /// question is <i>which animation</i> asks for a strip, and whatever
+        /// displays it plays the frames back.
+        /// </remarks>
+        private const string StripArgument = "-rosterStrip";
+
         private const string DefaultOutDir = "docs/frames/roster";
 
         /// <summary>How many tiles wide the candidate contact sheet is.</summary>
@@ -108,6 +124,7 @@ namespace View.Editor
             string outDir = BatchArguments.Value(OutDirArgument) ?? DefaultOutDir;
             string setFile = BatchArguments.Value(SetArgument);
             int width = ParseInt(BatchArguments.Value(WidthArgument), 700);
+            int stripFrames = Mathf.Clamp(ParseInt(BatchArguments.Value(StripArgument), 1), 1, 60);
             int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
 
             // Read and resolve the whole set BEFORE the first render. A set of
@@ -135,7 +152,9 @@ namespace View.Editor
                 }
                 else
                 {
-                    DrawSet(host.transform, camera, candidates, setFile, outDir, width, height, written);
+                    DrawSet(
+                        host.transform, camera, candidates, setFile, outDir, width, height,
+                        stripFrames, written);
                 }
             }
             finally
@@ -215,6 +234,7 @@ namespace View.Editor
             string outDir,
             int width,
             int height,
+            int stripFrames,
             List<string> written)
         {
             // TowerView takes a UnitType, and a candidate has no row to have
@@ -228,6 +248,7 @@ namespace View.Editor
             int tileHeight = Mathf.Max(1, Mathf.RoundToInt(SheetTileWidth / FrameAspect));
             var tiles = new List<Texture2D>(candidates.Count);
             var manifest = new List<string>(candidates.Count);
+            var strips = new List<string>(candidates.Count);
 
             try
             {
@@ -265,6 +286,24 @@ namespace View.Editor
                         written.Add(path);
 
                         tiles.Add(Grab(camera, SheetTileWidth, tileHeight));
+
+                        if (stripFrames > 1)
+                        {
+                            string strip = Path.Combine(
+                                outDir,
+                                "strip-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
+                                + "-" + candidate.Name + ".png");
+
+                            Write(strip, Filmstrip(camera, stand, candidate, unit, stripFrames, width, height));
+                            written.Add(strip);
+
+                            strips.Add(string.Format(
+                                CultureInfo.InvariantCulture,
+                                "{0,-30} {1,3} {2,8:F3}",
+                                candidate.Name,
+                                stripFrames,
+                                candidate.Clip == null ? 0f : candidate.Clip.length));
+                        }
                     }
                     finally
                     {
@@ -319,6 +358,40 @@ namespace View.Editor
                 }.Concat(manifest).ToArray());
 
             written.Add(manifestPath);
+
+            if (strips.Count == 0)
+            {
+                return;
+            }
+
+            // WHAT A PLAYER OF THESE STRIPS NEEDS AND CANNOT MEASURE. A strip is
+            // a row of frames and says nothing about how fast they go by; the
+            // clip's own length is the only honest answer, and it lives on the
+            // AnimationClip rather than in any picture. Written beside them so a
+            // page showing the strips can run each at the speed its clip was
+            // authored at.
+            //
+            // THAT IS THE CLIP'S SPEED AND NOT THE TOWER'S. A swing in the match
+            // is stretched to the row's windup and backswing tick budget, and
+            // docs/roster.md carries a _ for both on every row this set is
+            // about. So a strip played at the length below is the animation as
+            // authored, which is what is being chosen -- not a prediction of how
+            // fast the tower will do it.
+            string stripIndex = Path.Combine(outDir, "strip-index.txt");
+
+            File.WriteAllLines(
+                stripIndex,
+                new[]
+                {
+                    "# " + strips.Count + " filmstrips from " + setFile,
+                    "# Each strip-NN-<name>.png is one row of frames, left to right,",
+                    "# at phases i/frames of the clip -- so the last frame does NOT",
+                    "# repeat the first and the row loops without a stutter.",
+                    "#",
+                    "#   name                       frames  seconds",
+                }.Concat(strips).ToArray());
+
+            written.Add(stripIndex);
         }
 
         /// <summary>
@@ -491,16 +564,130 @@ namespace View.Editor
             }
         }
 
+        /// <summary>
+        /// One candidate drawn at evenly spaced phases across its clip, laid
+        /// left to right into a single strip.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The camera is framed once, on every phase at once.</b> Framing
+        /// each frame on its own bounds would track the body — a chop would
+        /// come out as a man standing still while the world moved under him,
+        /// which is worse than the still it replaces. So every phase is posed
+        /// and measured first, the bounds are unioned, and the camera is set
+        /// from that and never moved again. A pose that reaches further than
+        /// the rest therefore costs every frame a little size, which is the
+        /// right trade: a swing that leaves the frame is the thing being
+        /// looked for.
+        /// </para>
+        /// <para>
+        /// <b>Phases run <c>i / count</c>, not <c>i / (count - 1)</c>.</b>
+        /// These clips loop, so the last frame must not repeat the first — an
+        /// eight-frame strip of a walk cycle that ends where it starts stutters
+        /// on every lap.
+        /// </para>
+        /// </remarks>
+        private static Texture2D Filmstrip(
+            Camera camera,
+            GameObject stand,
+            CandidateSet.Candidate candidate,
+            UnitArt art,
+            int count,
+            int width,
+            int height)
+        {
+            var frames = new List<Texture2D>(count);
+            Bounds union = default;
+            var started = false;
+
+            for (var i = 0; i < count; i++)
+            {
+                Repose(stand, candidate, art, i / (float)count);
+                Bounds here = Measured(stand);
+
+                if (started)
+                {
+                    union.Encapsulate(here);
+                }
+                else
+                {
+                    union = here;
+                    started = true;
+                }
+            }
+
+            Frame(camera, union);
+
+            try
+            {
+                for (var i = 0; i < count; i++)
+                {
+                    Repose(stand, candidate, art, i / (float)count);
+                    frames.Add(Grab(camera, width, height));
+                }
+
+                return Stitch(frames, width, height, count);
+            }
+            finally
+            {
+                foreach (Texture2D frame in frames)
+                {
+                    Object.DestroyImmediate(frame);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Moves an already-built candidate to a phase of its clip, without
+        /// rebuilding the view.
+        /// </summary>
+        /// <remarks>
+        /// A rebuild per frame would re-instantiate the model and its props
+        /// twelve times a candidate, and — worse — a <see cref="Hide"/> would
+        /// have to be re-applied to each one. Posing the standing view is what
+        /// both views are for.
+        /// </remarks>
+        private static void Repose(
+            GameObject stand, CandidateSet.Candidate candidate, UnitArt art, float phase)
+        {
+            if (candidate.Side == CandidateSet.Side.Creep)
+            {
+                stand.GetComponent<CreepView>().Pose(
+                    Vector3.zero,
+                    Quaternion.identity,
+                    MatchTuning.HexesPerWalkCycle * phase,
+                    CreepState.Walking,
+                    0f);
+
+                return;
+            }
+
+            // A static tower has no clip to walk along, so every frame of its
+            // strip is the frame it already has. Left alone rather than
+            // refused: a set may mix posed and unposed rows, and one strip of
+            // twelve identical frames is not worth failing a run over.
+            if (!art.IsPosed)
+            {
+                return;
+            }
+
+            float seconds = art.IdleClip.length * phase;
+
+            stand.GetComponent<TowerView>().Pose(
+                TowerState.Idle, Mathf.RoundToInt(seconds * Match.TicksPerSecond), null);
+        }
+
         /// <summary>Lays the tiles out into a grid, left to right, top to bottom.</summary>
         /// <remarks>
         /// The last row is padded with the sheet's own background rather than
         /// left transparent, so a short row reads as a short row and not as
         /// three candidates that failed to render.
         /// </remarks>
-        private static Texture2D Stitch(List<Texture2D> tiles, int tileWidth, int tileHeight)
+        private static Texture2D Stitch(
+            List<Texture2D> tiles, int tileWidth, int tileHeight, int across = SheetColumns)
         {
-            int rows = Mathf.Max(1, Mathf.CeilToInt(tiles.Count / (float)SheetColumns));
-            int columns = Mathf.Min(SheetColumns, Mathf.Max(1, tiles.Count));
+            int rows = Mathf.Max(1, Mathf.CeilToInt(tiles.Count / (float)across));
+            int columns = Mathf.Min(across, Mathf.Max(1, tiles.Count));
 
             var sheet = new Texture2D(
                 columns * tileWidth, rows * tileHeight, TextureFormat.RGB24, false);
@@ -516,7 +703,7 @@ namespace View.Editor
             {
                 for (var column = 0; column < columns; column++)
                 {
-                    int index = (row * SheetColumns) + column;
+                    int index = (row * across) + column;
 
                     // Unity's texture origin is bottom-left and a contact sheet
                     // is read top-left first, so the rows go in upside down.

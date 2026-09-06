@@ -33,6 +33,14 @@
 # atlas and beside-prop columns and the two suffixes, @x,y,z to turn a held
 # prop and !Node to leave a part of the body out of the render.
 #
+# -Strip N ALSO DRAWS EACH CANDIDATE ACROSS ITS WHOLE CLIP, N frames laid left
+# to right into strip-NN-<name>.png, with strip-index.txt beside them giving
+# each clip's length in seconds. A still cannot answer "which animation": posed
+# at the strike, a chop and a diagonal slice are two pictures of a body holding
+# a hammer, and what tells them apart is the path the hammer took. The camera is
+# framed once across every phase, so the body moves in the strip and the world
+# does not.
+#
 # THE SETS THAT ARE STANDING QUESTIONS, rather than one effort's proposal:
 #   docs/roster-paladin-clips.txt        ids 20, 21 and 22, which ship posed
 #                                        by nothing and stand in a bind pose
@@ -49,6 +57,7 @@ param(
     [string]$OutDir,
     [string]$SetFile,
     [int]$Width = 700,
+    [int]$Strip = 1,
     [string]$LogFile = "$PSScriptRoot\..\capture-armed-roster.log"
 )
 
@@ -85,6 +94,8 @@ $unityArgs = @(
 )
 
 $unityArgs += @('-rosterOutDir', "`"$OutDir`"")
+
+if ($Strip -gt 1) { $unityArgs += @('-rosterStrip', $Strip) }
 
 if ($SetFile) {
     $unityArgs += @('-rosterSet', "`"$SetFile`"")

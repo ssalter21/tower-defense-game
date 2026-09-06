@@ -1,0 +1,16 @@
+# 10 filmstrips from C:\Users\salte\repos\tower-defense-game\.claude\worktrees\roster-signoff\docs\roster-prop-turns.txt
+# Each strip-NN-<name>.png is one row of frames, left to right,
+# at phases i/frames of the clip -- so the last frame does NOT
+# repeat the first and the row loops without a stutter.
+#
+#   name                       frames  seconds
+witch-broom-flat                12    1.067
+witch-broom-up                  12    1.067
+witch-broom-up-other            12    1.067
+witch-broom-reversed            12    1.067
+witch-broom-shouldered          12    1.067
+necro-scythe-flat               12    1.067
+necro-scythe-up                 12    1.067
+necro-scythe-up-other           12    1.067
+necro-scythe-reversed           12    1.067
+necro-scythe-shouldered         12    1.067
