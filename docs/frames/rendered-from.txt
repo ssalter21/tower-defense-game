@@ -11,6 +11,9 @@
 #       picture                        drawn from
 
 picture  effects-roster-tick-0700.png    714C2D52791521AD
+picture  four-lines-tick-0572.png        714C2D52791521AD
+picture  four-lines-tick-0780.png        714C2D52791521AD
+picture  four-lines-tick-0813.png        714C2D52791521AD
 picture  match-tick-1096.png             714C2D52791521AD
 picture  match-tick-1229.png             714C2D52791521AD
 picture  match-tick-1546.png             714C2D52791521AD

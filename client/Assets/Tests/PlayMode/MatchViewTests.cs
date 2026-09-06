@@ -929,8 +929,10 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// A blast and an aura each leave a ring on the ground under whatever
-        /// they were centred on, as wide as the bubble reached.
+        /// A bubble whose row names no signature of its own leaves the plain
+        /// disc on the ground under whatever it was centred on, as wide as the
+        /// bubble reached — and a blast that arrived on a body bursts on the
+        /// body instead.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -1003,27 +1005,300 @@ namespace Tests.PlayMode
                     + $"{drawnAt} metres across went off");
             }
 
-            // And a blast is the same ring under the body the shot arrived at.
+            // And a blast that arrived on a body is a burst on the body rather
+            // than this disc. The event names the creep the shot reached and
+            // never the tower that fired it, so there is no row to read a look
+            // off — see MatchDecorations.BlastLanded.
             int creepId = view.Current.Creeps[0].Id;
             Vector3 walks = view.Creeps.Live[creepId].transform.position;
 
             view.Decorations.BlastLanded(creepId, RadiusMilliHex, BubblePayload.Damage);
 
-            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2));
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(1),
+                "a blast that arrived on a body drew the disc a self-centred bubble draws");
 
-            float nearest = Rings(view).Min(disc => Vector3.Distance(disc.position, walks));
+            Assert.That(view.Decorations.BurstsDrawn, Is.EqualTo(1),
+                "a blast arrived on a body and nothing burst on it");
 
-            Assert.That(nearest, Is.LessThan(MatchTuning.BubbleRingHeight + 1e-3f),
-                "no ring is under the creep the blast landed on");
+            float nearest = Pieces(view, "MortarBurst")
+                .Min(shards => Vector3.Distance(
+                    shards.position, walks + (Vector3.up * MatchTuning.HitSparkHeight)));
 
-            // A bubble that reached only its centre is a ring of no size, and a
+            Assert.That(nearest, Is.LessThan(1e-3f),
+                "nothing burst on the creep the blast landed on");
+
+            // A bubble that reached only its centre is a shape of no size, and a
             // centre the view is not holding has nowhere to be. Neither draws,
             // and neither is an error.
             view.Decorations.BlastLanded(creepId, 0, BubblePayload.Speed);
             view.Decorations.AuraPulsed(int.MaxValue, RadiusMilliHex, BubblePayload.Shield);
 
-            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(2),
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(1),
                 "a bubble with no radius, or centred on nothing the view is holding, drew a ring anyway");
+
+            Assert.That(view.Decorations.BurstsDrawn, Is.EqualTo(1),
+                "a bubble with no radius burst anyway");
+        }
+
+        /// <summary>
+        /// Every rung of the Knight, Barbarian, Paladin and Engineer lines
+        /// flashes at the point on its own art its shot leaves from, and sparks
+        /// on the body its shot lands on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The anchor is asserted here as the place the effect went, not as
+        /// a field on a row.</b> That a row names a point on its own art rather
+        /// than a height above its root is <c>ImportedArtTests</c>'s claim and
+        /// is checked over the whole shipped table; what is checked here is
+        /// that the flash the event stream draws is at that point, on twelve
+        /// rows standing on a real board — which is the half of it that a
+        /// correct anchor and a decoration reading somewhere else would still
+        /// pass.
+        /// </para>
+        /// <para>
+        /// <b>The decorations are cleared between rows so that each assertion
+        /// is about one flash.</b> Twelve flashes drawn together would have to
+        /// be matched back to their towers by position, which is the thing
+        /// under test.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryRowOnTheseFourLinesFiresFromItsAnchorAndSparksOnWhatItHits()
+        {
+            MatchView view = BeginWithTheFourLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            foreach (TowerView tower in view.Towers.Values)
+            {
+                view.Decorations.Clear();
+                view.Decorations.TowerFired(tower.Id, creepId);
+
+                Assert.That(view.Decorations.FlashesDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fired and nothing left it");
+
+                Assert.That(tower.AnchorTransform, Is.Not.Null,
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) has no anchor, so its flash is at a "
+                    + "height above its own root whatever it is holding");
+
+                Transform flash = Pieces(view, "MuzzleFlash").Single();
+
+                Assert.That(Vector3.Distance(flash.position, tower.Muzzle), Is.LessThan(1e-3f),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fires from {tower.Muzzle} and its flash "
+                    + $"is at {flash.position}");
+
+                view.Decorations.CreepDamaged(creepId, 10);
+
+                Assert.That(view.Decorations.SparksDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) landed damage and nothing landed with it");
+
+                Transform spark = Pieces(view, "Spark").Single();
+
+                Assert.That(
+                    Vector3.Distance(spark.position, walks + (Vector3.up * MatchTuning.HitSparkHeight)),
+                    Is.LessThan(1e-3f),
+                    "the landing is not on the creep the shot landed on");
+            }
+
+            Assert.That(view.Towers.Count, Is.EqualTo(12), "the four lines are twelve rows");
+        }
+
+        /// <summary>
+        /// Each of the four capstones draws the shape its own row names rather
+        /// than the disc every bubble shared, at the size the bubble reached,
+        /// and keeps that size for the whole of its life.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The events are handed over by hand, as the ring's are.</b> What is
+        /// under test is the decoration and the binding behind it, and the
+        /// decoration is reached through the interface the simulation reaches it
+        /// through. <b>Each radius is read off the row that authors it</b>
+        /// rather than written out here, so this measures the view against
+        /// whatever <c>content/units.txt</c> says rather than against a fourth
+        /// copy of four numbers.
+        /// </para>
+        /// <para>
+        /// <b>The Mortar's is the one that names no row.</b> Its blast is
+        /// centred on the body its shell arrived at, so the event carries a
+        /// creep id and the shooter is not in it at all — the burst is what a
+        /// blast that arrived on a body draws, and it is asserted here from a
+        /// creep id for that reason rather than from the Mortar's own.
+        /// </para>
+        /// <para>
+        /// OBSERVED: let the signatures age like a spark. Every assertion above
+        /// the last block stays green and each shape reports a reach its bubble
+        /// did not have on every tick but the first — which is the bug #253
+        /// found in the ring and fixed with a flag that a new shape can simply
+        /// not set.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EachCapstoneDrawsItsOwnSignatureAtTheSizeItReached()
+        {
+            MatchView view = BeginWithTheFourLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            view.Decorations.Clear();
+
+            // The Shield Wall: a ring on the ground at the edge of the slow.
+            TowerView shieldWall = Standing(view, 16);
+            int shieldWallRadius = Reaches(shieldWall);
+
+            view.Decorations.AuraPulsed(shieldWall.Id, shieldWallRadius, BubblePayload.Speed);
+
+            Assert.That(view.Decorations.SlowRingsDrawn, Is.EqualTo(1),
+                "the Shield Wall pulsed and left no ring");
+
+            Transform slow = Pieces(view, "SlowRing").Single();
+
+            Assert.That(
+                Vector3.Distance(
+                    slow.position,
+                    shieldWall.transform.position + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                Is.LessThan(1e-3f),
+                "the slow ring is not under the tower that pulsed it");
+
+            Assert.That(slow.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(shieldWallRadius)).Within(1e-4f));
+
+            // The Slam: cracks out from under the man who swung.
+            TowerView slam = Standing(view, 19);
+            int slamRadius = Reaches(slam);
+
+            view.Decorations.BlastLanded(slam.Id, slamRadius, BubblePayload.Damage);
+
+            Assert.That(view.Decorations.ShocksDrawn, Is.EqualTo(1),
+                "the Slam swung and the ground did not move");
+
+            Transform shock = Pieces(view, "GroundShock").Single();
+
+            Assert.That(
+                Vector3.Distance(
+                    shock.position,
+                    slam.transform.position + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                Is.LessThan(1e-3f),
+                "the shock is not under the tower that swung");
+
+            Assert.That(shock.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(slamRadius)).Within(1e-4f));
+
+            // The Blessing: one ring over each tower it reached, which is
+            // itself and the Templar two hexes away and nothing else.
+            TowerView blessing = Standing(view, 22);
+            TowerView templar = Standing(view, 21);
+            TowerView paladin = Standing(view, 20);
+
+            view.Decorations.AuraPulsed(blessing.Id, Reaches(blessing), BubblePayload.Cooldown);
+
+            Assert.That(view.Decorations.GlowsDrawn, Is.EqualTo(2),
+                "the Blessing reached itself and the Templar, and drew something else");
+
+            Vector3[] glows = Pieces(view, "TowerGlow").Select(glow => glow.position).ToArray();
+            Vector3 overhead = Vector3.up * MatchTuning.BlessingGlowHeight;
+
+            Assert.That(
+                glows.Min(at => Vector3.Distance(at, blessing.transform.position + overhead)),
+                Is.LessThan(1e-3f),
+                "the tower doing the blessing is not wearing one");
+
+            Assert.That(
+                glows.Min(at => Vector3.Distance(at, templar.transform.position + overhead)),
+                Is.LessThan(1e-3f),
+                "the Templar is inside the aura and is not wearing one");
+
+            Assert.That(
+                glows.Min(at => Vector3.Distance(at, paladin.transform.position + overhead)),
+                Is.GreaterThan(1f),
+                "the Paladin is six hexes away and is wearing one anyway");
+
+            // The Mortar: a burst on the body the shell arrived at.
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            int mortarRadius = Reaches(Standing(view, 37));
+
+            view.Decorations.BlastLanded(creepId, mortarRadius, BubblePayload.Damage);
+
+            Assert.That(view.Decorations.BurstsDrawn, Is.EqualTo(1),
+                "a blast arrived on a body and nothing burst");
+
+            Transform burst = Pieces(view, "MortarBurst").Single();
+
+            Assert.That(
+                Vector3.Distance(burst.position, walks + (Vector3.up * MatchTuning.HitSparkHeight)),
+                Is.LessThan(1e-3f),
+                "the burst is not on the body the shell arrived at");
+
+            Assert.That(burst.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(mortarRadius)).Within(1e-4f));
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(0),
+                "a capstone fell back to the plain disc, so its binding was not read");
+
+            // And every one of them holds the size it reported. A shape that
+            // stands for a radius saying a smaller radius each tick is the bug
+            // the ring already had.
+            Transform[] shapes = { slow, shock, burst };
+            Vector3[] drawnAt = shapes.Select(shape => shape.localScale).ToArray();
+
+            for (var tick = 1; tick < MatchTuning.GroundShockTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+
+                for (var index = 0; index < shapes.Length; index++)
+                {
+                    Assert.That(shapes[index].localScale, Is.EqualTo(drawnAt[index]),
+                        $"{shapes[index].name} is {shapes[index].localScale.x} metres across {tick} "
+                        + $"ticks after a bubble {drawnAt[index].x} metres across went off");
+                }
+            }
+        }
+
+        /// <summary>
+        /// A seek re-runs the ticks it passes over in silence, so nothing it
+        /// passes over is drawn a second time.
+        /// </summary>
+        /// <remarks>
+        /// The counter that has to answer for it is
+        /// <see cref="MatchDecorations.EventsHeard"/>, which a clear does not
+        /// reset: a seek that heard the re-run ticks' events and then tidied up
+        /// after itself would be indistinguishable from one that never heard
+        /// them, from every counter that does.
+        /// </remarks>
+        [Test]
+        public void ASeekDrawsNoSignatureASecondTime()
+        {
+            MatchView view = BeginWithTheFourLines();
+
+            RunUntil(view, () => view.Decorations.SlowRingsDrawn > 0 && view.Decorations.GlowsDrawn > 0);
+
+            Assert.That(view.Decorations.SlowRingsDrawn, Is.GreaterThan(0),
+                "no aura pulsed in the whole match, so this proves nothing");
+
+            int tick = view.Current.Tick;
+            int heard = view.Decorations.EventsHeard;
+
+            view.ReSimulateTo(tick + 90);
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heard),
+                "a seek heard the events of the ticks it re-ran, so every effect between here and the "
+                + "start was drawn again");
+
+            Assert.That(view.Decorations.SlowRingsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.GlowsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.ShocksDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.BurstsDrawn, Is.EqualTo(0));
+
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
+                "an effect from before the seek is still on screen, and the tick it belongs to is now "
+                + "in the future");
         }
 
         /// <summary>
@@ -1234,6 +1509,106 @@ namespace Tests.PlayMode
                 WaveScript.Parse("effect wave", EffectWave, types),
                 TheMatchOnScreen.Seed);
         }
+
+        /// <summary>
+        /// The three rungs of each of the four impact and melee lines, standing
+        /// on cells of the real board, in the order the loader wants them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Every cell here is next to the corridor, and it has to be.</b>
+        /// Nine of these twelve rows reach one hex, where the recorded
+        /// defense's archers and mortars reach three and four — so the cells
+        /// that defense stands on would be refused at load for a row whose
+        /// range cannot touch the route at all.
+        /// </para>
+        /// <para>
+        /// <b>The Blessing and the Templar are one hex apart on purpose and
+        /// everything else is at least three away.</b> The Blessing's aura
+        /// carries two hexes, so a layout where the nearest tower sat exactly
+        /// on the edge would make "how many towers did the glow reach" a
+        /// question about the last bit of a float.
+        /// </para>
+        /// <para>
+        /// <b><c>docs/frames/four-lines.txt</c> is the same twelve rows on the
+        /// same cells</b>, so the frames of these lines are frames of what this
+        /// asserts about. Two copies rather than one, because a play-mode test
+        /// cannot read a file that is not beside the player — the same reason
+        /// the fixture roster above is written out here.
+        /// </para>
+        /// </remarks>
+        private const string FourLinesDefense =
+            "tower 11  3  0\n"
+            + "tower 15  5  0\n"
+            + "tower 16  2  2\n"
+            + "tower 17  5  2\n"
+            + "tower 18  2  4\n"
+            + "tower 19  7  4\n"
+            + "tower 20  5  6\n"
+            + "tower 22 11  6\n"
+            + "tower 21 12  6\n"
+            + "tower 35  3  8\n"
+            + "tower 36  7  8\n"
+            + "tower 37  2 10\n";
+
+        /// <summary>
+        /// The real board, the real roster and the real wave, with the twelve
+        /// rows of the Knight, Barbarian, Paladin and Engineer lines standing on
+        /// it instead of the recorded six.
+        /// </summary>
+        /// <remarks>
+        /// The roster is the shipped one and not a fixture, which is the whole
+        /// difference from <see cref="BeginWithEffects"/>: these four capstones
+        /// author real bubbles in <c>content/units.txt</c>, so what is under
+        /// test is the rows as they ship rather than rows invented to have
+        /// something to draw.
+        /// </remarks>
+        private MatchView BeginWithTheFourLines()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("four lines", FourLinesDefense, types),
+                StreamingContent.ReadWave(types),
+                TheMatchOnScreen.Seed);
+        }
+
+        /// <summary>The tower on the board drawn as the row with this id.</summary>
+        private static TowerView Standing(MatchView view, int unitId) =>
+            view.Towers.Values.Single(tower => tower.Type.Id == unitId);
+
+        /// <summary>
+        /// How far one tower's own bubble reaches, in thousandths of a hex, off
+        /// the row that authors it.
+        /// </summary>
+        /// <remarks>
+        /// Read rather than written out, so a reach that moves in
+        /// <c>content/units.txt</c> moves here too. A row authoring none is
+        /// refused rather than quietly asserted about, because a bubble of no
+        /// radius draws nothing and every assertion downstream of it would pass
+        /// by drawing nothing at all.
+        /// </remarks>
+        private static int Reaches(TowerView tower)
+        {
+            int radius = tower.Type.Bubble.RadiusMilliHex;
+
+            Assert.That(radius, Is.GreaterThan(0),
+                $"unit {tower.Type.Id} ({tower.Type.Label}) authors no bubble to draw a signature for");
+
+            return radius;
+        }
+
+        /// <summary>
+        /// Every effect object of one kind that is on screen, found by the name
+        /// its pool gives it.
+        /// </summary>
+        private static IEnumerable<Transform> Pieces(MatchView view, string named) =>
+            view.GetComponentsInChildren<Transform>()
+                .Where(child => child.name == named && child.gameObject.activeSelf);
 
         /// <summary>
         /// Every bubble ring standing under the view, found by the name the

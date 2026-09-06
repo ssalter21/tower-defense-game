@@ -86,6 +86,18 @@ namespace View
         /// <summary>What stands on the ground beside it, or null.</summary>
         public GameObject Beside { get; private set; }
 
+        /// <summary>
+        /// What this tower's bubble is drawn as, off its own row's art.
+        /// </summary>
+        /// <remarks>
+        /// Read where the event stream is handled, because a bubble names the
+        /// entity it is centred on and the view has to turn that id into the
+        /// row that emitted it. Kept here rather than looked up out of
+        /// <see cref="MatchArt"/> per event, for the same reason the anchor is
+        /// resolved once: an event is a tick-loop caller.
+        /// </remarks>
+        public EffectSignature Signature { get; private set; }
+
         /// <summary>True when this tower has a rig and three clips.</summary>
         public bool IsAnimated => _animator != null;
 
@@ -136,6 +148,7 @@ namespace View
 
             Id = id;
             Type = type ?? throw new ArgumentNullException(nameof(type));
+            Signature = art.Signature;
             _restingRotation = resting;
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
@@ -177,6 +190,7 @@ namespace View
 
             Id = id;
             Type = type ?? throw new ArgumentNullException(nameof(type));
+            Signature = art.Signature;
             _restingRotation = resting;
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);

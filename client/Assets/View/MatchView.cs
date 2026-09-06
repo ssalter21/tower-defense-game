@@ -64,6 +64,12 @@ namespace View
 
         private readonly Dictionary<int, TowerView> _towers = new Dictionary<int, TowerView>();
 
+        /// <summary>
+        /// Scratch for <see cref="TowersWithin"/>, so an aura that pulses every
+        /// fifteen ticks all match long allocates nothing.
+        /// </summary>
+        private readonly List<Vector3> _towersReached = new List<Vector3>();
+
         private EntityViewPool<CreepView> _creepPool;
 
         private EntityViewPool<ProjectileView> _projectilePool;
@@ -200,7 +206,9 @@ namespace View
                 transform,
                 CreepPositionOf,
                 TowerMuzzleOf,
-                EntityGroundOf);
+                EntityGroundOf,
+                TowerSignatureOf,
+                TowersWithin);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -304,7 +312,7 @@ namespace View
                 Destroy(_shieldSegmentMaterial);
             }
 
-            Decorations?.DestroyMaterials();
+            Decorations?.DestroyAssets();
         }
 
         /// <summary>
@@ -692,6 +700,66 @@ namespace View
             }
 
             return CreepPositionOf(entityId);
+        }
+
+        /// <summary>
+        /// What the tower with this id draws its bubble as, or null when the id
+        /// is not a tower.
+        /// </summary>
+        /// <remarks>
+        /// <b>Null and <see cref="EffectSignature.None"/> are different
+        /// answers.</b> A bubble is centred on an entity out of the one id
+        /// space, and which kind of entity that is decides what the decoration
+        /// means: a tower at the centre is the row that emitted, and anything
+        /// else is a body a shot arrived at. Collapsing the two would draw a
+        /// tower's plain disc under a creep a mortar shell had just landed on.
+        /// </remarks>
+        private EffectSignature? TowerSignatureOf(int entityId) =>
+            _towers.TryGetValue(entityId, out TowerView tower)
+                ? tower.Signature
+                : (EffectSignature?)null;
+
+        /// <summary>
+        /// Where every tower standing within <paramref name="metres"/> of the
+        /// entity with this id is — what the Blessing's glow is drawn on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Measured against where the towers are drawn, which for a tower is
+        /// exactly where it stands and never moves. The centre is looked up the
+        /// same way every other decoration looks one up, so a pulse from an id
+        /// the view is not holding reaches nothing rather than reaching
+        /// everything.
+        /// </para>
+        /// <para>
+        /// The list is reused between calls, so a pulse costs no allocation.
+        /// Its contents are read and drawn before anything else can ask again —
+        /// events arrive one at a time inside
+        /// <see cref="Match.Advance(int, IMatchEvents)"/>.
+        /// </para>
+        /// </remarks>
+        private IReadOnlyList<Vector3> TowersWithin(int entityId, float metres)
+        {
+            _towersReached.Clear();
+
+            Vector3? centre = EntityGroundOf(entityId);
+
+            if (!centre.HasValue)
+            {
+                return _towersReached;
+            }
+
+            float squared = metres * metres;
+
+            foreach (TowerView tower in _towers.Values)
+            {
+                if ((tower.transform.position - centre.Value).sqrMagnitude <= squared)
+                {
+                    _towersReached.Add(tower.transform.position);
+                }
+            }
+
+            return _towersReached;
         }
     }
 }

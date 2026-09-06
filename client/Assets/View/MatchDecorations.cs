@@ -7,7 +7,7 @@ namespace View
 {
     /// <summary>
     /// Everything the event stream is allowed to draw: tracers, muzzle flashes,
-    /// hit sparks and the rings a bubble leaves — drawn, and then forgotten.
+    /// hit sparks and the shapes a bubble leaves — drawn, and then forgotten.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -41,11 +41,20 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Real geometry only.</b> A tracer is a thin stretched box, a spark is
-    /// a small sphere and a bubble's ring is a flat cylinder, because the
-    /// camera orbits freely and the standing art rule is that nothing may turn
-    /// to face it. Unity's line renderers and default particles both billboard,
-    /// so neither is used here — which is a constraint that showed up as a
-    /// choice of primitive rather than as a problem.
+    /// a small sphere, a bubble's ring is a flat cylinder and a capstone's
+    /// signature is a mesh of solid bars out of <see cref="EffectMeshes"/>,
+    /// because the camera orbits freely and the standing art rule is that
+    /// nothing may turn to face it. Unity's line renderers and default
+    /// particles both billboard, so neither is used here — which is a
+    /// constraint that showed up as a choice of primitive rather than as a
+    /// problem.
+    /// </para>
+    /// <para>
+    /// <b>A row's bubble is drawn as its own row says.</b> Every bubble drew
+    /// one shared disc until the capstones needed telling apart; now the entity
+    /// an event names is turned into the row that emitted it and that row's
+    /// <see cref="EffectSignature"/> picks the shape. What a row with no
+    /// signature draws is still the disc, unchanged.
     /// </para>
     /// </remarks>
     public sealed class MatchDecorations : IMatchEvents
@@ -58,21 +67,20 @@ namespace View
 
         private readonly Func<int, Vector3?> _entityGround;
 
+        private readonly Func<int, EffectSignature?> _towerSignature;
+
+        private readonly Func<int, float, IReadOnlyList<Vector3>> _towersWithin;
+
         private readonly List<Effect> _active = new List<Effect>();
 
-        private readonly Stack<Transform> _idleBoxes = new Stack<Transform>();
+        private readonly Dictionary<Piece, Stack<Transform>> _idle =
+            new Dictionary<Piece, Stack<Transform>>();
 
-        private readonly Stack<Transform> _idleSpheres = new Stack<Transform>();
+        private readonly Dictionary<Piece, Material> _materials = new Dictionary<Piece, Material>();
 
-        private readonly Stack<Transform> _idleDiscs = new Stack<Transform>();
+        private readonly Dictionary<Piece, Mesh> _meshes = new Dictionary<Piece, Mesh>();
 
-        private readonly Material _tracerMaterial;
-
-        private readonly Material _muzzleMaterial;
-
-        private readonly Material _sparkMaterial;
-
-        private readonly Material _ringMaterial;
+        private readonly Dictionary<Piece, int> _drawn = new Dictionary<Piece, int>();
 
         private Transform _host;
 
@@ -93,21 +101,63 @@ namespace View
         /// can be a tower or a creep depending on which column the row filled
         /// in.
         /// </param>
+        /// <param name="towerSignature">
+        /// What the tower with this id draws its bubble as, or null when the id
+        /// is not a tower the view is holding. <b>The null is load-bearing and
+        /// is not the same answer as <see cref="EffectSignature.None"/>:</b> a
+        /// tower that draws the plain disc and a creep that a shell arrived at
+        /// are different cases and <see cref="BlastLanded"/> draws them
+        /// differently.
+        /// </param>
+        /// <param name="towersWithin">
+        /// Where every tower standing within so many metres of an entity is —
+        /// what the Blessing's glow is drawn on. Positions rather than ids,
+        /// because nothing here would do anything with an id but ask for the
+        /// position.
+        /// </param>
         public MatchDecorations(
             Transform parent,
             Func<int, Vector3?> creepPosition,
             Func<int, Vector3?> towerMuzzle,
-            Func<int, Vector3?> entityGround)
+            Func<int, Vector3?> entityGround,
+            Func<int, EffectSignature?> towerSignature,
+            Func<int, float, IReadOnlyList<Vector3>> towersWithin)
         {
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _creepPosition = creepPosition ?? throw new ArgumentNullException(nameof(creepPosition));
             _towerMuzzle = towerMuzzle ?? throw new ArgumentNullException(nameof(towerMuzzle));
             _entityGround = entityGround ?? throw new ArgumentNullException(nameof(entityGround));
+            _towerSignature = towerSignature ?? throw new ArgumentNullException(nameof(towerSignature));
+            _towersWithin = towersWithin ?? throw new ArgumentNullException(nameof(towersWithin));
 
-            _tracerMaterial = ViewMaterials.Create("Tracer", MatchTuning.TracerColor);
-            _muzzleMaterial = ViewMaterials.Create("MuzzleFlash", MatchTuning.MuzzleFlashColor);
-            _sparkMaterial = ViewMaterials.Create("HitSpark", MatchTuning.HitSparkColor);
-            _ringMaterial = ViewMaterials.Create("BubbleRing", MatchTuning.BubbleRingColor);
+            _materials[Piece.Tracer] = ViewMaterials.Create("Tracer", MatchTuning.TracerColor);
+            _materials[Piece.MuzzleFlash] = ViewMaterials.Create("MuzzleFlash", MatchTuning.MuzzleFlashColor);
+            _materials[Piece.Spark] = ViewMaterials.Create("HitSpark", MatchTuning.HitSparkColor);
+            _materials[Piece.BubbleRing] = ViewMaterials.Create("BubbleRing", MatchTuning.BubbleRingColor);
+            _materials[Piece.SlowRing] = ViewMaterials.Create("SlowRing", MatchTuning.SlowRingColor);
+            _materials[Piece.GroundShock] =
+                ViewMaterials.Create("GroundShock", MatchTuning.GroundShockColor);
+            _materials[Piece.TowerGlow] = ViewMaterials.Create("TowerGlow", MatchTuning.BlessingGlowColor);
+            _materials[Piece.MortarBurst] =
+                ViewMaterials.Create("MortarBurst", MatchTuning.MortarBurstColor);
+        }
+
+        /// <summary>
+        /// The pooled objects, one pool each. A signature is its own kind
+        /// rather than its mesh's kind — the slow ring and the tower glow are
+        /// the same ring at two sizes in two colours, and keeping them apart is
+        /// what lets anything looking at the playfield tell which one it found.
+        /// </summary>
+        private enum Piece
+        {
+            Tracer,
+            MuzzleFlash,
+            Spark,
+            BubbleRing,
+            SlowRing,
+            GroundShock,
+            TowerGlow,
+            MortarBurst,
         }
 
         /// <summary>How many effects are on screen. For tests.</summary>
@@ -126,13 +176,43 @@ namespace View
         public int EventsHeard { get; private set; }
 
         /// <summary>How many tracers have been drawn since the last clear. For tests.</summary>
-        public int TracersDrawn { get; private set; }
+        /// <remarks>
+        /// <b>Every count below reads one kind out of one tally, and the tally
+        /// is kept where an effect is registered rather than beside each place
+        /// that draws one.</b> A counter incremented at the drawing site is a
+        /// counter the next shape can be written without, and a shape that
+        /// draws correctly while reporting nothing is invisible to every test
+        /// that would have caught it.
+        /// </remarks>
+        public int TracersDrawn => Drawn(Piece.Tracer);
+
+        /// <summary>
+        /// How many muzzle flashes have been drawn since the last clear. For
+        /// tests, and the count that says a row fired from its anchor at all.
+        /// </summary>
+        public int FlashesDrawn => Drawn(Piece.MuzzleFlash);
 
         /// <summary>How many hit sparks have been drawn since the last clear. For tests.</summary>
-        public int SparksDrawn { get; private set; }
+        public int SparksDrawn => Drawn(Piece.Spark);
 
-        /// <summary>How many bubble rings have been drawn since the last clear. For tests.</summary>
-        public int RingsDrawn { get; private set; }
+        /// <summary>How many plain bubble discs have been drawn since the last clear. For tests.</summary>
+        public int RingsDrawn => Drawn(Piece.BubbleRing);
+
+        /// <summary>How many slow rings have been drawn since the last clear. For tests.</summary>
+        public int SlowRingsDrawn => Drawn(Piece.SlowRing);
+
+        /// <summary>How many ground shocks have been drawn since the last clear. For tests.</summary>
+        public int ShocksDrawn => Drawn(Piece.GroundShock);
+
+        /// <summary>
+        /// How many tower glows have been drawn since the last clear. For
+        /// tests. One per tower reached, so a single pulse over four towers
+        /// counts four.
+        /// </summary>
+        public int GlowsDrawn => Drawn(Piece.TowerGlow);
+
+        /// <summary>How many bursts have been drawn since the last clear. For tests.</summary>
+        public int BurstsDrawn => Drawn(Piece.MortarBurst);
 
         /// <summary>A tower released a shot: a tracer if it is hitscan, a flash either way.</summary>
         public void TowerFired(int towerId, int targetId)
@@ -146,7 +226,11 @@ namespace View
                 return;
             }
 
-            Sphere(muzzle.Value, MatchTuning.MuzzleFlashRadius, MatchTuning.MuzzleFlashTicks, _muzzleMaterial);
+            Sphere(
+                Piece.MuzzleFlash,
+                muzzle.Value,
+                MatchTuning.MuzzleFlashRadius,
+                MatchTuning.MuzzleFlashTicks);
 
             Vector3? target = _creepPosition(targetId);
 
@@ -168,12 +252,11 @@ namespace View
                 return;
             }
 
-            SparksDrawn++;
             Sphere(
+                Piece.Spark,
                 at.Value + (Vector3.up * MatchTuning.HitSparkHeight),
                 MatchTuning.HitSparkRadius,
-                MatchTuning.HitSparkTicks,
-                _sparkMaterial);
+                MatchTuning.HitSparkTicks);
         }
 
         /// <summary>
@@ -221,31 +304,66 @@ namespace View
         }
 
         /// <summary>
-        /// A bubble went off with a shot: a ring on the ground under whatever
-        /// it was centred on, at the size the bubble reached.
+        /// A bubble went off with a shot: the emitting row's signature, at the
+        /// size the bubble reached.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// <b>A sweep names its shooter and a blast names its victim, and that
+        /// is the whole of why this method is two cases.</b> A bubble centred
+        /// on itself is centred on the tower that fired it, so the centre is
+        /// the emitter and its row's signature is reachable — that is the
+        /// Slam's ground shock. A bubble centred on its target is centred on
+        /// the body the shot arrived at, and the shooter is not in the event at
+        /// all: a mortar's shell carries its type and its target, there are
+        /// several mortars, and reading the firing tower off an earlier
+        /// <c>TowerFired</c> would be building state out of an event stream
+        /// that seeks discard. So a blast that arrived on a body is drawn as a
+        /// burst at the radius it reached, which is the shape the Mortar's line
+        /// signs — and which every target-centred blast in the game therefore
+        /// wears, the Mage's and the Sorcerer's splash included.
+        /// </para>
+        /// <para>
         /// <b><paramref name="payload"/> is read by nothing here, on purpose.</b>
-        /// A blast and a pulse get one look, and a bubble carrying damage gets
-        /// the same look as one carrying a slow: telling them apart is a design
-        /// decision nobody has taken, and inventing four colours to have used
-        /// the parameter would be taking it. What the payload then does to a
-        /// unit is that unit's own picture and not this one's.
+        /// A bubble carrying damage gets the same look as one carrying a slow:
+        /// what a payload should look like is a decision nobody has taken, and
+        /// inventing four colours to have used the parameter would be taking
+        /// it. What the payload then does to a unit is that unit's own picture
+        /// and not this one's — see <see cref="EffectMarks"/>.
+        /// </para>
         /// </remarks>
         public void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload)
         {
             EventsHeard++;
-            Ring(centreId, radiusMilliHex);
+
+            EffectSignature? emitter = _towerSignature(centreId);
+
+            if (emitter.HasValue)
+            {
+                Signature(emitter.Value, centreId, radiusMilliHex);
+
+                return;
+            }
+
+            Burst(centreId, radiusMilliHex);
         }
 
         /// <summary>
-        /// A bubble pulsed on its own clock: the same ring, under the emitter,
-        /// and the same silence about what it carried.
+        /// A bubble pulsed on its own clock: the emitting row's signature,
+        /// under or over whatever is emitting it.
         /// </summary>
+        /// <remarks>
+        /// The emitter is the centre here in every case, so the row is always
+        /// reachable — except that a creep can carry an aura too, and no creep
+        /// has a signature. Those draw the plain disc, which is what every
+        /// bubble drew before any row had one.
+        /// </remarks>
         public void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload)
         {
             EventsHeard++;
-            Ring(emitterId, radiusMilliHex);
+
+            Signature(
+                _towerSignature(emitterId) ?? EffectSignature.None, emitterId, radiusMilliHex);
         }
 
         /// <summary>
@@ -300,31 +418,37 @@ namespace View
             }
 
             _active.Clear();
-            TracersDrawn = 0;
-            SparksDrawn = 0;
-            RingsDrawn = 0;
+            _drawn.Clear();
         }
 
         /// <summary>
-        /// Destroys the four materials this made. What the view calls when it
-        /// is destroyed.
+        /// Destroys the materials and the meshes this made. What the view calls
+        /// when it is destroyed.
         /// </summary>
         /// <remarks>
-        /// <b>Whoever made it destroys it.</b> A material is an asset instance
-        /// and destroying the object that draws with it does not destroy it, so
-        /// these outlive the match unless somebody says otherwise. It never
-        /// showed while one match was the whole session and three orphans were a
-        /// constant; a run begins a match a round, and thirty over ten waves is
-        /// a leak with a shape. Same rule and the same reasoning as
-        /// <see cref="PlaybackControls"/>'s panel settings and
+        /// <b>Whoever made it destroys it.</b> A material and a mesh are both
+        /// asset instances and destroying the object that draws with one does
+        /// not destroy it, so these outlive the match unless somebody says
+        /// otherwise. It never showed while one match was the whole session and
+        /// three orphans were a constant; a run begins a match a round, and
+        /// thirty over ten waves is a leak with a shape. Same rule and the same
+        /// reasoning as <see cref="PlaybackControls"/>'s panel settings and
         /// <see cref="BuildBoard"/>'s hex light.
         /// </remarks>
-        public void DestroyMaterials()
+        public void DestroyAssets()
         {
-            UnityEngine.Object.Destroy(_tracerMaterial);
-            UnityEngine.Object.Destroy(_muzzleMaterial);
-            UnityEngine.Object.Destroy(_sparkMaterial);
-            UnityEngine.Object.Destroy(_ringMaterial);
+            foreach (Material material in _materials.Values)
+            {
+                UnityEngine.Object.Destroy(material);
+            }
+
+            foreach (Mesh mesh in _meshes.Values)
+            {
+                UnityEngine.Object.Destroy(mesh);
+            }
+
+            _materials.Clear();
+            _meshes.Clear();
         }
 
         private void Tracer(Vector3 from, Vector3 to)
@@ -337,49 +461,57 @@ namespace View
                 return;
             }
 
-            TracersDrawn++;
-
-            Transform box = TakeBox();
+            Transform box = Take(Piece.Tracer);
             box.SetPositionAndRotation(
                 (from + to) * 0.5f,
                 Quaternion.LookRotation(along / length, Vector3.up));
 
             var scale = new Vector3(MatchTuning.TracerThickness, MatchTuning.TracerThickness, length);
-            box.localScale = scale;
-            box.GetComponent<MeshRenderer>().sharedMaterial = _tracerMaterial;
 
-            _active.Add(new Effect
-            {
-                Transform = box,
-                FullScale = scale,
-                Lifetime = MatchTuning.TracerTicks,
-                Idle = _idleBoxes,
-                Shrinks = true,
-            });
+            Draw(Piece.Tracer, box, scale, MatchTuning.TracerTicks, shrinks: true);
         }
 
-        private void Sphere(Vector3 at, float radius, int lifetimeTicks, Material material)
+        private void Sphere(Piece piece, Vector3 at, float radius, int lifetimeTicks)
         {
-            Transform sphere = TakeSphere();
+            Transform sphere = Take(piece);
             sphere.position = at;
 
-            var scale = Vector3.one * (radius * 2f);
-            sphere.localScale = scale;
-            sphere.GetComponent<MeshRenderer>().sharedMaterial = material;
-
-            _active.Add(new Effect
-            {
-                Transform = sphere,
-                FullScale = scale,
-                Lifetime = lifetimeTicks,
-                Idle = _idleSpheres,
-                Shrinks = true,
-            });
+            Draw(piece, sphere, Vector3.one * (radius * 2f), lifetimeTicks, shrinks: true);
         }
 
         /// <summary>
-        /// The ring a bubble leaves: a disc on the ground under the entity it
-        /// was centred on, as wide as the bubble reached.
+        /// The shape one row's bubble leaves, at the size the bubble reached.
+        /// </summary>
+        private void Signature(EffectSignature signature, int centreId, int radiusMilliHex)
+        {
+            switch (signature)
+            {
+                // The Shield Wall's: an open ring at the edge of the slow, so
+                // the bodies caught inside it stay visible through it.
+                case EffectSignature.SlowRing:
+                    Flat(Piece.SlowRing, centreId, radiusMilliHex, MatchTuning.SlowRingTicks);
+                    break;
+
+                // The Slam's: cracks running out from under the man who swung
+                // to the edge of what the swing reached.
+                case EffectSignature.GroundShock:
+                    Flat(Piece.GroundShock, centreId, radiusMilliHex, MatchTuning.GroundShockTicks);
+                    break;
+
+                case EffectSignature.TowerGlow:
+                    TowerGlow(centreId, radiusMilliHex);
+                    break;
+
+                default:
+                    Ring(centreId, radiusMilliHex);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// The disc a bubble leaves when its row has no signature of its own: a
+        /// flat cylinder on the ground under the entity it was centred on, as
+        /// wide as the bubble reached.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -409,58 +541,228 @@ namespace View
         /// </remarks>
         private void Ring(int centreId, int radiusMilliHex)
         {
+            if (!Reached(centreId, radiusMilliHex, out Vector3 at, out float diameter))
+            {
+                return;
+            }
+
+            Transform disc = Take(Piece.BubbleRing);
+            disc.position = at + (Vector3.up * MatchTuning.BubbleRingHeight);
+
+            // A Unity cylinder is one unit across and two tall, so a diameter
+            // goes into x and z unchanged and the thickness is halved into y.
+            var scale = new Vector3(diameter, MatchTuning.BubbleRingThickness * 0.5f, diameter);
+
+            Draw(Piece.BubbleRing, disc, scale, MatchTuning.BubbleRingTicks, shrinks: false);
+        }
+
+        /// <summary>
+        /// The Blessing's: a ring over the head of every tower the pulse
+        /// reached, the emitter included.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The one signature drawn on what a bubble found rather than on the
+        /// bubble.</b> A ring on the ground would say how far the blessing
+        /// carries, which is true and is not what this line is for: what the
+        /// Blessing does is make other towers fire faster, so the thing worth
+        /// seeing is which towers those are. It is a fixed size over each of
+        /// them, because it stands for a tower being blessed and not for a
+        /// distance.
+        /// </para>
+        /// <para>
+        /// <b>Who is inside is measured flat, against where the towers are
+        /// drawn.</b> The simulation reads the same radius as a sphere and adds
+        /// half a hex per level of height; nothing that draws a bubble asks how
+        /// tall the ground is, the same silence the disc keeps. A glow is
+        /// decoration, so a tower a level up that the pulse just missed is a
+        /// halo drawn on a tower whose cooldown did not move — visible, and
+        /// cheaper than a second opinion about a simulation rule.
+        /// </para>
+        /// </remarks>
+        private void TowerGlow(int emitterId, int radiusMilliHex)
+        {
             if (radiusMilliHex <= 0)
             {
                 return;
             }
 
-            Vector3? at = _entityGround(centreId);
+            IReadOnlyList<Vector3> reached =
+                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex));
 
-            if (!at.HasValue)
+            for (var index = 0; index < reached.Count; index++)
+            {
+
+                Transform glow = Take(Piece.TowerGlow);
+                glow.position = reached[index] + (Vector3.up * MatchTuning.BlessingGlowHeight);
+
+                Draw(
+                    Piece.TowerGlow,
+                    glow,
+                    Flattened(MatchTuning.BlessingGlowDiameter),
+                    MatchTuning.BlessingGlowTicks,
+                    shrinks: false);
+            }
+        }
+
+        /// <summary>
+        /// The Mortar's: shards thrown out of the body the shell arrived at, to
+        /// the edge of what the blast reached.
+        /// </summary>
+        private void Burst(int centreId, int radiusMilliHex)
+        {
+            if (!Reached(centreId, radiusMilliHex, out Vector3 at, out float diameter))
             {
                 return;
             }
 
-            RingsDrawn++;
+            Transform burst = Take(Piece.MortarBurst);
+            burst.position = at + (Vector3.up * MatchTuning.HitSparkHeight);
 
-            Transform disc = TakeDisc();
-            disc.position = at.Value + (Vector3.up * MatchTuning.BubbleRingHeight);
+            // Uniform, unlike the flat shapes: a burst leaves the ground as
+            // well as crossing it, so its height is part of the radius it is
+            // reporting.
+            Draw(
+                Piece.MortarBurst,
+                burst,
+                Vector3.one * diameter,
+                MatchTuning.MortarBurstTicks,
+                shrinks: false);
+        }
 
-            // A Unity cylinder is one unit across and two tall, so a diameter
-            // goes into x and z unchanged and the thickness is halved into y.
-            float diameter = 2f * SimUnits.MetresFromMilliHex(radiusMilliHex);
-            var scale = new Vector3(diameter, MatchTuning.BubbleRingThickness * 0.5f, diameter);
+        /// <summary>
+        /// One of the shapes that lies on the floor, laid flat under whatever
+        /// the bubble was centred on and as wide as the bubble reached.
+        /// </summary>
+        private void Flat(Piece piece, int centreId, int radiusMilliHex, int lifetimeTicks)
+        {
+            if (!Reached(centreId, radiusMilliHex, out Vector3 at, out float diameter))
+            {
+                return;
+            }
 
-            disc.localScale = scale;
-            disc.GetComponent<MeshRenderer>().sharedMaterial = _ringMaterial;
+            Transform drawn = Take(piece);
+            drawn.position = at + (Vector3.up * MatchTuning.BubbleRingHeight);
+
+            Draw(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
+        }
+
+        /// <summary>
+        /// The scale that takes a mesh built at
+        /// <see cref="EffectMeshes.OuterRadius"/> out to
+        /// <paramref name="diameter"/> across while leaving how far it stands
+        /// off the floor alone.
+        /// </summary>
+        private static Vector3 Flattened(float diameter) => new Vector3(diameter, 1f, diameter);
+
+        /// <summary>
+        /// Where a bubble went off and how wide it was, or false for one there
+        /// is nothing to draw for.
+        /// </summary>
+        private bool Reached(int centreId, int radiusMilliHex, out Vector3 at, out float diameter)
+        {
+            at = default;
+            diameter = 0f;
+
+            if (radiusMilliHex <= 0)
+            {
+                return false;
+            }
+
+            Vector3? ground = _entityGround(centreId);
+
+            if (!ground.HasValue)
+            {
+                return false;
+            }
+
+            at = ground.Value;
+            diameter = 2f * SimUnits.MetresFromMilliHex(radiusMilliHex);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Sizes, surfaces and registers one effect that has already been
+        /// placed.
+        /// </summary>
+        private void Draw(Piece piece, Transform drawn, Vector3 scale, int lifetimeTicks, bool shrinks)
+        {
+            drawn.localScale = scale;
+            drawn.GetComponent<MeshRenderer>().sharedMaterial = _materials[piece];
+
+            _drawn.TryGetValue(piece, out int already);
+            _drawn[piece] = already + 1;
 
             _active.Add(new Effect
             {
-                Transform = disc,
+                Transform = drawn,
                 FullScale = scale,
-                Lifetime = MatchTuning.BubbleRingTicks,
-                Idle = _idleDiscs,
-                Shrinks = false,
+                Lifetime = lifetimeTicks,
+                Piece = piece,
+                Shrinks = shrinks,
             });
         }
 
-        private Transform TakeBox() =>
-            _idleBoxes.Count > 0 ? Reactivate(_idleBoxes.Pop()) : Make(PrimitiveType.Cube, "Tracer");
+        /// <summary>How many of one kind have been drawn since the last clear.</summary>
+        private int Drawn(Piece piece) => _drawn.TryGetValue(piece, out int count) ? count : 0;
 
-        private Transform TakeSphere() =>
-            _idleSpheres.Count > 0 ? Reactivate(_idleSpheres.Pop()) : Make(PrimitiveType.Sphere, "Spark");
-
-        private Transform TakeDisc() =>
-            _idleDiscs.Count > 0 ? Reactivate(_idleDiscs.Pop()) : Make(PrimitiveType.Cylinder, "BubbleRing");
-
-        private static Transform Reactivate(Transform transform)
+        private Transform Take(Piece piece)
         {
-            transform.gameObject.SetActive(true);
+            if (_idle.TryGetValue(piece, out Stack<Transform> idle) && idle.Count > 0)
+            {
+                Transform reused = idle.Pop();
+                reused.gameObject.SetActive(true);
 
-            return transform;
+                return reused;
+            }
+
+            return Make(piece);
         }
 
-        private Transform Make(PrimitiveType shape, string name)
+        /// <summary>
+        /// The mesh one signature is drawn with, built the first time it is
+        /// asked for.
+        /// </summary>
+        /// <remarks>
+        /// Lazily, because a match whose roster authors no bubble should not
+        /// pay for three meshes it never draws — which is every match of the
+        /// shipped content that stands no capstone.
+        /// </remarks>
+        private Mesh MeshFor(Piece piece)
+        {
+            if (_meshes.TryGetValue(piece, out Mesh built))
+            {
+                return built;
+            }
+
+            Mesh made = piece switch
+            {
+                Piece.GroundShock => EffectMeshes.Cracks(
+                    MatchTuning.GroundShockCracks,
+                    MatchTuning.GroundShockInnerFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.GroundShockWidthFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.GroundShockThickness),
+
+                Piece.MortarBurst => EffectMeshes.Burst(
+                    MatchTuning.MortarBurstShards,
+                    MatchTuning.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
+
+                // The slow ring and the tower glow are one ring at two sizes,
+                // so they are one mesh. Their pools stay separate because their
+                // colours and lifetimes are not the same.
+                _ => EffectMeshes.Ring(
+                    MatchTuning.SignatureRingSides,
+                    MatchTuning.SignatureRingBandFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.SignatureRingThickness),
+            };
+
+            _meshes[piece] = made;
+
+            return made;
+        }
+
+        private Transform Make(Piece piece)
         {
             if (_host == null)
             {
@@ -469,8 +771,16 @@ namespace View
                 _host = host.transform;
             }
 
-            GameObject instance = GameObject.CreatePrimitive(shape);
-            instance.name = name;
+            GameObject instance = piece switch
+            {
+                Piece.Tracer => GameObject.CreatePrimitive(PrimitiveType.Cube),
+                Piece.MuzzleFlash => GameObject.CreatePrimitive(PrimitiveType.Sphere),
+                Piece.Spark => GameObject.CreatePrimitive(PrimitiveType.Sphere),
+                Piece.BubbleRing => GameObject.CreatePrimitive(PrimitiveType.Cylinder),
+                _ => Built(piece),
+            };
+
+            instance.name = piece.ToString();
             instance.transform.SetParent(_host, worldPositionStays: false);
 
             Collider collider = instance.GetComponent<Collider>();
@@ -489,6 +799,19 @@ namespace View
             return instance.transform;
         }
 
+        /// <summary>
+        /// One object carrying a generated mesh, for the shapes no Unity
+        /// primitive is.
+        /// </summary>
+        private GameObject Built(Piece piece)
+        {
+            var instance = new GameObject();
+            instance.AddComponent<MeshFilter>().sharedMesh = MeshFor(piece);
+            instance.AddComponent<MeshRenderer>();
+
+            return instance;
+        }
+
         private void Retire(Effect effect)
         {
             if (effect.Transform == null)
@@ -497,7 +820,14 @@ namespace View
             }
 
             effect.Transform.gameObject.SetActive(false);
-            effect.Idle.Push(effect.Transform);
+
+            if (!_idle.TryGetValue(effect.Piece, out Stack<Transform> idle))
+            {
+                idle = new Stack<Transform>();
+                _idle[effect.Piece] = idle;
+            }
+
+            idle.Push(effect.Transform);
         }
 
         private struct Effect
@@ -511,20 +841,20 @@ namespace View
             public int Elapsed;
 
             /// <summary>
-            /// The pool this goes back into when it retires. Carried rather
-            /// than worked out from the shape, because a primitive on screen
-            /// cannot be asked which primitive it was made from.
+            /// Which pool this goes back into when it retires. Carried rather
+            /// than worked out from the object, because a shape on screen
+            /// cannot be asked which pool it came out of.
             /// </summary>
-            public Stack<Transform> Idle;
+            public Piece Piece;
 
             /// <summary>
             /// Whether it closes down to nothing as it ages.
             /// </summary>
             /// <remarks>
             /// A tracer, a flash and a spark do: their size is how loud they
-            /// are, so it going away is them going away. A bubble's ring does
-            /// not, and that is the one place the two differ — its diameter is
-            /// the whole of what it says, so a ring that shrank would be
+            /// are, so it going away is them going away. Everything a bubble
+            /// leaves does not, and that is the one place the two differ — its
+            /// size is the whole of what it says, so one that shrank would be
             /// reporting a reach the bubble did not have for every tick but its
             /// first.
             /// </remarks>

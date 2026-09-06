@@ -902,6 +902,54 @@ namespace View.Editor
         }
 
         /// <summary>
+        /// The rows whose bubble is drawn as something of its own, and what.
+        /// Every row not named here draws the shared disc.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A table of its own rather than a column of
+        /// <see cref="UnitBindings"/>, for the reason
+        /// <see cref="LargeRigClips"/> is one:</b> three rows of fifty-five
+        /// carry one, so a column would be fifty-two <c>default</c>s written
+        /// out to say nothing.
+        /// </para>
+        /// <para>
+        /// <b>The three are the capstones whose look <c>docs/roster.md</c>
+        /// signs and whose emitter an event can name.</b> The Shield Wall's
+        /// slow and the Blessing's haste are auras, which pulse from their own
+        /// emitter; the Slam's sweep is centred on the man who swung. The
+        /// Mortar's blast is the fourth signed shape and is not here — it is
+        /// centred on the body its shell arrived at, so the event names the
+        /// victim and no row can be reached from it. See
+        /// <see cref="MatchDecorations.BlastLanded"/>, which draws that one off
+        /// the shape of the event instead.
+        /// </para>
+        /// </remarks>
+        private static readonly (int unitId, EffectSignature signature)[] Signatures =
+        {
+            (16, EffectSignature.SlowRing),
+            (19, EffectSignature.GroundShock),
+            (22, EffectSignature.TowerGlow),
+        };
+
+        /// <summary>
+        /// What one row's bubble is drawn as, or
+        /// <see cref="EffectSignature.None"/> for the shared disc.
+        /// </summary>
+        private static EffectSignature SignatureFor(int unitId)
+        {
+            foreach ((int id, EffectSignature signature) in Signatures)
+            {
+                if (id == unitId)
+                {
+                    return signature;
+                }
+            }
+
+            return EffectSignature.None;
+        }
+
+        /// <summary>
         /// Everything on <c>MatchArt</c> that is not per unit type, as field
         /// name to asset.
         /// </summary>
@@ -1350,7 +1398,8 @@ namespace View.Editor
                     binding.anchor,
                     binding.beside,
                     walk,
-                    death);
+                    death,
+                    SignatureFor(binding.unitId));
             }
 
             // A row with no art chosen for it yet: the stand-in at the size its
@@ -1381,7 +1430,7 @@ namespace View.Editor
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
             WireUnit(
                 entry, unitId, model, scale, null, null, null, null, null, null, default, default, default,
-                default, null, null);
+                default, null, null, EffectSignature.None);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -1407,7 +1456,8 @@ namespace View.Editor
             EffectAnchor anchor,
             (string model, float scale, Vector3 offset) beside,
             string walk,
-            string death)
+            string death,
+            EffectSignature signature)
         {
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
@@ -1422,6 +1472,11 @@ namespace View.Editor
             entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
             entry.FindPropertyRelative("walkClip").objectReferenceValue = MaybeClip(walk);
             entry.FindPropertyRelative("deathClip").objectReferenceValue = MaybeClip(death);
+            // The index into the enum's own names rather than the value, which
+            // is what a serialized enum property holds. The two agree because
+            // EffectSignature is declared in ascending order from zero with no
+            // gaps, and a gap there would silently bind the wrong shape.
+            entry.FindPropertyRelative("signature").enumValueIndex = (int)signature;
 
             SerializedProperty anchored = entry.FindPropertyRelative("effectAnchor");
 
@@ -1493,7 +1548,8 @@ namespace View.Editor
                     BesideProp.Standing(
                         MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset),
                     MaybeClip(walk),
-                    MaybeClip(death)));
+                    MaybeClip(death),
+                    SignatureFor(binding.unitId)));
             }
 
             units.AddRange(UnboundUnits.StandIns());

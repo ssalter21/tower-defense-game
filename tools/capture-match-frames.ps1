@@ -24,12 +24,23 @@
 # named after the table rather than after the match, because the tick in a
 # match-tick- filename is a claim about the run content/landmarks.txt was made
 # from.
+#
+# -Defense names a defense to stand on the recorded board instead of the one the
+# record carries. It is for photographing a row the recorded match does not
+# stand: those six towers are two types, computed by a bot's rule, so a frame of
+# the record can only ever show those two firing. The map, the wave and the seed
+# still come out of the record. The loader still refuses a tower off the grid,
+# one inside the corridor and one whose range cannot reach the route, so a melee
+# row has to be put next to the corridor rather than where an archer stood.
+# Frames from such a run are named after the defense, for the reason -Units'
+# are named after the table.
 
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
     [string]$Ticks,
     [string]$Units,
+    [string]$Defense,
     [float]$Yaw = 0,
     [float]$Distance = 0,
     [int]$Width = 1280,
@@ -67,6 +78,11 @@ if ($Ticks) { $unityArgs += @('-matchFrameTicks', $Ticks) }
 if ($Units) {
     $unitsPath = (Resolve-Path $Units).Path
     $unityArgs += @('-matchFrameUnits', "`"$unitsPath`"")
+}
+
+if ($Defense) {
+    $defensePath = (Resolve-Path $Defense).Path
+    $unityArgs += @('-matchFrameDefense', "`"$defensePath`"")
 }
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a

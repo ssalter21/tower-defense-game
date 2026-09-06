@@ -83,6 +83,37 @@ namespace View.Editor
         public const string UnitsArgument = "-matchFrameUnits";
 
         /// <summary>
+        /// A defense to stand on the recorded board instead of the one the
+        /// record carries.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For photographing rows the recorded match does not stand.</b> The
+        /// recorded defense is six towers of two types, computed by a bot's own
+        /// rule, and a frame of it can only ever show those two rows firing. A
+        /// line whose look somebody has to sign is a line somebody has to see
+        /// swing, and there is no way to reach it through the record.
+        /// </para>
+        /// <para>
+        /// <b>It is a defense and not a board.</b> The map, the wave and the
+        /// seed still come out of the record, so the corridor and the bodies
+        /// walking it are the ones every other frame shows and the only thing
+        /// that has moved is what is standing beside them. The loader still
+        /// refuses a tower off the grid, a tower inside the corridor and a
+        /// tower whose range cannot reach the route — so a melee row has to be
+        /// put next to the corridor rather than wherever an archer stood.
+        /// </para>
+        /// <para>
+        /// Frames from such a run are named after the defense for the same
+        /// reason a fixture roster's are named after the roster: the tick in a
+        /// <c>match-tick-</c> filename is a claim about the run
+        /// <c>content/landmarks.txt</c> was made from, and this is not that
+        /// run.
+        /// </para>
+        /// </remarks>
+        public const string DefenseArgument = "-matchFrameDefense";
+
+        /// <summary>
         /// The shape of a frame. Sixteen by nine, the same shape the playback
         /// bar lays itself out for, because these are pictures of what a player
         /// sees.
@@ -119,6 +150,7 @@ namespace View.Editor
                 ?? Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "docs", "frames"));
 
             string units = BatchArguments.Value(UnitsArgument);
+            string defense = BatchArguments.Value(DefenseArgument);
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
@@ -147,7 +179,7 @@ namespace View.Editor
                 // with no sides and shows the background through every step.
                 root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
 
-                MatchView view = BeginMatch(root, record, units);
+                MatchView view = BeginMatch(root, record, units, defense);
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -205,17 +237,27 @@ namespace View.Editor
 
                     string path = Path.Combine(
                         outDir,
-                        NameOf(units)
+                        NameOf(units, defense)
                         + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture)
                         + ".png");
 
                     File.WriteAllBytes(path, Grab(camera, width, height).EncodeToPNG());
                     written.Add(path);
 
+                    // The running effect counts go in the line, because they
+                    // are what a person hunting a frame of a capstone is
+                    // hunting. A signature goes off on one tick and is gone
+                    // eight later, so finding one by opening pictures means
+                    // opening most of them; over consecutive ticks these
+                    // numbers say which tick to ask for.
                     Debug.Log(
                         "MatchFrameCapture: tick " + view.Current.Tick
                         + " -- " + view.Current.Creeps.Count + " creeps, "
-                        + view.Current.Projectiles.Count + " shells -> " + path);
+                        + view.Current.Projectiles.Count + " shells, effects "
+                        + view.Decorations.SlowRingsDrawn + " slow / "
+                        + view.Decorations.ShocksDrawn + " shock / "
+                        + view.Decorations.GlowsDrawn + " glow / "
+                        + view.Decorations.BurstsDrawn + " burst -> " + path);
 
                     next++;
                 }
@@ -248,45 +290,78 @@ namespace View.Editor
         /// defense, wave and seed played against the unit table at
         /// <paramref name="units"/>.
         /// </summary>
-        private static MatchView BeginMatch(MatchRoot root, ReplayBundle record, string units)
+        private static MatchView BeginMatch(
+            MatchRoot root, ReplayBundle record, string units, string defense)
         {
             Ruleset rules = StreamingContent.ReadRuleset();
 
-            if (string.IsNullOrWhiteSpace(units))
+            if (string.IsNullOrWhiteSpace(units) && string.IsNullOrWhiteSpace(defense))
             {
                 return root.BeginMatch(StreamingContent.ReadUnitTypes(), rules, record, art: LoadArt());
             }
 
-            if (!File.Exists(units))
-            {
-                throw new FileNotFoundException(
-                    "No unit table at " + units + ". " + UnitsArgument + " names a table to draw the "
-                    + "recorded board, defense and wave against instead of the shipped one, and a capture "
-                    + "that quietly fell back to the shipped table would be a picture of the wrong match.",
-                    units);
-            }
+            UnitTypeTable types = string.IsNullOrWhiteSpace(units)
+                ? StreamingContent.ReadUnitTypes()
+                : UnitTypeTable.ParseUtf8(units, Read(units, UnitsArgument, "unit table"));
 
-            UnitTypeTable fixtures = UnitTypeTable.ParseUtf8(units, File.ReadAllBytes(units));
+            TowerLayout layout = string.IsNullOrWhiteSpace(defense)
+                ? record.Ghost.ToLayout(types)
+                : TowerLayout.ParseUtf8(defense, Read(defense, DefenseArgument, "defense"), types);
 
             return root.BeginMatch(
-                fixtures,
+                types,
                 rules,
-                record.Ghost.ToLayout(fixtures),
-                record.Wave.ToScript(fixtures),
+                layout,
+                record.Wave.ToScript(types),
                 record.Seed,
                 LoadArt());
         }
 
         /// <summary>
+        /// The bytes of a file an argument named, or a throw saying which
+        /// argument named a file that is not there.
+        /// </summary>
+        /// <remarks>
+        /// Loud rather than a fall back to the shipped content, which would be
+        /// a picture of the wrong match written under the filename of the right
+        /// one.
+        /// </remarks>
+        private static byte[] Read(string path, string argument, string what)
+        {
+            if (!File.Exists(path))
+            {
+                throw new FileNotFoundException(
+                    "No " + what + " at " + path + ". " + argument + " names a " + what + " to draw the "
+                    + "recorded match against instead of the shipped one, and a capture that quietly "
+                    + "fell back would be a picture of the wrong match.",
+                    path);
+            }
+
+            return File.ReadAllBytes(path);
+        }
+
+        /// <summary>
         /// What a frame is called before its tick. The recorded match's frames
         /// are <c>match-tick-</c>, because that tick is a tick of the run the
-        /// landmark table was made from; a fixture table's are named after the
-        /// fixture, because they are ticks of a match nobody can scrub to.
+        /// landmark table was made from; a fixture roster's or a fixture
+        /// defense's are named after the fixture, because they are ticks of a
+        /// match nobody can scrub to. The roster wins where both are named,
+        /// because a roster changes what every row on the board is.
         /// </summary>
-        private static string NameOf(string units) =>
-            string.IsNullOrWhiteSpace(units)
-                ? "match-tick-"
-                : Path.GetFileNameWithoutExtension(units) + "-tick-";
+        private static string NameOf(string units, string defense)
+        {
+            if (!string.IsNullOrWhiteSpace(units))
+            {
+                return Path.GetFileNameWithoutExtension(units) + "-tick-";
+            }
+
+            if (!string.IsNullOrWhiteSpace(defense))
+            {
+                return Path.GetFileNameWithoutExtension(defense) + "-tick-";
+            }
+
+            return "match-tick-";
+        }
 
         private static Texture2D Grab(Camera camera, int width, int height)
         {

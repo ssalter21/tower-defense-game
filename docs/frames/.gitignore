@@ -1,6 +1,7 @@
-# The capture writes six frames by default; five of the frames in this folder
-# are committed as documentation -- four of the recorded match and one of the
-# effects fixture beside it. README.md says which five and why.
+# The capture writes six frames by default; eight of the frames in this folder
+# are committed as documentation -- four of the recorded match, one of the
+# effects fixture and three of the four melee and impact lines standing on the
+# recorded board. README.md says which eight and why.
 #
 # Everything else it writes must not be committed, and that cannot be left to
 # whoever runs the capture next. The fourth working agreement is explicit about
@@ -22,6 +23,9 @@
 !match-tick-1546.png
 !match-tick-2700.png
 !effects-roster-tick-0700.png
+!four-lines-tick-0572.png
+!four-lines-tick-0780.png
+!four-lines-tick-0813.png
 
 # The one sheet out of the armed-roster capture that is kept: the four props
 # that stand on the ground beside a tower, at the sizes they are drawn at.

@@ -214,6 +214,105 @@ namespace View
         public const float BubbleRingHeight = 0.03f;
 
         // ---------------------------------------------------------------
+        // Capstone signatures — the shapes a row's bubble is drawn as
+        // ---------------------------------------------------------------
+        //
+        // FOUR SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
+        // PLACEHOLDER. What was signed is that the Shield Wall's slow leaves a
+        // ring, the Slam's swing shocks the ground across the hex, the
+        // Blessing glows on every tower it reaches and the Mortar bursts at the
+        // radius it landed in. How wide a band, how many cracks, how long any
+        // of it lasts and what colour it comes out are nobody's decision yet --
+        // the same standing rule the bubble ring above and the marks below are
+        // held to. A number here is the plainest thing that draws the signed
+        // shape, and is not a proposal about how it should look.
+        //
+        // THE ONES THAT STAND FOR A RADIUS DO NOT SHRINK, and that is not a
+        // number here but a flag on the effect: a ring, a shock and a burst all
+        // say how far the bubble reached, so closing one down over its life
+        // would report a reach the bubble did not have.
+
+        /// <summary>
+        /// How many bars the ring is made of. Enough that it reads as a circle
+        /// rather than as a polygon at the size a two-hex aura is drawn at.
+        /// </summary>
+        public const int SignatureRingSides = 32;
+
+        /// <summary>
+        /// How wide the ring's band is, as a share of its own radius. A share
+        /// rather than a distance because one mesh is scaled to whatever radius
+        /// the bubble reached.
+        /// </summary>
+        public const float SignatureRingBandFraction = 0.18f;
+
+        /// <summary>
+        /// How far the ring stands off the surface it lies on, in metres. Not
+        /// scaled with the radius: it is what keeps the ring solid rather than
+        /// a stripe seen edge-on, and that does not depend on how wide it is.
+        /// </summary>
+        public const float SignatureRingThickness = 0.06f;
+
+        /// <summary>How long the Shield Wall's slow ring lasts, in ticks.</summary>
+        /// <remarks>
+        /// Shorter than the period the aura it stands for pulses on, so two
+        /// pulses never draw two rings on top of each other and the ring reads
+        /// as a beat rather than as a thing that is always there.
+        /// </remarks>
+        public const int SlowRingTicks = 10;
+
+        /// <summary>How many cracks the Slam's ground shock runs out.</summary>
+        public const int GroundShockCracks = 9;
+
+        /// <summary>
+        /// How far out from the centre a crack starts, as a share of the radius
+        /// it reaches. Not zero, so the cracks do not all pile into one blob
+        /// under the man who swung.
+        /// </summary>
+        public const float GroundShockInnerFraction = 0.18f;
+
+        /// <summary>How wide one crack is, as a share of the radius.</summary>
+        public const float GroundShockWidthFraction = 0.07f;
+
+        /// <summary>How far a crack stands off the floor, in metres.</summary>
+        public const float GroundShockThickness = 0.08f;
+
+        /// <summary>How long the ground shock lasts, in ticks.</summary>
+        public const int GroundShockTicks = 8;
+
+        /// <summary>How wide the ring over a blessed tower's head is, in metres.</summary>
+        public const float BlessingGlowDiameter = 1.2f;
+
+        /// <summary>
+        /// How high over a tower's feet that ring hangs, in metres. Above the
+        /// tallest thing on the roster, so it is a halo rather than a collar.
+        /// </summary>
+        public const float BlessingGlowHeight = 2.9f;
+
+        /// <summary>How long a blessed tower's ring lasts, in ticks.</summary>
+        public const int BlessingGlowTicks = 12;
+
+        /// <summary>How many shards the Mortar's burst throws out.</summary>
+        public const int MortarBurstShards = 14;
+
+        /// <summary>How thick one shard is, as a share of the radius it reaches.</summary>
+        public const float MortarBurstWidthFraction = 0.06f;
+
+        /// <summary>How long the burst lasts, in ticks.</summary>
+        public const int MortarBurstTicks = 8;
+
+        /// <summary>The Shield Wall's slow ring. Cold, because it is a slow.</summary>
+        public static Color SlowRingColor => new Color(0.45f, 0.72f, 1f, 1f);
+
+        /// <summary>The Slam's ground shock.</summary>
+        public static Color GroundShockColor => new Color(0.95f, 0.62f, 0.28f, 1f);
+
+        /// <summary>The ring over a tower the Blessing has reached.</summary>
+        public static Color BlessingGlowColor => new Color(1f, 0.9f, 0.5f, 1f);
+
+        /// <summary>The Mortar's burst.</summary>
+        public static Color MortarBurstColor => new Color(1f, 0.55f, 0.2f, 1f);
+
+        // ---------------------------------------------------------------
         // What a unit is carrying — the marks, not the decoration
         // ---------------------------------------------------------------
         //

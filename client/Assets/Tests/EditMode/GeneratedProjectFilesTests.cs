@@ -234,6 +234,15 @@ namespace Tests.EditMode
                 // staffs' tilt drifted.
                 SameOrBothEmpty(made.WalkClip, unit.WalkClip, "walk clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.DeathClip, unit.DeathClip, "death clip for unit " + unit.UnitId);
+
+                // What a row's bubble is drawn as, which is an enum rather than
+                // a reference and so survives nothing being wired at all. A
+                // manifest that lost it draws every capstone as the plain disc
+                // in the player and as its own signature everywhere else.
+                Assert.That(made.Signature, Is.EqualTo(unit.Signature),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + "'s bubble as something else than ChosenArt does. Run "
+                    + "tools/build-test-assets.ps1 and commit what it writes.");
             }
 
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));

@@ -184,12 +184,13 @@ namespace Tests.PlayMode
         /// </para>
         /// <para>
         /// The two rings are still handed over by hand, on top of whatever the
-        /// match has drawn by itself: the Mage's splash is a damage bubble on a
-        /// shipped row, so the committed board fires rings of its own now, and
-        /// the count is read as a delta rather than as a total. An aura pulse
-        /// is the half no shipped row emits, and handing both over keeps this
-        /// about the seek rather than about which shapes happen to be on the
-        /// roster.
+        /// match has drawn by itself, and the count is read as a delta rather
+        /// than as a total. What the committed board draws on its own is the
+        /// Mage's splash, which is centred on the body its shot arrived at and
+        /// so bursts there rather than leaving a disc; both handed-over bubbles
+        /// are centred on a tower, which is what a disc is now for. Handing
+        /// them over keeps this about the seek rather than about which shapes
+        /// happen to be on the roster.
         /// </para>
         /// </remarks>
         [Test]
@@ -205,15 +206,16 @@ namespace Tests.PlayMode
 
             int towerId = view.Current.Towers[0].Id;
 
-            int drawnByTheMatch = view.Decorations.RingsDrawn;
+            int discsByTheMatch = view.Decorations.RingsDrawn;
 
-            Assert.That(drawnByTheMatch, Is.GreaterThan(0),
-                "the committed board's two Mages splash, so a match this far in has drawn rings already");
+            Assert.That(view.Decorations.BurstsDrawn, Is.GreaterThan(0),
+                "the committed board's two Mages splash, so a match this far in has burst on a body "
+                + "already");
 
             view.Decorations.AuraPulsed(towerId, 3000, BubblePayload.Cooldown);
             view.Decorations.BlastLanded(towerId, 3000, BubblePayload.Damage);
 
-            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(drawnByTheMatch + 2),
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(discsByTheMatch + 2),
                 "the rings were never drawn, so a count that dropped would prove nothing");
 
             int heardBefore = view.Decorations.EventsHeard;
@@ -223,6 +225,9 @@ namespace Tests.PlayMode
 
             Assert.That(view.Decorations.RingsDrawn, Is.Zero,
                 "a ring survived a seek, so it belongs to a tick that has not happened yet");
+
+            Assert.That(view.Decorations.BurstsDrawn, Is.Zero,
+                "a burst survived a seek, on the same rule");
 
             Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heardBefore),
                 "the re-run ticks emitted their events into the decorations");

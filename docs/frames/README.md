@@ -37,7 +37,18 @@ row that says "drag to tick 1096" are about the same moment.
 # The same board, defense, wave and seed, played against a roster of your own
 ./tools/capture-match-frames.ps1 -Units "docs/frames/effects-roster.txt" `
     -Ticks "700" -Distance 20 -Width 1600
+
+# The same board, wave and seed, with a defense of your own standing on it
+./tools/capture-match-frames.ps1 -Defense "docs/frames/four-lines.txt" `
+    -Ticks "572,780" -Width 1600
 ```
+
+**Finding the tick a capstone went off on is what the log line is for.** A
+signature is drawn on one tick and gone eight later, so hunting one by opening
+pictures means opening most of them. Every kept tick's line in
+`capture-match-frames.log` carries the running slow-ring, ground-shock, glow and
+burst counts; ask for a run of consecutive ticks, read the line where one of
+those numbers moves, and then capture that tick on its own at the size you want.
 
 **A frame is a function of its tick and nothing else.** The capture draws every
 tick it steps through rather than only the ones it keeps, because where a tower
@@ -94,6 +105,51 @@ And one that is **not** a frame of the recorded match:
   quadrants of the orbit, and both segments are shares of the health the row
   authored — so a creep at full health with a pool worth two fifths of it draws
   one and two fifths of a bar rather than one.
+
+And three that are frames of the recorded board with **somebody else's defense
+standing on it** — the twelve rows of the Knight, Barbarian, Paladin and
+Engineer lines, out of
+[`four-lines.txt`](four-lines.txt), all at `-Width 1600`. **Every shape in them
+is a placeholder and none of it is signed.** What issue #263 signed is four
+shapes — a ring for the Shield Wall's slow, a shock across the ground for the
+Slam, a glow on every tower the Blessing reaches and a burst at the radius the
+Mortar landed in — and every colour, size and duration they are drawn at is the
+plainest thing that draws that shape, declared as a placeholder in
+`MatchTuning`.
+
+- `four-lines-tick-0813.png` — **the one to look at first**, at `-Distance 22`,
+  close enough to read what each shape is made of. Three signatures at once: the
+  blue ring on the left is the Shield Wall's slow, lying on the ground at the
+  one hex it carries; the orange cracks under the Barbarian on the Large rig are
+  the Slam's swing landing on everything touching him; and the two gold rings
+  hanging over the heads on the right are the Blessing's, on itself and on the
+  Templar standing one hex away. The Paladin, six hexes off, is wearing none —
+  that is the aura's reach and not an oversight.
+
+- `four-lines-tick-0572.png` — the same three signatures at the framing that
+  fits the whole floor, so all twelve rows are in one picture. The Engineer's
+  shell is the black sphere in mid-air over the corridor.
+
+- `four-lines-tick-0780.png` — the Mortar's burst, on the body its shell arrived
+  at, at the whole-floor framing. **It is as wide as the blast is: three hexes
+  across**, because the row authors a radius of 1500 and a shape that stands for
+  a radius may not report a smaller one. Whether something that size reads as a
+  burst or as a windmill is exactly the question this frame is asking.
+
+**Three things about them are results rather than questions.** The Paladin and
+Engineer lines are bound with no clips at all — `roster.md` names none on either
+— so what a firing frame shows for those six rows is a body standing in its bind
+pose with the effect leaving the right place on it: the Paladin's hammer head,
+the Blessing's book, and the top of the turret standing on the tile beside each
+Engineer rung. **The Mortar's burst is the one signature no row selects**: a
+blast centred on the body a shell arrived at names the body and not the shooter,
+so the burst is what every target-centred blast draws — the Mage's and the
+Sorcerer's splash included. And **no frame shows all twelve rows firing at
+once**, because a hitscan row fires when a body is beside it and the corridor
+does not put a body beside all twelve at any tick; that each row fires from a
+point on its own art rather than from a height above its root is measured for
+every one of them by `ImportedArtTests`, which logs the distance, and asserted
+on this board by `MatchViewTests`.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

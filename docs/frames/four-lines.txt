@@ -1,0 +1,51 @@
+# The twelve rows of the Knight, Barbarian, Paladin and Engineer lines, standing
+# on the recorded board.
+#
+# WHAT THIS IS FOR. tools/capture-match-frames.ps1 draws the recorded match, and
+# the recorded defense is six towers of two types -- content/defense.txt's own
+# header says they were computed by a bot's rule rather than chosen. So a frame
+# of the record can only ever show an Archer and a Mage firing, and the four
+# lines issue #263 is about are not on the board at all.
+#
+#     ./tools/capture-match-frames.ps1 -Defense "docs/frames/four-lines.txt" `
+#         -Ticks "300,700" -Distance 22 -Width 1600
+#
+# The map, the wave and the seed still come out of content/match.replay, so the
+# corridor and the bodies walking it are the ones every other frame shows. Only
+# what is standing beside them has moved. Frames from such a run are named after
+# this file rather than match-tick-, because the tick in a match-tick- filename
+# is a claim about the run content/landmarks.txt was made from and this is not
+# that run.
+#
+# NOTHING HERE IS A BALANCE PROPOSAL. It is twelve rows put where they can be
+# photographed. content/defense.txt is the defense the authored match is fought
+# by and this changes nothing about it.
+#
+# EVERY CELL IS NEXT TO THE CORRIDOR, AND IT HAS TO BE. Nine of these twelve
+# rows reach one hex, where the recorded defense's archers and mortars reach
+# three and four -- so the cells that defense stands on are refused at load for a
+# melee row, on the loader's rule that a tower whose range cannot touch the route
+# is a mistyped coordinate.
+#
+# THE TEMPLAR STANDS ONE HEX FROM THE BLESSING and everything else is at least
+# three away, which is what puts exactly one other tower inside an aura that
+# carries two. Tests.PlayMode/MatchViewTests stands the same twelve on the same
+# cells and counts the glows.
+#
+# Same format as content/defense.txt: type, column, row, counted the way
+# content/map.txt is written, ascending by row and then by column.
+#
+#       type  col  row
+
+tower   11    3    0
+tower   15    5    0
+tower   16    2    2
+tower   17    5    2
+tower   18    2    4
+tower   19    7    4
+tower   20    5    6
+tower   22   11    6
+tower   21   12    6
+tower   35    3    8
+tower   36    7    8
+tower   37    2   10

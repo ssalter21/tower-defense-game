@@ -78,6 +78,10 @@ namespace View
         private EffectAnchor effectAnchor;
 
         [SerializeField]
+        [Tooltip("What this row's bubble is drawn as. None draws the shared disc every bubble had.")]
+        private EffectSignature signature;
+
+        [SerializeField]
         [Tooltip("This row's own walk cycle. Null for a creep drawn with MatchArt's shared pair.")]
         private AnimationClip walkClip;
 
@@ -121,7 +125,8 @@ namespace View
             Texture2D texture = null,
             BesideProp beside = default,
             AnimationClip walk = null,
-            AnimationClip death = null) =>
+            AnimationClip death = null,
+            EffectSignature signature = EffectSignature.None) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -137,6 +142,7 @@ namespace View
                 rightHandTilt = rightHandTilt,
                 leftHandTilt = leftHandTilt,
                 effectAnchor = effectAnchor,
+                signature = signature,
                 walkClip = walk,
                 deathClip = death,
             };
@@ -237,6 +243,19 @@ namespace View
         /// the model and the hands because it names a part of them.
         /// </remarks>
         public EffectAnchor EffectAnchor => effectAnchor;
+
+        /// <summary>
+        /// What this row's bubble is drawn as, or
+        /// <see cref="EffectSignature.None"/> for the shared disc.
+        /// </summary>
+        /// <remarks>
+        /// Per unit for the reason the anchor is: it is what makes a tier three
+        /// read as itself rather than as the shape every bubble in the game
+        /// shares, so it belongs beside the atlas and the props that do the
+        /// same job. A row with no bubble at all is unaffected either way —
+        /// nothing ever asks.
+        /// </remarks>
+        public EffectSignature Signature => signature;
 
         /// <summary>
         /// The walk cycle this row is drawn with, or null for the shared one on

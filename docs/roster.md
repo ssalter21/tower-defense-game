@@ -251,6 +251,37 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 > How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
 > ticket that picks a line's clips is where a real number is signed.
 
+### What a capstone's bubble is drawn as
+
+Every bubble in the game drew one shared disc on the ground until #263. Four shapes are signed now, one per
+capstone of the four impact and melee lines, and **the shape is all that is signed** — every colour, size and
+duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
+disc and the marks on a creep already are.
+
+| Row | What it draws | Where it is drawn |
+|---|---|---|
+| 16 · Shield Wall | A ring lying on the ground at the edge of the slow, open in the middle so the bodies caught inside stay visible | Under the tower that pulsed |
+| 19 · Slam | Cracks running out from the middle to the edge of the swing | Under the man who swung |
+| 22 · Blessing | A ring over the head of every tower the pulse reached, the emitter included | On what the bubble found, not on the bubble |
+| 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
+
+**Three of the four are bound per row and the fourth cannot be.** A signature is reached through the entity
+the event names: an aura pulses from its own emitter and a sweep is centred on the tower that swung, so those
+three name a row. A blast centred on its target names the *body the shot arrived at* — the shooter is not in
+the event and deliberately never will be, because an event carries an entity id and nothing to hold on to. So
+the burst is what any target-centred blast draws, and the Mage's and the Sorcerer's splash wear it too. That
+is the same restraint the disc kept between a blast and a pulse, moved one step along.
+
+**None of it is a `ParticleSystem` and none of it can be.** The client has none anywhere and two play-mode
+tests forbid one, for the reason the glow reservation above gives: the camera orbits and nothing may turn to
+face it. Each shape is a mesh of solid bars generated in `EffectMeshes`, lit by the one directional light
+everything else on the board is lit by.
+
+**A shape that stands for a radius does not shrink as it ages.** The shared ageing closes a tracer, a flash
+and a spark down to nothing, because their size is how loud they are; a ring, a shock and a burst say how far
+the bubble reached, so one that shrank would report a reach the bubble did not have on every tick but its
+first. That is #253's finding and every shape added since is held to it by a test.
+
 ## The Knight line — impact, melee
 
 ### 11 · Soldier · tier 1 · status live
@@ -283,8 +314,9 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 ### 16 · Shield Wall · tier 3 · status live
 
 - **Does** — every creep touching him walks at half speed while it is touching him, and he keeps swinging.
-- **Looks** — `Knight`, `knight_texture_alt_B`, shield raised (`Melee_Blocking`), visor closed. A persistent
-  glow reads the aura once one exists.
+- **Looks** — `Knight`, `knight_texture_alt_B`, shield raised (`Melee_Blocking`), visor closed. Every pulse
+  leaves a ring on the ground at the hex the slow carries; the glow the section above reserves stays the
+  Blessing's, because a slow that stops at one hex is read by where it stops.
 - **Numbers** — aura: origin `self`, radius 1000, affects `enemy`, payload `speed`, magnitude −50, period 15,
   duration 20. The Sergeant's damage and cooldown carry.
 - **Needs** — nothing. Layout 3 authors it and #217 plays it.
@@ -315,7 +347,8 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 
 - **Does** — every swing hits everything touching him. The same roll, every body.
 - **Looks** — the **`Barbarian_Large`** model, `Melee_2H_Slam`. This is the line's second model, and it is on
-  the **Large rig**, so it needs that rig's clip bank.
+  the **Large rig**, so it needs that rig's clip bank. Every swing cracks the ground out from under him to the
+  edge of what it reached.
 - **Numbers** — bubble: origin `self`, radius 1000, payload `damage`. The Berserker's roll.
 - **Needs** — nothing.
 - **Open** — none.
@@ -347,7 +380,8 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 - **Does** — every tower within two hexes fires a quarter faster, always.
 - **Looks** — `Paladin_with_Helmet`, `paladin_texture_B`, `paladin_book` open, and the gold `paladin_statue`
   standing on the tile beside him — **drawn at 1**, the size it imports at, which is 2.55 m tall and 1.60 across
-  and stands level with the Paladin himself.
+  and stands level with the Paladin himself. Every pulse puts a ring over the head of each tower it reached,
+  which is the glow the section above reserves and the one row it is reserved for.
 - **Numbers** — aura: origin `self`, radius 2000, affects `friend`, payload `cooldown`, magnitude −25,
   period 30, duration 30.
 - **Needs** — nothing. The beside slot is built.
@@ -599,10 +633,11 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — the shell bursts across a hex and a half.
 - **Looks** — `Engineer`, `engineer_texture_alt_B`, a heavier `turret_base` beside him and the lobbing arc
   drawn. The Engineer has **no second model anywhere in the collection**, so this line is colour and props at
-  every rung.
+  every rung. The shell bursts in shards on the body it arrived at, out to the radius it landed in.
 - **Numbers** — bubble on target: radius 1500, payload `damage`.
 - **Needs** — nothing. The beside slot is built.
-- **Open** — none.
+- **Open** — **the burst is the one signature no row selects**, so the Mage's and the Sorcerer's splash wear
+  it too. See the open question below.
 
 > **Two blasts on the board, and they are not the same tool.** The Mage's is magic at radius 1000 and lands at
 > tier 1; this one is impact at radius 1500 and costs a token. The impact one is the answer to arcane bodies
@@ -1176,3 +1211,17 @@ open.
    the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
    down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —
    the one look on this page the socket as built cannot draw whole.
+8. **The Mortar's burst reaches three rows nobody asked about it for.** A signature is chosen by the row the
+   event names, and a blast centred on its target names the body the shot arrived at rather than the shooter.
+   So the burst is what *any* target-centred blast draws, and the Mage's, the Sorcerer's and the Unravel's
+   splash wear the Mortar's capstone shape. **The alternative was to leave the Mortar without one**, because
+   the only other way to name the shooter is to put it on the event, and an event that carried a reference to
+   hold on to is the thing [ADR-0008](adr/0008-match-events-are-decorative.md) exists to refuse. Either the
+   three splashes are content with the shape, or those two cases need telling apart by something other than
+   the row — the payload and the delivery are the same on all four.
+9. **What ships for the Blessing is a halo and the word signed was "glow".** A ring hangs over the head of
+   every tower the pulse reached. It is real geometry, which the glow reservation above requires — nothing
+   here may billboard — but a ring of light above a head and a body lit from within are two different
+   pictures, and only the second is what "glow" plainly means. Whether the halo is the placeholder for it or
+   the answer to it is an eye check on
+   [`four-lines-tick-0572.png`](frames/four-lines-tick-0572.png).

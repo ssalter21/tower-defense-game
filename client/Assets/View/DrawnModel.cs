@@ -79,7 +79,7 @@ namespace View
         /// <b>Whoever calls this destroys what comes back.</b> A material is an
         /// asset instance and destroying the object drawing with it leaves it
         /// behind, so a body per creep would be an orphan per creep. Same rule
-        /// as <c>MatchDecorations.DestroyMaterials</c>.
+        /// as <c>MatchDecorations.DestroyAssets</c>.
         /// </para>
         /// </remarks>
         public static Material Wear(GameObject body, Texture skin)

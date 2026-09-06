@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1769683282
+--- !u!1 &619337730
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1769683284}
-  - component: {fileID: 1769683283}
+  - component: {fileID: 619337732}
+  - component: {fileID: 619337731}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1769683283
+--- !u!114 &619337731
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1769683282}
+  m_GameObject: {fileID: 619337730}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -213,6 +213,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 2
@@ -233,6 +234,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 3
@@ -253,6 +255,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: bow_withString
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 4
@@ -273,6 +276,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: spellbook_open
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 7
@@ -293,6 +297,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 11
@@ -313,6 +318,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 12
@@ -333,6 +339,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 13
@@ -353,6 +360,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 14
@@ -373,6 +381,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: bow_withString
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 15
@@ -393,6 +402,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 16
@@ -413,6 +423,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: sword_1handed
         tip: {x: 0, y: 1, z: 0}
+      signature: 1
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 17
@@ -433,6 +444,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 18
@@ -453,6 +465,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed_Large
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 19
@@ -473,6 +486,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: axe_2handed_Large
         tip: {x: 0, y: 1, z: 0}
+      signature: 2
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 20
@@ -493,6 +507,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 21
@@ -513,6 +528,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 22
@@ -533,6 +549,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
+      signature: 3
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 23
@@ -553,6 +570,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Tome
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 24
@@ -573,6 +591,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Mace
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 25
@@ -593,6 +612,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: Cleric_Mace
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 26
@@ -613,6 +633,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: staff
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 27
@@ -633,6 +654,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: Lorekeeper_Tome
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 28
@@ -653,6 +675,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 29
@@ -673,6 +696,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 30
@@ -693,6 +717,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 31
@@ -713,6 +738,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: crossbow_2handed
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 32
@@ -733,6 +759,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 33
@@ -753,6 +780,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 34
@@ -773,6 +801,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: dagger
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 35
@@ -793,6 +822,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 36
@@ -813,6 +843,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 37
@@ -833,6 +864,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: turret_base
         tip: {x: 0, y: 1, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 38
@@ -853,6 +885,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 39
@@ -873,6 +906,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
     - unitId: 40
@@ -893,6 +927,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
     - unitId: 41
@@ -913,6 +948,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
     - unitId: 42
@@ -933,6 +969,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
     - unitId: 43
@@ -953,6 +990,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 44
@@ -973,6 +1011,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 45
@@ -993,6 +1032,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 46
@@ -1013,6 +1053,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 47
@@ -1033,6 +1074,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 48
@@ -1053,6 +1095,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     - unitId: 49
@@ -1073,17 +1116,18 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
+      signature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &1769683284
+--- !u!4 &619337732
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1769683282}
+  m_GameObject: {fileID: 619337730}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1096,4 +1140,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1769683284}
+  - {fileID: 619337732}
