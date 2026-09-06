@@ -50,7 +50,7 @@ $declaration = @'
  10  client/Assets/Tests/EditMode/BoardDressingTests.cs
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
-  7  client/Assets/Tests/EditMode/CandidateSetTests.cs
+  9  client/Assets/Tests/EditMode/CandidateSetTests.cs
  13  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
   5  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
  19  client/Assets/Tests/EditMode/ImportedArtTests.cs

@@ -69,6 +69,31 @@ namespace Tests.EditMode
         /// </remarks>
         private const int CommittedEntries = 35;
 
+        /// <summary>
+        /// The three sets that are standing questions rather than one effort's
+        /// proposal, and how many lines each carries.
+        /// </summary>
+        /// <remarks>
+        /// Written out the way <see cref="CommittedEntries"/> is, and here for
+        /// the same reason the committed set is: none of the paths in them is
+        /// checked by a compiler or by the build gate, so a model moved out of
+        /// <c>Assets/Art/Kaykit</c> would surface as a three-minute batchmode
+        /// run that throws rather than as a red test.
+        /// </remarks>
+        private static readonly (string Path, int Entries)[] StandingSets =
+        {
+            // Ids 20, 21 and 22 in every clip a hammer or a book could be
+            // swung with: twelve for each of the two hammer rungs and eight
+            // for the book.
+            ("docs/roster-paladin-clips.txt", 32),
+
+            // The Witch's broom and the Necromancer's scythe, five turns each.
+            ("docs/roster-prop-turns.txt", 10),
+
+            // Id 49 with the sheathed sword and without, and with the backpack.
+            ("docs/roster-grave-robber-sword.txt", 5),
+        };
+
         [Test]
         public void TheCommittedSetResolvesEveryModelPropAndClip()
         {
@@ -81,6 +106,80 @@ namespace Tests.EditMode
                 Assert.That(candidate.Model, Is.Not.Null, candidate.Name + " has no model");
                 Assert.That(candidate.Clip, Is.Not.Null, candidate.Name + " has no clip");
             }
+        }
+
+        /// <summary>
+        /// The standing sets resolve too, and the Paladin's names its bank on
+        /// every line.
+        /// </summary>
+        /// <remarks>
+        /// <b>The bank qualifier is asserted here and not only on the Large
+        /// rig.</b> The Paladin is a Medium rig, so an unqualified name would
+        /// find the right clip today — which is exactly why the file would
+        /// rot quietly. Every line of that set writing its bank means the
+        /// sheet does not depend on what the searcher defaults to, and this is
+        /// what keeps that true when somebody adds a line.
+        /// </remarks>
+        [Test]
+        public void TheStandingSetsResolveAndThePaladinsNamesItsBank()
+        {
+            foreach ((string path, int entries) in StandingSets)
+            {
+                IReadOnlyList<CandidateSet.Candidate> candidates =
+                    CandidateSet.Read(Path.Combine(RepositoryRoot(), path));
+
+                Assert.That(candidates, Has.Count.EqualTo(entries), path);
+
+                foreach (CandidateSet.Candidate candidate in candidates)
+                {
+                    Assert.That(candidate.Model, Is.Not.Null, candidate.Name + " has no model");
+                    Assert.That(candidate.Clip, Is.Not.Null, candidate.Name + " has no clip");
+                }
+            }
+
+            IReadOnlyList<CandidateSet.Candidate> paladin =
+                CandidateSet.Read(Path.Combine(RepositoryRoot(), StandingSets[0].Path));
+
+            foreach (CandidateSet.Candidate candidate in paladin)
+            {
+                Assert.That(
+                    candidate.ClipName,
+                    Does.StartWith("Rig_Medium_"),
+                    candidate.Name + " does not say which bank its clip comes out of");
+            }
+        }
+
+        /// <summary>
+        /// A model may name mesh children to leave out of the render, and a
+        /// line that does not leaves the whole body standing.
+        /// </summary>
+        /// <remarks>
+        /// The Grave Robber's sword is in the body mesh rather than in a hand,
+        /// so "with it and without it" is one model twice and not two models.
+        /// Asserted on the committed set because it is the committed set that
+        /// asks the question, and a suffix that silently stopped hiding
+        /// anything would draw five identical tiles.
+        /// </remarks>
+        [Test]
+        public void AModelMayLeaveMeshPartsOut()
+        {
+            IReadOnlyList<CandidateSet.Candidate> candidates =
+                CandidateSet.Read(Path.Combine(RepositoryRoot(), StandingSets[2].Path));
+
+            Assert.That(Named(candidates, "grave-robber-as-shipped").Hidden, Is.Empty);
+
+            Assert.That(
+                Named(candidates, "grave-robber-no-sword").Hidden,
+                Is.EqualTo(new[] { "Hoarder_FrontPouch_Sword" }));
+
+            // The path the model loads from and the path the manifest prints
+            // are both the model: the suffix comes off before either is taken,
+            // so neither carries the question being asked of it.
+            Assert.That(
+                Named(candidates, "grave-robber-no-sword").ModelPath,
+                Is.EqualTo("Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx"));
+
+            Assert.That(Named(candidates, "grave-robber-no-sword").Model, Is.Not.Null);
         }
 
         /// <summary>
@@ -252,6 +351,11 @@ namespace Tests.EditMode
                     + "Kaykit/adventurers/turret_base.fbx@0,90,0",
                     "creep Knight Characters/Knight.fbx - - Walking_A - "
                     + "Kaykit/adventurers/turret_base.fbx",
+
+                    // Appended, so that the line numbers asserted below do not
+                    // move every time this fixture grows.
+                    "tower Knight Characters/Knight.fbx!__no-such-node__ - - Idle_A",
+                    "tower Knight Characters/Knight.fbx Weapons/sword_1handed.fbx!blade - Idle_A",
                 });
 
             try
@@ -285,6 +389,19 @@ namespace Tests.EditMode
                 // And a beside prop on a creep, which CreepView would draw
                 // nothing at all for.
                 Assert.That(thrown.Message, Does.Contain("stands beside a creep"));
+
+                // A part the body does not have is a fault, and it lists
+                // what the body does have -- because these node names are the
+                // pack's rather than this project's and nothing else prints
+                // them, so "no such child" on its own would leave a reader
+                // with nowhere to go.
+                Assert.That(thrown.Message, Does.Contain("__no-such-node__"));
+                Assert.That(thrown.Message, Does.Contain("It carries: "));
+
+                // And a part left out of a held prop, which is refused for the
+                // reason a turn on a character is: a hand holds a whole prop,
+                // so there is no part of one to leave behind.
+                Assert.That(thrown.Message, Does.Contain("leaves a part out"));
 
                 // Line numbers, because a fault in a file this long is only
                 // actionable if it says which line.
