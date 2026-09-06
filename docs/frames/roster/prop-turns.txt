@@ -1,6 +1,6 @@
 # prop-turns-sheet.png
 
-**What it is.** The Witch's broom (id 43) and the Necromancer's scythe (id 38) at five turns each,
+**What it is.** The Witch's broom (id 44) and the Necromancer's scythe (id 38) at five turns each,
 walking. Row one is the broom, row two the scythe; in each, left to right: flat as bound today,
 `@0,0,-90`, `@0,0,90`, `@0,0,180`, `@0,0,-45`. `prop-turns/candidates-manifest.txt` names every
 tile.
