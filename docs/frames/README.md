@@ -47,13 +47,18 @@ row that says "drag to tick 1096" are about the same moment.
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
     -Ticks "342,344" -Distance 22 -Width 1600
+
+# The same board, defense and seed, with a wave of your own walking it
+./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
+    -Ticks "272" -Distance 20 -Width 1600
 ```
 
 **Finding the tick a capstone went off on is what the log line is for.** A
 signature is drawn on one tick and gone six or eight later, so hunting one by
 opening pictures means opening most of them. Every kept tick's line in
 `capture-match-frames.log` carries the running slow-ring, ground-shock, glow,
-burst, long-shot, knife, bolt, light, root and strip counts; ask for a run of
+burst, long-shot, knife, bolt, light, root, strip, haste-ring, ward-dome,
+hex-plate and frost-crown counts; ask for a run of
 consecutive ticks, read the line where one of those numbers moves, and then
 capture that tick on its own at the size you want. **The knife count is the one
 that says how many bodies a throw found** — it goes up by three where the Fan of
@@ -69,6 +74,17 @@ started leaving the model rather than a fixed height above it, put the muzzle
 flash on a rig still standing in its bind pose.
 
 ## What is committed
+
+**`-Units`, `-Defense` and `-Wave` are three switches for three different
+absences, and which one a picture needs is decided by what the record is missing
+rather than by preference.** The record carries a board, a defense, a wave and a
+seed. `-Defense` replaces what is standing, and is what photographs a tower row
+the bot's six never build. `-Wave` replaces what is walking, and is what
+photographs a creep row the recorded wave never sends — with its own shipped
+numbers, so nothing about it goes stale. `-Units` replaces the roster itself,
+which is the heaviest of the three and the only one that needs a fixture table
+kept in step with `content/units.txt`; it is for photographing something *no*
+shipped row does at all.
 
 Four frames, kept as a record of what the match looks like:
 
@@ -258,6 +274,62 @@ whose cast is posed, at a signed windup of 21 and a backswing of 15. Both are
 Consecration fire from the head of a mace**, because the tier-2 line names
 `Cleric_Mace` and never says where `Cleric_Tome` goes, so the mace took the
 tome's hand — #259's open question, visible in these frames.
+
+And four of the recorded board with a **wave of the six creep rows that carry
+an aura or a pool** walking it, out of [`creep-auras.txt`](creep-auras.txt), all
+at `-Width 1600`. **Every colour, size, duration and — unlike the ten signed
+shapes above — every *shape* in them is a placeholder, and none of it is
+signed.** Issue #266 asked for four creep effects leaving the staff, the scythe,
+the broom and the axe, and named no shape; a walking row carries no effect
+anchor, which `ImportedArtTests` asserts because nothing would ever resolve one.
+So each aura is centred on the body, and what each one is drawn as is the
+plainest thing that says what that row's aura does — which is a weaker claim
+than any of #263 to #265 made, and `MatchTuning`'s own header says so.
+
+- `creep-auras-tick-0272.png` — **the one to look at first**, at `-Distance 20`.
+  All four auras pulsed on tick 271 and this is the tick after. The pale blue
+  cages are the Necromancer's ward, three of them overlapping, at the two hexes
+  it grants a pool across; the green rings hanging over the heads inside them
+  are the Skeleton Mage's haste, one per body it reached; and the violet plates
+  scattered across the ground are the Witch's hex ward, three bands of them out
+  to two hexes each. The green-and-blue bars over the bodies are **not** an
+  effect of this ticket: they are the two-segment bar #254 already draws, and
+  the blue half is a pool — some of it the Vampire's and the Grave Robber's own
+  and some of it what the Necromancer just granted.
+
+- `creep-auras-tick-0276.png` — the same knot at `-Distance 14`, down among the
+  bodies, four ticks later. What is worth reading here is that a haste ring
+  hangs above every body inside the aura and that the bar and the ring are two
+  different statements about one creep.
+
+- `creep-auras-tick-0271.png` — the whole-floor framing, so the reach of all
+  four is in one picture against a board nineteen hexes wide. Two hexes is what
+  every creep aura on the roster carries, and this is what two hexes looks like
+  from where a player sits.
+
+- `creep-auras-tick-0094.png` — **the Frost Wight's frostbite**, at
+  `-Distance 18`, which the three frames above cannot show. The pale shards
+  round the feet of the Archer standing among the wave are it: frostbite is the
+  one aura on the roster whose `affects` column reaches the *other* side, so it
+  is the one creep shape drawn on a tower. It is also the smallest of the four
+  and the question this frame asks — a frozen tower wears nothing else, because
+  the wash `EffectMarks` puts on a modified body is a creep's and there is no
+  tower equivalent, so this crown is the whole of what says that tower is firing
+  a third slower.
+
+**Three things about them are results rather than questions.** **The two rows
+with a pool of their own draw no effect at all**, and that is what #254 already
+built rather than an omission: a pool is a `CreepSnapshot` field and not a
+moment, which is why it survives a scrub, and the Vampire's blood and the Grave
+Robber's pack are the blue segment of the bar over the body in every frame here.
+**A hastened body is washed the same colour a slowed one is** — `SpeedEffectTint`
+covers both signs, which is a placeholder decision #254 recorded and this ticket
+did not reopen — so the haste ring over its head is what tells the two apart.
+And **the Necromancer's cage is a moment and the haste ring is a state**: the
+ward's duration is zero, so the cage stands ten ticks and the pool it granted
+goes on being drawn on the bar, where haste, hex ward and frostbite last exactly
+as long as the gap to the next pulse and are drawn for twenty-six of those
+thirty ticks.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

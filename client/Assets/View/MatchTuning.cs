@@ -219,21 +219,32 @@ namespace View
         // Capstone signatures — the shapes a row's own effects are drawn as
         // ---------------------------------------------------------------
         //
-        // TEN SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
-        // PLACEHOLDER. What was signed is that the Shield Wall's slow leaves a
-        // ring, the Slam's swing shocks the ground across the hex, the
-        // Blessing glows on every tower it reaches, the Mortar bursts at the
-        // radius it landed in, the Overwatch's single shot draws a tracer the
-        // length of the leg it crossed, the Fan of Knives throws three knives
-        // at three bodies, the Cleric and Druid lines fire a bolt out of the
-        // tome or the staff tip, Consecration lays light on the ground,
-        // Overgrowth puts roots under everything it slows and Unravel strips
-        // the armour off the hex its bolt landed on. How wide a band, how many
+        // TEN SHAPES ARE SIGNED, FOUR ARE NOT, AND EVERY NUMBER AND COLOUR
+        // BELOW IS A PLACEHOLDER. What was signed is that the Shield Wall's
+        // slow leaves a ring, the Slam's swing shocks the ground across the
+        // hex, the Blessing glows on every tower it reaches, the Mortar bursts
+        // at the radius it landed in, the Overwatch's single shot draws a
+        // tracer the length of the leg it crossed, the Fan of Knives throws
+        // three knives at three bodies, the Cleric and Druid lines fire a bolt
+        // out of the tome or the staff tip, Consecration lays light on the
+        // ground, Overgrowth puts roots under everything it slows and Unravel
+        // strips the armour off the hex its bolt landed on. How wide a band, how many
         // cracks, how long a knife or a bolt is, how many roots, how long any
         // of it lasts and what colour it comes out are nobody's decision yet --
         // the same standing rule the bubble ring above and the marks below are
         // held to. A number here is the plainest thing that draws the signed
         // shape, and is not a proposal about how it should look.
+        //
+        // THE FOUR CREEP AURAS AT THE BOTTOM OF THIS SECTION ARE WEAKER THAN
+        // THAT, AND THE DIFFERENCE MATTERS. Issue #266 named where those
+        // effects should leave from -- the creep's staff, scythe, broom or axe
+        // -- and named no shape at all, and a walking row carries no effect
+        // anchor, so neither half of what it asked for could be built as
+        // written. What is drawn instead is one shape per row, centred on the
+        // body, picked as the plainest thing that says what that row's aura
+        // does; the aura and its payload are signed in docs/roster.md and the
+        // shape is not. SO A SHAPE DOWN THERE IS AS UNSIGNED AS THE COLOUR IT
+        // IS DRAWN IN, which is not true of any of the ten above.
         //
         // THE ONES THAT STAND FOR A DISTANCE DO NOT SHRINK, and that is not a
         // number here but a flag on the effect: a ring, a shock and a burst all
@@ -458,6 +469,118 @@ namespace View
         /// </remarks>
         public const int ArmourStripTicks = 10;
 
+        // The four creep auras. Every row above pulses or fires from something
+        // that stands still; these four walk, and what each one is drawn as is
+        // this section's own paragraph rather than #263's.
+
+        /// <summary>How wide the ring over a hastened creep's head is, in metres.</summary>
+        /// <remarks>
+        /// Narrower than <see cref="BlessingGlowDiameter"/> because a creep is
+        /// a narrower body than a tower, and the two are the same shape saying
+        /// the same thing on opposite sides of the board.
+        /// </remarks>
+        public const float HasteRingDiameter = 1f;
+
+        /// <summary>
+        /// How high over a creep's feet that ring hangs, in metres. Above the
+        /// tallest body on the creep roster, so it is a halo rather than a
+        /// collar.
+        /// </summary>
+        public const float HasteRingHeight = 2.8f;
+
+        /// <summary>How long a hastened creep's ring lasts, in ticks.</summary>
+        /// <remarks>
+        /// Just under the thirty-tick period the aura pulses on, for the reason
+        /// <see cref="ConsecrationLightTicks"/> is: what it says is that this
+        /// body is walking faster, which is true for as long as it is inside.
+        /// </remarks>
+        public const int HasteRingTicks = 26;
+
+        /// <summary>How many arcs the ward's cage is made of.</summary>
+        public const int WardDomeRibs = 9;
+
+        /// <summary>
+        /// How many straight bars one of those arcs is broken into. Enough that
+        /// a rib reads as a curve rather than as a bent stick at the size a
+        /// two-hex ward is drawn at.
+        /// </summary>
+        public const int WardDomeSegments = 5;
+
+        /// <summary>
+        /// How thick one rib is, as a share of the ward's own radius. A share
+        /// rather than a distance because the whole cage is scaled uniformly to
+        /// whatever radius the pulse reached.
+        /// </summary>
+        public const float WardDomeRibWidthFraction = 0.05f;
+
+        /// <summary>
+        /// How long the cage stands, in ticks.
+        /// </summary>
+        /// <remarks>
+        /// <b>Far shorter than the ninety-tick period the ward pulses on, and
+        /// that is the point of it.</b> The ward's duration is zero -- a pool
+        /// is spent rather than timed -- so what lasts is the pool, and the
+        /// pool is drawn on each body that got one for as long as it holds it,
+        /// out of the snapshot. This is the moment the ward went out, on the
+        /// same terms as <see cref="ArmourStripTicks"/>.
+        /// </remarks>
+        public const int WardDomeTicks = 10;
+
+        /// <summary>
+        /// How many bars a whole ring of the hex ward's plates would take.
+        /// Every other one is drawn, so the band comes out in half this many
+        /// pieces.
+        /// </summary>
+        public const int HexPlateSides = 28;
+
+        /// <summary>How wide the band of plates is, as a share of its own radius.</summary>
+        public const float HexPlateBandFraction = 0.15f;
+
+        /// <summary>How far the plates stand off the ground they lie on, in metres.</summary>
+        public const float HexPlateThickness = 0.07f;
+
+        /// <summary>How long the plates last, in ticks.</summary>
+        /// <remarks>
+        /// Just under the thirty-tick period, for the reason
+        /// <see cref="HasteRingTicks"/> is: the armour it stands for lasts
+        /// exactly as long as the gap to the next pulse.
+        /// </remarks>
+        public const int HexPlateTicks = 26;
+
+        /// <summary>How many shards stand round the edge of the frostbite.</summary>
+        public const int FrostSpikeCount = 18;
+
+        /// <summary>
+        /// How tall a full shard stands, in metres. Every other one is half
+        /// this, which is <see cref="EffectMeshes.Spikes"/>'s own rule.
+        /// </summary>
+        /// <remarks>
+        /// A distance and not a share, because a crown is scaled across by
+        /// <see cref="FrostCrownDiameter"/> and not at all upwards -- the rule
+        /// every flat shape here is drawn under. Its width is a share for the
+        /// same reason a ring's band is: the horizontal axes carry the scale.
+        /// </remarks>
+        public const float FrostSpikeHeight = 0.6f;
+
+        /// <summary>How thick one shard is, as a share of the crown's radius.</summary>
+        public const float FrostSpikeWidthFraction = 0.09f;
+
+        /// <summary>
+        /// How wide the crown standing at a frostbitten tower's feet is, in
+        /// metres.
+        /// </summary>
+        /// <remarks>
+        /// <b>A fixed size and not the reach</b>, for the reason
+        /// <see cref="OvergrowthRootPatchDiameter"/> is one and
+        /// <see cref="BlessingGlowDiameter"/> is one: it stands for a tower
+        /// caught rather than for a distance. Wide enough to stand outside the
+        /// tile a tower is drawn on rather than through the body.
+        /// </remarks>
+        public const float FrostCrownDiameter = 1.6f;
+
+        /// <summary>How long the crown of shards stands, in ticks.</summary>
+        public const int FrostSpikeTicks = 26;
+
         /// <summary>The Shield Wall's slow ring. Cold, because it is a slow.</summary>
         public static Color SlowRingColor => new Color(0.45f, 0.72f, 1f, 1f);
 
@@ -493,6 +616,33 @@ namespace View
 
         /// <summary>The Unravel's armour strip.</summary>
         public static Color ArmourStripColor => new Color(0.78f, 0.55f, 1f, 1f);
+
+        /// <summary>The ring over a creep the Skeleton Mage's haste has reached.</summary>
+        public static Color HasteRingColor => new Color(0.55f, 0.95f, 0.5f, 1f);
+
+        /// <summary>
+        /// The Necromancer's ward.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="ShieldSegmentColor"/>, deliberately: the cage is the
+        /// moment a pool was granted and that segment is the pool it granted,
+        /// so the two say one thing in one colour. It is still a placeholder,
+        /// because that segment is.
+        /// </remarks>
+        public static Color WardDomeColor => ShieldSegmentColor;
+
+        /// <summary>The Witch's hex ward.</summary>
+        /// <remarks>
+        /// The violet <see cref="ArmourStripColor"/> and
+        /// <see cref="ArmourEffectTint"/> are, because all three are armour
+        /// moving; that the Unravel takes armour off and the Witch puts it on
+        /// is not distinguished, which is the same restraint the wash keeps
+        /// between a slow and a haste.
+        /// </remarks>
+        public static Color HexPlateColor => new Color(0.66f, 0.48f, 0.98f, 1f);
+
+        /// <summary>The Frost Wight's frostbite.</summary>
+        public static Color FrostSpikeColor => new Color(0.7f, 0.92f, 1f, 1f);
 
         // ---------------------------------------------------------------
         // What a unit is carrying — the marks, not the decoration

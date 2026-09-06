@@ -53,6 +53,15 @@ namespace View
     {
         private readonly Dictionary<int, Vector3> _drawnCreepPositions = new Dictionary<int, Vector3>();
 
+        /// <summary>
+        /// Which row each of those bodies is, filled in beside the positions
+        /// and cleared with them. Kept because a creep's own effect shape is a
+        /// property of its row and an event carries only the entity id — the
+        /// same lookup problem the position has, with the same at-most-a-tick
+        /// -behind answer.
+        /// </summary>
+        private readonly Dictionary<int, int> _drawnCreepTypes = new Dictionary<int, int>();
+
         private readonly Dictionary<int, CreepSnapshot> _previousCreeps =
             new Dictionary<int, CreepSnapshot>();
 
@@ -211,6 +220,7 @@ namespace View
                 TowerMuzzleOf,
                 EntityGroundOf,
                 TowerSignatureOf,
+                CreepSignatureOf,
                 TowersWithin,
                 CreepsWithin);
 
@@ -399,6 +409,7 @@ namespace View
         private void DrawCreeps(float alpha)
         {
             _drawnCreepPositions.Clear();
+            _drawnCreepTypes.Clear();
             _creepPool.BeginSync();
 
             foreach (CreepSnapshot creep in Current.Creeps)
@@ -418,6 +429,7 @@ namespace View
                 Vector3 position = _route.PointAt(distance, lateral);
 
                 _drawnCreepPositions[creep.Id] = position;
+                _drawnCreepTypes[creep.Id] = creep.TypeId;
 
                 view.Pose(
                     position,
@@ -721,6 +733,33 @@ namespace View
         private RowSignature? TowerSignatureOf(int entityId) =>
             _towers.TryGetValue(entityId, out TowerView tower)
                 ? tower.Signature
+                : (RowSignature?)null;
+
+        /// <summary>
+        /// What the creep with this id draws its own bubble as, or null when
+        /// the id is not a body the view last drew.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Separate from <see cref="TowerSignatureOf"/> and not folded into
+        /// it.</b> That one's null is what tells a bubble centred on its
+        /// emitter from a blast centred on its victim, so a lookup answering
+        /// for creeps as well would draw a walking row's aura shape under a
+        /// body a mortar shell had just landed on. Only the aura asks this one,
+        /// and an aura is always centred on the thing that emitted it.
+        /// </para>
+        /// <para>
+        /// The row comes from the frame the view last drew rather than from the
+        /// snapshot being pulled, which is the at-most-a-tick-behind answer
+        /// <see cref="CreepPositionOf"/> gives and is allowed to be for the same
+        /// reason: a body that has just left is one the view is no longer
+        /// holding art for, and its pulse reaches nothing rather than reaching
+        /// a row nothing is drawn as.
+        /// </para>
+        /// </remarks>
+        private RowSignature? CreepSignatureOf(int entityId) =>
+            _drawnCreepTypes.TryGetValue(entityId, out int typeId)
+                ? _art.ArtFor(typeId).Signature
                 : (RowSignature?)null;
 
         /// <summary>

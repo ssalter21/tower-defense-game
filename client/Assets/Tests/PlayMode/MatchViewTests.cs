@@ -1963,10 +1963,15 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// Nothing in the shipped content authors a bubble, so nothing in the
-        /// recorded match is ever marked. The marks cost a match that has no
-        /// effects in it exactly nothing on screen.
+        /// Nothing in the recorded match is ever marked, so the marks cost a
+        /// match with no effects in it exactly nothing on screen.
         /// </summary>
+        /// <remarks>
+        /// The roster does author bubbles — four creep auras and eight tower
+        /// ones — but the recorded wave releases Minions and Skeleton Scouts
+        /// against Archers and Mages, and not one of those four rows carries
+        /// one that lasts.
+        /// </remarks>
         [Test]
         public void ACreepCarryingNothingWearsNothing()
         {
@@ -1985,6 +1990,293 @@ namespace Tests.PlayMode
             });
 
             Assert.That(view.Current.Tick, Is.GreaterThan(1000), "hardly any of the match was watched");
+        }
+
+        /// <summary>
+        /// Each of the four creep auras draws its own shape, at the size the
+        /// pulse reached and on the thing that pulse is about.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Every one of them is centred on the body and not on what the body
+        /// is holding.</b> #266 asked for a shape leaving the staff, the
+        /// scythe, the broom or the axe; a walking row carries no effect anchor
+        /// at all — <c>ImportedArtTests.EveryTowerFiresFromAPointOnItsOwnArt</c>
+        /// asserts that it carries none, because nothing would ever resolve one
+        /// — so an aura leaves the creep, which is where the emitter id the
+        /// event carries resolves to.
+        /// </para>
+        /// <para>
+        /// <b>Driven by calling the event rather than by waiting for the
+        /// match to produce one</b>, the same way the tower capstones above are
+        /// driven: what is under test is what the view draws when an aura
+        /// pulses, and the tick a given creep first pulses on is the
+        /// simulation's business. <see cref="ASeekDrawsNoCreepAuraASecondTime"/>
+        /// is the one that waits for real pulses.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EachCreepAuraDrawsItsOwnSignature()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+            MatchView view = BeginWithTheCreepAuras();
+
+            RunUntil(view, () => Walkers(view, SkeletonMage).Any() && Walkers(view, Witch).Any());
+
+            view.Decorations.Clear();
+
+            // The Skeleton Mage: a ring over the head of every body its haste
+            // reached, itself included.
+            int mage = Walkers(view, SkeletonMage).First();
+            int hasteRadius = Pulses(types, SkeletonMage);
+            Vector3[] hastened = Bodies(view, mage, hasteRadius);
+
+            view.Decorations.AuraPulsed(mage, hasteRadius, BubblePayload.Speed);
+
+            Assert.That(view.Decorations.HasteRingsDrawn, Is.EqualTo(hastened.Length),
+                "the haste reached a different number of bodies than are standing inside it");
+
+            Assert.That(view.Decorations.HasteRingsDrawn, Is.GreaterThan(0),
+                "the emitter is inside its own aura, so this can never be none");
+
+            Transform[] rings = Pieces(view, "HasteRing").ToArray();
+
+            foreach (Vector3 body in hastened)
+            {
+                Vector3 over = body + (Vector3.up * MatchTuning.HasteRingHeight);
+
+                Assert.That(rings.Min(ring => Vector3.Distance(ring.position, over)), Is.LessThan(1e-3f),
+                    "a body inside the haste has no ring over its head");
+            }
+
+            Assert.That(rings[0].localScale.x, Is.EqualTo(MatchTuning.HasteRingDiameter).Within(1e-4f),
+                "the ring over a hastened body is scaled by the reach of the aura rather than by itself");
+
+            // The Necromancer: a cage over the ground its ward covered, as tall
+            // as it is wide.
+            int necromancer = Walkers(view, Necromancer).First();
+            int wardRadius = Pulses(types, Necromancer);
+
+            view.Decorations.AuraPulsed(necromancer, wardRadius, BubblePayload.Shield);
+
+            Assert.That(view.Decorations.WardDomesDrawn, Is.EqualTo(1),
+                "the Necromancer warded and nothing stood over it");
+
+            Transform dome = Pieces(view, "WardDome").Single();
+
+            Assert.That(
+                Vector3.Distance(
+                    dome.position,
+                    view.Creeps.Live[necromancer].transform.position
+                        + (Vector3.up * MatchTuning.FloorClearance)),
+                Is.LessThan(1e-3f),
+                "the cage is not over the body that warded");
+
+            Assert.That(dome.localScale,
+                Is.EqualTo(Vector3.one * (2f * SimUnits.MetresFromMilliHex(wardRadius))).Within(1e-4f),
+                "the cage reports a radius in all three directions, so it is scaled in all three");
+
+            // The Witch: plates on the ground out to the edge of the hex ward.
+            int witch = Walkers(view, Witch).First();
+            int hexRadius = Pulses(types, Witch);
+
+            view.Decorations.AuraPulsed(witch, hexRadius, BubblePayload.Armour);
+
+            Assert.That(view.Decorations.HexPlatesDrawn, Is.EqualTo(1),
+                "the Witch pulsed and the ground stayed bare");
+
+            Transform plates = Pieces(view, "HexPlates").Single();
+
+            Assert.That(plates.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(hexRadius)).Within(1e-4f));
+
+            // The Frost Wight: a crown at the feet of every tower it reached.
+            // The one aura on the roster that reaches the other side, so this
+            // is the one shape a creep draws on a tower.
+            RunUntil(view, () =>
+                Walkers(view, FrostWight).Any(wight => Standings(view, wight, FrostReach(types)).Any()));
+
+            int frostRadius = Pulses(types, FrostWight);
+            int frozen = Walkers(view, FrostWight)
+                .First(wight => Standings(view, wight, FrostReach(types)).Any());
+
+            Vector3[] towers = Standings(view, frozen, FrostReach(types)).ToArray();
+
+            view.Decorations.AuraPulsed(frozen, frostRadius, BubblePayload.Cooldown);
+
+            Assert.That(view.Decorations.FrostSpikesDrawn, Is.EqualTo(towers.Length),
+                "the frost reached a different number of towers than are standing inside it");
+
+            Transform[] crowns = Pieces(view, "FrostSpikes").ToArray();
+
+            foreach (Vector3 tower in towers)
+            {
+                Vector3 at = tower + (Vector3.up * MatchTuning.FloorClearance);
+
+                Assert.That(crowns.Min(crown => Vector3.Distance(crown.position, at)), Is.LessThan(1e-3f),
+                    "a tower inside the frostbite has no crown at its feet");
+            }
+
+            Assert.That(crowns[0].localScale.x,
+                Is.EqualTo(MatchTuning.FrostCrownDiameter).Within(1e-4f),
+                "the crown at a frozen tower's feet is scaled by the reach of the aura");
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(0),
+                "a creep aura fell back to the plain disc, so its binding was not read");
+
+            // And every one of them holds the size it reported. All four stand
+            // for a distance or for a body caught, and neither may close down
+            // over its life.
+            Transform[] shapes = { rings[0], dome, plates, crowns[0] };
+            Vector3[] drawnAt = shapes.Select(shape => shape.localScale).ToArray();
+
+            for (var tick = 1; tick < MatchTuning.WardDomeTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+
+                for (var index = 0; index < shapes.Length; index++)
+                {
+                    Assert.That(shapes[index].localScale, Is.EqualTo(drawnAt[index]),
+                        $"{shapes[index].name} is {shapes[index].localScale.x} metres across {tick} "
+                        + $"ticks after a pulse {drawnAt[index].x} metres across went out");
+                }
+            }
+        }
+
+        /// <summary>
+        /// A seek re-runs the ticks it passes over in silence, so no ring, no
+        /// cage, no plate and no crown it passes over is drawn a second time.
+        /// </summary>
+        /// <remarks>
+        /// The same claim the seek tests above make, on the shapes the walking
+        /// rows draw — and the one test here that waits for the simulation to
+        /// pulse rather than calling the event itself, so it is also what says
+        /// these four rows pulse at all.
+        /// </remarks>
+        [Test]
+        public void ASeekDrawsNoCreepAuraASecondTime()
+        {
+            MatchView view = BeginWithTheCreepAuras();
+
+            RunUntil(view, () =>
+                view.Decorations.HasteRingsDrawn > 0
+                && view.Decorations.WardDomesDrawn > 0
+                && view.Decorations.HexPlatesDrawn > 0
+                && view.Decorations.FrostSpikesDrawn > 0);
+
+            Assert.That(view.Decorations.HasteRingsDrawn, Is.GreaterThan(0),
+                "the Skeleton Mage never hastened anything in the whole match, so this proves nothing");
+
+            Assert.That(view.Decorations.WardDomesDrawn, Is.GreaterThan(0),
+                "the Necromancer never warded in the whole match, so this proves nothing");
+
+            Assert.That(view.Decorations.HexPlatesDrawn, Is.GreaterThan(0),
+                "the Witch never pulsed in the whole match, so this proves nothing");
+
+            Assert.That(view.Decorations.FrostSpikesDrawn, Is.GreaterThan(0),
+                "no tower was ever frostbitten in the whole match, so this proves nothing");
+
+            int tick = view.Current.Tick;
+            int heard = view.Decorations.EventsHeard;
+
+            view.ReSimulateTo(tick + 90);
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heard),
+                "a seek heard the events of the ticks it re-ran, so every effect between here and the "
+                + "start was drawn again");
+
+            Assert.That(view.Decorations.HasteRingsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.WardDomesDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.HexPlatesDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.FrostSpikesDrawn, Is.EqualTo(0));
+
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
+                "an effect from before the seek is still on screen, and the tick it belongs to is now "
+                + "in the future");
+        }
+
+        /// <summary>
+        /// The two rows that carry a pool of their own wear it from the first
+        /// tick they are drawn, out of the snapshot and with no event anywhere.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is what the Vampire's blood and the Grave Robber's pack are
+        /// drawn as, and nothing was added to draw it.</b> A pool is a
+        /// <c>CreepSnapshot</c> field rather than a moment, which is why it
+        /// survives a scrub, and <see cref="EffectMarks"/> already draws it as
+        /// the second segment of the bar over the body. Those two rows author
+        /// theirs in <c>content/units.txt</c> rather than being granted one, so
+        /// unlike the Necromancer's ward there is no event on the wire at any
+        /// tick — a decoration of any kind would have nothing to fire off, and a
+        /// second shape saying "there is a pool here" is what this asserts is
+        /// absent.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheTwoRowsWithAPoolOfTheirOwnWearItAndDrawNoEffect()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+            MatchView view = BeginWithTheCreepAuras();
+
+            RunUntil(view, () => Walkers(view, Vampire).Any() && Walkers(view, GraveRobber).Any());
+
+            foreach (int unitId in new[] { Vampire, GraveRobber })
+            {
+                CreepSnapshot carrying = view.Current.Creeps.First(creep => creep.TypeId == unitId);
+                EffectMarks marks = view.Creeps.Live[carrying.Id].Marks;
+
+                // The row's own pool is the floor and not the number: the
+                // Necromancer walks in this wave too, and its ward grants a
+                // quarter of a body's health on top of whatever that body
+                // brought. One field carries both, summed, which is what makes
+                // the granted one survive a scrub as well.
+                Assert.That(carrying.Shield, Is.GreaterThanOrEqualTo(types.ById(unitId).Shield),
+                    $"unit {unitId} walks on with less pool than its own row authored");
+
+                Assert.That(marks.Bar.gameObject.activeSelf, Is.True,
+                    $"unit {unitId} carries a pool and wears no bar");
+
+                Assert.That(
+                    marks.ShieldSegment.localScale.x,
+                    Is.EqualTo(
+                            MatchTuning.UnitBarLength
+                            * (carrying.Shield / (float)types.ById(unitId).MaxHp))
+                        .Within(1e-4f),
+                    $"unit {unitId}'s pool is not drawn as a share of the health it stands in front of");
+
+                // A pool washes nothing, and the wash on one of these bodies is
+                // never the pool. It is often not null: the Skeleton Mage walks
+                // in this wave too, and a hastened body is washed in the same
+                // colour a slowed one is -- which is the placeholder saying
+                // that the sign of a speed modifier is not distinguished.
+                Assert.That(
+                    marks.Wash == null
+                    || carrying.SpeedMagnitude != 0
+                    || carrying.ArmourMagnitude != 0,
+                    Is.True,
+                    $"unit {unitId} is washed while nothing has moved its speed or its armour, so the "
+                    + "wash is being driven by the pool");
+
+                Assert.That(types.ById(unitId).Bubble.Present, Is.False,
+                    $"unit {unitId} authors a bubble, so its pool is no longer the case this is about");
+            }
+
+            // And drawing those bodies again puts nothing on screen. A pool is
+            // snapshot state rather than a moment: there is no event behind it
+            // to draw a shape from, so a second thing saying "there is a pool
+            // here" could only be invented, and nothing here invents one.
+            view.Decorations.Clear();
+
+            for (var again = 0; again < 5; again++)
+            {
+                view.Draw(1f);
+            }
+
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
+                "drawing a frame of bodies carrying pools put an effect on screen, and no tick was "
+                + "advanced for one to have arrived on");
         }
 
         /// <summary>
@@ -2225,6 +2517,153 @@ namespace Tests.PlayMode
         private static IEnumerable<Transform> Pieces(MatchView view, string named) =>
             view.GetComponentsInChildren<Transform>()
                 .Where(child => child.name == named && child.gameObject.activeSelf);
+
+
+        /// <summary>The Skeleton Mage, whose haste is the first creep aura.</summary>
+        private const int SkeletonMage = 7;
+
+        /// <summary>The Necromancer, whose ward grants a pool.</summary>
+        private const int Necromancer = 38;
+
+        /// <summary>The Frost Wight, whose frostbite is the one aura reaching towers.</summary>
+        private const int FrostWight = 41;
+
+        /// <summary>The Vampire, which authors a pool of its own.</summary>
+        private const int Vampire = 43;
+
+        /// <summary>The Witch, whose hex ward puts armour on what walks beside it.</summary>
+        private const int Witch = 44;
+
+        /// <summary>The Grave Robber, which authors the other pool.</summary>
+        private const int GraveRobber = 49;
+
+        /// <summary>
+        /// Two Archers beside the corridor, so the Frost Wight has something on
+        /// the tower side to freeze.
+        /// </summary>
+        /// <remarks>
+        /// The cells are two of <see cref="FourLinesDefense"/>'s, which are next
+        /// to the corridor because nine of those twelve rows reach one hex. An
+        /// Archer reaches three and would stand anywhere; what these tests need
+        /// is a tower inside the two hexes a creep aura carries, which is a much
+        /// tighter requirement than a tower that can shoot.
+        /// </remarks>
+        private const string CreepAuraDefense =
+            "tower 3  3  0\n"
+            + "tower 3  5  0";
+
+        /// <summary>
+        /// A column of each of the six rows this ticket is about, released
+        /// together.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A wave and not a roster, which is the whole point of it.</b> Every
+        /// row here is the shipped row with the aura or the pool
+        /// <c>content/units.txt</c> authors on it; what the recorded wave lacks
+        /// is not the authoring but the sending, because it releases Minions and
+        /// Skeleton Scouts and neither carries either. So nothing here is a
+        /// fixture row invented to have something to draw, and nothing here goes
+        /// stale when the roster moves.
+        /// </para>
+        /// <para>
+        /// <b>Together, so they stand in each other's spheres.</b> Three of the
+        /// four auras reach friends within two hexes, and a column released on
+        /// its own would be one body pulsing at nobody. Orders ascend by tick
+        /// and then by type id, which is asserted at load rather than sorted.
+        /// </para>
+        /// <para>
+        /// <b><c>docs/frames/creep-auras.txt</c> is the same six orders</b>, so
+        /// the frames of these rows are frames of what this asserts about — two
+        /// copies for the reason <see cref="FourLinesDefense"/> has two.
+        /// </para>
+        /// </remarks>
+        private const string CreepAuraWave =
+            "order 0  7 6 0\n"
+            + "order 0 38 6 0\n"
+            + "order 0 41 4 0\n"
+            + "order 0 43 4 0\n"
+            + "order 0 44 6 0\n"
+            + "order 0 49 4 0";
+
+        /// <summary>
+        /// The real board, the real roster and the recorded seed, with the six
+        /// rows that carry an aura or a pool walking it.
+        /// </summary>
+        private MatchView BeginWithTheCreepAuras()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("creep aura defense", CreepAuraDefense, types),
+                WaveScript.Parse("creep aura wave", CreepAuraWave, types),
+                TheMatchOnScreen.Seed);
+        }
+
+        /// <summary>The ids of the bodies on the board drawn as the row with this id.</summary>
+        private static IEnumerable<int> Walkers(MatchView view, int unitId) =>
+            view.Current.Creeps.Where(creep => creep.TypeId == unitId).Select(creep => creep.Id);
+
+        /// <summary>
+        /// How far one walking row's aura reaches, in thousandths of a hex, off
+        /// the row that authors it.
+        /// </summary>
+        /// <remarks>
+        /// Read rather than written out, for the reason
+        /// <see cref="Reaches"/> reads a tower's: a reach that moves in
+        /// <c>content/units.txt</c> moves here too, and a row authoring none is
+        /// refused rather than quietly asserted about.
+        /// </remarks>
+        private static int Pulses(UnitTypeTable types, int unitId)
+        {
+            int radius = types.ById(unitId).Bubble.RadiusMilliHex;
+
+            Assert.That(radius, Is.GreaterThan(0),
+                $"unit {unitId} authors no aura to draw a signature for");
+
+            return radius;
+        }
+
+        /// <summary>What the Frost Wight's frostbite carries, in metres.</summary>
+        private static float FrostReach(UnitTypeTable types) =>
+            SimUnits.MetresFromMilliHex(Pulses(types, FrostWight));
+
+        /// <summary>
+        /// Where every body within <paramref name="radiusMilliHex"/> of the
+        /// creep with this id is drawn.
+        /// </summary>
+        /// <remarks>
+        /// Measured flat against where the bodies are drawn, which is what the
+        /// view measures a pulse's reach against — the simulation reads the same
+        /// radius as a sphere, and nothing that draws a bubble asks how tall the
+        /// ground is.
+        /// </remarks>
+        private static Vector3[] Bodies(MatchView view, int emitterId, int radiusMilliHex) =>
+            Within(
+                view.Creeps.Live.Values.Select(body => body.transform.position),
+                view.Creeps.Live[emitterId].transform.position,
+                SimUnits.MetresFromMilliHex(radiusMilliHex));
+
+        /// <summary>
+        /// Where every tower within <paramref name="metres"/> of the creep with
+        /// this id stands.
+        /// </summary>
+        private static Vector3[] Standings(MatchView view, int emitterId, float metres) =>
+            Within(
+                view.Towers.Values.Select(tower => tower.transform.position),
+                view.Creeps.Live[emitterId].transform.position,
+                metres);
+
+        /// <summary>
+        /// Which of <paramref name="places"/> are within
+        /// <paramref name="metres"/> of <paramref name="centre"/>.
+        /// </summary>
+        private static Vector3[] Within(IEnumerable<Vector3> places, Vector3 centre, float metres) =>
+            places.Where(at => (at - centre).sqrMagnitude <= metres * metres).ToArray();
 
         /// <summary>
         /// Every bubble ring standing under the view, found by the name the

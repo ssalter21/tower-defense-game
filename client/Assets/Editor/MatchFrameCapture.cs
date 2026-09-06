@@ -114,6 +114,34 @@ namespace View.Editor
         public const string DefenseArgument = "-matchFrameDefense";
 
         /// <summary>
+        /// A wave to send down the recorded board instead of the one the record
+        /// carries.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For photographing rows the recorded wave does not send.</b> The
+        /// record's wave releases Minions and Skeleton Scouts, and neither of
+        /// those two rows carries an aura or a pool — so the creep rows that do
+        /// never walk onto the board a frame is taken of, whatever roster or
+        /// defense is standing.
+        /// </para>
+        /// <para>
+        /// <b>It is a wave and not a roster.</b> The rows it sends are the
+        /// shipped rows out of <c>content/units.txt</c>, with their own
+        /// authored auras and their own authored pools, so a frame of one is a
+        /// frame of the row as it ships rather than of a row invented to have
+        /// something to draw. That is the whole difference from
+        /// <see cref="UnitsArgument"/>, whose fixture table goes stale the
+        /// moment the roster moves.
+        /// </para>
+        /// <para>
+        /// Frames from such a run are named after the wave, for the reason a
+        /// fixture defense's are named after the defense.
+        /// </para>
+        /// </remarks>
+        public const string WaveArgument = "-matchFrameWave";
+
+        /// <summary>
         /// The shape of a frame. Sixteen by nine, the same shape the playback
         /// bar lays itself out for, because these are pictures of what a player
         /// sees.
@@ -151,6 +179,7 @@ namespace View.Editor
 
             string units = BatchArguments.Value(UnitsArgument);
             string defense = BatchArguments.Value(DefenseArgument);
+            string wave = BatchArguments.Value(WaveArgument);
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float distance = ParseFloat(BatchArguments.Value(DistanceArgument), 0f);
@@ -179,7 +208,7 @@ namespace View.Editor
                 // with no sides and shows the background through every step.
                 root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
 
-                MatchView view = BeginMatch(root, record, units, defense);
+                MatchView view = BeginMatch(root, record, units, defense, wave);
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -237,7 +266,7 @@ namespace View.Editor
 
                     string path = Path.Combine(
                         outDir,
-                        NameOf(units, defense)
+                        NameOf(units, defense, wave)
                         + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture)
                         + ".png");
 
@@ -263,7 +292,11 @@ namespace View.Editor
                         + view.Decorations.BoltsDrawn + " bolt / "
                         + view.Decorations.LightsDrawn + " light / "
                         + view.Decorations.RootsDrawn + " roots / "
-                        + view.Decorations.StripsDrawn + " strip -> " + path);
+                        + view.Decorations.StripsDrawn + " strip / "
+                        + view.Decorations.HasteRingsDrawn + " haste / "
+                        + view.Decorations.WardDomesDrawn + " ward / "
+                        + view.Decorations.HexPlatesDrawn + " hex / "
+                        + view.Decorations.FrostSpikesDrawn + " frost -> " + path);
 
                     next++;
                 }
@@ -292,16 +325,18 @@ namespace View.Editor
         private static MatchArt LoadArt() => MatchSceneBuilder.Art();
 
         /// <summary>
-        /// The match to photograph: the recorded one, or the same board,
-        /// defense, wave and seed played against the unit table at
-        /// <paramref name="units"/>.
+        /// The match to photograph: the recorded one, or the same board and
+        /// seed played against the roster, the defense or the wave an argument
+        /// named.
         /// </summary>
         private static MatchView BeginMatch(
-            MatchRoot root, ReplayBundle record, string units, string defense)
+            MatchRoot root, ReplayBundle record, string units, string defense, string wave)
         {
             Ruleset rules = StreamingContent.ReadRuleset();
 
-            if (string.IsNullOrWhiteSpace(units) && string.IsNullOrWhiteSpace(defense))
+            if (string.IsNullOrWhiteSpace(units)
+                && string.IsNullOrWhiteSpace(defense)
+                && string.IsNullOrWhiteSpace(wave))
             {
                 return root.BeginMatch(StreamingContent.ReadUnitTypes(), rules, record, art: LoadArt());
             }
@@ -314,13 +349,11 @@ namespace View.Editor
                 ? record.Ghost.ToLayout(types)
                 : TowerLayout.ParseUtf8(defense, Read(defense, DefenseArgument, "defense"), types);
 
-            return root.BeginMatch(
-                types,
-                rules,
-                layout,
-                record.Wave.ToScript(types),
-                record.Seed,
-                LoadArt());
+            WaveScript script = string.IsNullOrWhiteSpace(wave)
+                ? record.Wave.ToScript(types)
+                : WaveScript.ParseUtf8(wave, Read(wave, WaveArgument, "wave"), types);
+
+            return root.BeginMatch(types, rules, layout, script, record.Seed, LoadArt());
         }
 
         /// <summary>
@@ -349,16 +382,23 @@ namespace View.Editor
         /// <summary>
         /// What a frame is called before its tick. The recorded match's frames
         /// are <c>match-tick-</c>, because that tick is a tick of the run the
-        /// landmark table was made from; a fixture roster's or a fixture
-        /// defense's are named after the fixture, because they are ticks of a
-        /// match nobody can scrub to. The roster wins where both are named,
-        /// because a roster changes what every row on the board is.
+        /// landmark table was made from; a fixture roster's, a fixture
+        /// defense's or a fixture wave's are named after the fixture, because
+        /// they are ticks of a match nobody can scrub to. The roster wins over
+        /// the other two, because a roster changes what every row on the board
+        /// is; the wave wins over the defense, because what is walking is the
+        /// larger change to a picture of a corridor.
         /// </summary>
-        private static string NameOf(string units, string defense)
+        private static string NameOf(string units, string defense, string wave)
         {
             if (!string.IsNullOrWhiteSpace(units))
             {
                 return Path.GetFileNameWithoutExtension(units) + "-tick-";
+            }
+
+            if (!string.IsNullOrWhiteSpace(wave))
+            {
+                return Path.GetFileNameWithoutExtension(wave) + "-tick-";
             }
 
             if (!string.IsNullOrWhiteSpace(defense))

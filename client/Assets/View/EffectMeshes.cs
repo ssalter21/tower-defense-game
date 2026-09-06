@@ -4,10 +4,10 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The shapes a capstone's signature is drawn with, generated in code: a
-    /// ring, a ring in pieces, a set of cracks running out from a centre, a
-    /// burst of shards, a spread of roots and a thrown knife. Each one is a
-    /// single mesh made of solid bars.
+    /// The shapes a row's signature is drawn with, generated in code: a ring, a
+    /// ring in pieces, a set of cracks running out from a centre, a burst of
+    /// shards, a spread of roots, a cage of arcs, a crown of upright shards and
+    /// a thrown knife. Each one is a single mesh made of solid bars.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -33,6 +33,15 @@ namespace View
     /// shape that is not a radius — it is an object of a size somebody picked
     /// rather than a reach the simulation reported — so it is built one unit
     /// long instead, and its caller scales by the length it wants.
+    /// </para>
+    /// <para>
+    /// <b>How far a shape stands off the plane it lies on is a distance in
+    /// metres and is not scaled with the radius.</b> A caller scaling a flat
+    /// shape leaves its vertical axis at one, so a ring's thickness and a
+    /// crown's height come out of this file already in the units the board is
+    /// in. <see cref="Dome"/> is the exception on the other side: it is as tall
+    /// as it is wide because it stands for a radius in all three directions,
+    /// so its caller scales it uniformly.
     /// </para>
     /// <para>
     /// <b>Each bar is six four-cornered faces with its own vertices, so the
@@ -162,6 +171,89 @@ namespace View
         }
 
         /// <summary>
+        /// A dome standing on the XZ plane: <paramref name="ribs"/> arcs
+        /// leaving the rim at <see cref="OuterRadius"/> and meeting over the
+        /// middle at the same height, each drawn as
+        /// <paramref name="segments"/> straight bars.
+        /// </summary>
+        /// <param name="ribs">How many arcs the cage is made of.</param>
+        /// <param name="segments">How many bars one arc is broken into.</param>
+        /// <param name="width">How thick a bar is, in mesh units, in both of the directions that are not its length.</param>
+        /// <remarks>
+        /// <para>
+        /// <b>A cage rather than a shell, because a shell would hide what is
+        /// under it.</b> Everything here is opaque — the same constraint that
+        /// picked shrinking over fading — so a closed hemisphere over a body
+        /// would draw the body out of the picture entirely. Ribs with the gaps
+        /// left in are the plainest solid that says "there is something over
+        /// this" and still lets the thing be seen.
+        /// </para>
+        /// <para>
+        /// <b>It is as tall as it is wide, so a caller scales it uniformly by
+        /// a diameter</b> and gets a hemisphere of exactly the radius it asked
+        /// for — unlike the flat shapes, whose height is a thickness and is
+        /// left alone. The burst is the other shape scaled that way, for the
+        /// same reason: both leave the ground as well as crossing it.
+        /// </para>
+        /// </remarks>
+        public static Mesh Dome(int ribs, int segments, float width)
+        {
+            var builder = new Bars();
+
+            for (var rib = 0; rib < ribs; rib++)
+            {
+                Vector3 outward = OnCircle(rib, ribs, 1f);
+
+                for (var segment = 0; segment < segments; segment++)
+                {
+                    builder.Add(
+                        OnArc(outward, segment, segments),
+                        OnArc(outward, segment + 1, segments),
+                        width * 0.5f,
+                        width * 0.5f);
+                }
+            }
+
+            return builder.ToMesh("EffectDome");
+        }
+
+        /// <summary>
+        /// A crown of upright shards: <paramref name="count"/> bars standing on
+        /// the circle of <see cref="OuterRadius"/> in the XZ plane, every other
+        /// one half as tall as its neighbours.
+        /// </summary>
+        /// <param name="count">How many shards stand round the circle.</param>
+        /// <param name="height">How tall a full shard is, in mesh units.</param>
+        /// <param name="width">How thick one shard is, in mesh units.</param>
+        /// <remarks>
+        /// <b>Upright is the whole of what separates this from a ring.</b> Both
+        /// stand at the edge of what a bubble reached and both are read from
+        /// above; a band lying flat is a boundary drawn on the floor and a row
+        /// of shards standing off it is something that has come up out of the
+        /// floor. The alternating heights are the plainest thing that makes the
+        /// row read as broken shards rather than as a fence, on the same terms
+        /// <see cref="BrokenRing"/>'s equal gaps are: half, because any other
+        /// share would be a proportion somebody chose.
+        /// </remarks>
+        public static Mesh Spikes(int count, float height, float width)
+        {
+            var builder = new Bars();
+
+            for (var spike = 0; spike < count; spike++)
+            {
+                Vector3 foot = OnCircle(spike, count, OuterRadius);
+
+                builder.Add(
+                    foot,
+                    foot + (Vector3.up * (spike % 2 == 0 ? height : height * 0.5f)),
+                    width * 0.5f,
+                    width * 0.5f);
+            }
+
+            return builder.ToMesh("EffectSpikes");
+        }
+
+        /// <summary>
         /// A burst: <paramref name="shards"/> bars leaving the middle in
         /// directions spread over the upper half of a sphere, each reaching
         /// <see cref="OuterRadius"/>.
@@ -252,6 +344,20 @@ namespace View
             float angle = 2f * Mathf.PI * step / steps;
 
             return new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+        }
+
+        /// <summary>
+        /// The point <paramref name="step"/> steps of <paramref name="steps"/>
+        /// along a quarter circle of <see cref="OuterRadius"/> that leaves the
+        /// rim in the <paramref name="outward"/> direction and finishes over
+        /// the middle.
+        /// </summary>
+        private static Vector3 OnArc(Vector3 outward, int step, int steps)
+        {
+            float angle = 0.5f * Mathf.PI * step / steps;
+
+            return (outward * (Mathf.Cos(angle) * OuterRadius))
+                + (Vector3.up * (Mathf.Sin(angle) * OuterRadius));
         }
 
         /// <summary>

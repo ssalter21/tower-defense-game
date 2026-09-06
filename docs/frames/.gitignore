@@ -1,8 +1,9 @@
-# The capture writes six frames by default; fifteen of the frames in this
+# The capture writes six frames by default; nineteen of the frames in this
 # folder are committed as documentation -- four of the recorded match, one of
 # the effects fixture, three of the four melee and impact lines standing on the
-# recorded board, three of the two pierce lines standing on it and four of the
-# three magic lines standing on it. README.md says which fifteen and why.
+# recorded board, three of the two pierce lines standing on it, four of the
+# three magic lines standing on it and four of the six creep rows that carry an
+# aura or a pool walking it. README.md says which nineteen and why.
 #
 # Everything else it writes must not be committed, and that cannot be left to
 # whoever runs the capture next. The fourth working agreement is explicit about
@@ -34,6 +35,10 @@
 !magic-lines-tick-0331.png
 !magic-lines-tick-0342.png
 !magic-lines-tick-0344.png
+!creep-auras-tick-0094.png
+!creep-auras-tick-0271.png
+!creep-auras-tick-0272.png
+!creep-auras-tick-0276.png
 
 # The one sheet out of the armed-roster capture that is kept: the four props
 # that stand on the ground beside a tower, at the sizes they are drawn at.

@@ -1,16 +1,17 @@
 namespace View
 {
     /// <summary>
-    /// What one row's <i>bubble</i> is drawn as, so that a capstone reads as
-    /// itself rather than as the disc every bubble in the game shares.
+    /// What one row's <i>bubble</i> is drawn as, so that a row reads as itself
+    /// rather than as the disc every bubble in the game shares.
     /// </summary>
     /// <remarks>
     /// <para>
     /// <b>It is bound per unit, on <see cref="UnitArt"/>, by the scene
     /// builder</b> — the same place the model, the atlas, the props and the
     /// effect anchor are bound. So a tier three carries a signature its tier
-    /// two does not, and adding one to a row is editing a table rather than
-    /// editing <see cref="MatchDecorations"/>.
+    /// two does not and one walking row carries a signature the row beside it
+    /// does not, and adding one to a row is editing a table rather than editing
+    /// <see cref="MatchDecorations"/>.
     /// </para>
     /// <para>
     /// <b>The names here are shapes and not rows.</b> What each shape is made
@@ -28,10 +29,19 @@ namespace View
     /// bubble's slot at all. See <see cref="ShotSignature"/>.
     /// </para>
     /// <para>
-    /// <b>A signature is reached through the entity the event named, so only a
-    /// tower's is reachable.</b> An aura pulses from its emitter and a sweep is
-    /// centred on the tower that swung, so both name a row the view is holding
-    /// art for. A blast centred on the body a shot arrived at names the body —
+    /// <b>A signature is reached through the entity the event named, and a
+    /// walking row is reachable exactly where it emits.</b> An aura pulses from
+    /// its emitter and a sweep is centred on the tower that swung, so both name
+    /// a row the view is holding art for; four of the auras on this roster are
+    /// carried by creeps, and a creep emitter is looked up the same way a tower
+    /// one is. What a creep still has no way of naming is a point on its own
+    /// art, because a walking row carries no effect anchor by assertion — see
+    /// <c>ImportedArtTests.EveryTowerFiresFromAPointOnItsOwnArt</c> — so a
+    /// creep's aura is centred on the body and never on the staff, the scythe,
+    /// the broom or the axe it is holding.
+    /// </para>
+    /// <para>
+    /// A blast centred on the body a shot arrived at names the body —
     /// the shooter is not in the event at all, deliberately, since an event
     /// carries an entity id and never a position or a reference to hold on to.
     /// Those are drawn off the shape of the event instead, and no row selects
@@ -82,6 +92,37 @@ namespace View
         /// so a shape at its radius would be a shape the size of ten boards.
         /// </summary>
         OvergrowthRoots = 5,
+
+        /// <summary>
+        /// A ring over the head of every creep the pulse reached. The Skeleton
+        /// Mage's haste, and deliberately the shape the Blessing already wears
+        /// on the other side of the board: both auras make their own side
+        /// faster, so what is worth seeing is which bodies got it.
+        /// </summary>
+        HasteRing = 6,
+
+        /// <summary>
+        /// A cage of arcs standing over the emitter, as wide as the pulse
+        /// reached. The Necromancer's ward, and the one shape here that stands
+        /// for a pool rather than for a stat that has moved.
+        /// </summary>
+        WardDome = 7,
+
+        /// <summary>
+        /// A band broken into plates lying on the ground out to the edge of
+        /// what the pulse reached. The Witch's hex ward, which is armour going
+        /// on, drawn as the shape the Unravel's strip already uses for armour
+        /// coming off.
+        /// </summary>
+        HexPlates = 8,
+
+        /// <summary>
+        /// A crown of upright shards at the feet of every tower the pulse
+        /// reached. The Frost Wight's frostbite, the one aura on the roster
+        /// that reaches the other side, and so the one signature a walking row
+        /// draws on something that stands still.
+        /// </summary>
+        FrostSpikes = 9,
     }
 
     /// <summary>

@@ -35,12 +35,23 @@
 # Frames from such a run are named after the defense, for the reason -Units'
 # are named after the table.
 
+# -Wave names a wave to send down the recorded board instead of the one the
+# record carries. It is for photographing creep rows the recorded wave does not
+# send: that wave releases Minions and Skeleton Scouts, and neither carries an
+# aura or a pool, so the rows that do never walk onto the board whatever roster
+# or defense is standing. The rows it sends are the shipped rows with their own
+# authored auras, which is the whole difference from -Units -- a fixture roster
+# goes stale the moment content/units.txt moves and a fixture wave does not. The
+# map, the defense and the seed still come out of the record. Frames from such a
+# run are named after the wave.
+
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
     [string]$Ticks,
     [string]$Units,
     [string]$Defense,
+    [string]$Wave,
     [float]$Yaw = 0,
     [float]$Distance = 0,
     [int]$Width = 1280,
@@ -83,6 +94,11 @@ if ($Units) {
 if ($Defense) {
     $defensePath = (Resolve-Path $Defense).Path
     $unityArgs += @('-matchFrameDefense', "`"$defensePath`"")
+}
+
+if ($Wave) {
+    $wavePath = (Resolve-Path $Wave).Path
+    $unityArgs += @('-matchFrameWave', "`"$wavePath`"")
 }
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a

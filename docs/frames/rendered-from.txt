@@ -10,6 +10,10 @@
 #
 #       picture                        drawn from
 
+picture  creep-auras-tick-0094.png       714C2D52791521AD
+picture  creep-auras-tick-0271.png       714C2D52791521AD
+picture  creep-auras-tick-0272.png       714C2D52791521AD
+picture  creep-auras-tick-0276.png       714C2D52791521AD
 picture  effects-roster-tick-0700.png    714C2D52791521AD
 picture  four-lines-tick-0572.png        714C2D52791521AD
 picture  four-lines-tick-0780.png        714C2D52791521AD

@@ -58,6 +58,14 @@ namespace View
     /// shape. What a row with neither draws is still the disc and the tracer,
     /// unchanged.
     /// </para>
+    /// <para>
+    /// <b>A row that walks is one of those rows.</b> Four of the auras on this
+    /// roster are carried by creeps, and a pulse names its emitter whichever
+    /// side the emitter is on, so a creep's own shape is reached the same way a
+    /// tower's is. Where it is <i>centred</i> is the body, because an event
+    /// carries an entity id and a walking row names no point on its own art —
+    /// see <see cref="AuraPulsed"/>.
+    /// </para>
     /// </remarks>
     public sealed class MatchDecorations : IMatchEvents
     {
@@ -70,6 +78,8 @@ namespace View
         private readonly Func<int, Vector3?> _entityGround;
 
         private readonly Func<int, RowSignature?> _towerSignature;
+
+        private readonly Func<int, RowSignature?> _creepSignature;
 
         private readonly Func<int, float, IReadOnlyList<Vector3>> _towersWithin;
 
@@ -113,6 +123,15 @@ namespace View
         /// a shell arrived at are different cases and <see cref="BlastLanded"/>
         /// draws them differently.
         /// </param>
+        /// <param name="creepSignature">
+        /// The same, for the id of a creep the view is holding, and null for
+        /// anything else. <b>A second lookup rather than one over both</b>,
+        /// because the two answers are asked at different moments and one of
+        /// them is load-bearing by being empty: <see cref="BlastLanded"/> reads
+        /// a centre that is not a tower as the body a shot arrived at, and a
+        /// lookup that answered for creeps as well would draw a walking row's
+        /// own aura shape under a body a mortar shell had just landed on.
+        /// </param>
         /// <param name="towersWithin">
         /// Where every tower standing within so many metres of an entity is —
         /// what the Blessing's glow is drawn on. Positions rather than ids,
@@ -129,6 +148,7 @@ namespace View
             Func<int, Vector3?> towerMuzzle,
             Func<int, Vector3?> entityGround,
             Func<int, RowSignature?> towerSignature,
+            Func<int, RowSignature?> creepSignature,
             Func<int, float, IReadOnlyList<Vector3>> towersWithin,
             Func<int, float, IReadOnlyList<Vector3>> creepsWithin)
         {
@@ -137,6 +157,7 @@ namespace View
             _towerMuzzle = towerMuzzle ?? throw new ArgumentNullException(nameof(towerMuzzle));
             _entityGround = entityGround ?? throw new ArgumentNullException(nameof(entityGround));
             _towerSignature = towerSignature ?? throw new ArgumentNullException(nameof(towerSignature));
+            _creepSignature = creepSignature ?? throw new ArgumentNullException(nameof(creepSignature));
             _towersWithin = towersWithin ?? throw new ArgumentNullException(nameof(towersWithin));
             _creepsWithin = creepsWithin ?? throw new ArgumentNullException(nameof(creepsWithin));
 
@@ -159,6 +180,11 @@ namespace View
                 ViewMaterials.Create("OvergrowthRoots", MatchTuning.OvergrowthRootColor);
             _materials[Piece.ArmourStrip] =
                 ViewMaterials.Create("ArmourStrip", MatchTuning.ArmourStripColor);
+            _materials[Piece.HasteRing] = ViewMaterials.Create("HasteRing", MatchTuning.HasteRingColor);
+            _materials[Piece.WardDome] = ViewMaterials.Create("WardDome", MatchTuning.WardDomeColor);
+            _materials[Piece.HexPlates] = ViewMaterials.Create("HexPlates", MatchTuning.HexPlateColor);
+            _materials[Piece.FrostSpikes] =
+                ViewMaterials.Create("FrostSpikes", MatchTuning.FrostSpikeColor);
         }
 
         /// <summary>
@@ -183,6 +209,10 @@ namespace View
             ConsecrationLight,
             OvergrowthRoots,
             ArmourStrip,
+            HasteRing,
+            WardDome,
+            HexPlates,
+            FrostSpikes,
         }
 
         /// <summary>How many effects are on screen. For tests.</summary>
@@ -272,6 +302,26 @@ namespace View
 
         /// <summary>How many of the Unravel's armour strips have been drawn since the last clear.</summary>
         public int StripsDrawn => Drawn(Piece.ArmourStrip);
+
+        /// <summary>
+        /// How many rings over a hastened creep's head have been drawn since
+        /// the last clear. For tests. One per body the Skeleton Mage's pulse
+        /// reached, so a single pulse over four bodies counts four.
+        /// </summary>
+        public int HasteRingsDrawn => Drawn(Piece.HasteRing);
+
+        /// <summary>How many of the Necromancer's ward cages have been drawn since the last clear.</summary>
+        public int WardDomesDrawn => Drawn(Piece.WardDome);
+
+        /// <summary>How many of the Witch's bands of plates have been drawn since the last clear.</summary>
+        public int HexPlatesDrawn => Drawn(Piece.HexPlates);
+
+        /// <summary>
+        /// How many crowns of frost have been drawn since the last clear. For
+        /// tests, and counted apart from every other aura shape because the
+        /// Frost Wight is the one row whose aura reaches the tower side.
+        /// </summary>
+        public int FrostSpikesDrawn => Drawn(Piece.FrostSpikes);
 
         /// <summary>
         /// A tower released a shot: a flash at the point on its art the shot
@@ -456,17 +506,31 @@ namespace View
         /// under or over whatever is emitting it.
         /// </summary>
         /// <remarks>
-        /// The emitter is the centre here in every case, so the row is always
-        /// reachable — except that a creep can carry an aura too, and no creep
-        /// has a signature. Those draw the plain disc, which is what every
-        /// bubble drew before any row had one.
+        /// <para>
+        /// <b>The emitter is the centre here in every case, so the row is
+        /// always reachable</b> — and it is reachable on both sides, because
+        /// four of the auras on this roster are carried by creeps. A tower is
+        /// looked up first and a creep second; a row neither lookup answers for
+        /// draws the plain disc, which is what every bubble drew before any row
+        /// had a signature.
+        /// </para>
+        /// <para>
+        /// <b>A creep's pulse leaves the body and not the staff it is
+        /// holding.</b> An event carries an entity id, so the position comes
+        /// out of the snapshot the view is drawing, and a walking row names no
+        /// effect anchor at all — <c>ImportedArtTests</c> asserts it carries
+        /// none, since nothing would ever resolve one. Where an aura should
+        /// leave a creep's art from is therefore an open question and not
+        /// something this method quietly answers.
+        /// </para>
         /// </remarks>
         public void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload)
         {
             EventsHeard++;
 
-            Signature(
-                _towerSignature(emitterId)?.Bubble ?? BubbleSignature.None, emitterId, radiusMilliHex);
+            RowSignature? emitter = _towerSignature(emitterId) ?? _creepSignature(emitterId);
+
+            Signature(emitter?.Bubble ?? BubbleSignature.None, emitterId, radiusMilliHex);
         }
 
         /// <summary>
@@ -740,6 +804,36 @@ namespace View
                     Roots(centreId, radiusMilliHex);
                     break;
 
+                // The Skeleton Mage's: a ring over the head of every body the
+                // haste reached, which is the Blessing's shape on the other
+                // side of the board and drawn on what the pulse found for the
+                // same reason -- what that aura does is make other bodies
+                // faster.
+                case BubbleSignature.HasteRing:
+                    HasteRings(centreId, radiusMilliHex);
+                    break;
+
+                // The Necromancer's: a cage standing over the ground the ward
+                // covered. It reports a radius in all three directions, so it
+                // is scaled uniformly rather than laid flat.
+                case BubbleSignature.WardDome:
+                    Dome(centreId, radiusMilliHex);
+                    break;
+
+                // The Witch's: plates lying on the ground out to the edge of
+                // the hex ward.
+                case BubbleSignature.HexPlates:
+                    Flat(Piece.HexPlates, centreId, radiusMilliHex, MatchTuning.HexPlateTicks);
+                    break;
+
+                // The Frost Wight's: a crown of shards at the feet of every
+                // tower the frost reached. The one aura on the roster that
+                // reaches the other side, so it is the one whose shape lands on
+                // something nothing else draws on.
+                case BubbleSignature.FrostSpikes:
+                    FrostCrowns(centreId, radiusMilliHex);
+                    break;
+
                 default:
                     Disc(
                         Piece.BubbleRing,
@@ -867,6 +961,85 @@ namespace View
         }
 
         /// <summary>
+        /// The Skeleton Mage's: a ring over the head of every creep its haste
+        /// reached, the emitter included.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The Blessing's shape, on the other side of the board.</b> Both
+        /// auras make their own side faster, so what is worth seeing is the
+        /// same thing in both cases: which bodies got it. Its own pool and its
+        /// own colour, because the two are told apart by nothing else.
+        /// </para>
+        /// <para>
+        /// <b>It is the one of the three friend-side creep auras drawn on the
+        /// bodies.</b> The Skeleton Mage's haste, the Necromancer's ward and
+        /// the Witch's hex ward all reach creeps within two hexes, so all three
+        /// drawn that way would stack three shapes on one walking body, over
+        /// the bar <see cref="EffectMarks"/> already puts there. The other two
+        /// are drawn at their reach for that reason.
+        /// </para>
+        /// </remarks>
+        private void HasteRings(int emitterId, int radiusMilliHex)
+        {
+            if (radiusMilliHex <= 0)
+            {
+                return;
+            }
+
+            OnEachFound(
+                Piece.HasteRing,
+                _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
+                MatchTuning.HasteRingHeight,
+                MatchTuning.HasteRingDiameter,
+                MatchTuning.HasteRingTicks);
+        }
+
+        /// <summary>
+        /// The Frost Wight's: a crown of shards at the feet of every tower its
+        /// frostbite reached.
+        /// </summary>
+        /// <remarks>
+        /// <b>The one shape in this file drawn on a tower by a creep.</b>
+        /// Frostbite is the only aura on the roster whose <c>affects</c> column
+        /// reaches the other side, and a tower carrying a modifier wears
+        /// nothing of its own — <see cref="EffectMarks"/> is a creep's — so
+        /// this is the whole of what says a tower is firing slower.
+        /// </remarks>
+        private void FrostCrowns(int emitterId, int radiusMilliHex)
+        {
+            if (radiusMilliHex <= 0)
+            {
+                return;
+            }
+
+            OnEachFound(
+                Piece.FrostSpikes,
+                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
+                MatchTuning.FloorClearance,
+                MatchTuning.FrostCrownDiameter,
+                MatchTuning.FrostSpikeTicks);
+        }
+
+        /// <summary>
+        /// The Necromancer's: a cage of arcs standing over the ground its ward
+        /// covered, as wide as the pulse reached.
+        /// </summary>
+        /// <remarks>
+        /// <b>Scaled uniformly and not laid flat</b>, because it is as tall as
+        /// it is wide by construction: what it reports is a radius in all three
+        /// directions, the way the Mortar's burst does, where every shape lying
+        /// on the floor reports one across and keeps a thickness of its own.
+        /// </remarks>
+        private void Dome(int centreId, int radiusMilliHex) =>
+            Uniform(
+                Piece.WardDome,
+                centreId,
+                radiusMilliHex,
+                MatchTuning.FloorClearance,
+                MatchTuning.WardDomeTicks);
+
+        /// <summary>
         /// The Blessing's: a ring over the head of every tower the pulse
         /// reached, the emitter included.
         /// </summary>
@@ -937,25 +1110,39 @@ namespace View
         /// The Mortar's: shards thrown out of the body the shell arrived at, to
         /// the edge of what the blast reached.
         /// </summary>
-        private void Burst(int centreId, int radiusMilliHex)
+        private void Burst(int centreId, int radiusMilliHex) =>
+            Uniform(
+                Piece.MortarBurst,
+                centreId,
+                radiusMilliHex,
+                MatchTuning.HitSparkHeight,
+                MatchTuning.MortarBurstTicks);
+
+        /// <summary>
+        /// One of the shapes that is as tall as it is wide, centred
+        /// <paramref name="height"/> above whatever the bubble was centred on
+        /// and scaled in all three directions by the reach.
+        /// </summary>
+        /// <remarks>
+        /// <b>The other kind of shape drawn on a bubble, against
+        /// <see cref="Flat"/>.</b> A flat one reports a reach across and keeps
+        /// a thickness of its own; these leave the ground as well as crossing
+        /// it, so their height is part of the radius they are reporting and the
+        /// scale goes into all three axes. Two shapes are of this kind: the
+        /// Mortar's burst and the Necromancer's cage.
+        /// </remarks>
+        private void Uniform(
+            Piece piece, int centreId, int radiusMilliHex, float height, int lifetimeTicks)
         {
             if (!Reached(centreId, radiusMilliHex, out Vector3 at, out float diameter))
             {
                 return;
             }
 
-            Transform burst = Take(Piece.MortarBurst);
-            burst.position = at + (Vector3.up * MatchTuning.HitSparkHeight);
+            Transform drawn = Take(piece);
+            drawn.position = at + (Vector3.up * height);
 
-            // Uniform, unlike the flat shapes: a burst leaves the ground as
-            // well as crossing it, so its height is part of the radius it is
-            // reporting.
-            Stays(
-                Piece.MortarBurst,
-                burst,
-                Vector3.one * diameter,
-                MatchTuning.MortarBurstTicks,
-                shrinks: false);
+            Stays(piece, drawn, Vector3.one * diameter, lifetimeTicks, shrinks: false);
         }
 
         /// <summary>
@@ -1107,6 +1294,21 @@ namespace View
                     MatchTuning.OvergrowthRootThickness,
                     MatchTuning.OvergrowthRootKink),
 
+                Piece.HexPlates => EffectMeshes.BrokenRing(
+                    MatchTuning.HexPlateSides,
+                    MatchTuning.HexPlateBandFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.HexPlateThickness),
+
+                Piece.WardDome => EffectMeshes.Dome(
+                    MatchTuning.WardDomeRibs,
+                    MatchTuning.WardDomeSegments,
+                    MatchTuning.WardDomeRibWidthFraction * EffectMeshes.OuterRadius),
+
+                Piece.FrostSpikes => EffectMeshes.Spikes(
+                    MatchTuning.FrostSpikeCount,
+                    MatchTuning.FrostSpikeHeight,
+                    MatchTuning.FrostSpikeWidthFraction * EffectMeshes.OuterRadius),
+
                 Piece.ArmourStrip => EffectMeshes.BrokenRing(
                     MatchTuning.ArmourStripSides,
                     MatchTuning.ArmourStripBandFraction * EffectMeshes.OuterRadius,
@@ -1119,9 +1321,9 @@ namespace View
                     MatchTuning.KnifeGuardFraction,
                     MatchTuning.KnifeThicknessFraction),
 
-                // The slow ring and the tower glow are one ring at two sizes,
-                // so they are one mesh. Their pools stay separate because their
-                // colours and lifetimes are not the same.
+                // The slow ring, the tower glow and the haste ring are one
+                // ring at three sizes, so they are one mesh. Their pools stay
+                // separate because their colours and lifetimes are not.
                 _ => EffectMeshes.Ring(
                     MatchTuning.SignatureRingSides,
                     MatchTuning.SignatureRingBandFraction * EffectMeshes.OuterRadius,

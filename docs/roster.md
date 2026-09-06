@@ -251,12 +251,22 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 > How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
 > ticket that picks a line's clips is where a real number is signed.
 
-### What a capstone is drawn as
+### What a row is drawn as
 
 Every bubble in the game drew one shared disc on the ground and every hitscan shot one shared tracer until
 #263, #264 and #265. Ten shapes are signed now, and **the shape is all that is signed** — every colour, size
 and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
 disc and the marks on a creep already are.
+
+**The four creep auras below the table are a weaker claim than the ten above it, and the difference is the
+point of this paragraph.** #266 asked for those four to leave the creep's staff, scythe, broom or axe, and
+named no shape for any of them. A walking row carries **no effect anchor at all** —
+`ImportedArtTests.EveryTowerFiresFromAPointOnItsOwnArt` asserts that it carries none, because no creep fires
+and nothing would ever resolve one — so the origin the ticket named is unreachable without changing that
+assertion, which would be a real design change and was not made. An aura therefore leaves the **body**, which
+is where the emitter id on the event resolves to. And with no shape named, what each of the four draws is the
+plainest thing that says what that row's aura *does*. **So on those four rows the shape is as unsigned as the
+colour**, which is not true of any of the ten.
 
 | Row | What it draws | Where it is drawn |
 |---|---|---|
@@ -271,9 +281,33 @@ disc and the marks on a creep already are.
 | 27 · Unravel | A band broken into plates, lying on the ground out to the edge of the strip | On the hex the bolt arrived at |
 | 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
 
-**Eight of the ten are bound per row and two cannot be.** A signature is reached through the entity the
+And the four creep auras, whose shapes **nobody has signed**:
+
+| Row | What it draws | Where it is drawn |
+|---|---|---|
+| 7 · Skeleton Mage | A ring over the head of every creep the haste reached, itself included — the Blessing's shape on the other side of the board | On what the aura found, not on the aura |
+| 38 · Necromancer | A cage of arcs standing over the ground the ward covered | Over the body, out to the two hexes it grants across |
+| 41 · Frost Wight | A crown of upright shards at the feet of every tower the frostbite reached | On what the aura found, and the only creep shape drawn on a tower |
+| 44 · Witch | A band broken into plates lying on the ground — the shape the Unravel's armour strip already uses, for armour going on rather than coming off | On the ground out to the edge of the hex ward |
+
+**Exactly one of the three friend-side creep auras is drawn on the bodies, and that is forced.** Haste, Ward and
+Hex Ward all reach creeps within two hexes, so all three drawn that way would stack three shapes on one walking
+body — over the bar #254 already puts there. The haste is the one that keeps it, because "which bodies got
+faster" is the same sentence the Blessing's halo already answers on the tower side; the other two are drawn at
+their reach. **Frostbite is drawn on the towers it froze because nothing else ever is**: `EffectMarks` washes a
+*creep* carrying a modifier and there is no tower equivalent, so a frostbitten tower would otherwise wear
+nothing at all.
+
+**The Vampire's and the Grave Robber's pools get no shape, and that is #254 rather than a gap.** A pool is a
+`CreepSnapshot` field and not a moment — which is exactly why it survives a scrub — so there is no event to
+draw one from, and the pool is already drawn as the second segment of the bar over the body. A second shape
+saying "there is a pool here" could only be invented. What those two rows are still waiting on is the same
+thing every other placeholder here is: somebody signing what a pool should look like.
+
+**Twelve of the fourteen are bound per row and two cannot be.** A signature is reached through the entity the
 event names: an aura pulses from its own emitter, a sweep is centred on the tower that swung, and a shot names
-the tower that fired it, so those eight name a row. A blast centred on its target names the *body the shot
+the tower that fired it, so those twelve name a row — four of them rows that walk, since an aura pulses from its emitter whichever side
+the emitter is on. A blast centred on its target names the *body the shot
 arrived at* — the shooter is not in the event and deliberately never will be, because an event carries an
 entity id and nothing to hold on to. The Mortar's burst and the Unravel's strip are both that case, and what
 tells them apart is the one thing on the event that is not the victim: the **payload**, `damage` against
@@ -806,6 +840,8 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19. Aura: origin `self`, affects
   `friend`, payload `speed`, magnitude **+20**, radius 2000, period 30, duration 30.
 - **Needs** — nothing. Layout 3 authors it and #217 plays it.
+- **Draws** — a green ring over the head of every creep the haste reached, itself included. **Unsigned**; see
+  [what a row is drawn as](#what-a-row-is-drawn-as).
 - **Open** — none. **The aura is signed**; it had stood unsigned since the row went live.
 
 > **Why the rename is the cheap half of this.** The id does not move, so no hash moves and no stored record is
@@ -832,6 +868,8 @@ would re-baseline every measurement in the sweep.
 - **Needs** — **engine, for Raise only.** Ward is on the row and pulsing; Raise is not — a creep spawning
   creeps is a new mechanic, and [#268](https://github.com/ssalter21/tower-defense-game/issues/268) is where it
   lands.
+- **Draws** — a pale blue cage of arcs standing over the two hexes the ward covers, for ten ticks. It is the
+  moment the pool went out and not the pool: what a body then carries is the bar above it. **Unsigned**.
 - **Open** — none.
 
 > **There is no cap on how many it raises, and that is the decision rather than an omission.** It raises for
@@ -875,6 +913,9 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 6000 hp, speed 16, arcane, armourValue 40, cost 53. Aura: origin `self`, affects **`enemy`**,
   payload `cooldown`, magnitude +30, radius 2000, period 30, duration 30.
 - **Needs** — nothing.
+- **Draws** — a crown of pale shards at the feet of every tower it froze. The only creep shape drawn on a
+  tower, and the only thing on screen that says a tower is firing slower — `EffectMarks` washes creeps and not
+  towers. **Unsigned**.
 - **Open** — none.
 
 ### 42 · Abomination · status live
@@ -891,6 +932,9 @@ would re-baseline every measurement in the sweep.
 - **Looks** — `Vampire`, `Vampire_Sword`.
 - **Numbers** — 2800 hp, speed 44, swift, armourValue 20, shield 1400, cost 21.
 - **Needs** — nothing.
+- **Draws** — nothing of its own. The pool is the blue segment of the bar #254 draws over the body, out of the
+  snapshot, so it survives a scrub and there is no event a decoration could hang off. **Unsigned**, like every
+  other mark.
 - **Open** — **the shield is unpriced, and the sweep has now measured what that is worth.** The cost rule has
   no term for a pool, so this row is cheaper than it should be: it returns 94 percent of a column's gold
   against the committed defense, the highest reading inside the band. Known gap, same family as radius and
@@ -903,6 +947,8 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 2000 hp, speed 33, arcane, armourValue 20, cost 15. Aura: origin `self`, affects `friend`,
   payload `armour`, magnitude +30, radius 2000, period 30, duration 30.
 - **Needs** — nothing.
+- **Draws** — a violet band broken into plates, on the ground out to two hexes. The shape the Unravel's strip
+  uses for armour coming off, for armour going on. **Unsigned**.
 - **Open** — none.
 
 ### 45 · Fiend · status live
@@ -960,6 +1006,8 @@ would re-baseline every measurement in the sweep.
 - **Looks** — `Hoarder`, wearing `Hoarder_Backpack`. **The backpack, not the sword** — the pack is what the
   mechanic is about, and a sword on a creep that never attacks reads as a lie.
 - **Numbers** — 3000 hp, speed 22, armoured, armourValue 30, shield 2000, cost 24. Pays **12** on a kill.
+- **Draws** — nothing of its own, as the Vampire's pool draws nothing: the pack is the blue segment of the bar
+  over the body.
 - **Needs** — **engine.** Gold paid on a kill is the first income during a wave, and
   [#269](https://github.com/ssalter21/tower-defense-game/issues/269) is where it lands. The row is live and the
   pool is on it; the payment is not.

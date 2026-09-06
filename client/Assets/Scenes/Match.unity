@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &163222750
+--- !u!1 &668862108
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 163222752}
-  - component: {fileID: 163222751}
+  - component: {fileID: 668862110}
+  - component: {fileID: 668862109}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &163222751
+--- !u!114 &668862109
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163222750}
+  m_GameObject: {fileID: 668862108}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -301,7 +301,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 6
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
@@ -917,7 +917,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 7
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
@@ -983,7 +983,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 9
       shotSignature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
@@ -1049,7 +1049,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 8
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
@@ -1165,13 +1165,13 @@ MonoBehaviour:
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &163222752
+--- !u!4 &668862110
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163222750}
+  m_GameObject: {fileID: 668862108}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1184,4 +1184,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 163222752}
+  - {fileID: 668862110}

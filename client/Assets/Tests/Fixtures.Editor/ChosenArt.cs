@@ -783,19 +783,24 @@ namespace Tests.Fixtures
         /// <remarks>
         /// Written out here a second time for the reason every path above is:
         /// a fixture that read the builder's table could not catch the builder
-        /// binding the Slam's shock to the Berserker. These five are the
-        /// emitters an event names — one sweep and four auras. The Mortar's
+        /// binding the Slam's shock to the Berserker. These nine are the
+        /// emitters an event names — one sweep and eight auras, four of them
+        /// carried by rows that walk. The Mortar's
         /// burst and the Unravel's armour strip are the two signed bubble
         /// shapes that are not bindings at all: both are blasts centred on the
         /// body a shot arrived at, so the event reaches no row.
         /// </remarks>
         private static readonly (int unitId, BubbleSignature signature)[] BubbleSignatures =
         {
+            (7, BubbleSignature.HasteRing),
             (16, BubbleSignature.SlowRing),
             (19, BubbleSignature.GroundShock),
             (22, BubbleSignature.TowerGlow),
             (25, BubbleSignature.ConsecrationLight),
             (30, BubbleSignature.OvergrowthRoots),
+            (38, BubbleSignature.WardDome),
+            (41, BubbleSignature.FrostSpikes),
+            (44, BubbleSignature.HexPlates),
         };
 
         /// <summary>

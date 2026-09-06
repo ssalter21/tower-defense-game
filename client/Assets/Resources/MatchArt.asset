@@ -120,7 +120,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 6
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
@@ -736,7 +736,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 7
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}
@@ -802,7 +802,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 9
       shotSignature: 0
       walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
       deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
@@ -868,7 +868,7 @@ MonoBehaviour:
       effectAnchor:
         transformName: 
         tip: {x: 0, y: 0, z: 0}
-      bubbleSignature: 0
+      bubbleSignature: 8
       shotSignature: 0
       walkClip: {fileID: 0}
       deathClip: {fileID: 0}

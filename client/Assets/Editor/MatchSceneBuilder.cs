@@ -909,29 +909,35 @@ namespace View.Editor
         /// <para>
         /// <b>A table of its own rather than a column of
         /// <see cref="UnitBindings"/>, for the reason
-        /// <see cref="LargeRigClips"/> is one:</b> five rows of fifty-five
-        /// carry one, so a column would be fifty <c>default</c>s written out to
-        /// say nothing.
+        /// <see cref="LargeRigClips"/> is one:</b> nine rows of fifty-five
+        /// carry one, so a column would be forty-six <c>default</c>s written
+        /// out to say nothing.
         /// </para>
         /// <para>
-        /// <b>Every one is an emitter an event can name.</b> The Shield Wall's
-        /// slow, the Blessing's haste, the Consecration's strip and the
-        /// Overgrowth's slow are auras, which pulse from their own emitter, and
-        /// the Slam's sweep is centred on the man who swung. <b>Two signed
-        /// bubble shapes are missing from here and cannot be added</b>: the
-        /// Mortar's burst and the Unravel's armour strip are blasts centred on
-        /// the body a shot arrived at, so the event names the victim and no row
-        /// is reachable from it. See <see cref="MatchDecorations.BlastLanded"/>,
+        /// <b>Every one is an emitter an event can name, and four of them
+        /// walk.</b> Eight are auras, which pulse from their own emitter —
+        /// four on the tower side and four carried by creeps — and the Slam's
+        /// sweep is centred on the man who swung. A creep's is centred on its
+        /// body rather than on what it is holding, because a walking row names
+        /// no effect anchor; see <see cref="MatchDecorations.AuraPulsed"/>.
+        /// <b>Two signed bubble shapes are missing from here and cannot be
+        /// added</b>: the Mortar's burst and the Unravel's armour strip are
+        /// blasts centred on the body a shot arrived at, so the event names the
+        /// victim and no row is reachable from it. See <see cref="MatchDecorations.BlastLanded"/>,
         /// which draws both off the shape of the event instead.
         /// </para>
         /// </remarks>
         private static readonly (int unitId, BubbleSignature signature)[] BubbleSignatures =
         {
+            (7, BubbleSignature.HasteRing),
             (16, BubbleSignature.SlowRing),
             (19, BubbleSignature.GroundShock),
             (22, BubbleSignature.TowerGlow),
             (25, BubbleSignature.ConsecrationLight),
             (30, BubbleSignature.OvergrowthRoots),
+            (38, BubbleSignature.WardDome),
+            (41, BubbleSignature.FrostSpikes),
+            (44, BubbleSignature.HexPlates),
         };
 
         /// <summary>
