@@ -258,13 +258,15 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # reads none of the four authored files. Move a price or a range and it renders
 # the same pixels, so a date against content/ would ask it a question it cannot
 # answer. What would make it stale is a look in docs/roster.md moving, which is
-# a person's job to notice and not this check's. The caster-lines sheet is the
-# same sheet for the other three lines and exempt on the same grounds.
+# a person's job to notice and not this check's. The caster-lines and
+# pierce-turret-lines sheets are the same sheet for the other six lines and
+# exempt on the same grounds.
 $decisionSheets = @(
     'docs/chrome/chosen-build-phase.png'
     'docs/frames/roster/beside-props-sheet.png'
     'docs/frames/roster/melee-lines-sheet.png'
     'docs/frames/roster/caster-lines-sheet.png'
+    'docs/frames/roster/pierce-turret-lines-sheet.png'
 )
 
 # An exemption for a file that is no longer committed covers nothing, and it

@@ -85,13 +85,23 @@ namespace Tests.EditMode
         /// <summary>The atlas the Skeletons 1.1 characters were authored against.</summary>
         private const string SkeletonAtlasPath = "Assets/Art/Characters/skeleton_texture_A.png";
 
-        private const string EngineerModelPath = "Assets/Art/Kaykit/adventurers/Engineer.fbx";
+        private const string EngineerModelPath = ChosenArt.EngineerModelPath;
 
-        private const string TurretPath = "Assets/Art/Kaykit/adventurers/turret_base.fbx";
+        private const string TurretPath = ChosenArt.TurretModelPath;
 
         private const string CratePath = "Assets/Art/Kaykit/adventurers/ammo_crate.fbx";
 
         private const string EngineerAtlasPath = "Assets/Art/Kaykit/adventurers/engineer_texture.png";
+
+        /// <summary>The Marksman's skin, one of the two sheets that body draws with.</summary>
+        private const string MarksmanAtlasPath = ChosenArt.MarksmanFolder + "marksman_texture.png";
+
+        /// <summary>The ghillie wrap, which is the other one.</summary>
+        private const string MarksmanFoliageAtlasPath =
+            ChosenArt.MarksmanFolder + "marksman_foliage_texture.png";
+
+        /// <summary>The sheet the Rogue line's two bodies and its dagger are all on.</summary>
+        private const string RogueAtlasPath = "Assets/Art/Kaykit/adventurers/rogue_texture.png";
 
         private const string BarbarianAtlasPath = "Assets/Art/Kaykit/adventurers/barbarian_texture.png";
 
@@ -193,12 +203,10 @@ namespace Tests.EditMode
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>Three of these are now bound to rows and one is not.</b> The
-        /// Blessing, the Consecration and the Overgrowth have art, so the two
-        /// binding tables carry them and this list holds those three against
-        /// the record a second time; the Engineer's turret is still a look
-        /// waiting for a row, with nowhere else in code to be written down. The
-        /// record is <c>docs/roster.md</c>, and
+        /// <b>All four are bound to rows now, and this holds them against the
+        /// record a second time.</b> The two binding tables each carry the
+        /// Blessing, the Consecration, the Overgrowth and the three rungs of
+        /// the Engineer; the record is <c>docs/roster.md</c>, and
         /// <c>docs/roster-expansion-beside-candidates.txt</c> is the same four
         /// again as something that can be photographed.
         /// </para>
@@ -206,7 +214,8 @@ namespace Tests.EditMode
         /// <b>The Artificer's ammo crate is not here.</b> A tower has one
         /// beside slot and that rung's look puts the crate beside the turret,
         /// which is two -- so the crate is a question about the rung rather
-        /// than a binding, and it goes on the candidate sheet instead.
+        /// than a binding, it is on that rung's <c>Needs</c> line in
+        /// <c>docs/roster.md</c>, and it goes on the candidate sheet instead.
         /// </para>
         /// </remarks>
         private static readonly (
@@ -225,19 +234,6 @@ namespace Tests.EditMode
             ("the Druid's Overgrowth", DruidModelPath, DruidAltBAtlasPath, WeirwoodPath, WeirwoodScale,
                 ForestAtlasPath),
         };
-
-        /// <summary>
-        /// Where the Engineer's shot leaves: the top of the turret standing
-        /// beside him, and not his own hands.
-        /// </summary>
-        /// <remarks>
-        /// The name is the prop's, because <c>DrawnModel</c> names an instance
-        /// after the asset and an FBX root node is named after its file. How far
-        /// up the turret is not written down -- <see cref="EffectAnchor"/> reads
-        /// it off the mesh, so a re-exported turret moves its own muzzle.
-        /// </remarks>
-        private static readonly EffectAnchor TurretMuzzle =
-            EffectAnchor.AtTipOf("turret_base", Vector3.up);
 
         /// <summary>
         /// Model to atlas. The adventurers each carry their own and the
@@ -331,6 +327,36 @@ namespace Tests.EditMode
             (ChosenArt.LorekeeperModelPath, LorekeeperAtlasPath),
             (ChosenArt.LorekeeperTomeModelPath, LorekeeperAtlasPath),
             (ChosenArt.DruidStaffModelPath, DruidAtlasPath),
+
+            // The pierce and turret lines' remaining art. The Rogue's two
+            // bodies and the dagger they throw are all on the pack's one rogue
+            // sheet, and so is the crossbow the Overwatch holds -- that weapon
+            // is authored on the archer's own character rather than on a sheet
+            // of its own, the way the Ranger's quiver is.
+            (ChosenArt.AdventurerRogueModelPath, RogueAtlasPath),
+            (ChosenArt.HoodedRogueModelPath, RogueAtlasPath),
+            (ChosenArt.DaggerModelPath, RogueAtlasPath),
+            (ChosenArt.CrossbowModelPath, RogueAtlasPath),
+            (ChosenArt.WrenchModelPath, EngineerAtlasPath),
+        };
+
+        /// <summary>
+        /// The one body here authored against more than one sheet, and both of
+        /// them.
+        /// </summary>
+        /// <remarks>
+        /// <b>The Marksman is a ghillie suit over a person</b>: seven of his
+        /// nine materials are the skin and two are the wrap, and the two draw
+        /// with different files. That is why he cannot be a row of
+        /// <see cref="AtlasBindings"/>, whose rule is that every material on a
+        /// model binds the one sheet named beside it. The failure being guarded
+        /// is the same one: a material that resolved to another pack's atlas,
+        /// or to another character's, draws confetti rather than a
+        /// slightly-wrong body.
+        /// </remarks>
+        private static readonly (string model, string[] atlases)[] MultiSheetBindings =
+        {
+            (ChosenArt.MarksmanModelPath, new[] { MarksmanAtlasPath, MarksmanFoliageAtlasPath }),
         };
 
         /// <summary>
@@ -339,8 +365,10 @@ namespace Tests.EditMode
         /// for the Archer and the Ranger, rest-and-cast for the Mage,
         /// rest-and-chop for the Soldier, the two-handed chop for the
         /// Barbarian, the raised guard for the Shield Wall, the slam for the
-        /// Slam and the cast for the Cleric and Druid lines. See #44, the
-        /// 14 August weapon pass and <c>docs/roster.md</c>.
+        /// Slam, the cast for the Cleric and Druid lines, the sighted aim the
+        /// Overwatch holds in all three states, the overarm throw for the Rogue
+        /// and the Cutthroat and the two-knife slice for the Fan of Knives. See
+        /// #44, the 14 August weapon pass and <c>docs/roster.md</c>.
         /// </summary>
         /// <remarks>
         /// The bank a name comes out of is asserted separately, in
@@ -359,6 +387,9 @@ namespace Tests.EditMode
             ChosenArt.TwoHandedChopClipName,
             ChosenArt.BlockingClipName,
             ChosenArt.ShootClipName,
+            ChosenArt.AimingClipName,
+            ChosenArt.ThrowClipName,
+            ChosenArt.DualwieldSliceClipName,
             SlamClipBareName,
         };
 
@@ -388,6 +419,9 @@ namespace Tests.EditMode
 
         /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
         private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
+
+        /// <summary>The tier-1 Engineer, the row whose shots leave a turret.</summary>
+        private const int EngineerUnitId = 35;
 
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
@@ -968,7 +1002,13 @@ namespace Tests.EditMode
         [Test]
         public void TheEngineersTurretStandsBesideHimAndHisShotsLeaveIt()
         {
-            TowerView tower = BuiltTower(TypeOf(ArcherUnitId), EngineerWithHisTurret());
+            UnitArt engineer = ChosenArt.Load().ArtFor(EngineerUnitId);
+
+            Assert.That(engineer.Model, Is.SameAs(Loaded(EngineerModelPath)),
+                $"unit {EngineerUnitId} is the row this test is about and it is drawn with something "
+                + "else now — the roster has moved under this assertion");
+
+            TowerView tower = BuiltTower(TypeOf(EngineerUnitId), engineer);
 
             Assert.That(tower.Beside, Is.Not.Null, "nothing was drawn beside the Engineer");
             Assert.That(tower.Beside.name, Is.EqualTo("turret_base"));
@@ -1139,23 +1179,6 @@ namespace Tests.EditMode
                 "the refusal has to name the prop that has no size, or it sends the reader looking at the "
                 + "art instead of at the table");
         }
-
-        /// <summary>The Engineer's tier-1 look: the wrench in hand, the turret beside him.</summary>
-        private static UnitArt EngineerWithHisTurret() =>
-            UnitArt.Armed(
-                0,
-                Loaded(EngineerModelPath),
-                MatchArt.TowerScale,
-                Loaded("Assets/Art/Kaykit/adventurers/engineer_Wrench.fbx"),
-                null,
-                null,
-                null,
-                null,
-                default,
-                default,
-                TurretMuzzle,
-                null,
-                BesideProp.OnTheNextTile(Loaded(TurretPath), 1f));
 
         /// <summary>Where something stands, to the millimetre.</summary>
         private static void AssertStandsAt(Vector3 actual, Vector3 expected, string message) =>
@@ -1329,13 +1352,15 @@ namespace Tests.EditMode
         /// <remarks>
         /// <para>
         /// The check is per model, not per material, and that is deliberate.
-        /// Each of these FBXs declares exactly one texture, so resolving it is
-        /// all-or-nothing for the whole file: either the importer found the
-        /// atlas or nothing in the model is textured. What a per-material rule
-        /// would add is a false failure — the skeleton's eyes carry a second
-        /// material, <c>Glow</c>, that declares no map at all and draws a flat
-        /// colour on purpose. Demanding a texture there is this test insisting
-        /// the artist textured something he deliberately did not.
+        /// Almost every one of these FBXs declares exactly one texture, so
+        /// resolving it is all-or-nothing for the whole file: either the
+        /// importer found the atlas or nothing in the model is textured. What a
+        /// per-material rule would add is a false failure — the skeleton's eyes
+        /// carry a second material, <c>Glow</c>, that declares no map at all
+        /// and draws a flat colour on purpose. Demanding a texture there is
+        /// this test insisting the artist textured something he deliberately
+        /// did not. <see cref="MultiSheetBindings"/> is the same rule for the
+        /// one body that was authored against two sheets.
         /// </para>
         /// <para>
         /// Identity, not name. <c>bow_withString.fbx</c> is imported searching
@@ -1350,46 +1375,65 @@ namespace Tests.EditMode
         {
             foreach ((string model, string atlas) in AtlasBindings)
             {
+                AssertDressedFrom(model, new[] { atlas });
+            }
+
+            foreach ((string model, string[] atlases) in MultiSheetBindings)
+            {
+                AssertDressedFrom(model, atlases);
+            }
+        }
+
+        /// <summary>
+        /// Every material on a model that binds anything binds one of the
+        /// sheets it was authored against, and at least one of them does.
+        /// </summary>
+        private void AssertDressedFrom(string model, string[] atlases)
+        {
+            foreach (string atlas in atlases)
+            {
                 Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<Texture2D>(atlas),
                     $"the atlas {atlas} is not in the project");
-
-                GameObject instance = Instantiate(model);
-                Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
-
-                Assert.IsNotEmpty(renderers, $"{model} instantiated with no renderer at all");
-
-                var dressed = new List<string>();
-
-                foreach (Renderer renderer in renderers)
-                {
-                    Assert.IsNotEmpty(renderer.sharedMaterials, $"{model}/{renderer.name} has no material");
-
-                    foreach (Material material in renderer.sharedMaterials)
-                    {
-                        Assert.IsNotNull(material,
-                            $"{model}/{renderer.name} has a null material slot — that slot draws magenta");
-
-                        Assert.AreNotEqual("Hidden/InternalErrorShader", material.shader.name,
-                            $"{model}/{renderer.name} material '{material.name}' is on the error shader — that draws magenta");
-
-                        Texture bound = MainTextureOf(material);
-
-                        if (bound == null) continue;
-
-                        Assert.AreEqual(atlas, AssetDatabase.GetAssetPath(bound),
-                            $"{model}/{renderer.name} material '{material.name}' bound '{bound.name}' " +
-                            $"from {AssetDatabase.GetAssetPath(bound)}, not the atlas it was authored against");
-
-                        dressed.Add($"{renderer.name}/{material.name}");
-                    }
-                }
-
-                Assert.IsNotEmpty(dressed,
-                    $"{model} bound no texture on any material. Expected {atlas}; " +
-                    "a model whose atlas failed to resolve draws flat magenta and throws nothing.");
-
-                Debug.Log($"[atlas] {model} -> {atlas} on {dressed.Count} material(s): {string.Join(", ", dressed)}");
             }
+
+            string wanted = string.Join(" or ", atlases);
+
+            GameObject instance = Instantiate(model);
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+
+            Assert.IsNotEmpty(renderers, $"{model} instantiated with no renderer at all");
+
+            var dressed = new List<string>();
+
+            foreach (Renderer renderer in renderers)
+            {
+                Assert.IsNotEmpty(renderer.sharedMaterials, $"{model}/{renderer.name} has no material");
+
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    Assert.IsNotNull(material,
+                        $"{model}/{renderer.name} has a null material slot — that slot draws magenta");
+
+                    Assert.AreNotEqual("Hidden/InternalErrorShader", material.shader.name,
+                        $"{model}/{renderer.name} material '{material.name}' is on the error shader — that draws magenta");
+
+                    Texture bound = MainTextureOf(material);
+
+                    if (bound == null) continue;
+
+                    Assert.Contains(AssetDatabase.GetAssetPath(bound), atlases,
+                        $"{model}/{renderer.name} material '{material.name}' bound '{bound.name}' " +
+                        $"from {AssetDatabase.GetAssetPath(bound)}, not the atlas it was authored against");
+
+                    dressed.Add($"{renderer.name}/{material.name}");
+                }
+            }
+
+            Assert.IsNotEmpty(dressed,
+                $"{model} bound no texture on any material. Expected {wanted}; " +
+                "a model whose atlas failed to resolve draws flat magenta and throws nothing.");
+
+            Debug.Log($"[atlas] {model} -> {wanted} on {dressed.Count} material(s): {string.Join(", ", dressed)}");
         }
 
         /// <summary>

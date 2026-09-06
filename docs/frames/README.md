@@ -109,7 +109,7 @@ for a date to see, so a date alone would call a current frame stale.
 says no. It is written by the capture and never by hand; see
 [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
-## And three sheets that are not frames at all
+## And four sheets that are not frames at all
 
 - [`roster/beside-props-sheet.png`](roster/beside-props-sheet.png) — the four props that stand on the ground
   beside a tower, drawn through the real `TowerView` by
@@ -199,6 +199,68 @@ says no. It is written by the capture and never by hand; see
   model's UVs land and not a sheet of its own.
 
   Like the two sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
+  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  Regenerate it with the command above and copy `candidates-sheet.png` over it.
+
+- [`roster/pierce-turret-lines-sheet.png`](roster/pierce-turret-lines-sheet.png) — the nine rungs of the
+  Archer, the Rogue and the Engineer, drawn through the real `TowerView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-pierce-turret-lines.txt`. Nine tiles in the order
+  [`roster.md`](../roster.md) writes them: Archer, Ranger, Overwatch; Rogue, Cutthroat, Fan of Knives;
+  Engineer, Artificer, Mortar. It closes the set of three — the other six lines are on the two sheets above —
+  and asks the same question of these: whether a rung reads as a rung above the one below it once it is
+  wearing its atlas and holding its props.
+
+  **The Engineer line needed the framing exception the Paladin line needed.** Its three rows are bound with
+  no clips, because `roster.md` names one on every rung of the Archer and Rogue lines and none on any rung of
+  that one, so they stand in their bind pose in the game. They are posed here in `Idle_A`, which is the clip
+  both earlier candidate sheets already put that model up in. That is framing and not a binding, and the `_`
+  on that line's windup and backswing still stands.
+
+  **Ten things on it are questions rather than results, and five of them are asks for
+  [`roster.md`](../roster.md) rather than for the eye.**
+  **The Artificer draws no ammo crate.** That page's tier-2 line puts one beside the turret, a tower has one
+  beside slot, and that is written on the rung's own `Needs` line as a thing the engine would have to gain.
+  The slot holds the turret, because the turret is what the Engineer's shell leaves from at every rung; so
+  the Artificer is told from the Engineer by colour alone, which is thinner than the rule that page sets for
+  a tier 2.
+  **The Mortar's turret is not a heavier one.** That page asks for "a heavier `turret_base`", and
+  `turret_base` is the only turret in the whole collection while size is retired as a tier signal everywhere
+  else on the page — so there is nothing a heavier one could be bound to and it is the same prop at the same
+  size. What "heavier" means is that page's to say.
+  **The Overwatch is posed by one clip in all three of its states.** Its `Looks` line names a stance,
+  `Ranged_2H_Aiming`, and no swing; a row is animated only when it carries three clips, so an idle on its own
+  would leave that stance unreachable, and carrying the Ranger's bow draw and release up onto a body holding
+  a crossbow would pose him with another weapon's action. What is unsigned there is a second clip.
+  **The Rogue's throw is bound and never plays.** `roster.md` names `Throw` on the Rogue and
+  `Melee_Dualwield_Attack_Slice` on the Fan of Knives, and those are attacks, so each is that row's windup —
+  but every row on these three lines carries `windup 0 backswing 0` in `content/units.txt`, which is that
+  page's `_` showing through. A tower that winds up for no time never enters the state, so the one clip the
+  line's identity rests on is wired and unreachable on the board. The same is true of the Cleric's and the
+  Druid's casts, landed one ticket earlier. The number is the ask, and it is the same ask that page's
+  windup-and-backswing note has been carrying since 5 September 2026.
+  **The Mortar's lobbing arc is already drawn, and it is not a Mortar signal.** That rung's `Looks` asks for
+  "the lobbing arc drawn"; `ProjectileView` bulges every shell along one project-wide constant, so any row
+  with `projectile` delivery already arcs — which the Engineer and the Artificer are too. Nothing on this
+  sheet distinguishes the three, and whether the capstone wanted a heavier arc of its own is that page's to
+  say.
+  **The Marksman is a modern soldier.** The body comes with a respirator and green nightvision goggles under
+  its hood, and the ghillie wrap is the whole of what tells this rung from the two below it. `roster.md`
+  rejected `Marksman_Rifle` for putting the top of this line in a different century; the crossbow in his hand
+  does not take that century off the rest of him, and whether it should is a question for whoever owns the
+  art.
+  The **crossbow is held one-handed.** `Ranged_2H_Aiming` is a two-handed aim and only the right hand carries
+  anything, so the off hand comes up beside a weapon it is not on.
+  The **Rogue's and the Cutthroat's dagger reads weakly** — it hangs at the hip and is mostly behind the leg
+  at the camera's fixed pitch, which is the Ranger's quiver complaint again. The Cutthroat is a hood and
+  nothing else against the Rogue, so at that rung the body is carrying the whole read on its own.
+  The **Fan of Knives throws from one of two identical hands.** He carries two daggers, both named after the
+  same asset, so the anchor that names `dagger` resolves to whichever the lookup reaches first — a point on
+  the art either way, but which hand the three knives leave from is not decided by anything.
+  And the **Engineer's wrench reads weakly for the same reason**, at every rung. It costs this line little,
+  because the turret beside him is loud and is what the shell leaves from — but a player looking at the man
+  is not looking at what fires.
+
+  Like the three sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
   its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 

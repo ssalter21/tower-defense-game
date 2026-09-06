@@ -64,18 +64,11 @@ namespace View.Editor
         /// </remarks>
         public static readonly (int UnitId, float Scale)[] Rows =
         {
-            // The tower rungs waiting for art: ids 31 to 37, in the order
-            // content/units.txt carries them. Every one of them stands, so
-            // every one of them is a tower scale.
-            (31, MatchArt.TowerScale),
-            (32, MatchArt.TowerScale), (33, MatchArt.TowerScale), (34, MatchArt.TowerScale),
-            (35, MatchArt.TowerScale), (36, MatchArt.TowerScale), (37, MatchArt.TowerScale),
-
             // The twelve creep rows the roster widened to, ids 38 to 49, in the
-            // same order. Every one of them walks, so every one of them is a
-            // creep scale — and a stand-in creep is handed the shared walk and
-            // death clips, so these slide down the corridor rather than
-            // standing still the way the rungs above do.
+            // order content/units.txt carries them. Every one of them walks, so
+            // every one of them is a creep scale — and a stand-in creep is
+            // handed the shared walk and death clips, so these slide down the
+            // corridor rather than standing still the way a tower would.
             (38, MatchArt.CreepScale), (39, MatchArt.CreepScale), (40, MatchArt.CreepScale),
             (41, MatchArt.CreepScale), (42, MatchArt.CreepScale), (43, MatchArt.CreepScale),
             (44, MatchArt.CreepScale), (45, MatchArt.CreepScale), (46, MatchArt.CreepScale),

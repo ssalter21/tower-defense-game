@@ -465,10 +465,10 @@ MonoBehaviour:
         transformName: druid_staff
         tip: {x: 0, y: 1, z: 0}
     - unitId: 31
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: c56010cf956c462ffa927b5904a3e0cb, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 401fed8c05367b84f92efc0e0d2a63c4, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -476,17 +476,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      windupClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: crossbow_2handed
         tip: {x: 0, y: 0, z: 0}
     - unitId: 32
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: 153a069e75ea3b11174c3551a744c99a, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -494,17 +494,17 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -6185155371445809522, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: dagger
         tip: {x: 0, y: 0, z: 0}
     - unitId: 33
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
       leftHand: {fileID: 0}
       beside:
         model: {fileID: 0}
@@ -512,84 +512,84 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -6185155371445809522, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: dagger
         tip: {x: 0, y: 0, z: 0}
     - unitId: 34
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
-      leftHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 570c51d5442007c44ad85415f39ce91b, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
       beside:
         model: {fileID: 0}
         scale: 0
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 1231959210303231270, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
-        transformName: 
+        transformName: dagger
         tip: {x: 0, y: 0, z: 0}
     - unitId: 35
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
       texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
       leftHand: {fileID: 0}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 36
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: 434ff209a5827334998c8da052203abb, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
       leftHand: {fileID: 0}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 37
-      model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
       scale: 1
-      texture: {fileID: 0}
-      rightHand: {fileID: 0}
+      texture: {fileID: 2800000, guid: dc1118436afc71145acbeb003a75771b, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
       leftHand: {fileID: 0}
       beside:
-        model: {fileID: 0}
-        scale: 0
-        offset: {x: 0, y: 0, z: 0}
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
       effectAnchor:
-        transformName: 
-        tip: {x: 0, y: 0, z: 0}
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
     - unitId: 38
       model: {fileID: 919132149155446097, guid: bb25be7fefd061845b38198b59df918a, type: 3}
       scale: 0.5

@@ -81,6 +81,31 @@ namespace View.Editor
         /// <summary>The Druid's staff, which every rung of his line carries.</summary>
         private const string DruidStaffPath = "Assets/Art/Kaykit/adventurers/druid_staff.fbx";
 
+        /// <summary>The Overwatch's body, and the only tower off the Adventurers pack's archers.</summary>
+        private const string MarksmanPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx";
+
+        /// <summary>What the Overwatch shoots with, in place of the rifle its own pack ships.</summary>
+        private const string CrossbowPath = "Assets/Art/Kaykit/adventurers/crossbow_2handed.fbx";
+
+        /// <summary>The Rogue's body, at the bottom rung of his line.</summary>
+        private const string RoguePath = "Assets/Art/Kaykit/adventurers/Rogue.fbx";
+
+        /// <summary>The hood, which is this line's second model and arrives at tier 2.</summary>
+        private const string HoodedRoguePath = "Assets/Art/Kaykit/adventurers/Rogue_Hooded.fbx";
+
+        /// <summary>What the Rogue line throws, one at the lower rungs and two at the top.</summary>
+        private const string DaggerPath = "Assets/Art/Kaykit/adventurers/dagger.fbx";
+
+        /// <summary>The Engineer's body, which all three rungs of his line are drawn on.</summary>
+        private const string EngineerPath = "Assets/Art/Kaykit/adventurers/Engineer.fbx";
+
+        /// <summary>The wrench in the Engineer's hand, which is not what fires.</summary>
+        private const string WrenchPath = "Assets/Art/Kaykit/adventurers/engineer_Wrench.fbx";
+
+        /// <summary>The machine that stands on the tile beside the Engineer and does the firing.</summary>
+        private const string TurretPath = "Assets/Art/Kaykit/adventurers/turret_base.fbx";
+
         /// <summary>The bare weirwood that stands on the tile beside the Overgrowth.</summary>
         private const string WeirwoodPath =
             "Assets/Art/Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx";
@@ -142,6 +167,16 @@ namespace View.Editor
         private const string DruidAltBAtlasPath =
             "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
 
+        /// <summary>The Adventurers pack's second rogue colourway, which the Fan of Knives wears.</summary>
+        private const string RogueAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/rogue_texture_alt_A.png";
+
+        private const string EngineerAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/engineer_texture_alt_A.png";
+
+        private const string EngineerAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/engineer_texture_alt_B.png";
+
         private const string WalkClipName = "Walking_A";
 
         private const string DeathClipName = "Death_A";
@@ -166,6 +201,18 @@ namespace View.Editor
 
         /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
         private const string BlockingClipName = "Melee_Blocking";
+
+        /// <summary>
+        /// The sighted stance the Overwatch holds, and the only clip
+        /// <c>docs/roster.md</c> names anywhere on that row.
+        /// </summary>
+        private const string AimingClipName = "Ranged_2H_Aiming";
+
+        /// <summary>The Rogue's overarm, which is how that line delivers a dagger.</summary>
+        private const string ThrowClipName = "Throw";
+
+        /// <summary>The two-knife swing the Fan of Knives throws with.</summary>
+        private const string DualwieldSliceClipName = "Melee_Dualwield_Attack_Slice";
 
         /// <summary>
         /// The Slam's swing, which exists on the Large rig alone and so names
@@ -270,6 +317,12 @@ namespace View.Editor
 
         private const string DruidStaffNode = "druid_staff";
 
+        private const string CrossbowNode = "crossbow_2handed";
+
+        private const string DaggerNode = "dagger";
+
+        private const string TurretNode = "turret_base";
+
         /// <summary>
         /// Which way along a shafted weapon its far end lies, in the prop's own
         /// local space.
@@ -339,6 +392,38 @@ namespace View.Editor
             EffectAnchor.AtTipOf(DruidStaffNode, AlongTheShaft);
 
         /// <summary>
+        /// The crossbow's own origin, which is the stock the bone puts in the
+        /// fist. No tip, for the reason <see cref="Bow"/> has none: a bolt
+        /// leaves the weapon a shooter is holding and not the end of a limb.
+        /// </summary>
+        private static readonly EffectAnchor Crossbow = EffectAnchor.At(CrossbowNode);
+
+        /// <summary>
+        /// The dagger's own origin, which is the grip and so is the hand.
+        /// </summary>
+        /// <remarks>
+        /// No tip: this line throws its knives, so what leaves is the whole
+        /// dagger from where it is held. The Fan of Knives carries two, both
+        /// named after the same asset, and this resolves to whichever the
+        /// lookup reaches first — one hand of the two, which is a point on the
+        /// art either way.
+        /// </remarks>
+        private static readonly EffectAnchor Dagger = EffectAnchor.At(DaggerNode);
+
+        /// <summary>
+        /// The top of the turret standing beside the Engineer, which is where
+        /// his shell leaves from rather than the man.
+        /// </summary>
+        /// <remarks>
+        /// Up rather than <see cref="AlongTheShaft"/> by coincidence of axis
+        /// and not of meaning: this is a barrel on a base rather than a shaft,
+        /// and the far end of it is its top. How far up is not written down —
+        /// <see cref="EffectAnchor"/> reads it off the mesh.
+        /// </remarks>
+        private static readonly EffectAnchor TurretMuzzle =
+            EffectAnchor.AtTipOf(TurretNode, Vector3.up);
+
+        /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row of
         /// <c>content/units.txt</c> that has art. A row that has none yet is on
         /// <see cref="UnboundUnits"/>'s list instead and draws the stand-in.
@@ -368,11 +453,21 @@ namespace View.Editor
         /// scale, and what separates them on sight is the Ranger's own atlas
         /// and the quiver in its hand. The atlas covers the body only — a prop
         /// is its own import off its own pack's atlas, and this quiver is
-        /// authored on the rogue's. Three rows here fill the beside column in —
-        /// the Blessing's statue, the Consecration's font and the Overgrowth's
-        /// weirwood — and the fourth look <c>docs/roster.md</c> signs for that
-        /// socket, the Engineer's turret, is on a line whose art has not been
-        /// chosen yet.
+        /// authored on the rogue's. Six rows here fill the beside column in —
+        /// the Blessing's statue, the Consecration's font, the Overgrowth's
+        /// weirwood and the turret that stands beside all three rungs of the
+        /// Engineer.
+        /// </para>
+        /// <para>
+        /// <b>The Artificer stands beside one thing and his look names two.</b>
+        /// <c>docs/roster.md</c> puts an <c>ammo_crate</c> beside the turret at
+        /// that rung, and a tower has one beside slot — which that page writes
+        /// on the rung's own <c>Needs</c> line as a thing the engine would have
+        /// to gain. What the one slot holds is the turret, because the turret
+        /// is what the Engineer's shell leaves from at every rung and the
+        /// crate would take the anchor's own prop off the board; so the crate
+        /// is not drawn and the Artificer is told from the Engineer by colour
+        /// alone. Nothing is invented to close that gap here.
         /// </para>
         /// <para>
         /// <b>A rung inherits what the rung below it holds, and its
@@ -406,24 +501,40 @@ namespace View.Editor
         /// whether that is the read is on the sheet as a question.
         /// </para>
         /// <para>
-        /// <b>The Paladin line is bound with no clips, and that is the record
-        /// speaking rather than an omission.</b> <c>docs/roster.md</c> names a
-        /// clip on every rung of the Knight, Barbarian, Cleric and Druid lines
-        /// and none on any rung of the Paladin's, whose windup and backswing
-        /// carry the <c>_</c> that page puts on a number nobody has signed. A
-        /// clip chosen here to fill the gap would be this table deciding how a
-        /// tower swings, so those three rows stand in their bind pose until the
-        /// ask is answered.
+        /// <b>The Paladin and Engineer lines are bound with no clips, and that
+        /// is the record speaking rather than an omission.</b>
+        /// <c>docs/roster.md</c> names a clip on every rung of the Knight,
+        /// Barbarian, Cleric, Druid and Rogue lines and none on any rung of
+        /// those two, whose windup and backswing carry the <c>_</c> that page
+        /// puts on a number nobody has signed. A clip chosen here to fill the
+        /// gap would be this table deciding how a tower swings, so those six
+        /// rows stand in their bind pose until the ask is answered.
+        /// </para>
+        /// <para>
+        /// <b>The Overwatch is posed by one clip in all three states, because
+        /// one is all that page signs.</b> Its <c>Looks</c> line names a stance
+        /// — <c>Ranged_2H_Aiming</c>, the sighted pose — the way the Shield
+        /// Wall's names a raised guard, and names no swing at all. A row is
+        /// animated only when it carries all three clips, so an idle on its own
+        /// would leave the signed stance unreachable and the Marksman standing
+        /// in his bind pose; the alternative, carrying the Ranger's bow draw and
+        /// release up onto a body holding a crossbow, would be posing this row
+        /// with another weapon's action. So the one signed pose is held through
+        /// all three states, and what is not signed is a second clip rather than
+        /// a way of reaching this one.
         /// </para>
         /// <para>
         /// <b>The clip a <c>Looks</c> line names is the swing, and the rest
         /// clip either side of it is not a per-row choice.</b> That page names
-        /// <c>Melee_2H_Attack_Chop</c> for the Barbarian and
-        /// <c>Ranged_Magic_Shoot</c> for the Cleric and the Druid in the same
-        /// grammar, and those are attacks — so each goes in the windup, with
-        /// <see cref="RestClipName"/> either side of it as every posed row that
-        /// is not holding a bow has. Where that page means the resting stance
-        /// it says so, as the Shield Wall's raised guard does.
+        /// <c>Melee_2H_Attack_Chop</c> for the Barbarian,
+        /// <c>Ranged_Magic_Shoot</c> for the Cleric and the Druid,
+        /// <c>Throw</c> for the Rogue and
+        /// <c>Melee_Dualwield_Attack_Slice</c> for the Fan of Knives in the
+        /// same grammar, and those are attacks — so each goes in the windup,
+        /// with <see cref="RestClipName"/> either side of it as every posed row
+        /// that is not holding a bow has. Where that page means the resting
+        /// stance it says so, as the Shield Wall's raised guard and the
+        /// Overwatch's sighted aim do.
         /// </para>
         /// <para>
         /// <b>What each unit holds, and the clips it holds it with, are the
@@ -533,6 +644,27 @@ namespace View.Editor
             (30, "Assets/Art/Kaykit/adventurers/Druid.fbx", MatchArt.TowerScale, DruidAltBAtlasPath,
                 DruidStaffPath, null, RestClipName, ShootClipName, RestClipName, StaffQuarterTurn, default,
                 DruidStaffTip, (WeirwoodPath, WeirwoodScale, BesideProp.NextTile)),
+            (31, MarksmanPath, MatchArt.TowerScale, null,
+                CrossbowPath, null, AimingClipName, AimingClipName, AimingClipName, default, default,
+                Crossbow, default),
+            (32, RoguePath, MatchArt.TowerScale, null,
+                DaggerPath, null, RestClipName, ThrowClipName, RestClipName, default, default,
+                Dagger, default),
+            (33, HoodedRoguePath, MatchArt.TowerScale, null,
+                DaggerPath, null, RestClipName, ThrowClipName, RestClipName, default, default,
+                Dagger, default),
+            (34, HoodedRoguePath, MatchArt.TowerScale, RogueAltAtlasPath,
+                DaggerPath, DaggerPath, RestClipName, DualwieldSliceClipName, RestClipName,
+                default, default, Dagger, default),
+            (35, EngineerPath, MatchArt.TowerScale, null,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (36, EngineerPath, MatchArt.TowerScale, EngineerAltAAtlasPath,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (37, EngineerPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
         };
 
         /// <summary>
