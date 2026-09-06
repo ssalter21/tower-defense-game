@@ -40,8 +40,9 @@
        tools/_rendered-from.ps1. A sheet docs/chrome/README.md lists as a
        chosen arrangement rather than as a baseline is named as exempt and
        reported n/a, because it records a decision rather than describing the
-       board; an exemption naming a file that is no longer committed is itself
-       a refusal.
+       board; so are the screen captures of a played run, which are dated by
+       the session they photograph and have no capture to re-run. An exemption
+       naming a file that is no longer committed is itself a refusal.
     3. The record count docs/README.md quotes for docs/adr/ is the number of
        records in it.
     4. Every ADR a source file cites exists. A comment pointing at a record
@@ -262,6 +263,14 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # pierce-turret-lines sheets are the same sheet for the other six lines, and the
 # two creep-bodies sheets are the same sheet for the twelve creep rows, all
 # exempt on the same grounds.
+# The ten under docs/frames/played-run/ are the third species: photographs of a
+# session rather than renders of the content. Nothing drew them -- they are the
+# built player's own back buffer, grabbed while a run was driven by synthetic
+# input -- so there is no capture to re-run and no rendered-from.txt for the
+# fallback below to read. Asking for a re-capture would be asking for a
+# different run: another arrival order, another tick under the pointer, another
+# picture. What it costs is that nothing notices when they go stale, and that
+# cost is stated in played-run/README.md and carried on purpose.
 $decisionSheets = @(
     'docs/chrome/chosen-build-phase.png'
     'docs/frames/roster/beside-props-sheet.png'
@@ -272,9 +281,25 @@ $decisionSheets = @(
     'docs/frames/roster/creep-bodies-rest-sheet.png'
 )
 
+# The photographs of a played session. A list of their own rather than more
+# names in the one above, because the sentence each is reported with is a
+# different sentence: those record a decision, these record a run.
+$sessionCaptures = @(
+    'docs/frames/played-run/build-phase.png'
+    'docs/frames/played-run/the-nine-lines-close.png'
+    'docs/frames/played-run/capstone-consecration.png'
+    'docs/frames/played-run/capstone-mortar.png'
+    'docs/frames/played-run/capstone-fan-of-knives.png'
+    'docs/frames/played-run/resolution.png'
+    'docs/frames/played-run/black-knight-beside-towers.png'
+    'docs/frames/played-run/a-slow-nobody-can-see.png'
+    'docs/frames/played-run/the-same-slow-close.png'
+    'docs/frames/played-run/run-over.png'
+)
+
 # An exemption for a file that is no longer committed covers nothing, and it
 # would go on reading as though it still applied to something.
-foreach ($sheet in $decisionSheets) {
+foreach ($sheet in ($decisionSheets + $sessionCaptures)) {
     if ($pictures -notcontains $sheet) {
         Refuse "$sheet is named as exempt from this invariant and is not a committed picture, so the exemption covers nothing. Restore the file, or drop its name from the exemption."
     }
@@ -283,6 +308,11 @@ foreach ($sheet in $decisionSheets) {
 foreach ($picture in $pictures) {
     if ($decisionSheets -contains $picture) {
         Exempt "$picture records a decision rather than describing the board, so its date is not compared."
+        continue
+    }
+
+    if ($sessionCaptures -contains $picture) {
+        Exempt "$picture photographs a run somebody played, so it is dated by that session and not by the content; re-capturing it would be a different run."
         continue
     }
 

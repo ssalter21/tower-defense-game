@@ -24,6 +24,11 @@ each filename is only worth anything because of that: it is a tick of the run
 `content/landmarks.txt` was made from, so a frame named 1096 and the checklist
 row that says "drag to tick 1096" are about the same moment.
 
+**One folder here is none of that.** [`played-run/`](played-run/README.md) holds screen captures of the built
+player taken while a whole ten-wave run was driven by synthetic input — chrome, palette, wave bar and all.
+They are the only pictures under this directory that no capture tool drew, and its README says what dates
+them.
+
 ## Regenerating
 
 ```powershell

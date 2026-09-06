@@ -62,6 +62,7 @@ code or the content file whose number it explains:
 | [A player build measures no text without a PanelSettings asset](research/a-player-build-measures-no-text-without-a-panelsettings-asset.md) | A build drew none of its HUD while the editor drew all of it. What is different about a player? |
 | [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
 | [What agents can build unattended](research/what-agents-can-build-unattended.md) | Which seams can an `/afk` run take to green, what proves each, and what must a person hand over first? |
+| [Driving the built player with synthetic input](research/driving-the-built-player-with-synthetic-input.md) | Can an agent play the shipped executable itself, and what does it have to get right before the game looks broken? |
 
 > **One caveat the hot-reload note carries.** `unity.com` returns 403 to automated fetching, so every licence
 > and pricing claim written against it was read via a browser user-agent as extracted text. A human should
