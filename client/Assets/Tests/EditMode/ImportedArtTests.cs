@@ -112,6 +112,14 @@ namespace Tests.EditMode
         /// </summary>
         private const string NinjaAtlasPath = ChosenArt.NinjaFolder + "ninja_texture_A.png";
 
+        private const string VampireAtlasPath = ChosenArt.VampireFolder + "vampire_texture.png";
+
+        private const string WitchAtlasPath = ChosenArt.WitchFolder + "witch_texture_A.png";
+
+        private const string WerewolfAtlasPath = ChosenArt.WerewolfFolder + "werewolf_A.png";
+
+        private const string HoarderAtlasPath = ChosenArt.HoarderFolder + "hoarder_texture.png";
+
         private const string EngineerModelPath = ChosenArt.EngineerModelPath;
 
         private const string TurretPath = ChosenArt.TurretModelPath;
@@ -386,6 +394,22 @@ namespace Tests.EditMode
             (ChosenArt.TieflingBackpackModelPath, TieflingAtlasPath),
             (ChosenArt.NinjaModelPath, NinjaAtlasPath),
             (ChosenArt.NinjaKatanaModelPath, NinjaAtlasPath),
+
+            // The remaining six creep bodies and what they carry. Four more
+            // packs, and the Necromancer takes the same copy of the skeleton
+            // sheet the Bone Golem does, for the same reason: it sits in the
+            // pack folder rather than in Art/Characters, and the two files are
+            // identical bytes under one name.
+            (ChosenArt.NecromancerModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.SkeletonScytheModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.VampireModelPath, VampireAtlasPath),
+            (ChosenArt.VampireSwordModelPath, VampireAtlasPath),
+            (ChosenArt.WitchModelPath, WitchAtlasPath),
+            (ChosenArt.BroomModelPath, WitchAtlasPath),
+            (ChosenArt.WerewolfManModelPath, WerewolfAtlasPath),
+            (ChosenArt.WerewolfWolfModelPath, WerewolfAtlasPath),
+            (ChosenArt.WerewolfAxeModelPath, WerewolfAtlasPath),
+            (ChosenArt.HoarderModelPath, HoarderAtlasPath),
         };
 
         /// <summary>
@@ -684,8 +708,8 @@ namespace Tests.EditMode
         /// they are the reason this needs saying.</b> Every one of them draws
         /// the same stand-in, holding nothing, in no atlas — they are
         /// deliberately indistinguishable, which is how an undressed row reads
-        /// as undressed. Issue #271 empties that list and this covers those
-        /// rows the moment it does.
+        /// as undressed. That list is empty, so nothing is skipped and this
+        /// covers every row.
         /// </para>
         /// </remarks>
         [Test]
@@ -922,8 +946,8 @@ namespace Tests.EditMode
         /// prop — and a row drawing the stand-in is a row nobody has chosen one
         /// for. Such a row is required to name NO anchor, which is the fixed
         /// height above its own root, and reads as undressed exactly as its
-        /// empty hands and its bind pose do. Issue #271 empties that list, and
-        /// this assertion covers every placed row again the moment it does.
+        /// empty hands and its bind pose do. That list is empty, so the branch
+        /// covers nothing and every placed row is held to naming an anchor.
         /// </para>
         /// <para>
         /// Built through the real <see cref="TowerView"/>, so what is asserted

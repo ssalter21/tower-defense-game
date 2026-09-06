@@ -33,12 +33,11 @@ namespace Tests.EditMode
         /// </summary>
         /// <remarks>
         /// <b>A row on <see cref="UnboundUnits"/>'s list is here too, and that
-        /// is the point.</b> The twenty-three rungs the nine tower lines added
-        /// and the twelve creep rows after them arrive in the simulation ahead
-        /// of their art, so the ones still waiting draw the stand-in — but
-        /// their names were signed with the rest of the roster, and a name does
-        /// not wait on a model. What the exemption in the walk below covers is a row whose
-        /// name the index has not signed at all.
+        /// is the point.</b> A row can land in the simulation ahead of its art
+        /// and draw the stand-in until it arrives — but its name was signed
+        /// with the rest of the roster, and a name does not wait on a model.
+        /// What the exemption in the walk below covers is a row whose name the
+        /// index has not signed at all.
         /// </remarks>
         /// <remarks>
         /// <b>Id 7 is Skeleton Mage and the Necromancer is id 38, and the two

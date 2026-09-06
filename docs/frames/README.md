@@ -109,7 +109,7 @@ for a date to see, so a date alone would call a current frame stale.
 says no. It is written by the capture and never by hand; see
 [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
-## And four sheets that are not frames at all
+## And six sheets that are not frames at all
 
 - [`roster/beside-props-sheet.png`](roster/beside-props-sheet.png) — the four props that stand on the ground
   beside a tower, drawn through the real `TowerView` by
@@ -312,6 +312,62 @@ says no. It is written by the capture and never by hand; see
   half rather than the undead half — and whether the colour carries it is an eye check.
 
   Like the four sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
+  its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
+  Regenerate it with the command above and copy `candidates-sheet.png` over it.
+
+- [`roster/creep-bodies-rest-sheet.png`](roster/creep-bodies-rest-sheet.png) — the last six creep bodies,
+  ids 38, 43, 44, 47, 48 and 49, drawn through the real `CreepView` by
+  `tools/capture-armed-roster.ps1 -SetFile docs/roster-creep-bodies-rest.txt`. Nine tiles: the Necromancer,
+  the Vampire, the Witch, the Cursed Villager, the Werewolf and the Grave Robber on the top row, then the
+  Grave Robber holding its backpack, the Witch with her broom turned upright and the Necromancer with his
+  scythe turned the same way on the second. **With these bound the stand-in list is empty** — every row of
+  `content/units.txt` draws its own model, and no row is drawn as the Prototype Dummy any more.
+
+  All six are on `Rig_Medium`, so every tile takes the shared bare `Walking_A`; the four bodies that had to
+  name the Large rig's own banks are on the sheet above. Every tile is posed a quarter of the way through
+  that walk, which is the clip the match draws these rows with, so nothing here is a framing choice.
+
+  **Seven things on it are questions rather than results, and three of them are asks for
+  [`roster.md`](../roster.md) rather than for the eye.**
+  **The Grave Robber's body already wears its pack.** That row is signed "`Hoarder`, wearing
+  `Hoarder_Backpack` — the backpack, not the sword", and `Hoarder.fbx` carries `Hoarder_Backpack` as a
+  skinned piece of itself: one of that body's thirteen materials is the pack, and the bedroll and hip pouches
+  come with it. The pack ships the same piece again as a model of its own, and tile seven is what that model
+  does in a hand — a second backpack that covers the body from the chin down and hides the face entirely. So
+  the row is bound with empty hands. Whether the worn pack reads loudly enough for a row whose whole
+  mechanic is the pack is the eye check.
+  **And that body wears a sword as well, which the same line does not want.** "A sword on a creep that never
+  attacks reads as a lie" is why that row picks the pack over `Hoarder_Sword` — but
+  `Hoarder_FrontPouch_Sword` is another of the thirteen materials, sheathed at the belt, and it cannot come
+  off without editing a model. Nothing was put in a hand; the sword on the tile is the one the character was
+  authored with. Whether that is the lie the line meant is that page's to say.
+  **The Witch's broom lies along the arm.** `roster.md` names "`Witch`, `Broom`" and no turn, and this
+  collection authors a shaft along the hand bone's local +Y — the same measurement that put the Mage's staff
+  flat with its orb by the feet. Bound at the bone's own rotation, the bristles come to rest out beside the
+  hip and read as a bundle. Tile eight is the same broom with the quarter turn the three staffs carry, and it
+  stands on end with the bristles at the floor, unmistakably a broom. Which is right is the developer's call
+  the way the staffs' was — `MatchSceneBuilder`'s own note on that tilt says to change a read like this on a
+  ticket and not by noticing the paragraph.
+  **The Necromancer's scythe is flat for the same reason**, blade curling up in front of the chest and shaft
+  out level behind. `Skeleton_Scythe` measures 2.09 m along that same bone axis against 1.34 across, and
+  `roster.md` names no turn on that row either. It is the largest thing any of these six carries at 69% of
+  the body and it does read; tile nine is the turned version, so the broom and the scythe can be answered
+  together.
+  **The Cursed Villager's axe is nearly invisible.** It lies level across the chest with the head edge-on and
+  the haft behind the arm, so at this camera it reads as a pale sash rather than as a weapon. It measures 46%
+  of the body, so nothing fails; it is the Rogue's dagger and the Engineer's wrench complaint again.
+  **The Villager and the Werewolf are the same figure in the same clothes.** Both draw at 1.25 m, both wear
+  the red shirt and the blue jeans, and the wolf head is the whole of what tells them apart — which is
+  exactly right for a pair [#267](https://github.com/ssalter21/tower-defense-game/issues/267) will join, and
+  is worth knowing before that ticket, because at gameplay distance a player is being asked to read a head.
+  **Three of these six are neither undead nor dark nor hooded.** The Witch is an orange pointed hat over a
+  green skirt, and the Villager and the Werewolf are a red shirt and jeans. `roster.md` states the theme as
+  *undead, and the dark or hooded*, and argues the licence on the Fiend's row rather than on any of these
+  three. Whether a village girl in orange belongs in that wave is an eye check, and the Necromancer, the
+  Vampire and the Grave Robber beside her are not the problem — they are bone, black-and-red and hooded
+  respectively.
+
+  Like the five sheets above it, it draws no board, no price and no roster row — a set sheet is drawn from
   its set file — which is why `check-docs.ps1` exempts it from being dated against the authored content.
   Regenerate it with the command above and copy `candidates-sheet.png` over it.
 

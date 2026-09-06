@@ -256,6 +256,48 @@ namespace Tests.Fixtures
 
         public const string NinjaKatanaModelPath = NinjaFolder + "Ninja_Katana.fbx";
 
+        /// <summary>The Necromancer's body, off the same pack as the skeletons it walks with.</summary>
+        public const string NecromancerModelPath = "Assets/Art/Kaykit/skeletons/Necromancer.fbx";
+
+        /// <summary>The scythe it carries, out of the pack folder rather than Art/Weapons.</summary>
+        public const string SkeletonScytheModelPath =
+            "Assets/Art/Kaykit/skeletons/Skeleton_Scythe.fbx";
+
+        /// <summary>The folder the Vampire's body, its sword and its atlas import into.</summary>
+        public const string VampireFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/vampire/";
+
+        public const string VampireModelPath = VampireFolder + "Vampire.fbx";
+
+        public const string VampireSwordModelPath = VampireFolder + "Vampire_Sword.fbx";
+
+        /// <summary>The folder the Witch's body, her broom and her atlas import into.</summary>
+        public const string WitchFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/witch/";
+
+        public const string WitchModelPath = WitchFolder + "Witch.fbx";
+
+        public const string BroomModelPath = WitchFolder + "Broom.fbx";
+
+        /// <summary>The folder both Werewolf bodies, the axe and their atlas import into.</summary>
+        public const string WerewolfFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/";
+
+        /// <summary>The Cursed Villager: the man half of that pack's pair.</summary>
+        public const string WerewolfManModelPath = WerewolfFolder + "Werewolf_Man.fbx";
+
+        /// <summary>The Werewolf: the wolf half, on the same rig.</summary>
+        public const string WerewolfWolfModelPath = WerewolfFolder + "Werewolf_Wolf.fbx";
+
+        /// <summary>
+        /// The Villager's axe, the one its own pack ships rather than any of
+        /// the nine others in the collection called some form of "axe".
+        /// </summary>
+        public const string WerewolfAxeModelPath = WerewolfFolder + "axe.fbx";
+
+        /// <summary>The folder the Grave Robber's body, its props and its atlas import into.</summary>
+        public const string HoarderFolder = "Assets/Art/Kaykit/mystery-monthly-series-6/hoarder/";
+
+        /// <summary>The Grave Robber's body, which imports already wearing its pack.</summary>
+        public const string HoarderModelPath = HoarderFolder + "Hoarder.fbx";
+
         /// <summary>Where every bank of both rigs is imported.</summary>
         public const string ClipBankFolder = "Assets/Art/Animations/";
 
@@ -337,9 +379,9 @@ namespace Tests.Fixtures
         /// up.
         /// <para>
         /// Only exactly upright in the pose it was measured in, because a weapon
-        /// parented to a hand turns with the arm. The Necromancer's capture pose
-        /// is a quarter of the way through Walking_A and leans about 43 degrees,
-        /// head-up.
+        /// parented to a hand turns with the arm. The Skeleton Mage's capture
+        /// pose is a quarter of the way through Walking_A and leans about 43
+        /// degrees, head-up.
         /// </para>
         /// <para>
         /// Re-derive this rather than copying it -- from the vertices and the
@@ -528,7 +570,7 @@ namespace Tests.Fixtures
         /// clip, not a way of reaching this one.
         /// </para>
         /// <para>
-        /// The six creep bodies carry no clips at all. The three columns are a
+        /// The creep rows carry no clips at all. The three columns are a
         /// tower's Idle, Windup and Backswing and nothing puts a walker in any
         /// of those states; what animates a creep is the walk and the death,
         /// which are shared except on <see cref="LargeRigClips"/>' four. A
@@ -541,7 +583,11 @@ namespace Tests.Fixtures
         /// Ranger's quiver already sits; and the Shade draws in the atlas its
         /// model imports with, because "the darkest of the pack's four" names
         /// none of them and which sheet draws a body darkest is not readable off
-        /// the files.
+        /// the files. The Werewolf is signed for no prop and the Grave Robber
+        /// for one its body already wears — <c>Hoarder.fbx</c> carries
+        /// <c>Hoarder_Backpack</c> as a skinned piece of itself, so the model
+        /// the pack ships of that same piece would draw a second pack in front
+        /// of the first — and both come out with empty hands.
         /// </para>
         /// </remarks>
         public static readonly (
@@ -653,6 +699,9 @@ namespace Tests.Fixtures
             (37, EngineerModelPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
                 WrenchModelPath, null, null, null, null,
                 default, default, TurretMuzzle, (TurretModelPath, 1f, BesideProp.NextTile)),
+            (38, NecromancerModelPath, MatchArt.CreepScale, null,
+                SkeletonScytheModelPath, null, null, null, null,
+                default, default, default, default),
             (39, SkeletonGolemModelPath, MatchArt.CreepScale, null,
                 SkeletonGolemAxeModelPath, null, null, null, null,
                 default, default, default, default),
@@ -665,11 +714,26 @@ namespace Tests.Fixtures
             (42, MonstrosityModelPath, MatchArt.CreepScale, null,
                 null, MonstrosityShieldModelPath, null, null, null,
                 default, default, default, default),
+            (43, VampireModelPath, MatchArt.CreepScale, null,
+                VampireSwordModelPath, null, null, null, null,
+                default, default, default, default),
+            (44, WitchModelPath, MatchArt.CreepScale, null,
+                BroomModelPath, null, null, null, null,
+                default, default, default, default),
             (45, TieflingModelPath, MatchArt.CreepScale, null,
                 TieflingBackpackModelPath, null, null, null, null,
                 default, default, default, default),
             (46, NinjaModelPath, MatchArt.CreepScale, null,
                 NinjaKatanaModelPath, null, null, null, null,
+                default, default, default, default),
+            (47, WerewolfManModelPath, MatchArt.CreepScale, null,
+                WerewolfAxeModelPath, null, null, null, null,
+                default, default, default, default),
+            (48, WerewolfWolfModelPath, MatchArt.CreepScale, null,
+                null, null, null, null, null,
+                default, default, default, default),
+            (49, HoarderModelPath, MatchArt.CreepScale, null,
+                null, null, null, null, null,
                 default, default, default, default),
         };
 

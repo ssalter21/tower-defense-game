@@ -11,13 +11,12 @@ namespace View.Editor
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>This list is a temporary allowance, and issue #271 — the roster
-    /// expansion's integrate ticket — is where it is emptied.</b> The rows of
-    /// the widened roster land in the simulation before their art does, so for
-    /// the length of that effort a row can exist with nothing chosen to draw
-    /// it. An id written here says so out loud; an id nobody wrote here and
-    /// nobody gave art to still reaches <c>MatchArt</c> as a throw naming it,
-    /// which is what stops a row being forgotten rather than allowed.
+    /// <b>This list is a temporary allowance and it is empty.</b> A row can
+    /// land in the simulation before its art does, and for as long as that gap
+    /// is open the row has to be drawable as something. An id written here says
+    /// so out loud; an id nobody wrote here and nobody gave art to still
+    /// reaches <c>MatchArt</c> as a throw naming it, which is what stops a row
+    /// being forgotten rather than allowed.
     /// </para>
     /// <para>
     /// <b>The stand-in was named on the ticket and is not chosen here.</b>
@@ -64,14 +63,7 @@ namespace View.Editor
         /// </remarks>
         public static readonly (int UnitId, float Scale)[] Rows =
         {
-            // The six creep rows of the widened roster still waiting for their
-            // bodies, in the order content/units.txt carries them. Every one of
-            // them walks, so every one of them is a creep scale — and a
-            // stand-in creep is handed the shared walk and death clips, so
-            // these slide down the corridor rather than standing still the way
-            // a tower would.
-            (38, MatchArt.CreepScale), (43, MatchArt.CreepScale), (44, MatchArt.CreepScale),
-            (47, MatchArt.CreepScale), (48, MatchArt.CreepScale), (49, MatchArt.CreepScale),
+            // Empty: every row of content/units.txt has art chosen for it.
         };
 
         /// <summary>Whether this row is one of the ones with no art yet.</summary>

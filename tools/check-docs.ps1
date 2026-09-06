@@ -260,8 +260,8 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # answer. What would make it stale is a look in docs/roster.md moving, which is
 # a person's job to notice and not this check's. The caster-lines and
 # pierce-turret-lines sheets are the same sheet for the other six lines, and the
-# creep-bodies sheet is the same sheet for the first six creep rows, all exempt
-# on the same grounds.
+# two creep-bodies sheets are the same sheet for the twelve creep rows, all
+# exempt on the same grounds.
 $decisionSheets = @(
     'docs/chrome/chosen-build-phase.png'
     'docs/frames/roster/beside-props-sheet.png'
@@ -269,6 +269,7 @@ $decisionSheets = @(
     'docs/frames/roster/caster-lines-sheet.png'
     'docs/frames/roster/pierce-turret-lines-sheet.png'
     'docs/frames/roster/creep-bodies-sheet.png'
+    'docs/frames/roster/creep-bodies-rest-sheet.png'
 )
 
 # An exemption for a file that is no longer committed covers nothing, and it
