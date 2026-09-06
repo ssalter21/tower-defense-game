@@ -134,10 +134,12 @@ namespace Sim
         /// The same rule, over a board and a purse that belong to no run.
         /// </summary>
         /// <remarks>
-        /// Everything the rule reads, named one by one. A run holds all six and
-        /// hands them over; the canned field pool holds a board and a purse of
-        /// its own and no run at all, and a wall built by a second copy of this
-        /// rule is a wall that can disagree with the one a player builds.
+        /// Everything the rule reads, named one by one. A run holds the first
+        /// seven and hands them over; the canned field pool holds a board and a
+        /// purse of its own and no run at all, and a wall built by a second copy
+        /// of this rule is a wall that can disagree with the one a player
+        /// builds. The eighth is the pool's alone: a run is never restricted to
+        /// one attack type, and a sweep row always is.
         /// </remarks>
         /// <param name="map">The board's map: where a cell is, and where the route runs.</param>
         /// <param name="types">The roster every placeable row is read out of.</param>

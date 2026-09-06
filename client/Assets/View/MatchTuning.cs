@@ -77,10 +77,13 @@ namespace View
         /// </summary>
         /// <remarks>
         /// A tower with an <see cref="EffectAnchor"/> fires from a bone or from
-        /// a point on what it holds, and every unit whose art is chosen has
-        /// one. This is what a row drawn as the stand-in gets: a mannequin has
-        /// no staff tip to name, and one number for the whole roster is the
-        /// thing anchors replaced.
+        /// a point on what it holds, and <b>every shipped placed row names one
+        /// — <c>EveryTowerFiresFromAPointOnItsOwnArt</c> holds all of them to
+        /// it, with no exemption left.</b> So nothing in the roster reaches
+        /// this number. It is kept as the fallback a row without an anchor
+        /// would take, which is the one number for the whole roster that
+        /// anchors replaced; the rows that used to take it were the ones drawn
+        /// as a stand-in, and that mechanism is retired.
         /// </remarks>
         public const float TowerMuzzleHeight = 1.4f;
 

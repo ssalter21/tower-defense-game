@@ -115,9 +115,10 @@ namespace View
         /// on what stands beside it when the view was built, so this reads the
         /// current pose of a bone, a staff tip or a turret barrel — and the
         /// flash on a held prop moves with the arm. A tower with no anchor
-        /// — a row drawn as the stand-in, which is a mannequin with no staff tip
-        /// to name — falls back to
-        /// <see cref="MatchTuning.TowerMuzzleHeight"/> above its base.
+        /// falls back to <see cref="MatchTuning.TowerMuzzleHeight"/> above its
+        /// base — <b>which no shipped row does any more</b>, since every placed
+        /// row is held to naming an anchor and the stand-in that used to be the
+        /// exception is retired.
         /// </para>
         /// <para>
         /// <b>Decorations only.</b> This is read where the event stream is
