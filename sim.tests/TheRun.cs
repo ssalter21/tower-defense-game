@@ -42,7 +42,7 @@ public static class TheRun
 
     /// <summary>
     /// What the ten-wave run on the committed content came to: its per-round
-    /// pairs, in order, as a real run of it produced them.
+    /// numbers, in order, as a real run of it produced them.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -83,10 +83,10 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(30, 239),
-        new RoundOutcome(148, 229),
-        new RoundOutcome(328, 184),
-        new RoundOutcome(510, 200),
+        new RoundOutcome(26, 239, 0),
+        new RoundOutcome(108, 229, 0),
+        new RoundOutcome(281, 184, 0),
+        new RoundOutcome(376, 200, 0),
     };
 
     /// <summary>
@@ -100,16 +100,16 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRunWithoutDeath => new[]
     {
-        new RoundOutcome(30, 239),
-        new RoundOutcome(148, 229),
-        new RoundOutcome(328, 184),
-        new RoundOutcome(510, 200),
-        new RoundOutcome(721, 164),
-        new RoundOutcome(988, 95),
-        new RoundOutcome(1412, 95),
-        new RoundOutcome(1945, 101),
-        new RoundOutcome(2595, 99),
-        new RoundOutcome(3421, 93),
+        new RoundOutcome(26, 239, 0),
+        new RoundOutcome(108, 229, 0),
+        new RoundOutcome(281, 184, 0),
+        new RoundOutcome(376, 200, 0),
+        new RoundOutcome(577, 82, 0),
+        new RoundOutcome(788, 25, 0),
+        new RoundOutcome(1178, 22, 0),
+        new RoundOutcome(1653, 25, 0),
+        new RoundOutcome(2218, 23, 0),
+        new RoundOutcome(2927, 22, 0),
     };
 
     /// <summary>What that run had left of the pool when it stopped: none of it.</summary>

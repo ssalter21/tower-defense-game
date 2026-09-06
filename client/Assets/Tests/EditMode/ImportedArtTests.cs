@@ -6,6 +6,7 @@ using Tests.Fixtures;
 using UnityEditor;
 using UnityEngine;
 using View;
+using View.Editor;
 
 namespace Tests.EditMode
 {
@@ -72,7 +73,10 @@ namespace Tests.EditMode
         /// <summary>The bank the three tower-state clips come out of.</summary>
         public const string RangedBankPath = ChosenArt.RangedBankPath;
 
-        /// <summary>The unit id the Ranger's one-and-a-half is written against in the roster.</summary>
+        /// <summary>The tier-1 Archer.</summary>
+        private const int ArcherUnitId = 3;
+
+        /// <summary>The tier-2 Ranger, which stands on the Archer's model.</summary>
         private const int RangerUnitId = 14;
 
         /// <summary>The atlas shared by the Ranger and the bow it holds.</summary>
@@ -80,6 +84,191 @@ namespace Tests.EditMode
 
         /// <summary>The atlas the Skeletons 1.1 characters were authored against.</summary>
         private const string SkeletonAtlasPath = "Assets/Art/Characters/skeleton_texture_A.png";
+
+        /// <summary>
+        /// The same sheet again, in the pack folder the whole collection was
+        /// imported into. Byte for byte the one above; which of the two a model
+        /// binds is decided by which folder it sits in, and the Bone Golem sits
+        /// in this one.
+        /// </summary>
+        private const string PackSkeletonAtlasPath =
+            "Assets/Art/Kaykit/skeletons/skeleton_texture_A.png";
+
+        private const string BlackKnightAtlasPath =
+            ChosenArt.BlackKnightFolder + "blackknight_texture.png";
+
+        private const string FrostGolemAtlasPath =
+            ChosenArt.FrostGolemFolder + "frostgolem_texture.png";
+
+        private const string MonstrosityAtlasPath =
+            ChosenArt.MonstrosityFolder + "monstrosity_texture_A.png";
+
+        private const string TieflingAtlasPath = ChosenArt.TieflingFolder + "tiefling_texture.png";
+
+        /// <summary>
+        /// The sheet the Ninja imports wearing, which is the one the Shade draws
+        /// in until the darkest of the four is picked. The other three are
+        /// imported and bound to nothing.
+        /// </summary>
+        private const string NinjaAtlasPath = ChosenArt.NinjaFolder + "ninja_texture_A.png";
+
+        private const string VampireAtlasPath = ChosenArt.VampireFolder + "vampire_texture.png";
+
+        private const string WitchAtlasPath = ChosenArt.WitchFolder + "witch_texture_A.png";
+
+        private const string WerewolfAtlasPath = ChosenArt.WerewolfFolder + "werewolf_A.png";
+
+        private const string HoarderAtlasPath = ChosenArt.HoarderFolder + "hoarder_texture.png";
+
+        private const string EngineerModelPath = ChosenArt.EngineerModelPath;
+
+        private const string TurretPath = ChosenArt.TurretModelPath;
+
+        private const string CratePath = "Assets/Art/Kaykit/adventurers/ammo_crate.fbx";
+
+        private const string EngineerAtlasPath = "Assets/Art/Kaykit/adventurers/engineer_texture.png";
+
+        /// <summary>The Marksman's skin, one of the two sheets that body draws with.</summary>
+        private const string MarksmanAtlasPath = ChosenArt.MarksmanFolder + "marksman_texture.png";
+
+        /// <summary>The ghillie wrap, which is the other one.</summary>
+        private const string MarksmanFoliageAtlasPath =
+            ChosenArt.MarksmanFolder + "marksman_foliage_texture.png";
+
+        /// <summary>The sheet the Rogue line's two bodies and its dagger are all on.</summary>
+        private const string RogueAtlasPath = "Assets/Art/Kaykit/adventurers/rogue_texture.png";
+
+        private const string BarbarianAtlasPath = "Assets/Art/Kaykit/adventurers/barbarian_texture.png";
+
+        /// <summary>
+        /// The Adventurers pack's own knight sheet, which is not the copy in
+        /// <c>Art/Characters</c> the live Knight model binds. The
+        /// <c>shield_square</c> is authored on this one and sits beside it, so
+        /// the importer's recursive-up search finds this file and not that one.
+        /// </summary>
+        private const string AdventurersKnightAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture.png";
+
+        /// <summary>
+        /// The Adventurers pack's own mage sheet, which for the same reason is
+        /// not the copy in <c>Art/Characters</c> the live Mage model binds. The
+        /// <c>spellbook_open</c> is authored on this one and sits beside it.
+        /// </summary>
+        private const string AdventurersMageAtlasPath =
+            "Assets/Art/Kaykit/adventurers/mage_texture.png";
+
+        private const string PaladinModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx";
+
+        private const string StatuePath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx";
+
+        private const string PaladinAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_texture_A.png";
+
+        private const string PaladinAltAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png";
+
+        private const string ClericModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx";
+
+        private const string FontPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/Cleric_Font.fbx";
+
+        private const string ClericAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/cleric_texture.png";
+
+        private const string ClericAltAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png";
+
+        /// <summary>The Lorekeeper's one sheet — that character ships no alternate.</summary>
+        private const string LorekeeperAtlasPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/lorekeeper_texture.png";
+
+        /// <summary>
+        /// The second model proposed for the Druid's tier 3 and set aside on
+        /// issue #250: it read as a different creature rather than as the same
+        /// person promoted, so that line is colour and a prop at every rung.
+        /// Imported, and drawn by nothing.
+        /// </summary>
+        private const string PlantWarriorModelPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/plant-warrior/PlantWarrior.fbx";
+
+        private const string DruidModelPath = "Assets/Art/Kaykit/adventurers/Druid.fbx";
+
+        private const string DruidAtlasPath = "Assets/Art/Kaykit/adventurers/druid_texture.png";
+
+        private const string DruidAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
+
+        /// <summary>The bare weirwood the developer picked on 5 September 2026.</summary>
+        private const string WeirwoodPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx";
+
+        /// <summary>
+        /// The atlas the Forest Nature pack ships in every one of its eight
+        /// colourway folders. The eight files are byte-identical: a colourway
+        /// is where a model's UVs land on the sheet and not a different sheet.
+        /// So which of the eight binds is the thing worth asserting -- any of
+        /// them would draw, and only the one in the model's own folder is what
+        /// the importer's recursive-up search is supposed to find.
+        /// </summary>
+        private const string ForestAtlasPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/forest_texture.png";
+
+        /// <summary>
+        /// How big the weirwood is drawn beside the Druid.
+        /// </summary>
+        /// <remarks>
+        /// Measured rather than chosen by eye. At its own imported size the
+        /// tree spreads 3.74 m across, which is nearly two of this board's
+        /// 2.0 m tiles and reaches back through the Druid himself; this brings
+        /// the spread to 2.06 -- the tile it is standing on -- and leaves it
+        /// 2.89 m tall against a Druid who measures about two. The other three
+        /// beside props are authored in the same packs as the characters they
+        /// stand with and need no correction at all, which is the whole reason
+        /// the size is per prop and not a constant.
+        /// </remarks>
+        private const float WeirwoodScale = 0.55f;
+
+        /// <summary>
+        /// The four looks <c>docs/roster.md</c> signs that put something on the
+        /// ground beside a tower: which character, which atlas it wears, and
+        /// what stands beside it at what size.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>All four are bound to rows now, and this holds them against the
+        /// record a second time.</b> The two binding tables each carry the
+        /// Blessing, the Consecration, the Overgrowth and the three rungs of
+        /// the Engineer; the record is <c>docs/roster.md</c>, and
+        /// <c>docs/roster-expansion-beside-candidates.txt</c> is the same four
+        /// again as something that can be photographed.
+        /// </para>
+        /// <para>
+        /// <b>The Artificer's ammo crate is not here.</b> A tower has one
+        /// beside slot and that rung's look puts the crate beside the turret,
+        /// which is two -- so the crate is a question about the rung rather
+        /// than a binding, it is on that rung's <c>Needs</c> line in
+        /// <c>docs/roster.md</c>, and it goes on the candidate sheet instead.
+        /// </para>
+        /// </remarks>
+        private static readonly (
+            string look,
+            string model,
+            string atlas,
+            string beside,
+            float scale,
+            string propAtlas)[] SignedBesideLooks =
+        {
+            ("the Engineer's turret", EngineerModelPath, null, TurretPath, 1f, EngineerAtlasPath),
+            ("the Paladin's Blessing", PaladinModelPath, PaladinAltAtlasPath, StatuePath, 1f,
+                PaladinAtlasPath),
+            ("the Cleric's Consecration", ClericModelPath, ClericAltAtlasPath, FontPath, 1f,
+                ClericAtlasPath),
+            ("the Druid's Overgrowth", DruidModelPath, DruidAltBAtlasPath, WeirwoodPath, WeirwoodScale,
+                ForestAtlasPath),
+        };
 
         /// <summary>
         /// Model to atlas. The adventurers each carry their own and the
@@ -121,14 +310,138 @@ namespace Tests.EditMode
             (ChosenArt.SkeletonMageModelPath, SkeletonAtlasPath),
             (ChosenArt.KnightModelPath, "Assets/Art/Characters/knight_texture.png"),
             (ChosenArt.MageModelPath, "Assets/Art/Characters/mage_texture.png"),
+
+            // The four props that stand beside a tower, and the characters they
+            // stand beside. This is where the confetti risk is sharpest: a
+            // row's own atlas covers its body only, so each of these has to
+            // arrive already wearing its own pack's. The tree's pack ships
+            // eight folders of identical bytes, so which one it binds is what
+            // says whether the colourway resolved or whether another Color
+            // folder answered first.
+            (EngineerModelPath, EngineerAtlasPath),
+            (TurretPath, EngineerAtlasPath),
+            (CratePath, EngineerAtlasPath),
+            (PaladinModelPath, PaladinAtlasPath),
+            (StatuePath, PaladinAtlasPath),
+
+            // The rest of the melee lines' art: each a body or a prop whose
+            // atlas is in its own pack's folder -- the Adventurers barbarian
+            // sheet for the Barbarian and both axes, the Paladin pack's for his
+            // hammer, shield and book. The shield_square is on the Adventurers
+            // pack's own knight sheet, which is not the copy in Art/Characters
+            // that the live Knight model binds.
+            (ChosenArt.BarbarianModelPath, BarbarianAtlasPath),
+            (ChosenArt.BarbarianLargeModelPath, BarbarianAtlasPath),
+            (ChosenArt.AxeModelPath, BarbarianAtlasPath),
+            (ChosenArt.LargeAxeModelPath, BarbarianAtlasPath),
+            (ChosenArt.ShieldSquareModelPath, AdventurersKnightAtlasPath),
+            (ChosenArt.PaladinModelPath, PaladinAtlasPath),
+            (ChosenArt.HammerModelPath, PaladinAtlasPath),
+            (ChosenArt.PaladinShieldModelPath, PaladinAtlasPath),
+            (ChosenArt.BookModelPath, PaladinAtlasPath),
+
+            (ClericModelPath, ClericAtlasPath),
+            (FontPath, ClericAtlasPath),
+            (DruidModelPath, DruidAtlasPath),
+            (WeirwoodPath, ForestAtlasPath),
+
+            // The caster lines' remaining art. The spellbook is authored beside
+            // the Adventurers pack's own mage sheet, which is not the copy in
+            // Art/Characters that the live Mage model binds; the two Cleric
+            // props are on the Cleric's; and the Lorekeeper is a whole
+            // character with its own.
+            (ChosenArt.SpellbookModelPath, AdventurersMageAtlasPath),
+            (ChosenArt.ClericTomeModelPath, ClericAtlasPath),
+            (ChosenArt.ClericMaceModelPath, ClericAtlasPath),
+            (ChosenArt.LorekeeperModelPath, LorekeeperAtlasPath),
+            (ChosenArt.LorekeeperTomeModelPath, LorekeeperAtlasPath),
+            (ChosenArt.DruidStaffModelPath, DruidAtlasPath),
+
+            // The pierce and turret lines' remaining art. The Rogue's two
+            // bodies and the dagger they throw are all on the pack's one rogue
+            // sheet, and so is the crossbow the Overwatch holds -- that weapon
+            // is authored on the archer's own character rather than on a sheet
+            // of its own, the way the Ranger's quiver is.
+            (ChosenArt.AdventurerRogueModelPath, RogueAtlasPath),
+            (ChosenArt.HoodedRogueModelPath, RogueAtlasPath),
+            (ChosenArt.DaggerModelPath, RogueAtlasPath),
+            (ChosenArt.CrossbowModelPath, RogueAtlasPath),
+            (ChosenArt.WrenchModelPath, EngineerAtlasPath),
+
+            // The six creep bodies and what they carry, each off its own pack's
+            // sheet. Five packs between them, so this is where a body wearing
+            // another character's UVs would show: the Bone Golem takes the copy
+            // of the skeleton sheet in the pack folder rather than the one in
+            // Art/Characters the live skeletons bind, because the importer's
+            // search walks a model's own folder first and the two files are
+            // identical bytes under one name.
+            (ChosenArt.SkeletonGolemModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.SkeletonGolemAxeModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.BlackKnightModelPath, BlackKnightAtlasPath),
+            (ChosenArt.BlackKnightSwordModelPath, BlackKnightAtlasPath),
+            (ChosenArt.BlackKnightShieldModelPath, BlackKnightAtlasPath),
+            (ChosenArt.FrostGolemModelPath, FrostGolemAtlasPath),
+            (ChosenArt.FrostGolemAxeModelPath, FrostGolemAtlasPath),
+            (ChosenArt.MonstrosityModelPath, MonstrosityAtlasPath),
+            (ChosenArt.MonstrosityShieldModelPath, MonstrosityAtlasPath),
+            (ChosenArt.TieflingModelPath, TieflingAtlasPath),
+            (ChosenArt.TieflingBackpackModelPath, TieflingAtlasPath),
+            (ChosenArt.NinjaModelPath, NinjaAtlasPath),
+            (ChosenArt.NinjaKatanaModelPath, NinjaAtlasPath),
+
+            // The remaining six creep bodies and what they carry. Four more
+            // packs, and the Necromancer takes the same copy of the skeleton
+            // sheet the Bone Golem does, for the same reason: it sits in the
+            // pack folder rather than in Art/Characters, and the two files are
+            // identical bytes under one name.
+            (ChosenArt.NecromancerModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.SkeletonScytheModelPath, PackSkeletonAtlasPath),
+            (ChosenArt.VampireModelPath, VampireAtlasPath),
+            (ChosenArt.VampireSwordModelPath, VampireAtlasPath),
+            (ChosenArt.WitchModelPath, WitchAtlasPath),
+            (ChosenArt.BroomModelPath, WitchAtlasPath),
+            (ChosenArt.WerewolfManModelPath, WerewolfAtlasPath),
+            (ChosenArt.WerewolfWolfModelPath, WerewolfAtlasPath),
+            (ChosenArt.WerewolfAxeModelPath, WerewolfAtlasPath),
+            (ChosenArt.HoarderModelPath, HoarderAtlasPath),
         };
 
         /// <summary>
-        /// Every clip a tower is posed with. Three states each, and the set a
-        /// tower gets depends on what it holds — the bow three for the Archer
-        /// and the Ranger, rest-and-cast for the Mage, rest-and-chop for the
-        /// Soldier. See #44 and the 14 August weapon pass.
+        /// The one body here authored against more than one sheet, and both of
+        /// them.
         /// </summary>
+        /// <remarks>
+        /// <b>The Marksman is a ghillie suit over a person</b>: seven of his
+        /// nine materials are the skin and two are the wrap, and the two draw
+        /// with different files. That is why he cannot be a row of
+        /// <see cref="AtlasBindings"/>, whose rule is that every material on a
+        /// model binds the one sheet named beside it. The failure being guarded
+        /// is the same one: a material that resolved to another pack's atlas,
+        /// or to another character's, draws confetti rather than a
+        /// slightly-wrong body.
+        /// </remarks>
+        private static readonly (string model, string[] atlases)[] MultiSheetBindings =
+        {
+            (ChosenArt.MarksmanModelPath, new[] { MarksmanAtlasPath, MarksmanFoliageAtlasPath }),
+        };
+
+        /// <summary>
+        /// Every clip a tower is posed with, as a bare name. Three states each,
+        /// and the set a tower gets depends on what it holds — the bow three
+        /// for the Archer and the Ranger, rest-and-cast for the Mage,
+        /// rest-and-chop for the Soldier, the two-handed chop for the
+        /// Barbarian, the raised guard for the Shield Wall, the slam for the
+        /// Slam, the cast for the Cleric and Druid lines, the sighted aim the
+        /// Overwatch holds in all three states, the overarm throw for the Rogue
+        /// and the Cutthroat and the two-knife slice for the Fan of Knives. See
+        /// #44, the 14 August weapon pass and <c>docs/roster.md</c>.
+        /// </summary>
+        /// <remarks>
+        /// The bank a name comes out of is asserted separately, in
+        /// <see cref="EveryClipComesOutOfTheBankForItsRowsRig"/>. This one asks
+        /// only that the name exists somewhere, which is why the Large rig's
+        /// clip is written here without its bank.
+        /// </remarks>
         private static readonly string[] TowerClipNames =
         {
             ChosenArt.BowIdleClipName,
@@ -137,7 +450,17 @@ namespace Tests.EditMode
             ChosenArt.RestClipName,
             ChosenArt.SpellcastClipName,
             ChosenArt.ChopClipName,
+            ChosenArt.TwoHandedChopClipName,
+            ChosenArt.BlockingClipName,
+            ChosenArt.ShootClipName,
+            ChosenArt.AimingClipName,
+            ChosenArt.ThrowClipName,
+            ChosenArt.DualwieldSliceClipName,
+            SlamClipBareName,
         };
+
+        /// <summary>The Slam's swing, without the bank its binding names.</summary>
+        private const string SlamClipBareName = "Melee_2H_Slam";
 
         /// <summary>The clip banks: the FBXs imported for their curves, not their meshes.</summary>
         private static readonly string[] ClipBankPaths =
@@ -146,7 +469,47 @@ namespace Tests.EditMode
             ChosenArt.GeneralBankPath,
             ChosenArt.RangedBankPath,
             ChosenArt.MeleeBankPath,
+            ChosenArt.LargeGeneralBankPath,
+            ChosenArt.LargeMeleeBankPath,
+            ChosenArt.LargeMovementBankPath,
         };
+
+        /// <summary>The banks of the second rig, which five rows are drawn on.</summary>
+        private static readonly string[] LargeBankPaths =
+        {
+            ChosenArt.LargeGeneralBankPath,
+            ChosenArt.LargeMeleeBankPath,
+            ChosenArt.LargeMovementBankPath,
+        };
+
+        /// <summary>The Slam, the one tower on the Large rig.</summary>
+        private const int SlamUnitId = 19;
+
+        /// <summary>
+        /// Every row drawn on the Large rig: the Slam, and the Bone Golem, the
+        /// Black Knight, the Frost Wight and the Abomination.
+        /// </summary>
+        /// <remarks>
+        /// Written out rather than read off the models, because what this is
+        /// held against is the binding tables' own idea of which rows are on
+        /// which rig — and taking that from the tables would be asserting they
+        /// agree with themselves.
+        /// </remarks>
+        private static readonly int[] LargeRigUnitIds = { SlamUnitId, 39, 40, 41, 42 };
+
+        /// <summary>
+        /// The Large-rig rows that walk, which are the ones that must name a
+        /// walk and a death of their own. Every one of them but the Slam: a
+        /// tower neither walks nor dies.
+        /// </summary>
+        private static readonly int[] LargeRigCreepUnitIds =
+            LargeRigUnitIds.Where(id => id != SlamUnitId).ToArray();
+
+        /// <summary>The Druid, the Elder and the Overgrowth, in roster order.</summary>
+        private static readonly int[] DruidLineUnitIds = { 28, 29, 30 };
+
+        /// <summary>The tier-1 Engineer, the row whose shots leave a turret.</summary>
+        private const int EngineerUnitId = 35;
 
         /// <summary>
         /// Every FBX in this project that carries a rig or clips: every model a
@@ -220,10 +583,11 @@ namespace Tests.EditMode
         /// nothing at all.
         /// </para>
         /// <para>
-        /// The scales are checked against the role rather than written out per
-        /// unit, because "towers 1, every creep a half" is the rule and the
-        /// Ranger is its one stated exception. That makes this a third
-        /// transcription of the roster, after the scene builder's table and the
+        /// <b>Two multipliers and no exceptions.</b> "Towers 1, every creep a
+        /// half" is the whole rule: size says which side a row is on and never
+        /// which rung of a line it is. The role is read off the shipped table
+        /// rather than written out per unit, which makes this a third
+        /// transcription of the roster after the scene builder's and the
         /// fixture's, and deliberately so: an assertion that read either table
         /// would be checking it against itself.
         /// </para>
@@ -238,9 +602,8 @@ namespace Tests.EditMode
                 Assert.That(art.ModelFor(type.Id), Is.Not.Null,
                     $"unit {type.Id} ({type.Label}) has no model");
 
-                float expected =
-                    type.Role == UnitRole.Moving ? MatchArt.CreepScale
-                    : type.Id == RangerUnitId ? MatchArt.RangerScale
+                float expected = type.Role == UnitRole.Moving
+                    ? MatchArt.CreepScale
                     : MatchArt.TowerScale;
 
                 Assert.That(art.ScaleFor(type.Id), Is.EqualTo(expected),
@@ -249,76 +612,176 @@ namespace Tests.EditMode
         }
 
         /// <summary>
-        /// A creep stands lower than a tower, measured off the geometry rather
-        /// than off the multipliers.
+        /// Every atlas a row names is imported, and imported as a texture.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// <b>Comparing the two scale numbers would prove nothing.</b> A half
-        /// applied to a taller model is not smaller than a one applied to a
-        /// shorter one, and the models come from two different packs. So each
-        /// is instantiated and its renderers' world bounds measured, which is
-        /// what a player's eye is doing.
-        /// </para>
-        /// <para>
-        /// The margin is a fifth rather than a hair, because the claim being
-        /// held is "unmistakably smaller" and a creep that measured one percent
-        /// shorter would satisfy a strict inequality while reading as the same
-        /// size.
-        /// </para>
+        /// A row naming an atlas that is not there is the flat-magenta failure
+        /// this class exists for, one row further along: the material is built
+        /// on a null map and the body draws in the base colour alone.
         /// </remarks>
         [Test]
-        public void EveryCreepStandsUnmistakablyLowerThanEveryTower()
+        public void EveryAtlasARowNamesIsImported()
         {
-            MatchArt art = ChosenArt.Load();
-            IReadOnlyList<UnitType> types = StreamingContent.ReadUnitTypes().Types;
-
-            float shortestTower = float.MaxValue;
-            float tallestCreep = 0f;
-            string shortest = null;
-            string tallest = null;
-
-            foreach (UnitType type in types)
+            foreach (string path in ChosenArt.TexturePaths)
             {
-                float height = DrawnHeightOf(art, type.Id);
-
-                if (type.Role == UnitRole.Moving && height > tallestCreep)
-                {
-                    (tallestCreep, tallest) = (height, type.Label);
-                }
-
-                if (type.Role == UnitRole.Placed && height < shortestTower)
-                {
-                    (shortestTower, shortest) = (height, type.Label);
-                }
-
-                Debug.Log($"[scale] {type.Label} draws {height:F2} m tall");
+                Assert.That(AssetDatabase.LoadAssetAtPath<Texture2D>(path), Is.Not.Null,
+                    $"{path} is not in the project — a row names an atlas nothing imported");
             }
-
-            Assert.That(tallestCreep, Is.LessThan(shortestTower * 0.8f),
-                $"the tallest creep ({tallest}, {tallestCreep:F2} m) is not unmistakably shorter than "
-                + $"the shortest tower ({shortest}, {shortestTower:F2} m)");
         }
 
         /// <summary>
-        /// How tall one unit is drawn: the world bounds of every renderer on its
-        /// instantiated model, times the scale the view will apply.
+        /// The two rows that share a model are told apart by something other
+        /// than size.
         /// </summary>
-        private float DrawnHeightOf(MatchArt art, int unitId)
+        /// <remarks>
+        /// <para>
+        /// <b>Nothing else in this project holds the two rungs apart.</b> The
+        /// Archer and the Ranger are one model at one scale, so a build that
+        /// gave the Ranger no colour, no prop and no second body would ship two
+        /// rungs a player cannot tell apart — and every other test here would
+        /// stay green over it.
+        /// </para>
+        /// <para>
+        /// <b>Both halves, not either.</b> <c>docs/roster.md</c> signs this
+        /// rung as a colour <i>and</i> a prop, and an assertion satisfied by
+        /// whichever of the two happened to survive would let the other go
+        /// back to null with every runner green. Which atlas and which prop
+        /// stay unnamed here: those are the developer's to move, and naming
+        /// them would make this test the place the art is decided.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheTwoRowsOnOneModelAreToldApartWithoutSize()
         {
-            GameObject instance = Instantiate(AssetDatabase.GetAssetPath(art.ModelFor(unitId)));
-            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+            MatchArt art = ChosenArt.Load();
 
-            Assert.IsNotEmpty(renderers, $"unit {unitId}'s model has no renderer to measure");
+            UnitArt archer = art.ArtFor(ArcherUnitId);
+            UnitArt ranger = art.ArtFor(RangerUnitId);
 
-            Bounds bounds = renderers[0].bounds;
+            Assert.That(ranger.Model, Is.SameAs(archer.Model),
+                "these are the two rows that share a model; if they no longer do, this test is "
+                + "asserting nothing and the roster has moved under it");
 
-            foreach (Renderer renderer in renderers)
+            Assert.That(ranger.Scale, Is.EqualTo(archer.Scale),
+                "size is not a tier signal, so the two rungs of the Archer line draw at one scale");
+
+            Assert.That(ranger.Texture, Is.Not.Null,
+                "the Ranger shares the Archer's model and its size, so its own atlas is the colour "
+                + "half of what tells the two rungs apart — see docs/roster.md");
+
+            Assert.That(ranger.Texture, Is.Not.SameAs(archer.Texture),
+                "the Ranger draws in the atlas the Archer draws in, so the colour separates nothing");
+
+            Assert.That(
+                ranger.RightHand != archer.RightHand || ranger.LeftHand != archer.LeftHand,
+                Is.True,
+                "the Ranger holds exactly what the Archer holds, so the prop separates nothing");
+        }
+
+        /// <summary>
+        /// No two rows drawn with the same model are drawn identically.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The rule from <c>docs/roster.md</c>, swept over every pair rather
+        /// than named one pair at a time.</b> A rung is told apart from the one
+        /// below it by what the body wears, holds or stands beside — never by
+        /// how big it is — so two rows on one model that agree about all four of
+        /// those are two rungs a player cannot tell apart. Nine rows now share a
+        /// model with another, and the day somebody adds a tenth this covers it
+        /// by being written this way rather than by anybody remembering.
+        /// </para>
+        /// <para>
+        /// Which atlas or which prop separates a given pair stays unnamed:
+        /// those are the developer's to move, and naming them would make this
+        /// test the place the art is decided. It asserts only that something
+        /// does.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is exempt.</b> There was an exemption while a row could
+        /// draw a shared stand-in — rows like that are deliberately
+        /// indistinguishable, which is how an undressed row reads as undressed
+        /// — and it went with the stand-in itself: every row of
+        /// <c>content/units.txt</c> now has art of its own, so every pair on a
+        /// shared model is compared.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void NoTwoRowsOnOneModelAreDrawnAlike()
+        {
+            IReadOnlyList<UnitArt> rows = ChosenArt.Load().Units;
+            var compared = 0;
+
+            for (var i = 0; i < rows.Count; i++)
             {
-                bounds.Encapsulate(renderer.bounds);
+                for (int j = i + 1; j < rows.Count; j++)
+                {
+                    UnitArt below = rows[i];
+                    UnitArt above = rows[j];
+
+                    if (below.Model != above.Model)
+                    {
+                        continue;
+                    }
+
+                    compared++;
+
+                    bool told = below.Texture != above.Texture
+                        || below.RightHand != above.RightHand
+                        || below.LeftHand != above.LeftHand
+                        || below.Beside.Model != above.Beside.Model;
+
+                    Assert.That(told, Is.True,
+                        $"units {below.UnitId} and {above.UnitId} draw the same model in the same atlas, "
+                        + "holding the same things, with the same thing beside them — so nothing on the "
+                        + "board tells the two rungs apart. See docs/roster.md: a rung is told apart by "
+                        + "what the body wears, holds or stands beside");
+                }
             }
 
-            return bounds.size.y * art.ScaleFor(unitId);
+            Assert.That(compared, Is.GreaterThan(0),
+                "no two rows share a model, so this compared nothing at all");
+        }
+
+        /// <summary>
+        /// Every rung of the Druid line is drawn on the Druid, and no row
+        /// anywhere is drawn on the PlantWarrior.
+        /// </summary>
+        /// <remarks>
+        /// <b>A rejection only holds where something reads it.</b> The
+        /// PlantWarrior was proposed as this line's second model and set aside
+        /// on issue #250 — of the six second models it was the only one that
+        /// read as a different creature rather than as the same person promoted
+        /// — so the Druid keeps his own body and is told apart by colour and by
+        /// the weirwood beside him, the way the Knight, the Cleric and the
+        /// Engineer are. The model is imported and the proposal that named it
+        /// is still in <c>docs/</c>, so what keeps it unbound is this rather
+        /// than everybody remembering. Held over the whole table and over the
+        /// beside socket, since a body may stand beside a tower as easily as
+        /// under one.
+        /// </remarks>
+        [Test]
+        public void TheDruidLineIsDrawnOnTheDruidAndNothingOnThePlantWarrior()
+        {
+            MatchArt art = ChosenArt.Load();
+            GameObject druid = Loaded(DruidModelPath);
+            GameObject plantWarrior = Loaded(PlantWarriorModelPath);
+
+            foreach (int unitId in DruidLineUnitIds)
+            {
+                Assert.That(art.ModelFor(unitId), Is.SameAs(druid),
+                    $"unit {unitId} is a rung of the Druid line and docs/roster.md draws every one of "
+                    + "them on the Druid himself — that line has no second model");
+            }
+
+            foreach (UnitArt unit in art.Units)
+            {
+                Assert.That(unit.Model, Is.Not.SameAs(plantWarrior),
+                    $"unit {unit.UnitId} is drawn on the PlantWarrior, which issue #250 set aside");
+
+                Assert.That(unit.Beside.Model, Is.Not.SameAs(plantWarrior),
+                    $"unit {unit.UnitId} stands beside the PlantWarrior, which issue #250 set aside");
+            }
         }
 
         /// <summary>
@@ -371,6 +834,389 @@ namespace Tests.EditMode
             Assert.That(measured, Is.GreaterThan(0),
                 "no unit holds anything, so this measured nothing at all");
         }
+
+        /// <summary>
+        /// Every tower's shots leave a point on its own art, and that point is
+        /// on the model or on what the model is holding.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Walked from the shipped unit table rather than from the art</b>,
+        /// for the reason the scale test gives: a walk of the art finds every
+        /// anchor there is and never the row that has none. A placed row is a
+        /// row that shoots, so a placed row with no anchor fires from a fixed
+        /// height above its own root — which is the thing anchors replaced, and
+        /// which no other assertion here would notice.
+        /// </para>
+        /// <para>
+        /// <b>There is no exception any more.</b> A row drawing a shared
+        /// stand-in used to be held the other way round — required to name NO
+        /// anchor, because an anchor is a point on a prop and nobody had chosen
+        /// one for it. The stand-in is retired, so every placed row is held to
+        /// naming an anchor and the branch that let one off is gone.
+        /// </para>
+        /// <para>
+        /// Built through the real <see cref="TowerView"/>, so what is asserted
+        /// is the resolution the game performs and not a second copy of it.
+        /// <c>BuildStatic</c> rather than <c>BuildAnimated</c> because the
+        /// anchor is found before the animator is bound and a Playables graph
+        /// in edit mode would be a second thing that could fail here.
+        /// </para>
+        /// <para>
+        /// The measurements are logged because "leaving the staff tip" is an eye
+        /// check in the end, and the numbers are what tell a reader of a green
+        /// run whether the tip came out at the orb or at the butt.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryTowerFiresFromAPointOnItsOwnArt()
+        {
+            MatchArt art = ChosenArt.Load();
+
+            var measured = 0;
+
+            foreach (UnitType type in StreamingContent.ReadUnitTypes().Types)
+            {
+                if (type.Role != UnitRole.Placed)
+                {
+                    // A row that walks has no shot to draw, so nothing ever
+                    // resolves its anchor and a misspelt one on it would sit in
+                    // two generated files failing nowhere. Held both ways, since
+                    // an anchor that cannot be reached is the one kind this
+                    // cannot make fail by name.
+                    Assert.That(art.ArtFor(type.Id).EffectAnchor.IsSet, Is.False,
+                        $"unit {type.Id} ({type.Label}) walks, and an effect anchor on a walking row is "
+                        + "read by nothing — no creep fires, so it would never resolve and never fail");
+
+                    continue;
+                }
+
+                UnitArt unit = art.ArtFor(type.Id);
+
+                Assert.That(unit.EffectAnchor.IsSet, Is.True,
+                    $"unit {type.Id} ({type.Label}) stands on the board and shoots, and its art names "
+                    + "nowhere for the shot to leave from — so it fires from a height above its own root, "
+                    + "whatever it is holding");
+
+                TowerView tower = BuiltTower(type, unit);
+                Transform anchor = tower.AnchorTransform;
+
+                Assert.That(anchor, Is.Not.Null,
+                    $"unit {type.Id} ({type.Label}) has an anchor that resolved to nothing");
+
+                // On the body, or on the thing standing beside it. Both are
+                // this row's own art and a row may fire from either — the
+                // Engineer's shell leaves his turret while the Paladin beside
+                // his statue still fires from his book. What is excluded is
+                // everything else, which is the scene.
+                var onTheArt = anchor.IsChildOf(tower.Model.transform)
+                    || (tower.Beside != null && anchor.IsChildOf(tower.Beside.transform));
+
+                Assert.That(onTheArt, Is.True,
+                    $"unit {type.Id} ({type.Label}) anchors on {anchor.name}, which is neither part of "
+                    + "its model nor part of what stands beside it — an effect anchor is a point on the "
+                    + "art, not on the scene");
+
+                Vector3 fromRoot = tower.Muzzle - tower.transform.position;
+                float alongTheProp = Vector3.Distance(tower.Muzzle, anchor.position);
+
+                // What the anchor hangs off is logged as well as what it is
+                // named, because a name can find more than one thing: the Fan
+                // of Knives carries two daggers and both are called `dagger`,
+                // so which hand its knives leave from is readable here and
+                // nowhere else. "nothing" is the tower root itself, which has
+                // no parent and is the one thing here that could have none.
+                string hangsOff = anchor.parent == null ? "nothing" : anchor.parent.name;
+
+                Debug.Log(
+                    $"[anchor] unit {type.Id} ({type.Label}) fires from "
+                    + $"{unit.EffectAnchor.TransformName} under {hangsOff}, "
+                    + $"{alongTheProp:F2} m along it, {fromRoot.y:F2} m above its base and "
+                    + $"{fromRoot.magnitude:F2} m from it");
+
+                Assert.That(fromRoot.y, Is.GreaterThan(0f),
+                    $"unit {type.Id} ({type.Label}) fires from below its own feet");
+
+                if (unit.EffectAnchor.Tip != Vector3.zero)
+                {
+                    Assert.That(alongTheProp, Is.GreaterThan(0.05f),
+                        $"unit {type.Id} ({type.Label}) asks for the far end of "
+                        + $"{unit.EffectAnchor.TransformName} and got a point on top of its origin, so "
+                        + "either the prop has no geometry or the tip is being thrown away");
+                }
+
+                measured++;
+            }
+
+            Assert.That(measured, Is.GreaterThan(0),
+                "no row in the shipped table stands still, so this measured nothing at all");
+        }
+
+        /// <summary>
+        /// An anchor naming something the art does not carry stops the view
+        /// being built, and says which name.
+        /// </summary>
+        /// <remarks>
+        /// The alternative is what every silent fallback here would produce: the
+        /// flash and the tracer come out of the model's own origin, which is on
+        /// the floor between the tower's feet, and reads as a bad effect rather
+        /// than as a misspelt string. Same reasoning as
+        /// <see cref="WeaponSocket"/>'s refusal, and the same failure it is
+        /// guarding against — a name that agrees with nothing.
+        /// </remarks>
+        [Test]
+        public void AnAnchorNamingSomethingTheArtDoesNotCarryFailsByName()
+        {
+            UnitArt real = ChosenArt.Load().ArtFor(RangerUnitId);
+
+            UnitArt misspelt = UnitArt.Armed(
+                real.UnitId, real.Model, real.Scale, null, null, null, null, null,
+                default, default, EffectAnchor.At("handslot.left"));
+
+            var host = new GameObject("misspelt-anchor");
+            _spawned.Add(host);
+
+            var tower = host.AddComponent<TowerView>();
+
+            var refused = Assert.Throws<System.InvalidOperationException>(
+                () => tower.BuildStatic(
+                    real.UnitId, TypeOf(RangerUnitId), misspelt, Quaternion.identity));
+
+            Assert.That(refused.Message, Does.Contain("handslot.left"),
+                "the refusal has to name the anchor that was not found, or it sends the reader looking "
+                + "at the art instead of at the string");
+        }
+
+        /// <summary>
+        /// The Engineer's turret stands on the tile beside him, keeps standing
+        /// there while he turns, and is where his shots leave from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the whole of the Engineer line's identity.</b> He is a
+        /// wrench and a turret at every rung; the turret is what fires, so an
+        /// anchor that fell back to his own body would put the shell coming out
+        /// of the man rather than out of the machine. The anchor resolves
+        /// across the built tower, which is what makes a node inside a beside
+        /// prop the same kind of name as a bone.
+        /// </para>
+        /// <para>
+        /// <b>The turn is asserted because that is the failure this cannot see
+        /// in a photograph.</b> A tower rotates to track a creep, so a prop left
+        /// at a fixed local offset orbits it — swinging through the neighbouring
+        /// tiles once per target — and a still frame of any single tick looks
+        /// perfectly correct.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void TheEngineersTurretStandsBesideHimAndHisShotsLeaveIt()
+        {
+            UnitArt engineer = ChosenArt.Load().ArtFor(EngineerUnitId);
+
+            Assert.That(engineer.Model, Is.SameAs(Loaded(EngineerModelPath)),
+                $"unit {EngineerUnitId} is the row this test is about and it is drawn with something "
+                + "else now — the roster has moved under this assertion");
+
+            TowerView tower = BuiltTower(TypeOf(EngineerUnitId), engineer);
+
+            Assert.That(tower.Beside, Is.Not.Null, "nothing was drawn beside the Engineer");
+            Assert.That(tower.Beside.name, Is.EqualTo("turret_base"));
+
+            Assert.That(tower.Beside.transform.IsChildOf(tower.transform), Is.True,
+                "the turret hangs off the tower root, which is what makes it a socket rather than "
+                + "scenery somebody left on the board");
+
+            Assert.That(tower.Beside.transform.IsChildOf(tower.Model.transform), Is.False,
+                "the turret is under the body, so it inherits the row's scale and whatever atlas the "
+                + "row wears — which for a prop off another pack is confetti at the wrong size");
+
+            AssertStandsAt(
+                tower.Beside.transform.position,
+                tower.transform.position + BesideProp.NextTile,
+                "the turret does not stand on the tile beside him");
+
+            Transform anchor = tower.AnchorTransform;
+
+            Assert.That(anchor, Is.Not.Null, "the Engineer's anchor resolved to nothing");
+
+            Assert.That(anchor.IsChildOf(tower.Beside.transform), Is.True,
+                $"the Engineer fires from {anchor.name}, which is not part of the turret — the shot "
+                + "leaves the machine and not the man holding the wrench");
+
+            Bounds turret = WorldBounds(tower.Beside, null);
+
+            Assert.That(tower.Muzzle.y, Is.GreaterThan(turret.center.y),
+                "the shell leaves the underside of the turret");
+
+            Debug.Log(
+                $"[beside] the Engineer's turret is {turret.size.y:F2} m tall and fires from "
+                + $"{tower.Muzzle.y:F2} m up, {Vector3.Distance(tower.Muzzle, tower.transform.position):F2} m "
+                + "from his own root");
+
+            // Turned to track a creep behind him. The tower rotates; the thing
+            // on the ground beside it does not.
+            Vector3 stood = tower.Beside.transform.position;
+
+            tower.Pose(TowerState.Idle, 0, tower.transform.position + (Vector3.forward * 8f));
+
+            AssertStandsAt(
+                tower.Beside.transform.position, stood,
+                "the turret moved when the Engineer turned, so it orbits him rather than standing on a tile");
+        }
+
+        /// <summary>
+        /// Each of the four signed beside looks resolves: the prop is there, it
+        /// is drawn at the size written down for it, and it wears its own
+        /// pack's atlas rather than the row's.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The atlas is the assertion that matters here.</b> A row's colour
+        /// is put on the bare body before anything else is attached, and these
+        /// props are each their own import off their own pack — so a font drawn
+        /// against a cleric's character sheet is confetti rather than a
+        /// slightly-wrong font. That the prop is a sibling of the body rather
+        /// than a child of it is what makes that true, and it is asserted by
+        /// reading the material the prop actually ends up drawing with.
+        /// </para>
+        /// <para>
+        /// <b>The row it is built against is a stand-in.</b> None of these four
+        /// looks has a row in <c>content/units.txt</c>; a live placed row lends
+        /// its <see cref="UnitType"/> because <see cref="TowerView"/> reads two
+        /// tick budgets off one and neither is reached from a tower that is
+        /// never posed.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EverySignedBesidePropStandsForItsRow()
+        {
+            foreach ((string look, string model, string atlas, string beside, float scale, string propAtlas)
+                in SignedBesideLooks)
+            {
+                UnitArt drawnAs = UnitArt.Armed(
+                    0,
+                    Loaded(model),
+                    MatchArt.TowerScale,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    default,
+                    default,
+                    default,
+                    atlas == null ? null : LoadedAtlas(atlas),
+                    BesideProp.OnTheNextTile(Loaded(beside), scale));
+
+                TowerView tower = BuiltTower(TypeOf(ArcherUnitId), drawnAs);
+
+                Assert.That(tower.Beside, Is.Not.Null, look + " drew nothing beside its tower");
+
+                Renderer[] renderers = tower.Beside.GetComponentsInChildren<Renderer>(true);
+
+                Assert.That(renderers, Is.Not.Empty, look + " stands beside its tower with no mesh at all");
+
+                AssertStandsAt(
+                    tower.Beside.transform.position,
+                    tower.transform.position + BesideProp.NextTile,
+                    look + " does not stand on the tile beside its tower");
+
+                foreach (Renderer renderer in renderers)
+                {
+                    foreach (Material material in renderer.sharedMaterials)
+                    {
+                        Assert.That(material, Is.Not.Null, look + " has a null material slot");
+
+                        Texture bound = MainTextureOf(material);
+
+                        Assert.That(bound, Is.Not.Null,
+                            look + " bound no atlas at all, which draws flat magenta");
+
+                        // Named, not merely "not the row's own". The row's atlas
+                        // is null on one of these looks, so an inequality
+                        // against it would assert nothing at all there — and
+                        // the failure being guarded is a prop wearing SOME
+                        // other sheet, not specifically the character's.
+                        Assert.That(AssetDatabase.GetAssetPath(bound), Is.EqualTo(propAtlas),
+                            look + " is drawn against an atlas that is not its own pack's, which is "
+                            + "confetti rather than a slightly-wrong prop — the row's colour goes on the "
+                            + "bare body and must not reach what stands beside it");
+                    }
+                }
+
+                Bounds drawn = WorldBounds(tower.Beside, null);
+
+                Debug.Log(
+                    $"[beside] {look}: {tower.Beside.name} at x{scale}, {drawn.size.y:F2} m tall, "
+                    + $"{drawn.size.x:F2} x {drawn.size.z:F2} on the ground");
+
+                Assert.That(drawn.size.x, Is.LessThan(HexGeometry.AcrossFlats * 1.5f),
+                    look + " spreads wider than half again the tile it is standing on, so it is over "
+                    + "its neighbours and probably over its own tower");
+            }
+        }
+
+        /// <summary>
+        /// A row that names a prop to stand beside it and never says how big
+        /// stops the view being built, and says which prop.
+        /// </summary>
+        /// <remarks>
+        /// Zero is what an unwritten serialized field holds, so this is the
+        /// shape of both failures that can reach here: a model dropped into the
+        /// inspector slot, and a binding table that named a prop and left the
+        /// size out. Neither throws anywhere else — a prop drawn at no size at
+        /// all is a prop nobody can see missing, which is the same refusal
+        /// <see cref="WeaponSocket"/> makes about a bone that is not there.
+        /// </remarks>
+        [Test]
+        public void APropStandingBesideATowerAtNoSizeAtAllFailsByName()
+        {
+            UnitArt sizeless = UnitArt.Armed(
+                0, Loaded(EngineerModelPath), MatchArt.TowerScale, null, null, null, null, null,
+                default, default, default, null,
+                BesideProp.Standing(Loaded(TurretPath), 0f, BesideProp.NextTile));
+
+            var host = new GameObject("sizeless-beside-prop");
+            _spawned.Add(host);
+
+            var tower = host.AddComponent<TowerView>();
+
+            var refused = Assert.Throws<System.InvalidOperationException>(
+                () => tower.BuildStatic(0, TypeOf(ArcherUnitId), sizeless, Quaternion.identity));
+
+            Assert.That(refused.Message, Does.Contain("turret_base"),
+                "the refusal has to name the prop that has no size, or it sends the reader looking at the "
+                + "art instead of at the table");
+        }
+
+        /// <summary>Where something stands, to the millimetre.</summary>
+        private static void AssertStandsAt(Vector3 actual, Vector3 expected, string message) =>
+            Assert.That(Vector3.Distance(actual, expected), Is.LessThan(1e-3f),
+                message + " — it is at " + actual + " and not at " + expected);
+
+        private static GameObject Loaded(string path) =>
+            AssetDatabase.LoadAssetAtPath<GameObject>(path)
+            ?? throw new AssertionException("nothing imported at " + path);
+
+        private static Texture2D LoadedAtlas(string path) =>
+            AssetDatabase.LoadAssetAtPath<Texture2D>(path)
+            ?? throw new AssertionException("nothing imported at " + path);
+
+        /// <summary>One tower built the way the game builds it, unposed.</summary>
+        private TowerView BuiltTower(UnitType type, UnitArt art)
+        {
+            var host = new GameObject("tower-" + type.Id);
+            _spawned.Add(host);
+
+            var view = host.AddComponent<TowerView>();
+            view.BuildStatic(type.Id, type, art, Quaternion.identity);
+
+            return view;
+        }
+
+        /// <summary>The shipped row for an id.</summary>
+        private static UnitType TypeOf(int unitId) =>
+            StreamingContent.ReadUnitTypes().Types.First(t => t.Id == unitId);
 
         /// <summary>
         /// Attaches one held item and measures it. Returns 1 when something was
@@ -515,13 +1361,15 @@ namespace Tests.EditMode
         /// <remarks>
         /// <para>
         /// The check is per model, not per material, and that is deliberate.
-        /// Each of these FBXs declares exactly one texture, so resolving it is
-        /// all-or-nothing for the whole file: either the importer found the
-        /// atlas or nothing in the model is textured. What a per-material rule
-        /// would add is a false failure — the skeleton's eyes carry a second
-        /// material, <c>Glow</c>, that declares no map at all and draws a flat
-        /// colour on purpose. Demanding a texture there is this test insisting
-        /// the artist textured something he deliberately did not.
+        /// Almost every one of these FBXs declares exactly one texture, so
+        /// resolving it is all-or-nothing for the whole file: either the
+        /// importer found the atlas or nothing in the model is textured. What a
+        /// per-material rule would add is a false failure — the skeleton's eyes
+        /// carry a second material, <c>Glow</c>, that declares no map at all
+        /// and draws a flat colour on purpose. Demanding a texture there is
+        /// this test insisting the artist textured something he deliberately
+        /// did not. <see cref="MultiSheetBindings"/> is the same rule for the
+        /// one body that was authored against two sheets.
         /// </para>
         /// <para>
         /// Identity, not name. <c>bow_withString.fbx</c> is imported searching
@@ -536,46 +1384,65 @@ namespace Tests.EditMode
         {
             foreach ((string model, string atlas) in AtlasBindings)
             {
+                AssertDressedFrom(model, new[] { atlas });
+            }
+
+            foreach ((string model, string[] atlases) in MultiSheetBindings)
+            {
+                AssertDressedFrom(model, atlases);
+            }
+        }
+
+        /// <summary>
+        /// Every material on a model that binds anything binds one of the
+        /// sheets it was authored against, and at least one of them does.
+        /// </summary>
+        private void AssertDressedFrom(string model, string[] atlases)
+        {
+            foreach (string atlas in atlases)
+            {
                 Assert.IsNotNull(AssetDatabase.LoadAssetAtPath<Texture2D>(atlas),
                     $"the atlas {atlas} is not in the project");
-
-                GameObject instance = Instantiate(model);
-                Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
-
-                Assert.IsNotEmpty(renderers, $"{model} instantiated with no renderer at all");
-
-                var dressed = new List<string>();
-
-                foreach (Renderer renderer in renderers)
-                {
-                    Assert.IsNotEmpty(renderer.sharedMaterials, $"{model}/{renderer.name} has no material");
-
-                    foreach (Material material in renderer.sharedMaterials)
-                    {
-                        Assert.IsNotNull(material,
-                            $"{model}/{renderer.name} has a null material slot — that slot draws magenta");
-
-                        Assert.AreNotEqual("Hidden/InternalErrorShader", material.shader.name,
-                            $"{model}/{renderer.name} material '{material.name}' is on the error shader — that draws magenta");
-
-                        Texture bound = MainTextureOf(material);
-
-                        if (bound == null) continue;
-
-                        Assert.AreEqual(atlas, AssetDatabase.GetAssetPath(bound),
-                            $"{model}/{renderer.name} material '{material.name}' bound '{bound.name}' " +
-                            $"from {AssetDatabase.GetAssetPath(bound)}, not the atlas it was authored against");
-
-                        dressed.Add($"{renderer.name}/{material.name}");
-                    }
-                }
-
-                Assert.IsNotEmpty(dressed,
-                    $"{model} bound no texture on any material. Expected {atlas}; " +
-                    "a model whose atlas failed to resolve draws flat magenta and throws nothing.");
-
-                Debug.Log($"[atlas] {model} -> {atlas} on {dressed.Count} material(s): {string.Join(", ", dressed)}");
             }
+
+            string wanted = string.Join(" or ", atlases);
+
+            GameObject instance = Instantiate(model);
+            Renderer[] renderers = instance.GetComponentsInChildren<Renderer>(true);
+
+            Assert.IsNotEmpty(renderers, $"{model} instantiated with no renderer at all");
+
+            var dressed = new List<string>();
+
+            foreach (Renderer renderer in renderers)
+            {
+                Assert.IsNotEmpty(renderer.sharedMaterials, $"{model}/{renderer.name} has no material");
+
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    Assert.IsNotNull(material,
+                        $"{model}/{renderer.name} has a null material slot — that slot draws magenta");
+
+                    Assert.AreNotEqual("Hidden/InternalErrorShader", material.shader.name,
+                        $"{model}/{renderer.name} material '{material.name}' is on the error shader — that draws magenta");
+
+                    Texture bound = MainTextureOf(material);
+
+                    if (bound == null) continue;
+
+                    Assert.Contains(AssetDatabase.GetAssetPath(bound), atlases,
+                        $"{model}/{renderer.name} material '{material.name}' bound '{bound.name}' " +
+                        $"from {AssetDatabase.GetAssetPath(bound)}, not the atlas it was authored against");
+
+                    dressed.Add($"{renderer.name}/{material.name}");
+                }
+            }
+
+            Assert.IsNotEmpty(dressed,
+                $"{model} bound no texture on any material. Expected {wanted}; " +
+                "a model whose atlas failed to resolve draws flat magenta and throws nothing.");
+
+            Debug.Log($"[atlas] {model} -> {wanted} on {dressed.Count} material(s): {string.Join(", ", dressed)}");
         }
 
         /// <summary>
@@ -605,6 +1472,97 @@ namespace Tests.EditMode
                     $"'{wanted}' is in none of the {ClipBankPaths.Length} banks. "
                     + $"Found: {string.Join(", ", names)}");
             }
+        }
+
+        /// <summary>
+        /// Every clip a tower is posed with comes out of the bank for the rig
+        /// its model is on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the failure the second rig introduced.</b> The collection
+        /// ships <c>Rig_Medium</c> and <c>Rig_Large</c>, and
+        /// <c>Idle_A</c>, <c>Walking_A</c> and <c>Death_A</c> are in both — so
+        /// a bare clip name asked of the banks in order answers with the medium
+        /// one every time. A medium clip on a Large body does not throw and
+        /// does not warn: it drives bones that are not there and leaves the ones
+        /// that are where they started, which reads as the model being bad.
+        /// Both binding tables spell a Large clip with its bank for that
+        /// reason, and this is what holds them to it.
+        /// </para>
+        /// <para>
+        /// <b>Held both ways.</b> A Large row's clips must come from the Large
+        /// banks and every other row's must not, because the second half is
+        /// what catches a medium row that gained a bank prefix by being copied
+        /// from the row above it.
+        /// </para>
+        /// <para>
+        /// <b>The creep's walk and death are held here too, and they are the
+        /// sharper half.</b> A tower's three clips are named per row, so a
+        /// missing bank prefix is at least visible in the table; a creep's pair
+        /// is shared, and a Large body that names no override of its own is
+        /// silently handed the medium walk — no name to misspell and nothing to
+        /// read wrong. So each of the four Large-rig creeps is required to name
+        /// its own, and every row that names one is held to its rig the same
+        /// way a posed row is.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryClipComesOutOfTheBankForItsRowsRig()
+        {
+            var large = new HashSet<AnimationClip>(
+                LargeBankPaths.SelectMany(AssetDatabase.LoadAllAssetsAtPath).OfType<AnimationClip>());
+
+            MatchArt art = ChosenArt.Load();
+            UnitArt slam = art.ArtFor(SlamUnitId);
+
+            Assert.That(slam.Model, Is.SameAs(Loaded(ChosenArt.BarbarianLargeModelPath)),
+                $"unit {SlamUnitId} is the row this test knows to be on the Large rig, and it is drawn "
+                + "with something else now — the roster has moved under this assertion");
+
+            Assert.That(slam.IsPosed, Is.True,
+                $"unit {SlamUnitId} carries no clips, so the rig this test is about is not exercised");
+
+            foreach (int unitId in LargeRigCreepUnitIds)
+            {
+                UnitArt creep = art.ArtFor(unitId);
+
+                Assert.That(creep.WalkClip, Is.Not.Null,
+                    $"unit {unitId} is drawn on the Large rig and names no walk of its own, so it is "
+                    + "handed the shared medium one — it slides down the corridor in its bind pose, and "
+                    + "nothing anywhere throws");
+
+                Assert.That(creep.DeathClip, Is.Not.Null,
+                    $"unit {unitId} is drawn on the Large rig and names no death of its own, so it dies "
+                    + "in the medium rig's clip, which drives none of its bones");
+            }
+
+            var measured = 0;
+
+            foreach (UnitArt unit in art.Units)
+            {
+                bool onTheLargeRig = LargeRigUnitIds.Contains(unit.UnitId);
+
+                foreach (AnimationClip clip in new[]
+                {
+                    unit.IdleClip, unit.WindupClip, unit.BackswingClip, unit.WalkClip, unit.DeathClip,
+                })
+                {
+                    if (clip == null)
+                    {
+                        continue;
+                    }
+
+                    Assert.That(large.Contains(clip), Is.EqualTo(onTheLargeRig),
+                        $"unit {unit.UnitId} is posed with '{clip.name}' from the "
+                        + (onTheLargeRig ? "Medium" : "Large") + " banks, and its model is on the "
+                        + (onTheLargeRig ? "Large" : "Medium") + " rig");
+
+                    measured++;
+                }
+            }
+
+            Assert.That(measured, Is.GreaterThan(0), "no row is posed at all, so this measured nothing");
         }
 
         /// <summary>

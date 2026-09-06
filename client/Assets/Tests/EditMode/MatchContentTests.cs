@@ -147,6 +147,29 @@ namespace Tests.EditMode
                 Assert.That(root.Art.IsComplete, Is.True,
                     "the scene's art is not fully wired. The scene is generated: run "
                     + "tools/build-match-scene.ps1 and commit what it writes.");
+
+                // What a row's bubble and its shot are drawn as are enums and
+                // not references, so a scene generated before the columns
+                // existed carries a valid, complete, entirely wrong answer:
+                // every capstone drawn as the plain disc and every bolt as the
+                // plain tracer, in the game only, with every editor path
+                // drawing the signatures right.
+                foreach (UnitArt bound in MatchSceneBuilder.Art().Units)
+                {
+                    Assert.That(
+                        root.Art.ArtFor(bound.UnitId).Signature.Bubble,
+                        Is.EqualTo(bound.Signature.Bubble),
+                        "the committed scene draws unit " + bound.UnitId
+                        + "'s bubble as something else than the builder binds. The scene is generated: "
+                        + "run tools/build-match-scene.ps1 and commit what it writes.");
+
+                    Assert.That(
+                        root.Art.ArtFor(bound.UnitId).Signature.Shot,
+                        Is.EqualTo(bound.Signature.Shot),
+                        "the committed scene draws unit " + bound.UnitId
+                        + "'s shot as something else than the builder binds. The scene is generated: "
+                        + "run tools/build-match-scene.ps1 and commit what it writes.");
+                }
             }
             finally
             {

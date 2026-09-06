@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1065247574
+--- !u!1 &812943458
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1065247576}
-  - component: {fileID: 1065247575}
+  - component: {fileID: 812943460}
+  - component: {fileID: 812943459}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1065247575
+--- !u!114 &812943459
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1065247574}
+  m_GameObject: {fileID: 812943458}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -198,102 +198,980 @@ MonoBehaviour:
     - unitId: 1
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 2
       model: {fileID: 919132149155446097, guid: 09960b6ddb684d8794ac0d6cd80f54d1, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 3
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
       scale: 1
+      texture: {fileID: 0}
       rightHand: {fileID: 0}
       leftHand: {fileID: 919132149155446097, guid: 4005f62aa0fde624488afe406fdf3100, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 180, z: 0}
       idleClip: {fileID: 1916961860785133836, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       windupClip: {fileID: -4457504429419621214, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      effectAnchor:
+        transformName: bow_withString
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 4
       model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
       scale: 1
-      rightHand: {fileID: 919132149155446097, guid: 9228eef15095ca048b270c1b2024af8b, type: 3}
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: d560a11a8213a0e46b03461151259102, type: 3}
       leftHand: {fileID: 0}
-      rightHandTilt: {x: 0, y: 0, z: -90}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: spellbook_open
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 7
       model: {fileID: 919132149155446097, guid: c088cd0b52194c56b33d3fabb2c5558c, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: 65a8c4c28a1c42b4693df2e0f808cd28, type: 3}
       leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: -90}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 6
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 11
       model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
       scale: 1
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
       leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
       backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 12
       model: {fileID: 919132149155446097, guid: 2b0e9c8894f34f15a82b5d15ebe9ccf5, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: ba3a7513da985fd429f287c7723bb15d, type: 3}
       leftHand: {fileID: 919132149155446097, guid: f6d2dd31e033a104f8a209fda538d4ed, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 13
       model: {fileID: 919132149155446097, guid: c2cccf09faebdcd4cb1d89b201d604e2, type: 3}
       scale: 0.5
+      texture: {fileID: 0}
       rightHand: {fileID: 919132149155446097, guid: ba3a7513da985fd429f287c7723bb15d, type: 3}
       leftHand: {fileID: 919132149155446097, guid: 47dbeb155298afc49a4d8c7ad99eb93e, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
       idleClip: {fileID: 0}
       windupClip: {fileID: 0}
       backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     - unitId: 14
       model: {fileID: 919132149155446097, guid: 13f2984e19bf0ed4585a42c2c834a7ee, type: 3}
-      scale: 1.5
-      rightHand: {fileID: 0}
+      scale: 1
+      texture: {fileID: 2800000, guid: f9bf033a50f99cf4db7466cd35fceb92, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: e5a9aafd38beee84f8719e0a7a39ec58, type: 3}
       leftHand: {fileID: 919132149155446097, guid: 4005f62aa0fde624488afe406fdf3100, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 180, z: 0}
       idleClip: {fileID: 1916961860785133836, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       windupClip: {fileID: -4457504429419621214, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
       backswingClip: {fileID: 1020120997136478934, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      effectAnchor:
+        transformName: bow_withString
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 15
+      model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 148f117d62a304d4c8fb92bbe39955d9, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 1dbfd1039fd8af74fb00fd5c611751ac, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 16
+      model: {fileID: 919132149155446097, guid: 269a5e8169d941778f6e4828a257b90d, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: a82a525d5b1a33d489640ba3bfd4eda5, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 90d8a7d9121dea145b7909292fe03b74, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 1dbfd1039fd8af74fb00fd5c611751ac, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 6824622970789808875, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: 6824622970789808875, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      effectAnchor:
+        transformName: sword_1handed
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 1
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 17
+      model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 7800915d9c0b4d840ac88134569d3a36, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -3183232228448455838, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: axe_2handed
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 18
+      model: {fileID: 919132149155446097, guid: 0cac88b8a57084c911a51a123f0de3bf, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: ee469dd2d3756d74d9d80e6e54abe1ed, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: a3ce16df644efd74db2105bbdc615bc1, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -3183232228448455838, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: axe_2handed_Large
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 19
+      model: {fileID: 919132149155446097, guid: 054d80a70404355df9877d170ee6b2bc, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: a3ce16df644efd74db2105bbdc615bc1, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+      windupClip: {fileID: -8053727146932420721, guid: 0df74e54a4e42b62f14d6d522fa99552, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+      effectAnchor:
+        transformName: axe_2handed_Large
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 2
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 20
+      model: {fileID: 919132149155446097, guid: ec52b260b4b3a8903446599ff028f37a, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 131dd901e3183be4ebd6b73a1594babe, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: paladin_hammer
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 21
+      model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 131dd901e3183be4ebd6b73a1594babe, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 4720c4954f2b635438c5fdc112c88bef, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: paladin_hammer
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 22
+      model: {fileID: 919132149155446097, guid: c409dd19b39c7c553af64c6c5b82a123, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: b7e9e1a7e8c5fc74faacd0ff01931488, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: e448367f791631940a3a42552df0b10a, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 4720c4954f2b635438c5fdc112c88bef, type: 3}
+      beside:
+        model: {fileID: 919132149155446097, guid: 31f7508baba133a48b15cc77be60ab1f, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: paladin_book
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 3
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 23
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 267a9b9e7a148f04081594f9f88ca98c, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: Cleric_Tome
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 24
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 5f8828d7a1733b544804fd17d7d79ccd, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 6e7bd71d55723d741b92f35efff0632a, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: Cleric_Mace
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 25
+      model: {fileID: 919132149155446097, guid: 7508254f464df69f8b56507c1f6d690c, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 5f8828d7a1733b544804fd17d7d79ccd, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 6e7bd71d55723d741b92f35efff0632a, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 919132149155446097, guid: 6d77bd05f6145f34eb0852d180490ab7, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: Cleric_Mace
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 4
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 26
+      model: {fileID: 919132149155446097, guid: 21dc293032784effb0af8af5e94673a9, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: d8907db333df80b479994956493ca1cc, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 9228eef15095ca048b270c1b2024af8b, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: staff
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 27
+      model: {fileID: 919132149155446097, guid: 80187777141e9f7de458d31115fc8143, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 16762a38e285a4b4284f99f0fe620577, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 5420664022460959746, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: Lorekeeper_Tome
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 28
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 29
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 17b7d1d4095a118409cdeeba1e571304, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 30
+      model: {fileID: 919132149155446097, guid: 48a0aa8b153002e3dfcd86fc4cb6654c, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 589d95ce09d973a4da7649f4b4726a30, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 451313d01ce15e34da51532f19c0fab8, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 919132149155446097, guid: 340079b6b4d461e46b2a77c913a578e1, type: 3}
+        scale: 0.55
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: -90}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4467039709948147482, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: druid_staff
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 5
+      shotSignature: 3
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 31
+      model: {fileID: 919132149155446097, guid: c56010cf956c462ffa927b5904a3e0cb, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 401fed8c05367b84f92efc0e0d2a63c4, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      windupClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -344612289506265405, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      effectAnchor:
+        transformName: crossbow_2handed
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 1
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 32
+      model: {fileID: 919132149155446097, guid: 153a069e75ea3b11174c3551a744c99a, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -6185155371445809522, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: dagger
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 33
+      model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: -6185155371445809522, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: dagger
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 34
+      model: {fileID: 919132149155446097, guid: c60ed77704fdf3e845f775ff6a766fc8, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 570c51d5442007c44ad85415f39ce91b, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: fccc127ba28530549823871822f2577e, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 1231959210303231270, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      effectAnchor:
+        transformName: dagger
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 2
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 35
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
+      scale: 1
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 36
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: 434ff209a5827334998c8da052203abb, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 37
+      model: {fileID: 919132149155446097, guid: f872db813953c9d4b40efc64e061ae77, type: 3}
+      scale: 1
+      texture: {fileID: 2800000, guid: dc1118436afc71145acbeb003a75771b, type: 3}
+      rightHand: {fileID: 919132149155446097, guid: 0991c9f88ba86c446ac471cf73f06341, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 919132149155446097, guid: dea6792986bf6834e97e758a23e605bd, type: 3}
+        scale: 1
+        offset: {x: 2, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: turret_base
+        tip: {x: 0, y: 1, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 38
+      model: {fileID: 919132149155446097, guid: 1b37ec377325967b3a741b440e485ab7, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 8dd8916992759b447bbb58b40c92df84, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 7
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 39
+      model: {fileID: 919132149155446097, guid: 2bed188c35d0c43f59d567bd639c9161, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 635ff339fd5894a4688e306fcccfddd8, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 40
+      model: {fileID: 919132149155446097, guid: 09d8ab70d9b2afc2bdd646efc0e8aa79, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 2afc349e4fc9bd34cb57f0270d23e1be, type: 3}
+      leftHand: {fileID: 919132149155446097, guid: 59f8f8a284190f84e953b6d63c9a8a5a, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 41
+      model: {fileID: 919132149155446097, guid: 32d13ae9cf112900c5b937800cf3bbc0, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 618bdf5e587e49748b9a18406f26e647, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 9
+      shotSignature: 0
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 42
+      model: {fileID: 919132149155446097, guid: 30843bd7d8654731bbde36058bb3b00c, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 0}
+      leftHand: {fileID: 919132149155446097, guid: 193751c5397bd404fae347bbbe0c5380, type: 3}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 7060811993321468294, guid: 1cbd843f69dabd2ac607322f56a3ff35, type: 3}
+      deathClip: {fileID: -1923750366902163184, guid: 66e521a7abc5a082fca01d00f15489e3, type: 3}
+    - unitId: 43
+      model: {fileID: 919132149155446097, guid: 84a1a607f645ba450bb037c299f39dc4, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 77bcdb92c53467a4da7c2293ab0fad34, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 44
+      model: {fileID: 919132149155446097, guid: af5b5d7d12e90781611fc879f324a3d3, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: ec534dec395af1e4984bef89a229272c, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 8
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 45
+      model: {fileID: 919132149155446097, guid: 88f19ca59eea5111057747ae89bdb1df, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: 40773528795a468428694f314d7c3236, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 46
+      model: {fileID: 919132149155446097, guid: 039912c3bb9db1b8760391d4bf20312d, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: be610404eb9921a4ba50733784350534, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 47
+      model: {fileID: 919132149155446097, guid: 24218fd6658d68f59fcc45ba5a2538b1, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 919132149155446097, guid: d29be18f5d858f34ea0f47a0f89ba837, type: 3}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 48
+      model: {fileID: 919132149155446097, guid: dcf5556d6ffc8d4cbc692daadbdd034f, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 0}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
+    - unitId: 49
+      model: {fileID: 919132149155446097, guid: 425048228c11539e91e997d899e0894c, type: 3}
+      scale: 0.5
+      texture: {fileID: 0}
+      rightHand: {fileID: 0}
+      leftHand: {fileID: 0}
+      beside:
+        model: {fileID: 0}
+        scale: 0
+        offset: {x: 0, y: 0, z: 0}
+      rightHandTilt: {x: 0, y: 0, z: 0}
+      leftHandTilt: {x: 0, y: 0, z: 0}
+      idleClip: {fileID: 0}
+      windupClip: {fileID: 0}
+      backswingClip: {fileID: 0}
+      effectAnchor:
+        transformName: 
+        tip: {x: 0, y: 0, z: 0}
+      bubbleSignature: 0
+      shotSignature: 0
+      walkClip: {fileID: 0}
+      deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &1065247576
+--- !u!4 &812943460
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1065247574}
+  m_GameObject: {fileID: 812943458}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -306,4 +1184,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1065247576}
+  - {fileID: 812943460}

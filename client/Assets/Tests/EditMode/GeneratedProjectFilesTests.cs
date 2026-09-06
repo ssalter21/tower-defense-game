@@ -183,12 +183,72 @@ namespace Tests.EditMode
                 SameTilt(made.RightHandTilt, unit.RightHandTilt, "right-hand item for unit " + unit.UnitId);
                 SameTilt(made.LeftHandTilt, unit.LeftHandTilt, "left-hand item for unit " + unit.UnitId);
 
+                // The anchor, which is two fields and neither is an asset
+                // reference -- so nothing above would have noticed a manifest
+                // still firing every tower from a height above its root.
+                Assert.That(made.EffectAnchor.TransformName, Is.EqualTo(unit.EffectAnchor.TransformName),
+                    GeneratedTestAssets.ManifestPath + " anchors unit " + unit.UnitId
+                    + "'s effects somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+                Assert.That(made.EffectAnchor.Tip, Is.EqualTo(unit.EffectAnchor.Tip),
+                    GeneratedTestAssets.ManifestPath + " takes unit " + unit.UnitId
+                    + "'s anchor from a different end of the same thing than ChosenArt does. "
+                    + "Run tools/build-test-assets.ps1 and commit what it writes.");
+
                 SameOrBothEmpty(made.RightHand, unit.RightHand, "right hand for unit " + unit.UnitId);
                 SameOrBothEmpty(made.LeftHand, unit.LeftHand, "left hand for unit " + unit.UnitId);
+
+                // The atlas, which is neither a model nor a clip and would
+                // otherwise drift the way the tilts once did -- leaving the
+                // player path drawing a tier in the colour of the rung below it
+                // while every editor path drew it right.
+                SameOrBothEmpty(made.Texture, unit.Texture, "atlas for unit " + unit.UnitId);
+
+                // What stands beside the row, which is a model, a size and a
+                // place. Only the first of the three is an asset reference, so
+                // a manifest that kept the turret and drew it at a tenth of its
+                // size, or on the tower's own tile, would pass everything else
+                // here.
+                SameOrBothEmpty(made.Beside.Model, unit.Beside.Model, "beside prop for unit " + unit.UnitId);
+
+                Assert.That(made.Beside.Scale, Is.EqualTo(unit.Beside.Scale),
+                    GeneratedTestAssets.ManifestPath + " draws what stands beside unit " + unit.UnitId
+                    + " at a different size than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
+
+                Assert.That(made.Beside.Offset, Is.EqualTo(unit.Beside.Offset),
+                    GeneratedTestAssets.ManifestPath + " stands what is beside unit " + unit.UnitId
+                    + " somewhere else than ChosenArt does. Run tools/build-test-assets.ps1 "
+                    + "and commit what it writes.");
                 SameOrBothEmpty(made.IdleClip, unit.IdleClip, "idle clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.WindupClip, unit.WindupClip, "windup clip for unit " + unit.UnitId);
                 SameOrBothEmpty(
                     made.BackswingClip, unit.BackswingClip, "backswing clip for unit " + unit.UnitId);
+
+                // The per-row walk and death, which only the four Large-rig
+                // creeps carry. A manifest that dropped them would fall back to
+                // the shared medium pair and draw those four sliding down the
+                // corridor in their bind pose -- in the player only, with every
+                // editor path drawing them right, which is exactly how the
+                // staffs' tilt drifted.
+                SameOrBothEmpty(made.WalkClip, unit.WalkClip, "walk clip for unit " + unit.UnitId);
+                SameOrBothEmpty(made.DeathClip, unit.DeathClip, "death clip for unit " + unit.UnitId);
+
+                // What a row's bubble and its shot are drawn as, which are
+                // enums rather than references and so survive nothing being
+                // wired at all. A manifest that lost them draws every capstone
+                // as the plain disc and every bolt as the plain tracer in the
+                // player, and as their own signatures everywhere else.
+                Assert.That(made.Signature.Bubble, Is.EqualTo(unit.Signature.Bubble),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + "'s bubble as something else than ChosenArt does. Run "
+                    + "tools/build-test-assets.ps1 and commit what it writes.");
+
+                Assert.That(made.Signature.Shot, Is.EqualTo(unit.Signature.Shot),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + "'s shot as something else than ChosenArt does. Run "
+                    + "tools/build-test-assets.ps1 and commit what it writes.");
             }
 
             Same(generated.CreepWalkClip, chosen.CreepWalkClip, nameof(chosen.CreepWalkClip));

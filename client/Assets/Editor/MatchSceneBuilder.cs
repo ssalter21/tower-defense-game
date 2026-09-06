@@ -50,9 +50,248 @@ namespace View.Editor
 
         private const string SkeletonShieldBPath = "Assets/Art/Weapons/Skeleton_Shield_Large_B.fbx";
 
+        /// <summary>The Ranger's quiver, in the fist for want of a socket on the spine.</summary>
+        private const string QuiverPath = "Assets/Art/Kaykit/adventurers/quiver.fbx";
+
+        /// <summary>The folder the Paladin's model, props and atlases all import into.</summary>
+        private const string PaladinFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/paladin/";
+
+        /// <summary>The folder the Cleric's model, props and both atlases import into.</summary>
+        private const string ClericFolder = "Assets/Art/Kaykit/mystery-monthly-series-6/cleric/";
+
+        /// <summary>The folder the Lorekeeper's model, tome and one atlas import into.</summary>
+        private const string LorekeeperFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/lorekeeper/";
+
+        /// <summary>The open book the Mage holds.</summary>
+        private const string SpellbookPath = "Assets/Art/Kaykit/adventurers/spellbook_open.fbx";
+
+        /// <summary>The Cleric's tier-1 tome.</summary>
+        private const string ClericTomePath = ClericFolder + "Cleric_Tome.fbx";
+
+        /// <summary>The mace the Bishop carries in place of the tome.</summary>
+        private const string ClericMacePath = ClericFolder + "Cleric_Mace.fbx";
+
+        /// <summary>The basin that stands on the tile beside the Consecration.</summary>
+        private const string ClericFontPath = ClericFolder + "Cleric_Font.fbx";
+
+        /// <summary>The open tome the Unravel holds, off the Lorekeeper's own sheet.</summary>
+        private const string LorekeeperTomePath = LorekeeperFolder + "Lorekeeper_Tome.fbx";
+
+        /// <summary>The Druid's staff, which every rung of his line carries.</summary>
+        private const string DruidStaffPath = "Assets/Art/Kaykit/adventurers/druid_staff.fbx";
+
+        /// <summary>The Overwatch's body, and the only tower off the Adventurers pack's archers.</summary>
+        private const string MarksmanPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx";
+
+        /// <summary>What the Overwatch shoots with, in place of the rifle its own pack ships.</summary>
+        private const string CrossbowPath = "Assets/Art/Kaykit/adventurers/crossbow_2handed.fbx";
+
+        /// <summary>The Rogue's body, at the bottom rung of his line.</summary>
+        private const string RoguePath = "Assets/Art/Kaykit/adventurers/Rogue.fbx";
+
+        /// <summary>The hood, which is this line's second model and arrives at tier 2.</summary>
+        private const string HoodedRoguePath = "Assets/Art/Kaykit/adventurers/Rogue_Hooded.fbx";
+
+        /// <summary>What the Rogue line throws, one at the lower rungs and two at the top.</summary>
+        private const string DaggerPath = "Assets/Art/Kaykit/adventurers/dagger.fbx";
+
+        /// <summary>The Engineer's body, which all three rungs of his line are drawn on.</summary>
+        private const string EngineerPath = "Assets/Art/Kaykit/adventurers/Engineer.fbx";
+
+        /// <summary>The wrench in the Engineer's hand, which is not what fires.</summary>
+        private const string WrenchPath = "Assets/Art/Kaykit/adventurers/engineer_Wrench.fbx";
+
+        /// <summary>The machine that stands on the tile beside the Engineer and does the firing.</summary>
+        private const string TurretPath = "Assets/Art/Kaykit/adventurers/turret_base.fbx";
+
+        /// <summary>The bare weirwood that stands on the tile beside the Overgrowth.</summary>
+        private const string WeirwoodPath =
+            "Assets/Art/Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx";
+
+        /// <summary>
+        /// How big the weirwood is drawn, which is the one beside prop that is
+        /// not authored beside the character it stands with.
+        /// </summary>
+        /// <remarks>
+        /// At its own imported size the tree spreads 3.74 m, which is nearly two
+        /// of this board's 2.0 m tiles and reaches back through the Druid. This
+        /// brings the spread to 2.06 — the tile it stands on — and leaves it
+        /// 2.89 m tall against a Druid of about two. Signed in
+        /// <c>docs/roster.md</c>, measured on issue #274.
+        /// </remarks>
+        private const float WeirwoodScale = 0.55f;
+
+        /// <summary>The Sergeant's off-hand shield, which the Shield Wall raises.</summary>
+        private const string ShieldSquarePath = "Assets/Art/Kaykit/adventurers/shield_square.fbx";
+
+        private const string AxePath = "Assets/Art/Kaykit/adventurers/axe_2handed.fbx";
+
+        /// <summary>The Berserker's bigger axe, which the Slam carries onto the Large rig.</summary>
+        private const string LargeAxePath = "Assets/Art/Kaykit/adventurers/axe_2handed_Large.fbx";
+
+        private const string HammerPath = PaladinFolder + "paladin_hammer.fbx";
+
+        private const string PaladinShieldPath = PaladinFolder + "paladin_shield.fbx";
+
+        /// <summary>The open book the Blessing holds instead of its hammer.</summary>
+        private const string BookPath = PaladinFolder + "paladin_book.fbx";
+
+        /// <summary>The gold statue that stands on the tile beside the Blessing.</summary>
+        private const string StatuePath = PaladinFolder + "paladin_statue.fbx";
+
+        /// <summary>The Adventurers pack's second ranger colourway.</summary>
+        private const string RangerAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/ranger_texture_alt_A.png";
+
+        private const string KnightAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_A.png";
+
+        private const string KnightAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/knight_texture_alt_B.png";
+
+        private const string BarbarianAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/barbarian_texture_alt_A.png";
+
+        private const string PaladinAltAtlasPath = PaladinFolder + "paladin_texture_B.png";
+
+        /// <summary>The Adventurers pack's second mage colourway, which the Sorcerer wears.</summary>
+        private const string MageAltAtlasPath = "Assets/Art/Kaykit/adventurers/mage_texture_alt_A.png";
+
+        private const string ClericAltAtlasPath = ClericFolder + "cleric_texture_B.png";
+
+        private const string DruidAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_A.png";
+
+        private const string DruidAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/druid_texture_alt_B.png";
+
+        /// <summary>The Adventurers pack's second rogue colourway, which the Fan of Knives wears.</summary>
+        private const string RogueAltAtlasPath =
+            "Assets/Art/Kaykit/adventurers/rogue_texture_alt_A.png";
+
+        private const string EngineerAltAAtlasPath =
+            "Assets/Art/Kaykit/adventurers/engineer_texture_alt_A.png";
+
+        private const string EngineerAltBAtlasPath =
+            "Assets/Art/Kaykit/adventurers/engineer_texture_alt_B.png";
+
+        /// <summary>The Bone Golem's body, off the same pack as the skeletons it walks with.</summary>
+        private const string SkeletonGolemPath = "Assets/Art/Kaykit/skeletons/Skeleton_Golem.fbx";
+
+        /// <summary>The axe it carries, in the export sized for the Large rig.</summary>
+        private const string SkeletonGolemAxePath =
+            "Assets/Art/Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx";
+
+        /// <summary>The folder the Black Knight's body, both weapons and its atlas import into.</summary>
+        private const string BlackKnightFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/black-knight/";
+
+        private const string BlackKnightPath = BlackKnightFolder + "BlackKnight.fbx";
+
+        private const string BlackKnightSwordPath = BlackKnightFolder + "BlackKnight_Sword_Large.fbx";
+
+        private const string BlackKnightShieldPath = BlackKnightFolder + "BlackKnight_Shield_Large.fbx";
+
+        /// <summary>The folder the Frost Wight's body, its two axes and its atlas import into.</summary>
+        private const string FrostGolemFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-5/frostgolem/";
+
+        private const string FrostGolemPath = FrostGolemFolder + "FrostGolem.fbx";
+
+        /// <summary>
+        /// The axe the Frost Wight carries. <c>docs/roster.md</c> signs
+        /// <c>FrostGolem_Axe</c>, which is the medium export; the pack also
+        /// ships <c>FrostGolem_Axe_Large</c> and the other three Large bodies
+        /// are each signed for their own <c>_Large</c> weapon. Bound as signed.
+        /// </summary>
+        private const string FrostGolemAxePath = FrostGolemFolder + "FrostGolem_Axe.fbx";
+
+        /// <summary>The folder the Abomination's body, its shields and its atlas import into.</summary>
+        private const string MonstrosityFolder =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/monstrosity/";
+
+        private const string MonstrosityPath = MonstrosityFolder + "Monstrosity.fbx";
+
+        private const string MonstrosityShieldPath =
+            MonstrosityFolder + "Monstrosity_BarndoorShield_Large.fbx";
+
+        /// <summary>The folder the Fiend's body, its sword, its backpack and its atlas import into.</summary>
+        private const string TieflingFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/tiefling/";
+
+        private const string TieflingPath = TieflingFolder + "Tiefling.fbx";
+
+        /// <summary>
+        /// The scabbarded pair the Fiend wears. It is a back piece and this
+        /// project has no spine socket, so it hangs off the melee hand the way
+        /// the Ranger's quiver does.
+        /// </summary>
+        private const string TieflingBackpackPath = TieflingFolder + "Tiefling_SwordsBackpack.fbx";
+
+        /// <summary>The folder the Shade's body, its katana and all four of its atlases import into.</summary>
+        private const string NinjaFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/ninja/";
+
+        private const string NinjaPath = NinjaFolder + "Ninja.fbx";
+
+        private const string NinjaKatanaPath = NinjaFolder + "Ninja_Katana.fbx";
+
+        /// <summary>The Necromancer's body, off the same pack as the skeletons it walks with.</summary>
+        private const string NecromancerPath = "Assets/Art/Kaykit/skeletons/Necromancer.fbx";
+
+        /// <summary>
+        /// The scythe it carries, out of the pack folder rather than
+        /// <c>Art/Weapons</c>, which holds four of that pack's props and not
+        /// this one.
+        /// </summary>
+        private const string SkeletonScythePath = "Assets/Art/Kaykit/skeletons/Skeleton_Scythe.fbx";
+
+        /// <summary>The folder the Vampire's body, its sword and its atlas import into.</summary>
+        private const string VampireFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/vampire/";
+
+        private const string VampirePath = VampireFolder + "Vampire.fbx";
+
+        private const string VampireSwordPath = VampireFolder + "Vampire_Sword.fbx";
+
+        /// <summary>The folder the Witch's body, her broom and her atlas import into.</summary>
+        private const string WitchFolder = "Assets/Art/Kaykit/mystery-monthly-series-5/witch/";
+
+        private const string WitchPath = WitchFolder + "Witch.fbx";
+
+        private const string BroomPath = WitchFolder + "Broom.fbx";
+
+        /// <summary>The folder both Werewolf bodies, the axe and their atlas import into.</summary>
+        private const string WerewolfFolder = "Assets/Art/Kaykit/mystery-monthly-series-4/werewolf/";
+
+        /// <summary>The Cursed Villager: the man half of that pack's pair.</summary>
+        private const string WerewolfManPath = WerewolfFolder + "Werewolf_Man.fbx";
+
+        /// <summary>The Werewolf: the wolf half, which walks on the same rig.</summary>
+        private const string WerewolfWolfPath = WerewolfFolder + "Werewolf_Wolf.fbx";
+
+        /// <summary>
+        /// The Villager's axe, which is the one that pack ships beside its
+        /// woodpiles rather than any of the nine others in the collection
+        /// called some form of "axe".
+        /// </summary>
+        private const string WerewolfAxePath = WerewolfFolder + "axe.fbx";
+
+        /// <summary>The Grave Robber's body, which imports already wearing its pack.</summary>
+        private const string HoarderPath =
+            "Assets/Art/Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx";
+
         private const string WalkClipName = "Walking_A";
 
         private const string DeathClipName = "Death_A";
+
+        /// <summary>
+        /// <see cref="WalkClipName"/> on the Large rig, and
+        /// <see cref="DeathClipName"/> likewise: the same two names out of the
+        /// other rig's banks, driving the other rig's bones.
+        /// </summary>
+        private const string LargeWalkClipName = "Rig_Large_MovementBasic/Walking_A";
+
+        private const string LargeDeathClipName = "Rig_Large_General/Death_A";
 
         /// <summary>The clip a tower rests in between shots, whatever it holds.</summary>
         private const string RestClipName = "Idle_A";
@@ -65,7 +304,39 @@ namespace View.Editor
 
         private const string SpellcastClipName = "Ranged_Magic_Spellcasting";
 
+        /// <summary>The cast the Cleric and Druid lines swing with.</summary>
+        private const string ShootClipName = "Ranged_Magic_Shoot";
+
         private const string ChopClipName = "Melee_1H_Attack_Chop";
+
+        private const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
+
+        /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
+        private const string BlockingClipName = "Melee_Blocking";
+
+        /// <summary>
+        /// The sighted stance the Overwatch holds, and the only clip
+        /// <c>docs/roster.md</c> names anywhere on that row.
+        /// </summary>
+        private const string AimingClipName = "Ranged_2H_Aiming";
+
+        /// <summary>The Rogue's overarm, which is how that line delivers a dagger.</summary>
+        private const string ThrowClipName = "Throw";
+
+        /// <summary>The two-knife swing the Fan of Knives throws with.</summary>
+        private const string DualwieldSliceClipName = "Melee_Dualwield_Attack_Slice";
+
+        /// <summary>
+        /// The Slam's swing, which exists on the Large rig alone and so names
+        /// its bank.
+        /// </summary>
+        private const string SlamClipName = "Rig_Large_CombatMelee/Melee_2H_Slam";
+
+        /// <summary>
+        /// <see cref="RestClipName"/> on the Large rig: the same name, in the
+        /// other rig's bank, driving the other rig's bones.
+        /// </summary>
+        private const string LargeRestClipName = "Rig_Large_General/Idle_A";
 
         /// <summary>
         /// The bow's half turn. Every weapon in this pack is authored for the
@@ -115,7 +386,7 @@ namespace View.Editor
         /// <b>It is only exactly upright in the pose it was measured in.</b> A
         /// weapon parented to a hand turns with the arm, so no fixed tilt can be
         /// right everywhere. This one was taken in <c>Idle_A</c> at frame 0,
-        /// which is where the Mage stands. The Necromancer is a creep and the
+        /// which is where the Mage stands. The Skeleton Mage is a creep and the
         /// roster capture poses it a quarter of the way through <c>Walking_A</c>,
         /// where the same bone axis is about 43° off vertical: head-up, and
         /// leaning. If a pose ever needs the staff dead upright regardless of
@@ -126,8 +397,148 @@ namespace View.Editor
         private static readonly Vector3 StaffQuarterTurn = new Vector3(0f, 0f, -90f);
 
         /// <summary>
-        /// What each unit type is drawn as, and how big — one entry per row in
-        /// <c>content/units.txt</c>.
+        /// What a held prop's own transform is called once it is on the bone.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="WeaponSocket"/> names the instance after the asset, and an
+        /// FBX's root node is named after its file, so these are the file names
+        /// above without their folder or extension. An anchor naming one that
+        /// is not there throws when the view is built.
+        /// </remarks>
+        private const string BowNode = "bow_withString";
+
+        private const string StaffNode = "staff";
+
+        private const string SwordNode = "sword_1handed";
+
+        private const string AxeNode = "axe_2handed";
+
+        private const string LargeAxeNode = "axe_2handed_Large";
+
+        private const string HammerNode = "paladin_hammer";
+
+        private const string BookNode = "paladin_book";
+
+        private const string SpellbookNode = "spellbook_open";
+
+        private const string ClericTomeNode = "Cleric_Tome";
+
+        private const string ClericMaceNode = "Cleric_Mace";
+
+        private const string LorekeeperTomeNode = "Lorekeeper_Tome";
+
+        private const string DruidStaffNode = "druid_staff";
+
+        private const string CrossbowNode = "crossbow_2handed";
+
+        private const string DaggerNode = "dagger";
+
+        private const string TurretNode = "turret_base";
+
+        /// <summary>
+        /// Which way along a shafted weapon its far end lies, in the prop's own
+        /// local space.
+        /// </summary>
+        /// <remarks>
+        /// The same axis <see cref="StaffQuarterTurn"/> was measured from: both
+        /// the staff's shaft and the sword's blade run along local +Y with the
+        /// orb and the tip at the +Y end, which is why the <c>[grip]</c> bounds
+        /// could not tell the two apart. The distance is not written down —
+        /// <see cref="EffectAnchor"/> takes it off the prop's own mesh, so a
+        /// re-exported staff moves its own tip.
+        /// </remarks>
+        private static readonly Vector3 AlongTheShaft = Vector3.up;
+
+        /// <summary>
+        /// The bow's own origin, which is the grip the bone puts in the fist and
+        /// the point the string is drawn back from. No tip: an arrow leaves an
+        /// archer's hand and not the end of a limb.
+        /// </summary>
+        private static readonly EffectAnchor Bow = EffectAnchor.At(BowNode);
+
+        /// <summary>The orb on the end of the Sorcerer's staff.</summary>
+        private static readonly EffectAnchor StaffTip =
+            EffectAnchor.AtTipOf(StaffNode, AlongTheShaft);
+
+        /// <summary>The point of the Soldier's sword.</summary>
+        private static readonly EffectAnchor SwordTip =
+            EffectAnchor.AtTipOf(SwordNode, AlongTheShaft);
+
+        /// <summary>The head of the Barbarian's two-handed axe.</summary>
+        private static readonly EffectAnchor AxeHead =
+            EffectAnchor.AtTipOf(AxeNode, AlongTheShaft);
+
+        /// <summary>The head of the bigger axe the Berserker and the Slam swing.</summary>
+        private static readonly EffectAnchor LargeAxeHead =
+            EffectAnchor.AtTipOf(LargeAxeNode, AlongTheShaft);
+
+        /// <summary>The head of the Paladin's hammer.</summary>
+        private static readonly EffectAnchor HammerHead =
+            EffectAnchor.AtTipOf(HammerNode, AlongTheShaft);
+
+        /// <summary>
+        /// The open book itself, and no tip. A book is held, not swung: its
+        /// pages are where the Blessing's light comes from, and the far end of
+        /// one is a corner of the cover.
+        /// </summary>
+        private static readonly EffectAnchor Book = EffectAnchor.At(BookNode);
+
+        /// <summary>
+        /// The open spellbook in the Mage's hand, and no tip, for the reason
+        /// <see cref="Book"/> has none: a book is held rather than swung.
+        /// </summary>
+        private static readonly EffectAnchor Spellbook = EffectAnchor.At(SpellbookNode);
+
+        /// <summary>The Cleric's tome, held the same way.</summary>
+        private static readonly EffectAnchor ClericTome = EffectAnchor.At(ClericTomeNode);
+
+        /// <summary>The Unravel's tome, held the same way.</summary>
+        private static readonly EffectAnchor LorekeeperTome = EffectAnchor.At(LorekeeperTomeNode);
+
+        /// <summary>The head of the Bishop's mace.</summary>
+        private static readonly EffectAnchor MaceHead =
+            EffectAnchor.AtTipOf(ClericMaceNode, AlongTheShaft);
+
+        /// <summary>The head of the Druid's staff.</summary>
+        private static readonly EffectAnchor DruidStaffTip =
+            EffectAnchor.AtTipOf(DruidStaffNode, AlongTheShaft);
+
+        /// <summary>
+        /// The crossbow's own origin, which is the stock the bone puts in the
+        /// fist. No tip, for the reason <see cref="Bow"/> has none: a bolt
+        /// leaves the weapon a shooter is holding and not the end of a limb.
+        /// </summary>
+        private static readonly EffectAnchor Crossbow = EffectAnchor.At(CrossbowNode);
+
+        /// <summary>
+        /// The dagger's own origin, which is the grip and so is the hand.
+        /// </summary>
+        /// <remarks>
+        /// No tip: this line throws its knives, so what leaves is the whole
+        /// dagger from where it is held. The Fan of Knives carries two, both
+        /// named after the same asset, and this resolves to whichever the
+        /// lookup reaches first — one hand of the two, which is a point on the
+        /// art either way.
+        /// </remarks>
+        private static readonly EffectAnchor Dagger = EffectAnchor.At(DaggerNode);
+
+        /// <summary>
+        /// The top of the turret standing beside the Engineer, which is where
+        /// his shell leaves from rather than the man.
+        /// </summary>
+        /// <remarks>
+        /// Up rather than <see cref="AlongTheShaft"/> by coincidence of axis
+        /// and not of meaning: this is a barrel on a base rather than a shaft,
+        /// and the far end of it is its top. How far up is not written down —
+        /// <see cref="EffectAnchor"/> reads it off the mesh.
+        /// </remarks>
+        private static readonly EffectAnchor TurretMuzzle =
+            EffectAnchor.AtTipOf(TurretNode, Vector3.up);
+
+        /// <summary>
+        /// What each unit type is drawn as, and how big — one entry per row of
+        /// <c>content/units.txt</c>, with no row left over. A row that reaches
+        /// <see cref="MatchArt"/> without an entry here throws by name.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -135,17 +546,107 @@ namespace View.Editor
         /// is chosen here.</b> The assignments are signed in
         /// <c>docs/roster.md</c> — the Minion and the Skeleton share the minion
         /// skin, the Warrior takes the warrior, the Scout the rogue, the
-        /// Necromancer the mage, and the four towers take the Knight, the
+        /// Skeleton Mage the mage, and the four towers take the Knight, the
         /// Ranger twice and the Mage. A builder that reached for "the obvious
         /// model" would be making an art decision unattended, which is a
         /// standing prohibition on this project and not a style preference.
         /// </para>
         /// <para>
-        /// <b>The scale is the tier signal and it is the only one.</b> Towers
-        /// draw at 1, every creep at a half, and the Ranger — which shares the
-        /// Archer's model and differs from it in one stat — at one and a half.
-        /// The numbers are <see cref="MatchArt"/>'s, so the two tables that
-        /// carry these rows cannot disagree about what a half is.
+        /// <b>Size says which side a row is on and nothing else.</b> Towers
+        /// draw at 1 and every creep at a half; no rung of a line is drawn
+        /// bigger than the rung below it. The numbers are
+        /// <see cref="MatchArt"/>'s, so the two tables that carry these rows
+        /// cannot disagree about what a half is.
+        /// </para>
+        /// <para>
+        /// <b>A tier is told apart by colour, by a prop or by a second
+        /// model, and a prop may be held or may stand beside.</b> The Archer
+        /// and the Ranger are the pair that proves the rule: one model, one
+        /// scale, and what separates them on sight is the Ranger's own atlas
+        /// and the quiver in its hand. The atlas covers the body only — a prop
+        /// is its own import off its own pack's atlas, and this quiver is
+        /// authored on the rogue's. Six rows here fill the beside column in —
+        /// the Blessing's statue, the Consecration's font, the Overgrowth's
+        /// weirwood and the turret that stands beside all three rungs of the
+        /// Engineer.
+        /// </para>
+        /// <para>
+        /// <b>The Artificer stands beside one thing and his look names two.</b>
+        /// <c>docs/roster.md</c> puts an <c>ammo_crate</c> beside the turret at
+        /// that rung, and a tower has one beside slot — which that page writes
+        /// on the rung's own <c>Needs</c> line as a thing the engine would have
+        /// to gain. What the one slot holds is the turret, because the turret
+        /// is what the Engineer's shell leaves from at every rung and the
+        /// crate would take the anchor's own prop off the board; so the crate
+        /// is not drawn and the Artificer is told from the Engineer by colour
+        /// alone. Nothing is invented to close that gap here.
+        /// </para>
+        /// <para>
+        /// <b>A rung inherits what the rung below it holds, and its
+        /// <c>Looks</c> line in <c>docs/roster.md</c> names only what
+        /// changes.</b> So the Sergeant and the Shield Wall carry the
+        /// Soldier's sword, the Slam carries the Berserker's axe and the
+        /// Blessing keeps the Templar's shield in the hand its book does not
+        /// fill. Reading those lines as a complete inventory instead would
+        /// strip the weapon off six of the nine rows below.
+        /// </para>
+        /// <para>
+        /// <b>A prop carries up a line and a colour does not.</b> A body has to
+        /// be holding something, so a rung that names no weapon keeps the one
+        /// below it; a colour is one of the three things that tell a rung
+        /// apart, and that page gives tier 3 the second model instead wherever
+        /// one exists. So the Slam is drawn in the atlas
+        /// <c>Barbarian_Large</c> imports wearing rather than in the
+        /// Berserker's, and the Unravel in the Lorekeeper's own — that body has
+        /// no alternate atlas anywhere in the collection, and the Sorcerer's
+        /// belongs to a different character's UVs.
+        /// </para>
+        /// <para>
+        /// <b>A named prop replaces what was in that hand rather than joining
+        /// it.</b> The Blessing's book takes the hand the Templar's hammer was
+        /// in and the Bishop's mace takes the Cleric's tome, because a
+        /// <c>Looks</c> line names the thing that changed and a hand holds one
+        /// thing. The Templar's shield stays because it is in the other hand.
+        /// <c>docs/roster.md</c> does not say where the tome goes when the mace
+        /// arrives, and moving it to the off hand would be inventing a second
+        /// assignment rather than reading one; so the tome is put down, and
+        /// whether that is the read is on the sheet as a question.
+        /// </para>
+        /// <para>
+        /// <b>The Paladin and Engineer lines are bound with no clips, and that
+        /// is the record speaking rather than an omission.</b>
+        /// <c>docs/roster.md</c> names a clip on every rung of the Knight,
+        /// Barbarian, Cleric, Druid and Rogue lines and none on any rung of
+        /// those two, whose windup and backswing carry the <c>_</c> that page
+        /// puts on a number nobody has signed. A clip chosen here to fill the
+        /// gap would be this table deciding how a tower swings, so those six
+        /// rows stand in their bind pose until the ask is answered.
+        /// </para>
+        /// <para>
+        /// <b>The Overwatch is posed by one clip in all three states, because
+        /// one is all that page signs.</b> Its <c>Looks</c> line names a stance
+        /// — <c>Ranged_2H_Aiming</c>, the sighted pose — the way the Shield
+        /// Wall's names a raised guard, and names no swing at all. A row is
+        /// animated only when it carries all three clips, so an idle on its own
+        /// would leave the signed stance unreachable and the Marksman standing
+        /// in his bind pose; the alternative, carrying the Ranger's bow draw and
+        /// release up onto a body holding a crossbow, would be posing this row
+        /// with another weapon's action. So the one signed pose is held through
+        /// all three states, and what is not signed is a second clip rather than
+        /// a way of reaching this one.
+        /// </para>
+        /// <para>
+        /// <b>The clip a <c>Looks</c> line names is the swing, and the rest
+        /// clip either side of it is not a per-row choice.</b> That page names
+        /// <c>Melee_2H_Attack_Chop</c> for the Barbarian,
+        /// <c>Ranged_Magic_Shoot</c> for the Cleric and the Druid,
+        /// <c>Throw</c> for the Rogue and
+        /// <c>Melee_Dualwield_Attack_Slice</c> for the Fan of Knives in the
+        /// same grammar, and those are attacks — so each goes in the windup,
+        /// with <see cref="RestClipName"/> either side of it as every posed row
+        /// that is not holding a bow has. Where that page means the resting
+        /// stance it says so, as the Shield Wall's raised guard and the
+        /// Overwatch's sighted aim do.
         /// </para>
         /// <para>
         /// <b>What each unit holds, and the clips it holds it with, are the
@@ -159,38 +660,342 @@ namespace View.Editor
         /// no clips of their own — nothing in the simulation swings a walker's
         /// weapon.
         /// </para>
+        /// <para>
+        /// <b>The anchor is where the shot leaves, and it names the weapon
+        /// rather than the body.</b> It is what keeps the Mage's spell off the
+        /// point in front of its chest that a height above the root would put it
+        /// at, and what makes the Archer's arrow leave a bow rather than the
+        /// same point on a taller model. A row that walks anchors nowhere:
+        /// nothing in the simulation gives a creep a shot to draw.
+        /// </para>
+        /// <para>
+        /// <b>The creep rows carry no clips at all, and that is the shape of a
+        /// creep rather than an unsigned number.</b> The three clip columns are
+        /// a tower's Idle, Windup and Backswing, and nothing in the simulation
+        /// puts a walker in any of those states. What a creep is animated by is
+        /// the walk and the death, which are shared — see
+        /// <see cref="LargeRigClips"/> for the four whose rig means they are
+        /// not.
+        /// </para>
+        /// <para>
+        /// <b>A shield goes in the off hand and everything else in the melee
+        /// hand.</b> <c>docs/roster.md</c> names each row's props and does not
+        /// say which hand holds which, so the Black Knight's shield and the
+        /// Abomination's barndoor are hung the way the Skeleton's, the
+        /// Sergeant's and the Templar's already are, leaving the melee hand for
+        /// the weapon. The Abomination's look names the shield alone, so its
+        /// melee hand is empty.
+        /// </para>
+        /// <para>
+        /// <b>The Fiend's backpack is in its fist for want of a socket on the
+        /// spine.</b> <c>Tiefling_SwordsBackpack</c> is a scabbarded pair worn
+        /// on the back, and there are two bone sockets here rather than three
+        /// — the same gap the Ranger's quiver sits in, and named on that row in
+        /// <c>docs/roster.md</c> as a spine socket this project has not got.
+        /// The pack's own <c>Tiefling_Sword</c> is what a hand would take, and
+        /// swapping to it would be this table choosing the prop.
+        /// </para>
+        /// <para>
+        /// <b>The Shade wears the atlas its model imports with, because the one
+        /// it is signed for has not been picked.</b> Its <c>Looks</c> line asks
+        /// for "the darkest of the pack's four" and names none of them, and
+        /// which of four swatch sheets draws a body darkest is not measurable
+        /// off the files — it depends where that body's UVs land. All four are
+        /// imported and on the sheet as a comparison; until one is chosen the
+        /// row draws in the base sheet, which is a question left open rather
+        /// than a colour decided here.
+        /// </para>
+        /// <para>
+        /// <b>The Grave Robber holds nothing, because the body it is signed
+        /// for already wears its pack.</b> <c>docs/roster.md</c> signs
+        /// "<c>Hoarder</c>, wearing <c>Hoarder_Backpack</c>", and
+        /// <c>Hoarder.fbx</c> carries <c>Hoarder_Backpack</c> as a skinned
+        /// piece of itself — the pack ships that piece a second time as a model
+        /// of its own, and hanging that one off a hand draws a second backpack
+        /// in front of a body already wearing one. The same page's "the
+        /// backpack, not the sword" is what keeps <c>Hoarder_Sword</c> out of
+        /// the hand it would otherwise take.
+        /// </para>
         /// </remarks>
         private static readonly (
             int unitId,
             string model,
             float scale,
+            string texture,
             string rightHand,
             string leftHand,
             string idle,
             string windup,
             string backswing,
             Vector3 rightTilt,
-            Vector3 leftTilt)[] UnitBindings =
+            Vector3 leftTilt,
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside)[] UnitBindings =
         {
-            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                null, null, null, null, null, default, default),
-            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale,
-                null, null, null, null, null, default, default),
-            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
-            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale,
-                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default),
-            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale,
-                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default),
-            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale,
-                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default),
-            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default),
-            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale,
-                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default),
-            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.RangerScale,
-                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip),
+            (1, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
+                null, null, null, null, null, default, default, default, default),
+            (2, "Assets/Art/Characters/Skeleton_Rogue.fbx", MatchArt.CreepScale, null,
+                null, null, null, null, null, default, default, default, default),
+            (3, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, null,
+                null, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow, default),
+            (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, null,
+                SpellbookPath, null, RestClipName, SpellcastClipName, RestClipName, default, default,
+                Spellbook, default),
+            (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale, null,
+                SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default, default),
+            (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, null,
+                SwordPath, null, RestClipName, ChopClipName, RestClipName, default, default,
+                SwordTip, default),
+            (12, "Assets/Art/Characters/Skeleton_Minion.fbx", MatchArt.CreepScale, null,
+                SkeletonBladePath, SkeletonShieldAPath, null, null, null, default, default, default,
+                default),
+            (13, "Assets/Art/Characters/Skeleton_Warrior.fbx", MatchArt.CreepScale, null,
+                SkeletonBladePath, SkeletonShieldBPath, null, null, null, default, default, default,
+                default),
+            (14, "Assets/Art/Characters/Ranger.fbx", MatchArt.TowerScale, RangerAltAtlasPath,
+                QuiverPath, BowPath, BowIdleClipName, BowDrawClipName, BowReleaseClipName, default, BowFlip,
+                Bow, default),
+            (15, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, KnightAltAAtlasPath,
+                SwordPath, ShieldSquarePath, RestClipName, ChopClipName, RestClipName, default, default,
+                SwordTip, default),
+            (16, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, KnightAltBAtlasPath,
+                SwordPath, ShieldSquarePath, BlockingClipName, ChopClipName, BlockingClipName,
+                default, default, SwordTip, default),
+            (17, "Assets/Art/Kaykit/adventurers/Barbarian.fbx", MatchArt.TowerScale, null,
+                AxePath, null, RestClipName, TwoHandedChopClipName, RestClipName, default, default,
+                AxeHead, default),
+            (18, "Assets/Art/Kaykit/adventurers/Barbarian.fbx", MatchArt.TowerScale, BarbarianAltAtlasPath,
+                LargeAxePath, null, RestClipName, TwoHandedChopClipName, RestClipName, default, default,
+                LargeAxeHead, default),
+            (19, "Assets/Art/Kaykit/adventurers/Barbarian_Large.fbx", MatchArt.TowerScale, null,
+                LargeAxePath, null, LargeRestClipName, SlamClipName, LargeRestClipName, default, default,
+                LargeAxeHead, default),
+            (20, PaladinFolder + "Paladin.fbx", MatchArt.TowerScale, null,
+                HammerPath, null, null, null, null, default, default,
+                HammerHead, default),
+            (21, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, null,
+                HammerPath, PaladinShieldPath, null, null, null, default, default,
+                HammerHead, default),
+            (22, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, PaladinAltAtlasPath,
+                BookPath, PaladinShieldPath, null, null, null, default, default,
+                Book, (StatuePath, 1f, BesideProp.NextTile)),
+            (23, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, null,
+                ClericTomePath, null, RestClipName, ShootClipName, RestClipName, default, default,
+                ClericTome, default),
+            (24, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, ClericAltAtlasPath,
+                ClericMacePath, null, RestClipName, ShootClipName, RestClipName, default, default,
+                MaceHead, default),
+            (25, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, ClericAltAtlasPath,
+                ClericMacePath, null, RestClipName, ShootClipName, RestClipName, default, default,
+                MaceHead, (ClericFontPath, 1f, BesideProp.NextTile)),
+            (26, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, MageAltAtlasPath,
+                StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
+                StaffTip, default),
+            (27, LorekeeperFolder + "Lorekeeper.fbx", MatchArt.TowerScale, null,
+                LorekeeperTomePath, null, RestClipName, SpellcastClipName, RestClipName, default, default,
+                LorekeeperTome, default),
+            (28, "Assets/Art/Kaykit/adventurers/Druid.fbx", MatchArt.TowerScale, null,
+                DruidStaffPath, null, RestClipName, ShootClipName, RestClipName, StaffQuarterTurn, default,
+                DruidStaffTip, default),
+            (29, "Assets/Art/Kaykit/adventurers/Druid.fbx", MatchArt.TowerScale, DruidAltAAtlasPath,
+                DruidStaffPath, null, RestClipName, ShootClipName, RestClipName, StaffQuarterTurn, default,
+                DruidStaffTip, default),
+            (30, "Assets/Art/Kaykit/adventurers/Druid.fbx", MatchArt.TowerScale, DruidAltBAtlasPath,
+                DruidStaffPath, null, RestClipName, ShootClipName, RestClipName, StaffQuarterTurn, default,
+                DruidStaffTip, (WeirwoodPath, WeirwoodScale, BesideProp.NextTile)),
+            (31, MarksmanPath, MatchArt.TowerScale, null,
+                CrossbowPath, null, AimingClipName, AimingClipName, AimingClipName, default, default,
+                Crossbow, default),
+            (32, RoguePath, MatchArt.TowerScale, null,
+                DaggerPath, null, RestClipName, ThrowClipName, RestClipName, default, default,
+                Dagger, default),
+            (33, HoodedRoguePath, MatchArt.TowerScale, null,
+                DaggerPath, null, RestClipName, ThrowClipName, RestClipName, default, default,
+                Dagger, default),
+            (34, HoodedRoguePath, MatchArt.TowerScale, RogueAltAtlasPath,
+                DaggerPath, DaggerPath, RestClipName, DualwieldSliceClipName, RestClipName,
+                default, default, Dagger, default),
+            (35, EngineerPath, MatchArt.TowerScale, null,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (36, EngineerPath, MatchArt.TowerScale, EngineerAltAAtlasPath,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (37, EngineerPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
+                WrenchPath, null, null, null, null, default, default,
+                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+            (38, NecromancerPath, MatchArt.CreepScale, null,
+                SkeletonScythePath, null, null, null, null, default, default, default, default),
+            (39, SkeletonGolemPath, MatchArt.CreepScale, null,
+                SkeletonGolemAxePath, null, null, null, null, default, default, default, default),
+            (40, BlackKnightPath, MatchArt.CreepScale, null,
+                BlackKnightSwordPath, BlackKnightShieldPath, null, null, null, default, default,
+                default, default),
+            (41, FrostGolemPath, MatchArt.CreepScale, null,
+                FrostGolemAxePath, null, null, null, null, default, default, default, default),
+            (42, MonstrosityPath, MatchArt.CreepScale, null,
+                null, MonstrosityShieldPath, null, null, null, default, default, default, default),
+            (43, VampirePath, MatchArt.CreepScale, null,
+                VampireSwordPath, null, null, null, null, default, default, default, default),
+            (44, WitchPath, MatchArt.CreepScale, null,
+                BroomPath, null, null, null, null, default, default, default, default),
+            (45, TieflingPath, MatchArt.CreepScale, null,
+                TieflingBackpackPath, null, null, null, null, default, default, default, default),
+            (46, NinjaPath, MatchArt.CreepScale, null,
+                NinjaKatanaPath, null, null, null, null, default, default, default, default),
+            (47, WerewolfManPath, MatchArt.CreepScale, null,
+                WerewolfAxePath, null, null, null, null, default, default, default, default),
+            (48, WerewolfWolfPath, MatchArt.CreepScale, null,
+                null, null, null, null, null, default, default, default, default),
+            (49, HoarderPath, MatchArt.CreepScale, null,
+                null, null, null, null, null, default, default, default, default),
         };
+
+        /// <summary>
+        /// The rows whose model is on <c>Rig_Large</c>, and the walk and death
+        /// they take out of that rig's own banks. Every row not named here is
+        /// drawn with <see cref="SharedBindings"/>' pair.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Which rig a body is on is not a look, so it is not a column of
+        /// the table above.</b> <c>docs/roster.md</c> signs four creeps onto
+        /// the Large rig — the Bone Golem, the Black Knight, the Frost Wight
+        /// and the Abomination — and signs no clip for any of them, because a
+        /// creep only walks and dies and both of those are shared. What is per
+        /// row is the bank those two names come out of.
+        /// </para>
+        /// <para>
+        /// <b>Nothing fails if this is wrong, which is why it is written
+        /// down.</b> <c>Walking_A</c> and <c>Death_A</c> are in both rigs'
+        /// banks, so the shared medium pair on a Large body drives bones that
+        /// skeleton has not got: it slides down the corridor in its bind pose
+        /// and reads as a bad model rather than as a wrong clip. The Slam is
+        /// the same rig and is not here — it is a tower, and a tower neither
+        /// walks nor dies.
+        /// </para>
+        /// </remarks>
+        private static readonly (int unitId, string walk, string death)[] LargeRigClips =
+        {
+            (39, LargeWalkClipName, LargeDeathClipName),
+            (40, LargeWalkClipName, LargeDeathClipName),
+            (41, LargeWalkClipName, LargeDeathClipName),
+            (42, LargeWalkClipName, LargeDeathClipName),
+        };
+
+        /// <summary>
+        /// The walk and death one row is drawn with, or two nulls for a row
+        /// drawn with the shared pair.
+        /// </summary>
+        private static (string walk, string death) RigClipsFor(int unitId)
+        {
+            foreach ((int id, string walk, string death) in LargeRigClips)
+            {
+                if (id == unitId)
+                {
+                    return (walk, death);
+                }
+            }
+
+            return (null, null);
+        }
+
+        /// <summary>
+        /// The rows whose bubble leaves a shape of its own, and what. Every row
+        /// not named here leaves the shared disc.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A table of its own rather than a column of
+        /// <see cref="UnitBindings"/>, for the reason
+        /// <see cref="LargeRigClips"/> is one:</b> nine rows of fifty-five
+        /// carry one, so a column would be forty-six <c>default</c>s written
+        /// out to say nothing.
+        /// </para>
+        /// <para>
+        /// <b>Every one is an emitter an event can name, and four of them
+        /// walk.</b> Eight are auras, which pulse from their own emitter —
+        /// four on the tower side and four carried by creeps — and the Slam's
+        /// sweep is centred on the man who swung. A creep's is centred on its
+        /// body rather than on what it is holding, because a walking row names
+        /// no effect anchor; see <see cref="MatchDecorations.AuraPulsed"/>.
+        /// <b>Two signed bubble shapes are missing from here and cannot be
+        /// added</b>: the Mortar's burst and the Unravel's armour strip are
+        /// blasts centred on the body a shot arrived at, so the event names the
+        /// victim and no row is reachable from it. See <see cref="MatchDecorations.BlastLanded"/>,
+        /// which draws both off the shape of the event instead.
+        /// </para>
+        /// </remarks>
+        private static readonly (int unitId, BubbleSignature signature)[] BubbleSignatures =
+        {
+            (7, BubbleSignature.HasteRing),
+            (16, BubbleSignature.SlowRing),
+            (19, BubbleSignature.GroundShock),
+            (22, BubbleSignature.TowerGlow),
+            (25, BubbleSignature.ConsecrationLight),
+            (30, BubbleSignature.OvergrowthRoots),
+            (38, BubbleSignature.WardDome),
+            (41, BubbleSignature.FrostSpikes),
+            (44, BubbleSignature.HexPlates),
+        };
+
+        /// <summary>
+        /// The rows whose shot is drawn as something of its own, and what.
+        /// </summary>
+        /// <remarks>
+        /// <b>Two of these are capstones and six are whole lines.</b> A bolt is
+        /// what the Cleric and the Druid lines fire at every rung, so this
+        /// table names six rows to say one thing — where the bubble table
+        /// above names a row per shape. That is the shape of the two moments
+        /// rather than an inconsistency: a bubble is a capstone's, and a shot
+        /// is a line's.
+        /// </remarks>
+        private static readonly (int unitId, ShotSignature signature)[] ShotSignatures =
+        {
+            (23, ShotSignature.MagicBolt),
+            (24, ShotSignature.MagicBolt),
+            (25, ShotSignature.MagicBolt),
+            (28, ShotSignature.MagicBolt),
+            (29, ShotSignature.MagicBolt),
+            (30, ShotSignature.MagicBolt),
+            (31, ShotSignature.LongShot),
+            (34, ShotSignature.ThrownKnife),
+        };
+
+        /// <summary>
+        /// What one row's bubble leaves, or <see cref="BubbleSignature.None"/>
+        /// for the shared disc.
+        /// </summary>
+        private static BubbleSignature BubbleSignatureFor(int unitId)
+        {
+            foreach ((int id, BubbleSignature signature) in BubbleSignatures)
+            {
+                if (id == unitId)
+                {
+                    return signature;
+                }
+            }
+
+            return BubbleSignature.None;
+        }
+
+        /// <summary>
+        /// What one row's shot is drawn as, or <see cref="ShotSignature.None"/>
+        /// for the shared tracer.
+        /// </summary>
+        private static ShotSignature ShotSignatureFor(int unitId)
+        {
+            foreach ((int id, ShotSignature signature) in ShotSignatures)
+            {
+                if (id == unitId)
+                {
+                    return signature;
+                }
+            }
+
+            return ShotSignature.None;
+        }
 
         /// <summary>
         /// Everything on <c>MatchArt</c> that is not per unit type, as field
@@ -209,25 +1014,6 @@ namespace View.Editor
         {
             ("creepWalkClip", null, WalkClipName),
             ("creepDeathClip", null, DeathClipName),
-        };
-
-        /// <summary>
-        /// The four clip banks, searched in order for a clip by name.
-        /// </summary>
-        /// <remarks>
-        /// All four share one rig, which is why a clip from any of them drives
-        /// any of the characters — verified by measurement rather than trusted,
-        /// and the reason this project has one artist rather than two. The
-        /// melee bank is the newest and arrived with the Soldier's sword: a
-        /// tower holding a sword and playing <c>Ranged_Bow_Draw</c> is the same
-        /// class of mistake as a mage holding a bow.
-        /// </remarks>
-        private static readonly string[] ClipBankPaths =
-        {
-            "Assets/Art/Animations/Rig_Medium_MovementBasic.fbx",
-            "Assets/Art/Animations/Rig_Medium_General.fbx",
-            "Assets/Art/Animations/Rig_Medium_CombatRanged.fbx",
-            "Assets/Art/Animations/Rig_Medium_CombatMelee.fbx",
         };
 
         /// <summary>Where the tile atlas material is written.</summary>
@@ -642,19 +1428,27 @@ namespace View.Editor
             for (var i = 0; i < UnitBindings.Length; i++)
             {
                 var binding = UnitBindings[i];
-                SerializedProperty entry = units.GetArrayElementAtIndex(i);
+                (string walk, string death) = RigClipsFor(binding.unitId);
 
-                entry.FindPropertyRelative("unitId").intValue = binding.unitId;
-                entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(binding.model);
-                entry.FindPropertyRelative("scale").floatValue = binding.scale;
-                entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(binding.rightHand);
-                entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(binding.leftHand);
-                entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(binding.idle);
-                entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(binding.windup);
-                entry.FindPropertyRelative("backswingClip").objectReferenceValue =
-                    MaybeClip(binding.backswing);
-                entry.FindPropertyRelative("rightHandTilt").vector3Value = binding.rightTilt;
-                entry.FindPropertyRelative("leftHandTilt").vector3Value = binding.leftTilt;
+                WireUnit(
+                    units.GetArrayElementAtIndex(i),
+                    binding.unitId,
+                    binding.model,
+                    binding.scale,
+                    binding.texture,
+                    binding.rightHand,
+                    binding.leftHand,
+                    binding.idle,
+                    binding.windup,
+                    binding.backswing,
+                    binding.rightTilt,
+                    binding.leftTilt,
+                    binding.anchor,
+                    binding.beside,
+                    walk,
+                    death,
+                    BubbleSignatureFor(binding.unitId),
+                    ShotSignatureFor(binding.unitId));
             }
 
             foreach ((string field, string asset, string clip) in SharedBindings)
@@ -662,6 +1456,78 @@ namespace View.Editor
                 Field(serialized, field).objectReferenceValue =
                     clip == null ? LoadModel(asset) : LoadClip(clip);
             }
+        }
+
+        /// <summary>
+        /// Writes one entry that stands there and holds nothing — the same
+        /// shape as <see cref="UnitArt.Of(int, GameObject, float)"/>.
+        /// </summary>
+        private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
+            WireUnit(
+                entry, unitId, model, scale, null, null, null, null, null, null, default, default, default,
+                default, null, null, BubbleSignature.None, ShotSignature.None);
+
+        /// <summary>
+        /// Writes one entry of the serialized unit list.
+        /// </summary>
+        /// <remarks>
+        /// Every field, every time. Growing a serialized array copies the last
+        /// element into the new slots, so an entry that set only the fields it
+        /// cared about would inherit the previous row's weapons and clips.
+        /// </remarks>
+        private static void WireUnit(
+            SerializedProperty entry,
+            int unitId,
+            string model,
+            float scale,
+            string texture,
+            string rightHand,
+            string leftHand,
+            string idle,
+            string windup,
+            string backswing,
+            Vector3 rightTilt,
+            Vector3 leftTilt,
+            EffectAnchor anchor,
+            (string model, float scale, Vector3 offset) beside,
+            string walk,
+            string death,
+            BubbleSignature bubbleSignature,
+            ShotSignature shotSignature)
+        {
+            entry.FindPropertyRelative("unitId").intValue = unitId;
+            entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
+            entry.FindPropertyRelative("scale").floatValue = scale;
+            entry.FindPropertyRelative("texture").objectReferenceValue = MaybeTexture(texture);
+            entry.FindPropertyRelative("rightHand").objectReferenceValue = MaybeModel(rightHand);
+            entry.FindPropertyRelative("leftHand").objectReferenceValue = MaybeModel(leftHand);
+            entry.FindPropertyRelative("idleClip").objectReferenceValue = MaybeClip(idle);
+            entry.FindPropertyRelative("windupClip").objectReferenceValue = MaybeClip(windup);
+            entry.FindPropertyRelative("backswingClip").objectReferenceValue = MaybeClip(backswing);
+            entry.FindPropertyRelative("rightHandTilt").vector3Value = rightTilt;
+            entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
+            entry.FindPropertyRelative("walkClip").objectReferenceValue = MaybeClip(walk);
+            entry.FindPropertyRelative("deathClip").objectReferenceValue = MaybeClip(death);
+            // The index into each enum's own names rather than the value, which
+            // is what a serialized enum property holds. The two agree because
+            // both enums are declared in ascending order from zero with no
+            // gaps, and a gap there would silently bind the wrong shape.
+            entry.FindPropertyRelative("bubbleSignature").enumValueIndex = (int)bubbleSignature;
+            entry.FindPropertyRelative("shotSignature").enumValueIndex = (int)shotSignature;
+
+            SerializedProperty anchored = entry.FindPropertyRelative("effectAnchor");
+
+            // The empty string and not null: a serialized string field holds "",
+            // and writing null leaves the previous row's anchor name in the slot
+            // for exactly the reason this method writes every field.
+            anchored.FindPropertyRelative("transformName").stringValue = anchor.TransformName ?? string.Empty;
+            anchored.FindPropertyRelative("tip").vector3Value = anchor.Tip;
+
+            SerializedProperty standing = entry.FindPropertyRelative("beside");
+
+            standing.FindPropertyRelative("model").objectReferenceValue = MaybeModel(beside.model);
+            standing.FindPropertyRelative("scale").floatValue = beside.scale;
+            standing.FindPropertyRelative("offset").vector3Value = beside.offset;
         }
 
         /// <summary>
@@ -701,6 +1567,8 @@ namespace View.Editor
 
             foreach (var binding in UnitBindings)
             {
+                (string walk, string death) = RigClipsFor(binding.unitId);
+
                 units.Add(UnitArt.Armed(
                     binding.unitId,
                     LoadModel(binding.model),
@@ -711,7 +1579,15 @@ namespace View.Editor
                     MaybeClip(binding.windup),
                     MaybeClip(binding.backswing),
                     binding.rightTilt,
-                    binding.leftTilt));
+                    binding.leftTilt,
+                    binding.anchor,
+                    MaybeTexture(binding.texture),
+                    BesideProp.Standing(
+                        MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset),
+                    MaybeClip(walk),
+                    MaybeClip(death),
+                    BubbleSignatureFor(binding.unitId),
+                    ShotSignatureFor(binding.unitId)));
             }
 
             return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));
@@ -731,6 +1607,29 @@ namespace View.Editor
         /// <summary>The named clip, or null when the name is null — a creep.</summary>
         private static AnimationClip MaybeClip(string clip) => clip == null ? null : LoadClip(clip);
 
+        /// <summary>
+        /// The atlas at a path, or null when the path is null — a row drawn in
+        /// the one its model imported wearing.
+        /// </summary>
+        private static Texture2D MaybeTexture(string path)
+        {
+            if (path == null)
+            {
+                return null;
+            }
+
+            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+
+            if (texture == null)
+            {
+                throw new IOException(
+                    "Nothing imported at " + path + ". A row naming an atlas it has not got draws in "
+                    + "the one its model came with, which is the rung below it wearing the same face.");
+            }
+
+            return texture;
+        }
+
         /// <summary>The imported model at a path, or a throw naming it.</summary>
         private static GameObject LoadModel(string path)
         {
@@ -747,39 +1646,16 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The clip of that name, from whichever of the four banks holds it.
+        /// The clip a binding names, or a throw saying where it looked.
+        /// <see cref="ClipBanks"/> is what decides which banks that is, so a
+        /// set file and this table cannot disagree about what a name means.
         /// </summary>
-        /// <remarks>
-        /// <c>__preview__</c> duplicates are editor thumbnail bookkeeping Unity
-        /// hangs off any clip it has ever drawn an icon for. Wiring one of those
-        /// into a scene would work in the editor and resolve to nothing in a
-        /// build, which is the worst of both.
-        /// </remarks>
         private static AnimationClip LoadClip(string name)
         {
-            var found = new List<string>();
+            AnimationClip clip = ClipBanks.Find(name, out string whereItLooked);
 
-            foreach (string bank in ClipBankPaths)
-            {
-                foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(bank))
-                {
-                    if (!(asset is AnimationClip candidate) || candidate.name.StartsWith("__preview__"))
-                    {
-                        continue;
-                    }
-
-                    if (candidate.name == name)
-                    {
-                        return candidate;
-                    }
-
-                    found.Add(candidate.name);
-                }
-            }
-
-            throw new IOException(
-                "No clip called '" + name + "' in any of the four banks. Found: "
-                + string.Join(", ", found));
+            return clip ?? throw new IOException(
+                "No clip called '" + ClipBanks.NameIn(name) + "' in " + whereItLooked);
         }
 
         /// <summary>

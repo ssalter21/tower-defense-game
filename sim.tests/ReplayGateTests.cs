@@ -257,13 +257,16 @@ public class ReplayGateTests
         // NOT THE LIVE MATCH'S HASH, and the difference is the level plane. A
         // version-0 bundle predates it, so stripping today's record back to
         // version 0 throws the tiers away and restages the folded board flat --
-        // a different match, legitimately, and the same reason the version-1
-        // bundle now leaks fifteen where the committed run leaks twelve. While
-        // the map was flat these two hashes agreed for a reason that had
-        // nothing to do with restaging, and this assertion proved less than it
-        // looked like it did.
+        // a different match, legitimately. While the map was flat these two
+        // hashes agreed for a reason that had nothing to do with restaging, and
+        // this assertion proved less than it looked like it did.
+        //
+        // The literal moves whenever the state hash's own layout does, which is
+        // a SimulationVersion bump by definition: this is match-state/6, which
+        // folds what the kills have paid because a body can now be worth gold
+        // for dying.
         Assert.Equal(
-            "F1B4F0BAC3B39D51",
+            "D55119ECD678CB04",
             restaged.Match.Resolve().RollingStateHash.ToString());
     }
 

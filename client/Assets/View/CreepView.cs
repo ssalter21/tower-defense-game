@@ -48,6 +48,8 @@ namespace View
 
         private SimDrivenAnimator _animator;
 
+        private Material _skin;
+
         /// <summary>The instantiated model, once built.</summary>
         public GameObject Model { get; private set; }
 
@@ -70,17 +72,72 @@ namespace View
         public GameObject LeftHand { get; private set; }
 
         /// <summary>
-        /// Builds the view: instantiates the model under this object at the
-        /// size its unit type is drawn at, and wires its two clips into a
-        /// Playables graph with no playback head.
+        /// What is on it, drawn — the wash and the bar. Shown by its own call
+        /// rather than by <see cref="Pose"/>: where a creep stands and what its
+        /// legs are doing come out of one part of the snapshot row and what is
+        /// on it comes out of another, and neither answer is an input to the
+        /// other.
         /// </summary>
-        public void Build(UnitArt art, AnimationClip walk, AnimationClip death)
+        /// <remarks>
+        /// <b>Made in <c>Build</c> and never in a field initializer.</b> It
+        /// holds a <c>MaterialPropertyBlock</c>, which is a native object, and
+        /// Unity refuses to make one of those from a MonoBehaviour's
+        /// constructor — the throw names the game object and lands in whatever
+        /// test happens to be running when the first creep is built, which is
+        /// nowhere near the line that caused it.
+        /// </remarks>
+        public EffectMarks Marks { get; private set; }
+
+        /// <summary>
+        /// Builds the view: instantiates the model under this object at the
+        /// size its unit type is drawn at, wires its two clips into a Playables
+        /// graph with no playback head, and hangs the effect marks off it.
+        /// </summary>
+        /// <param name="healthSegment">
+        /// The material the bar's health segment wears. Made once by whoever
+        /// owns the match, because a material per creep is an asset instance
+        /// per creep to destroy again.
+        /// </param>
+        /// <param name="shieldSegment">The material its pool segment wears.</param>
+        public void Build(
+            UnitArt art,
+            AnimationClip walk,
+            AnimationClip death,
+            Material healthSegment,
+            Material shieldSegment) =>
+            BuildBody(art, walk, death, healthSegment, shieldSegment);
+
+        /// <summary>
+        /// The same, for a body that is a portrait rather than a creep in a
+        /// match: a contact sheet or an art preview, where there is no snapshot
+        /// behind the model and nothing will ever ask what is on it.
+        /// </summary>
+        /// <remarks>
+        /// The marks are not built at all, rather than built out of materials
+        /// nobody would destroy again: a sheet builds and throws away a body per
+        /// row, so a material made here would be one leaked per row.
+        /// <see cref="ShowEffects"/> refuses by name afterwards, which is what
+        /// keeps this from being a quiet second mode of the same object.
+        /// </remarks>
+        public void Build(UnitArt art, AnimationClip walk, AnimationClip death) =>
+            BuildBody(art, walk, death, healthSegment: null, shieldSegment: null);
+
+        private void BuildBody(
+            UnitArt art,
+            AnimationClip walk,
+            AnimationClip death,
+            Material healthSegment,
+            Material shieldSegment)
         {
             if (art == null) throw new ArgumentNullException(nameof(art));
             if (walk == null) throw new ArgumentNullException(nameof(walk));
             if (death == null) throw new ArgumentNullException(nameof(death));
 
             Model = DrawnModel.Under(transform, art.Model, art.Scale);
+
+            // Before the hands, because the row's atlas covers the body and a
+            // prop wears its own pack's.
+            _skin = DrawnModel.Wear(Model, art.Texture);
 
             // What it carries goes on before the graph is built, so it is in
             // hand for the first frame the creep is ever drawn in. A creep's
@@ -102,6 +159,26 @@ namespace View
             // including the ban on a RuntimeAnimatorController, and the clip
             // lengths stay over there with the clips.
             _animator = SimDrivenAnimator.Bind(Model, walk, death);
+
+            // After the graph, because the wash lands on every renderer under
+            // the body and what it is holding is part of the body by now.
+            Marks = new EffectMarks();
+            Marks.Build(transform, Model, healthSegment, shieldSegment);
+        }
+
+        /// <summary>
+        /// Destroys the material this made, because whoever made one destroys
+        /// it. A creep wearing the atlas it imported with made none.
+        /// </summary>
+        /// <remarks>
+        /// One per pooled view rather than one per creep: a view is built once
+        /// for its variant and then handed out again for the length of the
+        /// match.
+        /// </remarks>
+        private void OnDestroy()
+        {
+            DrawnModel.Discard(_skin);
+            _skin = null;
         }
 
         /// <summary>

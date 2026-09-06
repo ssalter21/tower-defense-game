@@ -41,6 +41,18 @@ namespace View
     /// out of a single stack.
     /// </para>
     /// <para>
+    /// <b>An entity that comes back as a different variant swaps its view for
+    /// one of the variant it is now.</b> A body can change what it is mid-lane
+    /// — the Cursed Villager becomes the Werewolf — and which row it is is a
+    /// snapshot field, so the swap arrives here as an id that was drawn as one
+    /// variant and is claimed as another. The old view goes back on its own
+    /// idle stack and a view of the new variant takes its place, which is the
+    /// same subtraction the rest of this class runs on: two frames, two
+    /// statements of what exists, and the second one wins. Nothing here knows
+    /// which swaps are legal — that is the simulation's to refuse, and it does,
+    /// where the column is read.
+    /// </para>
+    /// <para>
     /// <b>Usage is three calls, in order.</b>
     /// <code>
     /// pool.BeginSync();
@@ -175,15 +187,16 @@ namespace View
 
             if (_live.TryGetValue(id, out T existing))
             {
-                if (_variantOf[id] != variant)
+                if (_variantOf[id] == variant)
                 {
-                    throw new InvalidOperationException(
-                        "Entity id " + id + " was drawn as variant " + _variantOf[id] + " and is now being "
-                        + "claimed as variant " + variant + ". An entity does not change what it is "
-                        + "mid-match, so one of the two frames is drawing the wrong thing.");
+                    return existing;
                 }
 
-                return existing;
+                // It is the same entity and it is not the same thing any more.
+                // Retiring it here rather than at EndSync means the view it
+                // gives up is on its stack in time to be handed to the next
+                // claim of that variant in this very sync.
+                Retire(id);
             }
 
             T view;

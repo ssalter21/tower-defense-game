@@ -53,6 +53,15 @@ namespace View
     {
         private readonly Dictionary<int, Vector3> _drawnCreepPositions = new Dictionary<int, Vector3>();
 
+        /// <summary>
+        /// Which row each of those bodies is, filled in beside the positions
+        /// and cleared with them. Kept because a creep's own effect shape is a
+        /// property of its row and an event carries only the entity id — the
+        /// same lookup problem the position has, with the same at-most-a-tick
+        /// -behind answer.
+        /// </summary>
+        private readonly Dictionary<int, int> _drawnCreepTypes = new Dictionary<int, int>();
+
         private readonly Dictionary<int, CreepSnapshot> _previousCreeps =
             new Dictionary<int, CreepSnapshot>();
 
@@ -63,6 +72,15 @@ namespace View
             new Dictionary<int, ProjectileSnapshot>();
 
         private readonly Dictionary<int, TowerView> _towers = new Dictionary<int, TowerView>();
+
+        /// <summary>
+        /// Scratch for <see cref="TowersWithin"/>, so an aura that pulses every
+        /// fifteen ticks all match long allocates nothing.
+        /// </summary>
+        private readonly List<Vector3> _towersReached = new List<Vector3>();
+
+        /// <summary>Scratch for <see cref="CreepsWithin"/>, on the same terms.</summary>
+        private readonly List<Vector3> _creepsReached = new List<Vector3>();
 
         private EntityViewPool<CreepView> _creepPool;
 
@@ -77,6 +95,15 @@ namespace View
         private Ruleset _rules;
 
         private Material _projectileMaterial;
+
+        /// <summary>
+        /// The two segments of the bar every creep wears while something has
+        /// granted it a pool. Made once here, because a material per creep is
+        /// an asset instance per creep to destroy again.
+        /// </summary>
+        private Material _healthSegmentMaterial;
+
+        private Material _shieldSegmentMaterial;
 
         private Transform _creepParent;
 
@@ -175,6 +202,8 @@ namespace View
 
             _route = RoutePath.For(map);
             _projectileMaterial = ViewMaterials.Create("Projectile", MatchTuning.ProjectileColor);
+            _healthSegmentMaterial = ViewMaterials.Create("HealthSegment", MatchTuning.HealthSegmentColor);
+            _shieldSegmentMaterial = ViewMaterials.Create("ShieldSegment", MatchTuning.ShieldSegmentColor);
 
             _creepParent = MakeGroup("Creeps");
             _projectileParent = MakeGroup("Projectiles");
@@ -185,7 +214,15 @@ namespace View
 
             BuildTowers(layout, towerParent);
 
-            Decorations = new MatchDecorations(transform, CreepPositionOf, TowerMuzzleOf);
+            Decorations = new MatchDecorations(
+                transform,
+                CreepPositionOf,
+                TowerMuzzleOf,
+                EntityGroundOf,
+                TowerSignatureOf,
+                CreepSignatureOf,
+                TowersWithin,
+                CreepsWithin);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -279,7 +316,17 @@ namespace View
                 Destroy(_projectileMaterial);
             }
 
-            Decorations?.DestroyMaterials();
+            if (_healthSegmentMaterial != null)
+            {
+                Destroy(_healthSegmentMaterial);
+            }
+
+            if (_shieldSegmentMaterial != null)
+            {
+                Destroy(_shieldSegmentMaterial);
+            }
+
+            Decorations?.DestroyAssets();
         }
 
         /// <summary>
@@ -362,6 +409,7 @@ namespace View
         private void DrawCreeps(float alpha)
         {
             _drawnCreepPositions.Clear();
+            _drawnCreepTypes.Clear();
             _creepPool.BeginSync();
 
             foreach (CreepSnapshot creep in Current.Creeps)
@@ -381,6 +429,7 @@ namespace View
                 Vector3 position = _route.PointAt(distance, lateral);
 
                 _drawnCreepPositions[creep.Id] = position;
+                _drawnCreepTypes[creep.Id] = creep.TypeId;
 
                 view.Pose(
                     position,
@@ -388,6 +437,16 @@ namespace View
                     distance,
                     creep.State,
                     DyingFraction(creep, before, paired, alpha));
+
+                // What is on it, straight off the same row and never
+                // interpolated: a magnitude is in force or it is not, and a
+                // pool a creep half has is a pool nothing could spend.
+                view.Marks.Show(
+                    creep.Hp,
+                    _types.ById(creep.TypeId).MaxHp,
+                    creep.Shield,
+                    creep.SpeedMagnitude,
+                    creep.ArmourMagnitude);
             }
 
             _creepPool.EndSync();
@@ -556,7 +615,12 @@ namespace View
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(_art.ArtFor(unitId), _art.CreepWalkClip, _art.CreepDeathClip);
+            view.Build(
+                _art.ArtFor(unitId),
+                _art.WalkClipFor(unitId),
+                _art.DeathClipFor(unitId),
+                _healthSegmentMaterial,
+                _shieldSegmentMaterial);
 
             return view;
         }
@@ -631,5 +695,161 @@ namespace View
 
         private Vector3? TowerMuzzleOf(int towerId) =>
             _towers.TryGetValue(towerId, out TowerView view) ? view.Muzzle : (Vector3?)null;
+
+        /// <summary>
+        /// Where an entity is standing, whichever kind it is — what a bubble's
+        /// ring is drawn under.
+        /// </summary>
+        /// <remarks>
+        /// Towers, creeps and projectiles are numbered out of one id space, so
+        /// a caller holding an id that could be either does not have to be told
+        /// which — and cannot be told wrong. A tower is at its own transform
+        /// and does not move; a creep is where it was last drawn, which is the
+        /// same at-most-a-tick-behind answer <see cref="CreepPositionOf"/>
+        /// gives and is allowed to be for the same reason.
+        /// </remarks>
+        private Vector3? EntityGroundOf(int entityId)
+        {
+            if (_towers.TryGetValue(entityId, out TowerView tower))
+            {
+                return tower.transform.position;
+            }
+
+            return CreepPositionOf(entityId);
+        }
+
+        /// <summary>
+        /// What the tower with this id draws its own bubble and its own shot
+        /// as, or null when the id is not a tower.
+        /// </summary>
+        /// <remarks>
+        /// <b>Null and a pair of <c>None</c>s are different answers.</b> A
+        /// bubble is centred on an entity out of the one id
+        /// space, and which kind of entity that is decides what the decoration
+        /// means: a tower at the centre is the row that emitted, and anything
+        /// else is a body a shot arrived at. Collapsing the two would draw a
+        /// tower's plain disc under a creep a mortar shell had just landed on.
+        /// </remarks>
+        private RowSignature? TowerSignatureOf(int entityId) =>
+            _towers.TryGetValue(entityId, out TowerView tower)
+                ? tower.Signature
+                : (RowSignature?)null;
+
+        /// <summary>
+        /// What the creep with this id draws its own bubble as, or null when
+        /// the id is not a body the view last drew.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Separate from <see cref="TowerSignatureOf"/> and not folded into
+        /// it.</b> That one's null is what tells a bubble centred on its
+        /// emitter from a blast centred on its victim, so a lookup answering
+        /// for creeps as well would draw a walking row's aura shape under a
+        /// body a mortar shell had just landed on. Only the aura asks this one,
+        /// and an aura is always centred on the thing that emitted it.
+        /// </para>
+        /// <para>
+        /// The row comes from the frame the view last drew rather than from the
+        /// snapshot being pulled, which is the at-most-a-tick-behind answer
+        /// <see cref="CreepPositionOf"/> gives and is allowed to be for the same
+        /// reason: a body that has just left is one the view is no longer
+        /// holding art for, and its pulse reaches nothing rather than reaching
+        /// a row nothing is drawn as.
+        /// </para>
+        /// </remarks>
+        private RowSignature? CreepSignatureOf(int entityId) =>
+            _drawnCreepTypes.TryGetValue(entityId, out int typeId)
+                ? _art.ArtFor(typeId).Signature
+                : (RowSignature?)null;
+
+        /// <summary>
+        /// Where every tower standing within <paramref name="metres"/> of the
+        /// entity with this id is — what the Blessing's glow is drawn on.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Measured against where the towers are drawn, which for a tower is
+        /// exactly where it stands and never moves. The centre is looked up the
+        /// same way every other decoration looks one up, so a pulse from an id
+        /// the view is not holding reaches nothing rather than reaching
+        /// everything.
+        /// </para>
+        /// <para>
+        /// The list is reused between calls, so a pulse costs no allocation.
+        /// Its contents are read and drawn before anything else can ask again —
+        /// events arrive one at a time inside
+        /// <see cref="Match.Advance(int, IMatchEvents)"/>.
+        /// </para>
+        /// </remarks>
+        private IReadOnlyList<Vector3> TowersWithin(int entityId, float metres)
+        {
+            if (!Reaching(_towersReached, entityId, metres, out Vector3 centre, out float squared))
+            {
+                return _towersReached;
+            }
+
+            foreach (TowerView tower in _towers.Values)
+            {
+                if ((tower.transform.position - centre).sqrMagnitude <= squared)
+                {
+                    _towersReached.Add(tower.transform.position);
+                }
+            }
+
+            return _towersReached;
+        }
+
+        /// <summary>
+        /// Where every creep within <paramref name="metres"/> of the entity
+        /// with this id is — what the Overgrowth's roots are drawn under.
+        /// </summary>
+        /// <remarks>
+        /// <b>Measured against where the bodies were last drawn</b>, which is
+        /// the at-most-a-tick-behind answer <see cref="CreepPositionOf"/> gives
+        /// and is allowed to be for the same reason. Everything else about it
+        /// — the reused list, the centre looked up the ordinary way, the flat
+        /// measurement against a simulation that reads the radius as a sphere —
+        /// is <see cref="TowersWithin"/>'s, with the other side of the board in
+        /// it.
+        /// </remarks>
+        private IReadOnlyList<Vector3> CreepsWithin(int entityId, float metres)
+        {
+            if (!Reaching(_creepsReached, entityId, metres, out Vector3 centre, out float squared))
+            {
+                return _creepsReached;
+            }
+
+            foreach (Vector3 walking in _drawnCreepPositions.Values)
+            {
+                if ((walking - centre).sqrMagnitude <= squared)
+                {
+                    _creepsReached.Add(walking);
+                }
+            }
+
+            return _creepsReached;
+        }
+
+        /// <summary>
+        /// Empties one scratch list and works out where a pulse went off and
+        /// how far it carried, or false for an id the view is not holding.
+        /// </summary>
+        /// <remarks>
+        /// The two lookups above differ only in which collection they walk, so
+        /// everything before the walk is here: an id the view does not carry
+        /// reaches nothing rather than everything, and the reach is squared
+        /// once rather than a square root taken per candidate.
+        /// </remarks>
+        private bool Reaching(
+            List<Vector3> into, int entityId, float metres, out Vector3 centre, out float squared)
+        {
+            into.Clear();
+            squared = metres * metres;
+
+            Vector3? at = EntityGroundOf(entityId);
+            centre = at ?? default;
+
+            return at.HasValue;
+        }
     }
 }

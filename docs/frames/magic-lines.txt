@@ -1,0 +1,55 @@
+# The nine rows of the Mage, Cleric and Druid lines, standing on the recorded
+# board.
+#
+# WHAT THIS IS FOR. tools/capture-match-frames.ps1 draws the recorded match, and
+# the recorded defense is six towers of two types -- content/defense.txt's own
+# header says they were computed by a bot's rule rather than chosen. Neither of
+# those two is on this page: a frame of the record can show no bolt leaving a
+# tome, no light on the ground under a font and no roots under a body.
+#
+#     ./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
+#         -Ticks "300,700" -Distance 22 -Width 1600
+#
+# The map, the wave and the seed still come out of content/match.replay, so the
+# corridor and the bodies walking it are the ones every other frame shows. Only
+# what is standing beside them has moved. Frames from such a run are named after
+# this file rather than match-tick-, because the tick in a match-tick- filename
+# is a claim about the run content/landmarks.txt was made from and this is not
+# that run.
+#
+# NOTHING HERE IS A BALANCE PROPOSAL. It is nine rows put where they can be
+# photographed. content/defense.txt is the defense the authored match is fought
+# by and this changes nothing about it.
+#
+# THESE NINE ARE THE THREE MAGIC LINES THAT ARE NOT THE PALADIN'S. Every rung
+# reaches at least three hexes, so unlike the melee twelve they are not forced
+# to the edge of the corridor -- but the cells here are the four-lines ones
+# anyway, because a cell that holds a Soldier holds anything.
+#
+# WHAT EACH CAPSTONE PUTS ON SCREEN, so a frame can be hunted for by the
+# capture's own log line rather than by opening pictures:
+#
+#   25 Consecration -- an aura on a thirty-tick period, so a disc of light lies
+#                      on the ground under the font for most of every second
+#   30 Overgrowth   -- an aura on a thirty-tick period reaching sixty hexes, so
+#                      roots come up under every body on the board at once
+#   27 Unravel      -- a bolt with an armour blast on the body it hits, so the
+#                      strip is drawn on the tick a shell of his arrives
+#
+# Tests.PlayMode/MatchViewTests stands the same nine on the same cells, so what
+# these frames show and what that file asserts are the same board.
+#
+# Same format as content/defense.txt: type, column, row, counted the way
+# content/map.txt is written, ascending by row and then by column.
+#
+#       type  col  row
+
+tower    4    3    0
+tower   23    5    0
+tower   24    2    2
+tower   25    5    2
+tower   26    2    4
+tower   27    7    4
+tower   28    5    6
+tower   29   11    6
+tower   30   12    6

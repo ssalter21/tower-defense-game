@@ -34,12 +34,41 @@
 #
 # A NEW UNIT IS A ROW AND NEVER A COLUMN. That is what the layout row costs: a
 # column is a format version, a hash label and every record made under the old
-# one retired, and a row is a line. Layout 3 paid that price once, deliberately
-# and for the last time before the map is measured: the five levers the roster
-# was blocked on -- a target count, a radial shot, a timed slow, an aura and a
-# second health pool -- are the nine columns below, and every unit in
-# docs/roster.md that was waiting on one of them is now a row somebody has to
-# write rather than a schema somebody has to widen.
+# one retired, and a row is a line. Layout 3 paid that price for the five levers
+# the roster was blocked on -- a target count, a radial shot, a timed slow, an
+# aura and a second health pool -- which are the nine columns below, and every
+# unit in docs/roster.md that was waiting on one of them became a row somebody
+# has to write rather than a schema somebody has to widen.
+#
+# AND LAYOUT 4 PAID IT AGAIN, FOR ONE COLUMN, ON 6 SEPTEMBER 2026. The Cursed
+# Villager turning into the Werewolf is a body that stops being one row and
+# starts being another, and no arrangement of the twenty-eight columns above can
+# say that: every one of them describes a body that is one thing for as long as
+# it exists. So `becomes` is the twenty-ninth, layout 3 keeps its own branch and
+# its own hash label, and every record stamped against the roster as it stood
+# before this is retired. See docs/decision-log.md, which records that layout 3
+# was written down here as the last widening before the map is measured, and
+# docs/adr/0059-a-creep-becomes-another-row-mid-lane.md for what the change
+# carries over.
+#
+# AND LAYOUT 6 PAID IT ONE MORE TIME, FOR ONE COLUMN, ON 6 SEPTEMBER 2026. A
+# Grave Robber pays the defender that kills it, and none of the thirty-one
+# columns above says what a body is worth dead: `cost` says what it is worth
+# alive, charged against a defense one for one when it reaches the exit, and
+# that is the opposite outcome. So `bounty` is the thirty-second, layout 5 keeps
+# its own branch and its own hash label, and every record stamped against the
+# roster as it stood is retired again. See
+# docs/adr/0061-a-kill-pays-the-defender.md.
+#
+# AND LAYOUT 5 PAID IT ONCE MORE, FOR TWO COLUMNS, ON 6 SEPTEMBER 2026. The
+# Necromancer raising a Minion beside itself is a creep putting a creep on the
+# board, and the twenty-nine columns above describe what a body IS rather than
+# what it makes: `becomes` is one body changing row, and no arrangement of the
+# rest says "and another one, every hundred and fifty ticks". So `raises` and
+# `raisePeriod` are the thirtieth and thirty-first, layout 4 keeps its own branch
+# and its own hash label, and every record stamped against the roster as it stood
+# is retired again. See
+# docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md.
 #
 # THREE OF THOSE FIVE TURNED OUT TO BE ONE MECHANIC. A radial shot, a timed
 # modifier and a periodic aura are all a bubble that emits something,
@@ -103,19 +132,54 @@
 #   one does, so a row that fires three shots is priced on three and a row that
 #   fires one is priced on one.
 #
-#   THE MAGE IS THE ROW THAT GUESS WAS PROPPING UP. It costs 92 gold, which is
-#   three bodies' worth, and it fires one projectile at one creep -- its splash
-#   has been a design statement in docs/roster.md and never a thing the
-#   simulation did. Layout 3 is the first schema that could carry that splash
-#   (a bubble on the target, radius 1000, payload damage) and this ticket
-#   deliberately authored no such bubble and moved no price: what to do about a
-#   row priced for three bodies that hits one is a design decision, and it is
-#   written down here and asserted in ContentTests rather than tuned away.
+#   THE MAGE'S SPLASH IS AUTHORED AND ITS PRICE IS DELIBERATELY NOT. The row
+#   carries the bubble docs/roster.md always described -- origin target, radius
+#   1000, payload damage -- and keeps the 92 gold it has always cost. The
+#   bodies term reads the targets column, which is 1 for a bubble because a
+#   bubble is one shot drawing one roll, so the rule reads 30 against the 92
+#   the row carries. That gap is held open rather than closed: repricing a row
+#   whose value is a radius is what this rule is worst at, and the number waits
+#   on a balance sweep that can derive it. ContentTests asserts the splash and
+#   the gap together instead of tuning either away.
+#
+#   THE SORCERER AND UNRAVEL INHERIT THAT GAP, being the same row at a shorter
+#   cooldown, so the Mage line is the one line the rule does not price. Their
+#   124 is the Mage's 92 scaled by the cooldown it changed and nothing else.
+#
+#   NO CAPSTONE PREMIUM IS AUTHORED. A capstone is bought with a token granted
+#   at rounds 3, 6 and 9, so gold does not buy the top of a line and the cost
+#   column on those nine rows carries what the damage rule returns. Seven of
+#   the nine return the number the rung below carries: five change neither the
+#   roll nor the bodies, and Slam and Mortar spread the roll over a bubble the
+#   targets column cannot count. That flatness is left standing for
+#   ./tools/show-ladder.ps1 to report as a note.
+#
+#   WINDUP AND BACKSWING ARE ZERO ON THE SIXTEEN ROWS THE ROSTER DID NOT SIGN
+#   THEM FOR, so those rows fire the tick they acquire and go straight back on
+#   cooldown. docs/roster.md signs both on the Knight line, on the Barbarian
+#   line, and on the Mage and Archer rows that were already here -- which the
+#   Sorcerer, Unravel and the Ranger inherit. It signs neither on the Paladin,
+#   Cleric, Druid, Rogue and Engineer lines, nor on Overwatch, whose two rungs
+#   below carry 9 and 6 and whose own tuning is a different shape. Zero is the
+#   absence and not a chosen number: picking one is picking how a tower feels,
+#   and the ticket that chooses each line's clips is where it is signed.
 #
 #   THE TOWER CONSTANT IS TIED TO THE TICK RATE. "Five damage a second" is a
 #   number about seconds, and cooldowns here are in ticks at thirty ticks a
 #   second. The clock has already moved once. If it moves again, re-derive the
 #   constant or every tower silently stops being based.
+#
+#   AND THE CREEP RULE PRICES NOTHING A ROW RAISES. The Necromancer's 21 gold
+#   is 3380 effective health over 160 and nothing else; the Minions it puts on
+#   the corridor -- about ten of them across the committed board, ten times that
+#   if it is fully slowed -- are a hundred gold of bodies nobody bought. That is
+#   the same silence the rule keeps about a shield and a radius, held open for
+#   the same reason: cost follows from health and armour, and a coefficient for
+#   a spawner guessed against one corridor is a coefficient guessed against
+#   geometry that is going away. What a raised body IS worth is charged: a leak
+#   of one costs the health the raised row's own price is, so a defense pays for
+#   it even though nobody paid to send it. The sweep is what is meant to derive
+#   the sender's half.
 #
 #   THE RULE PRICES NEITHER RANGE, NOR BUBBLE RADIUS, NOR SHIELD, NOR DURATION.
 #   A one-hex tower and an eight-hex tower with the same damage cost the same,
@@ -134,9 +198,19 @@
 # which is also where the measurements are written down.
 #
 # WHAT THAT LEAVES A ROW TO DIFFER IN IS SHAPE. Speed, granularity, and which
-# defense chews it. The five walking rows below span armour types and a factor
-# of three in speed, so choosing between them is a read of the board rather
-# than a lookup of which row was mispriced.
+# defense chews it. The seventeen walking rows below span the three armour
+# types -- seven armoured, five swift, five arcane -- and a factor of seven in
+# speed, from the Abomination's 12 to the Shade's 84, so choosing between them
+# is a read of the board rather than a lookup of which row was mispriced.
+#
+#   AND THE PRICE IS BLIND TO A SHIELD, WHICH TWO ROWS CARRY. The creep rule
+#   reads the health pool and the armour multiplier and nothing else, so the
+#   Vampire's 1400 and the Grave Robber's 2000 are raw pools nobody is charged
+#   for: both rows are cheaper than what they make a defense spend. It is the
+#   same silence the tower rule keeps about range and bubble radius, recorded
+#   in the same place and for the same reason -- a coefficient guessed here is
+#   a coefficient guessed against one corridor -- and the sweep is what is
+#   meant to derive it. See docs/roster.md and docs/open-questions.md.
 #
 # THIRTY TICKS A SECOND, AND THE CLOCK SLOWED BY THREE ON 8 AUGUST 2026. Every
 # duration here -- cooldown, windup, backswing, flight, dying -- was multiplied
@@ -156,11 +230,18 @@
 # about a sixth less. Send the same two into an impact line and the two trade
 # places, which is the whole of what the matrix is for.
 #
-# ONE ATTACK TYPE PER TOWER LINE. Soldier impact, Archer pierce, Mage magic --
-# so you can read what a tower does to a body from which line it came from,
-# rather than looking the row up. That is what moved the Mage off impact when
-# the roster was signed, and it is why the three types are covered exactly once
-# each rather than lopsidedly.
+# ONE ATTACK TYPE PER TOWER LINE, AND THERE ARE NINE LINES. Impact for the
+# Knight, the Barbarian and the Engineer; pierce for the Archer and the Rogue;
+# magic for the Mage, the Paladin, the Cleric and the Druid. You read what a
+# tower does to a body from the line it came from rather than looking the row
+# up, which is what moved the Mage off impact when the roster was signed. Magic
+# is over-represented on purpose: the creep side is undead and mostly armoured,
+# and magic is what beats armoured.
+#
+# A LINE IS THREE ROWS AND TWO EDGES, and every rung is its own id. Nine roots
+# can be placed and every other tower is reached by standing the rung below it
+# and upgrading, which is what content/upgrades.txt says and what the build
+# phase enforces.
 #
 # THE MINION AND THE SKELETON SCOUT ARE THE PAIR THE COMMITTED WAVE SENDS, and
 # they differ in speed, maximum hp and armour type -- and in the cost that
@@ -177,20 +258,38 @@
 # with the wave releasing a Minion column and a Scout column on the same tick,
 # this makes the pass a thing that happens repeatedly and visibly. The Skeleton
 # walks at the Minion's speed exactly, so those three meet on whole ticks too;
-# the Necromancer at 33 and the Warrior at 18 deliberately do not, because a
+# the Skeleton Mage at 33 and the Warrior at 18 deliberately do not, because a
 # pass that lands between ticks is the ordinary case and it needs to exist as
-# well.
+# well. The twelve rows added on 5 September 2026 keep both cases populated:
+# the Shade's 84 is exactly three Minions and the Bone Golem's 14 exactly half
+# of one, and 12, 16, 22, 44 and 50 are none of them multiples.
 #
-# THESE NUMBERS ARE TUNED TO A PARTIAL BREAK. Against the committed defense and
-# the committed wave, seventeen of forty creeps get through -- a little over
-# two fifths -- across a hundred and eighty-nine seconds. That is the point of
-# the tuning and not a
-# coincidence: a defense that holds tells you nothing when it changes, and a
-# defense that collapses tells you nothing either. A partial break means the
-# leak count is a number a person can watch, and the golden trace beside these
-# files is the run that produced it.
+# DYING IS ZERO ON THE TWELVE CREEP ROWS THE ROSTER DID NOT SIGN IT FOR, in the
+# same sense windup and backswing are zero on the tower rows above. Four of the
+# five rows signed on 8 August 2026 carry 36 and the Warrior 48; docs/roster.md
+# signs no dying number at all for the twelve added on 5 September 2026, so
+# those rows carry the absence rather than a number somebody picked. A corpse
+# that is gone the tick after it falls is what that looks like, and how long a
+# body takes to die is the art ticket's to sign.
 #
-#      id  label             role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue  shield  targets  bubbleRadius  bubbleOrigin  bubbleAffects  bubblePeriod  bubblePayload  bubbleMagnitude  bubbleDuration
+# THESE NUMBERS ARE TUNED TO A PARTIAL BREAK, AND THE COMMITTED MATCH IS UNDER
+# IT. The band docs/roster.md signs is a quarter to a half of the wave -- ten to
+# twenty of forty -- and three of forty get through, across a hundred and
+# seventy-six seconds. That is the point of the tuning and not a coincidence: a
+# defense that holds tells you nothing when it changes, and a defense that
+# collapses tells you nothing either. A partial break means the leak count is a
+# number a person can watch, and the golden trace beside these files is the run
+# that produced it. What took it under the band is the Mage's splash rather
+# than any creep number, and nothing is retuned to answer that: the miss is
+# asserted as a miss in sim.tests/MatchTests.cs, naming the assertion to put
+# back the day somebody retunes.
+#
+#   THE COMMITTED WAVE SENDS TWO OF THE SEVENTEEN, so the fifteen rows it does
+#   not send move no leak count at all. What they move is the content hash,
+#   which retires every record pinned to the roster before them, and the sweep,
+#   which plays a population of runs per row.
+#
+#      id  label             role    maxHp  speed  range  cooldown  windup  backswing  dmgMin  dmgMax  delivery    flight  dying  cost  attack  armour    armourValue  shield  targets  bubbleRadius  bubbleOrigin  bubbleAffects  bubblePeriod  bubblePayload  bubbleMagnitude  bubbleDuration  becomes  raises  raisePeriod  bounty
 #
 # role     : moving (walks the corridor) | placed (stands where it was put)
 # maxHp    : zero means the unit has no health pool and cannot be damaged
@@ -247,6 +346,93 @@
 #            rather than timed. Speed, cooldown and armour may not author 0: a
 #            stat put back the tick it moved is a stat that never moved
 #
+# The one column layout 4 added:
+#
+# becomes  : the id of the row a body of this one turns into the first time
+#            damage reaches its health, or none. THE CHANGE RESOLVES AHEAD OF
+#            THE DAMAGE: nothing has come off health when it happens, the new
+#            row enters on the same share of its own pool -- a full one, this
+#            being the first damage taken -- and the roll then lands on the body
+#            now standing there, through its armour and against its pool. So a
+#            hit large enough to have killed the row that named a successor
+#            kills nothing, which is what "cannot be one-shot" is. A shield
+#            swallowing a roll whole is not damage taken and changes nothing.
+#            The named row must walk, must have a health pool of its own, and
+#            MAY NOT NAME ONE IN ITS TURN -- a body changes row once, so the
+#            trigger reads as the first damage rather than as every hit that
+#            lands. What carries over is in
+#            docs/adr/0059-a-creep-becomes-another-row-mid-lane.md
+#
+# The two columns layout 5 added:
+#
+# raises   : the id of the row a body of this one puts on the corridor beside
+#            itself, or none. IT ARRIVES WHERE THE BODY THAT RAISED IT IS
+#            STANDING, on the next lane offset in the cycle, on full health and
+#            carrying its own row's shield -- a body that spawned, and not a
+#            body that was handed anything. It walks from there and is shot at
+#            from the tick after. The named row must walk and must have a health
+#            pool of its own; it MAY NOT RAISE IN ITS TURN and a row a body
+#            BECOMES may not raise either, so one wave order puts one raised row
+#            on the board and there is never a second generation
+# raisePeriod : ticks between one raise and the next, counted from the tick the
+#            body arrived -- so the first comes a whole period in and a spawner
+#            does not arrive already accompanied. Zero on a row that raises
+#            nothing, and a row that raises may not carry zero
+#
+# The one column layout 6 added:
+#
+# bounty   : gold paid to the defender that kills a body of this row, out of
+#            nowhere and into the one purse, on the tick its health reaches
+#            zero. Zero is no payment. IT IS PAID OFF THE BODY THAT DIES AND
+#            NEVER OFF THE ORDER THAT SENT IT -- a body raised mid-lane is in no
+#            order at all and one that has changed row is not the row its order
+#            names, so the row standing there at the kill is the only reading
+#            that answers every route a body can have arrived by. A LEAK PAYS
+#            NOTHING: reaching the exit is the opposite outcome and is already
+#            priced, at the cost column, against health. A row that stands or a
+#            row with no health pool may not carry one, because nothing kills
+#            either. NOTHING HERE CHECKS IT AGAINST THE COST COLUMN: the twelve
+#            below is half the row's own twenty-four and docs/roster.md argues
+#            that half for that row, but whether a body may ever be worth more
+#            dead than it cost to send is a design question nobody has taken, and
+#            a refusal would take it
+#
+# THERE IS NO CAP ON HOW MANY ONE BODY RAISES, AND THAT IS THE DECISION. It
+# raises for as long as it is alive and walking, so the board is what bounds it:
+# measured against the committed defense, one Necromancer raises ELEVEN before
+# it leaks -- a hundred and ten gold of bodies out of a twenty-one gold row. A
+# slowed one raises more: fifteen with the committed Overgrowth on the board,
+# and about a hundred and seventy at the speed floor, which is a tenth. So the
+# two capstones built to handle a push are the two that make this body worst.
+# That is a trade-off kept on purpose and it is what the sweep is to read.
+# WHAT IS BOUNDED IS ARRIVAL RATHER THAN POPULATION: a raise happens only while
+# its raiser walks, and what it puts down raises nothing, so the last raised
+# body is at the exit within one floored crossing of its raiser's own latest.
+# Match.RequireItArrives proves that at construction.
+#
+# TWELVE IS HALF THE GRAVE ROBBER'S OWN PRICE AND THE HALF IS THE POINT. Paying
+# the whole 24 back would make a body free to meet; half means killing one
+# returns half of what it cost, so it is a row that rewards being killed without
+# being one a defense is glad to see. It is the first income inside a wave --
+# every other line the purse is paid arrives when a wave closes -- and it lands
+# in the same wallet the towers were bought out of, because there is only the
+# one. What that does to the leak exchange rate is in
+# docs/adr/0061-a-kill-pays-the-defender.md: nothing, because the two outcomes
+# are exclusive and the rate is still cost for cost. What it adds is a second
+# way for a body to be worth something, on the outcome the rate says nothing
+# about.
+#
+# THE PAIR IS PRICED AS TWO ROWS AND SENT AS ONE. The rule reads a row's health
+# and armour, and a Cursed Villager is one row on the way in and another row for
+# the rest of the corridor. What a defense actually spends on one is the
+# Werewolf's 2860 effective health, because the change resolves ahead of the
+# damage and the Villager's own 1800 is never touched -- and the rule prices
+# 2860 at 18 gold, which is the 11 this row carries plus seven. The 18 the
+# Werewolf carries is what nobody ever pays, because nothing sends one. That gap
+# is held open rather than closed, exactly as the Mage's splash and the
+# Vampire's shield are: the price is not a lever, and a transforming pair is the
+# third thing the rule cannot see. The sweep is what is meant to derive it.
+#
 # A MODIFIER LASTS EXACTLY ITS DURATION AND THEN THE NUMBER ON THIS ROW IS BACK.
 # An effect landing on a tick is in force for the ticks after it, up to the
 # duration, whether it was fired with a shot or pulsed on a clock. TWO OF THEM
@@ -261,14 +447,49 @@
 # that cannot end unreachable by arithmetic instead of by careful authoring, so
 # a slow of a hundred percent is a legal number with a bounded consequence.
 
-layout 3
+layout 6
 
-unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0  0       1        none          none          none           0             none           0                0
-unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0  0       1        none          none          none           0             none           0                0
-unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0
-unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        none          none          none           0             none           0                0
-unit   7   necromancer       moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25  0       1        none          none          none           0             none           0                0
-unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0  0       1        none          none          none           0             none           0                0
-unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20  0       1        none          none          none           0             none           0                0
-unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45  0       1        none          none          none           0             none           0                0
-unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0
+unit   1   minion            moving  1550   28     0      0         0       0          0       0       none        0       36     10    none    armoured   0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit   2   skeleton-scout    moving  1500   56     0      0         0       0          0       0       none        0       36      9    none    swift      0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit   3   archer            placed  0      0      3200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit   4   mage              placed  0      0      4600   54        21      15         210     340     projectile  33      0      92    magic   none       0  0       1        1000          target        enemy          0             damage         0                0                        none  none  0    0
+unit   7   skeleton-mage     moving  2400   33     0      0         0       0          0       0       none        0       36     19    none    arcane    25  0       1        2000          self          friend         30            speed          20               30                       none  none  0    0
+unit  11   soldier           placed  0      0      1000   15        7       5          60      90      hitscan     0       0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  12   skeleton          moving  2200   28     0      0         0       0          0       0       none        0       36     17    none    armoured  20  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  13   skeleton-warrior  moving  3400   18     0      0         0       0          0       0       none        0       48     31    none    armoured  45  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  14   ranger            placed  0      0      4200   18        9       6          90      150     hitscan     0       0      40    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  15   sergeant          placed  0      0      1000   11        7       5          60      90      hitscan     0       0      41    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  16   shield-wall       placed  0      0      1000   11        7       5          60      90      hitscan     0       0      41    impact  none       0  0       1        1000          self          enemy          15            speed          -50              20                       none  none  0    0
+unit  17   barbarian         placed  0      0      1000   45        20      12         200     300     hitscan     0       0      33    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  18   berserker         placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  19   slam              placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        1000          self          enemy          0             damage         0                0                        none  none  0    0
+unit  20   paladin           placed  0      0      1000   24        0       0          120     180     hitscan     0       0      37    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  21   templar           placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  22   blessing          placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        2000          self          friend         30            cooldown       -25              30                       none  none  0    0
+unit  23   cleric            placed  0      0      3200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  24   bishop            placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  25   consecration      placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        3000          self          enemy          30            armour         -30              30                       none  none  0    0
+unit  26   sorcerer          placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             damage         0                0                        none  none  0    0
+unit  27   unravel           placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             armour         -60              150                      none  none  0    0
+unit  28   druid             placed  0      0      3600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  29   elder             placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  30   overgrowth        placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        60000         self          enemy          30            speed          -20              30                       none  none  0    0
+unit  31   overwatch         placed  0      0      8000   60        0       0          500     700     hitscan     0       0      60    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  32   rogue             placed  0      0      2200   9         0       0          40      60      hitscan     0       0      33    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  33   cutthroat         placed  0      0      2200   7         0       0          40      60      hitscan     0       0      43    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  34   fan-of-knives     placed  0      0      2200   7         0       0          40      60      hitscan     0       0     129    pierce  none       0  0       3        none          none          none           0             none           0                0                        none  none  0    0
+unit  35   engineer          placed  0      0      4000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  36   artificer         placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  37   mortar            placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        1500          target        enemy          0             damage         0                0                        none  none  0    0
+unit  38   necromancer       moving  2600   28     0      0         0       0          0       0       none        0       0      21    none    arcane    30  0       1        2000          self          friend         90            shield         25               0                        none  1     150  0
+unit  39   bone-golem        moving  9000   14     0      0         0       0          0       0       none        0       0      90    none    armoured  60  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  40   black-knight      moving  5000   22     0      0         0       0          0       0       none        0       0      56    none    armoured  80  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  41   frost-wight       moving  6000   16     0      0         0       0          0       0       none        0       0      53    none    arcane    40  0       1        2000          self          enemy          30            cooldown       30               30                       none  none  0    0
+unit  42   abomination       moving  12000  12     0      0         0       0          0       0       none        0       0      75    none    armoured   0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  43   vampire           moving  2800   44     0      0         0       0          0       0       none        0       0      21    none    swift     20  1400    1        none          none          none           0             none           0                0                        none  none  0    0
+unit  44   witch             moving  2000   33     0      0         0       0          0       0       none        0       0      15    none    arcane    20  0       1        2000          self          friend         30            armour         30               30                       none  none  0    0
+unit  45   fiend             moving  3200   33     0      0         0       0          0       0       none        0       0      29    none    arcane    45  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  46   shade             moving  1200   84     0      0         0       0          0       0       none        0       0      8     none    swift      0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  47   cursed-villager   moving  1800   28     0      0         0       0          0       0       none        0       0      11    none    swift      0  0       1        none          none          none           0             none           0                0                        48  none  0    0
+unit  48   werewolf          moving  2600   50     0      0         0       0          0       0       none        0       0      18    none    swift     10  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  49   grave-robber      moving  3000   22     0      0         0       0          0       0       none        0       0      24    none    armoured  30  2000    1        none          none          none           0             none           0                0                        none  none  0    12

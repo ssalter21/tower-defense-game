@@ -263,11 +263,36 @@ namespace Sim
         public void CreepLeaked(int creepId) => Note(FirstLeak, creepId, 0);
 
         /// <inheritdoc/>
+        public void CreepTransformed(int creepId, int typeId)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void CreepRaised(int creepId, int raisedCreepId)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void BountyPaid(int creepId, int gold)
+        {
+        }
+
+        /// <inheritdoc/>
         public void ProjectileOrphaned(int projectileId) => Note(Orphaned, projectileId, 0);
 
         /// <inheritdoc/>
         public void CreepOvertook(int creepId, int overtakenCreepId) =>
             Note(FirstOvertake, creepId, overtakenCreepId);
+
+        /// <inheritdoc/>
+        public void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload)
+        {
+        }
+
+        /// <inheritdoc/>
+        public void AuraPulsed(int emitterId, int radiusMilliHex, BubblePayload payload)
+        {
+        }
 
         /// <summary>
         /// The row for a moment that never happened. Words rather than a tick of

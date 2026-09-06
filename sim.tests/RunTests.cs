@@ -35,6 +35,31 @@ public class RunTests
         { "a server re-validating", true, false, false, true },
     };
 
+    /// <summary>The first round <see cref="Run.CapstoneTokenRounds"/> grants at.</summary>
+    private const int FirstCapstoneRound = 3;
+
+    /// <summary>The committed archer, the root of the line the token assertions climb.</summary>
+    private const int ArcherId = 3;
+
+    /// <summary>Its second rung, bought with gold.</summary>
+    private const int RangerId = 14;
+
+    /// <summary>Its capstone, bought with the token.</summary>
+    private const int OverwatchId = 31;
+
+    /// <summary>A ground cell of the committed map the token assertions build on.</summary>
+    private const int TokenColumn = 0;
+
+    /// <summary>Its row.</summary>
+    private const int TokenRow = 0;
+
+    /// <summary>
+    /// The rounds a capstone token arrives at, read off the run rather than off
+    /// the schedule. Three of them over ten rounds, and each one is held from
+    /// the round it lands in until something spends it.
+    /// </summary>
+    private static readonly int[] CapstoneTokensRoundByRound = { 0, 0, 1, 1, 1, 2, 2, 2, 3, 3 };
+
 
 
     [Theory]
@@ -70,7 +95,7 @@ public class RunTests
         // OBSERVED: give the flag a lifecycle of its own -- when death is off,
         // have Run.Advance record an empty round and return without resolving
         // anything. The no-death row goes red on its very first round, (0, 0)
-        // against (30, 239), which is what a second code path hiding behind an
+        // against (26, 239), which is what a second code path hiding behind an
         // argument looks like from the outside.
         Run run = spellsOutTheLengths
             ? TheRun.Fresh(Run.DefaultWaves, Run.DefaultFieldSize, deathEndsTheRun)
@@ -555,8 +580,8 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red at 6488 against 21605: the 9590 gold
-        // of creeps, and the interest a bank that never paid for them would have
+        // over bought nothing. It goes red by the 8830 gold of creeps it spent,
+        // and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
         Ruleset rules = run.Rules;
@@ -576,7 +601,10 @@ public class RunTests
             spent += rounds[round].Build.Spent;
             folded = Purse.Holding(folded.Gold - rounds[round].Build.Spent);
 
-            WavePayment paid = folded.CloseWave(rules, run.Outcome.Rounds[round].LeakCostDealt);
+            WavePayment paid = folded.CloseWave(
+                rules,
+                run.Outcome.Rounds[round].LeakCostDealt,
+                run.Outcome.Rounds[round].BountyEarned);
 
             bonus += paid.Bonus;
             folded = paid.Purse;
@@ -587,8 +615,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(9590, spent);
-        Assert.Equal(10480, bonus);
+        Assert.Equal(8830, spent);
+        Assert.Equal(9205, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -866,11 +894,19 @@ public class RunTests
 
         // The committed defense is the wall it opens behind, cell for cell, and
         // what the first round adds to it is whatever half of the opening purse
-        // pays for: on the committed content one forty-gold archer out of a
-        // fifty-gold half, standing on route the six already watch.
+        // pays for -- which on the committed content is nothing at all. The six
+        // towers already cover the route end to end, so the covering half of the
+        // bot's rule has nothing to buy, and the value half's best-scoring
+        // purchase costs more than the fifty-gold half. The rule stops at the
+        // first thing the half will not pay for rather than falling back on a
+        // cheaper one, so the opening round banks its share.
+        //
+        // It bought one forty-gold archer here while the roster was four rows.
+        // What moved is the candidate list and not the rule: nine roots and
+        // eighteen rungs put a dearer row at the top of the score.
         TowerLayout opening = canned.StandingIn(0, 0).Defense;
 
-        Assert.Equal(defense.Count + 1, opening.Count);
+        Assert.Equal(defense.Count, opening.Count);
         Assert.All(
             TheMatch.Spelling(defense),
             tower => Assert.Contains(tower, TheMatch.Spelling(opening)));
@@ -980,15 +1016,20 @@ public class RunTests
     }
 
     [Fact]
-    public void A_round_recorded_as_having_dealt_or_taken_less_than_nothing_is_refused()
+    public void A_round_recorded_as_having_dealt_taken_or_earned_less_than_nothing_is_refused()
     {
-        // OBSERVED: drop the guard in RoundOutcome.Amount. Both rows go red
-        // having caught nothing, and a negative round adds health back to a pool
-        // that is supposed to be a clock.
-        Assert.Throws<SimulationException>(() => new RoundOutcome(-1, 0));
-        Assert.Throws<SimulationException>(() => new RoundOutcome(0, -1));
+        // OBSERVED: drop the guard in RoundOutcome.Amount. The first two rows go
+        // red having caught nothing, and a negative round adds health back to a
+        // pool that is supposed to be a clock.
+        Assert.Throws<SimulationException>(() => new RoundOutcome(-1, 0, 0));
+        Assert.Throws<SimulationException>(() => new RoundOutcome(0, -1, 0));
+
+        // And the third number, which is gold rather than health: a defense
+        // charged for defending.
+        Assert.Throws<SimulationException>(() => new RoundOutcome(0, 0, -1));
 
         Assert.Equal(0, default(RoundOutcome).LeakCostDealt);
+        Assert.Equal(0, default(RoundOutcome).BountyEarned);
     }
 
     [Fact]
@@ -1199,7 +1240,8 @@ public class RunTests
         // payment's purse is the one the run now holds.
         //
         // OBSERVED: compose the report's payment from
-        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs))
+        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs),
+        // MostBountyEarnable)
         // -- the ceiling the load walk carries -- rather than from the payment
         // the round made. The closing assertion goes red: a report of what a
         // wave earned that says what it could have earned instead.
@@ -1222,13 +1264,16 @@ public class RunTests
         Assert.Equal(opening - price, round.Build.Purse.Gold);
 
         // And the payment runs from what the wave left to what the run holds,
-        // itemised into the three lines that make up the difference.
+        // itemised into the four lines that make up the difference.
         Assert.Equal(round.Build.Purse.Gold, round.Payment.Opening);
         Assert.Equal(run.Purse.Gold, round.Payment.Purse.Gold);
         Assert.Equal(run.Rules.IncomeBasePerWave, round.Payment.IncomeBase);
         Assert.Equal(
             run.Purse.Gold - round.Payment.Opening,
-            round.Payment.Interest + round.Payment.IncomeBase + round.Payment.Bonus);
+            round.Payment.Interest
+                + round.Payment.IncomeBase
+                + round.Payment.Bonus
+                + round.Payment.Bounty);
     }
 
     [Fact]
@@ -1611,6 +1656,80 @@ public class RunTests
         return run;
     }
 
+    [Fact]
+    public void A_run_is_granted_a_capstone_token_at_rounds_three_six_and_nine()
+    {
+        // The second currency, and the whole of its supply side. It goes up by
+        // one at three rounds of a ten-round run and never at any other, so
+        // three tokens meet nine capstones and which line reaches its top is a
+        // decision rather than an accumulation.
+        //
+        // The token lands at the OPENING of its round and is spendable in it,
+        // which is what the vector below reads: the count is taken before each
+        // round is advanced. Gold arrives when a wave closes because a wave has
+        // to be fought first; nothing has to happen for a token to be granted.
+        //
+        // OBSERVED: grant at the close instead -- read
+        // CapstoneTokensGrantedThrough(Round) rather than Round + 1 in
+        // Run.CapstoneTokens. This goes red at round three, 0 against 1, and the
+        // third token arrives at round ten, which a nine-round run never
+        // reaches.
+        Run run = TheRun.Fresh(waves: 10, fieldSize: 1, deathEndsTheRun: false);
+        var held = new List<int>();
+
+        while (!run.IsOver)
+        {
+            held.Add(run.CapstoneTokens);
+            run.Advance(TheBuild.BuyingNothing(run));
+        }
+
+        Assert.Equal(CapstoneTokensRoundByRound, held);
+        Assert.Equal(new[] { 3, 6, 9 }, Run.CapstoneTokenRounds);
+
+        // Nothing was spent, so what the run holds at the end is every token the
+        // schedule ever handed it. A run that outlasts the schedule is granted
+        // no more: the list is the whole supply.
+        //
+        // OBSERVED, on this clause: count grant rounds with `wave % 3 == 0`
+        // instead of walking CapstoneTokenRounds. Nothing here goes red at ten
+        // rounds and everything past round nine silently starts earning again,
+        // which is why the schedule is a list rather than a rule that
+        // reproduces one.
+        Assert.Equal(Run.CapstoneTokenRounds.Count, run.CapstoneTokens);
+        Assert.Equal(
+            Run.CapstoneTokenRounds.Count,
+            Run.CapstoneTokensGrantedThrough(run.Waves * 2));
+    }
+
+    [Fact]
+    public void A_capstone_a_round_climbs_comes_off_the_tokens_the_run_holds()
+    {
+        // The spending side. A run is not a purse and a token is not gold, so
+        // this is the one place the two halves meet: what a build phase took is
+        // written to the run where everything else a round moves is written, and
+        // what the run holds afterwards is the grant less the spend.
+        //
+        // OBSERVED: drop the `_capstoneTokensSpent += tokensSpent` line from
+        // Run.Commit. This goes red, 1 against 0, and one token buys a capstone
+        // every round for the rest of the run.
+        Run run = TheRun.Fresh(waves: 10, fieldSize: 1, deathEndsTheRun: false);
+
+        while (run.Round < FirstCapstoneRound - 1)
+        {
+            run.Advance(TheBuild.BuyingNothing(run));
+        }
+
+        Assert.Equal(1, run.CapstoneTokens);
+
+        RoundReport climbed = run.Advance(TheBuild.BuyingNothing(run)
+            .With(BuildAction.Of(ActionKind.Place, ArcherId, TokenColumn, TokenRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, RangerId, TokenColumn, TokenRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, OverwatchId, TokenColumn, TokenRow)));
+
+        Assert.Equal(1, climbed.Build.CapstoneTokensSpent);
+        Assert.Equal(0, run.CapstoneTokens);
+    }
+
     /// <summary>What a wall costs to stand: every tower on it, at the price of its row.</summary>
     private static int Worth(CostTable costs, TowerLayout wall)
     {
@@ -1624,14 +1743,21 @@ public class RunTests
         return gold;
     }
 
-    /// <summary>An outcome built from pairs rather than from a simulation.</summary>
+    /// <summary>
+    /// An outcome built from pairs rather than from a simulation. Every round of
+    /// one earns nothing, because what these fold is health and waves survived
+    /// and neither reads the bounty.
+    /// </summary>
     private static RunOutcome Outcome(int healthPoolGold, params (int Dealt, int Taken)[] rounds) =>
         Outcome(healthPoolGold, 10, rounds);
 
     private static RunOutcome Outcome(int healthPoolGold, int waves, params (int Dealt, int Taken)[] rounds) =>
         RunOutcome.Of(
             healthPoolGold,
-            rounds.Select(round => new RoundOutcome(round.Dealt, round.Taken)).ToArray(),
+            rounds.Select(round => new RoundOutcome(round.Dealt, round.Taken, EarnedNothing)).ToArray(),
             waves,
             deathEndsTheRun: true);
+
+    /// <summary>What a round of <see cref="Outcome"/> was paid for killing.</summary>
+    private const int EarnedNothing = 0;
 }

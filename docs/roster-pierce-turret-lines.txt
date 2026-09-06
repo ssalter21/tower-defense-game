@@ -1,0 +1,123 @@
+# The Archer, Rogue and Engineer lines as they are now bound, as a set.
+#
+# WHAT THIS IS FOR. The same question docs/roster-melee-lines.txt and
+# docs/roster-caster-lines.txt ask of the other six lines: whether the nine
+# rungs read as three lines of three once each row is wearing the atlas,
+# holding the props and playing the clip its binding gives it. A rung is told
+# apart from the rung below it by colour, by a prop or by a second model, and
+# none of those three can be seen on a sheet of one character per model.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-pierce-turret-lines.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle and no test reads it.
+# Edit a line, run it again, look again. The one committed copy is
+# docs/frames/roster/pierce-turret-lines-sheet.png, under a name the tool does
+# not write, because every candidate run rewrites candidates-sheet.png.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# THIS TRANSCRIBES THE BINDINGS AND DOES NOT DECIDE THEM. Every model, prop,
+# atlas, turn and beside prop below is the one MatchSceneBuilder and
+# Tests.Fixtures.ChosenArt bind for that row, which is what docs/roster.md
+# signs. A line here that disagrees with those tables is this file being wrong,
+# not the tables.
+#
+# THE POSE IS EACH ROW'S IDLE, WITH ONE FRAMING EXCEPTION -- THE ENGINEER LINE.
+# A set line carries one clip and a row carries three, so what is shown is the
+# clip a row stands in between shots. The three Engineer rows have no clips at
+# all: docs/roster.md names one on every rung of the Archer and Rogue lines and
+# none on any rung of the Engineer's, whose windup and backswing carry that
+# page's `_` for a number nobody has signed, so those rows are bound unposed and
+# stand in their bind pose in the game. A bind pose is not a photograph of
+# anything, so the three below are posed in Idle_A, which is the clip both
+# earlier candidate sheets already put that model up in. That is framing for
+# this picture and NOT a binding. The ask stands.
+#
+# THE OVERWATCH IS POSED BY ONE CLIP IN ALL THREE OF ITS STATES. Its Looks line
+# names a stance -- Ranged_2H_Aiming, the sighted pose -- the way the Shield
+# Wall's names a raised guard, and names no swing at all. A row is animated only
+# when it carries three clips, so an idle on its own would leave the signed
+# stance unreachable and the Marksman standing in his bind pose; carrying the
+# Ranger's bow draw and release up onto a body holding a crossbow would pose him
+# with another weapon's action. So the one signed pose is held throughout, and
+# what is unsigned is a second clip rather than a way of reaching this one.
+#
+# THE ROGUE'S THROW IS BOUND AND IS NOT WHAT THIS SHEET SHOWS. roster.md names
+# `Throw` on the Rogue and `Melee_Dualwield_Attack_Slice` on the Fan of Knives,
+# and those are attacks, so each is that row's windup with Idle_A either side of
+# it. Every Rogue row's windup is 0 ticks in content/units.txt, which is the `_`
+# on those blocks showing through: a tower that winds up for no time never
+# enters the state, so the throw is bound and never seen. That number is the ask
+# and this sheet is not where it is answered.
+#
+# A RUNG CARRIES UP WHAT THE RUNG BELOW IT HELD, AND WHAT ITS Looks LINE NAMES
+# REPLACES WHAT WAS IN THAT HAND. So the Cutthroat carries the Rogue's dagger
+# and the Artificer and the Mortar carry the Engineer's wrench and his turret,
+# none of which those lines repeat. A colour does not carry up at all: it is one
+# of the three things that tell a rung apart, which is why the Overwatch wears
+# the atlas the Marksman imports with rather than the Ranger's.
+#
+# THE ARTIFICER STANDS BESIDE ONE THING AND HIS LOOK NAMES TWO. roster.md puts
+# an ammo_crate beside the turret at that rung and a tower has one beside slot,
+# which is written on that rung's own Needs line as a thing the engine would
+# have to gain. The slot holds the turret, because the turret is what the
+# Engineer's shell leaves from at every rung and the crate would take the
+# anchor's own prop off the board -- so the crate is not drawn, and the
+# Artificer is told from the Engineer by colour alone. Whether that reads as a
+# rung above him is the thing to look at on that tile.
+
+# --------------------------------------------------------- the Archer line ---
+
+# Archer, tier 1: live since #44, and here as the rung the other two are read
+# against. The Ranger model, the bow in the off hand at its half turn, in the
+# atlas the model imports wearing.
+tower archer         Characters/Ranger.fbx  -                                       Weapons/bow_withString.fbx@0,180,0  Ranged_Bow_Idle
+# Ranger, tier 2: ranger_texture_alt_A and the quiver, which is in the fist for
+# want of a socket on the spine and is largely behind the body at this pitch.
+tower ranger         Characters/Ranger.fbx  Kaykit/adventurers/quiver.fbx           Weapons/bow_withString.fbx@0,180,0  Ranged_Bow_Idle  Kaykit/adventurers/ranger_texture_alt_A.png
+# Overwatch, tier 3: the second model, and the crossbow #250 signed over the
+# rifle its own pack ships -- a different pack's art style, which is the smaller
+# of the two breaks. The Marksman is a ghillie suit over a person and draws with
+# two sheets of his own, so this rung is a body swap and no colour.
+tower overwatch      Kaykit/mystery-monthly-series-6/marksman/Marksman.fbx  Kaykit/adventurers/crossbow_2handed.fbx  -  Ranged_2H_Aiming
+
+# ---------------------------------------------------------- the Rogue line ---
+
+# Rogue, tier 1: one dagger, in the atlas the model imports wearing.
+tower rogue          Kaykit/adventurers/Rogue.fbx         Kaykit/adventurers/dagger.fbx  -                              Idle_A
+# Cutthroat, tier 2: the second model arrives early on this line -- roster.md
+# says the hood is its smaller change and the capstone is carried by a clip and
+# a targets column rather than by a body -- with the Rogue's dagger and no
+# colour of its own.
+tower cutthroat      Kaykit/adventurers/Rogue_Hooded.fbx  Kaykit/adventurers/dagger.fbx  -                              Idle_A
+# Fan of Knives, tier 3: rogue_texture_alt_A and a second dagger. Every weapon
+# in this pack is authored for the right hand and the off-hand one is hung
+# untilted, the way docs/roster-expansion-candidates.txt drew this pair.
+tower fan-of-knives  Kaykit/adventurers/Rogue_Hooded.fbx  Kaykit/adventurers/dagger.fbx  Kaykit/adventurers/dagger.fbx  Idle_A  Kaykit/adventurers/rogue_texture_alt_A.png
+
+# ------------------------------------------------------- the Engineer line ---
+
+# Engineer, tier 1: the wrench in hand and the turret on the tile beside him
+# doing the firing, at the size it imports at -- 1.13 m tall, and the shell
+# leaves the top of it 0.77 m up rather than leaving the man. Idle_A is framing.
+tower engineer       Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Idle_A  -                                                 Kaykit/adventurers/turret_base.fbx*1
+# Artificer, tier 2: engineer_texture_alt_A, the same turret, and the ammo crate
+# roster.md puts beside it left off for want of a second socket. Idle_A is
+# framing.
+tower artificer      Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Idle_A  Kaykit/adventurers/engineer_texture_alt_A.png  Kaykit/adventurers/turret_base.fbx*1
+# Mortar, tier 3: engineer_texture_alt_B and the turret again. This line has no
+# second model anywhere in the collection, so it is colour and props at every
+# rung. roster.md calls this one "a HEAVIER turret_base" and that is the third
+# ask on this sheet: turret_base is the only turret in the whole collection, and
+# size is retired as a tier signal everywhere on that page -- so there is
+# nothing a heavier one could be bound to and it is drawn as the same prop at
+# the same size. What "heavier" is meant to be is roster.md's to say. That line
+# also asks for "the lobbing arc drawn", and it already is: ProjectileView
+# bulges every shell along one project-wide constant, so every projectile row
+# arcs -- which the Engineer and the Artificer are too, so the arc tells these
+# three rungs apart from nothing. Idle_A is framing.
+tower mortar         Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*1

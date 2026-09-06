@@ -12,8 +12,8 @@ moment to look at and what broken looks like. The moments are tick numbers, and
 the tick numbers are not invented here: they come from
 [`content/landmarks.txt`](../content/landmarks.txt), which is what a real run of
 [`content/match.replay`](../content/match.replay) reported, and the build plays
-those exact bytes. That is why this reads "drag to tick 1778, then back to tick
-1620" rather than "hunt for the moment".
+those exact bytes. That is why this reads "drag to tick 1868, then back to tick
+1826" rather than "hunt for the moment".
 
 ## Before you start
 
@@ -43,7 +43,7 @@ board and **E** and **Q** to lift it and drop it — or middle-drag to pan — a
 Dragging the scrubber pauses. That is deliberate, and it is not one of the
 things being tested.
 
-**Check the readout says the match ends on tick 5581 before you start.** That is
+**Check the readout says the match ends on tick 5302 before you start.** That is
 how you know this build is playing the match the rows below are written about,
 and it costs a glance. A build playing a match of its own would still look
 entirely reasonable — it would just end on a different tick, and every row here
@@ -63,11 +63,14 @@ than quietly sending somebody to the wrong second.
 | landmark | tick | what happens |
 |---|---|---|
 | `first-overtake` | tick 1096 | creep 23 draws ahead of creep 18 |
-| `projectile-orphaned` | tick 930 | shell 29 loses the creep it was aimed at, mid-flight |
-| `first-leak` | tick 1778 | creep 27 reaches the exit |
-| `last-creep-dies` | tick 5545 | creep 117, the last one, starts dying |
+| `projectile-orphaned` | tick 637 | shell 21 loses the creep it was aimed at, mid-flight |
+| `first-leak` | tick 1868 | creep 31 reaches the exit |
+| `last-creep-dies` | tick 5266 | creep 111, the last one, starts dying |
 
-The match ends on tick 5581. Twelve of forty creeps get through.
+The match ends on tick 5302. Three of forty creeps get through — under the
+quarter-to-half band [the roster](roster.md#the-tuning-target) targets, since the
+Mage was given the splash it has always been priced for and nothing was retuned
+to answer it.
 
 **Row 6 and row 10 are two separate visits.** The orphaned shell and the
 overtake are far apart in time as well as in kind, so neither read can stand in
@@ -80,12 +83,12 @@ for the other.
 | 1 | The floor at tick 0, before touching anything | Gaps or overlaps between hexes — grid math wrong |
 | 2 | Any model, any tick — tick 1096 has skeletons and both kinds of tower on screen at once | **Magenta.** The atlas did not bind — the most common import failure there is |
 | 3 | A creep mid-corridor: play to tick 2700 and watch one walk | Feet skating, or sunk into / floating above the road surface |
-| 4 | **Scrub backwards from the mid-match landmark: drag to tick 1778, then drag slowly back to tick 1736** | Legs keep walking *forwards* — the view holds its own playback head and the animation bet is lost |
-| 5 | Fast-forward: from tick 1778, press the speed button through to 8x | Walk cycle does not speed up. Same failure as 4, different symptom |
-| 6 | Scrub back across the orphaned shell, which loses its target on tick 930: drag to tick 963, then back to tick 903 | Projectile still flying, or a stuck death pose |
-| 7 | Press To the end — tick 5581 — then drag the scrubber to tick 0 | A burst of effects all at once, or particles that never cleared |
-| 8 | The projectile tower as it fires: nudge a tick at a time from tick 897 to tick 930 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
-| 9 | A creep at death: drag to tick 5508 and play at 1x through tick 5545 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
+| 4 | **Scrub backwards from the mid-match landmark: drag to tick 1868, then drag slowly back to tick 1826** | Legs keep walking *forwards* — the view holds its own playback head and the animation bet is lost |
+| 5 | Fast-forward: from tick 1868, press the speed button through to 8x | Walk cycle does not speed up. Same failure as 4, different symptom |
+| 6 | Scrub back across the orphaned shell, which loses its target on tick 637: drag to tick 670, then back to tick 610 | Projectile still flying, or a stuck death pose |
+| 7 | Press To the end — tick 5302 — then drag the scrubber to tick 0 | A burst of effects all at once, or particles that never cleared |
+| 8 | The projectile tower as it fires: nudge a tick at a time from tick 604 to tick 637 | Fires without playing its clip, or plays it without firing, or does not rotate to face its target |
+| 9 | A creep at death: drag to tick 5229 and play at 1x through tick 5266 | Vanishes instantly instead of playing the death clip for the tick duration the simulation gave it |
 | 10 | Two creeps overtaking: drag to tick 1060 and play at 1x to tick 1130, watching for the pass on tick 1096 | Draw order flickering, or the pass not visible at all |
 | 11 | **Orbit all the way round** by right-dragging, parked at tick 2700; scroll in until one creep fills the screen; fly off the far end of the board with W and drop under it with Q; then press F | Anything flips to face you, vanishes, or shows a flat card — the only check on the no-billboards rule; a model that reads at board distance falling apart up close; W going somewhere other than into the picture after a half turn; or F snapping rather than easing, or landing somewhere other than the view it started at |
 | 12 | Double-click the build on a clean machine — one that never cloned this repository and has no editor on it | Missing assembly, or a runtime prompt |

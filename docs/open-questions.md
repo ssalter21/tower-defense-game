@@ -90,17 +90,20 @@ load-bearing half of rows 4 and 5 and is the reason those two stopped being judg
 not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
 somebody sits down with the build.
 
-**What the gate rounds' loose ends are, and what the defense currency is called.**
-[Three gates](vision.md#the-gates) fix the capacity schedule and hand out a capstone
-token. Four things about them are readings rather than decisions, and all four are cheap to move while nothing
-is built. **The currency has no name**, and everything player-facing here gets named deliberately — gold took
-two goes. **The opening pair is two slots and ten count**, which is what makes the schedule 2/4/6/8 and
-10/20/30/40; only the steps were specified, so the starting values are an inference from them. **A gate grants
-one token**, which is what makes it three capstones a run. And **a capstone costs the token and no gold**,
-which is the simplest reading and the one [the roster](roster.md#what-things-cost) is now written against —
-charging gold on top would make the token a permit rather than a price, which is a different mechanic with a
-different failure mode. Open beside them: **whether a token banks**, which leans toward yes, since a token
-that must be spent on the round it arrives forces the decision at the moment the run knows least.
+**What the gate rounds' remaining loose ends are, and what the defense currency is called.** Two of the four
+readings here were settled on
+[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
+**a grant is one token**, which is what makes it three capstones a run, and **a capstone costs the token and no
+gold** — charging gold on top would make the token a permit rather than a price, which is a different mechanic
+with a different failure mode. Both are now rules in [the roster](roster.md#what-things-cost) rather than
+readings.
+
+Two are still open, and both are cheap to move while nothing is built. **The currency has no name**, and
+everything player-facing here gets named deliberately — gold took two goes. **Whether a token banks** leans
+toward yes, since a token that must be spent on the round it arrives forces the decision at the moment the run
+knows least. A third is open for a different reason: **the capacity schedule** — the opening pair of two slots
+and ten count, and the 2/4/6/8 and 10/20/30/40 steps — was deleted on 13 August and only the token half came
+back, so it is a design waiting on a playtest rather than a reading waiting on a signature.
 
 **Whether the wave is always on screen, or behind a control.** The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
@@ -205,17 +208,18 @@ range worth substantially more by tying it to elevation. That silence is deliber
 has been measured, because a coefficient guessed against the one-hex corridor is a coefficient priced against
 geometry that is going away. **The silence is not a judgement that these levers are free.**
 
-**The correction that was owed is paid, and it left a row exposed.**
-[#216](https://github.com/ssalter21/tower-defense-game/issues/216) made `bodies` read the `targets` column
-instead of guessing 3 from `Delivery == Projectile`, so a Marksman is priced on arrival. What the guess had
-been doing besides that is holding up the **Mage**: the rule prices it at **30 gold** and the row costs **92**,
-because 92 is three bodies' worth of a splash the simulation has never had. `docs/roster.md` signs the splash —
-one additional hex, radius 1000 — and `units.txt` layout 3 is the first schema that could carry it, as a bubble
-on the target with a damage payload. **#216 authored no such bubble and moved no price**, because either is a
-decision about what a Mage is; the gap is pinned in `ContentTests` with both numbers in it. Three ways out:
-author the splash and accept an unpriced radius, reprice the row to what it does, or make it genuinely fire
-three shots — which is a different tower. [The expansion proposal](roster-expansion-proposal.md) recommends the first, so
-that the Mage line has its splash from tier 1; it is a recommendation and not the answer.
+**The Mage's gap is now half-answered, and the open half is the price.** Settled on
+[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
+**the splash is authored** — a bubble on the target, radius 1000, damage payload — and **the 92 is not
+touched**. The rule prices the row at 30 because `bodies` reads `targets`, which is 1; the row costs 92 because
+92 was three bodies' worth of a splash. Authoring the splash makes the row do what it was priced for without
+making the *rule* say so, since the rule counts `targets` and not bubble radius.
+
+**What stays open is the number, and it waits on a tool rather than on a signature.** Repricing a row whose
+value is a splash radius is exactly what the cost rule is worst at, so the price waits for the automated
+balance sweeps to be trustworthy enough to derive it. Until then the gap stands, pinned in `ContentTests` with
+both numbers in it, and it is the clearest single argument for the sweep-derived pricing this file already
+contemplates.
 
 **Whether a true stun is ever wanted.** A creep never drops below 10% of its authored speed, which is what
 makes a match that cannot end unreachable by arithmetic rather than by careful authoring. It also means nothing
@@ -228,16 +232,21 @@ uptime holds a creep at the floor indefinitely. With the floor in place that is 
 correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
 per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
 
-**Nothing a view can see says a creep is slowed.** Timed effects landed in
-[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state: they are folded into the
-rolling state hash, where a run that drifts in one is caught, and they appear in no `Snapshot` field and in no
-match event. That is deliberate — events are decorative by
-[ADR-0008](adr/0008-match-events-are-decorative.md) and the snapshot is the view's only input by
-[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md), so adding either is a view contract and #217 was
-about rules. It is a real gap all the same: the day a Cryomancer is signed is the day somebody has to draw a
-slowed creep, and a creep that is walking at four tenths of its speed for no visible reason is the sort of
-thing a playtest reports as a bug. The cheap answer is a field on `CreepSnapshot`; the question is which
-field, because "is it slowed" and "what is on it" are different contracts.
+**What a slowed creep looks like.** The contract is settled and the look is not. Timed effects landed in
+[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state, visible in no `Snapshot`
+field at all, and [#254](https://github.com/ssalter21/tower-defense-game/issues/254) answered the question of
+*which field* the way that was open between "is it slowed" and "what is on it": a creep carries the two
+percentages in force and the pool in front of its health, a tower carries the percentage its cooldown is
+displaced by, and a magnitude is a displacement whose sign says which way — so one field covers a slow and a
+haste both. They are snapshot fields and not events because a seek re-simulates and hears nothing, so an
+event-driven tint would be right until the first drag of the scrub bar; the reasoning is in
+[ADR-0007](adr/0007-snapshot-is-the-only-view-input.md) and the line from the other side is in
+[ADR-0008](adr/0008-match-events-are-decorative.md). **What is left open is entirely the look.** The client
+draws a wash of one colour per payload and a two-segment bar, photographed in
+[`docs/frames/effects-roster-tick-0700.png`](frames/README.md); it does not say which way a speed moved, one
+colour covers a slow and a haste, a tower carrying a modifier is not drawn at all, and the bar does not turn to
+face the camera. Every one of those is a placeholder standing where a decision goes, and the decisions are
+Sam's.
 
 **Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
 the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads
@@ -253,7 +262,8 @@ means "the attack's own roll, spread" — so a damage *modifier* has no name lef
 Said plainly, so nobody has to reconstruct it from two ADRs: an author **can** spread the attack's own roll
 over a sphere, apply a percentage to speed, cooldown or armour, and grant a shield. An author **cannot** write
 a bubble dealing a flat amount, and cannot write a damage buff or debuff of any kind — including the "+x%
-damage to nearby towers" shape the Captain is described by in the same table that authorised the columns.
+damage to nearby towers" shape the retired Captain was described by in the same table that authorised the
+columns — and the shape the Cleric's Zeal wants now.
 
 Each ticket recorded its own half in its own ADR; the sum was never put in front of anybody. The way out is
 cheap and costs no format version, because it is a keyword rather than a column: a sixth payload value
@@ -261,6 +271,13 @@ distinguishing "the roll this attack made" from "the damage stat", at which poin
 it is not is an agent's to name** — a payload keyword is roster vocabulary. Until it is named, `roster.md`'s
 column table says the schema is narrower than the decision rather than quietly restating the decision as the
 narrowing.
+
+**Its naming was deliberately deferred on 5 September 2026, with a reason.** The Cleric's capstone was the
+first row that would have needed it: *Zeal*, every tower within two hexes dealing more damage. **Consecration
+was signed instead** — an armour aura, authorable today — and Zeal is written into
+[the roster](roster.md#consecration--tier-3--status-signed) as the *successor* rather than the alternative, so
+it is not re-invented. Naming a payload word nobody is implementing this effort would be signing a word blind;
+it gets named when it is built.
 
 **Whether an aura may carry damage.** #217 refuses `bubblePeriod > 0` beside a `damage` payload at load, on the
 argument that a pulse drawing dice outside a shot breaks the single-stream guarantee. The argument is sound and
@@ -296,10 +313,68 @@ that spends its whole share on a covered route now stops the light end of the ro
 the skeleton scout dealing **0** over eight runs and the minion **2,073**, against 52,687 and 36,847 before.
 A row of zeroes ranks against nothing, carries a cost efficiency of zero that means "never got through" rather
 than "poor value", and cannot disagree with itself across seeds — `SweepTests` had to move its determinism
-assertion to the necromancer to find a number that still moves.
+assertion up the roster to find a number that still moves — first to id 7, and then, once that row gained a
+haste aura and began leaking in full, to the skeleton.
 
 **It is a real reading of the board and not a broken harness**, which is what makes it a question. Three
 shapes it could take: leave it and read a zero as the finding it is; play the sweep against a thinner wall so
 that every row leaks something; or add a column that says what a row *survived* rather than what it dealt, so
 a creep that never gets through is still ranked by how far it got. The last is the only one that does not
 choose between honesty and signal.
+
+### Should the Cursed Villager transform on damage, or on death?
+
+**Raised by [#267](https://github.com/ssalter21/tower-defense-game/issues/267) building the trigger #250
+signed.** The signed sentence is *the Villager transforms on first damage taken and cannot be one-shot*, and
+the roster wrote a consequence beside it: *the pair is therefore worth 1800 + 2600 = 4400 effective health
+always*. Those two do not both hold. A change that resolves ahead of the damage means the Villager's 1800 is
+never spent — the roll that triggers it lands on the Werewolf — so a Villager is **2860 effective health for
+11 gold**, which the cost rule prices at 18. The 4400 is what a change **on death** would be worth.
+
+**The mechanic is built to the signed trigger and the arithmetic is corrected to match it.** What is not
+decided is which of the two was wanted. On damage, the Villager is a wolf almost immediately and its own pool
+is decoration; on death, it is a body that has to be killed twice and the first form is half of what was paid
+for. They feel different and they price differently, and the second is a bigger creep than anything else on
+the roster for eleven gold. **Nothing is retuned either way** — the price is derived, and a transforming pair
+is the third thing the rule cannot see, beside the Mage's splash and the Vampire's shield.
+
+### What is a spawner worth?
+
+**Raised by [#268](https://github.com/ssalter21/tower-defense-game/issues/268) building the raise
+[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed.** Creep cost is effective health
+over 160, per row, derived and never authored — so the Necromancer's 21 gold is its own 3380 effective health
+and cannot see a single Minion. Measured: one Necromancer raises **11** Minions before it leaks, so 21 gold of
+body arrives with **110 gold** of bodies behind it, and four hundred gold of them returns **1200%** against a
+band of 60 to 95.
+
+**A raised body's leak *is* charged**, at the price of the row it is, so the defending half of the exchange is
+honest. What is not priced is the sending half. Three shapes the answer could take: a term in the creep rule
+that multiplies a row's price by what it raises over the crossing time, which prices a spawner against one
+corridor and is the thing this project has twice refused to guess; a cap or a decay on the raise, which
+[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed against in as many words; or leave
+it, read the 1200 as the finding it is, and let the sweep derive a coefficient once there is a board worth
+deriving it against.
+
+**It is the third silence of the same kind**, beside the Mage's splash and the Vampire's shield, and it is the
+loudest of the three by an order of magnitude. Nothing is retuned either way while it stands.
+
+### Two asks the roster hands back, which had no home until now
+
+**Raised by the whole-branch review at the end of the unattended run**, which found both recorded in commit
+messages and in `docs/frames/README.md` and nowhere a reader of the record would look. Neither was edited into
+a signed block, which was right — but a deferral nobody can find is not deferred, it is lost.
+
+**The Elder is colour and nothing else.** `roster.md` states the rule as *"tier 2 is colour plus a prop"*, and
+the Elder's own block names `druid_texture_alt_A`, no prop, and `Open — none`. The block and the rule
+disagree. [#259](https://github.com/ssalter21/tower-defense-game/issues/259) bound the block as written rather
+than inventing a prop to satisfy the rule, which leaves the contradiction standing where a reader can see it.
+Either the Elder gains a prop or the rule admits an exception; both are Sam's.
+
+**The Paladin line's three clips are unsigned, so those rows stand in their bind pose.** `roster.md` names a
+clip on every rung of the Knight and Barbarian lines and none on any rung of the Paladin's, whose windup and
+backswing carry this page's `_`. [#258](https://github.com/ssalter21/tower-defense-game/issues/258) bound ids
+20, 21 and 22 with model, props, atlas, statue and anchor and **null clips**, rather than guessing a
+plausible-looking clip name — so in play a Blessing fires without moving. The same is true of the whole
+Engineer line ([#260](https://github.com/ssalter21/tower-defense-game/issues/260)), and the Cleric and Druid
+lines carry a nought-tick windup, which the simulation enters and leaves inside one tick, so they never
+visibly wind up either ([#265](https://github.com/ssalter21/tower-defense-game/issues/265)).

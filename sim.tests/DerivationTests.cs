@@ -221,6 +221,76 @@ public class DerivationTests
         // changing no step, every other line untouched -- the fingerprint is
         // 4B15804EC1BEDE48, and with the rule in it is the value below.
         (10u, 0x13EB7A4673B75F21UL),
+
+        // Version 11 is #267 -- a creep becomes another row mid-lane. The first
+        // damage that reaches a body's health changes the row it is, ahead of
+        // the matrix and ahead of the death check, so the roll lands on the new
+        // row's armour and against the new row's pool and a body that named a
+        // successor cannot be killed by the hit that changed it. Which row a
+        // creep is stopped being a constant of the creep with it, so
+        // match-state/3 went to match-state/4 and every stored record's rolling
+        // hash stops reproducing whether or not its roster authors a
+        // transformation.
+        //
+        // IT CAUGHT THE HOLE AN EIGHTH TIME, and in the same half and for the
+        // same reason as the seventh: the sixth half's roster is where a rule
+        // the other five cannot author gets authored, and no row on it named a
+        // row to become. What the fold saw without the roster moving is the
+        // state hash's new layout and nothing else -- which would have been a
+        // row recording that a number moved, for a mechanic nothing ran. So the
+        // walker gained a successor and the roster gained the row it becomes,
+        // and the label went to rule-fingerprint/9.
+        //
+        // OBSERVED, both ways round, on this build. With the transformation
+        // struck out of Match.Damage -- the successor column read, linked and
+        // folded, and the tick loop never acting on it, every other line
+        // untouched -- the fingerprint is 5AC52DFE9393CC7D, and with the rule in
+        // it is the value below.
+        (11u, 0x4A90FFAD025E6DA7UL),
+
+        // Version 12 is #268 -- a creep raises a creep. A row names the row it
+        // puts on the corridor beside itself and the cadence it does it on, so a
+        // body arrives that no wave order released, in no order, priced by
+        // nobody; and the tick loop grew a phase for it, beside the wave's own
+        // release and after everything else in the tick. Which clock a creep
+        // raises on and whether it was raised joined the per-tick fold with it,
+        // so match-state/4 went to match-state/5 and every stored record's
+        // rolling hash stops reproducing whether or not its roster authors a
+        // raise.
+        //
+        // IT CAUGHT THE HOLE A NINTH TIME, in the same half and for the same
+        // reason as the seventh and the eighth: the sixth half's roster is where
+        // a rule the other five cannot author gets authored, and no row on it
+        // raised anything. So the warden gained a raise and the roster gained
+        // the row it puts down, and the label went to rule-fingerprint/10.
+        //
+        // OBSERVED, both ways round, on this build. With the raise phase struck
+        // out of Match.Step -- the two columns read, linked and folded, and the
+        // tick loop never putting a body down -- the fingerprint is
+        // 79786A8DE9C1F0A2, and with the phase in it is the value below.
+        (12u, 0xC3B4DE54701BCD2DUL),
+
+        // Version 13 is #269 -- a kill pays the defender. A row names what
+        // killing a body of it pays, the payment is made where a body's health
+        // reaches zero, and what a match has paid comes back on its result for
+        // a build phase to spend. What the kills have paid joined the per-tick
+        // fold with it, so match-state/5 went to match-state/6 and every stored
+        // record's rolling hash stops reproducing whether or not its roster
+        // authors a bounty.
+        //
+        // IT CAUGHT THE HOLE A TENTH TIME, in the same half and for the same
+        // reason as the seventh, eighth and ninth: the sixth half's roster is
+        // where a rule the other five cannot author gets authored, and no row on
+        // it paid anything. So the row the walker becomes and the row the warden
+        // raises both gained a bounty -- the two routes a body can arrive by
+        // that are not a wave order -- and the label went to
+        // rule-fingerprint/11.
+        //
+        // OBSERVED, both ways round, on this build. With the payment struck out
+        // of Match.Damage -- the column read, linked and folded, and no kill
+        // ever paying for it -- the fingerprint is 3E54D6F70DE235B6, and with
+        // the payment in it is the value below.
+        (13u, 0x658CECEC487BCB6EUL),
     };
 
     /// <summary>
@@ -280,6 +350,38 @@ public class DerivationTests
     private const string FingerprintWave = "order  0  1  3  0";
 
     /// <summary>
+    /// The roster the seventh half is fought over: a walking row that turns into
+    /// a second, a walking row that raises a third, and a turret that kills all
+    /// of them. All four walking rows pay, and for two of them the row a body is
+    /// standing as at the kill is not the row its order names -- a goon pays the
+    /// husk's three where its own row says one, and a shade pays its own one
+    /// where the raiser that put it down pays two. So reading the payment off
+    /// the order is a different fingerprint rather than the same one.
+    /// </summary>
+    /// <remarks>
+    /// Layout 6, because no earlier layout has a bounty column at all. The
+    /// numbers are chosen so nothing reaches the exit: the cannon rolls forty to
+    /// sixty against pools of twenty to sixty, on a three-tick cooldown.
+    /// </remarks>
+    private const string FingerprintBountyUnits = """
+        layout 6
+        unit  1  goon    moving  40  27  0     0  0  0  0   0   none     0  3  4   none    armoured  0  0  1  none  none  none  0  none  0  0  3     none  0   1
+        unit  2  raiser  moving  60  27  0     0  0  0  0   0   none     0  3  5   none    armoured  0  0  1  none  none  none  0  none  0  0  none  4     40  2
+        unit  3  husk    moving  30  41  0     0  0  0  0   0   none     0  3  3   none    swift     0  0  1  none  none  none  0  none  0  0  none  none  0   3
+        unit  4  shade   moving  20  19  0     0  0  0  0   0   none     0  3  2   none    arcane    0  0  1  none  none  none  0  none  0  0  none  none  0   1
+        unit  5  cannon  placed  0   0   2000  3  1  1  40  60  hitscan  0  0  20  pierce  none      0  0  1  none  none  none  0  none  0  0  none  none  0   0
+        """;
+
+    /// <summary>The cannon, on the cell every other turret in this file stands on.</summary>
+    private const string FingerprintBountyDefense = "tower  5  2  1";
+
+    /// <summary>Two of each sent row, so the transformation and the raise both happen twice.</summary>
+    private const string FingerprintBountyWave = """
+        order  0  1  2  0
+        order  0  2  2  0
+        """;
+
+    /// <summary>
     /// The roster the shot-shape half is fought over: a walking row carrying a
     /// shield, one carrying an aura that grants a pool to whatever walks beside
     /// it, a turret that fires two shots, a turret whose one shot is a bubble,
@@ -287,7 +389,7 @@ public class DerivationTests
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Layout 3, because no earlier layout can say any of this.</b> That is
+    /// <b>Layout 5, because no earlier layout can say any of this.</b> That is
     /// the whole reason this half exists: the five above it are fought over
     /// layout-1 and layout-2 rosters, where a shield is not a column, a shot
     /// count is not a column and a bubble is not a column -- so #216's rules
@@ -300,14 +402,23 @@ public class DerivationTests
     /// runs the whole of the effect machinery and sees none of it -- which is
     /// the shape of hole this table has had six times.
     /// </para>
+    /// <para>
+    /// <b>And the warden raises the thrall, which is #268's.</b> The successor
+    /// belongs to the walker and the raise to the warden because a row a body
+    /// becomes may not raise -- so the two mechanics sit on the two walking rows
+    /// this roster already had, and the bodies the warden puts down are shot at,
+    /// slowed, swept and counted by everything else in this half.
+    /// </para>
     /// </remarks>
     private const string FingerprintShotUnits = """
-        layout 3
-        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0
-        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90
-        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0
-        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0
-        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60
+        layout 5
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0    6     none  0
+        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90   none  7     40
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0    none  none  0
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0    none  none  0
+        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60   none  none  0
+        unit  6  risen   moving  160  41  0     0  0  0  0  0  none     0  9  6   none    swift     0  0   1  none  none   none    0   none    0    0    none  none  0
+        unit  7  thrall  moving  90   19  0     0  0  0  0  0  none     0  6  3   none    arcane    0  0   1  none  none   none    0   none    0    0    none  none  0
         """;
 
     /// <summary>
@@ -389,6 +500,14 @@ public class DerivationTests
     /// simulation-version bump.
     /// </summary>
     private const int FingerprintComposedGold = 100000;
+
+    /// <summary>
+    /// The capstone tokens the composition half resolves under: none, because
+    /// <see cref="FingerprintComposedLadder"/> carries no edge and therefore no
+    /// capstone edge for one to buy. Handing over a token would fold a number
+    /// nothing in the scenario can spend.
+    /// </summary>
+    private const int FingerprintCapstoneTokens = 0;
 
     /// <summary>What the purse the payment half is folded through carries in.</summary>
     private const int FingerprintBank = 4321;
@@ -578,6 +697,42 @@ public class DerivationTests
         Assert.Equal(
             Hash64.FromValue(declared.Fingerprint),
             RuleFingerprint());
+    }
+
+    [Fact]
+    public void The_capstone_grant_schedule_is_a_rule_and_no_hash_in_this_repository_covers_it()
+    {
+        // The one rule a stored run's replay depends on that nothing else here
+        // pins. Which edges cost a token is in the ladder hash and therefore in
+        // the content hash; HOW MANY tokens a round holds is neither -- it is a
+        // list in sim/Run.cs, and moving it would make streams legal that were
+        // refused, and refuse streams that were legal, with every stamp on every
+        // record still agreeing.
+        //
+        // The fingerprint above cannot reach it: it is folded over a scenario
+        // whose ladder has no edges, so no capstone is ever priced there and no
+        // token is ever spent. Widening that scenario to cover this would be a
+        // SimulationVersion bump for a rule that has not moved, which is exactly
+        // the mistake the fingerprint's own remarks name.
+        //
+        // So this is the assertion that names what a change to the schedule
+        // owes: a SimulationVersion bump and a BehaviourByVersion row, taken
+        // deliberately, because every stored run made under the old schedule is
+        // retired by it. See docs/adr/0062-a-capstone-costs-a-token.md.
+        //
+        // OBSERVED: add a fourth grant round to Run.CapstoneTokenRounds. This
+        // goes red naming the list, and every other assertion in this repository
+        // stays green -- content/run.commands still replays, every hash still
+        // agrees, and a run that could not afford its second capstone can.
+        Assert.Equal(new[] { 3, 6, 9 }, Run.CapstoneTokenRounds);
+
+        // And the reading of the list, which is the other half of the rule: a
+        // grant lands at the opening of its round and none lands anywhere else.
+        Assert.Equal(0, Run.CapstoneTokensGrantedThrough(2));
+        Assert.Equal(1, Run.CapstoneTokensGrantedThrough(3));
+        Assert.Equal(1, Run.CapstoneTokensGrantedAt(3));
+        Assert.Equal(0, Run.CapstoneTokensGrantedAt(4));
+        Assert.Equal(Run.CapstoneTokenRounds.Count, Run.CapstoneTokensGrantedThrough(Run.DefaultWaves));
     }
 
     [Fact]
@@ -812,6 +967,31 @@ public class DerivationTests
     /// changed is the rows: a turret whose shot slows what it hits, and a
     /// walker whose aura grants a pool to whatever walks beside it.
     /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/9</c> is the third bump taken for the scenario
+    /// alone, and it is the sixth half's roster a third time. #267's rule is
+    /// reached only by a row naming the row it becomes, and no row on any of
+    /// these rosters named one -- so the walker gained a successor and the
+    /// roster gained the row it turns into. What that half now folds is a body
+    /// that spends part of the match as one row and the rest of it as another,
+    /// through a shot shape, a shield and a slow that all see it change.
+    /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/10</c> is the fourth, and the sixth half's roster a
+    /// fourth time. #268's rule is reached only by a row naming a row it raises,
+    /// so the warden gained one and the roster gained the thrall. What that half
+    /// now folds is bodies arriving mid-match that no order released, walking a
+    /// corridor the towers are already shooting down.
+    /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/11</c> added the seventh half, and it is the first
+    /// bump since <c>rule-fingerprint/6</c> that the scenario alone could not
+    /// answer. #269's rule fires where a body's health reaches zero, and not one
+    /// of the six halves above kills anything at all -- every body on every
+    /// roster here walks to the exit -- so a bounty put on the sixth half's
+    /// roster moved the fingerprint by nothing. The seventh half is a defense
+    /// that kills what walks at it, over rows that pay.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -821,7 +1001,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/8").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/11").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -836,8 +1016,9 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return ShapedIntoFingerprint(
-            FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint))));
+        return PaidForKillingIntoFingerprint(
+            ShapedIntoFingerprint(
+                FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)))));
     }
 
     /// <summary>
@@ -862,6 +1043,22 @@ public class DerivationTests
     /// magnitude on what it hits for a duration, and one that pulses on a clock
     /// of its own.
     /// </para>
+    /// <para>
+    /// <b>And a third time for #267.</b> The walker names the row it becomes,
+    /// so the first shot that reaches its health hands the rest of the match a
+    /// body with another pool, another armour type and another speed -- which
+    /// every other rule in this half then resolves against. The successor is
+    /// swift where the walker is armoured, so the matrix cell moves as well as
+    /// the pool.
+    /// </para>
+    /// <para>
+    /// <b>And a fourth for #268.</b> The warden raises a thrall every forty
+    /// ticks for as long as it walks, so this half is the only one in the table
+    /// where the number of bodies on the corridor is not the number the wave
+    /// sent -- and every one of them is acquired, shot, slowed and folded like
+    /// any other.
+    /// </para>
+
     /// <para>
     /// <b>Both shot shapes, the shield, the slow and the aura are in one match
     /// on purpose.</b> They share the one dice stream, so a draw added or
@@ -900,6 +1097,64 @@ public class DerivationTests
         return fingerprint
             .Add(result.Leaked, result.Total)
             .Add(result.FinalTick)
+            .Add(unchecked((long)result.RollingStateHash.Value));
+    }
+
+    /// <summary>
+    /// The seventh half of the fold: a match where the defense kills everything
+    /// walking at it, over a roster where three rows pay for being killed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because not one of the six above it kills
+    /// anything.</b> #269's rule fires where a body's health reaches zero, and
+    /// every body on every roster in this file walks to the exit: the shot-shape
+    /// half is the only one whose roster could carry a bounty at all, and
+    /// putting one on it changed the fingerprint by nothing, because fourteen
+    /// bodies leak there and none dies. A rule that runs in no half is a rule
+    /// this table cannot tell moved -- the tenth time this file has had that
+    /// hole, and the first time the fix is a half rather than a roster.
+    /// </para>
+    /// <para>
+    /// <b>All three routes a body can arrive by are folded, and they pay
+    /// different numbers on purpose.</b> The goon is sent by an order and turns
+    /// into the husk on the first damage that reaches it, so what it pays is the
+    /// husk's three and not its own one -- the payment is read off the row
+    /// standing there at the kill, and a fingerprint that read it off the order
+    /// would come out on twelve minus four. The raiser is sent by an order and
+    /// pays its own two. The shade is in no order at all, and pays its one.
+    /// </para>
+    /// <para>
+    /// The cannon kills rather than chips, so the match ends with nothing at the
+    /// exit: a leak pays nothing, and a half where half the bodies leaked would
+    /// fold the rule and its absence together.
+    /// </para>
+    /// </remarks>
+    private static Hash64 PaidForKillingIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint bounty units", FingerprintBountyUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+
+        var match = new Match(
+            map,
+            TheRuleset.Committed(),
+            TowerLayout.Parse("fingerprint bounty defense", FingerprintBountyDefense, types),
+            WaveScript.Parse("fingerprint bounty wave", FingerprintBountyWave, types),
+            FingerprintSeed);
+
+        for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
+        {
+            match.Advance(1);
+            fingerprint = fingerprint.Add(unchecked((long)match.StateHash.Value));
+        }
+
+        MatchResult result = match.Result();
+
+        // What the kills paid, beside what got past. It is the one number on a
+        // result a build phase spends rather than reports.
+        return fingerprint
+            .Add(result.Leaked, result.Total)
+            .Add(result.FinalTick, result.Bounty)
             .Add(unchecked((long)result.RollingStateHash.Value));
     }
 
@@ -1008,7 +1263,7 @@ public class DerivationTests
         // do before the fold had this half in it.
         for (int index = 0; index < dealt.Length; index++)
         {
-            WavePayment paid = purse.CloseWave(rules, dealt[index]);
+            WavePayment paid = purse.CloseWave(rules, dealt[index], 0);
 
             fingerprint = fingerprint
                 .Add(paid.Interest, paid.IncomeBase)
@@ -1019,7 +1274,7 @@ public class DerivationTests
         // moves: a walk over a stored stream folds this instead of the payment,
         // and a ceiling that stops being one admits decisions no run could
         // afford.
-        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice);
+        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice, 0);
 
         return fingerprint.Add(ceiling.Bonus, ceiling.Purse.Gold);
     }
@@ -1063,6 +1318,7 @@ public class DerivationTests
                 WaveScript.Nothing,
                 ladder,
                 Purse.Holding(FingerprintComposedGold),
+                FingerprintCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 map,
@@ -1098,6 +1354,7 @@ public class DerivationTests
                 composed.Wave,
                 ladder,
                 Purse.Holding(FingerprintComposedGold),
+                FingerprintCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 map,

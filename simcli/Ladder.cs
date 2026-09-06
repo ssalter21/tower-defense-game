@@ -4,8 +4,8 @@ using Sim;
 namespace Sim.Cli;
 
 /// <summary>
-/// The upgrade ladder, printed: one line per edge with the price of the tier it
-/// leads to, then everything a walk over the whole file had to say about it.
+/// The upgrade ladder, printed: one line per edge with what the tier it leads
+/// to costs, then everything a walk over the whole file had to say about it.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -21,6 +21,12 @@ namespace Sim.Cli;
 /// on its own row, so nothing here needs a <see cref="Ruleset"/>:
 /// <c>CostTable.From</c> wants one for the snapshot price, and no edge touches
 /// that.
+/// </para>
+/// <para>
+/// <b>A capstone edge prints its token and not its target's cost column</b>,
+/// because gold does not buy one. The column is still authored and the
+/// flat-price note below still reads it -- what the rule scores a capstone at is
+/// a reading, and this line is a bill.
 /// </para>
 /// <para>
 /// The notes come before the faults on purpose. A note names the shape of a
@@ -46,8 +52,10 @@ internal static class Ladder
                 .Append(from.Label.PadRight(18))
                 .Append("-> ")
                 .Append(to.Label.PadRight(18))
-                .Append(to.Cost.ToString(PlainText.Culture).PadLeft(4))
-                .Append(" gold\n");
+                .Append(edge.Price == EdgePrice.CapstoneToken
+                    ? "   1 capstone token"
+                    : to.Cost.ToString(PlainText.Culture).PadLeft(4) + " gold")
+                .Append('\n');
         }
 
         LadderReport report = ladder.Completeness(types);

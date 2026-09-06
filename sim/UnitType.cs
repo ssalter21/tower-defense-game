@@ -58,8 +58,12 @@ namespace Sim
             int armour,
             int shield,
             int targets,
-            Bubble bubble)
+            Bubble bubble,
+            int raisePeriodTicks,
+            int bounty)
         {
+            RaisePeriodTicks = raisePeriodTicks;
+            Bounty = bounty;
             Cost = cost;
             AttackType = attackType;
             ArmourType = armourType;
@@ -189,6 +193,104 @@ namespace Sim
         /// </summary>
         public Bubble Bubble { get; }
 
+        /// <summary>
+        /// The row a body of this one becomes when damage lands on it, or null
+        /// for a row that is only ever itself. Null on every row of every layout
+        /// before 4.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A resolved row rather than an id.</b> The table links the two
+        /// after it has read them all, so the tick loop holds the successor the
+        /// same way a wave order holds the row it sends -- nothing looks a
+        /// number up while a match is running.
+        /// </para>
+        /// <para>
+        /// <b>The successor names none of its own.</b> A chain is refused where
+        /// the column is read, which is what makes "damage lands on a row that
+        /// names a successor" the same sentence as "the first damage the body
+        /// takes".
+        /// </para>
+        /// </remarks>
+        public UnitType? Becomes { get; private set; }
+
+        /// <summary>
+        /// Points this row at the row it becomes. Called once, by the table,
+        /// after every row has been read -- a successor can sit anywhere in the
+        /// file, so the reference cannot exist while the rows are being built.
+        /// </summary>
+        internal void LinkBecomes(UnitType successor)
+        {
+            Becomes = successor;
+        }
+
+        /// <summary>
+        /// The row a body of this one puts on the board beside itself every
+        /// <see cref="RaisePeriodTicks"/> ticks for as long as it walks, or null
+        /// for a row that raises nothing. Null on every row of every layout
+        /// before 5.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A resolved row rather than an id</b>, linked once by the table
+        /// after it has read them all, for the reason <see cref="Becomes"/> is:
+        /// nothing looks a number up while a match is running.
+        /// </para>
+        /// <para>
+        /// <b>What a raise puts on the board raises nothing in its turn.</b>
+        /// The table refuses a raised row that raises, and a raised row that
+        /// becomes one -- so what one order can put on the corridor is its own
+        /// bodies and one generation after them. That is what keeps the
+        /// termination bound arithmetic over four rows rather than a walk over a
+        /// graph.
+        /// </para>
+        /// <para>
+        /// <b>There is no cap on how many one body raises.</b> The board is what
+        /// bounds a spawner: it raises for as long as it is walking, so a slowed
+        /// one raises more. See
+        /// <c>docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// </para>
+        /// </remarks>
+        public UnitType? Raises { get; private set; }
+
+        /// <summary>
+        /// Ticks between one raise and the next, counted from the tick the body
+        /// arrived. Zero on a row that raises nothing, and on every row of every
+        /// layout before 5.
+        /// </summary>
+        public int RaisePeriodTicks { get; }
+
+        /// <summary>
+        /// Points this row at the row it raises. Called once, by the table,
+        /// after every row has been read.
+        /// </summary>
+        internal void LinkRaises(UnitType raised)
+        {
+            Raises = raised;
+        }
+
+        /// <summary>
+        /// Gold paid to the defender that kills a body of this row, out of
+        /// nowhere and into the one purse. Zero is no payment, which is what
+        /// every row of every layout before 6 carries.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It is paid off the body that dies rather than off the order that
+        /// sent it.</b> A body can be standing as a row nobody sent -- one
+        /// raised by a spawner is in no order at all, and one that changed row
+        /// mid-lane is not the row its order names -- so the row in hand at the
+        /// moment of the kill is the only reading that answers all three
+        /// routes.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is paid for a body that reaches the exit.</b> A leak is
+        /// the opposite outcome and is already priced, at the row's cost, one
+        /// for one against health.
+        /// </para>
+        /// </remarks>
+        public int Bounty { get; }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
@@ -223,7 +325,16 @@ namespace Sim
                     return TypedFold(hash);
 
                 case 3:
-                    return Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
+                    return RadialFold(hash);
+
+                case 4:
+                    return SuccessorFold(hash);
+
+                case 5:
+                    return RaisingFold(hash);
+
+                case 6:
+                    return RaisingFold(hash).Add(Bounty);
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -235,9 +346,10 @@ namespace Sim
         }
 
         /// <summary>
-        /// The four columns layout 2 added, in file order. Layout 3 folds them
-        /// in the same places -- a widening moves no column that was already
-        /// there -- so the two branches share this rather than each spelling it.
+        /// The four columns layout 2 added, in file order. Every layout after
+        /// it folds them in the same places -- a widening moves no column that
+        /// was already there -- so the branches share this rather than each
+        /// spelling it.
         /// </summary>
         private Hash64 TypedFold(Hash64 hash) =>
             hash
@@ -245,5 +357,28 @@ namespace Sim
                 .Add((int)AttackType)
                 .Add((int)ArmourType)
                 .Add(Armour);
+
+        /// <summary>
+        /// The nine columns layout 3 added, in file order. Layout 4 folds them
+        /// in the same places and appends its own after them.
+        /// </summary>
+        private Hash64 RadialFold(Hash64 hash) =>
+            Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
+
+        /// <summary>
+        /// The one column layout 4 added, after the nine before it. Layout 5
+        /// folds it in the same place and appends its own after it.
+        /// </summary>
+        private Hash64 SuccessorFold(Hash64 hash) =>
+            RadialFold(hash).Add(Becomes is null ? 0 : Becomes.Id);
+
+        /// <summary>
+        /// The two columns layout 5 added, after the one before them. Layout 6
+        /// folds them in the same place and appends its own after them.
+        /// </summary>
+        private Hash64 RaisingFold(Hash64 hash) =>
+            SuccessorFold(hash)
+                .Add(Raises is null ? 0 : Raises.Id)
+                .Add(RaisePeriodTicks);
     }
 }

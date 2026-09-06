@@ -32,11 +32,17 @@
        re-captured in the same commit as the content passes, per rule 4 of
        AGENTS.md. It is a date and not the pixels: a rename or a rebase that
        re-stamps a picture buys it a pass it did not earn, and only a person
-       looking at it can catch that. A sheet docs/chrome/README.md lists as a
+       looking at it can catch that. Where the date says no, the capture's own
+       record is asked -- rendered-from.txt beside the pictures, naming the
+       content each was drawn from -- because a re-render that came out
+       pixel-identical leaves git nothing to date, and that is what happens
+       every time the content that moved is not drawn in that picture. See
+       tools/_rendered-from.ps1. A sheet docs/chrome/README.md lists as a
        chosen arrangement rather than as a baseline is named as exempt and
        reported n/a, because it records a decision rather than describing the
-       board; an exemption naming a file that is no longer committed is itself
-       a refusal.
+       board; so are the screen captures of a played run, which are dated by
+       the session they photograph and have no capture to re-run. An exemption
+       naming a file that is no longer committed is itself a refusal.
     3. The record count docs/README.md quotes for docs/adr/ is the number of
        records in it.
     4. Every ADR a source file cites exists. A comment pointing at a record
@@ -206,14 +212,15 @@ if (-not $ghReady) {
 }
 
 # --- 2. A picture is newer than the content it was rendered from --------------
-# The authored content a sheet or a frame draws: the board, the roster, the
-# ladder and the scenery standing on the board.
-$rendered = @(
-    'content/map.txt'
-    'content/units.txt'
-    'content/upgrades.txt'
-    'content/dressing.txt'
-)
+# The authored content a sheet or a frame draws -- the board, the roster, the
+# ladder and the scenery standing on the board -- is named in
+# tools/_rendered-from.ps1, beside the digest the capture tools record against
+# every picture they write. One list, so the capture and this cannot disagree
+# about what a picture is a claim about.
+. (Join-Path $PSScriptRoot '_rendered-from.ps1')
+
+$rendered = Get-DrawnContent
+$drawnStamp = Get-DrawnContentStamp $repoRoot
 
 Write-Host ""
 Write-Host "2. A committed sheet or frame is at least as new as the content it was rendered from."
@@ -241,11 +248,58 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # baseline stale, and dating it against content/ asks it the wrong question.
 # Named one file at a time on purpose -- a pattern here would exempt the next
 # sheet dropped into the directory as well.
-$decisionSheets = @('docs/chrome/chosen-build-phase.png')
+# The beside-prop sheet is the same species from the other direction: it
+# draws ten characters that no row in content/units.txt points at, standing
+# beside props no row names, so dating it against the roster asks it about
+# content it does not contain. What would make it stale is somebody changing
+# which prop stands beside which tower, and that is a line in docs/roster.md.
+# The melee-lines sheet is drawn the same way and exempt for the same reason,
+# from the other direction again: its nine rungs DO have rows now, but a set
+# sheet is drawn from a set file -- models, props, atlases and one pose -- and
+# reads none of the four authored files. Move a price or a range and it renders
+# the same pixels, so a date against content/ would ask it a question it cannot
+# answer. What would make it stale is a look in docs/roster.md moving, which is
+# a person's job to notice and not this check's. The caster-lines and
+# pierce-turret-lines sheets are the same sheet for the other six lines, and the
+# two creep-bodies sheets are the same sheet for the twelve creep rows, all
+# exempt on the same grounds.
+# The ten under docs/frames/played-run/ are the third species: photographs of a
+# session rather than renders of the content. Nothing drew them -- they are the
+# built player's own back buffer, grabbed while a run was driven by synthetic
+# input -- so there is no capture to re-run and no rendered-from.txt for the
+# fallback below to read. Asking for a re-capture would be asking for a
+# different run: another arrival order, another tick under the pointer, another
+# picture. What it costs is that nothing notices when they go stale, and that
+# cost is stated in played-run/README.md and carried on purpose.
+$decisionSheets = @(
+    'docs/chrome/chosen-build-phase.png'
+    'docs/frames/roster/beside-props-sheet.png'
+    'docs/frames/roster/melee-lines-sheet.png'
+    'docs/frames/roster/caster-lines-sheet.png'
+    'docs/frames/roster/pierce-turret-lines-sheet.png'
+    'docs/frames/roster/creep-bodies-sheet.png'
+    'docs/frames/roster/creep-bodies-rest-sheet.png'
+)
+
+# The photographs of a played session. A list of their own rather than more
+# names in the one above, because the sentence each is reported with is a
+# different sentence: those record a decision, these record a run.
+$sessionCaptures = @(
+    'docs/frames/played-run/build-phase.png'
+    'docs/frames/played-run/the-nine-lines-close.png'
+    'docs/frames/played-run/capstone-consecration.png'
+    'docs/frames/played-run/capstone-mortar.png'
+    'docs/frames/played-run/capstone-fan-of-knives.png'
+    'docs/frames/played-run/resolution.png'
+    'docs/frames/played-run/black-knight-beside-towers.png'
+    'docs/frames/played-run/a-slow-nobody-can-see.png'
+    'docs/frames/played-run/the-same-slow-close.png'
+    'docs/frames/played-run/run-over.png'
+)
 
 # An exemption for a file that is no longer committed covers nothing, and it
 # would go on reading as though it still applied to something.
-foreach ($sheet in $decisionSheets) {
+foreach ($sheet in ($decisionSheets + $sessionCaptures)) {
     if ($pictures -notcontains $sheet) {
         Refuse "$sheet is named as exempt from this invariant and is not a committed picture, so the exemption covers nothing. Restore the file, or drop its name from the exemption."
     }
@@ -253,7 +307,12 @@ foreach ($sheet in $decisionSheets) {
 
 foreach ($picture in $pictures) {
     if ($decisionSheets -contains $picture) {
-        Exempt "$picture is the chosen arrangement docs/chrome/README.md records, not a baseline, so its date is not compared."
+        Exempt "$picture records a decision rather than describing the board, so its date is not compared."
+        continue
+    }
+
+    if ($sessionCaptures -contains $picture) {
+        Exempt "$picture photographs a run somebody played, so it is dated by that session and not by the content; re-capturing it would be a different run."
         continue
     }
 
@@ -263,8 +322,24 @@ foreach ($picture in $pictures) {
     # carries the identical commit stamp.
     if ($when -ge $contentMoved) {
         Checked "$picture was committed $(Day $when), and $newestContent, the last of the content it draws to move, moved $(Day $contentMoved)."
+        continue
+    }
+
+    # A DATE CANNOT SEE A RE-RENDER THAT CAME OUT IDENTICAL. Where the content
+    # that moved is not drawn in this particular picture -- which is most
+    # pictures for most changes -- re-capturing rewrites the same pixels, there
+    # is no diff, and the picture keeps the commit stamp it had. So the capture's
+    # own record is asked second: it names the content each picture was drawn
+    # from, and the tool that drew it is what wrote the line.
+    $recorded = Read-RenderedFrom (Split-Path (Join-Path $repoRoot $picture) -Parent)
+    $name = Split-Path $picture -Leaf
+
+    if (-not $recorded.ContainsKey($name)) {
+        Refuse "$picture was captured $(Day $when) and shows the content as it was then; $newestContent moved on $(Day $contentMoved), and nothing beside the picture says what it was drawn from. Re-capture it -- the capture writes rendered-from.txt as it goes."
+    } elseif ($recorded[$name] -ne $drawnStamp) {
+        Refuse "$picture was drawn from content $($recorded[$name]) and this repository holds $drawnStamp, so the picture is of a game it no longer builds. Re-capture it."
     } else {
-        Refuse "$picture was captured $(Day $when) and shows the content as it was then; $newestContent moved on $(Day $contentMoved), so the picture is of a game this repository no longer builds."
+        Checked "$picture was committed $(Day $when), before $newestContent moved on $(Day $contentMoved) -- and it was drawn from content $drawnStamp, which is what this repository holds, so re-rendering it draws the same pixels."
     }
 }
 

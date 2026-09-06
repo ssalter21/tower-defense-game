@@ -3,6 +3,7 @@
     "rootNamespace": "Tests.Fixtures",
     "references": [
         "View",
+        "View.Editor",
         "Tests.PlayMode"
     ],
     "includePlatforms": [

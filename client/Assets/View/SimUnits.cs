@@ -64,6 +64,13 @@ namespace View
         private const double OneRaw = 4294967296.0;
 
         /// <summary>
+        /// What a milli-hex is a thousandth of. The unit a bubble's radius and
+        /// a walking speed are authored in, and it is a plain integer rather
+        /// than fixed point.
+        /// </summary>
+        private const float MilliHexPerHex = 1000f;
+
+        /// <summary>
         /// A fixed-point number as a float. Divided as a <c>double</c> and
         /// narrowed once at the end, so the division is exact and only the
         /// final narrowing rounds.
@@ -75,5 +82,17 @@ namespace View
         /// metres.
         /// </summary>
         public static float Metres(Fix64 hexes) => (float)(hexes.Raw / OneRaw * MetresPerHex);
+
+        /// <summary>
+        /// A radius authored in thousandths of a hex — a bubble's — in world
+        /// metres.
+        /// </summary>
+        /// <remarks>
+        /// Flat, and that is the whole of the conversion: the simulation reads
+        /// the same number as a sphere by adding half a hex per level of
+        /// height, and nothing that draws a bubble asks how tall the ground
+        /// under it is.
+        /// </remarks>
+        public static float MetresFromMilliHex(int milliHex) => milliHex / MilliHexPerHex * MetresPerHex;
     }
 }

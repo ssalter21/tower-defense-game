@@ -12,7 +12,14 @@ namespace View
     /// <b>The scale is here and not in <c>content/units.txt</c>.</b> Visual size
     /// is a view fact under ADR-0007, and a column in the content tables would
     /// make every art tweak a format version and a re-recording of every stored
-    /// match. The three numbers it takes are on <see cref="MatchArt"/>.
+    /// match. The two numbers it takes are on <see cref="MatchArt"/>.
+    /// </para>
+    /// <para>
+    /// <b>Size says which side a unit is on and nothing else.</b> A tier is
+    /// told apart by <see cref="Texture"/>, by what the unit holds, by what
+    /// stands <see cref="Beside">beside</see> it, or by being a different
+    /// model — never by being bigger. So two rows sharing a model share a
+    /// scale, and what separates them is one of the other four.
     /// </para>
     /// </remarks>
     [Serializable]
@@ -31,12 +38,20 @@ namespace View
         private float scale;
 
         [SerializeField]
+        [Tooltip("Drawn over the model's own atlas. Null for a unit wearing the one it imported with.")]
+        private Texture2D texture;
+
+        [SerializeField]
         [Tooltip("Hung off handslot.r. Null for a unit that carries nothing there.")]
         private GameObject rightHand;
 
         [SerializeField]
         [Tooltip("Hung off handslot.l. Null for a unit that carries nothing there.")]
         private GameObject leftHand;
+
+        [SerializeField]
+        [Tooltip("Stood on the ground beside the tower rather than held. Empty for a row with nothing there.")]
+        private BesideProp beside;
 
         [SerializeField]
         [Tooltip("Euler degrees applied to the right-hand item, on top of the bone. Usually zero.")]
@@ -57,6 +72,26 @@ namespace View
         [SerializeField]
         [Tooltip("Played across this tower's Backswing. Null on a creep.")]
         private AnimationClip backswingClip;
+
+        [SerializeField]
+        [Tooltip("Where this unit's flashes and tracers leave its art from. Empty for a unit that never fires.")]
+        private EffectAnchor effectAnchor;
+
+        [SerializeField]
+        [Tooltip("What this row's bubble is drawn as. None draws the shared disc every bubble had.")]
+        private BubbleSignature bubbleSignature;
+
+        [SerializeField]
+        [Tooltip("What this row's shot is drawn as. None draws the thin tracer every shot had.")]
+        private ShotSignature shotSignature;
+
+        [SerializeField]
+        [Tooltip("This row's own walk cycle. Null for a creep drawn with MatchArt's shared pair.")]
+        private AnimationClip walkClip;
+
+        [SerializeField]
+        [Tooltip("This row's own death. Null for a creep drawn with MatchArt's shared pair.")]
+        private AnimationClip deathClip;
 
         /// <summary>A unit that stands there and holds nothing.</summary>
         public static UnitArt Of(int unitId, GameObject model, float scale) =>
@@ -89,19 +124,33 @@ namespace View
             AnimationClip windup,
             AnimationClip backswing,
             Vector3 rightHandTilt = default,
-            Vector3 leftHandTilt = default) =>
+            Vector3 leftHandTilt = default,
+            EffectAnchor effectAnchor = default,
+            Texture2D texture = null,
+            BesideProp beside = default,
+            AnimationClip walk = null,
+            AnimationClip death = null,
+            BubbleSignature bubbleSignature = BubbleSignature.None,
+            ShotSignature shotSignature = ShotSignature.None) =>
             new UnitArt
             {
                 unitId = unitId,
                 model = model,
                 scale = scale,
+                texture = texture,
                 rightHand = rightHand,
                 leftHand = leftHand,
+                beside = beside,
                 idleClip = idle,
                 windupClip = windup,
                 backswingClip = backswing,
                 rightHandTilt = rightHandTilt,
                 leftHandTilt = leftHandTilt,
+                effectAnchor = effectAnchor,
+                bubbleSignature = bubbleSignature,
+                shotSignature = shotSignature,
+                walkClip = walk,
+                deathClip = death,
             };
 
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
@@ -113,11 +162,51 @@ namespace View
         /// <summary>How much bigger or smaller than the imported model this draws.</summary>
         public float Scale => scale;
 
+        /// <summary>
+        /// The atlas this row is drawn in, or null for the one the model
+        /// imported wearing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The packs ship several atlases per character and the rows pick
+        /// between them, so two rows on one model are two colours rather than
+        /// two sizes. Which atlas goes on which row is signed in
+        /// <c>docs/roster.md</c> and nothing chooses one here.
+        /// </para>
+        /// <para>
+        /// It covers the body and not what the body is holding. A prop is its
+        /// own import off its own pack's atlas — the Adventurers quiver is
+        /// authored on the rogue's — so a character atlas painted over it
+        /// would draw the prop in swatches meant for a torso.
+        /// </para>
+        /// </remarks>
+        public Texture2D Texture => texture;
+
         /// <summary>What goes on <c>handslot.r</c>, or null.</summary>
         public GameObject RightHand => rightHand;
 
         /// <summary>What goes on <c>handslot.l</c>, or null.</summary>
         public GameObject LeftHand => leftHand;
+
+        /// <summary>
+        /// What stands on the ground beside this row, and how big — empty for a
+        /// row with nothing there.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The third socket, and the only one that is not a bone. It is what
+        /// lets a tier be told apart by something the character is not carrying:
+        /// the Engineer's turret is what fires, and a statue, a font and a
+        /// weirwood are each a tower's whole tier-three read.
+        /// </para>
+        /// <para>
+        /// <b>Drawn by <see cref="TowerView"/> and ignored by
+        /// <see cref="CreepView"/>.</b> Nothing that walks stands beside
+        /// anything: a creep would carry its prop down the corridor, sliding
+        /// along a fixed offset from a body that is moving.
+        /// </para>
+        /// </remarks>
+        public BesideProp Beside => beside;
 
         /// <summary>
         /// How the right-hand item is turned relative to the bone. Zero for
@@ -148,6 +237,52 @@ namespace View
 
         /// <summary>The clip for <see cref="Sim.TowerState.Backswing"/>, or null on a creep.</summary>
         public AnimationClip BackswingClip => backswingClip;
+
+        /// <summary>
+        /// Where this unit's flashes and tracers leave its art from — a bone,
+        /// or a point on what it is holding. Empty for a unit that never fires.
+        /// </summary>
+        /// <remarks>
+        /// Per unit for the same reason the weapon is: a staff tip and a bow
+        /// grip are not the same place on the same rig, and a project-wide
+        /// height above the root is the thing this replaces. It travels with
+        /// the model and the hands because it names a part of them.
+        /// </remarks>
+        public EffectAnchor EffectAnchor => effectAnchor;
+
+        /// <summary>
+        /// What this row's bubble and this row's shot are drawn as, or a pair
+        /// of <c>None</c>s for the shapes every row shares.
+        /// </summary>
+        /// <remarks>
+        /// Per unit for the reason the anchor is: it is what makes a tier three
+        /// read as itself rather than as the shape every bubble and every shot
+        /// in the game shares, so it belongs beside the atlas and the props
+        /// that do the same job. Two halves rather than one field because the
+        /// Cleric's and the Druid's capstones want a shape at both moments —
+        /// an aura on the ground and a bolt out of the tome.
+        /// </remarks>
+        public RowSignature Signature => new RowSignature(bubbleSignature, shotSignature);
+
+        /// <summary>
+        /// The walk cycle this row is drawn with, or null for the shared one on
+        /// <see cref="MatchArt.CreepWalkClip"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Set only where the body is on a rig the shared pair was not
+        /// authored for.</b> The collection ships <c>Rig_Medium</c> and
+        /// <c>Rig_Large</c>, and <c>Walking_A</c> and <c>Death_A</c> exist in
+        /// both — so the shared pair is the medium one, and a Large body handed
+        /// it drives bones that skeleton has not got and slides down the
+        /// corridor in its bind pose. Nothing throws, which is why the override
+        /// is per row and named rather than derived from the model.
+        /// </para>
+        /// </remarks>
+        public AnimationClip WalkClip => walkClip;
+
+        /// <summary>The death this row is drawn with, or null for the shared one.</summary>
+        public AnimationClip DeathClip => deathClip;
 
         /// <summary>
         /// True when both halves are filled in. A zero scale is as incomplete as
@@ -184,12 +319,14 @@ namespace View
     /// </para>
     /// <para>
     /// <b>Models, weapons and tower clips are all per unit type.</b> The lookup
-    /// is by the id in <c>content/units.txt</c>, so the Necromancer and the
+    /// is by the id in <c>content/units.txt</c>, so the Skeleton Mage and the
     /// Skeleton Warrior are two different bodies on the board rather than two
-    /// rows that happen to draw the same. What is still shared is the creep
-    /// animation — one walk and one death for all of them — because all nine
-    /// models are on <c>Rig_Medium</c> and a clip from any bank drives any of
-    /// them.
+    /// rows that happen to draw the same. The creep animation is shared — one
+    /// walk and one death — with a per-row override for the bodies on the
+    /// second rig: a clip drives the skeleton it was authored for and reads as
+    /// a broken model on any other, so the shared pair is <c>Rig_Medium</c>'s
+    /// and the Large-rig rows name their own. <see cref="WalkClipFor"/> is
+    /// where the two meet.
     /// </para>
     /// <para>
     /// <b>The tower's weapon and clips were shared once, and that was the bug.</b>
@@ -228,12 +365,6 @@ namespace View
         /// than the thing shooting at it from any camera angle.
         /// </summary>
         public const float CreepScale = 0.5f;
-
-        /// <summary>
-        /// The Ranger's size. It shares the Archer's model and differs from it
-        /// in one stat, so size is the only thing separating the two rungs.
-        /// </summary>
-        public const float RangerScale = 1.5f;
 
         [Header("Per unit type")]
         [SerializeField]
@@ -274,11 +405,26 @@ namespace View
         /// <summary>Every unit type that has art, in the order it was wired.</summary>
         public IReadOnlyList<UnitArt> Units => units;
 
-        /// <summary>The walk cycle.</summary>
+        /// <summary>The walk cycle shared by every row that does not name one.</summary>
         public AnimationClip CreepWalkClip => Required(creepWalkClip, nameof(creepWalkClip));
 
-        /// <summary>The death clip.</summary>
+        /// <summary>The death shared by every row that does not name one.</summary>
         public AnimationClip CreepDeathClip => Required(creepDeathClip, nameof(creepDeathClip));
+
+        /// <summary>
+        /// The walk cycle one row is drawn with: its own where it names one,
+        /// and the shared clip otherwise.
+        /// </summary>
+        /// <remarks>
+        /// The fallback lives here rather than at the three call sites, so a
+        /// caller that draws a creep cannot draw it with the wrong rig's clip
+        /// by forgetting the override exists. See
+        /// <see cref="UnitArt.WalkClip"/> for what makes a row name its own.
+        /// </remarks>
+        public AnimationClip WalkClipFor(int unitId) => For(unitId).WalkClip ?? CreepWalkClip;
+
+        /// <summary>The death one row is drawn with, on the same rule.</summary>
+        public AnimationClip DeathClipFor(int unitId) => For(unitId).DeathClip ?? CreepDeathClip;
 
         /// <summary>
         /// Everything one unit type is drawn with — its model, its size, what

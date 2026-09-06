@@ -1,0 +1,37 @@
+# What each picture in this directory was drawn from: one line per
+# picture, and a digest over content/map.txt, content/units.txt,
+# content/upgrades.txt and content/dressing.txt as they stood when it
+# was captured.
+#
+# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
+# and only the thing that drew it knows that. tools/check-docs.ps1 reads
+# it where a commit date cannot answer -- a re-render that came out
+# pixel-identical leaves git nothing to date.
+#
+#       picture                        drawn from
+
+picture  creep-auras-tick-0094.png       F3896E6D53F411C4
+picture  creep-auras-tick-0271.png       F3896E6D53F411C4
+picture  creep-auras-tick-0272.png       F3896E6D53F411C4
+picture  creep-auras-tick-0276.png       F3896E6D53F411C4
+picture  effects-roster-tick-0700.png    F3896E6D53F411C4
+picture  four-lines-tick-0572.png        F3896E6D53F411C4
+picture  four-lines-tick-0780.png        F3896E6D53F411C4
+picture  four-lines-tick-0813.png        F3896E6D53F411C4
+picture  magic-lines-tick-0311.png       F3896E6D53F411C4
+picture  magic-lines-tick-0331.png       F3896E6D53F411C4
+picture  magic-lines-tick-0342.png       F3896E6D53F411C4
+picture  magic-lines-tick-0344.png       F3896E6D53F411C4
+picture  match-tick-0060.png             CD19C4891CAF9D03
+picture  match-tick-0200.png             CD19C4891CAF9D03
+picture  match-tick-0366.png             CD19C4891CAF9D03
+picture  match-tick-0700.png             CD19C4891CAF9D03
+picture  match-tick-0900.png             CD19C4891CAF9D03
+picture  match-tick-1096.png             F3896E6D53F411C4
+picture  match-tick-1229.png             F3896E6D53F411C4
+picture  match-tick-1400.png             CD19C4891CAF9D03
+picture  match-tick-1546.png             F3896E6D53F411C4
+picture  match-tick-2700.png             F3896E6D53F411C4
+picture  pierce-lines-tick-0516.png      F3896E6D53F411C4
+picture  pierce-lines-tick-0673.png      F3896E6D53F411C4
+picture  pierce-lines-tick-0674.png      F3896E6D53F411C4
