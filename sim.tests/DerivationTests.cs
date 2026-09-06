@@ -221,6 +221,32 @@ public class DerivationTests
         // changing no step, every other line untouched -- the fingerprint is
         // 4B15804EC1BEDE48, and with the rule in it is the value below.
         (10u, 0x13EB7A4673B75F21UL),
+
+        // Version 11 is #267 -- a creep becomes another row mid-lane. The first
+        // damage that reaches a body's health changes the row it is, ahead of
+        // the matrix and ahead of the death check, so the roll lands on the new
+        // row's armour and against the new row's pool and a body that named a
+        // successor cannot be killed by the hit that changed it. Which row a
+        // creep is stopped being a constant of the creep with it, so
+        // match-state/3 went to match-state/4 and every stored record's rolling
+        // hash stops reproducing whether or not its roster authors a
+        // transformation.
+        //
+        // IT CAUGHT THE HOLE AN EIGHTH TIME, and in the same half and for the
+        // same reason as the seventh: the sixth half's roster is where a rule
+        // the other five cannot author gets authored, and no row on it named a
+        // row to become. What the fold saw without the roster moving is the
+        // state hash's new layout and nothing else -- which would have been a
+        // row recording that a number moved, for a mechanic nothing ran. So the
+        // walker gained a successor and the roster gained the row it becomes,
+        // and the label went to rule-fingerprint/9.
+        //
+        // OBSERVED, both ways round, on this build. With the transformation
+        // struck out of Match.Damage -- the successor column read, linked and
+        // folded, and the tick loop never acting on it, every other line
+        // untouched -- the fingerprint is 5AC52DFE9393CC7D, and with the rule in
+        // it is the value below.
+        (11u, 0x4A90FFAD025E6DA7UL),
     };
 
     /// <summary>
@@ -302,12 +328,13 @@ public class DerivationTests
     /// </para>
     /// </remarks>
     private const string FingerprintShotUnits = """
-        layout 3
-        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0
-        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90
-        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0
-        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0
-        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60
+        layout 4
+        unit  1  walker  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  30  1  none  none   none    0   none    0    0    6
+        unit  2  warden  moving  100  27  0     0  0  0  0  0  none     0  4  4   none    armoured  0  0   1  1500  self   friend  20  shield  40   90   none
+        unit  3  volley  placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   2  none  none   none    0   none    0    0    none
+        unit  4  sweep   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  1000  self   enemy   0   damage  0    0    none
+        unit  5  chill   placed  0    0   2000  5  2  1  4  9  hitscan  0  0  20  pierce  none      0  0   1  0     target enemy   0   speed   -40  60   none
+        unit  6  risen   moving  160  41  0     0  0  0  0  0  none     0  9  6   none    swift     0  0   1  none  none   none    0   none    0    0    none
         """;
 
     /// <summary>
@@ -812,6 +839,15 @@ public class DerivationTests
     /// changed is the rows: a turret whose shot slows what it hits, and a
     /// walker whose aura grants a pool to whatever walks beside it.
     /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/9</c> is the third bump taken for the scenario
+    /// alone, and it is the sixth half's roster a third time. #267's rule is
+    /// reached only by a row naming the row it becomes, and no row on any of
+    /// these rosters named one -- so the walker gained a successor and the
+    /// roster gained the row it turns into. What that half now folds is a body
+    /// that spends part of the match as one row and the rest of it as another,
+    /// through a shot shape, a shield and a slow that all see it change.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -821,7 +857,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/8").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/9").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -861,6 +897,14 @@ public class DerivationTests
     /// is a bubble of each kind: one that spreads a roll, one that puts a
     /// magnitude on what it hits for a duration, and one that pulses on a clock
     /// of its own.
+    /// </para>
+    /// <para>
+    /// <b>And a third time for #267.</b> The walker names the row it becomes,
+    /// so the first shot that reaches its health hands the rest of the match a
+    /// body with another pool, another armour type and another speed -- which
+    /// every other rule in this half then resolves against. The successor is
+    /// swift where the walker is armoured, so the matrix cell moves as well as
+    /// the pool.
     /// </para>
     /// <para>
     /// <b>Both shot shapes, the shield, the slow and the aura are in one match

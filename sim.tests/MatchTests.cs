@@ -171,14 +171,23 @@ public class MatchTests
         // docs/roster.md signs or moves the committed defense, and both are
         // decisions rather than consequences of authoring a signed row.
         //
-        //   UNDER THE BAND, six rows, for two opposite reasons. The Mage's
+        //   UNDER THE BAND, five rows, for two opposite reasons. The Mage's
         //   splash lands on everything within a hex of what it hit, so it is
         //   worth most against a dense column -- and a column of one creep for
         //   four hundred gold is the densest thing that can be sent, which is
-        //   the Minion at forty bodies, the Shade at fifty and the Cursed
-        //   Villager at thirty-six. The Bone Golem, the Abomination and the
-        //   Warrior are at the other end: the slowest bodies on the roster
-        //   stand in front of the wall longest and are shot for longer.
+        //   the Minion at forty bodies and the Shade at fifty. The Bone Golem,
+        //   the Abomination and the Warrior are at the other end: the slowest
+        //   bodies on the roster stand in front of the wall longest and are
+        //   shot for longer.
+        //
+        //   THE CURSED VILLAGER LEFT THIS LIST WHEN IT LEARNED TO TRANSFORM,
+        //   36 to 88, and it is the only reading #267 moved. Thirty-six of them
+        //   is still the densest column the splash can be pointed at; what
+        //   changed is that each body is now the Werewolf's 2860 effective
+        //   health at the Villager's 11 gold, where it was the Villager's 1800.
+        //   The Werewolf's own reading is 86 either way, because nothing sends
+        //   one -- a Werewolf reached by sending Werewolves is the row nobody
+        //   buys.
         //
         //   OVER THE BAND, one row, and it is the Necromancer. Nineteen of them
         //   walk together and every one pulses a shield worth a quarter of a
@@ -242,7 +251,6 @@ public class MatchTests
                 "bone-golem at 25",
                 "abomination at 20",
                 "shade at 42",
-                "cursed-villager at 36",
             },
             under);
 
@@ -812,6 +820,7 @@ public class MatchTests
                 "CreepDied",
                 "CreepLeaked",
                 "CreepOvertook",
+                "CreepTransformed",
                 "ProjectileOrphaned",
                 "TowerFired",
             },

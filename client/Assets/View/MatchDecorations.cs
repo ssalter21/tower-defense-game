@@ -425,6 +425,25 @@ namespace View
         }
 
         /// <summary>
+        /// A creep became another row. Nothing is drawn here, and the two halves
+        /// of why are both worth saying.
+        /// </summary>
+        /// <remarks>
+        /// <b>The body swap is not a decoration.</b> Which row a creep is is a
+        /// field of the snapshot, so the model changes on the tick and a scrub
+        /// back across it draws the old body again without this method being
+        /// called at all -- which is the point of the field being in the
+        /// snapshot rather than on this stream.
+        /// <b>And what would go on top of it has not been chosen.</b> A puff, a
+        /// flash or a shockwave at the moment of the change is an art decision,
+        /// and inventing one here is not this ticket's to make.
+        /// </remarks>
+        public void CreepTransformed(int creepId, int typeId)
+        {
+            EventsHeard++;
+        }
+
+        /// <summary>
         /// A shot lost its target mid-flight. Nothing is drawn, and that is the
         /// interesting case rather than an omission: the projectile stops being
         /// in the snapshot on this tick, so its object is already going back in

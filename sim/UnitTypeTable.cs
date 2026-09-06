@@ -46,7 +46,7 @@ namespace Sim
         public const int DefaultLayout = 1;
 
         /// <summary>The layout the columns documented on <see cref="UnitType"/> describe.</summary>
-        public const int CurrentLayout = 3;
+        public const int CurrentLayout = 4;
 
         private const string Keyword = "unit";
 
@@ -78,6 +78,12 @@ namespace Sim
         /// second literal is a second thing to change.
         /// </remarks>
         private const string AbsentWord = NoTypeWord;
+
+        /// <summary>
+        /// What the <c>becomes</c> column carries where a row is only ever
+        /// itself. The same spelling of "nothing" the columns above use.
+        /// </summary>
+        private const string BecomesNobodyWord = NoTypeWord;
 
         /// <summary>
         /// The payload a bubble may not carry, spelled out so the refusal can
@@ -154,6 +160,12 @@ namespace Sim
             }
 
             var types = new List<UnitType>();
+
+            // The successor each row named and the line it named it on, in row
+            // order. Kept beside the rows rather than on them because the row
+            // being named may not have been read yet.
+            var becomes = new List<int>();
+            var lines = new List<int>();
             int previousId = 0;
             int layout = DefaultLayout;
             bool declared = false;
@@ -176,7 +188,7 @@ namespace Sim
                     throw WrongColumnCount(source, row.Line, layout, fields.Length);
                 }
 
-                UnitType type = ReadRow(source, row.Line, fields, layout);
+                UnitType type = ReadRow(source, row.Line, fields, layout, out int successor);
 
                 if (type.Id == previousId)
                 {
@@ -205,12 +217,16 @@ namespace Sim
 
                 previousId = type.Id;
                 types.Add(type);
+                becomes.Add(successor);
+                lines.Add(row.Line);
             }
 
             if (types.Count == 0)
             {
                 throw new ContentException(source, 0, "has no unit types in it at all.");
             }
+
+            Link(source, types, becomes, lines);
 
             Hash64 hash = Hash64.Start(HashLabelOf(layout)).Add(types.Count);
 
@@ -220,6 +236,103 @@ namespace Sim
             }
 
             return new UnitTypeTable(types.ToArray(), layout, hash);
+        }
+
+        /// <summary>
+        /// Points every row that named a successor at the row it named, once
+        /// every row has been read.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A chain is refused.</b> The row a body turns into may not itself
+        /// name one, so a body changes row at most once and the trigger reads as
+        /// "the first damage it takes" rather than as "every hit that lands
+        /// while it still has somewhere to go". It also keeps the termination
+        /// bound a comparison of two rows: a match refuses to start unless its
+        /// slowest walker still reaches the exit, and a chain would make the
+        /// slowest walker a walk over a graph.
+        /// </para>
+        /// <para>
+        /// Run before the fold, because the fold reads the resolved successor's
+        /// id -- so a table that refuses here never produces a hash at all.
+        /// </para>
+        /// </remarks>
+        private static void Link(string source, List<UnitType> types, List<int> becomes, List<int> lines)
+        {
+            for (int index = 0; index < types.Count; index++)
+            {
+                int wanted = becomes[index];
+
+                if (wanted == 0)
+                {
+                    continue;
+                }
+
+                int found = IndexOf(types, wanted);
+
+                if (found < 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "becomes type "
+                        + wanted.ToString(CultureInfo.InvariantCulture)
+                        + ", which is not a row of this table. A body cannot turn into a row nobody "
+                        + "authored, and an id is never an index into anything here.");
+                }
+
+                UnitType successor = types[found];
+
+                if (successor.Role != UnitRole.Moving)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "becomes "
+                        + successor.ToString()
+                        + ", which stands where it was put. A body walking the corridor cannot turn into "
+                        + "something that does not walk it.");
+                }
+
+                if (successor.MaxHp <= 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "becomes "
+                        + successor.ToString()
+                        + ", which has no health pool. What carries over at the change is a share of a "
+                        + "pool, and a share of nothing is a body that is already dead.");
+                }
+
+                if (becomes[found] != 0)
+                {
+                    throw new ContentException(
+                        source,
+                        lines[index],
+                        "becomes "
+                        + successor.ToString()
+                        + ", which becomes something in its turn. A body changes row once: a chain would "
+                        + "make the trigger every hit that lands rather than the first one, and would make "
+                        + "the slowest speed a match must terminate at a walk over a graph.");
+                }
+
+                types[index].LinkBecomes(successor);
+            }
+        }
+
+        /// <summary>Where the row with that id sits, or -1 if no row has it.</summary>
+        private static int IndexOf(List<UnitType> types, int id)
+        {
+            for (int index = 0; index < types.Count; index++)
+            {
+                if (types[index].Id == id)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -279,7 +392,7 @@ namespace Sim
         /// </remarks>
         public static bool IsKnownLayout(int layout)
         {
-            return layout == 1 || layout == 2 || layout == 3;
+            return layout == 1 || layout == 2 || layout == 3 || layout == 4;
         }
 
         /// <summary>Fields per row, keyword included, in that layout.</summary>
@@ -295,6 +408,9 @@ namespace Sim
 
                 case 3:
                     return 28;
+
+                case 4:
+                    return 29;
 
                 default:
                     throw NoSuchLayout(layout);
@@ -318,6 +434,9 @@ namespace Sim
 
                 case 3:
                     return "unit-types/3";
+
+                case 4:
+                    return "unit-types/4";
 
                 default:
                     throw NoSuchLayout(layout);
@@ -521,7 +640,12 @@ namespace Sim
                 + layout.ToString(CultureInfo.InvariantCulture)
                 + " has no reader branch in this table.");
 
-        private static UnitType ReadRow(string source, int line, string[] fields, int layout)
+        private static UnitType ReadRow(
+            string source,
+            int line,
+            string[] fields,
+            int layout,
+            out int becomes)
         {
             int id = DataText.IntegerInRange(source, line, "the type id", fields[1], MinimumId, MaximumId);
             string label = DataText.Label(source, line, "the label", fields[2]);
@@ -596,6 +720,16 @@ namespace Sim
                 RequireShotShapes(source, line, role, delivery, maxHp, shield, targets, bubble);
             }
 
+            // And what a row before layout 4 carries: a body that is only ever
+            // the row it spawned as. Zero is the absence of an id, which is what
+            // the record format already spells "no unit".
+            becomes = 0;
+
+            if (layout >= 4)
+            {
+                becomes = ReadBecomes(source, line, fields[28], id, role, maxHp);
+            }
+
             return new UnitType(
                 id,
                 label,
@@ -618,6 +752,62 @@ namespace Sim
                 shield,
                 targets,
                 bubble);
+        }
+
+        /// <summary>
+        /// The column naming the row a body of this one turns into, as an id
+        /// that has not been resolved yet -- the successor can sit anywhere in
+        /// the file, so the row it names is looked up once every row is read.
+        /// </summary>
+        /// <remarks>
+        /// What is checked here is everything about the naming row, because
+        /// that is everything this line can see. A row that cannot be damaged
+        /// has no moment to change on, and a row that named itself would be a
+        /// transformation nobody could watch happen.
+        /// </remarks>
+        private static int ReadBecomes(
+            string source,
+            int line,
+            string field,
+            int id,
+            UnitRole role,
+            int maxHp)
+        {
+            if (string.Equals(field, BecomesNobodyWord, StringComparison.Ordinal))
+            {
+                return 0;
+            }
+
+            int becomes = DataText.IntegerInRange(source, line, "the row it becomes", field, MinimumId, MaximumId);
+
+            if (becomes == id)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "becomes itself. A transformation that changes nothing is a column read by nothing, "
+                    + "and it would still move the content hash.");
+            }
+
+            if (role != UnitRole.Moving)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "stands where it was put and names a row it becomes. Nothing that stands is ever "
+                    + "damaged in this simulation, so the moment the change is triggered on never arrives.");
+            }
+
+            if (maxHp <= 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "has no health pool and names a row it becomes. The change is triggered by damage "
+                    + "reaching health, and a unit with no pool cannot be damaged at all.");
+            }
+
+            return becomes;
         }
 
         /// <summary>

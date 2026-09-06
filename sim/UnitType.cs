@@ -189,6 +189,37 @@ namespace Sim
         /// </summary>
         public Bubble Bubble { get; }
 
+        /// <summary>
+        /// The row a body of this one becomes when damage lands on it, or null
+        /// for a row that is only ever itself. Null on every row of every layout
+        /// before 4.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A resolved row rather than an id.</b> The table links the two
+        /// after it has read them all, so the tick loop holds the successor the
+        /// same way a wave order holds the row it sends -- nothing looks a
+        /// number up while a match is running.
+        /// </para>
+        /// <para>
+        /// <b>The successor names none of its own.</b> A chain is refused where
+        /// the column is read, which is what makes "damage lands on a row that
+        /// names a successor" the same sentence as "the first damage the body
+        /// takes".
+        /// </para>
+        /// </remarks>
+        public UnitType? Becomes { get; private set; }
+
+        /// <summary>
+        /// Points this row at the row it becomes. Called once, by the table,
+        /// after every row has been read -- a successor can sit anywhere in the
+        /// file, so the reference cannot exist while the rows are being built.
+        /// </summary>
+        internal void LinkBecomes(UnitType successor)
+        {
+            Becomes = successor;
+        }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
@@ -223,7 +254,10 @@ namespace Sim
                     return TypedFold(hash);
 
                 case 3:
-                    return Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
+                    return RadialFold(hash);
+
+                case 4:
+                    return RadialFold(hash).Add(Becomes is null ? 0 : Becomes.Id);
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -235,9 +269,10 @@ namespace Sim
         }
 
         /// <summary>
-        /// The four columns layout 2 added, in file order. Layout 3 folds them
-        /// in the same places -- a widening moves no column that was already
-        /// there -- so the two branches share this rather than each spelling it.
+        /// The four columns layout 2 added, in file order. Every layout after
+        /// it folds them in the same places -- a widening moves no column that
+        /// was already there -- so the branches share this rather than each
+        /// spelling it.
         /// </summary>
         private Hash64 TypedFold(Hash64 hash) =>
             hash
@@ -245,5 +280,12 @@ namespace Sim
                 .Add((int)AttackType)
                 .Add((int)ArmourType)
                 .Add(Armour);
+
+        /// <summary>
+        /// The nine columns layout 3 added, in file order. Layout 4 folds them
+        /// in the same places and appends its own after them.
+        /// </summary>
+        private Hash64 RadialFold(Hash64 hash) =>
+            Bubble.Fold(TypedFold(hash).Add(Shield).Add(Targets));
     }
 }

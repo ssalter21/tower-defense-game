@@ -51,7 +51,7 @@ $declaration = @'
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
   7  client/Assets/Tests/EditMode/CandidateSetTests.cs
- 11  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
+ 13  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
   5  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
  20  client/Assets/Tests/EditMode/ImportedArtTests.cs
   4  client/Assets/Tests/EditMode/MatchContentTests.cs
@@ -67,7 +67,7 @@ $declaration = @'
   8  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
   2  client/Assets/Tests/PlayMode/LocomotionTests.cs
- 36  client/Assets/Tests/PlayMode/MatchViewTests.cs
+ 37  client/Assets/Tests/PlayMode/MatchViewTests.cs
   2  client/Assets/Tests/PlayMode/ParityRunTests.cs
   4  client/Assets/Tests/PlayMode/PlayableHeadPoisonTests.cs
  10  client/Assets/Tests/PlayMode/PlayablesSamplingTests.cs

@@ -1606,3 +1606,46 @@ stand; the Engineer line cannot be drawn as designed at any tier without one. An
 a tier signal** — it is reserved for reading *"this tower is projecting an aura"*, which is the meaning that
 matters in play; the client has no `ParticleSystem` and two play-mode tests forbid one, so it would have to be
 real mesh geometry either way.
+
+---
+
+## 6 September 2026 — the Villager transforms, and two written-down claims move with it
+
+[#267](https://github.com/ssalter21/tower-defense-game/issues/267) built the first of the three engine asks
+signed on 5 September: a creep becomes another row mid-lane. Two claims this repository had written down
+turned out to be wrong once it existed, and both are here rather than edited away.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 "paid that price once, deliberately and **for the last time before the map is measured**" | **Layout 4, and the map is not measured yet.** A body that stops being one row and starts being another cannot be said in any arrangement of the twenty-eight columns, because every one of them describes a body that is one thing for as long as it exists. So `becomes` is the twenty-ninth column, layout 3 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired |
+| **[The roster](roster.md)** — the Villager/Werewolf pair | "The pair is therefore worth 1800 + 2600 = 4400 effective health *always*, not as a worst case" | **It is worth the Werewolf's 2860 effective health.** That arithmetic belonged to a trigger nobody signed — it is what a change *on death* would be worth. The signed trigger is the **first damage taken** and the change resolves ahead of it, so the Villager's own 1800 is never spent and the roll that triggers the change lands on the Werewolf. The band test moved with it, 36 to 88. **Whether the pair should be worth both pools is Sam's, and is unsigned** — it means moving the trigger onto the death, which is a different mechanic; it is an [open question](open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death) rather than a decision this ticket took |
+
+**The reading taken, spelled out, because a later reader will need it.** "The change resolves ahead of the
+death" was signed; three implementations of that sentence were available, and the one taken is **the change
+resolves ahead of the *damage***. The shot arrives, the pools in front of health absorb, and if anything got
+past then the body becomes the row it names — and *then* the roll is resolved, through the new row's armour
+and against the new row's pool and death check. "Cannot be one-shot" is therefore not a rule at all: the row
+that named a successor is already gone when the death check runs, so no hit of any size can kill it. The two
+rejected readings both apply the damage first and then need an invented clamp — one point of health, so that
+the transformation has somebody to happen to — and a clamp would make the Werewolf's entering pool a function
+of how hard the Villager was hit, which is the opposite of what the roster signs. See
+[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 3` → `layout 4`, and `unit-types/3` → `unit-types/4`, for the one column.
+- `SimulationVersion` **10 → 11**, because the tick loop's rules moved: a body can change row, and the matrix
+  is consulted against the row it changed into.
+- `match-state/3` → `match-state/4`. **Which row a creep is stopped being a constant of the creep**, so the
+  type id is folded every tick beside its health and its phase instead of once at the spawn — and every stored
+  record's rolling hash stops reproducing whether or not its roster authors a transformation.
+- `rule-fingerprint/8` → `rule-fingerprint/9`, the third bump taken for the scenario rather than the shape of
+  the fold: no roster in `DerivationTests` named a row to become, so the rules ran nowhere and the fingerprint
+  would have recorded only that the state hash had a new layout.
+
+**What is free is every record format.** `RecordFormat` is untouched: a roster is pinned by its content hash
+and never by its column count, so the replay bundle, the ghost, the wave and the command stream all carry the
+new hash in the field they already had.
+

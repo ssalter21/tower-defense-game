@@ -976,9 +976,9 @@ would re-baseline every measurement in the sweep.
   Werewolf.**
 - **Looks** — `Werewolf_Man`, `axe`.
 - **Numbers** — 1800 hp, speed 28, swift, armourValue 0, cost 11.
-- **Needs** — **engine.** A creep becoming another row mid-lane is a new mechanic, and
-  [#267](https://github.com/ssalter21/tower-defense-game/issues/267) is where it lands. The row itself is live
-  and walks as an ordinary cheap body until then.
+- **Needs** — nothing. A creep becoming another row mid-lane was a new mechanic and
+  [#267](https://github.com/ssalter21/tower-defense-game/issues/267) built it: `content/units.txt` layout 4
+  added the `becomes` column, and this is the one row on the roster that fills it in.
 - **Open** — none.
 
 ### 48 · Werewolf · status live
@@ -986,16 +986,29 @@ would re-baseline every measurement in the sweep.
 - **Does** — fast and durable at once. What the Cursed Villager becomes.
 - **Looks** — `Werewolf_Wolf`.
 - **Numbers** — 2600 hp, speed 50, swift, armourValue 10, cost 18.
-- **Needs** — engine, with the Villager. Both rows are live and both walk on their own until
-  [#267](https://github.com/ssalter21/tower-defense-game/issues/267).
+- **Needs** — nothing. Both rows still walk on their own, and nothing on the roster sends a Werewolf: it is
+  what a Cursed Villager becomes.
 - **Open** — none.
 
 > **A lethal first hit does not kill the Villager; it produces a Werewolf at full health.** The trigger is the
-> first damage taken, and the change resolves ahead of the death — so the Werewolf enters on its own full
-> 2600 rather than on whatever the Villager had left, and **no Cursed Villager can ever be one-shot**. The
-> pair is therefore worth 1800 + 2600 = 4400 effective health *always*, not as a worst case, and it must be
-> priced and swept as a pair. What else carries over at the change — position, route progress — is the
-> transform ticket's ADR.
+> first damage taken, and the change resolves ahead of the damage — so the Werewolf enters on its own full
+> 2600 rather than on whatever the Villager had left, and **no Cursed Villager can ever be one-shot**: the row
+> that named a successor is already gone when the death check runs, so no hit of any size kills it. What else
+> carries over at the change is
+> [ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
+>
+> **The pair is worth the Werewolf's 2860, and not 1800 + 2600.** That arithmetic was written here before the
+> mechanic was built and it belonged to a trigger nobody signed: the change resolves ahead of the damage, so
+> the Villager's own 1800 is never spent at all — the roll that triggers the change lands on the Werewolf and
+> comes off the Werewolf's pool. So the 11 gold a Villager costs buys 2860 effective health, which the cost
+> rule prices at 18. **It is priced as two rows and sent as one**, because the rule reads a row's health and
+> armour and no row here is both — the same silence it keeps about the Mage's splash and the Vampire's shield,
+> and the sweep is what is meant to derive a term for it.
+>
+> **Whether the pair SHOULD be worth both pools is unsigned, and is not this ticket's to take.** Making it so
+> means moving the trigger off the first damage and onto the death, which is a different mechanic and a
+> different feel; the 4400 above is the arithmetic of that trigger, written beside this one's name. See
+> [the open questions](open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death).
 
 > **This is the pairing `lancer` occupied with no design behind it.** Now the design is the transformation.
 
@@ -1090,9 +1103,9 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
 > decisions rather than consequences of authoring a signed row.
 >
-> **Seven creep rows are outside their own band with it.** Four hundred gold of one creep against the
-> committed defense returns 60 to 95 percent of its gold for ten of the seventeen rows; six are under and one
-> is over. The full table, measured on 5 September 2026 with the twelve new rows in:
+> **Six creep rows are outside their own band with it.** Four hundred gold of one creep against the
+> committed defense returns 60 to 95 percent of its gold for eleven of the seventeen rows; five are under and
+> one is over. The full table, measured on 6 September 2026 with the transformation in:
 >
 > | row | returns | | row | returns |
 > |---|---|---|---|---|
@@ -1100,7 +1113,7 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > | Skeleton Scout | 77 | | Witch | 84 |
 > | Skeleton Mage | 90 | | Fiend | 84 |
 > | Skeleton | 69 | | Shade | **42** |
-> | Skeleton Warrior | **41** | | Cursed Villager | **36** |
+> | Skeleton Warrior | **41** | | Cursed Villager | 88 |
 > | Necromancer | **100** | | Werewolf | 86 |
 > | Bone Golem | **25** | | Grave Robber | 81 |
 > | Black Knight | 71 | | | |
@@ -1109,9 +1122,15 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 >
 > **Under the band, for two opposite reasons.** A splash is worth most against a dense column, and a column of
 > one cheap row is the densest thing that can be sent — so what the Mage's splash costs most is the fine end
-> of the granularity axis: the Minion at forty bodies, the Shade at fifty, the Cursed Villager at thirty-six.
-> The Bone Golem, the Abomination and the Warrior are under it from the coarse end instead: the slowest bodies
-> on the board stand in front of the wall longest and are shot at for longer.
+> of the granularity axis: the Minion at forty bodies and the Shade at fifty. The Bone Golem, the Abomination
+> and the Warrior are under it from the coarse end instead: the slowest bodies on the board stand in front of
+> the wall longest and are shot at for longer.
+>
+> **The Cursed Villager left that list when it learned to transform, 36 to 88**, and it is the only reading
+> [#267](https://github.com/ssalter21/tower-defense-game/issues/267) moved. Thirty-six of them is still the
+> densest column the Mage's splash can be pointed at; what changed is that each of those bodies is now the
+> Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's 1800. The Werewolf's
+> own 86 is unchanged, because nothing sends a Werewolf.
 >
 > **Over the band, one row, and it is the Necromancer — which is the shield and the radius going unpriced at
 > once.** Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the
@@ -1126,9 +1145,12 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > and say which band to put back.
 >
 > **And no row deals zero.** The floor of the table is the Abomination at 20, so there is no dead row on the
-> menu; the two rows that never win a round of the sweep are the Minion at 21 dealt per hundred gold and the
-> Cursed Villager at 17, which are the same two ends of the same axis. Against the smaller four-wave field the
-> test fixture plays, the Abomination is the one row that deals nothing at all.
+> menu. **One row never wins a round of the sweep: the Minion, at 21 dealt per hundred gold.** The Cursed
+> Villager was the other, at 17 and nought of eight runs won, and the transformation moved it further than it
+> moved anything else — **398 dealt per hundred gold and eight of eight**, level with the Skeleton Mage, above
+> the Werewolf's 389 and behind only the Vampire and the Necromancer. It is the same body at the same 11 gold;
+> what changed is that a defense now has to kill two rows to be rid of it. Against the smaller four-wave field
+> the test fixture plays, the Abomination is the one row that deals nothing at all.
 
 **Measure before you retune.** Two changes have moved this number without any creep row moving — an attack type
 changing line, and the clock dilating while `wave.txt`'s order ticks did not. Both were found by running the
@@ -1218,11 +1240,13 @@ considered and dropped: it is not a thing this page needs to have an opinion abo
 
 **Decided, fixed as a list, and built.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)
 fixed the list; [#216](https://github.com/ssalter21/tower-defense-game/issues/216) landed it, and
-`content/units.txt` is layout 3 as of 16 August 2026. **The schema does not lack these any more** — the
-section title is kept because the table below is what every block above points at. The five levers became
-**nine columns**, and three of the five collapsed into one mechanic, because a sweep, a blast and an aura are
-all the same shape: a bubble that emits something. The reasoning is
-[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md).
+`content/units.txt` was layout 3 from 16 August 2026 and is layout 4 from 6 September 2026, when
+[#267](https://github.com/ssalter21/tower-defense-game/issues/267) added the `becomes` column. **The schema
+does not lack these any more** — the section title is kept because the table below is what every block above
+points at. The five levers became **nine columns**, and three of the five collapsed into one mechanic, because
+a sweep, a blast and an aura are all the same shape: a bubble that emits something. The reasoning is
+[ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md), and the tenth column's is
+[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
 
 | Column | Meaning |
 |---|---|
@@ -1235,6 +1259,7 @@ all the same shape: a bubble that emits something. The reasoning is
 | `bubblePayload` | `damage`, or one of the modifiable stats — speed, cooldown, armour, shield. **Range is not modifiable**, because it would force coverage back into the tick loop. Damage is not modifiable *today* either, because the keyword is taken by the roll a damage bubble spreads — a narrowing of the signed column list, and [an open question](open-questions.md) rather than a decision |
 | `bubbleMagnitude` | A percentage. A shield is a share of the health it stands in front of, and may not be negative. The signed table also allowed **a flat damage amount**, which nothing implements — same open question |
 | `bubbleDuration` | Ticks. 0 = instant, and for a shield it means "until spent" |
+| `becomes` | The id of the row a body of this one turns into the first time damage reaches its health, or `none`. The change resolves ahead of the damage; the named row must walk, must have a pool of its own, and may not name one in its turn |
 
 **What that authors.** A slow needs no dedicated columns at all: it is a bubble of radius 0, origin `target`,
 payload `speed`, negative magnitude, positive duration. Blessing is the same mechanic with a period and origin

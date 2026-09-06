@@ -24,6 +24,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
 | [0054](0054-height-is-a-relationship-and-a-radius-is-a-sphere.md) | Height is a relationship, a radius is a sphere, and a floor is under both |
 | [0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) | An effect is a stat, a magnitude and a duration, and a creep never drops below a tenth of its speed |
+| [0058](0058-a-creep-becomes-another-row-mid-lane.md) | A creep becomes another row mid-lane, ahead of the damage that triggered it |
 
 ## The simulation/view boundary
 

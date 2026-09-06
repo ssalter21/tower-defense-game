@@ -1963,6 +1963,90 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A body that becomes another row is drawn as that row from the tick it
+        /// becomes it, and a scrub across that tick draws the right body on both
+        /// sides of it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the fourth acceptance criterion of #267 and it is
+        /// satisfied by a field rather than by a message.</b> Which row a creep
+        /// is is in the snapshot, so a seek — which re-simulates and subscribes
+        /// nobody — puts the body back to whatever the row was at that tick with
+        /// no listener involved. An event saying "it transformed" would be
+        /// discarded by the re-run and the body would be scrubbed back wearing
+        /// the wrong skin; see ADR-0007 and ADR-0058.
+        /// </para>
+        /// <para>
+        /// <b>The two models are nearly the same picture and the assertions are
+        /// chosen for it.</b> The Cursed Villager and the Werewolf are the same
+        /// figure at the same height in the same clothes — the wolf head and the
+        /// axe are the whole of what tells them apart — so what is asserted is
+        /// the model asset's own name and the hand the axe is in, both read off
+        /// the art rather than written down here.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void ACreepDrawsTheRowItBecameAndASeekDrawsTheRightBodyEitherSide()
+        {
+            MatchArt art = TheMatchOnScreen.Art();
+            MatchView view = BeginWithTheTransformingPair();
+
+            RunUntil(view, () => view.Current.Creeps.Any(creep => creep.TypeId == Werewolf));
+
+            CreepSnapshot changed = view.Current.Creeps.First(creep => creep.TypeId == Werewolf);
+            int body = changed.Id;
+            int tick = view.Current.Tick;
+
+            Assert.That(tick, Is.GreaterThan(1), "nothing had time to be hit");
+            AssertDrawnAs(view, body, art, Werewolf);
+
+            // One tick earlier the same id is the Villager, which is what makes
+            // this a transformation rather than a death and a spawn.
+            view.ReSimulateTo(tick - 1);
+
+            Assert.That(
+                view.Current.Creeps.Single(creep => creep.Id == body).TypeId,
+                Is.EqualTo(CursedVillager),
+                "the body was already the Werewolf a tick before it became one");
+
+            AssertDrawnAs(view, body, art, CursedVillager);
+
+            // Forward across the change, and back over it again. Neither
+            // direction is special: the pool is told what exists and works the
+            // rest out by subtraction.
+            view.ReSimulateTo(tick + 30);
+            AssertDrawnAs(view, body, art, Werewolf);
+
+            view.ReSimulateTo(tick - 1);
+            AssertDrawnAs(view, body, art, CursedVillager);
+
+            view.ReSimulateTo(tick);
+            AssertDrawnAs(view, body, art, Werewolf);
+        }
+
+        /// <summary>
+        /// That the body with this id is drawn as the row with that id: the
+        /// model asset the row's art names, and whatever that row puts in its
+        /// hands.
+        /// </summary>
+        private static void AssertDrawnAs(MatchView view, int body, MatchArt art, int unitId)
+        {
+            CreepView drawn = view.Creeps.Live[body];
+            UnitArt authored = art.ArtFor(unitId);
+
+            Assert.That(
+                drawn.Model.name,
+                Is.EqualTo(authored.Model.name),
+                $"the body is drawn as {drawn.Model.name} where unit {unitId} is {authored.Model.name}");
+
+            Assert.That(
+                drawn.RightHand == null,
+                Is.EqualTo(authored.RightHand == null),
+                $"unit {unitId} is drawn holding the wrong thing");
+        }
+
+        /// <summary>
         /// Nothing in the recorded match is ever marked, so the marks cost a
         /// match with no effects in it exactly nothing on screen.
         /// </summary>
@@ -2536,6 +2620,41 @@ namespace Tests.PlayMode
 
         /// <summary>The Grave Robber, which authors the other pool.</summary>
         private const int GraveRobber = 49;
+
+        /// <summary>The Cursed Villager, the one row that names a row it becomes.</summary>
+        private const int CursedVillager = 47;
+
+        /// <summary>The Werewolf, which is what it becomes.</summary>
+        private const int Werewolf = 48;
+
+        /// <summary>
+        /// One Archer on a cell of the recorded defense, and a short column of
+        /// Cursed Villagers walking into it.
+        /// </summary>
+        /// <remarks>
+        /// The shipped rows and not a fixture, for the reason
+        /// <see cref="CreepAuraWave"/> is: what the recorded wave lacks is not
+        /// the authoring but the sending, so a row invented here would go stale
+        /// the day <c>content/units.txt</c> moved.
+        /// </remarks>
+        private const string TransformDefense = "tower 3 4 3";
+
+        private const string TransformWave = "order 0 47 3 0";
+
+        /// <summary>The real board and the real roster, with the pair walking it.</summary>
+        private MatchView BeginWithTheTransformingPair()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("transform defense", TransformDefense, types),
+                WaveScript.Parse("transform wave", TransformWave, types),
+                TheMatchOnScreen.Seed);
+        }
 
         /// <summary>
         /// Two Archers beside the corridor, so the Frost Wight has something on

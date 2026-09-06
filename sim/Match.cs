@@ -114,15 +114,17 @@ namespace Sim
         /// set loudly rather than leaving them silently comparing fewer things.
         /// </summary>
         /// <remarks>
-        /// <c>match-state/3</c> is the layout that folds what every unit is
+        /// <c>match-state/3</c> was the layout that folds what every unit is
         /// carrying -- the magnitude and the expiry of each timed effect on it,
         /// the pool a shield bubble granted it, and how long until its own aura
         /// pulses next. All of it is state a view never sees, which is exactly
         /// the kind of field this fold exists to watch: two runs that disagree
         /// about when a slow ends look identical for as long as it lasts and are
-        /// already different matches.
+        /// already different matches. <c>match-state/4</c> adds the row each
+        /// creep is, which stopped being a constant of a creep the moment a body
+        /// could change into another row mid-lane.
         /// </remarks>
-        private const string HashLabel = "match-state/3";
+        private const string HashLabel = "match-state/4";
 
         /// <summary>
         /// A match that has not ended by here is a match that is never going to,
@@ -333,19 +335,26 @@ namespace Sim
                 UnitOrder order = wave.Orders[index];
                 UnitType type = order.Type;
 
-                if (type.SpeedMilliHexPerTick <= 0)
-                {
-                    throw new SimulationException(
-                        "The wave sends "
-                        + type.ToString()
-                        + ", which has no speed. A unit that walks a corridor at nothing per tick never "
-                        + "reaches the exit and never dies, so the match it is in cannot end.");
-                }
+                UnitType? successor = type.Becomes;
 
+                RequireItWalks(type);
                 RequireResolvable(type);
-                RequireItArrives(order);
 
                 walkersPulse = walkersPulse || type.Bubble.IsAnAura;
+
+                // A row a body turns into is on this map as surely as the row
+                // the wave named, so it is held to the same three things -- and
+                // the termination bound below is taken against whichever of the
+                // two walks slower and dies longer.
+                if (successor is not null)
+                {
+                    RequireItWalks(successor);
+                    RequireResolvable(successor);
+
+                    walkersPulse = walkersPulse || successor.Bubble.IsAnAura;
+                }
+
+                RequireItArrives(order);
 
                 // Once, here, rather than in the tick loop: this is a division,
                 // and it is also the one place the truncated remainder that the
@@ -411,6 +420,22 @@ namespace Sim
         }
 
         /// <summary>
+        /// A row that gets anywhere. Nothing walking at nothing per tick ever
+        /// reaches the exit or dies, so a match holding one cannot end.
+        /// </summary>
+        private static void RequireItWalks(UnitType type)
+        {
+            if (type.SpeedMilliHexPerTick <= 0)
+            {
+                throw new SimulationException(
+                    "The wave sends "
+                    + type.ToString()
+                    + ", which has no speed. A unit that walks a corridor at nothing per tick never "
+                    + "reaches the exit and never dies, so the match it is in cannot end.");
+            }
+        }
+
+        /// <summary>
         /// A row this tick loop can actually resolve, or a refusal naming what
         /// about it is not.
         /// </summary>
@@ -472,7 +497,30 @@ namespace Sim
         private void RequireItArrives(UnitOrder order)
         {
             UnitType type = order.Type;
-            int floor = Effects.FloorSpeed(type.SpeedMilliHexPerTick);
+            UnitType? successor = type.Becomes;
+
+            // A body that changes row mid-lane finishes the corridor at the
+            // slower of the two speeds and dies for the longer of the two
+            // deaths, and which half it spends where is unknown here -- so the
+            // bound is taken against the worst of both, which is a walk no
+            // body can be slower than.
+            int slowest = type.SpeedMilliHexPerTick;
+            int dying = type.DyingTicks;
+
+            if (successor is not null)
+            {
+                if (successor.SpeedMilliHexPerTick < slowest)
+                {
+                    slowest = successor.SpeedMilliHexPerTick;
+                }
+
+                if (successor.DyingTicks > dying)
+                {
+                    dying = successor.DyingTicks;
+                }
+            }
+
+            int floor = Effects.FloorSpeed(slowest);
 
             // The step the creep would actually take, and not the milli-hexes
             // it was worked out from. Those are two different numbers -- the
@@ -491,7 +539,7 @@ namespace Sim
             long latest = order.TickOffset
                 + ((long)SpawnIntervalTicks * (order.Count - 1))
                 + crossing
-                + type.DyingTicks;
+                + dying;
 
             if (latest < TickCeiling)
             {
@@ -1666,6 +1714,18 @@ namespace Sim
         /// is the single place overkill and every kind of stale reference are
         /// dealt with -- and the single place a roll becomes an amount.
         /// </summary>
+        /// <remarks>
+        /// <b>A row that names a successor changes into it here, between the
+        /// pool and the matrix.</b> The order is the whole of the mechanic:
+        /// nothing has come off health yet when the change resolves, so the new
+        /// row enters on the same share of its own pool the old one was holding
+        /// -- a full one, this being the first damage the body has taken -- and
+        /// the roll then lands on the body now standing there, through its
+        /// armour and against its pool. A hit big enough to have killed the old
+        /// row therefore kills nothing: the old row is already gone by the time
+        /// the death check runs. See
+        /// <c>docs/adr/0058-a-creep-becomes-another-row-mid-lane.md</c>.
+        /// </remarks>
         /// <param name="creep">Where the target is in the live array, or -1 for nothing.</param>
         /// <param name="roll">What the dice gave when the shot was fired.</param>
         /// <param name="shooter">The row that fired it, which carries its attack type.</param>
@@ -1691,6 +1751,15 @@ namespace Sim
                 return;
             }
 
+            // After the pool and before the matrix. A roll a shield swallowed
+            // whole never reaches here, which is the right silence: nothing was
+            // taken off health, so no damage was taken and there is nothing to
+            // change on.
+            if (target.Type.Becomes is UnitType next)
+            {
+                Become(ref target, next, events);
+            }
+
             int amount = Resolved(shooter, past, ref target);
 
             events?.CreepDamaged(target.Id, amount);
@@ -1706,6 +1775,48 @@ namespace Sim
             target.TicksInState = 0;
             _killed++;
             events?.CreepDied(target.Id);
+        }
+
+        /// <summary>
+        /// Turns one body into the row its own row names, in place.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The body is the same body.</b> It keeps its id, its distance along
+        /// the route, its lateral offset, the order that released it and every
+        /// effect standing on it, so nothing that was pointed at it stops being
+        /// pointed at it and nothing about where it is moves.
+        /// </para>
+        /// <para>
+        /// <b>Health carries as a share of the pool and never as a number.</b>
+        /// Two rows have two pools, so a raw carry-over would be a fraction of
+        /// one pool read as a fraction of the other. The share is taken in
+        /// integers and floored, and floored to at least one, because a body
+        /// that changed row is a body the change did not kill.
+        /// </para>
+        /// <para>
+        /// <b>The pool in front of that health carries raw.</b> A shield is
+        /// spent rather than scaled -- it has no rate for a share to be a share
+        /// of -- so what is left of it is what is left of it, and the new row's
+        /// own authored shield is not granted: a pool arrives when a body
+        /// spawns, and this body did not.
+        /// </para>
+        /// <para>
+        /// The step is re-derived because the new row walks at its own speed,
+        /// and the aura counter is put back to zero because the new row pulses
+        /// on its own clock -- both exactly as a spawn does them.
+        /// </para>
+        /// </remarks>
+        private static void Become(ref Creep body, UnitType next, IMatchEvents? events)
+        {
+            long share = (long)body.Hp * next.MaxHp / body.Type.MaxHp;
+
+            body.Type = next;
+            body.Hp = share < 1 ? 1 : (int)share;
+            body.Step = StepUnder(next, body.Effects.SpeedMagnitude);
+            body.PulseIn = 0;
+
+            events?.CreepTransformed(body.Id, next.Id);
         }
 
         /// <summary>
@@ -1912,6 +2023,13 @@ namespace Sim
         /// that cannot have changed, once a tick for two thousand ticks, would
         /// be spending the re-simulation budget on proving nothing.
         /// </para>
+        /// <para>
+        /// <b>Which row a creep is is not one of those.</b> A body can change
+        /// row mid-lane, so the type id is folded here beside the health and the
+        /// phase rather than once at the spawn: a run that changed a body one
+        /// tick earlier than another run is a different match from that tick on,
+        /// and this is the only thing that would ever notice.
+        /// </para>
         /// </remarks>
         private void Fold()
         {
@@ -1932,7 +2050,8 @@ namespace Sim
                         .Add(creep.Distance.Raw)
                         .Add(creep.Id, creep.Hp)
                         .Add(creep.Shield, (int)creep.Phase)
-                        .Add(creep.TicksInState, creep.PulseIn));
+                        .Add(creep.TicksInState, creep.PulseIn)
+                        .Add(creep.Type.Id));
             }
 
             for (int index = 0; index < _towers.Length; index++)

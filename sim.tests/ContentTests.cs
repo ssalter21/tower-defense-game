@@ -37,14 +37,26 @@ public class ContentTests
 
     /// <summary>
     /// The same three rows again in column layout 3, carrying nothing in any of
-    /// the nine columns it adds -- which is what every committed row carries and
-    /// is not the same thing as a row that has no such columns.
+    /// the nine columns it adds -- which is not the same thing as a row that has
+    /// no such columns.
     /// </summary>
-    private const string ThreeCurrentRows = """
+    private const string ThreeRadialRows = """
         layout 3
         unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0
         unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0
         unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
+        """;
+
+    /// <summary>
+    /// The same three rows once more in column layout 4, carrying nothing in the
+    /// one column it adds -- which is what every committed row but the Cursed
+    /// Villager carries.
+    /// </summary>
+    private const string ThreeCurrentRows = """
+        layout 4
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none
         """;
 
     /// <summary>
@@ -64,6 +76,19 @@ public class ContentTests
     /// instead -- one literal, in the one place a widening would move it.
     /// </remarks>
     private const ulong LayoutTwoHashOfThreeRows = 0x0EEC991C9FDDAF07UL;
+
+    /// <summary>
+    /// What <see cref="ThreeRadialRows"/> hashed to before layout 4 existed, and
+    /// what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Pinned here for the reason layout 2's is: no golden bundle carries a
+    /// layout-3 table any more -- <c>content/golden/defense-1.units</c> was
+    /// re-recorded at layout 4 with the bundle beside it -- so a fold that moved
+    /// under layout 3's label would go unnoticed by everything else in this
+    /// repository, and the next widening is exactly when it would happen.
+    /// </remarks>
+    private const ulong LayoutThreeHashOfThreeRows = 0x6C404CE93E6484C1UL;
 
     /// <summary>
     /// The Mage's id. Named because two tests below single the row out -- it is
@@ -748,20 +773,57 @@ public class ContentTests
         // absent ones as zeroes under the old label, this pair would be equal.
         UnitTypeTable one = UnitTypeTable.Parse(ThreeGoodRows);
         UnitTypeTable two = UnitTypeTable.Parse(ThreeTypedRows);
-        UnitTypeTable three = UnitTypeTable.Parse(ThreeCurrentRows);
+        UnitTypeTable three = UnitTypeTable.Parse(ThreeRadialRows);
+        UnitTypeTable four = UnitTypeTable.Parse(ThreeCurrentRows);
 
         Assert.Equal(UnitTypeTable.DefaultLayout, one.Layout);
         Assert.Equal(2, two.Layout);
-        Assert.Equal(UnitTypeTable.CurrentLayout, three.Layout);
+        Assert.Equal(3, three.Layout);
+        Assert.Equal(UnitTypeTable.CurrentLayout, four.Layout);
 
         Assert.Equal(one.ById(1).MaxHp, two.ById(1).MaxHp);
         Assert.Equal(two.ById(1).MaxHp, three.ById(1).MaxHp);
+        Assert.Equal(three.ById(1).MaxHp, four.ById(1).MaxHp);
         Assert.Equal(two.ById(7).Cost, three.ById(7).Cost);
-        Assert.Equal(two.ById(7).AttackType, three.ById(7).AttackType);
+        Assert.Equal(three.ById(7).Cost, four.ById(7).Cost);
+        Assert.Equal(three.ById(7).AttackType, four.ById(7).AttackType);
 
-        Assert.NotEqual(one.ContentHash, two.ContentHash);
-        Assert.NotEqual(two.ContentHash, three.ContentHash);
-        Assert.NotEqual(one.ContentHash, three.ContentHash);
+        var hashes = new[]
+        {
+            one.ContentHash,
+            two.ContentHash,
+            three.ContentHash,
+            four.ContentHash,
+        };
+
+        Assert.Equal(hashes.Length, hashes.Distinct().Count());
+    }
+
+    [Fact]
+    public void A_layout_three_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time, one layout
+        // on: layout 3 is what content/units.txt was an hour ago, and a widening
+        // that quietly changed how one reads would retire records nobody edited.
+        //
+        // OBSERVED: fold the successor id in UnitType.Fold's layout-3 branch as
+        // well. This goes red against the literal, and nothing else in the suite
+        // notices.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeRadialRows);
+
+        Assert.Equal(3, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutThreeHashOfThreeRows), table.ContentHash);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Equal(1, table.ById(7).Targets);
+        Assert.False(table.ById(7).Bubble.Present);
+
+        // And what such a row carries in the column it does not have: a body
+        // that is only ever the row it spawned as. That is what a layout-3 row
+        // IS, and not a default standing in for something it stated.
+        Assert.Null(table.ById(1).Becomes);
+        Assert.Null(table.ById(2).Becomes);
+        Assert.Null(table.ById(7).Becomes);
     }
 
     [Fact]
@@ -826,6 +888,13 @@ public class ContentTests
         Assert.NotEqual(
             UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
             UnitTypeTable.Parse(ThreeCurrentRows.Replace("0 40 pierce", "0 40 magic")).ContentHash);
+
+        // And the one column layout 4 added. A row that names the row it becomes
+        // is a row that plays differently from the day it was authored, so a
+        // record made against the roster before it has to be retired.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none", "armoured 0 0 1 none none none 0 none 0 0 2")).ContentHash);
     }
 
     [Fact]
@@ -840,7 +909,7 @@ public class ContentTests
         // columns were added in the wrong order parses as the current layout
         // with its fields transposed.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "# the layout row, forgotten")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 4", "# the layout row, forgotten")));
 
         Assert.Contains("column layout 1 has 15", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("'layout' row", thrown.Message, StringComparison.Ordinal);
@@ -859,9 +928,9 @@ public class ContentTests
     public void A_row_with_layout_twos_columns_under_a_layout_three_declaration_refuses_by_name()
     {
         // The widening's own version of the test above, and the acceptance
-        // criterion in as many words: a layout-3 row with the wrong field count
-        // is refused rather than read against shifted fields. Nine columns is a
-        // lot to leave off, and leaving off any of them would otherwise slide a
+        // criterion in as many words: a row with the wrong field count is
+        // refused rather than read against shifted fields. Nine columns is a lot
+        // to leave off, and leaving off any of them would otherwise slide a
         // bubble magnitude into a duration.
         ContentException thrown = Assert.Throws<ContentException>(
             () => UnitTypeTable.Parse(ThreeTypedRows.Replace("layout 2", "layout 3")));
@@ -871,9 +940,30 @@ public class ContentTests
         // And one column short of the twenty-eight, which is the shape a real
         // mistake takes: a row that lost a field rather than nine of them.
         ContentException short_ = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("none 0 none 0 0", "none 0 none 0")));
+            () => UnitTypeTable.Parse(ThreeRadialRows.Replace("none 0 none 0 0", "none 0 none 0")));
 
         Assert.Contains("column layout 3 has 28", short_.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_threes_columns_under_a_layout_four_declaration_refuses_by_name()
+    {
+        // Layout 4's own version of it, and the acceptance criterion again: a
+        // row whose count does not match the layout it declared is refused. One
+        // column is the easiest of all of them to leave off, because a table
+        // that gained a single column looks finished the moment the layout row
+        // is edited.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeRadialRows.Replace("layout 3", "layout 4")));
+
+        Assert.Contains("column layout 4 has 29", thrown.Message, StringComparison.Ordinal);
+
+        // And one field too many, which is the same mistake from the other side:
+        // the columns written and the layout row left where it was.
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 4", "layout 3")));
+
+        Assert.Contains("column layout 3 has 28", over.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -883,13 +973,14 @@ public class ContentTests
         // branch somebody deleted arrives here rather than passing an
         // inequality and falling through a switch.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "layout 4")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 4", "layout 5")));
 
-        Assert.Contains("declares column layout 4", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declares column layout 5", thrown.Message, StringComparison.Ordinal);
         Assert.False(UnitTypeTable.IsKnownLayout(0));
-        Assert.False(UnitTypeTable.IsKnownLayout(4));
+        Assert.False(UnitTypeTable.IsKnownLayout(5));
         Assert.True(UnitTypeTable.IsKnownLayout(1));
         Assert.True(UnitTypeTable.IsKnownLayout(2));
+        Assert.True(UnitTypeTable.IsKnownLayout(3));
         Assert.True(UnitTypeTable.IsKnownLayout(UnitTypeTable.CurrentLayout));
     }
 

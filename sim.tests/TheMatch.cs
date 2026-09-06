@@ -264,6 +264,9 @@ public static class TheMatch
 
         public void CreepLeaked(int creepId) => Record("leaked", creepId, 0);
 
+        public void CreepTransformed(int creepId, int typeId) =>
+            Record("became", creepId, typeId);
+
         public void ProjectileOrphaned(int projectileId) => Record("orphaned", projectileId, 0);
 
         public void CreepOvertook(int creepId, int overtakenCreepId) =>

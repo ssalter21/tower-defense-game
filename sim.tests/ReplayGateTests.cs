@@ -260,8 +260,13 @@ public class ReplayGateTests
         // a different match, legitimately. While the map was flat these two
         // hashes agreed for a reason that had nothing to do with restaging, and
         // this assertion proved less than it looked like it did.
+        //
+        // The literal moves whenever the state hash's own layout does, which is
+        // a SimulationVersion bump by definition: this is match-state/4, which
+        // folds the row every creep is because a body can now change row
+        // mid-lane.
         Assert.Equal(
-            "FCC75445E738FBEB",
+            "8D1D3551E104ED13",
             restaged.Match.Resolve().RollingStateHash.ToString());
     }
 

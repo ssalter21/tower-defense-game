@@ -1,7 +1,7 @@
 namespace Sim
 {
     /// <summary>
-    /// The eight things a match will tell you about as they happen, if you ask.
+    /// The nine things a match will tell you about as they happen, if you ask.
     /// Every parameter is an entity id, a count, or a value read straight off
     /// the emitter's row -- no event carries a position, a duration, or
     /// simulation state. Emitted only to the sink passed to
@@ -20,6 +20,22 @@ namespace Sim
 
         /// <summary>The creep reached the exit.</summary>
         void CreepLeaked(int creepId);
+
+        /// <summary>
+        /// A creep became another row, on the tick the change resolved.
+        /// </summary>
+        /// <remarks>
+        /// <b>The body it is now drawn as is not this event.</b> Which row a
+        /// creep is is a field of the snapshot, so a seek that lands either side
+        /// of this tick draws the right body without anybody having heard
+        /// anything -- see <c>docs/adr/0007-snapshot-is-the-only-view-input.md</c>.
+        /// What this carries is the moment, for whatever a view wants to mark it
+        /// with, and the row it names is the one the snapshot is already
+        /// reporting.
+        /// </remarks>
+        /// <param name="creepId">The body that changed. It keeps its id.</param>
+        /// <param name="typeId">The row it is now, by its stable id.</param>
+        void CreepTransformed(int creepId, int typeId);
 
         /// <summary>
         /// A projectile lost the creep it was aimed at and stopped existing

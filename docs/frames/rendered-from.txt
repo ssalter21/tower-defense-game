@@ -14,7 +14,7 @@ picture  creep-auras-tick-0094.png       714C2D52791521AD
 picture  creep-auras-tick-0271.png       714C2D52791521AD
 picture  creep-auras-tick-0272.png       714C2D52791521AD
 picture  creep-auras-tick-0276.png       714C2D52791521AD
-picture  effects-roster-tick-0700.png    714C2D52791521AD
+picture  effects-roster-tick-0700.png    37C269DDB7C95E86
 picture  four-lines-tick-0572.png        714C2D52791521AD
 picture  four-lines-tick-0780.png        714C2D52791521AD
 picture  four-lines-tick-0813.png        714C2D52791521AD
@@ -22,10 +22,10 @@ picture  magic-lines-tick-0311.png       714C2D52791521AD
 picture  magic-lines-tick-0331.png       714C2D52791521AD
 picture  magic-lines-tick-0342.png       714C2D52791521AD
 picture  magic-lines-tick-0344.png       714C2D52791521AD
-picture  match-tick-1096.png             714C2D52791521AD
-picture  match-tick-1229.png             714C2D52791521AD
-picture  match-tick-1546.png             714C2D52791521AD
-picture  match-tick-2700.png             714C2D52791521AD
+picture  match-tick-1096.png             37C269DDB7C95E86
+picture  match-tick-1229.png             37C269DDB7C95E86
+picture  match-tick-1546.png             37C269DDB7C95E86
+picture  match-tick-2700.png             37C269DDB7C95E86
 picture  pierce-lines-tick-0516.png      714C2D52791521AD
 picture  pierce-lines-tick-0673.png      714C2D52791521AD
 picture  pierce-lines-tick-0674.png      714C2D52791521AD

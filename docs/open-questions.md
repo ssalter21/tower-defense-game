@@ -321,3 +321,19 @@ shapes it could take: leave it and read a zero as the finding it is; play the sw
 that every row leaks something; or add a column that says what a row *survived* rather than what it dealt, so
 a creep that never gets through is still ranked by how far it got. The last is the only one that does not
 choose between honesty and signal.
+
+### Should the Cursed Villager transform on damage, or on death?
+
+**Raised by [#267](https://github.com/ssalter21/tower-defense-game/issues/267) building the trigger #250
+signed.** The signed sentence is *the Villager transforms on first damage taken and cannot be one-shot*, and
+the roster wrote a consequence beside it: *the pair is therefore worth 1800 + 2600 = 4400 effective health
+always*. Those two do not both hold. A change that resolves ahead of the damage means the Villager's 1800 is
+never spent — the roll that triggers it lands on the Werewolf — so a Villager is **2860 effective health for
+11 gold**, which the cost rule prices at 18. The 4400 is what a change **on death** would be worth.
+
+**The mechanic is built to the signed trigger and the arithmetic is corrected to match it.** What is not
+decided is which of the two was wanted. On damage, the Villager is a wolf almost immediately and its own pool
+is decoration; on death, it is a body that has to be killed twice and the first form is half of what was paid
+for. They feel different and they price differently, and the second is a bigger creep than anything else on
+the roster for eleven gold. **Nothing is retuned either way** — the price is derived, and a transforming pair
+is the third thing the rule cannot see, beside the Mage's splash and the Vampire's shield.
