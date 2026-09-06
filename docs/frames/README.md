@@ -46,7 +46,7 @@ row that says "drag to tick 1096" are about the same moment.
     -Ticks "673" -Distance 18 -Width 1600
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
-    -Ticks "342,344" -Distance 22 -Width 1600
+    -Ticks "311,342,344" -Distance 22 -Width 1600
 
 # The same board, defense and seed, with a wave of your own walking it
 ./tools/capture-match-frames.ps1 -Wave "docs/frames/creep-auras.txt" `
@@ -65,13 +65,22 @@ that says how many bodies a throw found** — it goes up by three where the Fan 
 Knives had three in range and by one or two where it had fewer, so a frame of
 *three* knives is found by looking for a step of three.
 
-**A frame is a function of its tick and nothing else.** The capture draws every
-tick it steps through rather than only the ones it keeps, because where a tower
-is pointing and where its shot leaves from are both read off the pose it was
-last drawn in. It used to draw only at the kept ticks, which made a sparse tick
-list a photograph of a match whose towers had never moved — and, once effects
-started leaving the model rather than a fixed height above it, put the muzzle
-flash on a rig still standing in its bind pose.
+**A frame is a function of its tick AND of the tick list it was asked for**, and
+the second half of that is a trap. The capture draws every tick it steps through
+rather than only the ones it keeps, because where a tower is pointing and where
+its shot leaves from are both read off the pose it was last drawn in. It used to
+draw only at the kept ticks, which made a sparse tick list a photograph of a
+match whose towers had never moved — and, once effects started leaving the model
+rather than a fixed height above it, put the muzzle flash on a rig still standing
+in its bind pose.
+
+**Drawing every tick did not make the kept ones independent of each other.**
+Measured twice, reproducibly: `-Ticks "342,344"` and `-Ticks "311,342,344"` give
+different bytes for 0342 and 0344, and only the three-tick list reproduces what
+is committed. So **re-capture a fixture with the whole tick list above and not
+one tick at a time**, and expect a frame to move if you do not. Where a frame is
+listed on a line of its own below — 0813, 0674, 0331 — that line is its whole
+list.
 
 ## What is committed
 

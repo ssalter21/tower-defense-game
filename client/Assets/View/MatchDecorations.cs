@@ -463,6 +463,25 @@ namespace View
         }
 
         /// <summary>
+        /// A body that pays for being killed was killed. Nothing is drawn here,
+        /// for the two reasons the transformation and the raise are not drawn
+        /// either.
+        /// </summary>
+        /// <remarks>
+        /// <b>The gold itself is not a decoration.</b> What a match has paid is
+        /// a number on the match, and a seek re-simulates it from tick zero
+        /// rather than replaying a stream -- so a scrub either side of this tick
+        /// reads the running total without this method being called at all.
+        /// <b>And what would go on top of it has not been chosen.</b> A coin, a
+        /// number floating off the body or a flash on the purse is an art
+        /// decision, and inventing one here is not this ticket's to make.
+        /// </remarks>
+        public void BountyPaid(int creepId, int gold)
+        {
+            EventsHeard++;
+        }
+
+        /// <summary>
         /// A shot lost its target mid-flight. Nothing is drawn, and that is the
         /// interesting case rather than an omission: the projectile stops being
         /// in the snapshot on this tick, so its object is already going back in

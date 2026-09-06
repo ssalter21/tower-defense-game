@@ -531,8 +531,11 @@ namespace Sim
         /// closes every wave at <see cref="Purse.CloseWaveAtBest"/>, against the
         /// most the round could possibly have dealt: the full price of the wave
         /// the stored decision composes, every creep of it leaking against every
-        /// opponent. Every decision refused here is one no run could have
-        /// afforded however well it played; a decision the ceiling admits is
+        /// opponent. <b>What a round is paid for killing is bounded the same
+        /// way</b>, by <see cref="Run.MostBountyEarnable"/> -- income earned
+        /// inside a match is a number only a resolved round has, and a ceiling
+        /// that left it out would stop being one. Every decision refused here is
+        /// one no run could have afforded however well it played; a decision the ceiling admits is
         /// checked again, against the purse the round really holds, by the same
         /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
@@ -587,7 +590,9 @@ namespace Sim
                 Build build = command.ToPhase().Resolve(
                     round, carried, run.Ladder, purse, run.Costs, run.Types, run.Map, board);
 
-                purse = build.Purse.CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs)).Purse;
+                purse = build.Purse
+                    .CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs), run.MostBountyEarnable)
+                    .Purse;
                 board = build.Board;
                 carried = build.Wave;
                 builds.Add(build);

@@ -104,6 +104,13 @@ namespace Sim
         /// </summary>
         private const int NothingDealt = 0;
 
+        /// <summary>
+        /// The bounty a round of the canned stand-in is closed on. Nothing here
+        /// plays a match, so nothing was killed in front of the wall being
+        /// built and there is nothing to be paid for.
+        /// </summary>
+        private const int NothingEarned = 0;
+
         private static readonly RoundOrders[] Nobody = new RoundOrders[0];
 
         private readonly RoundOrders[][] _standIn;
@@ -372,7 +379,7 @@ namespace Sim
 
                 board = built.Board;
                 recorded[round] = new[] { RoundOrders.Of(board.Layout(), Grown(wave, round + 1)) };
-                purse = built.Purse.CloseWave(rules, NothingDealt).Purse;
+                purse = built.Purse.CloseWave(rules, NothingDealt, NothingEarned).Purse;
             }
 
             return OfRounds(recorded);

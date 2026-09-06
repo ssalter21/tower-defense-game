@@ -269,6 +269,28 @@ public class DerivationTests
         // tick loop never putting a body down -- the fingerprint is
         // 79786A8DE9C1F0A2, and with the phase in it is the value below.
         (12u, 0xC3B4DE54701BCD2DUL),
+
+        // Version 13 is #269 -- a kill pays the defender. A row names what
+        // killing a body of it pays, the payment is made where a body's health
+        // reaches zero, and what a match has paid comes back on its result for
+        // a build phase to spend. What the kills have paid joined the per-tick
+        // fold with it, so match-state/5 went to match-state/6 and every stored
+        // record's rolling hash stops reproducing whether or not its roster
+        // authors a bounty.
+        //
+        // IT CAUGHT THE HOLE A TENTH TIME, in the same half and for the same
+        // reason as the seventh, eighth and ninth: the sixth half's roster is
+        // where a rule the other five cannot author gets authored, and no row on
+        // it paid anything. So the row the walker becomes and the row the warden
+        // raises both gained a bounty -- the two routes a body can arrive by
+        // that are not a wave order -- and the label went to
+        // rule-fingerprint/11.
+        //
+        // OBSERVED, both ways round, on this build. With the payment struck out
+        // of Match.Damage -- the column read, linked and folded, and no kill
+        // ever paying for it -- the fingerprint is 3E54D6F70DE235B6, and with
+        // the payment in it is the value below.
+        (13u, 0x658CECEC487BCB6EUL),
     };
 
     /// <summary>
@@ -326,6 +348,38 @@ public class DerivationTests
         """;
 
     private const string FingerprintWave = "order  0  1  3  0";
+
+    /// <summary>
+    /// The roster the seventh half is fought over: a walking row that turns into
+    /// a second, a walking row that raises a third, and a turret that kills all
+    /// of them. All four walking rows pay, and for two of them the row a body is
+    /// standing as at the kill is not the row its order names -- a goon pays the
+    /// husk's three where its own row says one, and a shade pays its own one
+    /// where the raiser that put it down pays two. So reading the payment off
+    /// the order is a different fingerprint rather than the same one.
+    /// </summary>
+    /// <remarks>
+    /// Layout 6, because no earlier layout has a bounty column at all. The
+    /// numbers are chosen so nothing reaches the exit: the cannon rolls forty to
+    /// sixty against pools of twenty to sixty, on a three-tick cooldown.
+    /// </remarks>
+    private const string FingerprintBountyUnits = """
+        layout 6
+        unit  1  goon    moving  40  27  0     0  0  0  0   0   none     0  3  4   none    armoured  0  0  1  none  none  none  0  none  0  0  3     none  0   1
+        unit  2  raiser  moving  60  27  0     0  0  0  0   0   none     0  3  5   none    armoured  0  0  1  none  none  none  0  none  0  0  none  4     40  2
+        unit  3  husk    moving  30  41  0     0  0  0  0   0   none     0  3  3   none    swift     0  0  1  none  none  none  0  none  0  0  none  none  0   3
+        unit  4  shade   moving  20  19  0     0  0  0  0   0   none     0  3  2   none    arcane    0  0  1  none  none  none  0  none  0  0  none  none  0   1
+        unit  5  cannon  placed  0   0   2000  3  1  1  40  60  hitscan  0  0  20  pierce  none      0  0  1  none  none  none  0  none  0  0  none  none  0   0
+        """;
+
+    /// <summary>The cannon, on the cell every other turret in this file stands on.</summary>
+    private const string FingerprintBountyDefense = "tower  5  2  1";
+
+    /// <summary>Two of each sent row, so the transformation and the raise both happen twice.</summary>
+    private const string FingerprintBountyWave = """
+        order  0  1  2  0
+        order  0  2  2  0
+        """;
 
     /// <summary>
     /// The roster the shot-shape half is fought over: a walking row carrying a
@@ -885,6 +939,15 @@ public class DerivationTests
     /// now folds is bodies arriving mid-match that no order released, walking a
     /// corridor the towers are already shooting down.
     /// </para>
+    /// <para>
+    /// <c>rule-fingerprint/11</c> added the seventh half, and it is the first
+    /// bump since <c>rule-fingerprint/6</c> that the scenario alone could not
+    /// answer. #269's rule fires where a body's health reaches zero, and not one
+    /// of the six halves above kills anything at all -- every body on every
+    /// roster here walks to the exit -- so a bounty put on the sixth half's
+    /// roster moved the fingerprint by nothing. The seventh half is a defense
+    /// that kills what walks at it, over rows that pay.
+    /// </para>
     /// </remarks>
     private static Hash64 RuleFingerprint()
     {
@@ -894,7 +957,7 @@ public class DerivationTests
         WaveScript wave = WaveScript.Parse("fingerprint wave", FingerprintWave, types);
 
         var match = new Match(map, TheRuleset.Committed(), layout, wave, FingerprintSeed);
-        Hash64 fingerprint = Hash64.Start("rule-fingerprint/10").Add(unchecked((long)match.StateHash.Value));
+        Hash64 fingerprint = Hash64.Start("rule-fingerprint/11").Add(unchecked((long)match.StateHash.Value));
 
         for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
         {
@@ -909,8 +972,9 @@ public class DerivationTests
             .Add(result.FinalTick)
             .Add(unchecked((long)result.RollingStateHash.Value));
 
-        return ShapedIntoFingerprint(
-            FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint))));
+        return PaidForKillingIntoFingerprint(
+            ShapedIntoFingerprint(
+                FoughtIntoFingerprint(PaidIntoFingerprint(ComposedIntoFingerprint(fingerprint)))));
     }
 
     /// <summary>
@@ -950,6 +1014,7 @@ public class DerivationTests
     /// sent -- and every one of them is acquired, shot, slowed and folded like
     /// any other.
     /// </para>
+
     /// <para>
     /// <b>Both shot shapes, the shield, the slow and the aura are in one match
     /// on purpose.</b> They share the one dice stream, so a draw added or
@@ -988,6 +1053,64 @@ public class DerivationTests
         return fingerprint
             .Add(result.Leaked, result.Total)
             .Add(result.FinalTick)
+            .Add(unchecked((long)result.RollingStateHash.Value));
+    }
+
+    /// <summary>
+    /// The seventh half of the fold: a match where the defense kills everything
+    /// walking at it, over a roster where three rows pay for being killed.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>This half is here because not one of the six above it kills
+    /// anything.</b> #269's rule fires where a body's health reaches zero, and
+    /// every body on every roster in this file walks to the exit: the shot-shape
+    /// half is the only one whose roster could carry a bounty at all, and
+    /// putting one on it changed the fingerprint by nothing, because fourteen
+    /// bodies leak there and none dies. A rule that runs in no half is a rule
+    /// this table cannot tell moved -- the tenth time this file has had that
+    /// hole, and the first time the fix is a half rather than a roster.
+    /// </para>
+    /// <para>
+    /// <b>All three routes a body can arrive by are folded, and they pay
+    /// different numbers on purpose.</b> The goon is sent by an order and turns
+    /// into the husk on the first damage that reaches it, so what it pays is the
+    /// husk's three and not its own one -- the payment is read off the row
+    /// standing there at the kill, and a fingerprint that read it off the order
+    /// would come out on twelve minus four. The raiser is sent by an order and
+    /// pays its own two. The shade is in no order at all, and pays its one.
+    /// </para>
+    /// <para>
+    /// The cannon kills rather than chips, so the match ends with nothing at the
+    /// exit: a leak pays nothing, and a half where half the bodies leaked would
+    /// fold the rule and its absence together.
+    /// </para>
+    /// </remarks>
+    private static Hash64 PaidForKillingIntoFingerprint(Hash64 fingerprint)
+    {
+        UnitTypeTable types = UnitTypeTable.Parse("fingerprint bounty units", FingerprintBountyUnits);
+        HexMap map = HexMap.Parse("fingerprint map", FingerprintMap);
+
+        var match = new Match(
+            map,
+            TheRuleset.Committed(),
+            TowerLayout.Parse("fingerprint bounty defense", FingerprintBountyDefense, types),
+            WaveScript.Parse("fingerprint bounty wave", FingerprintBountyWave, types),
+            FingerprintSeed);
+
+        for (int tick = 0; tick < FingerprintTicks && !match.IsFinished; tick++)
+        {
+            match.Advance(1);
+            fingerprint = fingerprint.Add(unchecked((long)match.StateHash.Value));
+        }
+
+        MatchResult result = match.Result();
+
+        // What the kills paid, beside what got past. It is the one number on a
+        // result a build phase spends rather than reports.
+        return fingerprint
+            .Add(result.Leaked, result.Total)
+            .Add(result.FinalTick, result.Bounty)
             .Add(unchecked((long)result.RollingStateHash.Value));
     }
 
@@ -1096,7 +1219,7 @@ public class DerivationTests
         // do before the fold had this half in it.
         for (int index = 0; index < dealt.Length; index++)
         {
-            WavePayment paid = purse.CloseWave(rules, dealt[index]);
+            WavePayment paid = purse.CloseWave(rules, dealt[index], 0);
 
             fingerprint = fingerprint
                 .Add(paid.Interest, paid.IncomeBase)
@@ -1107,7 +1230,7 @@ public class DerivationTests
         // moves: a walk over a stored stream folds this instead of the payment,
         // and a ceiling that stops being one admits decisions no run could
         // afford.
-        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice);
+        WavePayment ceiling = purse.CloseWaveAtBest(rules, FingerprintWavePrice, 0);
 
         return fingerprint.Add(ceiling.Bonus, ceiling.Purse.Gold);
     }

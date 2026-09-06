@@ -59,9 +59,11 @@ namespace Sim
             int shield,
             int targets,
             Bubble bubble,
-            int raisePeriodTicks)
+            int raisePeriodTicks,
+            int bounty)
         {
             RaisePeriodTicks = raisePeriodTicks;
+            Bounty = bounty;
             Cost = cost;
             AttackType = attackType;
             ArmourType = armourType;
@@ -267,6 +269,28 @@ namespace Sim
             Raises = raised;
         }
 
+        /// <summary>
+        /// Gold paid to the defender that kills a body of this row, out of
+        /// nowhere and into the one purse. Zero is no payment, which is what
+        /// every row of every layout before 6 carries.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It is paid off the body that dies rather than off the order that
+        /// sent it.</b> A body can be standing as a row nobody sent -- one
+        /// raised by a spawner is in no order at all, and one that changed row
+        /// mid-lane is not the row its order names -- so the row in hand at the
+        /// moment of the kill is the only reading that answers all three
+        /// routes.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is paid for a body that reaches the exit.</b> A leak is
+        /// the opposite outcome and is already priced, at the row's cost, one
+        /// for one against health.
+        /// </para>
+        /// </remarks>
+        public int Bounty { get; }
+
         public override string ToString() =>
             Label + " (#" + Id.ToString(CultureInfo.InvariantCulture) + ")";
 
@@ -307,9 +331,10 @@ namespace Sim
                     return SuccessorFold(hash);
 
                 case 5:
-                    return SuccessorFold(hash)
-                        .Add(Raises is null ? 0 : Raises.Id)
-                        .Add(RaisePeriodTicks);
+                    return RaisingFold(hash);
+
+                case 6:
+                    return RaisingFold(hash).Add(Bounty);
 
                 default:
                     throw new ArgumentOutOfRangeException(
@@ -342,9 +367,18 @@ namespace Sim
 
         /// <summary>
         /// The one column layout 4 added, after the nine before it. Layout 5
-        /// folds it in the same place and appends its two after it.
+        /// folds it in the same place and appends its own after it.
         /// </summary>
         private Hash64 SuccessorFold(Hash64 hash) =>
             RadialFold(hash).Add(Becomes is null ? 0 : Becomes.Id);
+
+        /// <summary>
+        /// The two columns layout 5 added, after the one before them. Layout 6
+        /// folds them in the same place and appends its own after them.
+        /// </summary>
+        private Hash64 RaisingFold(Hash64 hash) =>
+            SuccessorFold(hash)
+                .Add(Raises is null ? 0 : Raises.Id)
+                .Add(RaisePeriodTicks);
     }
 }

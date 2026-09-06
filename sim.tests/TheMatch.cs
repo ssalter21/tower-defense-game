@@ -270,6 +270,8 @@ public static class TheMatch
         public void CreepRaised(int creepId, int raisedCreepId) =>
             Record("raised", creepId, raisedCreepId);
 
+        public void BountyPaid(int creepId, int gold) => Record("paid", creepId, gold);
+
         public void ProjectileOrphaned(int projectileId) => Record("orphaned", projectileId, 0);
 
         public void CreepOvertook(int creepId, int overtakenCreepId) =>

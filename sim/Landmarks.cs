@@ -273,6 +273,11 @@ namespace Sim
         }
 
         /// <inheritdoc/>
+        public void BountyPaid(int creepId, int gold)
+        {
+        }
+
+        /// <inheritdoc/>
         public void ProjectileOrphaned(int projectileId) => Note(Orphaned, projectileId, 0);
 
         /// <inheritdoc/>

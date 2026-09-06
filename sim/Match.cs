@@ -128,9 +128,13 @@ namespace Sim
         /// notice drifting, and the running count of leaks nobody sent, which is
         /// what says how much of the total is priced the other way. Whether a
         /// body was raised is a constant of it and folds at the spawn, beside
-        /// the row it is and the lane it walks in.
+        /// the row it is and the lane it walks in. <c>match-state/6</c> adds
+        /// what the kills have paid, which the count of kills beside it cannot
+        /// stand in for: two matches that killed the same number of different
+        /// rows agree on every other field in this fold, and the money is the
+        /// whole of the difference.
         /// </remarks>
-        private const string HashLabel = "match-state/5";
+        private const string HashLabel = "match-state/6";
 
         /// <summary>
         /// A match that has not ended by here is a match that is never going to,
@@ -138,7 +142,7 @@ namespace Sim
         /// times the length of the skeleton's match, so nothing legitimate can
         /// approach it.
         /// </summary>
-        private const int TickCeiling = 120000;
+        internal const int TickCeiling = 120000;
 
         /// <summary>Thousandths of a hex. Speeds are authored in them.</summary>
         private const int MilliHexPerHex = 1000;
@@ -285,6 +289,12 @@ namespace Sim
         private int _leakedRaised;
 
         private int _killed;
+
+        /// <summary>
+        /// What those kills have paid the defender so far, in gold: the bounty
+        /// column of every row that has died here, added up.
+        /// </summary>
+        private int _bounty;
 
         private int _shotsFired;
 
@@ -787,6 +797,19 @@ namespace Sim
         public int Killed => _killed;
 
         /// <summary>
+        /// What those kills have paid, in gold. Income earned inside a match,
+        /// which is what makes it the one number here a build phase reads.
+        /// </summary>
+        /// <remarks>
+        /// <b>Paid for a kill and never for a leak.</b> A body that reaches the
+        /// exit is charged against the defense at its own price instead, so the
+        /// two outcomes are opposite ends of the same body and a leak adds
+        /// nothing here. See
+        /// <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// </remarks>
+        public int Bounty => _bounty;
+
+        /// <summary>
         /// Where each tower can reach: the intervals this match acquires
         /// through, rather than a second table built to agree with them. A
         /// caller checking whether the defense makes sense, or whether a tower
@@ -860,7 +883,7 @@ namespace Sim
                     + "looks like an outcome and is not one.");
             }
 
-            return new MatchResult(_leaked, _wave.TotalUnits, Tick, _stateHash);
+            return new MatchResult(_leaked, _wave.TotalUnits, Tick, _bounty, _stateHash);
         }
 
         /// <summary>
@@ -2080,6 +2103,45 @@ namespace Sim
             target.TicksInState = 0;
             _killed++;
             events?.CreepDied(target.Id);
+
+            // The row standing here at the moment of the kill, which is not
+            // always the row an order sent: a body raised mid-lane is in no
+            // order at all, and one that changed row above is no longer the row
+            // its own order names. What is in hand is the body, so the body is
+            // what is read.
+            if (target.Type.Bounty > 0)
+            {
+                Pay(target.Type.Bounty);
+                events?.BountyPaid(target.Id, target.Type.Bounty);
+            }
+        }
+
+        /// <summary>
+        /// Adds one kill's payment to what this match has paid, refusing a
+        /// total that has left the range gold is counted in.
+        /// </summary>
+        /// <remarks>
+        /// Refused rather than wrapped, because a wrapped total is a purse
+        /// credited a negative number -- and how many bodies a match can hold
+        /// is bounded by the board rather than by arithmetic, so the sum is
+        /// bounded by nothing this file could check at construction.
+        /// </remarks>
+        private void Pay(int gold)
+        {
+            long paid = (long)_bounty + gold;
+
+            if (paid > int.MaxValue)
+            {
+                throw new SimulationException(
+                    "This match has paid "
+                    + paid.ToString(CultureInfo.InvariantCulture)
+                    + " gold in bounties, which does not fit in the 32-bit integer gold is counted in. "
+                    + "A bounty is paid per body killed and how many bodies a match holds is bounded by "
+                    + "the board, so a total past that range is a bounty column authored in the wrong "
+                    + "units.");
+            }
+
+            _bounty = (int)paid;
         }
 
         /// <summary>
@@ -2346,7 +2408,7 @@ namespace Sim
                 .Add(Tick, _shotsFired)
                 .Add(_tiebreaksBroken, _releasedTotal)
                 .Add(_leaked, _killed)
-                .Add(_leakedRaised)
+                .Add(_leakedRaised, _bounty)
                 .Add(_creepCount, _projectileCount);
 
             for (int index = 0; index < _creepCount; index++)

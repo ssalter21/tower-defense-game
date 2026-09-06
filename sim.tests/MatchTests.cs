@@ -825,6 +825,7 @@ public class MatchTests
             {
                 "AuraPulsed",
                 "BlastLanded",
+                "BountyPaid",
                 "CreepDamaged",
                 "CreepDied",
                 "CreepLeaked",

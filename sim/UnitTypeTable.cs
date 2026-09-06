@@ -46,7 +46,7 @@ namespace Sim
         public const int DefaultLayout = 1;
 
         /// <summary>The layout the columns documented on <see cref="UnitType"/> describe.</summary>
-        public const int CurrentLayout = 5;
+        public const int CurrentLayout = 6;
 
         private const string Keyword = "unit";
 
@@ -516,7 +516,12 @@ namespace Sim
         /// </remarks>
         public static bool IsKnownLayout(int layout)
         {
-            return layout == 1 || layout == 2 || layout == 3 || layout == 4 || layout == 5;
+            return layout == 1
+                || layout == 2
+                || layout == 3
+                || layout == 4
+                || layout == 5
+                || layout == 6;
         }
 
         /// <summary>Fields per row, keyword included, in that layout.</summary>
@@ -538,6 +543,9 @@ namespace Sim
 
                 case 5:
                     return 31;
+
+                case 6:
+                    return 32;
 
                 default:
                     throw NoSuchLayout(layout);
@@ -567,6 +575,9 @@ namespace Sim
 
                 case 5:
                     return "unit-types/5";
+
+                case 6:
+                    return "unit-types/6";
 
                 default:
                     throw NoSuchLayout(layout);
@@ -873,6 +884,15 @@ namespace Sim
                 raisePeriod = ReadRaisePeriod(source, line, fields[30], raises);
             }
 
+            // And what a row before layout 6 carries: a body whose death pays
+            // the defender nothing.
+            int bounty = 0;
+
+            if (layout >= 6)
+            {
+                bounty = ReadBounty(source, line, fields[31], role, maxHp);
+            }
+
             return new UnitType(
                 id,
                 label,
@@ -895,7 +915,64 @@ namespace Sim
                 shield,
                 targets,
                 bubble,
-                raisePeriod);
+                raisePeriod,
+                bounty);
+        }
+
+        /// <summary>
+        /// The column saying what killing a body of this row pays the defender,
+        /// checked against whether the body can be killed at all and against
+        /// what it cost to send.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A row nothing can kill may not carry one.</b> A placed row is
+        /// never damaged in this simulation and a row with no health pool
+        /// cannot be, so a payment on either is a number read by nothing that
+        /// still moves the content hash -- which is the rule every other unread
+        /// column in this file is refused by.
+        /// </para>
+        /// <para>
+        /// <b>What is deliberately not checked is the row's own cost.</b> The
+        /// Grave Robber's twelve is half its twenty-four and
+        /// <c>docs/roster.md</c> argues that half; whether a body may ever be
+        /// worth more dead than it cost to send is a design question nobody has
+        /// taken, and refusing it here would take it.
+        /// </para>
+        /// </remarks>
+        private static int ReadBounty(
+            string source,
+            int line,
+            string field,
+            UnitRole role,
+            int maxHp)
+        {
+            int bounty = DataText.IntegerInRange(source, line, "the bounty", field, 0, int.MaxValue);
+
+            if (bounty == 0)
+            {
+                return 0;
+            }
+
+            if (role != UnitRole.Moving)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "stands where it was put and pays a bounty. Nothing that stands is ever damaged in "
+                    + "this simulation, so the kill the payment is made on never happens.");
+            }
+
+            if (maxHp <= 0)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "has no health pool and pays a bounty. A payment is made where a body is killed, and "
+                    + "a unit with no pool cannot be damaged at all.");
+            }
+
+            return bounty;
         }
 
         /// <summary>

@@ -1035,15 +1035,23 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 3000 hp, speed 22, armoured, armourValue 30, shield 2000, cost 24. Pays **12** on a kill.
 - **Draws** — nothing of its own, as the Vampire's pool draws nothing: the pack is the blue segment of the bar
   over the body.
-- **Needs** — **engine.** Gold paid on a kill is the first income during a wave, and
-  [#269](https://github.com/ssalter21/tower-defense-game/issues/269) is where it lands. The row is live and the
-  pool is on it; the payment is not.
+- **Needs** — nothing. Gold paid on a kill was a new mechanic and
+  [#269](https://github.com/ssalter21/tower-defense-game/issues/269) built it: `content/units.txt` layout 6
+  added the `bounty` column, and this is the one row on the roster that fills it in.
 - **Open** — the shield is unpriced, as the Vampire's is.
 
 > **Twelve is half its own price, and the half is the point.** Paying its full 24 back would make it free to
 > send. Half means killing it refunds half of what the attacker laid out, so it is a body that rewards being
-> killed without being one you are glad to see. **A leaked Grave Robber pays nothing.** This is the first
-> income inside a wave and it moves the leak exchange rate, which is the gold ticket's ADR.
+> killed without being one you are glad to see. **A leaked Grave Robber pays nothing** — reaching the exit is
+> the opposite outcome and is already charged, at the cost column, against health.
+>
+> **What that did to the leak exchange rate is nothing, and what it did to the measurements is the finding.**
+> The rate is still cost for cost, because no body is both charged and paid for. What changed is the spread
+> around it: the swing between this row's two outcomes is its 24 of health plus 12 of gold where every other
+> row's is its cost alone — and the return band below is a **leak rate**, so it cannot see the half of a body
+> that did not leak. Its reading is 81 before and after, to the digit.
+> [ADR-0060](adr/0060-a-kill-pays-the-defender.md) has the whole of it, including what the one purse does with
+> money a defense earned.
 
 ---
 
@@ -1170,6 +1178,15 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > from 2652 to **7670** against a health pool of 800. **An uncapped spawner is symmetric, and that is the
 > sharpest thing #268 measured**: the row is not strong, it is a mirror nobody survives. Its own reading went
 > 444 → 1399 and eight of eight wins → nought of eight, and nothing else in the report moved a digit.
+>
+> **The Grave Robber learning to pay moved nothing in this report at all, and that is a finding about the
+> instrument.** `content/sweep.csv` came back byte-identical after
+> [#269](https://github.com/ssalter21/tower-defense-game/issues/269): still 367 dealt per hundred gold, still
+> eight of eight. The sweep varies the row a run **sends** and a bounty is paid to whoever **kills**, so it
+> would have to reach a run through the opponents it defends against — and every opponent in the committed
+> sweep is the stand-in out of `content/field.txt`, which sends Minions. So both instruments on this page are
+> blind to the mechanic, for two different reasons, and
+> [ADR-0060](adr/0060-a-kill-pays-the-defender.md) records what a reading of it would need.
 >
 > The Cursed Villager was the third row that never won, at 17 and nought of eight, and the transformation
 > moved it further than it moved anything else — **398 dealt per hundred gold and eight of eight**, level with

@@ -2092,6 +2092,86 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// A kill that pays moves the gold the match is carrying on the tick it
+        /// happens, and a seek back across that tick moves it back.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The gain is a number on the match and not a decoration, and that
+        /// is what this measures.</b> A seek re-simulates from tick zero with
+        /// nobody subscribed, so what the view is holding either side of the
+        /// tick is whatever the re-simulation arrived at -- which is the only
+        /// reason a scrub across income can be right without anything being
+        /// replayed. See
+        /// <c>docs/adr/0026-seeking-re-simulates-rather-than-caching.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>And the decoration draws nothing</b>, for the reason
+        /// <c>CreepTransformed</c> and <c>CreepRaised</c> draw nothing: a coin,
+        /// a floating number or a flash on the purse is an art decision. The
+        /// event is heard and no object appears, which is asserted here rather
+        /// than described.
+        /// </para>
+        /// <para>
+        /// The Grave Robber is a shipped row and not a fixture, for the reason
+        /// the transforming pair is: what the recorded wave lacks is not the
+        /// authoring but the sending. It takes the twelve rows of
+        /// <see cref="FourLinesDefense"/> to kill one inside a match -- the
+        /// recorded six leave most of a column standing -- so this is the
+        /// defense those frames are of, with a short column walking into it.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void AKillThatPaysMovesTheGoldOnItsTickAndASeekMovesItBack()
+        {
+            MatchView view = BeginWithTheGraveRobbers();
+
+            RunUntil(view, () => view.Match.Bounty > 0);
+
+            int tick = view.Current.Tick;
+            int paid = view.Match.Bounty;
+
+            Assert.That(paid, Is.EqualTo(GraveRobberPays), "the first kill paid something else");
+            Assert.That(tick, Is.GreaterThan(1), "nothing had time to be killed");
+
+            // A tick earlier nothing had been killed, so the match is carrying
+            // nothing -- and the view got there by re-simulating rather than by
+            // undoing anything.
+            view.ReSimulateTo(tick - 1);
+
+            Assert.That(view.Match.Bounty, Is.Zero, "the gold survived a seek back across the kill");
+
+            // Forward across it and back over it again. Neither direction is
+            // special, and the number is the same one both times.
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Match.Bounty, Is.EqualTo(paid));
+
+            view.ReSimulateTo(tick - 1);
+
+            Assert.That(view.Match.Bounty, Is.Zero);
+
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Match.Bounty, Is.EqualTo(paid));
+
+            // And the payment puts nothing on screen. Called straight, as the
+            // bubble events above are, because what is being asserted is what
+            // the sink does rather than when the simulation calls it.
+            view.Decorations.Clear();
+
+            int heard = view.Decorations.EventsHeard;
+
+            view.Decorations.BountyPaid(view.Current.Creeps[0].Id, GraveRobberPays);
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heard + 1), "the sink did not hear it");
+            Assert.That(
+                view.Decorations.ActiveCount,
+                Is.Zero,
+                "the payment drew something, and no shape for it has been signed");
+        }
+
+        /// <summary>
         /// That the body with this id is drawn as the row with that id: the
         /// model asset the row's art names, and whatever that row puts in its
         /// hands.
@@ -2709,6 +2789,31 @@ namespace Tests.PlayMode
 
         /// <summary>The Minion, which the Necromancer raises.</summary>
         private const int Minion = 1;
+
+        /// <summary>What docs/roster.md signs the Grave Robber pays for being killed.</summary>
+        private const int GraveRobberPays = 12;
+
+        /// <summary>
+        /// A short column of Grave Robbers, walking into the twelve rows of
+        /// <see cref="FourLinesDefense"/>. Three rather than one so that the
+        /// wall has something to kill while the first is still crossing.
+        /// </summary>
+        private const string BountyWave = "order 0 49 3 0";
+
+        /// <summary>The real board and the real roster, with the row that pays walking it.</summary>
+        private MatchView BeginWithTheGraveRobbers()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("bounty defense", FourLinesDefense, types),
+                WaveScript.Parse("bounty wave", BountyWave, types),
+                TheMatchOnScreen.Seed);
+        }
 
         /// <summary>
         /// One Archer on a cell of the recorded defense, and one Necromancer

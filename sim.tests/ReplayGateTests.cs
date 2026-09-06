@@ -262,11 +262,11 @@ public class ReplayGateTests
         // this assertion proved less than it looked like it did.
         //
         // The literal moves whenever the state hash's own layout does, which is
-        // a SimulationVersion bump by definition: this is match-state/5, which
-        // folds the clock every creep raises on because a body can now put
-        // another body on the corridor.
+        // a SimulationVersion bump by definition: this is match-state/6, which
+        // folds what the kills have paid because a body can now be worth gold
+        // for dying.
         Assert.Equal(
-            "4B948189ED89D5AD",
+            "D55119ECD678CB04",
             restaged.Match.Resolve().RollingStateHash.ToString());
     }
 

@@ -576,7 +576,10 @@ public class RunTests
             spent += rounds[round].Build.Spent;
             folded = Purse.Holding(folded.Gold - rounds[round].Build.Spent);
 
-            WavePayment paid = folded.CloseWave(rules, run.Outcome.Rounds[round].LeakCostDealt);
+            WavePayment paid = folded.CloseWave(
+                rules,
+                run.Outcome.Rounds[round].LeakCostDealt,
+                run.Outcome.Rounds[round].BountyEarned);
 
             bonus += paid.Bonus;
             folded = paid.Purse;
@@ -988,15 +991,20 @@ public class RunTests
     }
 
     [Fact]
-    public void A_round_recorded_as_having_dealt_or_taken_less_than_nothing_is_refused()
+    public void A_round_recorded_as_having_dealt_taken_or_earned_less_than_nothing_is_refused()
     {
-        // OBSERVED: drop the guard in RoundOutcome.Amount. Both rows go red
-        // having caught nothing, and a negative round adds health back to a pool
-        // that is supposed to be a clock.
-        Assert.Throws<SimulationException>(() => new RoundOutcome(-1, 0));
-        Assert.Throws<SimulationException>(() => new RoundOutcome(0, -1));
+        // OBSERVED: drop the guard in RoundOutcome.Amount. The first two rows go
+        // red having caught nothing, and a negative round adds health back to a
+        // pool that is supposed to be a clock.
+        Assert.Throws<SimulationException>(() => new RoundOutcome(-1, 0, 0));
+        Assert.Throws<SimulationException>(() => new RoundOutcome(0, -1, 0));
+
+        // And the third number, which is gold rather than health: a defense
+        // charged for defending.
+        Assert.Throws<SimulationException>(() => new RoundOutcome(0, 0, -1));
 
         Assert.Equal(0, default(RoundOutcome).LeakCostDealt);
+        Assert.Equal(0, default(RoundOutcome).BountyEarned);
     }
 
     [Fact]
@@ -1207,7 +1215,8 @@ public class RunTests
         // payment's purse is the one the run now holds.
         //
         // OBSERVED: compose the report's payment from
-        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs))
+        // build.Purse.CloseWaveAtBest(Rules, round.Build.Wave.FullPrice(Costs),
+        // MostBountyEarnable)
         // -- the ceiling the load walk carries -- rather than from the payment
         // the round made. The closing assertion goes red: a report of what a
         // wave earned that says what it could have earned instead.
@@ -1230,13 +1239,16 @@ public class RunTests
         Assert.Equal(opening - price, round.Build.Purse.Gold);
 
         // And the payment runs from what the wave left to what the run holds,
-        // itemised into the three lines that make up the difference.
+        // itemised into the four lines that make up the difference.
         Assert.Equal(round.Build.Purse.Gold, round.Payment.Opening);
         Assert.Equal(run.Purse.Gold, round.Payment.Purse.Gold);
         Assert.Equal(run.Rules.IncomeBasePerWave, round.Payment.IncomeBase);
         Assert.Equal(
             run.Purse.Gold - round.Payment.Opening,
-            round.Payment.Interest + round.Payment.IncomeBase + round.Payment.Bonus);
+            round.Payment.Interest
+                + round.Payment.IncomeBase
+                + round.Payment.Bonus
+                + round.Payment.Bounty);
     }
 
     [Fact]
@@ -1632,14 +1644,21 @@ public class RunTests
         return gold;
     }
 
-    /// <summary>An outcome built from pairs rather than from a simulation.</summary>
+    /// <summary>
+    /// An outcome built from pairs rather than from a simulation. Every round of
+    /// one earns nothing, because what these fold is health and waves survived
+    /// and neither reads the bounty.
+    /// </summary>
     private static RunOutcome Outcome(int healthPoolGold, params (int Dealt, int Taken)[] rounds) =>
         Outcome(healthPoolGold, 10, rounds);
 
     private static RunOutcome Outcome(int healthPoolGold, int waves, params (int Dealt, int Taken)[] rounds) =>
         RunOutcome.Of(
             healthPoolGold,
-            rounds.Select(round => new RoundOutcome(round.Dealt, round.Taken)).ToArray(),
+            rounds.Select(round => new RoundOutcome(round.Dealt, round.Taken, EarnedNothing)).ToArray(),
             waves,
             deathEndsTheRun: true);
+
+    /// <summary>What a round of <see cref="Outcome"/> was paid for killing.</summary>
+    private const int EarnedNothing = 0;
 }

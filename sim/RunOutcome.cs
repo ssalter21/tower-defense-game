@@ -18,21 +18,39 @@ namespace Sim
     }
 
     /// <summary>
-    /// One round, as the pair it is: what got past everybody else, and what got
-    /// past me. Both are leak costs -- gold, priced one for one off whatever
-    /// walked to the exit.
+    /// One round, as the three numbers it is: what got past everybody else,
+    /// what got past me, and what my defense was paid for the bodies it killed.
+    /// The first two are leak costs -- gold, priced one for one off whatever
+    /// walked to the exit -- and the third is gold too, off the bounty column of
+    /// whatever died.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Each is the <b>average</b> of the round's K resolutions rather than the
-    /// best or the sum of them, and both for the same reason: a field of ten is
-    /// meant to average a bad draw away rather than to multiply it.
+    /// best or the sum of them, and all three for the same reason: a field of
+    /// ten is meant to average a bad draw away rather than to multiply it.
+    /// </para>
+    /// <para>
+    /// <b>The bounty is on the vector because the purse is a fold over it.</b>
+    /// What a run holds at the end has to be arithmetic over these numbers and
+    /// never a second play -- see
+    /// <see cref="Purse.BonusOver(Ruleset, RunOutcome)"/> and the run's own
+    /// retrospective -- so an income line missing here would be a purse nobody
+    /// could rebuild. It is gold and it appears nowhere in
+    /// <see cref="RunOutcome.CompareTo"/>, exactly as
+    /// <see cref="LeakCostDealt"/> does not. <b>There is one constructor and it
+    /// takes all three</b>, for the same reason: an overload that filled the
+    /// third in with a zero would be a way to leave an income line out by
+    /// writing fewer arguments than the vector has numbers.
+    /// </para>
     /// </remarks>
     public readonly struct RoundOutcome
     {
-        public RoundOutcome(int leakCostDealt, int leakCostTaken)
+        public RoundOutcome(int leakCostDealt, int leakCostTaken, int bountyEarned)
         {
             LeakCostDealt = Amount(leakCostDealt, "dealt to");
             LeakCostTaken = Amount(leakCostTaken, "taken from");
+            BountyEarned = Bounty(bountyEarned);
         }
 
         /// <summary>What this round's wave got past the field, priced in gold.</summary>
@@ -41,11 +59,16 @@ namespace Sim
         /// <summary>What the field's waves got past this round's defense, priced in gold.</summary>
         public int LeakCostTaken { get; }
 
+        /// <summary>What this round's defense was paid for the bodies it killed, in gold.</summary>
+        public int BountyEarned { get; }
+
         public override string ToString() =>
             "dealt "
             + LeakCostDealt.ToString(CultureInfo.InvariantCulture)
             + ", took "
-            + LeakCostTaken.ToString(CultureInfo.InvariantCulture);
+            + LeakCostTaken.ToString(CultureInfo.InvariantCulture)
+            + ", earned "
+            + BountyEarned.ToString(CultureInfo.InvariantCulture);
 
         /// <summary>A leak cost, refused if it is not one.</summary>
         private static int Amount(int leakCost, string direction)
@@ -62,6 +85,21 @@ namespace Sim
             }
 
             return leakCost;
+        }
+
+        /// <summary>A bounty, refused if it is not one.</summary>
+        private static int Bounty(int bountyEarned)
+        {
+            if (bountyEarned < 0)
+            {
+                throw new SimulationException(
+                    "A round is recorded as having earned "
+                    + bountyEarned.ToString(CultureInfo.InvariantCulture)
+                    + " in bounties. A bounty is authored as a non-negative column and paid once per "
+                    + "body killed, so a round below zero is a defense being charged for defending.");
+            }
+
+            return bountyEarned;
         }
     }
 

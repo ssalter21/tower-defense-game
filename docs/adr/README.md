@@ -26,6 +26,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) | An effect is a stat, a magnitude and a duration, and a creep never drops below a tenth of its speed |
 | [0058](0058-a-creep-becomes-another-row-mid-lane.md) | A creep becomes another row mid-lane, ahead of the damage that triggered it |
 | [0059](0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md) | A creep raises a creep, and the board is what caps it |
+| [0060](0060-a-kill-pays-the-defender.md) | A kill pays the defender, and the band that measures leaks cannot see it |
 
 ## The simulation/view boundary
 

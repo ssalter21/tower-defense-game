@@ -1699,3 +1699,81 @@ Two retirements, both deliberate, and the label bumps that come with them.
 
 **What is free is every record format.** `RecordFormat` is untouched, for the reason #267 gives: a roster is
 pinned by its content hash and never by its column count.
+
+---
+
+## 6 September 2026 — a kill pays, and both balance instruments turn out to be blind to it
+
+[#269](https://github.com/ssalter21/tower-defense-game/issues/269) built the last of the three engine asks
+signed on 5 September: the Grave Robber pays twelve gold to whoever kills it, mid-match, into the one purse.
+The mechanic is small and what it measured is not.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 was "the last widening before the map is measured"; layouts 4 and 5 already broke it, hours apart | **Layout 6, the same day, and the map is still not measured.** What a body is worth *dead* cannot be said in any arrangement of the thirty-one columns: `cost` is what it is worth *alive*, charged against health when it reaches the exit, and a kill is the opposite outcome. So `bounty` is the thirty-second, layout 5 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired again |
+| **[The roster](roster.md)** — "the sweep is what is meant to derive it" | Every unpriced thing on this roster is held open for the sweep to measure | **The sweep cannot see this one, and neither can the return band.** Both instruments came back byte-identical, for two different structural reasons, and no number was touched to make that happen |
+
+**Neither instrument is broken and neither is being relaxed.** The return band plays four hundred gold of one
+row against the committed defense and reads `leaked × 100 / count`: it is a **leak rate**, which is exactly why
+cost cancels out of it, and a body that was *killed* is outside the ratio entirely. The sweep plays whole runs
+and varies the row a run **sends**, where a bounty is paid to whoever **kills** — so it would reach a run
+through the opponents it defends against, and every opponent in the committed sweep is the stand-in out of
+`content/field.txt`, which sends Minions. The Grave Robber reads 81 in the band and 367 in the sweep, before
+and after, to the digit.
+
+**What a reading of it needs is a stand-in that sends the row**, which is one line of `content/field.txt` and a
+regenerated report — and that is deliberately not done here. The stand-in's column is calibrated rather than
+chosen: its own header carries the measurement that a field member with the right total and the wrong number of
+columns is a walkover, so swapping the row it sends would move every reading in the report for a reason that
+has nothing to do with any of them.
+
+**Three decisions the ticket had to take, all recorded in
+[ADR-0060](adr/0060-a-kill-pays-the-defender.md).**
+
+- **The payment is read off the row the body is standing as when it dies**, and never off the order that sent
+  it. That is forced rather than chosen: a body a spawner raised is in no order at all, and one that changed
+  row mid-lane is not the row its order names. It is deliberately *not* how a leak is priced, because a leak
+  survives only as a count per order and a kill is resolved with the body still in the array.
+- **The money is minted rather than taken**, and **the one purse spends it on either half of the board.** With
+  two wallets, "a kill pays the defender" would mean the defense funds itself; with one, a round that kills
+  well sends a bigger wave next round. That coupling is the one purse's and not the bounty's, and it is the
+  first income that depends on what a player *built* rather than on what a player *sent*.
+- **What the kills paid joins the per-tick fold.** The count of kills beside it cannot stand in for it: two
+  matches that killed the same number of different rows agree on every other field in that fold, and a body
+  that has been cleared away leaves nothing else behind. That is the shape of the bug #254 found in the
+  snapshot comparison.
+
+**One thing was deliberately not refused.** A bounty above the row's own cost loads perfectly well. Twelve is
+half of twenty-four and `docs/roster.md` argues that half for *that row*; whether a body may ever be worth more
+dead than it cost to send is a design question nobody has taken, and a refusal at load would take it.
+
+**And one adjacent hole is named rather than fixed.** `WaveScript.FullPrice` is documented as the ceiling on
+what a round can deal, and since #268 it is not one: a raised body's leak is charged at the raised row's price
+and `FullPrice` counts only the bodies an order sends, so a pool holding a spawner bounds the load walk's bonus
+below what a round could really earn — the one direction that produces false refusals. Nothing in the committed
+content reaches it, and it is #268's line rather than this one's. The bounty's own ceiling,
+`WaveScript.MostBountyPayable`, does count what a spawner puts down, bounded by `Match.TickCeiling` over the
+raise period.
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 5` → `layout 6`, and `unit-types/5` → `unit-types/6`, for the one column.
+- `SimulationVersion` **12 → 13**, because a match now produces a number a run spends.
+- `match-state/5` → `match-state/6`. What the kills have paid joins the per-tick fold.
+- `rule-fingerprint/10` → `rule-fingerprint/11`, and this one is **the first bump since
+  `rule-fingerprint/6` that the scenario alone could not answer**. #269's rule fires where a body's health
+  reaches zero, and **not one of the six halves that fold already had kills anything at all** — every body on
+  every roster in `DerivationTests` walks to the exit. A bounty put on the sixth half's roster moved the
+  fingerprint by nothing. The seventh half is a defense that kills what walks at it, over rows that pay three
+  different numbers by three different routes.
+
+**What is free is every record format**, again, and for the reason #267 gives.
+
+**And one measured fact about the frames, found while re-capturing them.**
+[`docs/frames/README.md`](frames/README.md) said "a frame is a function of its tick and nothing else". It is
+not: capturing `-Ticks "342,344"` and `-Ticks "311,342,344"` produce different bytes for the two shared frames,
+reproducibly, and only the three-tick list reproduces what is committed. #268 measured the same thing and
+recorded it in a commit message; the README now says it, and its magic-lines recipe is the list that actually
+made those frames.

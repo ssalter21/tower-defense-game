@@ -7,19 +7,21 @@ namespace Sim
     /// What one wave paid a purse, itemised, and the purse it left behind.
     /// </summary>
     /// <remarks>
-    /// Itemised rather than summed, because the three lines answer different
+    /// Itemised rather than summed, because the four lines answer different
     /// questions: the interest is what banking was worth, the base is what the
-    /// wave was worth for happening, and the bonus is what the wave's own
-    /// damage was worth. A run's retrospective is a fold over these.
+    /// wave was worth for happening, the bonus is what the wave's own damage was
+    /// worth, and the bounty is what the round's defense was paid for the bodies
+    /// it killed. A run's retrospective is a fold over these.
     /// </remarks>
     public sealed class WavePayment
     {
-        internal WavePayment(int opening, int interest, int incomeBase, int bonus, Purse purse)
+        internal WavePayment(int opening, int interest, int incomeBase, int bonus, int bounty, Purse purse)
         {
             Opening = opening;
             Interest = interest;
             IncomeBase = incomeBase;
             Bonus = bonus;
+            Bounty = bounty;
             Purse = purse;
         }
 
@@ -40,8 +42,17 @@ namespace Sim
         /// </summary>
         public int Bonus { get; }
 
+        /// <summary>
+        /// The bounties this round's defense collected: what every body it
+        /// killed pays, averaged over the field it met. The one line paid for
+        /// what stood rather than for what walked, and the one earned during a
+        /// match rather than at the end of one. See
+        /// <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// </summary>
+        public int Bounty { get; }
+
         /// <summary>Everything the wave paid.</summary>
-        public int Total => Interest + IncomeBase + Bonus;
+        public int Total => Interest + IncomeBase + Bonus + Bounty;
 
         /// <summary>The purse afterwards, holding what it opened with plus what it was paid.</summary>
         public Purse Purse { get; }
@@ -54,7 +65,9 @@ namespace Sim
             + IncomeBase.ToString(CultureInfo.InvariantCulture)
             + " base + "
             + Bonus.ToString(CultureInfo.InvariantCulture)
-            + " bonus = "
+            + " bonus + "
+            + Bounty.ToString(CultureInfo.InvariantCulture)
+            + " bounty = "
             + Purse.Gold.ToString(CultureInfo.InvariantCulture)
             + " gold";
     }
@@ -210,23 +223,27 @@ namespace Sim
         /// What a wave pays this purse, and the purse afterwards.
         /// </summary>
         /// <remarks>
-        /// Three lines, in this order. The interest is taken on what the purse
+        /// Four lines, in this order. The interest is taken on what the purse
         /// carried <b>through</b> the wave, before the wave's own money lands,
         /// which is what makes not spending an investment rather than a
         /// rebate. The base is flat. The bonus is the ruleset's share of what
         /// the wave got past, so a wave that dealt twice as much is paid twice
-        /// as much for it.
+        /// as much for it. The bounty is what the round's defense was paid for
+        /// killing, and it arrives whole rather than at a rate: what a kill pays
+        /// is authored on the row that died, so there is no share of it left for
+        /// a ruleset to take.
         /// </remarks>
         /// <param name="rules">The interest rate, its ceiling, the base and the bonus rate.</param>
         /// <param name="leakCostDealt">What this wave got past its opponents, priced in gold.</param>
-        public WavePayment CloseWave(Ruleset rules, int leakCostDealt)
+        /// <param name="bountyEarned">What this round's defense was paid for the bodies it killed.</param>
+        public WavePayment CloseWave(Ruleset rules, int leakCostDealt, int bountyEarned)
         {
             if (rules is null)
             {
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            return Closed(rules, BonusOn(rules, leakCostDealt));
+            return Closed(rules, BonusOn(rules, leakCostDealt), Bountied(bountyEarned));
         }
 
         /// <summary>
@@ -262,14 +279,20 @@ namespace Sim
         /// below what the round could really deal turns this into a floor, which
         /// is the one way the walk goes wrong.
         /// </param>
-        public WavePayment CloseWaveAtBest(Ruleset rules, int mostLeakCostDealable)
+        /// <param name="mostBountyEarnable">
+        /// The most this round's defense could have been paid for killing, under
+        /// the same reading and for the same reason. See
+        /// <see cref="Run.MostBountyEarnable"/>, which is where the number comes
+        /// from.
+        /// </param>
+        public WavePayment CloseWaveAtBest(Ruleset rules, int mostLeakCostDealable, int mostBountyEarnable)
         {
             if (rules is null)
             {
                 throw new ArgumentNullException(nameof(rules));
             }
 
-            return Closed(rules, BonusOn(rules, mostLeakCostDealable));
+            return Closed(rules, BonusOn(rules, mostLeakCostDealable), Bountied(mostBountyEarnable));
         }
 
         /// <summary>
@@ -324,11 +347,14 @@ namespace Sim
             return (int)earned;
         }
 
-        /// <summary>The purse after the interest, the base and a bonus somebody worked out.</summary>
-        private WavePayment Closed(Ruleset rules, long bonus)
+        /// <summary>
+        /// The purse after the interest, the base, a bonus somebody worked out
+        /// and the bounty.
+        /// </summary>
+        private WavePayment Closed(Ruleset rules, long bonus, int bounty)
         {
             long interest = InterestOn(rules, Gold);
-            long closing = Gold + interest + rules.IncomeBasePerWave + bonus;
+            long closing = Gold + interest + rules.IncomeBasePerWave + bonus + bounty;
 
             if (closing > int.MaxValue)
             {
@@ -345,6 +371,7 @@ namespace Sim
                 (int)interest,
                 rules.IncomeBasePerWave,
                 (int)bonus,
+                bounty,
                 Holding((int)closing));
         }
 
@@ -365,6 +392,26 @@ namespace Sim
             }
 
             return earned;
+        }
+
+        /// <summary>
+        /// A bounty, refused if it is not one. Paid whole -- what a kill pays is
+        /// authored on the row that died, so no rate applies to it and there is
+        /// nothing here to truncate.
+        /// </summary>
+        private static int Bountied(int bountyEarned)
+        {
+            if (bountyEarned < 0)
+            {
+                throw new SimulationException(
+                    "A purse was paid "
+                    + bountyEarned.ToString(CultureInfo.InvariantCulture)
+                    + " gold in bounties. A bounty is authored as a non-negative column and paid once "
+                    + "per body killed, so a figure below zero is a defense being charged for "
+                    + "defending.");
+            }
+
+            return bountyEarned;
         }
 
         /// <summary>

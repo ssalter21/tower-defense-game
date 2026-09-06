@@ -1,7 +1,8 @@
 namespace Sim
 {
     /// <summary>
-    /// The ten things a match will tell you about as they happen, if you ask.
+    /// The eleven things a match will tell you about as they happen, if you
+    /// ask.
     /// Every parameter is an entity id, a count, or a value read straight off
     /// the emitter's row -- no event carries a position, a duration, or
     /// simulation state. Emitted only to the sink passed to
@@ -52,6 +53,24 @@ namespace Sim
         /// <param name="creepId">The body that raised it.</param>
         /// <param name="raisedCreepId">The body it put on the corridor.</param>
         void CreepRaised(int creepId, int raisedCreepId);
+
+        /// <summary>
+        /// A body that pays for being killed was killed, on the tick its health
+        /// reached zero.
+        /// </summary>
+        /// <remarks>
+        /// <b>The gold is not this event.</b> What a match has paid is a number
+        /// on the match, and a seek re-simulates rather than replaying a stream
+        /// -- so a scrub either side of this tick reads the running total the
+        /// re-simulation arrived at, without anybody having heard anything. See
+        /// <c>docs/adr/0026-seeking-re-simulates-rather-than-caching.md</c>.
+        /// What this carries is the moment and which body paid, for whatever a
+        /// view wants to mark it with. Nothing is emitted for a row whose
+        /// bounty column is zero, which is every row but one.
+        /// </remarks>
+        /// <param name="creepId">The body that died. It pays for the row it was standing as.</param>
+        /// <param name="gold">What that row's bounty column says, read straight off it.</param>
+        void BountyPaid(int creepId, int gold);
 
         /// <summary>
         /// A projectile lost the creep it was aimed at and stopped existing

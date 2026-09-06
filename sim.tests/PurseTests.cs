@@ -82,13 +82,13 @@ public class PurseTests
         // compounding fold below goes red at its third wave, 134 against 133.
         Ruleset rules = InterestOnly();
 
-        Assert.Equal(1, Purse.Holding(1).CloseWave(rules, 0).Interest);
-        Assert.Equal(1, Purse.Holding(10).CloseWave(rules, 0).Interest);
-        Assert.Equal(2, Purse.Holding(11).CloseWave(rules, 0).Interest);
+        Assert.Equal(1, Purse.Holding(1).CloseWave(rules, 0, 0).Interest);
+        Assert.Equal(1, Purse.Holding(10).CloseWave(rules, 0, 0).Interest);
+        Assert.Equal(2, Purse.Holding(11).CloseWave(rules, 0, 0).Interest);
 
         // And nothing at all earns nothing, which is the one case rounding up
         // must not invent a coin for.
-        Assert.Equal(0, Purse.Empty.CloseWave(rules, 0).Interest);
+        Assert.Equal(0, Purse.Empty.CloseWave(rules, 0, 0).Interest);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class PurseTests
 
         for (int wave = 0; wave < 10; wave++)
         {
-            purse = purse.CloseWave(rules, 0).Purse;
+            purse = purse.CloseWave(rules, 0, 0).Purse;
             banked.Add(purse.Gold);
         }
 
@@ -137,14 +137,14 @@ public class PurseTests
         // which is a rate nobody can tune without a compile.
         Assert.Equal(
             100,
-            Purse.Holding(1000).CloseWave(InterestOnly(), 0).Interest);
+            Purse.Holding(1000).CloseWave(InterestOnly(), 0, 0).Interest);
 
         Assert.Equal(
             200,
             Purse.Holding(1000)
                 .CloseWave(
                     Ruleset.Parse(PlantedText.Replace(InterestOnlyText(), "interest 10 0", "interest 20 0")),
-                    0)
+                    0, 0)
                 .Interest);
     }
 
@@ -155,7 +155,7 @@ public class PurseTests
         // first assertion goes red, 168 against 84, and every run in the project
         // is quietly poorer than the file it was authored in says.
         Ruleset rules = TheRuleset.Committed();
-        WavePayment paid = Purse.Empty.CloseWave(rules, 0);
+        WavePayment paid = Purse.Empty.CloseWave(rules, 0, 0);
 
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
         Assert.Equal(168, paid.IncomeBase);
@@ -166,7 +166,7 @@ public class PurseTests
             Purse.Empty
                 .CloseWave(
                     Ruleset.Parse(PlantedText.Replace(TheRuleset.Minimal, "income 100", "income 250")),
-                    0)
+                    0, 0)
                 .IncomeBase);
     }
 
@@ -181,7 +181,7 @@ public class PurseTests
         // dealt. The bonus assertion goes red, 0 against 168 -- a build paying
         // a performance bonus for a wave that performed.
         Ruleset rules = TheRuleset.Committed();
-        WavePayment paid = Purse.Holding(500).CloseWave(rules, 0);
+        WavePayment paid = Purse.Holding(500).CloseWave(rules, 0, 0);
 
         Assert.Equal(0, paid.Bonus);
         Assert.Equal(rules.IncomeBasePerWave, paid.IncomeBase);
@@ -261,11 +261,11 @@ public class PurseTests
         // than asked for -- an oracle that calls the thing under test is not one.
         Assert.Equal(130, wave.FullPrice(costs));
 
-        WavePayment best = Purse.Holding(500).CloseWaveAtBest(rules, wave.FullPrice(costs));
+        WavePayment best = Purse.Holding(500).CloseWaveAtBest(rules, wave.FullPrice(costs), 0);
 
         for (int dealt = 0; dealt <= 130; dealt++)
         {
-            WavePayment paid = Purse.Holding(500).CloseWave(rules, dealt);
+            WavePayment paid = Purse.Holding(500).CloseWave(rules, dealt, 0);
 
             Assert.True(
                 paid.Total <= best.Total,
@@ -284,7 +284,7 @@ public class PurseTests
         // Reached rather than merely never exceeded: a wave every creep of which
         // leaked against every opponent is paid exactly the ceiling.
         Assert.Equal(32, best.Bonus);
-        Assert.Equal(best.Total, Purse.Holding(500).CloseWave(rules, 130).Total);
+        Assert.Equal(best.Total, Purse.Holding(500).CloseWave(rules, 130, 0).Total);
     }
 
     [Fact]
@@ -303,9 +303,9 @@ public class PurseTests
 
         var rounds = new[]
         {
-            new RoundOutcome(45, 100),
-            new RoundOutcome(35, 100),
-            new RoundOutcome(5, 100),
+            new RoundOutcome(45, 100, 0),
+            new RoundOutcome(35, 100, 0),
+            new RoundOutcome(5, 100, 0),
         };
 
         RunOutcome outcome = RunOutcome.Of(1500, rounds, 3, deathEndsTheRun: true);
@@ -508,17 +508,17 @@ public class PurseTests
             "income 100",
             "income 0"));
 
-        Assert.Equal(5, Purse.Holding(1000).CloseWave(capped, 0).Interest);
+        Assert.Equal(5, Purse.Holding(1000).CloseWave(capped, 0, 0).Interest);
 
         // Under the ceiling it is the rate that answers, not the cap.
-        Assert.Equal(4, Purse.Holding(40).CloseWave(capped, 0).Interest);
+        Assert.Equal(4, Purse.Holding(40).CloseWave(capped, 0, 0).Interest);
 
         var banked = new List<int>();
         Purse purse = Purse.Holding(1000);
 
         for (int wave = 0; wave < 4; wave++)
         {
-            purse = purse.CloseWave(capped, 0).Purse;
+            purse = purse.CloseWave(capped, 0, 0).Purse;
             banked.Add(purse.Gold);
         }
 
@@ -540,7 +540,7 @@ public class PurseTests
         // asserted by name: a run that got rich enough to go bankrupt should say
         // which arithmetic did it.
         SimulationException thrown = Assert.Throws<SimulationException>(
-            () => Purse.Holding(int.MaxValue).CloseWave(InterestOnly(), 0));
+            () => Purse.Holding(int.MaxValue).CloseWave(InterestOnly(), 0, 0));
 
         Assert.Contains("does not fit", thrown.Message, StringComparison.Ordinal);
     }
@@ -556,7 +556,7 @@ public class PurseTests
         // Purse.CloseWave. The last assertion goes red, 546 against 512: the
         // three lines still add up and the purse no longer agrees with them.
         Ruleset rules = TheRuleset.Committed();
-        WavePayment paid = Purse.Holding(333).CloseWave(rules, 45);
+        WavePayment paid = Purse.Holding(333).CloseWave(rules, 45, 0);
 
         Assert.Equal(333, paid.Opening);
         Assert.Equal(34, paid.Interest);
@@ -568,7 +568,7 @@ public class PurseTests
 
     /// <summary>What a wave that dealt this much is paid on top of the base.</summary>
     private static int Bonus(Ruleset rules, int leakCostDealt) =>
-        Purse.Empty.CloseWave(rules, leakCostDealt).Bonus;
+        Purse.Empty.CloseWave(rules, leakCostDealt, 0).Bonus;
 
     /// <summary>
     /// The minimal ruleset with the income base taken to nothing, so that a fold

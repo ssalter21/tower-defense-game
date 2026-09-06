@@ -60,14 +60,24 @@ public class ContentTests
 
     /// <summary>
     /// And once more in column layout 5, carrying nothing in either of the two
-    /// columns it adds -- which is what every committed row but the Necromancer
-    /// carries.
+    /// columns it adds.
     /// </summary>
-    private const string ThreeCurrentRows = """
+    private const string ThreeRaisingRows = """
         layout 5
         unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none none 0
         unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none none 0
         unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none none 0
+        """;
+
+    /// <summary>
+    /// And once more in column layout 6, paying nothing for being killed --
+    /// which is what every committed row but the Grave Robber carries.
+    /// </summary>
+    private const string ThreeCurrentRows = """
+        layout 6
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none none 0 0
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none none 0 0
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none none 0 0
         """;
 
     /// <summary>
@@ -112,6 +122,18 @@ public class ContentTests
     /// widening is exactly when it would happen.
     /// </remarks>
     private const ulong LayoutFourHashOfThreeRows = 0xE30727A394A13D2CUL;
+
+    /// <summary>
+    /// What <see cref="ThreeRaisingRows"/> hashed to before layout 6 existed,
+    /// and what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Pinned here for the reason layouts 2, 3 and 4 are: no golden bundle
+    /// carries a layout-5 table any more, so a fold that moved under layout 5's
+    /// label would go unnoticed by everything else in this repository, and the
+    /// next widening is exactly when it would happen.
+    /// </remarks>
+    private const ulong LayoutFiveHashOfThreeRows = 0xC8B9ECC587139537UL;
 
     /// <summary>
     /// The Mage's id. Named because two tests below single the row out -- it is
@@ -798,22 +820,26 @@ public class ContentTests
         UnitTypeTable two = UnitTypeTable.Parse(ThreeTypedRows);
         UnitTypeTable three = UnitTypeTable.Parse(ThreeRadialRows);
         UnitTypeTable four = UnitTypeTable.Parse(ThreeSuccessorRows);
-        UnitTypeTable five = UnitTypeTable.Parse(ThreeCurrentRows);
+        UnitTypeTable five = UnitTypeTable.Parse(ThreeRaisingRows);
+        UnitTypeTable six = UnitTypeTable.Parse(ThreeCurrentRows);
 
         Assert.Equal(UnitTypeTable.DefaultLayout, one.Layout);
         Assert.Equal(2, two.Layout);
         Assert.Equal(3, three.Layout);
         Assert.Equal(4, four.Layout);
-        Assert.Equal(UnitTypeTable.CurrentLayout, five.Layout);
+        Assert.Equal(5, five.Layout);
+        Assert.Equal(UnitTypeTable.CurrentLayout, six.Layout);
 
         Assert.Equal(one.ById(1).MaxHp, two.ById(1).MaxHp);
         Assert.Equal(two.ById(1).MaxHp, three.ById(1).MaxHp);
         Assert.Equal(three.ById(1).MaxHp, four.ById(1).MaxHp);
         Assert.Equal(four.ById(1).MaxHp, five.ById(1).MaxHp);
+        Assert.Equal(five.ById(1).MaxHp, six.ById(1).MaxHp);
         Assert.Equal(two.ById(7).Cost, three.ById(7).Cost);
         Assert.Equal(three.ById(7).Cost, four.ById(7).Cost);
         Assert.Equal(four.ById(7).Cost, five.ById(7).Cost);
-        Assert.Equal(four.ById(7).AttackType, five.ById(7).AttackType);
+        Assert.Equal(five.ById(7).Cost, six.ById(7).Cost);
+        Assert.Equal(five.ById(7).AttackType, six.ById(7).AttackType);
 
         var hashes = new[]
         {
@@ -822,6 +848,7 @@ public class ContentTests
             three.ContentHash,
             four.ContentHash,
             five.ContentHash,
+            six.ContentHash,
         };
 
         Assert.Equal(hashes.Length, hashes.Distinct().Count());
@@ -920,6 +947,32 @@ public class ContentTests
     }
 
     [Fact]
+    public void A_layout_five_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time, one layout
+        // on again: layout 5 is what content/units.txt was an hour ago, and a
+        // widening that quietly changed how one reads would retire records
+        // nobody edited.
+        //
+        // OBSERVED: fold the bounty in UnitType.Fold's layout-5 branch as well.
+        // This goes red against the literal, and nothing else in the suite
+        // notices.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeRaisingRows);
+
+        Assert.Equal(5, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutFiveHashOfThreeRows), table.ContentHash);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Null(table.ById(1).Raises);
+
+        // And what such a row carries in the column it does not have: a body
+        // whose death pays the defender nothing. That is what a layout-5 row
+        // IS, and not a default standing in for something it stated.
+        Assert.Equal(0, table.ById(1).Bounty);
+        Assert.Equal(0, table.ById(7).Bounty);
+    }
+
+    [Fact]
     public void The_current_layout_folds_the_columns_it_added()
     {
         // A layout that declared four columns and folded none of them would let
@@ -950,18 +1003,25 @@ public class ContentTests
         // record made against the roster before it has to be retired.
         Assert.NotEqual(
             UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
-            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0", "armoured 0 0 1 none none none 0 none 0 0 2 none 0")).ContentHash);
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 2 none 0 0")).ContentHash);
 
         // And the two layout 5 added, one at a time. The period moves the hash
         // on its own, so a spawner retuned from one raise a second to one every
         // five retires the records made under the faster one.
         Assert.NotEqual(
             UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
-            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30")).ContentHash);
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30 0")).ContentHash);
 
         Assert.NotEqual(
-            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30")).ContentHash,
-            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 31")).ContentHash);
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30 0")).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 31 0")).ContentHash);
+
+        // And the one layout 6 added. A row that pays for being killed is a row
+        // that funds a defense from the day it was authored, so a record made
+        // against the roster before it has to be retired.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none none 0 2")).ContentHash);
     }
 
     [Fact]
@@ -976,7 +1036,7 @@ public class ContentTests
         // columns were added in the wrong order parses as the current layout
         // with its fields transposed.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 5", "# the layout row, forgotten")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "# the layout row, forgotten")));
 
         Assert.Contains("column layout 1 has 15", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("'layout' row", thrown.Message, StringComparison.Ordinal);
@@ -1046,9 +1106,26 @@ public class ContentTests
         Assert.Contains("column layout 5 has 31", thrown.Message, StringComparison.Ordinal);
 
         ContentException over = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 5", "layout 4")));
+            () => UnitTypeTable.Parse(ThreeRaisingRows.Replace("layout 5", "layout 4")));
 
         Assert.Contains("column layout 4 has 29", over.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_fives_columns_under_a_layout_six_declaration_refuses_by_name()
+    {
+        // Layout 6's own version of it, and the one column is the easiest of
+        // all of them to leave off: a table that gained a single column looks
+        // finished the moment the layout row is edited.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeRaisingRows.Replace("layout 5", "layout 6")));
+
+        Assert.Contains("column layout 6 has 32", thrown.Message, StringComparison.Ordinal);
+
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "layout 5")));
+
+        Assert.Contains("column layout 5 has 31", over.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1058,15 +1135,16 @@ public class ContentTests
         // branch somebody deleted arrives here rather than passing an
         // inequality and falling through a switch.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 5", "layout 6")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "layout 7")));
 
-        Assert.Contains("declares column layout 6", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declares column layout 7", thrown.Message, StringComparison.Ordinal);
         Assert.False(UnitTypeTable.IsKnownLayout(0));
-        Assert.False(UnitTypeTable.IsKnownLayout(6));
+        Assert.False(UnitTypeTable.IsKnownLayout(7));
         Assert.True(UnitTypeTable.IsKnownLayout(1));
         Assert.True(UnitTypeTable.IsKnownLayout(2));
         Assert.True(UnitTypeTable.IsKnownLayout(3));
         Assert.True(UnitTypeTable.IsKnownLayout(4));
+        Assert.True(UnitTypeTable.IsKnownLayout(5));
         Assert.True(UnitTypeTable.IsKnownLayout(UnitTypeTable.CurrentLayout));
     }
 
