@@ -309,6 +309,19 @@ namespace View.Editor
 
         private const string ChopClipName = "Melee_1H_Attack_Chop";
 
+        /// <summary>
+        /// The Blessing's cast: arms raised rather than a hand thrown forward.
+        /// </summary>
+        /// <remarks>
+        /// Signed on 6 September 2026 off the filmstrips on issue #278, out of
+        /// the five magic clips the Medium banks hold. It is a cast and not a
+        /// stance, so it sits in the windup with <see cref="RestClipName"/>
+        /// either side of it like every other swing on this page — the Shield
+        /// Wall's guard and the Overwatch's aim are the two rows that hold a
+        /// pose instead, and this is not one of them.
+        /// </remarks>
+        private const string RaiseClipName = "Ranged_Magic_Raise";
+
         private const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
 
         /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
@@ -613,14 +626,25 @@ namespace View.Editor
         /// whether that is the read is on the sheet as a question.
         /// </para>
         /// <para>
-        /// <b>The Paladin and Engineer lines are bound with no clips, and that
-        /// is the record speaking rather than an omission.</b>
-        /// <c>docs/roster.md</c> names a clip on every rung of the Knight,
-        /// Barbarian, Cleric, Druid and Rogue lines and none on any rung of
-        /// those two, whose windup and backswing carry the <c>_</c> that page
-        /// puts on a number nobody has signed. A clip chosen here to fill the
-        /// gap would be this table deciding how a tower swings, so those six
-        /// rows stand in their bind pose until the ask is answered.
+        /// <b>The Engineer line is bound with no clips, and that is the record
+        /// speaking rather than an omission.</b> <c>docs/roster.md</c> names a
+        /// clip on every rung of the Knight, Barbarian, Cleric, Druid and Rogue
+        /// lines and none on any rung of that one, whose windup and backswing
+        /// carry the <c>_</c> that page puts on a number nobody has signed. A
+        /// clip chosen here to fill the gap would be this table deciding how a
+        /// tower swings, so those three rows stand in their bind pose until the
+        /// ask is answered.
+        /// </para>
+        /// <para>
+        /// <b>The Paladin line stood in that bind pose too until 6 September
+        /// 2026.</b> Ids 20, 21 and 22 carried three nulls apiece for the same
+        /// reason, and it was a bug on the board rather than a gap in a
+        /// document: three towers with their arms straight out. Issue #278 put
+        /// all thirty-two clips a hammer or a book could be swung with up as
+        /// filmstrips and the developer picked from them — the chop for the
+        /// Paladin and the Templar, <see cref="RaiseClipName"/> for the
+        /// Blessing. The durations are still unsigned; a clip is what the tower
+        /// does and a duration is how many ticks it gets to do it in.
         /// </para>
         /// <para>
         /// <b>The Overwatch is posed by one clip in all three states, because
@@ -772,13 +796,13 @@ namespace View.Editor
                 LargeAxePath, null, LargeRestClipName, SlamClipName, LargeRestClipName, default, default,
                 LargeAxeHead, default),
             (20, PaladinFolder + "Paladin.fbx", MatchArt.TowerScale, null,
-                HammerPath, null, null, null, null, default, default,
+                HammerPath, null, RestClipName, ChopClipName, RestClipName, default, default,
                 HammerHead, default),
             (21, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, null,
-                HammerPath, PaladinShieldPath, null, null, null, default, default,
+                HammerPath, PaladinShieldPath, RestClipName, ChopClipName, RestClipName, default, default,
                 HammerHead, default),
             (22, PaladinFolder + "Paladin_with_Helmet.fbx", MatchArt.TowerScale, PaladinAltAtlasPath,
-                BookPath, PaladinShieldPath, null, null, null, default, default,
+                BookPath, PaladinShieldPath, RestClipName, RaiseClipName, RestClipName, default, default,
                 Book, (StatuePath, 1f, BesideProp.NextTile)),
             (23, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, null,
                 ClericTomePath, null, RestClipName, ShootClipName, RestClipName, default, default,

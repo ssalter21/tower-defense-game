@@ -442,7 +442,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 ### 20 · Paladin · tier 1 · status live
 
 - **Does** — one hex, holy damage, one target.
-- **Looks** — `Paladin`, bare head, `paladin_hammer`.
+- **Looks** — `Paladin`, bare head, `paladin_hammer`, swinging **`Melee_1H_Attack_Chop`**.
 - **Numbers** — range 1000, cooldown 24, damage 120–180, windup `_`, backswing `_`, hitscan, magic, cost ~37.
 - **Needs** — nothing.
 - **Open** — none.
@@ -450,7 +450,8 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 ### 21 · Templar · tier 2 · status live
 
 - **Does** — hits harder. One stat.
-- **Looks** — the **`Paladin_with_Helmet`** model, `paladin_hammer` and `paladin_shield`.
+- **Looks** — the **`Paladin_with_Helmet`** model, `paladin_hammer` and `paladin_shield`,
+  swinging **`Melee_1H_Attack_Chop`** as the rung below does.
 - **Numbers** — damage 120–180 → **180–270**. Cost ~56.
 - **Needs** — nothing.
 - **Open** — the second model lands at tier 2 here rather than tier 3, because the helmet is the smaller of
@@ -462,7 +463,9 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 - **Looks** — `Paladin_with_Helmet`, `paladin_texture_B`, `paladin_book` open, and the gold `paladin_statue`
   standing on the tile beside him — **drawn at 1**, the size it imports at, which is 2.55 m tall and 1.60 across
   and stands level with the Paladin himself. Every pulse puts a ring over the head of each tower it reached,
-  which is the glow the section above reserves and the one row it is reserved for.
+  which is the glow the section above reserves and the one row it is reserved for. It casts with
+  **`Ranged_Magic_Raise`** — arms raised rather than a hand thrown forward, which is the
+  one of the five magic clips that reads as a blessing rather than a bolt.
 - **Numbers** — aura: origin `self`, radius 2000, affects `friend`, payload `cooldown`, magnitude −25,
   period 30, duration 30.
 - **Needs** — nothing. The beside slot is built.
@@ -874,7 +877,9 @@ would re-baseline every measurement in the sweep.
 
 - **Does** — **Ward**: grants creeps within two hexes a shield worth a quarter of their health, every three
   seconds. **Raise**: spawns a Minion beside itself every **150 ticks**, for as long as it lives.
-- **Looks** — the pack's own `Necromancer` model, `Skeleton_Scythe`.
+- **Looks** — the pack's own `Necromancer` model, `Skeleton_Scythe`, **carried at no
+  turn** — along the shaft, the way the pack authored it, and not stood upright the way
+  the Mage's and the Druid's staffs are. Signed against the four alternatives on 6 September 2026.
 - **Numbers** — 2600 hp, speed 28, arcane, armourValue 30, cost 21. Ward: origin `self`, affects `friend`,
   payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: `raises` 1, `raisePeriod` 150.
 - **Needs** — nothing. Both are on the row and playing as of
@@ -969,7 +974,9 @@ would re-baseline every measurement in the sweep.
 ### 44 · Witch · status live
 
 - **Does** — **Hex Ward**: creeps within two hexes gain 30 armour.
-- **Looks** — `Witch`, `Broom`.
+- **Looks** — `Witch`, `Broom`, **carried at no turn**, for the reason the Necromancer's
+  scythe is: these two walk rather than swing, and a turn that reads in a still buries the shaft in
+  the body mid-stride. Signed against the four alternatives on 6 September 2026.
 - **Numbers** — 2000 hp, speed 33, arcane, armourValue 20, cost 15. Aura: origin `self`, affects `friend`,
   payload `armour`, magnitude +30, radius 2000, period 30, duration 30.
 - **Needs** — nothing.
@@ -1043,7 +1050,12 @@ would re-baseline every measurement in the sweep.
 - **Does** — the pack soaks hits: a raw pool in front of ordinary health. **Pays 12 gold to the defender that
   kills it**, mid-match, into the one purse.
 - **Looks** — `Hoarder`, wearing `Hoarder_Backpack`. **The backpack, not the sword** — the pack is what the
-  mechanic is about, and a sword on a creep that never attacks reads as a lie.
+  mechanic is about, and `Hoarder_Sword` stays out of the hand it would otherwise take. **The blade
+  in the body's own front pouch stays**, signed 6 September 2026 against the same body with it
+  hidden: it is a piece of `Hoarder.fbx` rather than something the row hands it, and a robber
+  wearing a knife it never draws is a robber. The sheet that asked settled a second thing too —
+  with the loose backpack held in a hand the two renders come out byte-identical, because a pack in
+  front of a body already wearing one hides the belt entirely.
 - **Numbers** — 3000 hp, speed 22, armoured, armourValue 30, shield 2000, cost 24. Pays **12** on a kill.
 - **Draws** — nothing of its own, as the Vampire's pool draws nothing: the pack is the blue segment of the bar
   over the body.

@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &812943458
+--- !u!1 &1984085094
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 812943460}
-  - component: {fileID: 812943459}
+  - component: {fileID: 1984085096}
+  - component: {fileID: 1984085095}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &812943459
+--- !u!114 &1984085095
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812943458}
+  m_GameObject: {fileID: 1984085094}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -515,9 +515,9 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
@@ -537,9 +537,9 @@ MonoBehaviour:
         offset: {x: 0, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 4043807988371827432, guid: ed97a2d691569ea46a6ba1d02c95578f, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_hammer
         tip: {x: 0, y: 1, z: 0}
@@ -559,9 +559,9 @@ MonoBehaviour:
         offset: {x: 2, y: 0, z: 0}
       rightHandTilt: {x: 0, y: 0, z: 0}
       leftHandTilt: {x: 0, y: 0, z: 0}
-      idleClip: {fileID: 0}
-      windupClip: {fileID: 0}
-      backswingClip: {fileID: 0}
+      idleClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
+      windupClip: {fileID: 7719806121101089419, guid: a2ea5266f69d28340b5b331f4ce31e4c, type: 3}
+      backswingClip: {fileID: -5624545281902316504, guid: b60846b11498cd6478c62e69928865a1, type: 3}
       effectAnchor:
         transformName: paladin_book
         tip: {x: 0, y: 0, z: 0}
@@ -1165,13 +1165,13 @@ MonoBehaviour:
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &812943460
+--- !u!4 &1984085096
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812943458}
+  m_GameObject: {fileID: 1984085094}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1184,4 +1184,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 812943460}
+  - {fileID: 1984085096}
