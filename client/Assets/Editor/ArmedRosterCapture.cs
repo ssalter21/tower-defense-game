@@ -261,13 +261,13 @@ namespace View.Editor
                         "candidate-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
                         + "-" + candidate.Name + ".png");
 
+                    UnitArt unit = ArtFor(candidate);
+
                     var stand = new GameObject(candidate.Name);
                     stand.transform.SetParent(host, worldPositionStays: false);
 
                     try
                     {
-                        UnitArt unit = ArtFor(candidate);
-
                         if (candidate.Side == CandidateSet.Side.Tower)
                         {
                             BuildTower(stand, 0, standIn, unit, ClipPhase);
@@ -286,29 +286,37 @@ namespace View.Editor
                         written.Add(path);
 
                         tiles.Add(Grab(camera, SheetTileWidth, tileHeight));
-
-                        if (stripFrames > 1)
-                        {
-                            string strip = Path.Combine(
-                                outDir,
-                                "strip-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
-                                + "-" + candidate.Name + ".png");
-
-                            Write(strip, Filmstrip(
-                                host, camera, candidate, standIn, unit, stripFrames, width, height));
-                            written.Add(strip);
-
-                            strips.Add(string.Format(
-                                CultureInfo.InvariantCulture,
-                                "{0,-30} {1,3} {2,8:F3}",
-                                candidate.Name,
-                                stripFrames,
-                                candidate.Clip == null ? 0f : candidate.Clip.length));
-                        }
                     }
                     finally
                     {
                         Object.DestroyImmediate(stand);
+                    }
+
+                    // THE STRIP IS DRAWN ONLY ONCE THE STILL'S BODY IS OFF THE
+                    // STAGE. Both stands hang off the same host at the same
+                    // local position, so a strip taken while the still was
+                    // still standing came out with a motionless body
+                    // superimposed on the moving one -- twelve frames of a
+                    // candidate obscuring itself. Filmstrip refuses to draw
+                    // with company now, but the ordering here is what actually
+                    // keeps it alone.
+                    if (stripFrames > 1)
+                    {
+                        string strip = Path.Combine(
+                            outDir,
+                            "strip-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
+                            + "-" + candidate.Name + ".png");
+
+                        Write(strip, Filmstrip(
+                            host, camera, candidate, standIn, unit, stripFrames, width, height));
+                        written.Add(strip);
+
+                        strips.Add(string.Format(
+                            CultureInfo.InvariantCulture,
+                            "{0,-30} {1,3} {2,8:F3}",
+                            candidate.Name,
+                            stripFrames,
+                            candidate.Clip == null ? 0f : candidate.Clip.length));
                     }
 
                     manifest.Add(
@@ -602,6 +610,8 @@ namespace View.Editor
             Bounds union = default;
             var started = false;
 
+            Alone(host, candidate.Name);
+
             for (var i = 0; i < count; i++)
             {
                 GameObject stand = BuildAt(host, candidate, standIn, art, i / (float)count);
@@ -652,6 +662,36 @@ namespace View.Editor
                 {
                     Object.DestroyImmediate(frame);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Refuses to draw a strip while anything else that draws a body is
+        /// standing on the host.
+        /// </summary>
+        /// <remarks>
+        /// <b>Because a second body does not look like a second body.</b> Every
+        /// stand is parented to the same host at the same local position, so a
+        /// strip taken while the single-still capture's stand was still alive
+        /// came out as one candidate superimposed on a motionless copy of
+        /// itself — which reads as a smeared model or a bad clip, not as two
+        /// objects. It cost a round trip with the developer to find. The
+        /// ordering in <see cref="DrawSet"/> is what keeps the stage clear;
+        /// this is here so that if some future caller gets that ordering wrong
+        /// the run stops and says so, instead of writing forty-seven strips
+        /// nobody can read.
+        /// </remarks>
+        private static void Alone(Transform host, string subject)
+        {
+            int bodies = host.GetComponentsInChildren<TowerView>(true).Length
+                + host.GetComponentsInChildren<CreepView>(true).Length;
+
+            if (bodies != 0)
+            {
+                throw new IOException(
+                    "Cannot draw the filmstrip for " + subject + ": " + bodies + " other body(ies) "
+                    + "are still standing on the capture host. Every stand shares one position, so "
+                    + "the strip would come out with them drawn on top of each other.");
             }
         }
 
