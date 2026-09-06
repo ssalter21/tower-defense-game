@@ -294,7 +294,8 @@ namespace View.Editor
                                 "strip-" + (index + 1).ToString("00", CultureInfo.InvariantCulture)
                                 + "-" + candidate.Name + ".png");
 
-                            Write(strip, Filmstrip(camera, stand, candidate, unit, stripFrames, width, height));
+                            Write(strip, Filmstrip(
+                                host, camera, candidate, standIn, unit, stripFrames, width, height));
                             written.Add(strip);
 
                             strips.Add(string.Format(
@@ -588,9 +589,10 @@ namespace View.Editor
         /// </para>
         /// </remarks>
         private static Texture2D Filmstrip(
+            Transform host,
             Camera camera,
-            GameObject stand,
             CandidateSet.Candidate candidate,
+            UnitType standIn,
             UnitArt art,
             int count,
             int width,
@@ -602,17 +604,25 @@ namespace View.Editor
 
             for (var i = 0; i < count; i++)
             {
-                Repose(stand, candidate, art, i / (float)count);
-                Bounds here = Measured(stand);
+                GameObject stand = BuildAt(host, candidate, standIn, art, i / (float)count);
 
-                if (started)
+                try
                 {
-                    union.Encapsulate(here);
+                    Bounds here = Measured(stand);
+
+                    if (started)
+                    {
+                        union.Encapsulate(here);
+                    }
+                    else
+                    {
+                        union = here;
+                        started = true;
+                    }
                 }
-                else
+                finally
                 {
-                    union = here;
-                    started = true;
+                    Object.DestroyImmediate(stand);
                 }
             }
 
@@ -622,8 +632,16 @@ namespace View.Editor
             {
                 for (var i = 0; i < count; i++)
                 {
-                    Repose(stand, candidate, art, i / (float)count);
-                    frames.Add(Grab(camera, width, height));
+                    GameObject stand = BuildAt(host, candidate, standIn, art, i / (float)count);
+
+                    try
+                    {
+                        frames.Add(Grab(camera, width, height));
+                    }
+                    finally
+                    {
+                        Object.DestroyImmediate(stand);
+                    }
                 }
 
                 return Stitch(frames, width, height, count);
@@ -638,43 +656,40 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// Moves an already-built candidate to a phase of its clip, without
-        /// rebuilding the view.
+        /// One candidate, built and posed at a phase of its clip, standing on
+        /// its own.
         /// </summary>
         /// <remarks>
-        /// A rebuild per frame would re-instantiate the model and its props
-        /// twelve times a candidate, and — worse — a <see cref="Hide"/> would
-        /// have to be re-applied to each one. Posing the standing view is what
-        /// both views are for.
+        /// <b>Built fresh per frame, and the cheaper way was wrong.</b> The
+        /// first filmstrip posed one standing view over and over, which is what
+        /// <see cref="SimDrivenAnimator"/> is for and costs a twelfth of the
+        /// instantiation. What came back was a rigid body with a weapon
+        /// sliding around it: the bones moved — a prop parented to a hand
+        /// follows them exactly, which is why the hammer travelled — while the
+        /// character's skinned mesh went on drawing the pose it was built in.
+        /// A strip of that is worse than the still it replaces, because it
+        /// looks like an answer. Building each frame the way the single-still
+        /// path builds its one is the path already known to draw a posed body,
+        /// so it is the path a strip takes too.
         /// </remarks>
-        private static void Repose(
-            GameObject stand, CandidateSet.Candidate candidate, UnitArt art, float phase)
+        private static GameObject BuildAt(
+            Transform host, CandidateSet.Candidate candidate, UnitType standIn, UnitArt art, float phase)
         {
-            if (candidate.Side == CandidateSet.Side.Creep)
-            {
-                stand.GetComponent<CreepView>().Pose(
-                    Vector3.zero,
-                    Quaternion.identity,
-                    MatchTuning.HexesPerWalkCycle * phase,
-                    CreepState.Walking,
-                    0f);
+            var stand = new GameObject(candidate.Name);
+            stand.transform.SetParent(host, worldPositionStays: false);
 
-                return;
+            if (candidate.Side == CandidateSet.Side.Tower)
+            {
+                BuildTower(stand, 0, standIn, art, phase);
+            }
+            else
+            {
+                BuildCreep(stand, art, candidate.Clip, candidate.Clip, phase);
             }
 
-            // A static tower has no clip to walk along, so every frame of its
-            // strip is the frame it already has. Left alone rather than
-            // refused: a set may mix posed and unposed rows, and one strip of
-            // twelve identical frames is not worth failing a run over.
-            if (!art.IsPosed)
-            {
-                return;
-            }
+            Hide(stand, candidate.Hidden);
 
-            float seconds = art.IdleClip.length * phase;
-
-            stand.GetComponent<TowerView>().Pose(
-                TowerState.Idle, Mathf.RoundToInt(seconds * Match.TicksPerSecond), null);
+            return stand;
         }
 
         /// <summary>Lays the tiles out into a grid, left to right, top to bottom.</summary>
