@@ -90,6 +90,9 @@ namespace Sim
         /// <summary>The axis of the report that is the seed space.</summary>
         private const string SeedAxis = "seeds";
 
+        /// <summary>The axis of the report that is what the opponents' towers are made of.</summary>
+        private const string WallAxis = "walls";
+
         /// <summary>
         /// Plays the whole sweep and folds it into rows.
         /// </summary>
@@ -109,15 +112,28 @@ namespace Sim
             var rows = new List<SweepRow>();
             var everyRun = new List<SweepRunRow>();
 
-            for (int index = 0; index < plan.Creeps.Count; index++)
+            // Wall outermost, so the file reads as one whole roster per wall
+            // rather than as one creep's three walls interleaved. A reader
+            // comparing creeps -- which is what the report is for -- wants the
+            // five rows of one wall adjacent; a reader comparing walls sorts.
+            for (int wall = 0; wall < plan.Walls.Count; wall++)
             {
-                Score(plan, plan.Creeps[index], rows, everyRun);
+                for (int index = 0; index < plan.Creeps.Count; index++)
+                {
+                    Score(plan, plan.Walls[wall], plan.Creeps[index], rows, everyRun);
+                }
             }
 
             var coverage = new[]
             {
                 new CoverageBound(CreepAxis, plan.Creeps.Count, plan.Roster),
                 new CoverageBound(SeedAxis, plan.RunsPerCreep, CoverageBound.Unbounded),
+
+                // The walls are complete by construction -- a plan is scored
+                // against exactly the walls it carries -- so what this axis
+                // reports is HOW MANY, which is the number that says whether a
+                // zero in the file is a reading or the only wall anybody tried.
+                new CoverageBound(WallAxis, plan.Walls.Count, plan.Walls.Count),
             };
 
             return new SweepReport(plan, rows.ToArray(), everyRun.ToArray(), coverage);
@@ -138,16 +154,23 @@ namespace Sim
         /// </remarks>
         private static void Score(
             SweepPlan plan,
+            SweepWall wall,
             UnitType creep,
             List<SweepRow> rows,
             List<SweepRunRow> everyRun)
         {
             var whole = new Cell();
 
+            // THE SAME SEEDS EVERYWHERE. A seed is derived from the sweep's own
+            // and the run's index alone -- not from the creep and not from the
+            // wall -- so cell (minion, pierce) and cell (minion, magic) are the
+            // same eight runs meeting different opponents. That is what makes
+            // the difference between two cells attributable to the wall, which
+            // is the entire reason the axis was added.
             for (int index = 0; index < plan.RunsPerCreep; index++)
             {
                 ulong seed = plan.SeedOf(index);
-                Played played = Play(plan, creep, seed);
+                Played played = Play(plan, wall, creep, seed);
 
                 whole.Add(played);
 
@@ -159,22 +182,22 @@ namespace Sim
                 // this harness allows is millions of rows.
                 if (plan.KeepsEveryRun)
                 {
-                    everyRun.Add(played.Row(creep, seed));
+                    everyRun.Add(played.Row(wall, creep, seed));
                 }
             }
 
-            rows.Add(whole.Row(creep));
+            rows.Add(whole.Row(wall, creep));
         }
 
         /// <summary>Plays one run to its end and reads off what the row needs.</summary>
-        private static Played Play(SweepPlan plan, UnitType creep, ulong seed)
+        private static Played Play(SweepPlan plan, SweepWall wall, UnitType creep, ulong seed)
         {
             var run = new Run(
                 plan.Map,
                 plan.Rules,
                 plan.Types,
                 plan.Ladder,
-                plan.Field,
+                wall.Field,
                 seed,
                 plan.Waves,
                 plan.FieldSize,
@@ -273,10 +296,11 @@ namespace Sim
             /// a rate over a single run is a bit, and both of the integers one
             /// would be computed from are on the row already.
             /// </remarks>
-            internal SweepRunRow Row(UnitType creep, ulong seed) =>
+            internal SweepRunRow Row(SweepWall wall, UnitType creep, ulong seed) =>
                 new SweepRunRow(
                     creep.Id,
                     creep.Label,
+                    wall.Name,
                     seed,
                     Rounds,
                     Won,
@@ -331,13 +355,15 @@ namespace Sim
             /// operands are on the row beside them, so nothing downstream has to
             /// take this type's rounding on trust.
             /// </summary>
-            internal SweepRow Row(UnitType creep)
+            internal SweepRow Row(SweepWall wall, UnitType creep)
             {
                 if (_runs == 0)
                 {
                     throw new SimulationException(
                         "A sweep folded a row for "
                         + creep.Label
+                        + " against a wall of "
+                        + wall.Name
                         + " out of no runs at all. A rate is a share of a population and there is no share "
                         + "of nothing, so an empty cell is a row that was emitted for a bin nothing landed "
                         + "in rather than a row reporting zero.");
@@ -346,6 +372,7 @@ namespace Sim
                 return new SweepRow(
                     creep.Id,
                     creep.Label,
+                    wall.Name,
                     _runs,
                     _rounds,
                     _wins,

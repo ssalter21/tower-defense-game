@@ -240,7 +240,7 @@ public class SweepTests
             TheRuleset.Committed(),
             TheMatch.Types(),
             TheLadder.Committed(),
-            TheSweep.Field(TheMatch.Types()),
+            new[] { SweepWall.Unrestricted(TheSweep.Field(TheMatch.Types())) },
             TheSweep.Seed,
             TheSweep.Runs).DeathEndsTheRun);
     }
@@ -697,6 +697,92 @@ public class SweepTests
         // A policy handed over without a name says so, rather than inheriting
         // the name of the one it replaced.
         Assert.Equal(SweepPlan.Unnamed, TheSweep.Plan(policy: TheSweep.Banks).PolicyName);
+    }
+
+    [Fact]
+    public void A_wall_restricted_to_an_attack_type_is_built_out_of_that_type_alone()
+    {
+        // The mechanism the whole wall axis rests on. A wall named for pierce
+        // that carried a mage would be a column whose label was a lie, and the
+        // lie is invisible in the report: the numbers are all plausible and the
+        // heading is the only thing that is wrong.
+        //
+        // OBSERVED: filter the placing half of CoverThenUpgradeBot and not the
+        // upgrade half. The wall opens correct and climbs the ladder into
+        // another attack type in its later rounds, so this goes red only on the
+        // deep stages -- which is exactly the shape a bug that survives a short
+        // test takes.
+        UnitTypeTable types = TheMatch.Types();
+
+        foreach (AttackType attack in new[] { AttackType.Pierce, AttackType.Impact, AttackType.Magic })
+        {
+            FieldPool pool = FieldPool.Canned(
+                TheMatch.Map(),
+                TheRuleset.Committed(),
+                types,
+                TheLadder.Committed(types),
+                TowerLayout.Nothing,
+                TheRun.FieldWave(types),
+                rounds: 10,
+                only: attack);
+
+            var standing = 0;
+
+            foreach (RoundOrders member in pool.Members)
+            {
+                foreach (PlacedTower tower in member.Defense.Towers)
+                {
+                    Assert.Equal(attack, tower.Type.AttackType);
+                    standing++;
+                }
+            }
+
+            // And it did build something. Every assertion above is vacuously
+            // true of a wall that never placed a tower, which is precisely what
+            // a filter that matched nothing would produce.
+            Assert.True(standing > 0, DamageMatrix.WordFor(attack) + " built no wall at all");
+        }
+    }
+
+    [Fact]
+    public void Every_creep_meets_every_wall_on_the_same_seeds()
+    {
+        // What makes two cells of the report comparable. A seed is derived from
+        // the sweep's own and the run's index alone -- not from the creep and
+        // not from the wall -- so (minion, pierce) and (minion, magic) are the
+        // same runs meeting different opponents, and the difference between
+        // them is the wall.
+        //
+        // OBSERVED: fold the wall into SweepPlan.SeedOf. Every cell still
+        // reports plausible numbers and the report still has fifteen rows; what
+        // goes is the attribution, because each column is then a different
+        // population and no two of them can be subtracted.
+        UnitTypeTable types = TheMatch.Types();
+
+        SweepReport report = Sweep.Of(TheSweep.Plan(
+            types: types,
+            walls: new[]
+            {
+                SweepWall.Of(AttackType.Pierce, TheSweep.Field(types)),
+                SweepWall.Of(AttackType.Magic, TheSweep.Field(types)),
+            },
+            keepsEveryRun: true));
+
+        Assert.Equal(new[] { "pierce", "magic" }, report.Rows.Select(row => row.Wall).Distinct());
+
+        // Every creep carries a row against both walls, and no pair repeats.
+        Assert.Equal(
+            report.Rows.Count,
+            report.Rows.Select(row => row.Label + "/" + row.Wall).Distinct().Count());
+
+        foreach (var creep in report.EveryRun.GroupBy(run => run.Label))
+        {
+            ulong[] pierce = creep.Where(run => run.Wall == "pierce").Select(run => run.Seed).ToArray();
+            ulong[] magic = creep.Where(run => run.Wall == "magic").Select(run => run.Seed).ToArray();
+
+            Assert.NotEmpty(pierce);
+            Assert.Equal(pierce, magic);
+        }
     }
 
     /// <summary>

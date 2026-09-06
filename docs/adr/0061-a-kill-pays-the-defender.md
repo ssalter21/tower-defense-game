@@ -1,4 +1,4 @@
-# 0060 — A kill pays the defender
+# 0061 — A kill pays the defender
 
 The Grave Robber pays twelve gold to whoever kills it. Until now the only thing a body was worth to a defense
 was the health it did **not** take off it: every line a purse was paid arrived when a wave closed, out of

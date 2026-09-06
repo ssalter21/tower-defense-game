@@ -5,6 +5,64 @@ using System.Globalization;
 namespace Sim
 {
     /// <summary>
+    /// One wall a sweep scores its roster against: a population of opponents,
+    /// and the name of what their towers are made of.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <b>The wall is an axis and not a setting.</b> The damage matrix is
+    /// authored so that no attack type is globally better, so one wall of one
+    /// type is a hard counter to one armour class and a soft touch to another:
+    /// against pierce the swift Scout leaks nothing, against magic the armoured
+    /// Minion leaks nothing, and against impact every row separates. A report
+    /// played against a single wall therefore says as much about the wall as
+    /// about the roster, and cannot price a creep at all. Scoring every creep
+    /// against every wall is what turns a zero from a gap into a reading.
+    /// The measurements are in
+    /// <c>docs/research/a-sweep-row-measures-the-walls-attack-type.md</c>.
+    /// </para>
+    /// <para>
+    /// <b>The name travels with the population rather than being derived from
+    /// it.</b> A <see cref="FieldPool"/> is a list of recorded rounds and has no
+    /// opinion about what built them, so asking one what it is made of would
+    /// mean walking every layout of every stage and hoping they agree. What
+    /// composed the wall is known where the pool is built and nowhere after.
+    /// </para>
+    /// </remarks>
+    public sealed class SweepWall
+    {
+        /// <summary>What a wall nobody restricted is called on a report.</summary>
+        /// <remarks>
+        /// It is a name and not a blank, because a fifteen-row report and a
+        /// five-row one are read by the same spreadsheet: a column that is
+        /// empty on some files and filled on others is one every reader has to
+        /// learn twice.
+        /// </remarks>
+        public const string Any = "any";
+
+        private SweepWall(string name, FieldPool field)
+        {
+            Name = name;
+            Field = field ?? throw new ArgumentNullException(nameof(field));
+        }
+
+        /// <summary>What this wall's towers are made of, for the report to write down.</summary>
+        public string Name { get; }
+
+        /// <summary>The population a round's field of K is drawn from.</summary>
+        public FieldPool Field { get; }
+
+        /// <summary>A wall of one attack type, named by it.</summary>
+        public static SweepWall Of(AttackType attack, FieldPool field) =>
+            new SweepWall(DamageMatrix.WordFor(attack), field);
+
+        /// <summary>A wall nobody restricted: whatever the defending bot bought.</summary>
+        public static SweepWall Unrestricted(FieldPool field) => new SweepWall(Any, field);
+
+        public override string ToString() => Name;
+    }
+
+    /// <summary>
     /// Everything one sweep is played under: the content it is pointed at, the
     /// shape of the runs, the economy's dials, who plays them, and how far it is
     /// allowed to reach.
@@ -84,10 +142,11 @@ namespace Sim
         /// <param name="rules">The matrix, the purse, the bonus rate and the dials below.</param>
         /// <param name="types">The roster the rows are scored over and every cost is read out of.</param>
         /// <param name="ladder">The upgrade edges a placement is refused against.</param>
-        /// <param name="field">
-        /// The population a round's field of K is drawn from -- canned, until
-        /// runs are stored and a real pool of them exists. See the remarks on
-        /// <see cref="Sweep"/>.
+        /// <param name="walls">
+        /// The walls every creep is scored against, each carrying the
+        /// population a round's field of K is drawn from -- canned, until runs
+        /// are stored and a real pool of them exists. See the remarks on
+        /// <see cref="SweepWall"/> and on <see cref="Sweep"/>.
         /// </param>
         /// <param name="firstSeed">What every run's seed in this sweep is derived from.</param>
         /// <param name="runsPerCreep">How many seeds each row of the roster is played on.</param>
@@ -118,7 +177,7 @@ namespace Sim
             Ruleset rules,
             UnitTypeTable types,
             UpgradeLadder ladder,
-            FieldPool field,
+            IReadOnlyList<SweepWall> walls,
             ulong firstSeed,
             int runsPerCreep = DefaultRunsPerCreep,
             int waves = Run.DefaultWaves,
@@ -134,7 +193,21 @@ namespace Sim
             Map = map ?? throw new ArgumentNullException(nameof(map));
             Types = types ?? throw new ArgumentNullException(nameof(types));
             Ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
-            Field = field ?? throw new ArgumentNullException(nameof(field));
+
+            if (walls is null)
+            {
+                throw new ArgumentNullException(nameof(walls));
+            }
+
+            if (walls.Count == 0)
+            {
+                throw new SimulationException(
+                    "A sweep was planned against no wall at all. A row is what a creep did against an "
+                    + "opponent, so a plan with nothing to fight is a report with no rows rather than a "
+                    + "report of zeros.");
+            }
+
+            Walls = walls;
 
             if (rules is null)
             {
@@ -184,8 +257,15 @@ namespace Sim
         /// <summary>The upgrade edges.</summary>
         public UpgradeLadder Ladder { get; }
 
-        /// <summary>The population a round's field is drawn from.</summary>
-        public FieldPool Field { get; }
+        /// <summary>
+        /// The walls every scored creep is played against, in report order.
+        /// </summary>
+        /// <remarks>
+        /// Every creep meets every wall, so the rows are the product and the
+        /// report says so on a coverage axis of its own. See
+        /// <see cref="SweepWall"/> for why the axis exists.
+        /// </remarks>
+        public IReadOnlyList<SweepWall> Walls { get; }
 
         /// <summary>What every run's seed in this sweep is derived from.</summary>
         public ulong FirstSeed { get; }

@@ -307,6 +307,30 @@ namespace Sim
         /// How many rounds of it to record. A run longer than this fights the
         /// last of them, by the rule <see cref="OfRounds"/> carries.
         /// </param>
+        /// <param name="only">
+        /// The one attack type this opponent's wall may be built out of, or
+        /// nothing for the whole roster.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// <b>What <paramref name="only"/> is for is comparability, not
+        /// flavour.</b> The damage matrix is authored so that no attack type is
+        /// globally better, which means a wall of one type is a hard counter to
+        /// one armour class and a soft touch to another -- so a roster swept
+        /// against a wall of whatever a value-buying bot converged on reports a
+        /// landslide and a zero, and which creep gets which is a fact about the
+        /// bot. Restricting the wall makes the type the axis it always secretly
+        /// was. Measured in
+        /// <c>docs/research/a-sweep-row-measures-the-walls-attack-type.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>The opening layout is not filtered and is not meant to be.</b>
+        /// <paramref name="defense"/> is a recorded wall handed over whole, so
+        /// restricting what this opponent BUYS while it stands what it was given
+        /// is the honest split: the seed is content somebody authored and the
+        /// growth is the thing being held to one type.
+        /// </para>
+        /// </remarks>
         public static FieldPool Canned(
             HexMap map,
             Ruleset rules,
@@ -314,7 +338,8 @@ namespace Sim
             UpgradeLadder ladder,
             TowerLayout defense,
             WaveScript wave,
-            int rounds = Run.DefaultWaves)
+            int rounds = Run.DefaultWaves,
+            AttackType? only = null)
         {
             if (map is null)
             {
@@ -381,7 +406,7 @@ namespace Sim
                 // this round built.
                 Build built = BuildPhase
                     .Of()
-                    .With(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse, tokens))
+                    .With(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse, tokens, only))
                     .Resolve(
                         round + 1, WaveScript.Nothing, ladder, share, tokens, costs, types, map, board);
 

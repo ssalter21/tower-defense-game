@@ -248,7 +248,7 @@ namespace Sim
         /// <b>There is no cap on how many one body raises.</b> The board is what
         /// bounds a spawner: it raises for as long as it is walking, so a slowed
         /// one raises more. See
-        /// <c>docs/adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// <c>docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
         /// </para>
         /// </remarks>
         public UnitType? Raises { get; private set; }

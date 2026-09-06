@@ -47,7 +47,7 @@ namespace Sim
         /// killed pays, averaged over the field it met. The one line paid for
         /// what stood rather than for what walked, and the one earned during a
         /// match rather than at the end of one. See
-        /// <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
         /// </summary>
         public int Bounty { get; }
 

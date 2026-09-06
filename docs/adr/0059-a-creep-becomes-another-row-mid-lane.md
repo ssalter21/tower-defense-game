@@ -1,4 +1,4 @@
-# 0058 — A creep becomes another row mid-lane, ahead of the damage that triggered it
+# 0059 — A creep becomes another row mid-lane, ahead of the damage that triggered it
 
 The Cursed Villager turns into the Werewolf. Until now a body was one row for as long as it existed: the
 `Creep` struct carried its `UnitType` from the spawn that set it to the tick it left the map, and the state

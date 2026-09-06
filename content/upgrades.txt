@@ -18,7 +18,7 @@
 #               row has one -- and nothing charges it. That is why a capstone
 #               is not priced by the damage rule and why no premium is authored
 #               to compensate: scarcity is the schedule, not the price.
-#               Reasoning in docs/adr/0061-a-capstone-costs-a-token.md, and the
+#               Reasoning in docs/adr/0062-a-capstone-costs-a-token.md, and the
 #               design side in docs/roster.md's "What things cost".
 #
 # THE PRICE IS THE EDGE AND NOT THE ROW IT LANDS ON. Every capstone row below

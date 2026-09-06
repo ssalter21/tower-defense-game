@@ -103,6 +103,31 @@ namespace Sim
             _towers = towers;
         }
 
+        /// <summary>
+        /// An open board: a wall with nothing standing on it yet.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The type has always allowed this and only the file parser
+        /// refuses it.</b> A layout read back off a board is empty whenever a
+        /// run has built nothing, which is every run at its opening -- so
+        /// emptiness is a legal state and an empty <i>defense file</i> is the
+        /// separate thing the parser catches: somebody's authored content that
+        /// stops mid-sentence.
+        /// </para>
+        /// <para>
+        /// <b>What wants it is a wall of one attack type.</b> A sweep scores
+        /// its roster against a wall named for what it is built out of
+        /// (<see cref="SweepWall"/>), and the authored defense is a mix of two
+        /// -- so an opponent restricted to pierce that still opened behind two
+        /// mages would be a column whose label was a lie and whose zeros were
+        /// the seed's doing. Opening every restricted wall on nothing makes the
+        /// three columns equal by construction: same purse, same rounds, one
+        /// difference.
+        /// </para>
+        /// </remarks>
+        public static TowerLayout Nothing { get; } = new TowerLayout(new PlacedTower[0]);
+
         /// <summary>The towers, in canonical order. That order is the match's iteration order.</summary>
         public IReadOnlyList<PlacedTower> Towers => _towers;
 

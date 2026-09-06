@@ -32,12 +32,13 @@ namespace Tests.EditMode
         /// <c>docs/roster.md</c>'s index has signed, by id.
         /// </summary>
         /// <remarks>
-        /// <b>A row on <see cref="UnboundUnits"/>'s list is here too, and that
-        /// is the point.</b> A row can land in the simulation ahead of its art
-        /// and draw the stand-in until it arrives — but its name was signed
-        /// with the rest of the roster, and a name does not wait on a model.
-        /// What the exemption in the walk below covers is a row whose name the
-        /// index has not signed at all.
+        /// <b>Every shipped row is here, and there is no exemption.</b> While a
+        /// row could land in the simulation ahead of its art and draw a
+        /// stand-in until it arrived, the walk below let such a row off — but
+        /// only for its art, never for its name, because a name was signed with
+        /// the rest of the roster and does not wait on a model. The stand-in is
+        /// retired, so the exemption went with it and this table is held
+        /// against every row there is.
         /// </remarks>
         /// <remarks>
         /// <b>Id 7 is Skeleton Mage and the Necromancer is id 38, and the two
@@ -103,10 +104,10 @@ namespace Tests.EditMode
             foreach (UnitType type in types.Types)
             {
                 Assert.That(
-                    TheRoster.Any(r => r.Id == type.Id) || UnboundUnits.Lists(type.Id),
+                    TheRoster.Any(r => r.Id == type.Id),
                     Is.True,
                     "Unit " + type.Id + " (" + type.Label + ") was added and this table was not told. "
-                    + "A row with no art yet is exempt for as long as it is on UnboundUnits' list.");
+                    + "Every shipped row is named in docs/roster.md's index and nothing is exempt.");
             }
 
             // ById throws on an id this table names and the shipped rows no

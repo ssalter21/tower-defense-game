@@ -311,12 +311,6 @@ namespace Tests.EditMode
             (ChosenArt.KnightModelPath, "Assets/Art/Characters/knight_texture.png"),
             (ChosenArt.MageModelPath, "Assets/Art/Characters/mage_texture.png"),
 
-            // The stand-in a row with no art yet draws as. It comes from a
-            // different pack and wears that pack's own atlas, which is the
-            // failure this table exists for: a model drawn against the wrong
-            // atlas draws confetti, and one drawn against none draws magenta.
-            (UnboundUnits.StandInModelPath, "Assets/Art/Kaykit/prototype/prototypebits_texture.png"),
-
             // The four props that stand beside a tower, and the characters they
             // stand beside. This is where the confetti risk is sharpest: a
             // row's own atlas covers its body only, so each of these has to
@@ -704,12 +698,12 @@ namespace Tests.EditMode
         /// does.
         /// </para>
         /// <para>
-        /// <b>The rows on <see cref="UnboundUnits"/>'s list are skipped, and
-        /// they are the reason this needs saying.</b> Every one of them draws
-        /// the same stand-in, holding nothing, in no atlas — they are
-        /// deliberately indistinguishable, which is how an undressed row reads
-        /// as undressed. That list is empty, so nothing is skipped and this
-        /// covers every row.
+        /// <b>Nothing is exempt.</b> There was an exemption while a row could
+        /// draw a shared stand-in — rows like that are deliberately
+        /// indistinguishable, which is how an undressed row reads as undressed
+        /// — and it went with the stand-in itself: every row of
+        /// <c>content/units.txt</c> now has art of its own, so every pair on a
+        /// shared model is compared.
         /// </para>
         /// </remarks>
         [Test]
@@ -725,9 +719,7 @@ namespace Tests.EditMode
                     UnitArt below = rows[i];
                     UnitArt above = rows[j];
 
-                    if (below.Model != above.Model
-                        || UnboundUnits.Lists(below.UnitId)
-                        || UnboundUnits.Lists(above.UnitId))
+                    if (below.Model != above.Model)
                     {
                         continue;
                     }
@@ -857,14 +849,11 @@ namespace Tests.EditMode
         /// which no other assertion here would notice.
         /// </para>
         /// <para>
-        /// <b>A row on <see cref="UnboundUnits"/>'s list is the one exception,
-        /// and it is held the other way round.</b> An anchor is a point on a
-        /// bone or inside a held prop, so it is chosen by whoever chooses the
-        /// prop — and a row drawing the stand-in is a row nobody has chosen one
-        /// for. Such a row is required to name NO anchor, which is the fixed
-        /// height above its own root, and reads as undressed exactly as its
-        /// empty hands and its bind pose do. That list is empty, so the branch
-        /// covers nothing and every placed row is held to naming an anchor.
+        /// <b>There is no exception any more.</b> A row drawing a shared
+        /// stand-in used to be held the other way round — required to name NO
+        /// anchor, because an anchor is a point on a prop and nobody had chosen
+        /// one for it. The stand-in is retired, so every placed row is held to
+        /// naming an anchor and the branch that let one off is gone.
         /// </para>
         /// <para>
         /// Built through the real <see cref="TowerView"/>, so what is asserted
@@ -903,16 +892,6 @@ namespace Tests.EditMode
                 }
 
                 UnitArt unit = art.ArtFor(type.Id);
-
-                if (UnboundUnits.Lists(type.Id))
-                {
-                    Assert.That(unit.EffectAnchor.IsSet, Is.False,
-                        $"unit {type.Id} ({type.Label}) is listed as having no art yet and names an "
-                        + "anchor anyway. An anchor is a point on a prop nobody has chosen for this row, "
-                        + "so there is nothing for it to be a point on");
-
-                    continue;
-                }
 
                 Assert.That(unit.EffectAnchor.IsSet, Is.True,
                     $"unit {type.Id} ({type.Label}) stands on the board and shoots, and its art names "

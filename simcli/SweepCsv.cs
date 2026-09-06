@@ -121,11 +121,21 @@ internal static class SweepCsv
     {
         Note(
             text,
+            "wall",
+            "what the OPPONENTS' towers were made of -- every creep meets every wall and reports a row "
+            + "against each of them so two rows are comparable when this column matches and not otherwise; "
+            + "the matrix is authored so that no attack type is globally better -- pierce takes 140% off a "
+            + "swift body where magic takes 140% off an armoured one -- so a zero in this file is a hard "
+            + "counter rather than a weak creep; see docs/adr/0058 and #242");
+
+        Note(
+            text,
             "defense_gold",
             "the defense these rows were played against was built by a deliberately simple bot -- the tower "
             + "that covers the most unshot route per gold and then whichever upgrade or second tower scores "
             + "the most damage over the route per gold above what already stands there -- so a row describes "
-            + "a game and never skilled play; see #163 and #236");
+            + "a game and never skilled play; see #163 and #236 -- and since #242 that bot is restricted to "
+            + "one attack type per wall so it buys the best tower of that type rather than the best tower");
 
         Note(
             text,
@@ -171,7 +181,35 @@ internal static class SweepCsv
         Parameter(text, "first_seed", plan.FirstSeed.ToString(PlainText.Culture));
         Parameter(text, "runs_per_creep", Number(plan.RunsPerCreep));
         Parameter(text, "policy", plan.PolicyName);
+
+        // The walls, named in the order the rows are written, so a reader who
+        // filters the file down to one wall can still see which others were
+        // played -- and a report swept against one wall cannot be mistaken for
+        // this one.
+        Parameter(text, "walls", Walls(plan));
+
         Parameter(text, "ruleset_hash", plan.Rules.ContentHash.ToString());
+    }
+
+    /// <summary>
+    /// The wall names, separated by a character a cell may carry.
+    /// </summary>
+    /// <remarks>
+    /// A space and not a comma: a comma would shift every column of every row
+    /// below this one, and <see cref="CsvRow"/> refuses one rather than quoting
+    /// it. There is a coverage row saying how many there were, so this is the
+    /// naming and not the count.
+    /// </remarks>
+    private static string Walls(SweepPlan plan)
+    {
+        var names = new string[plan.Walls.Count];
+
+        for (int index = 0; index < plan.Walls.Count; index++)
+        {
+            names[index] = plan.Walls[index].Name;
+        }
+
+        return string.Join(" ", names);
     }
 
     private static void Parameter(StringBuilder text, string name, string value) =>
@@ -217,6 +255,7 @@ internal static class SweepCsv
     private static CsvRow Population(
         string kind,
         string label,
+        string wall,
         long runs,
         long rounds,
         long wins,
@@ -230,6 +269,7 @@ internal static class SweepCsv
         new CsvRow()
             .With("kind", kind)
             .With("subject", label)
+            .With("wall", wall)
             .With("runs", Number(runs))
             .With("rounds", Number(rounds))
             .With("wins", Number(wins))
@@ -248,6 +288,7 @@ internal static class SweepCsv
             Population(
                 "creep",
                 row.Label,
+                row.Wall,
                 runs: row.Runs,
                 rounds: row.Rounds,
                 wins: row.Wins,
@@ -275,6 +316,7 @@ internal static class SweepCsv
             Population(
                 "run",
                 row.Label,
+                row.Wall,
                 runs: 1,
                 rounds: row.Rounds,
                 wins: row.Won ? 1 : 0,

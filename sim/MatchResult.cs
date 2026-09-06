@@ -31,7 +31,7 @@ namespace Sim
         /// What the kills paid the defense, in gold. The one number here that a
         /// build phase reads rather than reports: it is income earned inside the
         /// match, and it lands in the same purse the towers were bought out of.
-        /// See <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// See <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
         /// </summary>
         public int Bounty { get; }
 

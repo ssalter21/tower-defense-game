@@ -503,9 +503,9 @@ namespace Tests.Fixtures
             EffectAnchor.AtTipOf(TurretNode, Vector3.up);
 
         /// <summary>
-        /// What each row in <c>content/units.txt</c> that has art is drawn as,
-        /// and how big, as signed in <c>docs/roster.md</c>. A row that has none
-        /// yet is on <see cref="UnboundUnits"/>'s list instead.
+        /// What each row in <c>content/units.txt</c> is drawn as, and how big,
+        /// as signed in <c>docs/roster.md</c>. Every row is here; a row that
+        /// reaches <see cref="MatchArt"/> without an entry throws by name.
         /// </summary>
         /// <remarks>
         /// The Minion and the Skeleton share the minion skin, and the Archer
@@ -864,21 +864,20 @@ namespace Tests.Fixtures
         [InitializeOnLoadMethod]
         private static void Install() => MatchArtSource.Use(new Adapter());
 
-        /// <summary>
-        /// Every asset above, loaded now, and a stand-in for each row that has
-        /// no art yet.
-        /// </summary>
+        /// <summary>Every asset above, loaded now.</summary>
         /// <remarks>
-        /// <see cref="UnboundUnits"/> is the one thing here that is taken from
-        /// the builder's side of the seam rather than written out again. The
-        /// duplication above exists so that two tables can disagree about which
-        /// model a unit takes; a row with no art has no such choice in it, and
-        /// two lists of which rows those are could only ever disagree by one of
-        /// them being stale.
+        /// <b>Nothing here is taken from the builder's side of the seam.</b>
+        /// While a row could have no art yet, the list of such rows was read
+        /// across from the builder rather than written out again — two lists of
+        /// them could only ever disagree by one being stale, and a row with no
+        /// art has no choice in it to disagree about. That list is retired, so
+        /// this fixture is once more a complete second transcription, which is
+        /// the point of it: two tables that must agree, so one choosing the
+        /// wrong model is a failure rather than a tautology.
         /// </remarks>
         public static MatchArt Load() =>
             MatchArt.Of(
-                UnitPaths.Select(Armed).Concat(UnboundUnits.StandIns()),
+                UnitPaths.Select(Armed),
                 Clip(MovementBankPath, WalkClipName),
                 Clip(GeneralBankPath, DeathClipName));
 

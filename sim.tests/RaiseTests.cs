@@ -175,7 +175,7 @@ public class RaiseTests
     [Fact]
     public void A_raised_body_enters_behind_everything_standing_and_loses_every_tie()
     {
-        // Where it goes in the array, which is the decision ADR-0059 records.
+        // Where it goes in the array, which is the decision ADR-0060 records.
         // Ids are handed out in arrival order and the array is kept in ascending
         // id, so a raised body is behind everything already on the corridor --
         // and the target-selection tiebreak picks the lower id, so a raised body
@@ -279,7 +279,7 @@ public class RaiseTests
     [Fact]
     public void A_leak_of_a_raised_body_is_charged_at_the_price_of_the_row_it_is()
     {
-        // The pricing decision ADR-0059 records. A raised body takes as much
+        // The pricing decision ADR-0060 records. A raised body takes as much
         // health off a defense as a bought one, so its leak is charged -- and at
         // the price of the row that was raised, because that is what leaked. It
         // is counted apart from the order's own leaks, because the order's type

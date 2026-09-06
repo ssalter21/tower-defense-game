@@ -48,6 +48,26 @@
     in the file as rows saying what was covered -- so a sweep somebody
     truncated does not read like a complete one three months later.
 
+    A ROW IS A CREEP AGAINST ONE WALL, AND THE WALL IS A COLUMN. Every creep is
+    scored against a wall of each attack type the roster has a tower for, so
+    the committed report is five creeps by three walls and fifteen rows. The
+    reason is the damage matrix: it is authored so that no attack type is
+    globally better, so a wall of one type hard-counters one armour class and
+    barely troubles another -- pierce takes 140% off a swift body where magic
+    takes 140% off an armoured one. Swept against a single wall the roster
+    reported a landslide and two zeros, and which creep got which was a fact
+    about what the defending bot happened to buy rather than about any creep.
+    Two rows are comparable when their wall column matches and not otherwise.
+    See #242 and docs/research/a-sweep-row-measures-the-walls-attack-type.md.
+
+    A RESTRICTED WALL OPENS ON NOTHING, AND content/defense.txt IS STILL THE
+    OPPONENTS' SEED EVERYWHERE ELSE. That file is four archers and two mages,
+    so a wall asked for pierce that opened behind it would carry a creep's
+    counter in its seed -- measured, the armoured Minion reported zero against
+    both pierce and impact until the seed came out. Opening every restricted
+    wall empty makes the three columns equal by construction: same purse, same
+    rounds, one difference.
+
 .EXAMPLE
     ./tools/run-sweep.ps1
     Play the committed sweep and print the report to the shell.
@@ -72,6 +92,18 @@
     run behind the folded ones. Two of these under the two players are what
     answers a question no single report can: what the defensive half of a round
     is worth.
+
+.EXAMPLE
+    ./tools/run-sweep.ps1 -Walls magic -Out artefacts/magic.csv
+    One column of the committed report on its own: every creep against a wall
+    of mages and nothing else.
+
+.EXAMPLE
+    ./tools/run-sweep.ps1 -Walls any -Out artefacts/mixed.csv
+    The report as it was before #242 -- one wall, whatever the defending bot
+    buys unrestricted, which is the wall a run actually meets. Read it beside
+    the committed one rather than instead of it: it says what a roster does
+    against a real opponent and cannot say which creep is which.
 
 .EXAMPLE
     ./tools/run-sweep.ps1 -ContentFile @{ map = 'maps/second.txt' } -Runs 64 -Out artefacts/second.csv
@@ -120,7 +152,20 @@ param(
     # the fold is a summary of. Off by default because the row count is the
     # roster times the sample, and a sweep that wanted the fold alone should not
     # carry that.
-    [switch]$PerRun
+    [switch]$PerRun,
+
+    # What the OPPONENTS' towers are made of, and every creep is scored against
+    # every one of them: 'pierce,impact,magic' in any combination, or 'any' for
+    # whatever the defending bot buys unrestricted. Left off, it is every attack
+    # type the roster has a tower for -- which is what the committed report is.
+    #
+    # ONE WALL CANNOT PRICE A ROSTER, which is why this is not a switch that
+    # defaults to off. The matrix is authored so that none of the three attack
+    # types is globally better, so a report swept against one wall shows a
+    # landslide and a zero and which creep gets which is a fact about the
+    # defending bot. Measured in
+    # docs/research/a-sweep-row-measures-the-walls-attack-type.md.
+    [string]$Walls
 )
 
 $ErrorActionPreference = 'Stop'
@@ -132,8 +177,8 @@ if ($Verify -and $Regenerate) {
 # The committed artefact is one shape: the folded report, under the default
 # player. Either of these would rewrite it into a file -Verify then reads as a
 # difference in the content, which is a red gate about the wrong thing.
-if (($PerRun -or $Policy) -and ($Verify -or $Regenerate)) {
-    throw "-PerRun and -Policy describe a sweep of your own, and content/sweep.csv is the committed one. Write it somewhere else with -Out."
+if (($PerRun -or $Policy -or $Walls) -and ($Verify -or $Regenerate)) {
+    throw "-PerRun, -Policy and -Walls describe a sweep of your own, and content/sweep.csv is the committed one. Write it somewhere else with -Out."
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -186,6 +231,14 @@ if ($Policy) {
 
 if ($PerRun) {
     $sweepArguments += '--per-run'
+}
+
+# Left off entirely where nobody asked, for the reason --runs and --policy are:
+# which walls a roster has towers for is the runner's answer, derived from the
+# roster it read, and a list spelled out here would be a second copy of it free
+# to name a wall this content cannot build.
+if ($Walls) {
+    $sweepArguments += @('--walls', $Walls)
 }
 
 if ($Regenerate) {

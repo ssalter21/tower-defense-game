@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &668862108
+--- !u!1 &812943458
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 668862110}
-  - component: {fileID: 668862109}
+  - component: {fileID: 812943460}
+  - component: {fileID: 812943459}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &668862109
+--- !u!114 &812943459
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 668862108}
+  m_GameObject: {fileID: 812943458}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -1165,13 +1165,13 @@ MonoBehaviour:
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &668862110
+--- !u!4 &812943460
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 668862108}
+  m_GameObject: {fileID: 812943458}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1184,4 +1184,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 668862110}
+  - {fileID: 812943460}

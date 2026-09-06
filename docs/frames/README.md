@@ -586,8 +586,9 @@ says no. It is written by the capture and never by hand; see
   `tools/capture-armed-roster.ps1 -SetFile docs/roster-creep-bodies-rest.txt`. Nine tiles: the Necromancer,
   the Vampire, the Witch, the Cursed Villager, the Werewolf and the Grave Robber on the top row, then the
   Grave Robber holding its backpack, the Witch with her broom turned upright and the Necromancer with his
-  scythe turned the same way on the second. **With these bound the stand-in list is empty** — every row of
-  `content/units.txt` draws its own model, and no row is drawn as the Prototype Dummy any more.
+  scythe turned the same way on the second. **With these bound the stand-in list was empty** — every row of
+  `content/units.txt` draws its own model, and no row is drawn as the Prototype Dummy any more. The list, and
+  the mechanism that held it, were retired on the integrate ticket: an unbound row now throws by name.
 
   All six are on `Rig_Medium`, so every tile takes the shared bare `Walking_A`; the four bodies that had to
   name the Large rig's own banks are on the sheet above. Every tile is posed a quarter of the way through

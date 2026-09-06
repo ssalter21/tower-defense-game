@@ -718,7 +718,7 @@ public class DerivationTests
         // So this is the assertion that names what a change to the schedule
         // owes: a SimulationVersion bump and a BehaviourByVersion row, taken
         // deliberately, because every stored run made under the old schedule is
-        // retired by it. See docs/adr/0061-a-capstone-costs-a-token.md.
+        // retired by it. See docs/adr/0062-a-capstone-costs-a-token.md.
         //
         // OBSERVED: add a fourth grant round to Run.CapstoneTokenRounds. This
         // goes red naming the list, and every other assertion in this repository

@@ -805,7 +805,7 @@ namespace Sim
         /// exit is charged against the defense at its own price instead, so the
         /// two outcomes are opposite ends of the same body and a leak adds
         /// nothing here. See
-        /// <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
         /// </remarks>
         public int Bounty => _bounty;
 
@@ -2052,7 +2052,7 @@ namespace Sim
         /// armour and against its pool. A hit big enough to have killed the old
         /// row therefore kills nothing: the old row is already gone by the time
         /// the death check runs. See
-        /// <c>docs/adr/0058-a-creep-becomes-another-row-mid-lane.md</c>.
+        /// <c>docs/adr/0059-a-creep-becomes-another-row-mid-lane.md</c>.
         /// </remarks>
         /// <param name="creep">Where the target is in the live array, or -1 for nothing.</param>
         /// <param name="roll">What the dice gave when the shot was fired.</param>

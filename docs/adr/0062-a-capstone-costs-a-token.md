@@ -1,4 +1,4 @@
-# 0061 — A capstone costs a token
+# 0062 — A capstone costs a token
 
 The top of a tower line is bought with a **capstone token**: one token, no gold. A run is granted one at
 rounds 3, 6 and 9, so three tokens meet nine capstones and which line reaches its top is the decision. This
@@ -125,7 +125,7 @@ soldiers, rogues, clerics and a druid — because the cover phase keeps finding 
 nothing watches yet. No rung 2 stands, so no capstone edge is climbable, so all three tokens are held to the
 end. The canned stand-in does reach a rung 2, and the capstone above it scores exactly what that rung scores,
 which is what the clause above declines. **So the balance harness cannot currently see this mechanic**, in the
-same structural way [ADR-0060](0060-a-kill-pays-the-defender.md) records the sweep being unable to see a
+same structural way [ADR-0061](0061-a-kill-pays-the-defender.md) records the sweep being unable to see a
 bounty. Nothing was softened to make that come out: it is the reading.
 
 ## What it costs

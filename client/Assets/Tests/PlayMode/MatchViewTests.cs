@@ -1975,7 +1975,7 @@ namespace Tests.PlayMode
         /// nobody — puts the body back to whatever the row was at that tick with
         /// no listener involved. An event saying "it transformed" would be
         /// discarded by the re-run and the body would be scrubbed back wearing
-        /// the wrong skin; see ADR-0007 and ADR-0058.
+        /// the wrong skin; see ADR-0007 and ADR-0059.
         /// </para>
         /// <para>
         /// <b>The two models are nearly the same picture and the assertions are

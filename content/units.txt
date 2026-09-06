@@ -48,7 +48,7 @@
 # its own hash label, and every record stamped against the roster as it stood
 # before this is retired. See docs/decision-log.md, which records that layout 3
 # was written down here as the last widening before the map is measured, and
-# docs/adr/0058-a-creep-becomes-another-row-mid-lane.md for what the change
+# docs/adr/0059-a-creep-becomes-another-row-mid-lane.md for what the change
 # carries over.
 #
 # AND LAYOUT 6 PAID IT ONE MORE TIME, FOR ONE COLUMN, ON 6 SEPTEMBER 2026. A
@@ -58,7 +58,7 @@
 # that is the opposite outcome. So `bounty` is the thirty-second, layout 5 keeps
 # its own branch and its own hash label, and every record stamped against the
 # roster as it stood is retired again. See
-# docs/adr/0060-a-kill-pays-the-defender.md.
+# docs/adr/0061-a-kill-pays-the-defender.md.
 #
 # AND LAYOUT 5 PAID IT ONCE MORE, FOR TWO COLUMNS, ON 6 SEPTEMBER 2026. The
 # Necromancer raising a Minion beside itself is a creep putting a creep on the
@@ -68,7 +68,7 @@
 # `raisePeriod` are the thirtieth and thirty-first, layout 4 keeps its own branch
 # and its own hash label, and every record stamped against the roster as it stood
 # is retired again. See
-# docs/adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md.
+# docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md.
 #
 # THREE OF THOSE FIVE TURNED OUT TO BE ONE MECHANIC. A radial shot, a timed
 # modifier and a periodic aura are all a bubble that emits something,
@@ -361,7 +361,7 @@
 #            MAY NOT NAME ONE IN ITS TURN -- a body changes row once, so the
 #            trigger reads as the first damage rather than as every hit that
 #            lands. What carries over is in
-#            docs/adr/0058-a-creep-becomes-another-row-mid-lane.md
+#            docs/adr/0059-a-creep-becomes-another-row-mid-lane.md
 #
 # The two columns layout 5 added:
 #
@@ -417,7 +417,7 @@
 # every other line the purse is paid arrives when a wave closes -- and it lands
 # in the same wallet the towers were bought out of, because there is only the
 # one. What that does to the leak exchange rate is in
-# docs/adr/0060-a-kill-pays-the-defender.md: nothing, because the two outcomes
+# docs/adr/0061-a-kill-pays-the-defender.md: nothing, because the two outcomes
 # are exclusive and the rate is still cost for cost. What it adds is a second
 # way for a body to be worth something, on the outcome the rate says nothing
 # about.

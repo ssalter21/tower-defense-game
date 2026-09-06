@@ -62,6 +62,7 @@ public static class TheSweep
         Ruleset? rules = null,
         UpgradeLadder? ladder = null,
         FieldPool? field = null,
+        IReadOnlyList<SweepWall>? walls = null,
         ulong seed = Seed,
         int runs = Runs,
         int waves = Waves,
@@ -81,7 +82,7 @@ public static class TheSweep
             rules ?? TheRuleset.Committed(),
             table,
             ladder ?? TheLadder.Committed(table),
-            field ?? Field(table),
+            walls ?? new[] { SweepWall.Unrestricted(field ?? Field(table)) },
             seed,
             runs,
             waves,
@@ -181,13 +182,17 @@ public static class TheSweep
             TheRuleset.Committed(),
             towers,
             TheLadder.Committed(),
-            FieldPool.Canned(
-                TheMatch.Map(),
-                TheRuleset.Committed(),
-                towers,
-                TheLadder.Committed(),
-                defense,
-                TheRun.FieldWave(TheMatch.Types())),
+            new[]
+            {
+                SweepWall.Unrestricted(
+                    FieldPool.Canned(
+                        TheMatch.Map(),
+                        TheRuleset.Committed(),
+                        towers,
+                        TheLadder.Committed(),
+                        defense,
+                        TheRun.FieldWave(TheMatch.Types()))),
+            },
             Seed,
             Runs,
             Waves,

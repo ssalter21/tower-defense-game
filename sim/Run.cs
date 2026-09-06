@@ -146,7 +146,7 @@ namespace Sim
         /// column would be a ruleset layout and a new stamp, which retires every
         /// replay bundle that names the old one -- a price worth paying for a
         /// number somebody tunes, and this is not one. See
-        /// <c>docs/adr/0061-a-capstone-costs-a-token.md</c>.
+        /// <c>docs/adr/0062-a-capstone-costs-a-token.md</c>.
         /// </para>
         /// </remarks>
         public static readonly IReadOnlyList<int> CapstoneTokenRounds = new[] { 3, 6, 9 };
@@ -982,13 +982,13 @@ namespace Sim
         /// that mechanic opens, and it is held open rather than closed: cost is
         /// derived from health and armour and is never authored, and a spawner's
         /// price cannot see what it spawns. See
-        /// <c>docs/adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// <c>docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
         /// </para>
         /// <para>
         /// <b>What was killed is read off the match rather than counted here</b>,
         /// because a bounty is paid off the row a body was standing as and a
         /// count per wave order cannot say what that was. See
-        /// <c>docs/adr/0060-a-kill-pays-the-defender.md</c>.
+        /// <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
         /// </para>
         /// </remarks>
         private (int LeakCost, int Bounty) Scored(

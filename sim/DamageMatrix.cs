@@ -80,6 +80,66 @@ namespace Sim
         /// <summary>How the three armour types are spelled in authored text.</summary>
         internal static readonly string[] ArmourWords = { "swift", "armoured", "arcane" };
 
+        /// <summary>
+        /// The three spellings, for a refusal that has to list what it would
+        /// have accepted.
+        /// </summary>
+        /// <remarks>
+        /// A copy rather than the array, because the array is the one place the
+        /// spelling lives and a caller handed it could write to it.
+        /// </remarks>
+        public static IReadOnlyList<string> AttackWordList => (string[])AttackWords.Clone();
+
+        /// <summary>
+        /// How an attack type is spelled, for something outside this assembly
+        /// that has to name one.
+        /// </summary>
+        /// <remarks>
+        /// <b>The spelling lives in one place and this is the way out of it.</b>
+        /// A sweep played against a wall of one attack type writes that type's
+        /// name into its report, and a second copy of these three words in the
+        /// command line would be free to disagree with the one the content is
+        /// parsed by -- which is a file naming a wall the roster does not have.
+        /// </remarks>
+        public static string WordFor(AttackType attack)
+        {
+            if (attack == AttackType.None || (int)attack >= AttackWords.Length)
+            {
+                throw new SimulationException(
+                    "There is no word for attack type "
+                    + attack.ToString()
+                    + ". The three the matrix has rows for are "
+                    + string.Join(", ", AttackWords)
+                    + ", and None is what a unit that never attacks carries rather than a fourth kind.");
+            }
+
+            return AttackWords[(int)attack];
+        }
+
+        /// <summary>
+        /// The attack type a word names, or <see cref="AttackType.None"/> where
+        /// it names none of them.
+        /// </summary>
+        /// <remarks>
+        /// None rather than an exception, because the caller is a command line
+        /// reading an argument: it refuses in its own sentence, naming its own
+        /// option, and a simulation exception surfacing through that would be
+        /// this type answering a question about spelling that was never asked
+        /// of the content.
+        /// </remarks>
+        public static AttackType AttackFor(string word)
+        {
+            for (int index = 0; index < AttackWords.Length; index++)
+            {
+                if (AttackWords[index] == word)
+                {
+                    return (AttackType)index;
+                }
+            }
+
+            return AttackType.None;
+        }
+
         private readonly int[] _cells;
 
         internal DamageMatrix(int[] cells)

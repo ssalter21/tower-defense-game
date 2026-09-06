@@ -1629,7 +1629,7 @@ that named a successor is already gone when the death check runs, so no hit of a
 rejected readings both apply the damage first and then need an invented clamp — one point of health, so that
 the transformation has somebody to happen to — and a clamp would make the Werewolf's entering pool a function
 of how hard the Villager was hit, which is the opposite of what the roster signs. See
-[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
+[ADR-0059](adr/0059-a-creep-becomes-another-row-mid-lane.md).
 
 ### The bill
 
@@ -1671,7 +1671,7 @@ return was added to make the number look better**, and no creep number was retun
 already asserted as MISSED at both ends and the Necromancer's entry in the over list is updated from 100 to
 1200 rather than converted to a pass.
 
-**Two decisions the ticket had to take, both recorded in [ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).**
+**Two decisions the ticket had to take, both recorded in [ADR-0060](adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).**
 
 - **A raised body enters the array at the end, with the next entity id**, so the array stays in ascending id
   order — which `ReportPasses`, `Acquire` and the fold all read as part of the rules. The tiebreak follows
@@ -1728,7 +1728,7 @@ columns is a walkover, so swapping the row it sends would move every reading in 
 has nothing to do with any of them.
 
 **Three decisions the ticket had to take, all recorded in
-[ADR-0060](adr/0060-a-kill-pays-the-defender.md).**
+[ADR-0061](adr/0061-a-kill-pays-the-defender.md).**
 
 - **The payment is read off the row the body is standing as when it dies**, and never off the order that sent
   it. That is forced rather than chosen: a body a spawner raised is in no order at all, and one that changed
@@ -1829,7 +1829,7 @@ function of and the actions every spend is a function of, and the ladder hash in
 cost a token — so a stored token count would be a second copy of a derivation, free to disagree with the
 first. `CommandStream.Check` folds the balance forward beside the purse and the board, **exactly rather than at
 a ceiling**, because nothing about a token depends on how a round played. `RecordFormat.CommandVersion` stays
-3 and its reader branches are untouched. [ADR-0061](adr/0061-a-capstone-costs-a-token.md) states that decision.
+3 and its reader branches are untouched. [ADR-0062](adr/0062-a-capstone-costs-a-token.md) states that decision.
 
 **And one rule is left uncovered by every hash in this repository, named rather than fixed.** *Which* edges
 cost a token is in the ladder hash; *how many tokens a round holds* is a list in `sim/Run.cs`, and moving it
@@ -1948,3 +1948,67 @@ art the branch already ships and changing it changes no byte a simulation reads.
 [#261](https://github.com/ssalter21/tower-defense-game/issues/261) closes and
 [#271](https://github.com/ssalter21/tower-defense-game/issues/271) unblocks, which is the whole of the roster
 expansion waiting on one sentence from the person whose call it was.
+
+---
+
+## 6 September 2026, after the roster — integrating it turns up two things nobody wrote down
+
+The roster expansion's integrate ticket brought `main` into the effort branch and retired the stand-in
+allowance. Neither of those was meant to be interesting. Both were.
+
+### The branch and main both minted ADR 0058
+
+`main` merged [#243](https://github.com/ssalter21/tower-defense-game/issues/243) as
+`0058-a-sweep-row-is-a-creep-against-one-attack-type`; the roster branch had already written
+`0058-a-creep-becomes-another-row-mid-lane` and three more above it. Two records with one number, allocated in
+two branches that never saw each other.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| The branch's four records | 0058 becomes, 0059 raises, 0060 bounty, 0061 token | **0059, 0060, 0061, 0062.** The branch renumbers and `main` keeps 0058. |
+| `docs/adr/README.md` | Listed 0058–0060 and never listed the capstone-token record at all | All four listed, the token one included — it had been missing since it was written. |
+
+**The branch moved because `main` is where a number becomes public.** Main's 0058 is cited from `simcli/`, from
+a research note and from a merged pull request; renumbering it would break references that already exist
+outside this branch. The roster's four had never left it. That is the whole of the rule, and it is written
+here because nothing else in the repository says what to do when two branches allocate the same number.
+
+**The cost landed somewhere nobody would predict: twenty-two pictures.** Those four ADRs are cited by path in
+`content/units.txt` and `content/upgrades.txt` comments, and `Get-DrawnContentStamp` digests those files
+**byte for byte** — its own comment says a re-wrapped comment that moves no number still moves the stamp, and
+calls that the safe direction. So renumbering a comment aged every committed frame and chrome sheet. All
+twenty-two were re-captured and **all twenty-two came back byte-identical**, which is the check working as
+designed rather than a false alarm to be suppressed: it asked for proof and the proof was cheap.
+
+**Re-capturing them re-proved [6 September's tick-list finding](#6-september-2026--a-creep-raises-creeps-and-the-layout-row-moves-a-second-time-in-a-day) the hard way.** Nine of the nineteen frames came back
+*different* on the first attempt, because they were captured with a combined tick list rather than the list
+each was originally drawn with. `docs/frames/README.md` already says which frames stand on a line of their own
+and that the line is their whole list; ignoring it produced nine wrong pictures in one command. Re-run at the
+recorded lists, every one matched.
+
+### The stand-in allowance is gone, and with it the last thing that could hide a missing row
+
+[#251](https://github.com/ssalter21/tower-defense-game/issues/251) opened an allow-list so a simulation row
+could land before its art, drawing the Prototype Dummy until art arrived.
+[#262](https://github.com/ssalter21/tower-defense-game/issues/262) emptied it early. This ticket removed the
+mechanism: `UnboundUnits`, its five tests, and three exemptions that read it.
+
+**An empty allow-list and no allow-list are not the same thing**, which is why removing it was a ticket rather
+than a tidy-up. While the class existed, three assertions carried a branch for it —
+`NoTwoRowsOnOneModelAreDrawnAlike` skipped listed rows, `EveryTowerFiresFromAPointOnItsOwnArt` held them to
+naming *no* anchor, and `EveryUnitIsCalledWhatTheRosterCallsIt` let one off the name index. Every one of those
+branches was unreachable, and an unreachable branch in a test is a rule nobody is enforcing that reads like one
+somebody is. A row with no art now throws by name out of `MatchArt.For`, which is what it did before #251.
+
+**The test fixture is a complete second transcription again.** `Tests.Fixtures.ChosenArt` deliberately keeps its
+own copy of every art assignment so that two tables must agree — one choosing the wrong model is a failure
+rather than a tautology. `UnboundUnits` was the single thing it read across from the builder's side, because
+two lists of rows-with-no-art could only ever disagree by one being stale. That exception is gone with the
+mechanism.
+
+### What the numbers came to
+
+EditMode **100 of 100** — six fewer cases than before, being the five `UnboundUnitsTests` and the retired
+height assertion. PlayMode **165 of 165**, the built player **163 passed and 2 skipped**, and every static
+check green. The committed match is untouched at state `441D37E128517F3D`, 3 of 40 leaked, and a content hash
+that never moved: comments are not scanned, so a citation is free to be corrected.

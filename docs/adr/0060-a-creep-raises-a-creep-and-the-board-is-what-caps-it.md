@@ -1,4 +1,4 @@
-# 0059 — A creep raises a creep, and the board is what caps it
+# 0060 — A creep raises a creep, and the board is what caps it
 
 The Necromancer raises a Minion beside itself every 150 ticks. Until now every body on the corridor came out
 of a wave order: `Match.Release` was the one thing that spawned a creep, `Creep.OrderIndex` said which order

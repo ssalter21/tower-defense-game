@@ -537,8 +537,8 @@ namespace View.Editor
 
         /// <summary>
         /// What each unit type is drawn as, and how big — one entry per row of
-        /// <c>content/units.txt</c> that has art. A row that has none yet is on
-        /// <see cref="UnboundUnits"/>'s list instead and draws the stand-in.
+        /// <c>content/units.txt</c>, with no row left over. A row that reaches
+        /// <see cref="MatchArt"/> without an entry here throws by name.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -1423,7 +1423,7 @@ namespace View.Editor
         private static void WireArt(SerializedObject serialized)
         {
             SerializedProperty units = Field(serialized, "units");
-            units.arraySize = UnitBindings.Length + UnboundUnits.Rows.Length;
+            units.arraySize = UnitBindings.Length;
 
             for (var i = 0; i < UnitBindings.Length; i++)
             {
@@ -1449,20 +1449,6 @@ namespace View.Editor
                     death,
                     BubbleSignatureFor(binding.unitId),
                     ShotSignatureFor(binding.unitId));
-            }
-
-            // A row with no art chosen for it yet: the stand-in at the size its
-            // role is drawn at, empty hands and no clips. The list is empty at
-            // rest, so this loop usually writes nothing.
-            for (var i = 0; i < UnboundUnits.Rows.Length; i++)
-            {
-                var row = UnboundUnits.Rows[i];
-
-                WireUnit(
-                    units.GetArrayElementAtIndex(UnitBindings.Length + i),
-                    row.UnitId,
-                    UnboundUnits.StandInModelPath,
-                    row.Scale);
             }
 
             foreach ((string field, string asset, string clip) in SharedBindings)
@@ -1577,7 +1563,7 @@ namespace View.Editor
         /// </remarks>
         public static MatchArt Art()
         {
-            var units = new List<UnitArt>(UnitBindings.Length + UnboundUnits.Rows.Length);
+            var units = new List<UnitArt>(UnitBindings.Length);
 
             foreach (var binding in UnitBindings)
             {
@@ -1603,8 +1589,6 @@ namespace View.Editor
                     BubbleSignatureFor(binding.unitId),
                     ShotSignatureFor(binding.unitId)));
             }
-
-            units.AddRange(UnboundUnits.StandIns());
 
             return MatchArt.Of(units, LoadClip(WalkClipName), LoadClip(DeathClipName));
         }

@@ -63,7 +63,7 @@ does not buy, is a clause about nothing.
 > and they are not coming back with it — no capacity schedule, no per-wave type limit, no offering. The
 > [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.** Built on
 > 6 September 2026 — `content/upgrades.txt` layout 2, a `capstone` keyword, and
-> [ADR-0061](adr/0061-a-capstone-costs-a-token.md).
+> [ADR-0062](adr/0062-a-capstone-costs-a-token.md).
 
 **Scarcity is the grant schedule, not the price, and that is deliberate.** Five of the nine capstones change
 neither the damage roll nor the bodies a shot hits — Shield Wall, Blessing, Consecration, Overgrowth and
@@ -913,7 +913,7 @@ would re-baseline every measurement in the sweep.
 > raises only while it walks and a Minion raises nothing, so the last body raised is at the exit within one
 > floored crossing of the latest its raiser could still have been walking — which is what
 > `Match.RequireItArrives` now proves at construction. How many arrive between here and there is deliberately
-> unbounded. See [ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
+> unbounded. See [ADR-0060](adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
 
 ### 39 · Bone Golem · status live
 
@@ -1021,7 +1021,7 @@ would re-baseline every measurement in the sweep.
 > 2600 rather than on whatever the Villager had left, and **no Cursed Villager can ever be one-shot**: the row
 > that named a successor is already gone when the death check runs, so no hit of any size kills it. What else
 > carries over at the change is
-> [ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md).
+> [ADR-0059](adr/0059-a-creep-becomes-another-row-mid-lane.md).
 >
 > **The pair is worth the Werewolf's 2860, and not 1800 + 2600.** That arithmetic was written here before the
 > mechanic was built and it belonged to a trigger nobody signed: the change resolves ahead of the damage, so
@@ -1062,7 +1062,7 @@ would re-baseline every measurement in the sweep.
 > around it: the swing between this row's two outcomes is its 24 of health plus 12 of gold where every other
 > row's is its cost alone — and the return band below is a **leak rate**, so it cannot see the half of a body
 > that did not leak. Its reading is 81 before and after, to the digit.
-> [ADR-0060](adr/0060-a-kill-pays-the-defender.md) has the whole of it, including what the one purse does with
+> [ADR-0061](adr/0061-a-kill-pays-the-defender.md) has the whole of it, including what the one purse does with
 > money a defense earned.
 
 ---
@@ -1198,7 +1198,7 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > would have to reach a run through the opponents it defends against — and every opponent in the committed
 > sweep is the stand-in out of `content/field.txt`, which sends Minions. So both instruments on this page are
 > blind to the mechanic, for two different reasons, and
-> [ADR-0060](adr/0060-a-kill-pays-the-defender.md) records what a reading of it would need.
+> [ADR-0061](adr/0061-a-kill-pays-the-defender.md) records what a reading of it would need.
 >
 > The Cursed Villager was the third row that never won, at 17 and nought of eight, and the transformation
 > moved it further than it moved anything else — **398 dealt per hundred gold and eight of eight**, level with
@@ -1320,8 +1320,8 @@ raise columns. **The schema does not lack these any more** — the section title
 is what every block above points at. The five levers became **nine columns**, and three of the five collapsed
 into one mechanic, because a sweep, a blast and an aura are all the same shape: a bubble that emits something.
 The reasoning is [ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md), the tenth column's is
-[ADR-0058](adr/0058-a-creep-becomes-another-row-mid-lane.md), and the eleventh and twelfth's is
-[ADR-0059](adr/0059-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
+[ADR-0059](adr/0059-a-creep-becomes-another-row-mid-lane.md), and the eleventh and twelfth's is
+[ADR-0060](adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).
 
 | Column | Meaning |
 |---|---|
@@ -1415,7 +1415,7 @@ open.
    [`Tree_Bare_1_C_Color8`](https://github.com/ssalter21/tower-defense-game/issues/274#issuecomment-5552677475).
 6. **The capstone token is built, and what a run holds is not on screen anywhere.** Answered on
    6 September 2026 by [#273](https://github.com/ssalter21/tower-defense-game/issues/273) and
-   [ADR-0061](adr/0061-a-capstone-costs-a-token.md): `content/upgrades.txt` goes to layout 2, a `capstone` row
+   [ADR-0062](adr/0062-a-capstone-costs-a-token.md): `content/upgrades.txt` goes to layout 2, a `capstone` row
    costs one token and no gold, and the grant lands at the opening of rounds 3, 6 and 9 so all three are
    spendable in a nine-round run. **What is left open is the client.** A rung the round can pay for reads
    `Shield Wall   1 capstone token` on the hex it is offered at, and one it cannot is simply not offered — so
