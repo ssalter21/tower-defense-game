@@ -44,18 +44,21 @@ row that says "drag to tick 1096" are about the same moment.
 
 ./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
     -Ticks "673" -Distance 18 -Width 1600
+
+./tools/capture-match-frames.ps1 -Defense "docs/frames/magic-lines.txt" `
+    -Ticks "342,344" -Distance 22 -Width 1600
 ```
 
 **Finding the tick a capstone went off on is what the log line is for.** A
 signature is drawn on one tick and gone six or eight later, so hunting one by
 opening pictures means opening most of them. Every kept tick's line in
 `capture-match-frames.log` carries the running slow-ring, ground-shock, glow,
-burst, long-shot and knife counts; ask for a run of consecutive ticks, read the
-line where one of those numbers moves, and then capture that tick on its own at
-the size you want. **The knife count is the one that says how many bodies a
-throw found** — it goes up by three where the Fan of Knives had three in range
-and by one or two where it had fewer, so a frame of *three* knives is found by
-looking for a step of three.
+burst, long-shot, knife, bolt, light, root and strip counts; ask for a run of
+consecutive ticks, read the line where one of those numbers moves, and then
+capture that tick on its own at the size you want. **The knife count is the one
+that says how many bodies a throw found** — it goes up by three where the Fan of
+Knives had three in range and by one or two where it had fewer, so a frame of
+*three* knives is found by looking for a step of three.
 
 **A frame is a function of its tick and nothing else.** The capture draws every
 tick it steps through rather than only the ones it keeps, because where a tower
@@ -204,6 +207,57 @@ whichever of the two the lookup reaches first and not a hand anybody picked. Its
 own two rungs below throw from `handslot.r`. `ImportedArtTests` logs what every
 row's anchor was found under, which is where that measurement comes from; which
 hand the capstone *should* throw from is on `roster.md` as a question.
+
+And four of the recorded board with the **nine rows of the Mage, Cleric and
+Druid lines** standing on it, out of [`magic-lines.txt`](magic-lines.txt), all at
+`-Width 1600`. **Every colour, size and duration in them is a placeholder and
+none of those is signed.** What issue #265 signed is four shapes — a bolt leaving the tome or the
+staff tip, the Consecration's light on the ground, the Overgrowth's roots on
+every hex it slows, and the Unravel's armour strip on the hex his bolt landed
+on — and every colour, size and duration they are drawn at is the plainest thing
+that draws that shape, declared as a placeholder in `MatchTuning`.
+
+- `magic-lines-tick-0344.png` — **the one to look at first**, at `-Distance 22`.
+  The violet band broken into plates, lying on the ground around the skeleton at
+  the left of the light, is the Unravel's armour strip, drawn on the tick his
+  bolt arrived. The three pale bars in the air are the bolts fired two ticks
+  earlier, two ticks into a five-tick crossing. The wide pale disc under the towers is
+  the Consecration's light, and the small green sprigs under the bodies standing
+  in it are the Overgrowth's roots.
+
+- `magic-lines-tick-0342.png` — the same corner two ticks earlier, so the three
+  bolts of that tick are freshly out of the tome and the staff tip rather than
+  most of the way across. **The Mage line draws no bolt at all** and that is the
+  delivery column rather than an omission: those three rows are projectile, so
+  what crosses to the body is the shell in the snapshot, and a bolt drawn beside
+  it would be a second thing in the air saying what the shell already says.
+
+- `magic-lines-tick-0311.png` — **the Mage line firing**, which is what the
+  three frames above cannot show. The bald Lorekeeper is the Unravel: the flash
+  and the shared tracer are leaving his open tome, and the dark speck near the
+  top of the frame is the shell that leaves with them, thirty-three ticks from
+  the body it strips at tick 344. So this frame and
+  `magic-lines-tick-0344.png` are the two ends of one shot.
+
+- `magic-lines-tick-0331.png` — the whole-floor framing, so the reach of both
+  auras is in one picture. The Consecration's light covers three hexes round the
+  font; the Overgrowth's roots are under every body on the board, because that
+  aura reaches sixty hexes and the board is nineteen across. **The orange burst
+  in the middle of it is open question 8 in one picture**: it is the Mage's or
+  the Sorcerer's splash landing, wearing the Mortar's capstone shape, because a
+  blast centred on the body a shot arrived at names the body and never the
+  shooter.
+
+**Two things about them are results rather than questions.** **The Cleric and
+Druid lines carry a nought-tick windup and a nought-tick backswing** in
+`content/units.txt` — six of the nine rows — so `Ranged_Magic_Shoot` never plays
+on the board and a firing frame of those rows is a body in its resting pose with
+a bolt leaving its tome or its staff. The Mage line is the one of the three
+whose cast is posed, at a signed windup of 21 and a backswing of 15. Both are
+`docs/roster.md` speaking rather than an omission here. And **the Bishop and the
+Consecration fire from the head of a mace**, because the tier-2 line names
+`Cleric_Mace` and never says where `Cleric_Tome` goes, so the mace took the
+tome's hand — #259's open question, visible in these frames.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

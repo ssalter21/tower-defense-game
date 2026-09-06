@@ -5,8 +5,9 @@ namespace View
 {
     /// <summary>
     /// The shapes a capstone's signature is drawn with, generated in code: a
-    /// ring, a set of cracks running out from a centre, a burst of shards and a
-    /// thrown knife. Each one is a single mesh made of solid bars.
+    /// ring, a ring in pieces, a set of cracks running out from a centre, a
+    /// burst of shards, a spread of roots and a thrown knife. Each one is a
+    /// single mesh made of solid bars.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -73,6 +74,35 @@ namespace View
         }
 
         /// <summary>
+        /// The same ring with every other bar left out, so it reads as a band
+        /// that has come apart rather than as one that is whole.
+        /// </summary>
+        /// <param name="sides">How many bars a whole circle would take; half of them are drawn.</param>
+        /// <param name="band">How wide the band is, radially, in mesh units.</param>
+        /// <param name="thickness">How tall the band stands off the plane.</param>
+        /// <remarks>
+        /// The gaps are as wide as the pieces, which is the plainest split
+        /// there is: any other share would be a proportion somebody chose, and
+        /// what this shape has to say is that the ring is broken and not by how
+        /// much.
+        /// </remarks>
+        public static Mesh BrokenRing(int sides, float band, float thickness)
+        {
+            var builder = new Bars();
+
+            for (var side = 0; side < sides; side += 2)
+            {
+                builder.Add(
+                    OnCircle(side, sides, OuterRadius),
+                    OnCircle(side + 1, sides, OuterRadius),
+                    band * 0.5f,
+                    thickness * 0.5f);
+            }
+
+            return builder.ToMesh("EffectBrokenRing");
+        }
+
+        /// <summary>
         /// Cracks running out from the middle: <paramref name="spokes"/> bars
         /// lying in the XZ plane, each from <paramref name="inner"/> out to
         /// <see cref="OuterRadius"/>.
@@ -89,6 +119,46 @@ namespace View
             }
 
             return builder.ToMesh("EffectCracks");
+        }
+
+        /// <summary>
+        /// Roots: <paramref name="roots"/> two-piece bars lying in the XZ
+        /// plane, each leaving the middle straight and then bending sideways
+        /// before it reaches <see cref="OuterRadius"/>.
+        /// </summary>
+        /// <param name="roots">How many roots break the ground.</param>
+        /// <param name="width">How wide one root is, in mesh units.</param>
+        /// <param name="thickness">How far a root stands off the plane.</param>
+        /// <param name="kink">
+        /// How far the outer half swings off the line it left on, as a share of
+        /// <see cref="OuterRadius"/>.
+        /// </param>
+        /// <remarks>
+        /// <b>The bend is the whole of what makes this a root and not a
+        /// crack.</b> <see cref="Cracks"/> is a straight radial spread — a
+        /// thing that happened at once, from a point — and a root is a thing
+        /// that grew, so each one leaves the middle straight and then turns.
+        /// Consecutive roots turn opposite ways, so the spread stays balanced
+        /// rather than winding one way like a pinwheel.
+        /// </remarks>
+        public static Mesh Roots(int roots, float width, float thickness, float kink)
+        {
+            var builder = new Bars();
+
+            for (var root = 0; root < roots; root++)
+            {
+                Vector3 along = OnCircle(root, roots, 1f);
+                var aside = new Vector3(-along.z, 0f, along.x);
+
+                Vector3 knee = along * (OuterRadius * 0.5f);
+                Vector3 tip =
+                    (along * OuterRadius) + (aside * (kink * OuterRadius * (root % 2 == 0 ? 1f : -1f)));
+
+                builder.Add(Vector3.zero, knee, width * 0.5f, thickness * 0.5f);
+                builder.Add(knee, tip, width * 0.5f, thickness * 0.5f);
+            }
+
+            return builder.ToMesh("EffectRoots");
         }
 
         /// <summary>

@@ -902,9 +902,8 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The rows whose effects are drawn as something of their own, and
-        /// what. Every row not named here draws the shared disc and the shared
-        /// tracer.
+        /// The rows whose bubble leaves a shape of its own, and what. Every row
+        /// not named here leaves the shared disc.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -915,34 +914,56 @@ namespace View.Editor
         /// say nothing.
         /// </para>
         /// <para>
-        /// <b>Every one is a capstone whose look <c>docs/roster.md</c> signs
-        /// and whose emitter an event can name.</b> The Shield Wall's slow and
-        /// the Blessing's haste are auras, which pulse from their own emitter;
-        /// the Slam's sweep is centred on the man who swung; and a shot names
-        /// the tower that fired it, which is what lets the Overwatch and the
-        /// Fan of Knives be bound here at all. The Mortar's burst is the sixth
-        /// signed shape and is not here — its blast is centred on the body its
-        /// shell arrived at, so the event names the victim and no row can be
-        /// reached from it. See <see cref="MatchDecorations.BlastLanded"/>,
-        /// which draws that one off the shape of the event instead.
+        /// <b>Every one is an emitter an event can name.</b> The Shield Wall's
+        /// slow, the Blessing's haste, the Consecration's strip and the
+        /// Overgrowth's slow are auras, which pulse from their own emitter, and
+        /// the Slam's sweep is centred on the man who swung. <b>Two signed
+        /// bubble shapes are missing from here and cannot be added</b>: the
+        /// Mortar's burst and the Unravel's armour strip are blasts centred on
+        /// the body a shot arrived at, so the event names the victim and no row
+        /// is reachable from it. See <see cref="MatchDecorations.BlastLanded"/>,
+        /// which draws both off the shape of the event instead.
         /// </para>
         /// </remarks>
-        private static readonly (int unitId, EffectSignature signature)[] Signatures =
+        private static readonly (int unitId, BubbleSignature signature)[] BubbleSignatures =
         {
-            (16, EffectSignature.SlowRing),
-            (19, EffectSignature.GroundShock),
-            (22, EffectSignature.TowerGlow),
-            (31, EffectSignature.LongShot),
-            (34, EffectSignature.ThrownKnife),
+            (16, BubbleSignature.SlowRing),
+            (19, BubbleSignature.GroundShock),
+            (22, BubbleSignature.TowerGlow),
+            (25, BubbleSignature.ConsecrationLight),
+            (30, BubbleSignature.OvergrowthRoots),
         };
 
         /// <summary>
-        /// What one row's effects are drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shared shapes.
+        /// The rows whose shot is drawn as something of its own, and what.
         /// </summary>
-        private static EffectSignature SignatureFor(int unitId)
+        /// <remarks>
+        /// <b>Two of these are capstones and six are whole lines.</b> A bolt is
+        /// what the Cleric and the Druid lines fire at every rung, so this
+        /// table names six rows to say one thing — where the bubble table
+        /// above names a row per shape. That is the shape of the two moments
+        /// rather than an inconsistency: a bubble is a capstone's, and a shot
+        /// is a line's.
+        /// </remarks>
+        private static readonly (int unitId, ShotSignature signature)[] ShotSignatures =
         {
-            foreach ((int id, EffectSignature signature) in Signatures)
+            (23, ShotSignature.MagicBolt),
+            (24, ShotSignature.MagicBolt),
+            (25, ShotSignature.MagicBolt),
+            (28, ShotSignature.MagicBolt),
+            (29, ShotSignature.MagicBolt),
+            (30, ShotSignature.MagicBolt),
+            (31, ShotSignature.LongShot),
+            (34, ShotSignature.ThrownKnife),
+        };
+
+        /// <summary>
+        /// What one row's bubble leaves, or <see cref="BubbleSignature.None"/>
+        /// for the shared disc.
+        /// </summary>
+        private static BubbleSignature BubbleSignatureFor(int unitId)
+        {
+            foreach ((int id, BubbleSignature signature) in BubbleSignatures)
             {
                 if (id == unitId)
                 {
@@ -950,7 +971,24 @@ namespace View.Editor
                 }
             }
 
-            return EffectSignature.None;
+            return BubbleSignature.None;
+        }
+
+        /// <summary>
+        /// What one row's shot is drawn as, or <see cref="ShotSignature.None"/>
+        /// for the shared tracer.
+        /// </summary>
+        private static ShotSignature ShotSignatureFor(int unitId)
+        {
+            foreach ((int id, ShotSignature signature) in ShotSignatures)
+            {
+                if (id == unitId)
+                {
+                    return signature;
+                }
+            }
+
+            return ShotSignature.None;
         }
 
         /// <summary>
@@ -1403,7 +1441,8 @@ namespace View.Editor
                     binding.beside,
                     walk,
                     death,
-                    SignatureFor(binding.unitId));
+                    BubbleSignatureFor(binding.unitId),
+                    ShotSignatureFor(binding.unitId));
             }
 
             // A row with no art chosen for it yet: the stand-in at the size its
@@ -1434,7 +1473,7 @@ namespace View.Editor
         private static void WireUnit(SerializedProperty entry, int unitId, string model, float scale) =>
             WireUnit(
                 entry, unitId, model, scale, null, null, null, null, null, null, default, default, default,
-                default, null, null, EffectSignature.None);
+                default, null, null, BubbleSignature.None, ShotSignature.None);
 
         /// <summary>
         /// Writes one entry of the serialized unit list.
@@ -1461,7 +1500,8 @@ namespace View.Editor
             (string model, float scale, Vector3 offset) beside,
             string walk,
             string death,
-            EffectSignature signature)
+            BubbleSignature bubbleSignature,
+            ShotSignature shotSignature)
         {
             entry.FindPropertyRelative("unitId").intValue = unitId;
             entry.FindPropertyRelative("model").objectReferenceValue = LoadModel(model);
@@ -1476,11 +1516,12 @@ namespace View.Editor
             entry.FindPropertyRelative("leftHandTilt").vector3Value = leftTilt;
             entry.FindPropertyRelative("walkClip").objectReferenceValue = MaybeClip(walk);
             entry.FindPropertyRelative("deathClip").objectReferenceValue = MaybeClip(death);
-            // The index into the enum's own names rather than the value, which
+            // The index into each enum's own names rather than the value, which
             // is what a serialized enum property holds. The two agree because
-            // EffectSignature is declared in ascending order from zero with no
+            // both enums are declared in ascending order from zero with no
             // gaps, and a gap there would silently bind the wrong shape.
-            entry.FindPropertyRelative("signature").enumValueIndex = (int)signature;
+            entry.FindPropertyRelative("bubbleSignature").enumValueIndex = (int)bubbleSignature;
+            entry.FindPropertyRelative("shotSignature").enumValueIndex = (int)shotSignature;
 
             SerializedProperty anchored = entry.FindPropertyRelative("effectAnchor");
 
@@ -1553,7 +1594,8 @@ namespace View.Editor
                         MaybeModel(binding.beside.model), binding.beside.scale, binding.beside.offset),
                     MaybeClip(walk),
                     MaybeClip(death),
-                    SignatureFor(binding.unitId)));
+                    BubbleSignatureFor(binding.unitId),
+                    ShotSignatureFor(binding.unitId)));
             }
 
             units.AddRange(UnboundUnits.StandIns());

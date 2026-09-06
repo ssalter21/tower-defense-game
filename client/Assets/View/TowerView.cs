@@ -97,7 +97,7 @@ namespace View
         /// per event, for the same reason the anchor is resolved once: an event
         /// is a tick-loop caller.
         /// </remarks>
-        public EffectSignature Signature { get; private set; }
+        public RowSignature Signature { get; private set; }
 
         /// <summary>True when this tower has a rig and three clips.</summary>
         public bool IsAnimated => _animator != null;

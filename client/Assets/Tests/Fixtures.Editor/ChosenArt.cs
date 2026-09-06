@@ -777,34 +777,57 @@ namespace Tests.Fixtures
         }
 
         /// <summary>
-        /// The rows whose effects are drawn as something of their own, and
-        /// what. Every row not named here draws the shared disc and the shared
-        /// tracer.
+        /// The rows whose bubble leaves a shape of its own, and what. Every row
+        /// not named here leaves the shared disc.
         /// </summary>
         /// <remarks>
         /// Written out here a second time for the reason every path above is:
         /// a fixture that read the builder's table could not catch the builder
-        /// binding the Slam's shock to the Berserker. The five are the
-        /// capstones whose emitter an event names — three bubbles and two
-        /// shots; the Mortar's blast is centred on the body its shell arrived
-        /// at and reaches no row at all, so it is not a binding on either side.
+        /// binding the Slam's shock to the Berserker. These five are the
+        /// emitters an event names — one sweep and four auras. The Mortar's
+        /// burst and the Unravel's armour strip are the two signed bubble
+        /// shapes that are not bindings at all: both are blasts centred on the
+        /// body a shot arrived at, so the event reaches no row.
         /// </remarks>
-        private static readonly (int unitId, EffectSignature signature)[] Signatures =
+        private static readonly (int unitId, BubbleSignature signature)[] BubbleSignatures =
         {
-            (16, EffectSignature.SlowRing),
-            (19, EffectSignature.GroundShock),
-            (22, EffectSignature.TowerGlow),
-            (31, EffectSignature.LongShot),
-            (34, EffectSignature.ThrownKnife),
+            (16, BubbleSignature.SlowRing),
+            (19, BubbleSignature.GroundShock),
+            (22, BubbleSignature.TowerGlow),
+            (25, BubbleSignature.ConsecrationLight),
+            (30, BubbleSignature.OvergrowthRoots),
         };
 
         /// <summary>
-        /// What one row's effects are drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shared shapes.
+        /// The rows whose shot is drawn as something of its own, and what.
         /// </summary>
-        private static EffectSignature SignatureFor(int unitId)
+        /// <remarks>
+        /// <b>Two of these are capstones and six are whole lines.</b> A bolt is
+        /// what the Cleric and the Druid lines fire at every rung, so this
+        /// table names six rows to say one thing — where the bubble table
+        /// above names a row per shape. That is the shape of the two moments
+        /// rather than an inconsistency: a bubble is a capstone's, and a shot
+        /// is a line's.
+        /// </remarks>
+        private static readonly (int unitId, ShotSignature signature)[] ShotSignatures =
         {
-            foreach ((int id, EffectSignature signature) in Signatures)
+            (23, ShotSignature.MagicBolt),
+            (24, ShotSignature.MagicBolt),
+            (25, ShotSignature.MagicBolt),
+            (28, ShotSignature.MagicBolt),
+            (29, ShotSignature.MagicBolt),
+            (30, ShotSignature.MagicBolt),
+            (31, ShotSignature.LongShot),
+            (34, ShotSignature.ThrownKnife),
+        };
+
+        /// <summary>
+        /// What one row's bubble leaves, or <see cref="BubbleSignature.None"/>
+        /// for the shared disc.
+        /// </summary>
+        private static BubbleSignature BubbleSignatureFor(int unitId)
+        {
+            foreach ((int id, BubbleSignature signature) in BubbleSignatures)
             {
                 if (id == unitId)
                 {
@@ -812,7 +835,24 @@ namespace Tests.Fixtures
                 }
             }
 
-            return EffectSignature.None;
+            return BubbleSignature.None;
+        }
+
+        /// <summary>
+        /// What one row's shot is drawn as, or <see cref="ShotSignature.None"/>
+        /// for the shared tracer.
+        /// </summary>
+        private static ShotSignature ShotSignatureFor(int unitId)
+        {
+            foreach ((int id, ShotSignature signature) in ShotSignatures)
+            {
+                if (id == unitId)
+                {
+                    return signature;
+                }
+            }
+
+            return ShotSignature.None;
         }
 
         /// <summary>Installs this adapter, in every editor domain, before play mode.</summary>
@@ -871,7 +911,8 @@ namespace Tests.Fixtures
                 BesideProp.Standing(MaybeModel(row.beside.model), row.beside.scale, row.beside.offset),
                 MaybeClip(walk),
                 MaybeClip(death),
-                SignatureFor(row.unitId));
+                BubbleSignatureFor(row.unitId),
+                ShotSignatureFor(row.unitId));
         }
 
         private static GameObject MaybeModel(string path) => path == null ? null : Model(path);

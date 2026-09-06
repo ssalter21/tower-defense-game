@@ -972,7 +972,7 @@ namespace Tests.PlayMode
             Transform ring = Rings(view).Single();
 
             Assert.That(
-                Vector3.Distance(ring.position, stands + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                Vector3.Distance(ring.position, stands + (Vector3.up * MatchTuning.FloorClearance)),
                 Is.LessThan(1e-3f),
                 $"the ring is at {ring.position} and the tower that pulsed is at {stands}");
 
@@ -1160,7 +1160,7 @@ namespace Tests.PlayMode
             Assert.That(
                 Vector3.Distance(
                     slow.position,
-                    shieldWall.transform.position + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                    shieldWall.transform.position + (Vector3.up * MatchTuning.FloorClearance)),
                 Is.LessThan(1e-3f),
                 "the slow ring is not under the tower that pulsed it");
 
@@ -1181,7 +1181,7 @@ namespace Tests.PlayMode
             Assert.That(
                 Vector3.Distance(
                     shock.position,
-                    slam.transform.position + (Vector3.up * MatchTuning.BubbleRingHeight)),
+                    slam.transform.position + (Vector3.up * MatchTuning.FloorClearance)),
                 Is.LessThan(1e-3f),
                 "the shock is not under the tower that swung");
 
@@ -1553,6 +1553,274 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
+        /// Every rung of the Mage, Cleric and Druid lines flashes at the point
+        /// on its own art its shot leaves from, sparks on the body its shot
+        /// lands on, and — where it is hitscan — puts a bolt in the air out of
+        /// the same point.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The same claim the two tests above make about the impact, melee and
+        /// pierce rows, on the nine that cast. It is asserted a third time
+        /// rather than folded in for the reason there are three: twenty-one
+        /// towers next to a corridor of fifty-one cells is more than the cells
+        /// beside it, and a row that could not be placed would be a row this
+        /// quietly stopped covering.
+        /// </para>
+        /// <para>
+        /// <b>Six of the nine draw a bolt and three draw the shared tracer, and
+        /// that split is the delivery column rather than a choice made here.</b>
+        /// The Cleric and Druid lines are hitscan, so the only thing crossing
+        /// to the body is whatever the decoration draws. The Mage line is
+        /// projectile: its shell is a real entity in the snapshot flying that
+        /// same line over thirty-three ticks, and a bolt drawn beside it would
+        /// be a second thing in the air saying what the shell already says.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EveryRowOnTheMagicLinesFiresFromItsAnchorAndSparksOnWhatItHits()
+        {
+            MatchView view = BeginWithTheMagicLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            foreach (TowerView tower in view.Towers.Values)
+            {
+                view.Decorations.Clear();
+                view.Decorations.TowerFired(tower.Id, creepId);
+
+                Assert.That(view.Decorations.FlashesDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fired and nothing left it");
+
+                Assert.That(tower.AnchorTransform, Is.Not.Null,
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) has no anchor, so its flash is at a "
+                    + "height above its own root whatever it is holding");
+
+                Transform flash = Pieces(view, "MuzzleFlash").Single();
+
+                Assert.That(Vector3.Distance(flash.position, tower.Muzzle), Is.LessThan(1e-3f),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) fires from {tower.Muzzle} and its flash "
+                    + $"is at {flash.position}");
+
+                bool hitscan = tower.Type.Delivery == Delivery.Hitscan;
+
+                Assert.That(view.Decorations.BoltsDrawn, Is.EqualTo(hitscan ? 1 : 0),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) is {tower.Type.Delivery} and drew "
+                    + $"{view.Decorations.BoltsDrawn} bolts");
+
+                Assert.That(view.Decorations.TracersDrawn, Is.EqualTo(hitscan ? 0 : 1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) is {tower.Type.Delivery} and drew "
+                    + $"{view.Decorations.TracersDrawn} of the tracer every row shares");
+
+                if (hitscan)
+                {
+                    Transform bolt = Pieces(view, "MagicBolt").Single();
+
+                    Assert.That(Vector3.Distance(bolt.position, tower.Muzzle), Is.LessThan(1e-3f),
+                        $"unit {tower.Type.Id} ({tower.Type.Label})'s bolt starts at {bolt.position} "
+                        + $"and its tome or staff tip is at {tower.Muzzle}");
+                }
+
+                view.Decorations.CreepDamaged(creepId, 10);
+
+                Assert.That(view.Decorations.SparksDrawn, Is.EqualTo(1),
+                    $"unit {tower.Type.Id} ({tower.Type.Label}) landed damage and nothing landed with it");
+
+                Transform spark = Pieces(view, "Spark").Single();
+
+                Assert.That(
+                    Vector3.Distance(spark.position, walks + (Vector3.up * MatchTuning.HitSparkHeight)),
+                    Is.LessThan(1e-3f),
+                    "the landing is not on the creep the shot landed on");
+            }
+
+            Assert.That(view.Towers.Count, Is.EqualTo(9), "the three magic lines are nine rows");
+        }
+
+        /// <summary>
+        /// The Consecration lays light on the ground out to the edge of its
+        /// aura, the Overgrowth puts roots under every body it is holding, and
+        /// the Unravel strips the hex its bolt landed on — while the Mage's
+        /// splash, which is a damage blast on a body like the Mortar's, still
+        /// wears the Mortar's burst.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The last of those is open question 8 asserted rather than fixed.</b>
+        /// A blast centred on its target names the body the shot arrived at and
+        /// the shooter is deliberately not in the event, so the only handle on
+        /// it is the payload — which tells the Unravel's armour blast from the
+        /// Mortar's damage blast and cannot tell the Mage's damage blast from
+        /// the Mortar's at all. The burst on the Mage's splash is asserted here
+        /// so that the day something does tell them apart, this is the test
+        /// that says so.
+        /// </para>
+        /// <para>
+        /// <b>The Overgrowth's roots are counted against the bodies on the
+        /// board and not against a radius.</b> That aura reaches sixty hexes
+        /// and the board is nineteen across, so every creep in the snapshot is
+        /// inside it — which is what "the whole board slows while he stands"
+        /// means, drawn.
+        /// </para>
+        /// </remarks>
+        [Test]
+        public void EachMagicCapstoneDrawsItsOwnSignature()
+        {
+            MatchView view = BeginWithTheMagicLines();
+
+            RunUntil(view, () => view.Creeps.LiveCount > 0);
+
+            view.Decorations.Clear();
+
+            // The Consecration: light filling the ground the font has claimed.
+            TowerView consecration = Standing(view, 25);
+            int consecrationRadius = Reaches(consecration);
+
+            view.Decorations.AuraPulsed(consecration.Id, consecrationRadius, BubblePayload.Armour);
+
+            Assert.That(view.Decorations.LightsDrawn, Is.EqualTo(1),
+                "the Consecration pulsed and the ground stayed dark");
+
+            Transform light = Pieces(view, "ConsecrationLight").Single();
+
+            Assert.That(
+                Vector3.Distance(
+                    light.position,
+                    consecration.transform.position + (Vector3.up * MatchTuning.FloorClearance)),
+                Is.LessThan(1e-3f),
+                "the light is not under the tower that pulsed it");
+
+            Assert.That(light.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(consecrationRadius)).Within(1e-4f));
+
+            // The Overgrowth: roots under every body the aura is holding, which
+            // at sixty hexes is every body on the board.
+            TowerView overgrowth = Standing(view, 30);
+
+            view.Decorations.AuraPulsed(overgrowth.Id, Reaches(overgrowth), BubblePayload.Speed);
+
+            Assert.That(view.Decorations.RootsDrawn, Is.EqualTo(view.Current.Creeps.Count),
+                "the Overgrowth slows the whole board and the roots reached a different number of "
+                + "bodies than are standing on it");
+
+            Assert.That(view.Decorations.RootsDrawn, Is.GreaterThan(0),
+                "no body was on the board, so this proves nothing");
+
+            Vector3[] roots = Pieces(view, "OvergrowthRoots").Select(patch => patch.position).ToArray();
+
+            foreach (int walking in view.Current.Creeps.Select(creep => creep.Id))
+            {
+                Vector3 under = view.Creeps.Live[walking].transform.position
+                    + (Vector3.up * MatchTuning.FloorClearance);
+
+                Assert.That(roots.Min(at => Vector3.Distance(at, under)), Is.LessThan(1e-3f),
+                    $"creep {walking} is inside the aura and has no roots under it");
+            }
+
+            Assert.That(
+                Pieces(view, "OvergrowthRoots").First().localScale.x,
+                Is.EqualTo(MatchTuning.OvergrowthRootPatchDiameter).Within(1e-4f),
+                "a patch of roots is scaled by the reach of an aura that covers ten boards");
+
+            // The Unravel: the hex his bolt landed on, stripped. The event
+            // names the body and never him, so what picks this shape is the
+            // armour payload.
+            int creepId = view.Current.Creeps[0].Id;
+            Vector3 walks = view.Creeps.Live[creepId].transform.position;
+
+            int unravelRadius = Reaches(Standing(view, 27));
+
+            view.Decorations.BlastLanded(creepId, unravelRadius, BubblePayload.Armour);
+
+            Assert.That(view.Decorations.StripsDrawn, Is.EqualTo(1),
+                "an armour blast arrived on a body and nothing came off the hex");
+
+            Transform strip = Pieces(view, "ArmourStrip").Single();
+
+            Assert.That(
+                Vector3.Distance(
+                    strip.position, walks + (Vector3.up * MatchTuning.FloorClearance)),
+                Is.LessThan(1e-3f),
+                "the strip is not on the hex the bolt arrived at");
+
+            Assert.That(strip.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(unravelRadius)).Within(1e-4f));
+
+            // And the Mage's splash, which is the open question: a damage blast
+            // on a body, indistinguishable from the Mortar's shell landing.
+            view.Decorations.BlastLanded(creepId, Reaches(Standing(view, 4)), BubblePayload.Damage);
+
+            Assert.That(view.Decorations.BurstsDrawn, Is.EqualTo(1),
+                "the Mage's splash stopped drawing the Mortar's burst, which would mean something now "
+                + "tells a damage blast on a body from another one — open question 8 in docs/roster.md");
+
+            Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(0),
+                "a capstone fell back to the plain disc, so its binding was not read");
+
+            // And every one of them holds the size it reported.
+            Transform[] shapes = { light, strip };
+            Vector3[] drawnAt = shapes.Select(shape => shape.localScale).ToArray();
+
+            for (var tick = 1; tick < MatchTuning.ArmourStripTicks; tick++)
+            {
+                view.Decorations.AgeOneTick();
+
+                for (var index = 0; index < shapes.Length; index++)
+                {
+                    Assert.That(shapes[index].localScale, Is.EqualTo(drawnAt[index]),
+                        $"{shapes[index].name} is {shapes[index].localScale.x} metres across {tick} "
+                        + $"ticks after a bubble {drawnAt[index].x} metres across went off");
+                }
+            }
+        }
+
+        /// <summary>
+        /// A seek re-runs the ticks it passes over in silence, so no bolt, no
+        /// light and no root it passes over is drawn a second time.
+        /// </summary>
+        /// <remarks>
+        /// The same claim the two seek tests above make, on the shapes this
+        /// file's magic rows draw. <see cref="MatchDecorations.EventsHeard"/>
+        /// is the counter that has to answer for it, because a clear does not
+        /// reset it.
+        /// </remarks>
+        [Test]
+        public void ASeekDrawsNoMagicSignatureASecondTime()
+        {
+            MatchView view = BeginWithTheMagicLines();
+
+            RunUntil(view, () => view.Decorations.BoltsDrawn > 0 && view.Decorations.RootsDrawn > 0);
+
+            Assert.That(view.Decorations.BoltsDrawn, Is.GreaterThan(0),
+                "no magic row fired in the whole match, so this proves nothing");
+
+            Assert.That(view.Decorations.LightsDrawn, Is.GreaterThan(0),
+                "the Consecration never pulsed in the whole match, so this proves nothing");
+
+            int tick = view.Current.Tick;
+            int heard = view.Decorations.EventsHeard;
+
+            view.ReSimulateTo(tick + 90);
+            view.ReSimulateTo(tick);
+
+            Assert.That(view.Decorations.EventsHeard, Is.EqualTo(heard),
+                "a seek heard the events of the ticks it re-ran, so every effect between here and the "
+                + "start was drawn again");
+
+            Assert.That(view.Decorations.BoltsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.LightsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.RootsDrawn, Is.EqualTo(0));
+            Assert.That(view.Decorations.StripsDrawn, Is.EqualTo(0));
+
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
+                "an effect from before the seek is still on screen, and the tick it belongs to is now "
+                + "in the future");
+        }
+
+        /// <summary>
         /// Decoration does not pile up over a whole match. The count on screen
         /// stays bounded by what the last few ticks produced, because aging
         /// happens where the simulation advances rather than where somebody
@@ -1871,6 +2139,56 @@ namespace Tests.PlayMode
                 StreamingContent.ReadRuleset(),
                 types,
                 TowerLayout.Parse("pierce lines", PierceLinesDefense, types),
+                StreamingContent.ReadWave(types),
+                TheMatchOnScreen.Seed);
+        }
+
+        /// <summary>
+        /// The three rungs of each of the three magic lines that are not the
+        /// Paladin's, standing on cells of the real board, in the order the
+        /// loader wants them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The cells are <see cref="FourLinesDefense"/>'s first nine.</b>
+        /// Every row here reaches at least three hexes where nine of those
+        /// twelve reach one, so a cell that holds a Soldier holds any of these
+        /// — and reusing them means the three defenses differ only in what is
+        /// standing rather than in where.
+        /// </para>
+        /// <para>
+        /// <b><c>docs/frames/magic-lines.txt</c> is the same nine rows on the
+        /// same cells</b>, so the frames of these lines are frames of what this
+        /// asserts about — two copies for the reason
+        /// <see cref="FourLinesDefense"/> has two.
+        /// </para>
+        /// </remarks>
+        private const string MagicLinesDefense =
+            "tower  4  3  0\n"
+            + "tower 23  5  0\n"
+            + "tower 24  2  2\n"
+            + "tower 25  5  2\n"
+            + "tower 26  2  4\n"
+            + "tower 27  7  4\n"
+            + "tower 28  5  6\n"
+            + "tower 29 11  6\n"
+            + "tower 30 12  6";
+
+        /// <summary>
+        /// The real board, the real roster and the real wave, with the nine
+        /// rows of the Mage, Cleric and Druid lines standing on it instead of
+        /// the recorded six.
+        /// </summary>
+        private MatchView BeginWithTheMagicLines()
+        {
+            UnitTypeTable types = StreamingContent.ReadUnitTypes();
+
+            return TheMatchOnScreen.Begin(
+                Spawn(GetType().Name),
+                StreamingContent.ReadMap(),
+                StreamingContent.ReadRuleset(),
+                types,
+                TowerLayout.Parse("magic lines", MagicLinesDefense, types),
                 StreamingContent.ReadWave(types),
                 TheMatchOnScreen.Seed);
         }

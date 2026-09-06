@@ -70,6 +70,9 @@ namespace View
         /// </summary>
         private readonly List<Vector3> _towersReached = new List<Vector3>();
 
+        /// <summary>Scratch for <see cref="CreepsWithin"/>, on the same terms.</summary>
+        private readonly List<Vector3> _creepsReached = new List<Vector3>();
+
         private EntityViewPool<CreepView> _creepPool;
 
         private EntityViewPool<ProjectileView> _projectilePool;
@@ -208,7 +211,8 @@ namespace View
                 TowerMuzzleOf,
                 EntityGroundOf,
                 TowerSignatureOf,
-                TowersWithin);
+                TowersWithin,
+                CreepsWithin);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -703,21 +707,21 @@ namespace View
         }
 
         /// <summary>
-        /// What the tower with this id draws its own effects as, or null when
-        /// the id is not a tower.
+        /// What the tower with this id draws its own bubble and its own shot
+        /// as, or null when the id is not a tower.
         /// </summary>
         /// <remarks>
-        /// <b>Null and <see cref="EffectSignature.None"/> are different
-        /// answers.</b> A bubble is centred on an entity out of the one id
+        /// <b>Null and a pair of <c>None</c>s are different answers.</b> A
+        /// bubble is centred on an entity out of the one id
         /// space, and which kind of entity that is decides what the decoration
         /// means: a tower at the centre is the row that emitted, and anything
         /// else is a body a shot arrived at. Collapsing the two would draw a
         /// tower's plain disc under a creep a mortar shell had just landed on.
         /// </remarks>
-        private EffectSignature? TowerSignatureOf(int entityId) =>
+        private RowSignature? TowerSignatureOf(int entityId) =>
             _towers.TryGetValue(entityId, out TowerView tower)
                 ? tower.Signature
-                : (EffectSignature?)null;
+                : (RowSignature?)null;
 
         /// <summary>
         /// Where every tower standing within <paramref name="metres"/> of the
@@ -740,26 +744,73 @@ namespace View
         /// </remarks>
         private IReadOnlyList<Vector3> TowersWithin(int entityId, float metres)
         {
-            _towersReached.Clear();
-
-            Vector3? centre = EntityGroundOf(entityId);
-
-            if (!centre.HasValue)
+            if (!Reaching(_towersReached, entityId, metres, out Vector3 centre, out float squared))
             {
                 return _towersReached;
             }
 
-            float squared = metres * metres;
-
             foreach (TowerView tower in _towers.Values)
             {
-                if ((tower.transform.position - centre.Value).sqrMagnitude <= squared)
+                if ((tower.transform.position - centre).sqrMagnitude <= squared)
                 {
                     _towersReached.Add(tower.transform.position);
                 }
             }
 
             return _towersReached;
+        }
+
+        /// <summary>
+        /// Where every creep within <paramref name="metres"/> of the entity
+        /// with this id is — what the Overgrowth's roots are drawn under.
+        /// </summary>
+        /// <remarks>
+        /// <b>Measured against where the bodies were last drawn</b>, which is
+        /// the at-most-a-tick-behind answer <see cref="CreepPositionOf"/> gives
+        /// and is allowed to be for the same reason. Everything else about it
+        /// — the reused list, the centre looked up the ordinary way, the flat
+        /// measurement against a simulation that reads the radius as a sphere —
+        /// is <see cref="TowersWithin"/>'s, with the other side of the board in
+        /// it.
+        /// </remarks>
+        private IReadOnlyList<Vector3> CreepsWithin(int entityId, float metres)
+        {
+            if (!Reaching(_creepsReached, entityId, metres, out Vector3 centre, out float squared))
+            {
+                return _creepsReached;
+            }
+
+            foreach (Vector3 walking in _drawnCreepPositions.Values)
+            {
+                if ((walking - centre).sqrMagnitude <= squared)
+                {
+                    _creepsReached.Add(walking);
+                }
+            }
+
+            return _creepsReached;
+        }
+
+        /// <summary>
+        /// Empties one scratch list and works out where a pulse went off and
+        /// how far it carried, or false for an id the view is not holding.
+        /// </summary>
+        /// <remarks>
+        /// The two lookups above differ only in which collection they walk, so
+        /// everything before the walk is here: an id the view does not carry
+        /// reaches nothing rather than everything, and the reach is squared
+        /// once rather than a square root taken per candidate.
+        /// </remarks>
+        private bool Reaching(
+            List<Vector3> into, int entityId, float metres, out Vector3 centre, out float squared)
+        {
+            into.Clear();
+            squared = metres * metres;
+
+            Vector3? at = EntityGroundOf(entityId);
+            centre = at ?? default;
+
+            return at.HasValue;
         }
     }
 }

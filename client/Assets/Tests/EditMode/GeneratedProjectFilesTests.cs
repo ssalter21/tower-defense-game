@@ -235,13 +235,19 @@ namespace Tests.EditMode
                 SameOrBothEmpty(made.WalkClip, unit.WalkClip, "walk clip for unit " + unit.UnitId);
                 SameOrBothEmpty(made.DeathClip, unit.DeathClip, "death clip for unit " + unit.UnitId);
 
-                // What a row's bubble is drawn as, which is an enum rather than
-                // a reference and so survives nothing being wired at all. A
-                // manifest that lost it draws every capstone as the plain disc
-                // in the player and as its own signature everywhere else.
-                Assert.That(made.Signature, Is.EqualTo(unit.Signature),
+                // What a row's bubble and its shot are drawn as, which are
+                // enums rather than references and so survive nothing being
+                // wired at all. A manifest that lost them draws every capstone
+                // as the plain disc and every bolt as the plain tracer in the
+                // player, and as their own signatures everywhere else.
+                Assert.That(made.Signature.Bubble, Is.EqualTo(unit.Signature.Bubble),
                     GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
                     + "'s bubble as something else than ChosenArt does. Run "
+                    + "tools/build-test-assets.ps1 and commit what it writes.");
+
+                Assert.That(made.Signature.Shot, Is.EqualTo(unit.Signature.Shot),
+                    GeneratedTestAssets.ManifestPath + " draws unit " + unit.UnitId
+                    + "'s shot as something else than ChosenArt does. Run "
                     + "tools/build-test-assets.ps1 and commit what it writes.");
             }
 

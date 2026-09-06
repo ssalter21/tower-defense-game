@@ -208,27 +208,32 @@ namespace View
         public const float BubbleRingThickness = 0.04f;
 
         /// <summary>
-        /// How far above the floor the ring lies, in metres. Enough to clear
-        /// the tile it covers rather than fight it for the same depth.
+        /// How far above the floor anything that lies flat on it is drawn, in
+        /// metres — the disc, the shapes a bubble leaves on the ground and the
+        /// roots under a body. Enough to clear the tile it covers rather than
+        /// fight it for the same depth.
         /// </summary>
-        public const float BubbleRingHeight = 0.03f;
+        public const float FloorClearance = 0.03f;
 
         // ---------------------------------------------------------------
         // Capstone signatures — the shapes a row's own effects are drawn as
         // ---------------------------------------------------------------
         //
-        // SIX SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
+        // TEN SHAPES ARE SIGNED AND EVERY NUMBER AND COLOUR BELOW IS A
         // PLACEHOLDER. What was signed is that the Shield Wall's slow leaves a
         // ring, the Slam's swing shocks the ground across the hex, the
         // Blessing glows on every tower it reaches, the Mortar bursts at the
         // radius it landed in, the Overwatch's single shot draws a tracer the
-        // length of the leg it crossed and the Fan of Knives throws three
-        // knives at three bodies. How wide a band, how many cracks, how long a
-        // knife is, how long any of it lasts and what colour it comes out are
-        // nobody's decision yet -- the same standing rule the bubble ring above
-        // and the marks below are held to. A number here is the plainest thing
-        // that draws the signed shape, and is not a proposal about how it
-        // should look.
+        // length of the leg it crossed, the Fan of Knives throws three knives
+        // at three bodies, the Cleric and Druid lines fire a bolt out of the
+        // tome or the staff tip, Consecration lays light on the ground,
+        // Overgrowth puts roots under everything it slows and Unravel strips
+        // the armour off the hex its bolt landed on. How wide a band, how many
+        // cracks, how long a knife or a bolt is, how many roots, how long any
+        // of it lasts and what colour it comes out are nobody's decision yet --
+        // the same standing rule the bubble ring above and the marks below are
+        // held to. A number here is the plainest thing that draws the signed
+        // shape, and is not a proposal about how it should look.
         //
         // THE ONES THAT STAND FOR A DISTANCE DO NOT SHRINK, and that is not a
         // number here but a flag on the effect: a ring, a shock and a burst all
@@ -354,6 +359,105 @@ namespace View
         /// </remarks>
         public const int KnifeFlightTicks = 6;
 
+        /// <summary>How long one of the magic lines' bolts is, in metres.</summary>
+        public const float MagicBoltLength = 0.45f;
+
+        /// <summary>
+        /// How thick that bolt is, in metres, in both of the directions that
+        /// are not its length.
+        /// </summary>
+        public const float MagicBoltThickness = 0.12f;
+
+        /// <summary>
+        /// How many ticks a bolt spends crossing from the anchor to the body.
+        /// </summary>
+        /// <remarks>
+        /// <b>The flight is decoration and not the shot</b>, the same as the
+        /// thrown knife's: every row that draws one is hitscan, so the damage
+        /// landed on the tick it was fired and the spark on the body is already
+        /// drawn. Five ticks is a sixth of a second at thirty ticks per second,
+        /// short enough that the Cleric's thirty-tick cooldown never has two
+        /// bolts of one tower in the air at once.
+        /// </remarks>
+        public const int MagicBoltFlightTicks = 5;
+
+        /// <summary>
+        /// How far the Consecration's light stands off the ground it lies on,
+        /// in metres.
+        /// </summary>
+        public const float ConsecrationLightThickness = 0.03f;
+
+        /// <summary>
+        /// How long that light lasts, in ticks.
+        /// </summary>
+        /// <remarks>
+        /// Nearly the whole of the thirty-tick period the aura pulses on, so
+        /// the ground under the font reads as claimed rather than as flashing
+        /// — and still short of it, so two pulses never lay two discs on top of
+        /// each other.
+        /// </remarks>
+        public const int ConsecrationLightTicks = 26;
+
+        /// <summary>How many roots the Overgrowth breaks the ground with under one body.</summary>
+        public const int OvergrowthRootCount = 7;
+
+        /// <summary>How wide one root is, as a share of the patch's radius.</summary>
+        public const float OvergrowthRootWidthFraction = 0.1f;
+
+        /// <summary>How far a root stands off the floor, in metres.</summary>
+        public const float OvergrowthRootThickness = 0.07f;
+
+        /// <summary>
+        /// How far a root's outer half swings off the line it left the middle
+        /// on, as a share of the patch's radius.
+        /// </summary>
+        public const float OvergrowthRootKink = 0.35f;
+
+        /// <summary>
+        /// How wide the patch of roots under one body is, in metres.
+        /// </summary>
+        /// <remarks>
+        /// <b>A fixed size and not the radius, because that aura reaches sixty
+        /// hexes.</b> Every other shape on this page is scaled by the reach the
+        /// bubble reported; a shape scaled by this one would be a hundred and
+        /// twenty hexes across and the board is nineteen. So the roots are
+        /// drawn on each body the aura is holding, at the size of the ground a
+        /// body stands on — the same reason the Blessing's halo is a fixed size
+        /// over each tower rather than a ring at the edge of the pulse.
+        /// </remarks>
+        public const float OvergrowthRootPatchDiameter = 1.1f;
+
+        /// <summary>How long a patch of roots lasts, in ticks.</summary>
+        /// <remarks>
+        /// Just under the thirty-tick period the aura pulses on, for the reason
+        /// <see cref="ConsecrationLightTicks"/> is: what it says is that this
+        /// body is being held, which is true for as long as it is inside.
+        /// </remarks>
+        public const int OvergrowthRootTicks = 26;
+
+        /// <summary>
+        /// How many bars a whole ring of the Unravel's armour strip would take.
+        /// Every other one is drawn, so the band comes out in half this many
+        /// pieces with gaps as wide as the pieces.
+        /// </summary>
+        public const int ArmourStripSides = 24;
+
+        /// <summary>How wide the strip's band is, as a share of its own radius.</summary>
+        public const float ArmourStripBandFraction = 0.2f;
+
+        /// <summary>How far the strip stands off the ground it lies on, in metres.</summary>
+        public const float ArmourStripThickness = 0.07f;
+
+        /// <summary>How long the strip lasts, in ticks.</summary>
+        /// <remarks>
+        /// Longer than a spark and far shorter than the hundred and fifty ticks
+        /// the strip itself lasts on the body. What a unit is wearing is drawn
+        /// from the snapshot for the whole of its duration — see the marks
+        /// below — so this is the moment the armour came off and not the five
+        /// seconds it stays off.
+        /// </remarks>
+        public const int ArmourStripTicks = 10;
+
         /// <summary>The Shield Wall's slow ring. Cold, because it is a slow.</summary>
         public static Color SlowRingColor => new Color(0.45f, 0.72f, 1f, 1f);
 
@@ -371,6 +475,24 @@ namespace View
 
         /// <summary>One of the Fan of Knives' knives.</summary>
         public static Color KnifeColor => new Color(0.78f, 0.82f, 0.88f, 1f);
+
+        /// <summary>A bolt off the Cleric's tome or the Druid's staff.</summary>
+        /// <remarks>
+        /// One colour for both lines, and that is part of the placeholder: a
+        /// holy bolt and a nature bolt reading differently is a decision nobody
+        /// has taken, and inventing two colours to have had the distinction
+        /// would be taking it.
+        /// </remarks>
+        public static Color MagicBoltColor => new Color(0.85f, 0.92f, 1f, 1f);
+
+        /// <summary>The light the Consecration lays on the ground.</summary>
+        public static Color ConsecrationLightColor => new Color(1f, 0.94f, 0.68f, 1f);
+
+        /// <summary>The roots the Overgrowth breaks the ground with.</summary>
+        public static Color OvergrowthRootColor => new Color(0.42f, 0.52f, 0.26f, 1f);
+
+        /// <summary>The Unravel's armour strip.</summary>
+        public static Color ArmourStripColor => new Color(0.78f, 0.55f, 1f, 1f);
 
         // ---------------------------------------------------------------
         // What a unit is carrying — the marks, not the decoration

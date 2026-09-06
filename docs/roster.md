@@ -254,8 +254,8 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 ### What a capstone is drawn as
 
 Every bubble in the game drew one shared disc on the ground and every hitscan shot one shared tracer until
-#263 and #264. Six shapes are signed now, and **the shape is all that is signed** — every colour, size and
-duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
+#263, #264 and #265. Ten shapes are signed now, and **the shape is all that is signed** — every colour, size
+and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
 disc and the marks on a creep already are.
 
 | Row | What it draws | Where it is drawn |
@@ -263,22 +263,44 @@ disc and the marks on a creep already are.
 | 16 · Shield Wall | A ring lying on the ground at the edge of the slow, open in the middle so the bodies caught inside stay visible | Under the tower that pulsed |
 | 19 · Slam | Cracks running out from the middle to the edge of the swing | Under the man who swung |
 | 22 · Blessing | A ring over the head of every tower the pulse reached, the emitter included | On what the bubble found, not on the bubble |
+| 25 · Consecration | A disc of light filling the ground out to the edge of the aura | Centred on the tower, not on the font — the aura is |
+| 30 · Overgrowth | A patch of roots breaking the ground under every body the aura is holding | On what the bubble found, not on the bubble |
 | 31 · Overwatch | One heavy bar the length of the leg the shot crossed | From the crossbow to the body it was aimed at |
 | 34 · Fan of Knives | One knife per shot, crossing to the body it found — three knives where the throw found three bodies | From the hand to each body |
+| 23, 24, 25, 28, 29, 30 · the Cleric and Druid lines | A short bolt crossing to the body the shot found | From the tome, the mace head or the staff tip |
+| 27 · Unravel | A band broken into plates, lying on the ground out to the edge of the strip | On the hex the bolt arrived at |
 | 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
 
-**Five of the six are bound per row and the sixth cannot be.** A signature is reached through the entity the
+**Eight of the ten are bound per row and two cannot be.** A signature is reached through the entity the
 event names: an aura pulses from its own emitter, a sweep is centred on the tower that swung, and a shot names
-the tower that fired it, so those five name a row. A blast centred on its target names the *body the shot
+the tower that fired it, so those eight name a row. A blast centred on its target names the *body the shot
 arrived at* — the shooter is not in the event and deliberately never will be, because an event carries an
-entity id and nothing to hold on to. So the burst is what any target-centred blast draws, and the Mage's and
-the Sorcerer's splash wear it too. That is the same restraint the disc kept between a blast and a pulse, moved
-one step along.
+entity id and nothing to hold on to. The Mortar's burst and the Unravel's strip are both that case, and what
+tells them apart is the one thing on the event that is not the victim: the **payload**, `damage` against
+`armour`. That is a shape chosen by the payload rather than by the row, and its weakness is stated rather than
+hidden — a second row authoring a target-centred armour blast would wear the strip too, exactly as the Mage's
+and the Sorcerer's damage splashes wear the burst. See the open question.
 
-**Neither pierce capstone is a bubble, so neither had that problem.** The Overwatch is a long single shot and
-the Fan of Knives is a `targets` of three; `content/units.txt` gives both of them `none` in the radius column.
-Three shots at three bodies is three `TowerFired` events on one tick, each naming the tower and one body, so
-three knives is what the event stream produces rather than something the view has to know how to fan out.
+**A bubble's shape and a shot's shape are two fields on `UnitArt`, not one.** They were one enum over both
+moments while no row wanted a shape at each; Consecration and Overgrowth want exactly that — an aura on the
+ground and a bolt out of the tome, on one row — so the field split into a `BubbleSignature` and a
+`ShotSignature` rather than growing a third place to switch on. **A bolt is the one signed shape a whole line
+wears rather than one capstone**: six rows fire it, which is what makes the shot table read differently from
+the bubble table.
+
+**Neither pierce capstone is a bubble, so neither had the blast's problem.** The Overwatch is a long single
+shot and the Fan of Knives is a `targets` of three; `content/units.txt` gives both of them `none` in the radius
+column. Three shots at three bodies is three `TowerFired` events on one tick, each naming the tower and one
+body, so three knives is what the event stream produces rather than something the view has to know how to fan
+out. **The Mage line draws no shot shape at all**, and that is its delivery column: those three rows are
+projectile, so the thing crossing to the body is the shell in the snapshot and a bolt drawn beside it would be
+a second thing in the air saying what the shell already says.
+
+**Two shapes are drawn on what a bubble found rather than on the bubble, and both were forced.** The
+Blessing's read is which towers got the haste. The Overgrowth's aura reaches **sixty hexes** — the whole board,
+every board — so a shape scaled to its radius would be a hundred and twenty hexes across on a board nineteen
+wide; roots under each body it is holding is the only reading of "roots on every hex it slows" that fits in the
+picture.
 
 **None of it is a `ParticleSystem` and none of it can be.** The client has none anywhere and two play-mode
 tests forbid one, for the reason the glow reservation above gives: the camera orbits and nothing may turn to
@@ -290,10 +312,10 @@ and a spark down to nothing, because their size is how loud they are; a ring, a 
 the bubble reached and the Overwatch's shot says how far the shot went, so one that shrank would report a
 reach that was never had. That is #253's finding and every shape added since is held to it by a test.
 
-**One thing moves rather than staying where it was drawn, and it is the knife.** It carries the two points it
-was drawn between and crosses between them on the tick, over six of them — so a body that dies mid-throw
-leaves a knife finishing the throw it was drawn for. The flight is a picture of a throw and not the shot: the
-row is hitscan, and the damage landed on the tick it was fired.
+**Two things move rather than staying where they were drawn: the knife and the bolt.** Each carries the two
+points it was drawn between and crosses between them on the tick — six of them for a knife, five for a bolt —
+so a body that dies mid-flight leaves the throw finishing as it was drawn. The flight is a picture of a throw
+and not the shot: every row that draws one is hitscan, and the damage landed on the tick it was fired.
 
 ## The Knight line — impact, melee
 
@@ -409,7 +431,8 @@ row is hitscan, and the damage landed on the tick it was fired.
 ### 23 · Cleric · tier 1 · status live
 
 - **Does** — three hexes, holy bolt, one target.
-- **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`.
+- **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of
+  the tome, crossing to the body it found.
 - **Numbers** — range 3200, cooldown 30, damage 130–190, windup `_`, backswing `_`, hitscan, magic, cost ~32.
 - **Needs** — nothing.
 - **Open** — none.
@@ -417,7 +440,8 @@ row is hitscan, and the damage landed on the tick it was fired.
 ### 24 · Bishop · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`.
+- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`. The bolt is the Cleric's and it leaves the head of
+  the mace, because the mace took the tome's hand — #259's question, not this rung's.
 - **Numbers** — range 3200 → **4200**. Cost 32 — **range is unpriced**, so the rung costs what the Cleric
   costs. Same shape as `archer → ranger`, and the ladder prints a flat-price note against it for the same
   reason.
@@ -429,7 +453,11 @@ row is hitscan, and the damage landed on the tick it was fired.
 - **Does** — every undead within three hexes loses a third of its armour while it is there.
 - **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`, and the `Cleric_Font` on the tile beside him, light
   on the ground — **drawn at 1**, which is 0.81 m tall and 1.44 across, a basin at knee height. The Cleric has
-  **no second model anywhere in the collection**, so this line is colour and props at every rung.
+  **no second model anywhere in the collection**, so this line is colour and props at every rung. Every pulse
+  lays a disc of light on the ground out to the edge of the aura, so what the font has claimed is the ground
+  itself rather than a boundary round it; the bolt is the line's, off the mace head. **The light is centred on
+  the tower and not on the font**, which stands one tile away: the aura's own centre is the tower, and a disc
+  drawn round the prop would report a reach the simulation never had.
 - **Numbers** — aura: origin `self`, radius 3000, affects `enemy`, payload `armour`, magnitude −30, period 30,
   duration 30.
 - **Needs** — nothing. The beside slot is built.
@@ -501,7 +529,9 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 4 · Mage · tier 1 · status live
 
 - **Does** — magic damage with splash of one additional hex.
-- **Looks** — the mage, book in hand.
+- **Looks** — the mage, book in hand. The flash leaves the open spellbook and the shell is what crosses to the
+  body; the splash it lands with draws the Mortar's burst, which is the open question below and not this
+  rung's choice.
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
 - **Needs** — nothing. The splash is on the row as of 5 September 2026: origin `target`, radius 1000,
@@ -517,7 +547,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 26 · Sorcerer · tier 2 · status live
 
 - **Does** — casts faster. One stat.
-- **Looks** — `Mage`, `mage_texture_alt_A`, holding `staff` rather than the open book.
+- **Looks** — `Mage`, `mage_texture_alt_A`, holding `staff` rather than the open book. The flash leaves the
+  staff tip; the splash wears the Mortar's burst, as the Mage's does.
 - **Numbers** — cooldown 54 → **40**. Cost **124**, and the splash carries.
 - **Needs** — nothing.
 - **Open** — the price, as the Mage's is. 124 is the Mage's 92 scaled by the cooldown it changed, so this rung
@@ -527,7 +558,9 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 - **Does** — his bolt strips most of the armour off what it hits, for five seconds.
 - **Looks** — the **`Lorekeeper`** model, `Lorekeeper_Tome` open. The Lorekeeper is the one character in the
-  roster with **no alternate texture**, which costs nothing: this rung is a model swap.
+  roster with **no alternate texture**, which costs nothing: this rung is a model swap. Where the bolt arrives,
+  a band broken into plates lies on the ground out to the edge of the strip — the one shape on this page picked
+  by a bubble's payload rather than by its row, because the blast names the body and never him.
 - **Numbers** — bubble on target: radius 1000, payload **armour**, magnitude −60, duration 150. Cost **124**,
   the Sorcerer's, since it changes neither the roll nor the bodies.
 - **Needs** — nothing.
@@ -547,7 +580,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 28 · Druid · tier 1 · status live
 
 - **Does** — three and a half hexes, nature bolt, one target.
-- **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`.
+- **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of the
+  staff tip, the same shape the Cleric line fires.
 - **Numbers** — range 3600, cooldown 36, damage 150–210, windup `_`, backswing `_`, hitscan, magic, cost ~30.
 - **Needs** — nothing.
 - **Open** — none.
@@ -555,7 +589,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 29 · Elder · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Druid`, `druid_texture_alt_A`.
+- **Looks** — `Druid`, `druid_texture_alt_A`. The staff and the bolt are the Druid's.
 - **Numbers** — range 3600 → **4600**. Cost 30 — range is unpriced, same shape as `archer → ranger`.
 - **Needs** — nothing.
 - **Open** — none.
@@ -569,7 +603,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   936 triangles and the only silhouette that reads as an ancient tree rather than a dead stick from every
   angle. **Drawn at 0.55**: at its own size it spreads 3.74 m, which is nearly two tiles and reaches back
   through the Druid, and 0.55 brings that to the 2.06 m of the tile it stands on and leaves it 2.89 m tall,
-  half again the Druid's own height. Roots on every hex once they are drawn.
+  half again the Druid's own height. **The roots are drawn under every body the aura is holding** rather than
+  at its radius, because that radius is sixty hexes and the board is nineteen — see the section above.
 - **Numbers** — aura: origin `self`, radius 60000, affects `enemy`, payload `speed`, magnitude −20, period 30,
   duration 30.
 - **Needs** — nothing. The beside slot is built and the tree is picked.
@@ -656,8 +691,9 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   every rung. The shell bursts in shards on the body it arrived at, out to the radius it landed in.
 - **Numbers** — bubble on target: radius 1500, payload `damage`.
 - **Needs** — nothing. The beside slot is built.
-- **Open** — **the burst is the one signature no row selects**, so the Mage's and the Sorcerer's splash wear
-  it too. See the open question below.
+- **Open** — **the burst is one of two shapes no row selects**, so the Mage's and the Sorcerer's splash wear
+  it too. The Unravel's strip is the other, and it is told from this one by its payload. See the open question
+  below.
 
 > **Two blasts on the board, and they are not the same tool.** The Mage's is magic at radius 1000 and lands at
 > tier 1; this one is impact at radius 1500 and costs a token. The impact one is the answer to arcane bodies
@@ -1231,17 +1267,41 @@ open.
    the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
    down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —
    the one look on this page the socket as built cannot draw whole.
-8. **The Mortar's burst reaches three rows nobody asked about it for.** A signature is chosen by the row the
-   event names, and a blast centred on its target names the body the shot arrived at rather than the shooter.
-   So the burst is what *any* target-centred blast draws, and the Mage's, the Sorcerer's and the Unravel's
-   splash wear the Mortar's capstone shape. **The alternative was to leave the Mortar without one**, because
-   the only other way to name the shooter is to put it on the event, and an event that carried a reference to
-   hold on to is the thing [ADR-0008](adr/0008-match-events-are-decorative.md) exists to refuse. Either the
-   three splashes are content with the shape, or those two cases need telling apart by something other than
-   the row — the payload and the delivery are the same on all four.
+8. **The Mortar's burst reaches two rows nobody asked about it for, down from three.** A signature is chosen
+   by the row the event names, and a blast centred on its target names the body the shot arrived at rather
+   than the shooter — so the burst is what *any* target-centred blast draws. **The Unravel came out of it on
+   6 September 2026** and the Mage and the Sorcerer did not: the payload is the one thing on the event that is
+   not the victim, and the Unravel's blast carries `armour` where the other three carry `damage`. That fixes
+   the Unravel by the shape of its bubble rather than by its row, so any second row authoring a target-centred
+   armour blast would wear the strip.
+   **The Mage's and the Sorcerer's splash cannot be reached at all, and three routes were tried.** Putting the
+   shooter on the event is what [ADR-0008](adr/0008-match-events-are-decorative.md) exists to refuse.
+   Reading it off an earlier `TowerFired` is building state out of an event stream that seeks discard.
+   And the shell in the snapshot *does* carry the firing row's type — `ProjectileSnapshot.TypeId` — with the
+   view holding the previous tick's shells for its own interpolation, which was the closest thing to a way
+   through: it was refused because it makes a decoration an inference over snapshot history ("the shell that
+   vanished on this body this tick is the one that caused this blast"), because two shells arriving on one
+   body on one tick make that inference ambiguous, and because it reaches nothing at all for a hitscan blast.
+   So [#265](https://github.com/ssalter21/tower-defense-game/issues/265)'s **"the Mage's splash ring at tier
+   1" is the one shape on that ticket that was not built.** Either the two splashes are content with the
+   burst, or telling them apart needs something that is neither the row nor the payload, and the payload, the
+   delivery and the radius column shape are what those three rows have in common.
 9. **What ships for the Blessing is a halo and the word signed was "glow".** A ring hangs over the head of
    every tower the pulse reached. It is real geometry, which the glow reservation above requires — nothing
    here may billboard — but a ring of light above a head and a body lit from within are two different
    pictures, and only the second is what "glow" plainly means. Whether the halo is the placeholder for it or
    the answer to it is an eye check on
    [`four-lines-tick-0572.png`](frames/four-lines-tick-0572.png).
+10. **The Consecration's light is a filled disc, which is the same solid the placeholder disc is.** What was
+    signed is "light on the ground from the font", and light on the ground is what ships: a disc lying flat
+    out to the three hexes the aura carries, in its own colour and on its own lifetime. It is nevertheless the
+    same cylinder the unsigned bubble placeholder uses, at a size that covers the ground its own tower stands
+    on — so whether a lit floor reads as *an aura being projected* or merely as a bigger version of the
+    placeholder is an eye check on
+    [`magic-lines-tick-0331.png`](frames/magic-lines-tick-0331.png). The same reading question the halo above
+    has, one row along.
+11. **"Roots on every hex it slows" ships as roots under every body it slows.** The two are not the same
+    sentence and the difference is forced: that aura reaches sixty hexes on a board nineteen across, so roots
+    on every hex it slows is roots on every hex, permanently, which is a floor texture rather than an effect.
+    Roots under each body it is holding says the same thing about what the tower is doing and moves with the
+    thing worth watching. Whether that reads as the board being held is an eye check on the same frame.

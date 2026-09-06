@@ -259,7 +259,11 @@ namespace View.Editor
                         + view.Decorations.GlowsDrawn + " glow / "
                         + view.Decorations.BurstsDrawn + " burst / "
                         + view.Decorations.LongShotsDrawn + " long shot / "
-                        + view.Decorations.KnivesDrawn + " knife -> " + path);
+                        + view.Decorations.KnivesDrawn + " knife / "
+                        + view.Decorations.BoltsDrawn + " bolt / "
+                        + view.Decorations.LightsDrawn + " light / "
+                        + view.Decorations.RootsDrawn + " roots / "
+                        + view.Decorations.StripsDrawn + " strip -> " + path);
 
                     next++;
                 }

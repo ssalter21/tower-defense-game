@@ -79,7 +79,11 @@ namespace View
 
         [SerializeField]
         [Tooltip("What this row's bubble is drawn as. None draws the shared disc every bubble had.")]
-        private EffectSignature signature;
+        private BubbleSignature bubbleSignature;
+
+        [SerializeField]
+        [Tooltip("What this row's shot is drawn as. None draws the thin tracer every shot had.")]
+        private ShotSignature shotSignature;
 
         [SerializeField]
         [Tooltip("This row's own walk cycle. Null for a creep drawn with MatchArt's shared pair.")]
@@ -126,7 +130,8 @@ namespace View
             BesideProp beside = default,
             AnimationClip walk = null,
             AnimationClip death = null,
-            EffectSignature signature = EffectSignature.None) =>
+            BubbleSignature bubbleSignature = BubbleSignature.None,
+            ShotSignature shotSignature = ShotSignature.None) =>
             new UnitArt
             {
                 unitId = unitId,
@@ -142,7 +147,8 @@ namespace View
                 rightHandTilt = rightHandTilt,
                 leftHandTilt = leftHandTilt,
                 effectAnchor = effectAnchor,
-                signature = signature,
+                bubbleSignature = bubbleSignature,
+                shotSignature = shotSignature,
                 walkClip = walk,
                 deathClip = death,
             };
@@ -245,17 +251,18 @@ namespace View
         public EffectAnchor EffectAnchor => effectAnchor;
 
         /// <summary>
-        /// What this row's own effects are drawn as, or
-        /// <see cref="EffectSignature.None"/> for the shapes every row shares.
+        /// What this row's bubble and this row's shot are drawn as, or a pair
+        /// of <c>None</c>s for the shapes every row shares.
         /// </summary>
         /// <remarks>
         /// Per unit for the reason the anchor is: it is what makes a tier three
         /// read as itself rather than as the shape every bubble and every shot
         /// in the game shares, so it belongs beside the atlas and the props
-        /// that do the same job. A row whose signature is a shape for a moment
-        /// it never has is unaffected either way — nothing ever asks.
+        /// that do the same job. Two halves rather than one field because the
+        /// Cleric's and the Druid's capstones want a shape at both moments —
+        /// an aura on the ground and a bolt out of the tome.
         /// </remarks>
-        public EffectSignature Signature => signature;
+        public RowSignature Signature => new RowSignature(bubbleSignature, shotSignature);
 
         /// <summary>
         /// The walk cycle this row is drawn with, or null for the shared one on

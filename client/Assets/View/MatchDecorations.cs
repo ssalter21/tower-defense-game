@@ -54,8 +54,9 @@ namespace View
     /// Every bubble drew one shared disc and every shot one shared tracer until
     /// the capstones needed telling apart; now the entity an event names is
     /// turned into the row that emitted it and that row's
-    /// <see cref="EffectSignature"/> picks the shape. What a row with no
-    /// signature draws is still the disc and the tracer, unchanged.
+    /// <see cref="BubbleSignature"/> or <see cref="ShotSignature"/> picks the
+    /// shape. What a row with neither draws is still the disc and the tracer,
+    /// unchanged.
     /// </para>
     /// </remarks>
     public sealed class MatchDecorations : IMatchEvents
@@ -68,9 +69,11 @@ namespace View
 
         private readonly Func<int, Vector3?> _entityGround;
 
-        private readonly Func<int, EffectSignature?> _towerSignature;
+        private readonly Func<int, RowSignature?> _towerSignature;
 
         private readonly Func<int, float, IReadOnlyList<Vector3>> _towersWithin;
+
+        private readonly Func<int, float, IReadOnlyList<Vector3>> _creepsWithin;
 
         private readonly List<Effect> _active = new List<Effect>();
 
@@ -103,12 +106,12 @@ namespace View
         /// in.
         /// </param>
         /// <param name="towerSignature">
-        /// What the tower with this id draws its own effects as, or null when
-        /// the id is not a tower the view is holding. <b>The null is
-        /// load-bearing and is not the same answer as
-        /// <see cref="EffectSignature.None"/>:</b> a tower that draws the plain
-        /// disc and a creep that a shell arrived at are different cases and
-        /// <see cref="BlastLanded"/> draws them differently.
+        /// What the tower with this id draws its own bubble and its own shot
+        /// as, or null when the id is not a tower the view is holding. <b>The
+        /// null is load-bearing and is not the same answer as a pair of
+        /// <c>None</c>s:</b> a tower that draws the plain disc and a creep that
+        /// a shell arrived at are different cases and <see cref="BlastLanded"/>
+        /// draws them differently.
         /// </param>
         /// <param name="towersWithin">
         /// Where every tower standing within so many metres of an entity is —
@@ -116,13 +119,18 @@ namespace View
         /// because nothing here would do anything with an id but ask for the
         /// position.
         /// </param>
+        /// <param name="creepsWithin">
+        /// Where every creep within so many metres of an entity is — what the
+        /// Overgrowth's roots are drawn under, on the same terms.
+        /// </param>
         public MatchDecorations(
             Transform parent,
             Func<int, Vector3?> creepPosition,
             Func<int, Vector3?> towerMuzzle,
             Func<int, Vector3?> entityGround,
-            Func<int, EffectSignature?> towerSignature,
-            Func<int, float, IReadOnlyList<Vector3>> towersWithin)
+            Func<int, RowSignature?> towerSignature,
+            Func<int, float, IReadOnlyList<Vector3>> towersWithin,
+            Func<int, float, IReadOnlyList<Vector3>> creepsWithin)
         {
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _creepPosition = creepPosition ?? throw new ArgumentNullException(nameof(creepPosition));
@@ -130,6 +138,7 @@ namespace View
             _entityGround = entityGround ?? throw new ArgumentNullException(nameof(entityGround));
             _towerSignature = towerSignature ?? throw new ArgumentNullException(nameof(towerSignature));
             _towersWithin = towersWithin ?? throw new ArgumentNullException(nameof(towersWithin));
+            _creepsWithin = creepsWithin ?? throw new ArgumentNullException(nameof(creepsWithin));
 
             _materials[Piece.Tracer] = ViewMaterials.Create("Tracer", MatchTuning.TracerColor);
             _materials[Piece.MuzzleFlash] = ViewMaterials.Create("MuzzleFlash", MatchTuning.MuzzleFlashColor);
@@ -143,6 +152,13 @@ namespace View
                 ViewMaterials.Create("MortarBurst", MatchTuning.MortarBurstColor);
             _materials[Piece.LongShot] = ViewMaterials.Create("LongShot", MatchTuning.LongShotColor);
             _materials[Piece.ThrownKnife] = ViewMaterials.Create("ThrownKnife", MatchTuning.KnifeColor);
+            _materials[Piece.MagicBolt] = ViewMaterials.Create("MagicBolt", MatchTuning.MagicBoltColor);
+            _materials[Piece.ConsecrationLight] =
+                ViewMaterials.Create("ConsecrationLight", MatchTuning.ConsecrationLightColor);
+            _materials[Piece.OvergrowthRoots] =
+                ViewMaterials.Create("OvergrowthRoots", MatchTuning.OvergrowthRootColor);
+            _materials[Piece.ArmourStrip] =
+                ViewMaterials.Create("ArmourStrip", MatchTuning.ArmourStripColor);
         }
 
         /// <summary>
@@ -163,6 +179,10 @@ namespace View
             MortarBurst,
             LongShot,
             ThrownKnife,
+            MagicBolt,
+            ConsecrationLight,
+            OvergrowthRoots,
+            ArmourStrip,
         }
 
         /// <summary>How many effects are on screen. For tests.</summary>
@@ -234,6 +254,26 @@ namespace View
         public int KnivesDrawn => Drawn(Piece.ThrownKnife);
 
         /// <summary>
+        /// How many bolts have been drawn since the last clear. For tests, and
+        /// counted apart from <see cref="TracersDrawn"/> — a magic row falling
+        /// back to the plain tracer is exactly the failure this reports.
+        /// </summary>
+        public int BoltsDrawn => Drawn(Piece.MagicBolt);
+
+        /// <summary>How many discs of the Consecration's light have been drawn since the last clear.</summary>
+        public int LightsDrawn => Drawn(Piece.ConsecrationLight);
+
+        /// <summary>
+        /// How many patches of the Overgrowth's roots have been drawn since the
+        /// last clear. For tests. One per body the aura is holding, so a single
+        /// pulse over four bodies counts four.
+        /// </summary>
+        public int RootsDrawn => Drawn(Piece.OvergrowthRoots);
+
+        /// <summary>How many of the Unravel's armour strips have been drawn since the last clear.</summary>
+        public int StripsDrawn => Drawn(Piece.ArmourStrip);
+
+        /// <summary>
         /// A tower released a shot: a flash at the point on its art the shot
         /// leaves from, and — where the shot has a body to reach — the emitting
         /// row's own shape crossing to it.
@@ -244,7 +284,7 @@ namespace View
         /// A muzzle flash says a row fired and where from, which is the same
         /// sentence whatever the row is; what crosses to the body is where a
         /// line can read as itself, so it is picked off the shooter's
-        /// <see cref="EffectSignature"/>. A row with none draws the thin tracer
+        /// <see cref="ShotSignature"/>. A row with none draws the thin tracer
         /// every hitscan row drew before any row had a signature.
         /// </para>
         /// <para>
@@ -289,7 +329,7 @@ namespace View
             }
 
             Crossing(
-                _towerSignature(towerId) ?? EffectSignature.None,
+                _towerSignature(towerId)?.Shot ?? ShotSignature.None,
                 muzzle.Value,
                 target.Value + (Vector3.up * MatchTuning.HitSparkHeight));
         }
@@ -372,34 +412,43 @@ namespace View
         /// all: a mortar's shell carries its type and its target, there are
         /// several mortars, and reading the firing tower off an earlier
         /// <c>TowerFired</c> would be building state out of an event stream
-        /// that seeks discard. So a blast that arrived on a body is drawn as a
-        /// burst at the radius it reached, which is the shape the Mortar's line
-        /// signs — and which every target-centred blast in the game therefore
-        /// wears, the Mage's and the Sorcerer's splash included.
+        /// that seeks discard. So a blast that arrived on a body is drawn off
+        /// the shape of the event rather than off a row — a burst at the radius
+        /// it reached, which is the shape the Mortar's line signs and which the
+        /// Mage's and the Sorcerer's splash therefore wear too.
         /// </para>
         /// <para>
-        /// <b><paramref name="payload"/> is read by nothing here, on purpose.</b>
-        /// A bubble carrying damage gets the same look as one carrying a slow:
-        /// what a payload should look like is a decision nobody has taken, and
-        /// inventing four colours to have used the parameter would be taking
-        /// it. What the payload then does to a unit is that unit's own picture
-        /// and not this one's — see <see cref="EffectMarks"/>.
+        /// <b>What tells those unreachable cases apart is
+        /// <paramref name="payload"/>, which is the only thing on the event
+        /// that is not the victim.</b> An armour blast on a body is the
+        /// Unravel's bolt stripping the hex and a damage blast is the Mortar's
+        /// shell arriving, so the two draw different shapes without anything
+        /// having to know which tower fired. It is a shape chosen by the
+        /// payload rather than by the row and that is the whole of its
+        /// weakness: a second row authoring a target-centred armour blast would
+        /// wear the strip too, exactly as the Mage's and the Sorcerer's splash
+        /// wear the burst. <b>The payload still says nothing about
+        /// colour.</b> What a payload should look like in general is a decision
+        /// nobody has taken; this is two signed shapes told apart by the one
+        /// handle that exists, not four colours invented to have used the
+        /// parameter. What the payload then does to a unit is that unit's own
+        /// picture and not this one's — see <see cref="EffectMarks"/>.
         /// </para>
         /// </remarks>
         public void BlastLanded(int centreId, int radiusMilliHex, BubblePayload payload)
         {
             EventsHeard++;
 
-            EffectSignature? emitter = _towerSignature(centreId);
+            RowSignature? emitter = _towerSignature(centreId);
 
             if (emitter.HasValue)
             {
-                Signature(emitter.Value, centreId, radiusMilliHex);
+                Signature(emitter.Value.Bubble, centreId, radiusMilliHex);
 
                 return;
             }
 
-            Burst(centreId, radiusMilliHex);
+            Arrived(centreId, radiusMilliHex, payload);
         }
 
         /// <summary>
@@ -417,7 +466,7 @@ namespace View
             EventsHeard++;
 
             Signature(
-                _towerSignature(emitterId) ?? EffectSignature.None, emitterId, radiusMilliHex);
+                _towerSignature(emitterId)?.Bubble ?? BubbleSignature.None, emitterId, radiusMilliHex);
         }
 
         /// <summary>
@@ -521,7 +570,7 @@ namespace View
         /// What one row's shot is drawn as on its way to the body: the emitting
         /// row's own shape, or the thin tracer every row shares.
         /// </summary>
-        private void Crossing(EffectSignature signature, Vector3 from, Vector3 to)
+        private void Crossing(ShotSignature signature, Vector3 from, Vector3 to)
         {
             switch (signature)
             {
@@ -529,7 +578,7 @@ namespace View
                 // the shot crossed. It stands for a distance, so it holds that
                 // length for its whole life -- the rule every shape reporting a
                 // reach is held to.
-                case EffectSignature.LongShot:
+                case ShotSignature.LongShot:
                     Bar(
                         Piece.LongShot,
                         from,
@@ -542,8 +591,29 @@ namespace View
                 // The Fan of Knives': one knife leaving the hand and crossing
                 // to the body. That row fires three shots at three bodies in
                 // one throw, so one throw arrives here three times.
-                case EffectSignature.ThrownKnife:
-                    Knife(from, to);
+                case ShotSignature.ThrownKnife:
+                    Crosses(
+                        Piece.ThrownKnife,
+                        from,
+                        to,
+                        Vector3.one * MatchTuning.KnifeLength,
+                        MatchTuning.KnifeFlightTicks);
+                    break;
+
+                // The Cleric and Druid lines': a short shaft leaving the tome
+                // or the staff tip. Six rows draw it, which is what makes it
+                // the one shape here worn by whole lines rather than by one
+                // capstone.
+                case ShotSignature.MagicBolt:
+                    Crosses(
+                        Piece.MagicBolt,
+                        from,
+                        to,
+                        new Vector3(
+                            MatchTuning.MagicBoltThickness,
+                            MatchTuning.MagicBoltThickness,
+                            MatchTuning.MagicBoltLength),
+                        MatchTuning.MagicBoltFlightTicks);
                     break;
 
                 default:
@@ -581,32 +651,33 @@ namespace View
         }
 
         /// <summary>
-        /// One knife, leaving <paramref name="from"/> pointed at
-        /// <paramref name="to"/> and crossing to it as it ages.
+        /// One object leaving <paramref name="from"/> pointed at
+        /// <paramref name="to"/> and crossing to it as it ages — a thrown knife
+        /// or a bolt.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>It is the same size wherever it is thrown</b>, unlike everything
-        /// a bubble leaves: a knife is an object rather than a reach being
-        /// reported, so a longer throw draws the same knife going further and
-        /// not a bigger one.
+        /// <b>It is the same size wherever it goes</b>, unlike everything a
+        /// bubble leaves: these are objects rather than a reach being reported,
+        /// so a longer flight draws the same knife or the same bolt covering
+        /// more ground and not a bigger one.
         /// </para>
         /// <para>
-        /// <b>Both ends are read once, here.</b> The knife carries the two
-        /// points it was drawn between and crosses between them on the tick,
-        /// so it never asks the snapshot anything again — a body that dies
-        /// mid-throw leaves a knife finishing the throw it was drawn for, which
-        /// is decoration behaving as decoration rather than a second opinion
-        /// about where a creep is.
+        /// <b>Both ends are read once, here.</b> The object carries the two
+        /// points it was drawn between and crosses between them on the tick, so
+        /// it never asks the snapshot anything again — a body that dies
+        /// mid-flight leaves the throw finishing as it was drawn, which is
+        /// decoration behaving as decoration rather than a second opinion about
+        /// where a creep is.
         /// </para>
         /// <para>
-        /// <b>And the flight is not the shot.</b> The row is hitscan: the
-        /// damage landed on the tick it was fired and the spark on the body is
-        /// already drawn. What crosses here is a picture of a throw, which is
-        /// why it may take ticks the shot did not.
+        /// <b>And the flight is not the shot.</b> Every row that draws one is
+        /// hitscan: the damage landed on the tick it was fired and the spark on
+        /// the body is already drawn. What crosses here is a picture of the
+        /// shot, which is why it may take ticks the shot did not.
         /// </para>
         /// </remarks>
-        private void Knife(Vector3 from, Vector3 to)
+        private void Crosses(Piece piece, Vector3 from, Vector3 to, Vector3 scale, int lifetimeTicks)
         {
             Vector3 along = to - from;
 
@@ -615,16 +686,10 @@ namespace View
                 return;
             }
 
-            Transform knife = Take(Piece.ThrownKnife);
-            knife.SetPositionAndRotation(from, Quaternion.LookRotation(along.normalized, Vector3.up));
+            Transform thrown = Take(piece);
+            thrown.SetPositionAndRotation(from, Quaternion.LookRotation(along.normalized, Vector3.up));
 
-            Flies(
-                Piece.ThrownKnife,
-                knife,
-                Vector3.one * MatchTuning.KnifeLength,
-                MatchTuning.KnifeFlightTicks,
-                from,
-                to);
+            Flies(piece, thrown, scale, lifetimeTicks, from, to);
         }
 
         private void Sphere(Piece piece, Vector3 at, float radius, int lifetimeTicks)
@@ -636,49 +701,101 @@ namespace View
         }
 
         /// <summary>
-        /// The shape one row's bubble leaves, at the size the bubble reached. A
-        /// row carrying a shot's shape rather than a bubble's draws the disc
-        /// here, which is what a row carrying nothing draws.
+        /// The shape one row's bubble leaves, at the size the bubble reached.
         /// </summary>
-        private void Signature(EffectSignature signature, int centreId, int radiusMilliHex)
+        private void Signature(BubbleSignature signature, int centreId, int radiusMilliHex)
         {
             switch (signature)
             {
                 // The Shield Wall's: an open ring at the edge of the slow, so
                 // the bodies caught inside it stay visible through it.
-                case EffectSignature.SlowRing:
+                case BubbleSignature.SlowRing:
                     Flat(Piece.SlowRing, centreId, radiusMilliHex, MatchTuning.SlowRingTicks);
                     break;
 
                 // The Slam's: cracks running out from under the man who swung
                 // to the edge of what the swing reached.
-                case EffectSignature.GroundShock:
+                case BubbleSignature.GroundShock:
                     Flat(Piece.GroundShock, centreId, radiusMilliHex, MatchTuning.GroundShockTicks);
                     break;
 
-                case EffectSignature.TowerGlow:
+                case BubbleSignature.TowerGlow:
                     TowerGlow(centreId, radiusMilliHex);
                     break;
 
+                // The Consecration's: light filling the ground the font has
+                // claimed, rather than a band at the edge of it, because what
+                // that aura does happens to a body for standing anywhere
+                // inside.
+                case BubbleSignature.ConsecrationLight:
+                    Disc(
+                        Piece.ConsecrationLight,
+                        centreId,
+                        radiusMilliHex,
+                        MatchTuning.ConsecrationLightThickness,
+                        MatchTuning.ConsecrationLightTicks);
+                    break;
+
+                case BubbleSignature.OvergrowthRoots:
+                    Roots(centreId, radiusMilliHex);
+                    break;
+
                 default:
-                    Ring(centreId, radiusMilliHex);
+                    Disc(
+                        Piece.BubbleRing,
+                        centreId,
+                        radiusMilliHex,
+                        MatchTuning.BubbleRingThickness,
+                        MatchTuning.BubbleRingTicks);
                     break;
             }
         }
 
         /// <summary>
-        /// The disc a bubble leaves when its row has no signature of its own: a
-        /// flat cylinder on the ground under the entity it was centred on, as
-        /// wide as the bubble reached.
+        /// What a blast that arrived on a body draws: the Unravel's strip where
+        /// the payload says armour came off, and the Mortar's burst otherwise.
+        /// </summary>
+        /// <remarks>
+        /// <b>Neither is bound to a row and neither can be.</b> The event names
+        /// the body the shot arrived at, so there is no shooter here to look a
+        /// signature up on — see <see cref="BlastLanded"/>. The payload is the
+        /// only other thing the event carries, so it is what these two are told
+        /// apart by; the Mage's and the Sorcerer's splash are damage blasts on
+        /// a body like the Mortar's and are drawn as the burst for that reason
+        /// rather than because anybody asked for it.
+        /// </remarks>
+        private void Arrived(int centreId, int radiusMilliHex, BubblePayload payload)
+        {
+            if (payload == BubblePayload.Armour)
+            {
+                Flat(Piece.ArmourStrip, centreId, radiusMilliHex, MatchTuning.ArmourStripTicks);
+
+                return;
+            }
+
+            Burst(centreId, radiusMilliHex);
+        }
+
+        /// <summary>
+        /// A flat cylinder on the ground under the entity a bubble was centred
+        /// on, as wide as the bubble reached — the plain disc a row with no
+        /// signature leaves, and the Consecration's light.
         /// </summary>
         /// <remarks>
         /// <para>
+        /// <b>One shape and two readings.</b> The disc is the placeholder that
+        /// says only "the bubble reached this far"; the Consecration's is the
+        /// same solid of light in its own colour, because what that aura does
+        /// is claim ground rather than draw a boundary. They are separate
+        /// pieces so that anything looking at the playfield can tell which one
+        /// it found.
+        /// </para>
+        /// <para>
         /// <b>Nothing is drawn for a bubble that reached only its centre.</b>
         /// A radius of zero is a real authoring in the simulation — the
-        /// single-target slow — and it is a ring of no size, so the ring is the
-        /// wrong instrument for it and drawing a speck would be a worse answer
-        /// than drawing nothing. What that bubble did to the one body it found
-        /// is that body's own picture.
+        /// single-target slow — and a disc of no size is a speck, so drawing
+        /// one would be a worse answer than drawing nothing. What that bubble
+        /// did to the one body it found is that body's own picture.
         /// </para>
         /// <para>
         /// <b>Nothing is drawn for an id the view is not holding either.</b>
@@ -697,21 +814,56 @@ namespace View
         /// enclosed and a much larger thing than a placeholder.
         /// </para>
         /// </remarks>
-        private void Ring(int centreId, int radiusMilliHex)
+        private void Disc(
+            Piece piece, int centreId, int radiusMilliHex, float thickness, int lifetimeTicks)
         {
             if (!Reached(centreId, radiusMilliHex, out Vector3 at, out float diameter))
             {
                 return;
             }
 
-            Transform disc = Take(Piece.BubbleRing);
-            disc.position = at + (Vector3.up * MatchTuning.BubbleRingHeight);
+            Transform disc = Take(piece);
+            disc.position = at + (Vector3.up * MatchTuning.FloorClearance);
 
             // A Unity cylinder is one unit across and two tall, so a diameter
             // goes into x and z unchanged and the thickness is halved into y.
-            var scale = new Vector3(diameter, MatchTuning.BubbleRingThickness * 0.5f, diameter);
+            var scale = new Vector3(diameter, thickness * 0.5f, diameter);
 
-            Stays(Piece.BubbleRing, disc, scale, MatchTuning.BubbleRingTicks, shrinks: false);
+            Stays(piece, disc, scale, lifetimeTicks, shrinks: false);
+        }
+
+        /// <summary>
+        /// The Overgrowth's: a patch of roots breaking the ground under every
+        /// body the aura is holding.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Drawn on what the bubble found rather than on the bubble, and
+        /// that is forced by the row.</b> Overgrowth's aura reaches sixty
+        /// hexes — the whole board, every board — so a shape at its radius
+        /// would be a hundred and twenty hexes across on a board nineteen
+        /// wide. What is worth seeing is which bodies are being held, which is
+        /// the same answer the Blessing's halo reached from the other side.
+        /// </para>
+        /// <para>
+        /// <b>Each patch is a fixed size</b>, for the same reason: it stands
+        /// for a body caught rather than for a distance, so nothing here is
+        /// scaled by the reach.
+        /// </para>
+        /// </remarks>
+        private void Roots(int emitterId, int radiusMilliHex)
+        {
+            if (radiusMilliHex <= 0)
+            {
+                return;
+            }
+
+            OnEachFound(
+                Piece.OvergrowthRoots,
+                _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
+                MatchTuning.FloorClearance,
+                MatchTuning.OvergrowthRootPatchDiameter,
+                MatchTuning.OvergrowthRootTicks);
         }
 
         /// <summary>
@@ -720,9 +872,10 @@ namespace View
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>The one signature drawn on what a bubble found rather than on the
-        /// bubble.</b> A ring on the ground would say how far the blessing
-        /// carries, which is true and is not what this line is for: what the
+        /// <b>Drawn on what a bubble found rather than on the bubble, which
+        /// the Overgrowth's roots are too.</b> A ring on the ground would say
+        /// how far the blessing carries, which is true and is not what this
+        /// line is for: what the
         /// Blessing does is make other towers fire faster, so the thing worth
         /// seeing is which towers those are. It is a fixed size over each of
         /// them, because it stands for a tower being blessed and not for a
@@ -745,21 +898,38 @@ namespace View
                 return;
             }
 
-            IReadOnlyList<Vector3> reached =
-                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex));
+            OnEachFound(
+                Piece.TowerGlow,
+                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
+                MatchTuning.BlessingGlowHeight,
+                MatchTuning.BlessingGlowDiameter,
+                MatchTuning.BlessingGlowTicks);
+        }
 
-            for (var index = 0; index < reached.Count; index++)
+        /// <summary>
+        /// One flat shape of a fixed size at each of the places a bubble found,
+        /// <paramref name="height"/> above each of them.
+        /// </summary>
+        /// <remarks>
+        /// <b>The size is fixed and not the reach, which is what makes this the
+        /// other kind of bubble shape.</b> Everything drawn on the bubble is
+        /// scaled by how far it went; these are drawn on the things it found,
+        /// so each one stands for one thing being caught and none of them
+        /// reports a distance. Nothing here shrinks, for the same reason.
+        /// </remarks>
+        private void OnEachFound(
+            Piece piece,
+            IReadOnlyList<Vector3> found,
+            float height,
+            float diameter,
+            int lifetimeTicks)
+        {
+            for (var index = 0; index < found.Count; index++)
             {
+                Transform drawn = Take(piece);
+                drawn.position = found[index] + (Vector3.up * height);
 
-                Transform glow = Take(Piece.TowerGlow);
-                glow.position = reached[index] + (Vector3.up * MatchTuning.BlessingGlowHeight);
-
-                Stays(
-                    Piece.TowerGlow,
-                    glow,
-                    Flattened(MatchTuning.BlessingGlowDiameter),
-                    MatchTuning.BlessingGlowTicks,
-                    shrinks: false);
+                Stays(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
             }
         }
 
@@ -800,7 +970,7 @@ namespace View
             }
 
             Transform drawn = Take(piece);
-            drawn.position = at + (Vector3.up * MatchTuning.BubbleRingHeight);
+            drawn.position = at + (Vector3.up * MatchTuning.FloorClearance);
 
             Stays(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
         }
@@ -931,6 +1101,17 @@ namespace View
                     MatchTuning.MortarBurstShards,
                     MatchTuning.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
 
+                Piece.OvergrowthRoots => EffectMeshes.Roots(
+                    MatchTuning.OvergrowthRootCount,
+                    MatchTuning.OvergrowthRootWidthFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.OvergrowthRootThickness,
+                    MatchTuning.OvergrowthRootKink),
+
+                Piece.ArmourStrip => EffectMeshes.BrokenRing(
+                    MatchTuning.ArmourStripSides,
+                    MatchTuning.ArmourStripBandFraction * EffectMeshes.OuterRadius,
+                    MatchTuning.ArmourStripThickness),
+
                 // The one mesh here built a unit long rather than at an outer
                 // radius, because a knife is an object and not a reach.
                 Piece.ThrownKnife => EffectMeshes.Knife(
@@ -963,10 +1144,12 @@ namespace View
 
             GameObject instance = piece switch
             {
-                Piece.Tracer or Piece.LongShot => GameObject.CreatePrimitive(PrimitiveType.Cube),
+                Piece.Tracer or Piece.LongShot or Piece.MagicBolt =>
+                    GameObject.CreatePrimitive(PrimitiveType.Cube),
                 Piece.MuzzleFlash => GameObject.CreatePrimitive(PrimitiveType.Sphere),
                 Piece.Spark => GameObject.CreatePrimitive(PrimitiveType.Sphere),
-                Piece.BubbleRing => GameObject.CreatePrimitive(PrimitiveType.Cylinder),
+                Piece.BubbleRing or Piece.ConsecrationLight =>
+                    GameObject.CreatePrimitive(PrimitiveType.Cylinder),
                 _ => Built(piece),
             };
 
