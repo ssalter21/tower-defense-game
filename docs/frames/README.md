@@ -67,9 +67,10 @@ them.
 **Finding the tick a capstone went off on is what the log line is for.** A
 signature is drawn on one tick and gone six or eight later, so hunting one by
 opening pictures means opening most of them. Every kept tick's line in
-`capture-match-frames.log` carries the running slow-ring, ground-shock, glow,
-burst, long-shot, knife, bolt, light, root, strip, haste-ring, ward-dome,
-hex-plate and frost-crown counts; ask for a run of
+`capture-match-frames.log` carries the running slow, shock, glow, burst,
+long-shot, knife, bolt, light, strip, haste, ward, hex and frost counts — one
+per aura and per shot, which since the shapes collapsed are counts of circles
+rather than of different things; ask for a run of
 consecutive ticks, read the line where one of those numbers moves, and then
 capture that tick on its own at the size you want. **The knife count is the one
 that says how many bodies a throw found** — it goes up by three where the Fan of
@@ -163,22 +164,30 @@ And one that is **not** a frame of the recorded match:
 And three that are frames of the recorded board with **somebody else's defense
 standing on it** — the twelve rows of the Knight, Barbarian, Paladin and
 Engineer lines, out of
-[`four-lines.txt`](four-lines.txt), all at `-Width 1600`. **Every shape in them
-is a placeholder and none of it is signed.** What issue #263 signed is four
-shapes — a ring for the Shield Wall's slow, a shock across the ground for the
-Slam, a glow on every tower the Blessing reaches and a burst at the radius the
-Mortar landed in — and every colour, size and duration they are drawn at is the
-plainest thing that draws that shape, declared as a placeholder in
-`MatchTuning`.
+[`four-lines.txt`](four-lines.txt), all at `-Width 1600`. **Three of the four are the same shape now.** Issue #263 signed a
+ring for the Shield Wall's slow, a shock across the ground for the Slam, a glow
+on every tower the Blessing reaches and a burst at the radius the Mortar landed
+in; Sam replaced the first three with one flat translucent circle at the reach
+on 7 September 2026, because all three are auras. The Mortar's burst is a blast
+and keeps its shards. Every colour and duration is still the plainest thing that
+draws it, declared as a placeholder in `MatchTuning`, and so is how see-through
+the circles are.
 
 - `four-lines-tick-0813.png` — **the one to look at first**, at `-Distance 22`,
   close enough to read what each shape is made of. Three signatures at once: the
-  blue ring on the left is the Shield Wall's slow, lying on the ground at the
-  one hex it carries; the orange cracks under the Barbarian on the Large rig are
-  the Slam's swing landing on everything touching him; and the two gold rings
-  hanging over the heads on the right are the Blessing's, on itself and on the
-  Templar standing one hex away. The Paladin, six hexes off, is wearing none —
-  that is the aura's reach and not an oversight.
+  pale blue circle on the left is the Shield Wall's slow, lying on the ground at
+  the one hex it carries; the warm circle under the Barbarian on the Large rig
+  is the Slam's swing landing on everything touching him; and the gold circle on
+  the right is the Blessing's, covering itself and the Templar standing one hex
+  away. The Paladin, six hexes off, is outside it — that is the aura's reach and
+  not an oversight, and **it is the only thing on screen that says which towers
+  got the blessing**, because nothing is drawn on the towers themselves.
+
+  **This frame is also the alpha question.** The gold circle on yellow-green
+  grass is the faintest of the three: a warm colour on a warm floor at
+  `AuraDiscAlpha` 0.28 is close to invisible at play size, where the two cold
+  ones read. Whether that is the alpha or the colour is what
+  [`effect-candidates/`](effect-candidates/README.md) is for.
 
 - `four-lines-tick-0572.png` — the same three signatures at the framing that
   fits the whole floor, so all twelve rows are in one picture. The Engineer's
@@ -260,16 +269,21 @@ Druid lines** standing on it, out of [`magic-lines.txt`](magic-lines.txt), all a
 none of those is signed.** What issue #265 signed is four shapes — a bolt leaving the tome or the
 staff tip, the Consecration's light on the ground, the Overgrowth's roots on
 every hex it slows, and the Unravel's armour strip on the hex his bolt landed
-on — and every colour, size and duration they are drawn at is the plainest thing
-that draws that shape, declared as a placeholder in `MatchTuning`.
+on. **Two of those moved on 7 September 2026**: the Consecration's light is the
+one flat translucent circle every aura now draws, and the Overgrowth draws
+nothing at all, because its sixty-hex reach makes a circle at its radius a
+screen washed flat. The bolt and the strip are a shot and a blast, so neither
+was touched. Every colour and duration is still the plainest thing that draws
+the shape, declared as a placeholder in `MatchTuning`.
 
 - `magic-lines-tick-0344.png` — **the one to look at first**, at `-Distance 22`.
   The violet band broken into plates, lying on the ground around the skeleton at
   the left of the light, is the Unravel's armour strip, drawn on the tick his
   bolt arrived. The three pale bars in the air are the bolts fired two ticks
-  earlier, two ticks into a five-tick crossing. The wide pale disc under the towers is
-  the Consecration's light, and the small green sprigs under the bodies standing
-  in it are the Overgrowth's roots.
+  earlier, two ticks into a five-tick crossing. The wide pale circle under the
+  towers is the Consecration's light. **Nothing marks the bodies the Overgrowth
+  is holding** — that aura draws no decoration at all now, so what says the
+  board is held is the creeps not moving.
 
 - `magic-lines-tick-0342.png` — the same corner two ticks earlier, so the three
   bolts of that tick are freshly out of the tome and the staff tip rather than
@@ -287,9 +301,10 @@ that draws that shape, declared as a placeholder in `MatchTuning`.
 
 - `magic-lines-tick-0331.png` — the whole-floor framing, so the reach of both
   auras is in one picture. The Consecration's light covers three hexes round the
-  font; the Overgrowth's roots are under every body on the board, because that
-  aura reaches sixty hexes and the board is nineteen across. **The orange burst
-  in the middle of it is open question 8 in one picture**: it is the Mage's or
+  font; the Overgrowth is **nowhere in this picture**, which is the point of
+  keeping the frame — it reaches sixty hexes and draws nothing, so a board-wide
+  hold has to read through the creeps not moving. **The orange burst in the
+  middle of it is open question 8 in one picture**: it is the Mage's or
   the Sorcerer's splash landing, wearing the Mortar's capstone shape, because a
   blast centred on the body a shot arrived at names the body and never the
   shooter.
@@ -318,11 +333,13 @@ than any of #263 to #265 made, and `MatchTuning`'s own header says so.
 
 - `creep-auras-tick-0272.png` — **the one to look at first**, at `-Distance 20`.
   All four auras pulsed on tick 271 and this is the tick after. The pale blue
-  cages are the Necromancer's ward, three of them overlapping, at the two hexes
-  it grants a pool across; the green rings hanging over the heads inside them
-  are the Skeleton Mage's haste, one per body it reached; and the violet plates
-  scattered across the ground are the Witch's hex ward, three bands of them out
-  to two hexes each. The green-and-blue bars over the bodies are **not** an
+  circles are the Necromancer's ward, three of them overlapping, at the two hexes
+  it grants a pool across; the green circle blending with them is the Skeleton
+  Mage's haste; and the violet ones are the Witch's hex ward, out to two hexes
+  each. **Overlapping circles are what this frame is for**: three translucent
+  surfaces blending is the case the alpha is judged on, and it is the reason
+  nothing is drawn on the bodies — three shapes stacked on one walking creep is
+  exactly what this replaced. The green-and-blue bars over the bodies are **not** an
   effect of this ticket: they are the two-segment bar #254 already draws, and
   the blue half is a pool — some of it the Vampire's and the Grave Robber's own
   and some of it what the Necromancer just granted. **The Minions in the knot
@@ -330,9 +347,10 @@ than any of #263 to #265 made, and `MatchTuning`'s own header says so.
   every one on screen is a body a Necromancer raised.
 
 - `creep-auras-tick-0276.png` — the same knot at `-Distance 14`, down among the
-  bodies, four ticks later. What is worth reading here is that a haste ring
-  hangs above every body inside the aura and that the bar and the ring are two
-  different statements about one creep.
+  bodies, four ticks later. What is worth reading here is that **nothing hangs
+  above the bodies inside the aura**: the circle they are standing in is the
+  whole of what says the haste reached them, and the only thing over a creep is
+  the pool bar, which is not an effect.
 
 - `creep-auras-tick-0271.png` — the whole-floor framing, so the reach of all
   four is in one picture against a board nineteen hexes wide. Two hexes is what
