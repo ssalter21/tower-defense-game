@@ -153,6 +153,28 @@ namespace View
                 deathClip = death,
             };
 
+        /// <summary>
+        /// The same art wearing a different pair of signatures.
+        /// </summary>
+        /// <remarks>
+        /// <b>For a capture and for nothing else.</b> Which shape a row's
+        /// bubble leaves is bound once by the scene builder and is a fact about
+        /// the row; this exists because four of those shapes are declared
+        /// unsigned in <see cref="MatchTuning"/>'s own header, and the way one
+        /// gets signed is somebody seeing the same row draw each of the
+        /// alternatives on the real board. Nothing in the built player calls
+        /// it, and the copy it hands back is a copy — the bound art is not
+        /// touched.
+        /// </remarks>
+        public UnitArt WithSignature(BubbleSignature bubble, ShotSignature shot)
+        {
+            var copy = (UnitArt)MemberwiseClone();
+            copy.bubbleSignature = bubble;
+            copy.shotSignature = shot;
+
+            return copy;
+        }
+
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
         public int UnitId => unitId;
 

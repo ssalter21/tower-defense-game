@@ -99,13 +99,18 @@ namespace View
         /// per creep to destroy again.
         /// </param>
         /// <param name="shieldSegment">The material its pool segment wears.</param>
+        /// <param name="look">
+        /// The look the marks are drawn at, or null for the one the game ships.
+        /// Only a capture passes one; see <see cref="EffectLook"/>.
+        /// </param>
         public void Build(
             UnitArt art,
             AnimationClip walk,
             AnimationClip death,
             Material healthSegment,
-            Material shieldSegment) =>
-            BuildBody(art, walk, death, healthSegment, shieldSegment);
+            Material shieldSegment,
+            EffectLook look = null) =>
+            BuildBody(art, walk, death, healthSegment, shieldSegment, look);
 
         /// <summary>
         /// The same, for a body that is a portrait rather than a creep in a
@@ -120,14 +125,15 @@ namespace View
         /// keeps this from being a quiet second mode of the same object.
         /// </remarks>
         public void Build(UnitArt art, AnimationClip walk, AnimationClip death) =>
-            BuildBody(art, walk, death, healthSegment: null, shieldSegment: null);
+            BuildBody(art, walk, death, healthSegment: null, shieldSegment: null, look: null);
 
         private void BuildBody(
             UnitArt art,
             AnimationClip walk,
             AnimationClip death,
             Material healthSegment,
-            Material shieldSegment)
+            Material shieldSegment,
+            EffectLook look)
         {
             if (art == null) throw new ArgumentNullException(nameof(art));
             if (walk == null) throw new ArgumentNullException(nameof(walk));
@@ -162,7 +168,7 @@ namespace View
 
             // After the graph, because the wash lands on every renderer under
             // the body and what it is holding is part of the body by now.
-            Marks = new EffectMarks();
+            Marks = new EffectMarks(look);
             Marks.Build(transform, Model, healthSegment, shieldSegment);
         }
 

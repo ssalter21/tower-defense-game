@@ -644,6 +644,27 @@ next remembering to delete four files. Left to memory, a plain
 `tools/capture-match-frames.ps1` leaves them in the tree and the build gate's
 last step fails the next push for a dirty repository.
 
+## And a folder that is not a picture of what the game draws
+
+[`effect-candidates/`](effect-candidates/README.md) holds the alternatives to
+every effect look that ships standing on nobody's signature — the four creep
+aura shapes, the ring a blast and an aura share, the Blessing, telling a slow
+from a haste on the body, and the four other things `#254` recorded as undecided.
+**Every frame in it is a picture of something the game does not draw.**
+
+It is here rather than under `roster/` because these are whole frames of the
+recorded match and not contact sheets: what is being judged is an effect against
+a board at the size a person plays at, which is the one thing a tile on a plain
+ground cannot show. Every candidate is rendered twice — once at the framing the
+built player uses, which is the frame that decides, and once with the camera
+moved in, which is what says what a shape is made of.
+
+**The candidate look is a file and never an edit to `MatchTuning`.**
+`tools/capture-match-frames.ps1 -Effects` plays the recorded match with one
+candidate on; nothing in the file the game ships from moves, and the override
+lives for the length of the run and no longer. `EffectLook.cs` says why that
+indirection is not a second set of values.
+
 ## What to look at
 
 Both frames were worth capturing before they were worth committing: the first

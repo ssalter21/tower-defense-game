@@ -88,6 +88,13 @@ namespace View
 
         private MatchArt _art;
 
+        /// <summary>
+        /// The look every effect on this match is drawn at.
+        /// <see cref="EffectLook.Shipped"/> unless a capture handed one to
+        /// <see cref="Begin"/>; see <see cref="EffectLook"/> for why one would.
+        /// </summary>
+        private EffectLook _look = EffectLook.Shipped;
+
         private RoutePath _route;
 
         private UnitTypeTable _types;
@@ -181,7 +188,8 @@ namespace View
             TowerLayout layout,
             WaveScript wave,
             ulong seed,
-            MatchArt art)
+            MatchArt art,
+            EffectLook look = null)
         {
             if (map is null) throw new ArgumentNullException(nameof(map));
             if (rules is null) throw new ArgumentNullException(nameof(rules));
@@ -190,6 +198,7 @@ namespace View
 
             _types = types ?? throw new ArgumentNullException(nameof(types));
             _art = art ?? throw new ArgumentNullException(nameof(art));
+            _look = look ?? EffectLook.Shipped;
 
             // Kept so a seek can build the match again from nothing but these.
             // A seek re-simulates, so these five are the whole of what the view
@@ -201,9 +210,9 @@ namespace View
             _seed = seed;
 
             _route = RoutePath.For(map);
-            _projectileMaterial = ViewMaterials.Create("Projectile", MatchTuning.ProjectileColor);
-            _healthSegmentMaterial = ViewMaterials.Create("HealthSegment", MatchTuning.HealthSegmentColor);
-            _shieldSegmentMaterial = ViewMaterials.Create("ShieldSegment", MatchTuning.ShieldSegmentColor);
+            _projectileMaterial = ViewMaterials.Create("Projectile", _look.ProjectileColor);
+            _healthSegmentMaterial = ViewMaterials.Create("HealthSegment", _look.HealthSegmentColor);
+            _shieldSegmentMaterial = ViewMaterials.Create("ShieldSegment", _look.ShieldSegmentColor);
 
             _creepParent = MakeGroup("Creeps");
             _projectileParent = MakeGroup("Projectiles");
@@ -222,7 +231,8 @@ namespace View
                 TowerSignatureOf,
                 CreepSignatureOf,
                 TowersWithin,
-                CreepsWithin);
+                CreepsWithin,
+                _look);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -499,6 +509,17 @@ namespace View
                     : (Vector3?)null;
 
                 view.Pose(tower.State, ticksInState, target);
+
+                // A CANDIDATE AND NOT THE GAME, on the same terms the marks
+                // were built on. The sign is flipped because a tower's
+                // magnitude is a cooldown and a creep's is a speed: a positive
+                // cooldown displacement is a tower firing further apart, which
+                // is the same thing the wash on the other side of the board
+                // is drawn for.
+                if (view.Marks != null)
+                {
+                    view.Marks.ShowModifiers(-tower.CooldownMagnitude, 0);
+                }
             }
         }
 
@@ -600,6 +621,15 @@ namespace View
                     view.BuildStatic(id, placed.Type, art, resting);
                 }
 
+                // A CANDIDATE AND NOT THE GAME. Nothing the shipped look asks
+                // for: a tower carrying a modifier is drawn as the crown of
+                // shards at its feet and nothing on the body. See
+                // EffectLook.TowerMarksShown.
+                if (_look.TowerMarksShown)
+                {
+                    view.BuildMarks(_look);
+                }
+
                 _towers.Add(id, view);
             }
         }
@@ -620,7 +650,8 @@ namespace View
                 _art.WalkClipFor(unitId),
                 _art.DeathClipFor(unitId),
                 _healthSegmentMaterial,
-                _shieldSegmentMaterial);
+                _shieldSegmentMaterial,
+                _look);
 
             return view;
         }

@@ -55,6 +55,13 @@ namespace View
 
         private readonly MaterialPropertyBlock _wash = new MaterialPropertyBlock();
 
+        /// <summary>
+        /// Where the bar's size and the wash's colour are read from.
+        /// <see cref="EffectLook.Shipped"/> unless a capture handed one in; see
+        /// <see cref="EffectLook"/> for why a capture would.
+        /// </summary>
+        private readonly EffectLook _look;
+
         private Renderer[] _body;
 
         private Transform _bar;
@@ -62,6 +69,15 @@ namespace View
         private Transform _health;
 
         private Transform _shield;
+
+        /// <summary>
+        /// The second pair, at right angles, or null. Built only when
+        /// <see cref="EffectLook.UnitBarCrossed"/> asks for one — which nothing
+        /// the game ships does. See <see cref="Build"/>.
+        /// </summary>
+        private Transform _crossHealth;
+
+        private Transform _crossShield;
 
         private bool _washed;
 
@@ -76,6 +92,26 @@ namespace View
 
         /// <summary>What the last <see cref="Show"/> washed the body with, or null.</summary>
         public Color? Wash { get; private set; }
+
+        /// <summary>
+        /// Marks drawn at the look the game ships.
+        /// </summary>
+        public EffectMarks()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Marks drawn at <paramref name="look"/>, or at the shipped look when
+        /// it is null. <b>Only a capture passes one</b> — the bar's size and
+        /// both washes are placeholders <see cref="MatchTuning"/>'s own header
+        /// declares, and a candidate for one is judged by being photographed
+        /// through the real match.
+        /// </summary>
+        public EffectMarks(EffectLook look)
+        {
+            _look = look ?? EffectLook.Shipped;
+        }
 
         /// <summary>
         /// Builds the marks: finds the renderers the wash lands on, and hangs a
@@ -106,10 +142,25 @@ namespace View
             group.transform.SetParent(host, worldPositionStays: false);
 
             _bar = group.transform;
-            _bar.localPosition = Vector3.up * MatchTuning.UnitBarHeight;
+            _bar.localPosition = Vector3.up * _look.UnitBarHeight;
 
             _health = Segment(_bar, "Health", health);
             _shield = Segment(_bar, "Shield", shield);
+
+            // A CANDIDATE AND NOT THE GAME. The bar is a stretched box that
+            // never turns, so it is read end-on from two of the four quadrants
+            // of the orbit -- one of the five things #254 recorded as nobody's
+            // decision. The candidate that answers it without billboarding is a
+            // second bar across the first, and it is off unless a capture asks.
+            if (_look.UnitBarCrossed)
+            {
+                var across = new GameObject("Across").transform;
+                across.SetParent(_bar, worldPositionStays: false);
+                across.localRotation = Quaternion.Euler(0f, 90f, 0f);
+
+                _crossHealth = Segment(across, "Health", health);
+                _crossShield = Segment(across, "Shield", shield);
+            }
 
             _bar.gameObject.SetActive(false);
         }
@@ -162,8 +213,26 @@ namespace View
             float left = Mathf.Clamp01(hp / (float)maxHp);
             float pool = Mathf.Clamp01(shield / (float)maxHp);
 
+            // A CANDIDATE AND NOT THE GAME, on the same terms as the crossed
+            // pair above: both segments being shares of the authored health is
+            // the fifth of #254's undecided five, and the alternative it names
+            // is one bar the two of them share. Off unless a capture asks, so
+            // what the game draws is the bar that grows past its own length.
+            if (_look.UnitBarClamped && left + pool > 0f)
+            {
+                float whole = left + pool;
+                left /= whole;
+                pool /= whole;
+            }
+
             Stretch(_health, from: 0f, width: left);
             Stretch(_shield, from: left, width: pool);
+
+            if (_crossHealth != null)
+            {
+                Stretch(_crossHealth, from: 0f, width: left);
+                Stretch(_crossShield, from: left, width: pool);
+            }
         }
 
         /// <summary>One segment of the bar, at rest.</summary>
@@ -197,7 +266,7 @@ namespace View
         /// puts it <paramref name="from"/> of the way along, measuring from the
         /// left-hand end.
         /// </summary>
-        private static void Stretch(Transform segment, float from, float width)
+        private void Stretch(Transform segment, float from, float width)
         {
             if (width <= 0f)
             {
@@ -209,15 +278,15 @@ namespace View
             segment.gameObject.SetActive(true);
 
             segment.localScale = new Vector3(
-                MatchTuning.UnitBarLength * width,
-                MatchTuning.UnitBarThickness,
-                MatchTuning.UnitBarThickness);
+                _look.UnitBarLength * width,
+                _look.UnitBarThickness,
+                _look.UnitBarThickness);
 
             // A cube is drawn about its own middle, so a segment starting at
             // `from` and `width` wide has its centre half a width past that --
             // and the whole bar is centred on the unit, which is the half.
             segment.localPosition = new Vector3(
-                MatchTuning.UnitBarLength * (from + (width / 2f) - 0.5f),
+                _look.UnitBarLength * (from + (width / 2f) - 0.5f),
                 0f,
                 0f);
         }
@@ -227,26 +296,64 @@ namespace View
         /// null for one carrying neither.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Speed first, because it is the modifier that changes where the body
         /// is rather than what a hit does to it, and one body can only wear one
         /// colour. A unit carrying both is drawn as the first of the two, which
         /// is a placeholder's answer to a question a real look would answer
         /// differently.
+        /// </para>
+        /// <para>
+        /// <b>Both of those placeholder answers are written here as a look and
+        /// not as a branch that is not taken.</b>
+        /// <see cref="EffectLook.HasteEffectTint"/> and
+        /// <see cref="EffectLook.BothModifiersTint"/> both answer
+        /// <see cref="EffectLook.SpeedEffectTint"/> unless a capture says
+        /// otherwise, so what the game draws is exactly what it drew before
+        /// there were three names for it — one colour over both signs of a
+        /// speed modifier, and the speed one over a body carrying an armour
+        /// modifier as well. A candidate that separates them is a file rather
+        /// than an edit.
+        /// </para>
         /// </remarks>
-        private static Color? TintFor(int speedMagnitude, int armourMagnitude)
+        private Color? TintFor(int speedMagnitude, int armourMagnitude)
         {
-            if (speedMagnitude != 0)
+            if (speedMagnitude != 0 && armourMagnitude != 0)
             {
-                return MatchTuning.SpeedEffectTint;
+                return _look.BothModifiersTint;
+            }
+
+            if (speedMagnitude < 0)
+            {
+                return _look.SpeedEffectTint;
+            }
+
+            if (speedMagnitude > 0)
+            {
+                return _look.HasteEffectTint;
             }
 
             if (armourMagnitude != 0)
             {
-                return MatchTuning.ArmourEffectTint;
+                return _look.ArmourEffectTint;
             }
 
             return null;
         }
+
+        /// <summary>
+        /// Washes the body for the modifiers on it and draws no bar, which is
+        /// what a body with no bar to draw gets.
+        /// </summary>
+        /// <remarks>
+        /// <b>A CANDIDATE AND NOT THE GAME.</b> Nothing the game ships calls
+        /// this: a tower carrying a modifier is not drawn at all, which is the
+        /// third of the five things <c>docs/frames/README.md</c> records as
+        /// nobody's decision. It exists so the alternative can be photographed
+        /// beside the shipped picture — see <see cref="EffectLook.TowerMarksShown"/>.
+        /// </remarks>
+        public void ShowModifiers(int speedMagnitude, int armourMagnitude) =>
+            Paint(TintFor(speedMagnitude, armourMagnitude));
 
         /// <summary>
         /// Washes every renderer on the body with <paramref name="tint"/>, or

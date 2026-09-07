@@ -1,0 +1,48 @@
+# What each picture in this directory was drawn from: one line per
+# picture, and a digest over content/map.txt, content/units.txt,
+# content/upgrades.txt and content/dressing.txt as they stood when it
+# was captured.
+#
+# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
+# and only the thing that drew it knows that. tools/check-docs.ps1 reads
+# it where a commit date cannot answer -- a re-render that came out
+# pixel-identical leaves git nothing to date.
+#
+#       picture                        drawn from
+
+picture  auras-as-shipped-tick-0094.png  F3896E6D53F411C4
+picture  auras-as-shipped-tick-0272.png  F3896E6D53F411C4
+picture  bar-clamped-tick-0272.png       F3896E6D53F411C4
+picture  bar-crossed-tick-0272.png       F3896E6D53F411C4
+picture  blessing-at-the-feet-tick-0270.png  F3896E6D53F411C4
+picture  blessing-at-the-feet-tick-0274.png  F3896E6D53F411C4
+picture  blessing-collar-tick-0270.png   F3896E6D53F411C4
+picture  blessing-collar-tick-0274.png   F3896E6D53F411C4
+picture  blessing-halo-shipped-tick-0270.png  F3896E6D53F411C4
+picture  blessing-halo-shipped-tick-0274.png  F3896E6D53F411C4
+picture  blessing-held-halo-tick-0270.png  F3896E6D53F411C4
+picture  blessing-held-halo-tick-0274.png  F3896E6D53F411C4
+picture  both-modifiers-third-colour-tick-0272.png  F3896E6D53F411C4
+picture  frost-halo-tick-0094.png        F3896E6D53F411C4
+picture  frost-halo-tick-0272.png        F3896E6D53F411C4
+picture  frost-ring-at-reach-tick-0094.png  F3896E6D53F411C4
+picture  frost-ring-at-reach-tick-0272.png  F3896E6D53F411C4
+picture  haste-ring-at-reach-tick-0272.png  F3896E6D53F411C4
+picture  haste-under-body-tick-0272.png  F3896E6D53F411C4
+picture  hex-cage-tick-0272.png          F3896E6D53F411C4
+picture  hex-under-body-tick-0272.png    F3896E6D53F411C4
+picture  ring-as-shipped-tick-0272.png   F3896E6D53F411C4
+picture  ring-heavy-tick-0272.png        F3896E6D53F411C4
+picture  ring-warm-tick-0272.png         F3896E6D53F411C4
+picture  speed-both-moved-tick-0240.png  F3896E6D53F411C4
+picture  speed-both-moved-tick-0270.png  F3896E6D53F411C4
+picture  speed-green-haste-tick-0240.png  F3896E6D53F411C4
+picture  speed-green-haste-tick-0270.png  F3896E6D53F411C4
+picture  speed-one-colour-tick-0240.png  F3896E6D53F411C4
+picture  speed-one-colour-tick-0270.png  F3896E6D53F411C4
+picture  speed-warm-haste-tick-0240.png  F3896E6D53F411C4
+picture  speed-warm-haste-tick-0270.png  F3896E6D53F411C4
+picture  tower-marks-on-tick-0094.png    F3896E6D53F411C4
+picture  tower-marks-on-tick-0272.png    F3896E6D53F411C4
+picture  ward-light-on-ground-tick-0272.png  F3896E6D53F411C4
+picture  ward-ring-at-reach-tick-0272.png  F3896E6D53F411C4

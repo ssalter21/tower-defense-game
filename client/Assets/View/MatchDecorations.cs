@@ -85,6 +85,15 @@ namespace View
 
         private readonly Func<int, float, IReadOnlyList<Vector3>> _creepsWithin;
 
+        /// <summary>
+        /// Where every number and colour on this page is read from. <see
+        /// cref="EffectLook.Shipped"/> unless a capture handed one in, and that
+        /// one answers out of <see cref="MatchTuning"/> for every member it was
+        /// not asked about — so this is one indirection and never a second set
+        /// of values.
+        /// </summary>
+        private readonly EffectLook _look;
+
         private readonly List<Effect> _active = new List<Effect>();
 
         private readonly Dictionary<Piece, Stack<Transform>> _idle =
@@ -142,6 +151,15 @@ namespace View
         /// Where every creep within so many metres of an entity is — what the
         /// Overgrowth's roots are drawn under, on the same terms.
         /// </param>
+        /// <param name="look">
+        /// The look to draw every effect at, or null for the one the game
+        /// ships. <b>Only a capture ever passes one</b>, and it passes one
+        /// because every number and colour here is declared a placeholder in
+        /// <see cref="MatchTuning"/>'s own header: a candidate is judged by
+        /// being photographed through the real match beside the shipped value,
+        /// which needs a way to play the match at a look the file does not
+        /// hold. See <see cref="EffectLook"/>.
+        /// </param>
         public MatchDecorations(
             Transform parent,
             Func<int, Vector3?> creepPosition,
@@ -150,8 +168,10 @@ namespace View
             Func<int, RowSignature?> towerSignature,
             Func<int, RowSignature?> creepSignature,
             Func<int, float, IReadOnlyList<Vector3>> towersWithin,
-            Func<int, float, IReadOnlyList<Vector3>> creepsWithin)
+            Func<int, float, IReadOnlyList<Vector3>> creepsWithin,
+            EffectLook look = null)
         {
+            _look = look ?? EffectLook.Shipped;
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _creepPosition = creepPosition ?? throw new ArgumentNullException(nameof(creepPosition));
             _towerMuzzle = towerMuzzle ?? throw new ArgumentNullException(nameof(towerMuzzle));
@@ -161,30 +181,30 @@ namespace View
             _towersWithin = towersWithin ?? throw new ArgumentNullException(nameof(towersWithin));
             _creepsWithin = creepsWithin ?? throw new ArgumentNullException(nameof(creepsWithin));
 
-            _materials[Piece.Tracer] = ViewMaterials.Create("Tracer", MatchTuning.TracerColor);
-            _materials[Piece.MuzzleFlash] = ViewMaterials.Create("MuzzleFlash", MatchTuning.MuzzleFlashColor);
-            _materials[Piece.Spark] = ViewMaterials.Create("HitSpark", MatchTuning.HitSparkColor);
-            _materials[Piece.BubbleRing] = ViewMaterials.Create("BubbleRing", MatchTuning.BubbleRingColor);
-            _materials[Piece.SlowRing] = ViewMaterials.Create("SlowRing", MatchTuning.SlowRingColor);
+            _materials[Piece.Tracer] = ViewMaterials.Create("Tracer", _look.TracerColor);
+            _materials[Piece.MuzzleFlash] = ViewMaterials.Create("MuzzleFlash", _look.MuzzleFlashColor);
+            _materials[Piece.Spark] = ViewMaterials.Create("HitSpark", _look.HitSparkColor);
+            _materials[Piece.BubbleRing] = ViewMaterials.Create("BubbleRing", _look.BubbleRingColor);
+            _materials[Piece.SlowRing] = ViewMaterials.Create("SlowRing", _look.SlowRingColor);
             _materials[Piece.GroundShock] =
-                ViewMaterials.Create("GroundShock", MatchTuning.GroundShockColor);
-            _materials[Piece.TowerGlow] = ViewMaterials.Create("TowerGlow", MatchTuning.BlessingGlowColor);
+                ViewMaterials.Create("GroundShock", _look.GroundShockColor);
+            _materials[Piece.TowerGlow] = ViewMaterials.Create("TowerGlow", _look.BlessingGlowColor);
             _materials[Piece.MortarBurst] =
-                ViewMaterials.Create("MortarBurst", MatchTuning.MortarBurstColor);
-            _materials[Piece.LongShot] = ViewMaterials.Create("LongShot", MatchTuning.LongShotColor);
-            _materials[Piece.ThrownKnife] = ViewMaterials.Create("ThrownKnife", MatchTuning.KnifeColor);
-            _materials[Piece.MagicBolt] = ViewMaterials.Create("MagicBolt", MatchTuning.MagicBoltColor);
+                ViewMaterials.Create("MortarBurst", _look.MortarBurstColor);
+            _materials[Piece.LongShot] = ViewMaterials.Create("LongShot", _look.LongShotColor);
+            _materials[Piece.ThrownKnife] = ViewMaterials.Create("ThrownKnife", _look.KnifeColor);
+            _materials[Piece.MagicBolt] = ViewMaterials.Create("MagicBolt", _look.MagicBoltColor);
             _materials[Piece.ConsecrationLight] =
-                ViewMaterials.Create("ConsecrationLight", MatchTuning.ConsecrationLightColor);
+                ViewMaterials.Create("ConsecrationLight", _look.ConsecrationLightColor);
             _materials[Piece.OvergrowthRoots] =
-                ViewMaterials.Create("OvergrowthRoots", MatchTuning.OvergrowthRootColor);
+                ViewMaterials.Create("OvergrowthRoots", _look.OvergrowthRootColor);
             _materials[Piece.ArmourStrip] =
-                ViewMaterials.Create("ArmourStrip", MatchTuning.ArmourStripColor);
-            _materials[Piece.HasteRing] = ViewMaterials.Create("HasteRing", MatchTuning.HasteRingColor);
-            _materials[Piece.WardDome] = ViewMaterials.Create("WardDome", MatchTuning.WardDomeColor);
-            _materials[Piece.HexPlates] = ViewMaterials.Create("HexPlates", MatchTuning.HexPlateColor);
+                ViewMaterials.Create("ArmourStrip", _look.ArmourStripColor);
+            _materials[Piece.HasteRing] = ViewMaterials.Create("HasteRing", _look.HasteRingColor);
+            _materials[Piece.WardDome] = ViewMaterials.Create("WardDome", _look.WardDomeColor);
+            _materials[Piece.HexPlates] = ViewMaterials.Create("HexPlates", _look.HexPlateColor);
             _materials[Piece.FrostSpikes] =
-                ViewMaterials.Create("FrostSpikes", MatchTuning.FrostSpikeColor);
+                ViewMaterials.Create("FrostSpikes", _look.FrostSpikeColor);
         }
 
         /// <summary>
@@ -368,8 +388,8 @@ namespace View
             Sphere(
                 Piece.MuzzleFlash,
                 muzzle.Value,
-                MatchTuning.MuzzleFlashRadius,
-                MatchTuning.MuzzleFlashTicks);
+                _look.MuzzleFlashRadius,
+                _look.MuzzleFlashTicks);
 
             Vector3? target = _creepPosition(targetId);
 
@@ -381,7 +401,7 @@ namespace View
             Crossing(
                 _towerSignature(towerId)?.Shot ?? ShotSignature.None,
                 muzzle.Value,
-                target.Value + (Vector3.up * MatchTuning.HitSparkHeight));
+                target.Value + (Vector3.up * _look.HitSparkHeight));
         }
 
         /// <summary>Damage landed: a spark on the creep it landed on.</summary>
@@ -398,9 +418,9 @@ namespace View
 
             Sphere(
                 Piece.Spark,
-                at.Value + (Vector3.up * MatchTuning.HitSparkHeight),
-                MatchTuning.HitSparkRadius,
-                MatchTuning.HitSparkTicks);
+                at.Value + (Vector3.up * _look.HitSparkHeight),
+                _look.HitSparkRadius,
+                _look.HitSparkTicks);
         }
 
         /// <summary>
@@ -704,8 +724,8 @@ namespace View
                         Piece.LongShot,
                         from,
                         to,
-                        MatchTuning.LongShotThickness,
-                        MatchTuning.LongShotTicks,
+                        _look.LongShotThickness,
+                        _look.LongShotTicks,
                         shrinks: false);
                     break;
 
@@ -717,8 +737,8 @@ namespace View
                         Piece.ThrownKnife,
                         from,
                         to,
-                        Vector3.one * MatchTuning.KnifeLength,
-                        MatchTuning.KnifeFlightTicks);
+                        Vector3.one * _look.KnifeLength,
+                        _look.KnifeFlightTicks);
                     break;
 
                 // The Cleric and Druid lines': a short shaft leaving the tome
@@ -731,10 +751,10 @@ namespace View
                         from,
                         to,
                         new Vector3(
-                            MatchTuning.MagicBoltThickness,
-                            MatchTuning.MagicBoltThickness,
-                            MatchTuning.MagicBoltLength),
-                        MatchTuning.MagicBoltFlightTicks);
+                            _look.MagicBoltThickness,
+                            _look.MagicBoltThickness,
+                            _look.MagicBoltLength),
+                        _look.MagicBoltFlightTicks);
                     break;
 
                 default:
@@ -742,8 +762,8 @@ namespace View
                         Piece.Tracer,
                         from,
                         to,
-                        MatchTuning.TracerThickness,
-                        MatchTuning.TracerTicks,
+                        _look.TracerThickness,
+                        _look.TracerTicks,
                         shrinks: true);
                     break;
             }
@@ -831,13 +851,13 @@ namespace View
                 // The Shield Wall's: an open ring at the edge of the slow, so
                 // the bodies caught inside it stay visible through it.
                 case BubbleSignature.SlowRing:
-                    Flat(Piece.SlowRing, centreId, radiusMilliHex, MatchTuning.SlowRingTicks);
+                    Flat(Piece.SlowRing, centreId, radiusMilliHex, _look.SlowRingTicks);
                     break;
 
                 // The Slam's: cracks running out from under the man who swung
                 // to the edge of what the swing reached.
                 case BubbleSignature.GroundShock:
-                    Flat(Piece.GroundShock, centreId, radiusMilliHex, MatchTuning.GroundShockTicks);
+                    Flat(Piece.GroundShock, centreId, radiusMilliHex, _look.GroundShockTicks);
                     break;
 
                 case BubbleSignature.TowerGlow:
@@ -853,8 +873,8 @@ namespace View
                         Piece.ConsecrationLight,
                         centreId,
                         radiusMilliHex,
-                        MatchTuning.ConsecrationLightThickness,
-                        MatchTuning.ConsecrationLightTicks);
+                        _look.ConsecrationLightThickness,
+                        _look.ConsecrationLightTicks);
                     break;
 
                 case BubbleSignature.OvergrowthRoots:
@@ -880,7 +900,7 @@ namespace View
                 // The Witch's: plates lying on the ground out to the edge of
                 // the hex ward.
                 case BubbleSignature.HexPlates:
-                    Flat(Piece.HexPlates, centreId, radiusMilliHex, MatchTuning.HexPlateTicks);
+                    Flat(Piece.HexPlates, centreId, radiusMilliHex, _look.HexPlateTicks);
                     break;
 
                 // The Frost Wight's: a crown of shards at the feet of every
@@ -896,8 +916,8 @@ namespace View
                         Piece.BubbleRing,
                         centreId,
                         radiusMilliHex,
-                        MatchTuning.BubbleRingThickness,
-                        MatchTuning.BubbleRingTicks);
+                        _look.BubbleRingThickness,
+                        _look.BubbleRingTicks);
                     break;
             }
         }
@@ -919,7 +939,7 @@ namespace View
         {
             if (payload == BubblePayload.Armour)
             {
-                Flat(Piece.ArmourStrip, centreId, radiusMilliHex, MatchTuning.ArmourStripTicks);
+                Flat(Piece.ArmourStrip, centreId, radiusMilliHex, _look.ArmourStripTicks);
 
                 return;
             }
@@ -974,7 +994,7 @@ namespace View
             }
 
             Transform disc = Take(piece);
-            disc.position = at + (Vector3.up * MatchTuning.FloorClearance);
+            disc.position = at + (Vector3.up * _look.FloorClearance);
 
             // A Unity cylinder is one unit across and two tall, so a diameter
             // goes into x and z unchanged and the thickness is halved into y.
@@ -1012,9 +1032,9 @@ namespace View
             OnEachFound(
                 Piece.OvergrowthRoots,
                 _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                MatchTuning.FloorClearance,
-                MatchTuning.OvergrowthRootPatchDiameter,
-                MatchTuning.OvergrowthRootTicks);
+                _look.FloorClearance,
+                _look.OvergrowthRootPatchDiameter,
+                _look.OvergrowthRootTicks);
         }
 
         /// <summary>
@@ -1047,9 +1067,9 @@ namespace View
             OnEachFound(
                 Piece.HasteRing,
                 _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                MatchTuning.HasteRingHeight,
-                MatchTuning.HasteRingDiameter,
-                MatchTuning.HasteRingTicks);
+                _look.HasteRingHeight,
+                _look.HasteRingDiameter,
+                _look.HasteRingTicks);
         }
 
         /// <summary>
@@ -1073,9 +1093,9 @@ namespace View
             OnEachFound(
                 Piece.FrostSpikes,
                 _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                MatchTuning.FloorClearance,
-                MatchTuning.FrostCrownDiameter,
-                MatchTuning.FrostSpikeTicks);
+                _look.FloorClearance,
+                _look.FrostCrownDiameter,
+                _look.FrostSpikeTicks);
         }
 
         /// <summary>
@@ -1093,8 +1113,8 @@ namespace View
                 Piece.WardDome,
                 centreId,
                 radiusMilliHex,
-                MatchTuning.FloorClearance,
-                MatchTuning.WardDomeTicks);
+                _look.FloorClearance,
+                _look.WardDomeTicks);
 
         /// <summary>
         /// The Blessing's: a ring over the head of every tower the pulse
@@ -1131,9 +1151,9 @@ namespace View
             OnEachFound(
                 Piece.TowerGlow,
                 _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                MatchTuning.BlessingGlowHeight,
-                MatchTuning.BlessingGlowDiameter,
-                MatchTuning.BlessingGlowTicks);
+                _look.BlessingGlowHeight,
+                _look.BlessingGlowDiameter,
+                _look.BlessingGlowTicks);
         }
 
         /// <summary>
@@ -1172,8 +1192,8 @@ namespace View
                 Piece.MortarBurst,
                 centreId,
                 radiusMilliHex,
-                MatchTuning.HitSparkHeight,
-                MatchTuning.MortarBurstTicks);
+                _look.HitSparkHeight,
+                _look.MortarBurstTicks);
 
         /// <summary>
         /// One of the shapes that is as tall as it is wide, centred
@@ -1214,7 +1234,7 @@ namespace View
             }
 
             Transform drawn = Take(piece);
-            drawn.position = at + (Vector3.up * MatchTuning.FloorClearance);
+            drawn.position = at + (Vector3.up * _look.FloorClearance);
 
             Stays(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
         }
@@ -1336,55 +1356,55 @@ namespace View
             Mesh made = piece switch
             {
                 Piece.GroundShock => EffectMeshes.Cracks(
-                    MatchTuning.GroundShockCracks,
-                    MatchTuning.GroundShockInnerFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.GroundShockWidthFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.GroundShockThickness),
+                    _look.GroundShockCracks,
+                    _look.GroundShockInnerFraction * EffectMeshes.OuterRadius,
+                    _look.GroundShockWidthFraction * EffectMeshes.OuterRadius,
+                    _look.GroundShockThickness),
 
                 Piece.MortarBurst => EffectMeshes.Burst(
-                    MatchTuning.MortarBurstShards,
-                    MatchTuning.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
+                    _look.MortarBurstShards,
+                    _look.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
 
                 Piece.OvergrowthRoots => EffectMeshes.Roots(
-                    MatchTuning.OvergrowthRootCount,
-                    MatchTuning.OvergrowthRootWidthFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.OvergrowthRootThickness,
-                    MatchTuning.OvergrowthRootKink),
+                    _look.OvergrowthRootCount,
+                    _look.OvergrowthRootWidthFraction * EffectMeshes.OuterRadius,
+                    _look.OvergrowthRootThickness,
+                    _look.OvergrowthRootKink),
 
                 Piece.HexPlates => EffectMeshes.BrokenRing(
-                    MatchTuning.HexPlateSides,
-                    MatchTuning.HexPlateBandFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.HexPlateThickness),
+                    _look.HexPlateSides,
+                    _look.HexPlateBandFraction * EffectMeshes.OuterRadius,
+                    _look.HexPlateThickness),
 
                 Piece.WardDome => EffectMeshes.Dome(
-                    MatchTuning.WardDomeRibs,
-                    MatchTuning.WardDomeSegments,
-                    MatchTuning.WardDomeRibWidthFraction * EffectMeshes.OuterRadius),
+                    _look.WardDomeRibs,
+                    _look.WardDomeSegments,
+                    _look.WardDomeRibWidthFraction * EffectMeshes.OuterRadius),
 
                 Piece.FrostSpikes => EffectMeshes.Spikes(
-                    MatchTuning.FrostSpikeCount,
-                    MatchTuning.FrostSpikeHeight,
-                    MatchTuning.FrostSpikeWidthFraction * EffectMeshes.OuterRadius),
+                    _look.FrostSpikeCount,
+                    _look.FrostSpikeHeight,
+                    _look.FrostSpikeWidthFraction * EffectMeshes.OuterRadius),
 
                 Piece.ArmourStrip => EffectMeshes.BrokenRing(
-                    MatchTuning.ArmourStripSides,
-                    MatchTuning.ArmourStripBandFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.ArmourStripThickness),
+                    _look.ArmourStripSides,
+                    _look.ArmourStripBandFraction * EffectMeshes.OuterRadius,
+                    _look.ArmourStripThickness),
 
                 // The one mesh here built a unit long rather than at an outer
                 // radius, because a knife is an object and not a reach.
                 Piece.ThrownKnife => EffectMeshes.Knife(
-                    MatchTuning.KnifeBladeWidthFraction,
-                    MatchTuning.KnifeGuardFraction,
-                    MatchTuning.KnifeThicknessFraction),
+                    _look.KnifeBladeWidthFraction,
+                    _look.KnifeGuardFraction,
+                    _look.KnifeThicknessFraction),
 
                 // The slow ring, the tower glow and the haste ring are one
                 // ring at three sizes, so they are one mesh. Their pools stay
                 // separate because their colours and lifetimes are not.
                 _ => EffectMeshes.Ring(
-                    MatchTuning.SignatureRingSides,
-                    MatchTuning.SignatureRingBandFraction * EffectMeshes.OuterRadius,
-                    MatchTuning.SignatureRingThickness),
+                    _look.SignatureRingSides,
+                    _look.SignatureRingBandFraction * EffectMeshes.OuterRadius,
+                    _look.SignatureRingThickness),
             };
 
             _meshes[piece] = made;

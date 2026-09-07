@@ -45,6 +45,17 @@
 # map, the defense and the seed still come out of the record. Frames from such a
 # run are named after the wave.
 
+# -Effects names a candidate look to draw the match's effects at instead of the
+# one the game ships. It is for photographing a decision nobody has taken: every
+# effect colour, size and duration in the game is declared a placeholder in
+# MatchTuning's own header, and four of the shapes are declared unsigned beside
+# them, so signing one means somebody seeing the alternatives on the real board
+# at the size the game is played at. The file names MatchTuning's own constants
+# and may move a row's shape with a `signature` line; see EffectLookFile.cs.
+# Frames from such a run are named after the candidate, for the reason a fixture
+# roster's are named after the roster. NOTHING IN THE FILE THE GAME SHIPS FROM
+# MOVES -- the override lives for the length of the run and no longer.
+
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
@@ -52,6 +63,7 @@ param(
     [string]$Units,
     [string]$Defense,
     [string]$Wave,
+    [string]$Effects,
     [float]$Yaw = 0,
     [float]$Pitch = 0,
     [float]$Distance = 0,
@@ -122,6 +134,11 @@ if ($Defense) {
 if ($Wave) {
     $wavePath = (Resolve-Path $Wave).Path
     $unityArgs += @('-matchFrameWave', "`"$wavePath`"")
+}
+
+if ($Effects) {
+    $effectsPath = (Resolve-Path $Effects).Path
+    $unityArgs += @('-matchFrameEffects', "`"$effectsPath`"")
 }
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a
