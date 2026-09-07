@@ -1,4 +1,4 @@
-# mage-hat-pitch-20.png, mage-hat-pitch-35-shipped.png, mage-hat-pitch-55.png
+# mage-hat-pitch-20/, mage-hat-pitch-35-shipped/ and mage-hat-pitch-55/
 
 **What they are.** Tick 1546 of the recorded match — a Mage casting — at three camera pitches. The
 tick, the distance and the width are the committed `docs/frames/match-tick-1546.png`'s: `-Ticks
@@ -20,12 +20,17 @@ rim, so the whole 51-hex board no longer fits the frame. **The staff head is sti
 20.** So a pitch alone does not fix the thing the frame was taken about; it trades a legible tower
 for an illegible board and gets partway.
 
-**Drawn from content `F3896E6D53F411C4`**, which is what this repository holds — the same digest
-the committed `docs/frames/match-tick-1546.png` carries, so these three and it are pictures of the
-same match. The capture writes that record itself, into a `rendered-from.txt` beside the PNGs it
-draws; it is quoted here because the three kept frames were copied out of seven working directories
-that are not committed, and a provenance file this document wrote by hand would be a claim nothing
-measured.
+**Each kept pitch is committed as the capture's own directory.** `mage-hat-pitch-20/`,
+`mage-hat-pitch-35-shipped/` and `mage-hat-pitch-55/` each hold the `match-tick-1546.png` the
+capture wrote and the `rendered-from.txt` it wrote beside it, so what a picture here was drawn from
+is a line the tool measured rather than a digest this document quoted. Until 7 September 2026 they
+were three renamed files at the top of this directory, copied out by hand from seven working
+directories; a hand-copied picture arrives carrying no record, and `tools/check-docs.ps1` said so
+the first time `content/units.txt` moved under it.
+
+**Re-captured after that move, the three came back byte-identical.** The consecration duration that
+moved is not visible at tick 1546, so not a pixel of these frames changed — which is exactly the
+case a commit date cannot see, and the whole reason the record sits beside the picture.
 
 **Three committed, seven rendered.** The bracket and the baseline. The other four come back from:
 
