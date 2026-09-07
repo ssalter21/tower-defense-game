@@ -31,6 +31,29 @@ crops of a frame that size, enlarged so a shape twenty pixels across can be seen
 | [`the-same-slow-close.png`](the-same-slow-close.png) | The same frame at 3×, where the slowed bodies are plainly blue and the unslowed ones plainly white. |
 | [`run-over.png`](run-over.png) | The end frame, and where the script went. |
 
+## Four of them photograph effects that no longer look like that
+
+**`resolution.png`, `a-slow-nobody-can-see.png`, `the-same-slow-close.png` and
+`capstone-consecration.png` were played before 7 September 2026**, when every
+aura became one flat translucent circle and the wash on a modified body came off
+— see [the decision log](../../decision-log.md). So the spikes, the hex plates
+and the haste rings in `resolution.png` are shapes the game no longer draws, and
+the plainly-blue slowed bodies in the two slow frames are a wash that no longer
+exists.
+
+**They are kept and not re-captured, and that is the rule below rather than an
+oversight.** A photograph of a session is dated by the session; re-capturing one
+is playing a different run, and only a person can play it. What they are
+evidence *of* is undamaged — `a-slow-nobody-can-see.png` is the frame that says
+a slow read at 1x and its bodies did not, which is the finding that put the
+circle on the floor in the first place. Read them as what the game looked like
+on the day they were played.
+
+For what the effects look like now, the fixture frames in the folder above are
+redrawn: [`four-lines-tick-0813.png`](../four-lines-tick-0813.png) and
+[`creep-auras-tick-0272.png`](../creep-auras-tick-0272.png) are the two to
+start with.
+
 ## What dates these, and what does not
 
 `tools/check-docs.ps1` names them exempt from the invariant that dates a picture against the content it draws,
