@@ -1188,34 +1188,42 @@ namespace Tests.PlayMode
             Assert.That(shock.localScale.x,
                 Is.EqualTo(2f * SimUnits.MetresFromMilliHex(slamRadius)).Within(1e-4f));
 
-            // The Blessing: one ring over each tower it reached, which is
-            // itself and the Templar two hexes away and nothing else.
+            // The Blessing: one circle on the ground at the edge of what it
+            // reached. It used to be a ring over each tower it found, and the
+            // claim that survives the change is the one the circle makes --
+            // the Templar two hexes away is inside it and the Paladin is not.
             TowerView blessing = Standing(view, 22);
             TowerView templar = Standing(view, 21);
             TowerView paladin = Standing(view, 20);
+            int blessingRadius = Reaches(blessing);
 
-            view.Decorations.AuraPulsed(blessing.Id, Reaches(blessing), BubblePayload.Cooldown);
+            view.Decorations.AuraPulsed(blessing.Id, blessingRadius, BubblePayload.Cooldown);
 
-            Assert.That(view.Decorations.GlowsDrawn, Is.EqualTo(2),
-                "the Blessing reached itself and the Templar, and drew something else");
+            Assert.That(view.Decorations.GlowsDrawn, Is.EqualTo(1),
+                "the Blessing pulsed and drew something other than its one circle");
 
-            Vector3[] glows = Pieces(view, "TowerGlow").Select(glow => glow.position).ToArray();
-            Vector3 overhead = Vector3.up * MatchTuning.BlessingGlowHeight;
+            Transform glow = Pieces(view, "TowerGlow").Single();
 
             Assert.That(
-                glows.Min(at => Vector3.Distance(at, blessing.transform.position + overhead)),
+                Vector3.Distance(
+                    glow.position,
+                    blessing.transform.position + (Vector3.up * MatchTuning.FloorClearance)),
                 Is.LessThan(1e-3f),
-                "the tower doing the blessing is not wearing one");
+                "the circle is not under the tower that pulsed it");
+
+            float blessingReach = SimUnits.MetresFromMilliHex(blessingRadius);
+
+            Assert.That(glow.localScale.x, Is.EqualTo(2f * blessingReach).Within(1e-4f));
 
             Assert.That(
-                glows.Min(at => Vector3.Distance(at, templar.transform.position + overhead)),
-                Is.LessThan(1e-3f),
-                "the Templar is inside the aura and is not wearing one");
+                Flat(templar.transform.position - blessing.transform.position),
+                Is.LessThan(blessingReach),
+                "the Templar is inside the aura and the circle does not cover it");
 
             Assert.That(
-                glows.Min(at => Vector3.Distance(at, paladin.transform.position + overhead)),
-                Is.GreaterThan(1f),
-                "the Paladin is six hexes away and is wearing one anyway");
+                Flat(paladin.transform.position - blessing.transform.position),
+                Is.GreaterThan(blessingReach),
+                "the Paladin is six hexes away and the circle covers it anyway");
 
             // The Mortar: a burst on the body the shell arrived at.
             int creepId = view.Current.Creeps[0].Id;
@@ -1244,7 +1252,7 @@ namespace Tests.PlayMode
             // And every one of them holds the size it reported. A shape that
             // stands for a radius saying a smaller radius each tick is the bug
             // the ring already had.
-            Transform[] shapes = { slow, shock, burst };
+            Transform[] shapes = { slow, shock, glow, burst };
             Vector3[] drawnAt = shapes.Select(shape => shape.localScale).ToArray();
 
             for (var tick = 1; tick < MatchTuning.GroundShockTicks; tick++)
@@ -1696,34 +1704,21 @@ namespace Tests.PlayMode
             Assert.That(light.localScale.x,
                 Is.EqualTo(2f * SimUnits.MetresFromMilliHex(consecrationRadius)).Within(1e-4f));
 
-            // The Overgrowth: roots under every body the aura is holding, which
-            // at sixty hexes is every body on the board.
+            // The Overgrowth: nothing at all, and it is the one aura on the
+            // roster that draws nothing. Its reach is sixty hexes, so the
+            // circle every other aura leaves would be a hundred and twenty
+            // across on a board nineteen wide -- the screen washed flat rather
+            // than an area shown. See docs/decision-log.md.
             TowerView overgrowth = Standing(view, 30);
+            int standing = view.Decorations.ActiveCount;
 
             view.Decorations.AuraPulsed(overgrowth.Id, Reaches(overgrowth), BubblePayload.Speed);
 
-            Assert.That(view.Decorations.RootsDrawn, Is.EqualTo(view.Current.Creeps.Count),
-                "the Overgrowth slows the whole board and the roots reached a different number of "
-                + "bodies than are standing on it");
+            Assert.That(view.Decorations.ActiveCount, Is.EqualTo(standing),
+                "the Overgrowth pulsed and drew something, which at sixty hexes covers the board");
 
-            Assert.That(view.Decorations.RootsDrawn, Is.GreaterThan(0),
-                "no body was on the board, so this proves nothing");
-
-            Vector3[] roots = Pieces(view, "OvergrowthRoots").Select(patch => patch.position).ToArray();
-
-            foreach (int walking in view.Current.Creeps.Select(creep => creep.Id))
-            {
-                Vector3 under = view.Creeps.Live[walking].transform.position
-                    + (Vector3.up * MatchTuning.FloorClearance);
-
-                Assert.That(roots.Min(at => Vector3.Distance(at, under)), Is.LessThan(1e-3f),
-                    $"creep {walking} is inside the aura and has no roots under it");
-            }
-
-            Assert.That(
-                Pieces(view, "OvergrowthRoots").First().localScale.x,
-                Is.EqualTo(MatchTuning.OvergrowthRootPatchDiameter).Within(1e-4f),
-                "a patch of roots is scaled by the reach of an aura that covers ten boards");
+            Assert.That(view.Decorations.EventsHeard, Is.GreaterThan(0),
+                "the pulse never arrived, so drawing nothing proves nothing");
 
             // The Unravel: the hex his bolt landed on, stripped. The event
             // names the body and never him, so what picks this shape is the
@@ -1792,7 +1787,7 @@ namespace Tests.PlayMode
         {
             MatchView view = BeginWithTheMagicLines();
 
-            RunUntil(view, () => view.Decorations.BoltsDrawn > 0 && view.Decorations.RootsDrawn > 0);
+            RunUntil(view, () => view.Decorations.BoltsDrawn > 0 && view.Decorations.LightsDrawn > 0);
 
             Assert.That(view.Decorations.BoltsDrawn, Is.GreaterThan(0),
                 "no magic row fired in the whole match, so this proves nothing");
@@ -1812,7 +1807,6 @@ namespace Tests.PlayMode
 
             Assert.That(view.Decorations.BoltsDrawn, Is.EqualTo(0));
             Assert.That(view.Decorations.LightsDrawn, Is.EqualTo(0));
-            Assert.That(view.Decorations.RootsDrawn, Is.EqualTo(0));
             Assert.That(view.Decorations.StripsDrawn, Is.EqualTo(0));
 
             Assert.That(view.Decorations.ActiveCount, Is.EqualTo(0),
@@ -1857,9 +1851,15 @@ namespace Tests.PlayMode
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// A creep something has landed on wears it: a wash while a modifier is
-        /// in force, and a bar while a pool stands in front of its health.
+        /// A creep something has landed on wears it: a bar while a pool stands
+        /// in front of its health.
         /// </summary>
+        /// <remarks>
+        /// <b>A modifier in force is drawn nowhere on the body.</b> A wash of
+        /// colour used to say so and Sam took it off on 7 Sep 2026 — what an
+        /// aura is doing is read off the translucent circle it lays on the
+        /// floor. See <c>docs/decision-log.md</c>.
+        /// </remarks>
         /// <remarks>
         /// <b>Played against a fixture roster, and it has to be.</b> Every row
         /// of <c>content/units.txt</c> authors no bubble at all, so a match of
@@ -1879,10 +1879,6 @@ namespace Tests.PlayMode
             CreepSnapshot slowed = view.Current.Creeps.First(creep => creep.SpeedMagnitude != 0);
 
             Assert.That(slowed.SpeedMagnitude, Is.Negative, "the fixture archer's bubble is a slow");
-            Assert.That(
-                view.Creeps.Live[slowed.Id].Marks.Wash,
-                Is.EqualTo(MatchTuning.SpeedEffectTint),
-                "a creep the snapshot says is slowed is drawn in its own colour");
 
             // And the bar is the pool, as a share of the health pool its row
             // authored. Asserted against the number in the snapshot rather than
@@ -1945,8 +1941,11 @@ namespace Tests.PlayMode
 
             RunUntil(view, () => view.Current.Creeps.Any(creep => creep.SpeedMagnitude != 0));
 
+            RunUntil(view, () => view.Current.Creeps.Any(creep => creep.Shield > 0));
+
             int tick = view.Current.Tick;
             int slowed = view.Current.Creeps.First(creep => creep.SpeedMagnitude != 0).Id;
+            CreepSnapshot pooled = view.Current.Creeps.First(creep => creep.Shield > 0);
 
             view.ReSimulateTo(tick + 60);
             view.ReSimulateTo(tick);
@@ -1956,10 +1955,14 @@ namespace Tests.PlayMode
                 Is.True,
                 "the same tick played again is a different match");
 
+            // The bar is what carries the claim now that no modifier is drawn
+            // on the body at all: it is a pure function of the snapshot, so a
+            // scrub back onto this tick has to put it back exactly.
             Assert.That(
-                view.Creeps.Live[slowed].Marks.Wash,
-                Is.EqualTo(MatchTuning.SpeedEffectTint),
-                "a creep scrubbed back onto the tick it was slowed on is drawn as though it were not");
+                view.Creeps.Live[pooled.Id].Marks.ShieldSegment.localScale.x,
+                Is.EqualTo(MatchTuning.UnitBarLength * (pooled.Shield / (float)FixtureMaxHp))
+                    .Within(1e-4f),
+                "a creep scrubbed back onto the tick it carried a pool on is drawn without it");
         }
 
         /// <summary>
@@ -2211,7 +2214,6 @@ namespace Tests.PlayMode
             {
                 foreach (CreepView drawn in view.Creeps.Live.Values)
                 {
-                    Assert.That(drawn.Marks.Wash, Is.Null, "a creep with nothing on it was washed");
                     Assert.That(drawn.Marks.Bar.gameObject.activeSelf, Is.False,
                         "a creep with no pool wears a bar");
                 }
@@ -2255,32 +2257,38 @@ namespace Tests.PlayMode
 
             view.Decorations.Clear();
 
-            // The Skeleton Mage: a ring over the head of every body its haste
-            // reached, itself included.
+            // The Skeleton Mage: one circle on the ground at the edge of its
+            // haste. It used to be a ring over each body it reached; what the
+            // circle has to keep saying is that those bodies are inside it.
             int mage = Walkers(view, SkeletonMage).First();
             int hasteRadius = Pulses(types, SkeletonMage);
             Vector3[] hastened = Bodies(view, mage, hasteRadius);
 
             view.Decorations.AuraPulsed(mage, hasteRadius, BubblePayload.Speed);
 
-            Assert.That(view.Decorations.HasteRingsDrawn, Is.EqualTo(hastened.Length),
-                "the haste reached a different number of bodies than are standing inside it");
+            Assert.That(view.Decorations.HasteRingsDrawn, Is.EqualTo(1),
+                "the haste pulsed and drew something other than its one circle");
 
-            Assert.That(view.Decorations.HasteRingsDrawn, Is.GreaterThan(0),
+            Assert.That(hastened.Length, Is.GreaterThan(0),
                 "the emitter is inside its own aura, so this can never be none");
 
-            Transform[] rings = Pieces(view, "HasteRing").ToArray();
+            Transform haste = Pieces(view, "HasteRing").Single();
+            Vector3 pulsedAt = view.Creeps.Live[mage].transform.position;
+            float hasteReach = SimUnits.MetresFromMilliHex(hasteRadius);
+
+            Assert.That(
+                Vector3.Distance(
+                    haste.position, pulsedAt + (Vector3.up * MatchTuning.FloorClearance)),
+                Is.LessThan(1e-3f),
+                "the circle is not under the body that pulsed it");
+
+            Assert.That(haste.localScale.x, Is.EqualTo(2f * hasteReach).Within(1e-4f));
 
             foreach (Vector3 body in hastened)
             {
-                Vector3 over = body + (Vector3.up * MatchTuning.HasteRingHeight);
-
-                Assert.That(rings.Min(ring => Vector3.Distance(ring.position, over)), Is.LessThan(1e-3f),
-                    "a body inside the haste has no ring over its head");
+                Assert.That(Flat(body - pulsedAt), Is.LessThan(hasteReach + 1e-3f),
+                    "a body the haste reached is outside the circle drawn for it");
             }
-
-            Assert.That(rings[0].localScale.x, Is.EqualTo(MatchTuning.HasteRingDiameter).Within(1e-4f),
-                "the ring over a hastened body is scaled by the reach of the aura rather than by itself");
 
             // The Necromancer: a cage over the ground its ward covered, as tall
             // as it is wide.
@@ -2290,7 +2298,7 @@ namespace Tests.PlayMode
             view.Decorations.AuraPulsed(necromancer, wardRadius, BubblePayload.Shield);
 
             Assert.That(view.Decorations.WardDomesDrawn, Is.EqualTo(1),
-                "the Necromancer warded and nothing stood over it");
+                "the Necromancer warded and the ground stayed bare");
 
             Transform dome = Pieces(view, "WardDome").Single();
 
@@ -2300,11 +2308,14 @@ namespace Tests.PlayMode
                     view.Creeps.Live[necromancer].transform.position
                         + (Vector3.up * MatchTuning.FloorClearance)),
                 Is.LessThan(1e-3f),
-                "the cage is not over the body that warded");
+                "the circle is not under the body that warded");
 
-            Assert.That(dome.localScale,
-                Is.EqualTo(Vector3.one * (2f * SimUnits.MetresFromMilliHex(wardRadius))).Within(1e-4f),
-                "the cage reports a radius in all three directions, so it is scaled in all three");
+            Assert.That(dome.localScale.x,
+                Is.EqualTo(2f * SimUnits.MetresFromMilliHex(wardRadius)).Within(1e-4f),
+                "the ward's circle is not as wide as the ward reached");
+
+            Assert.That(dome.localScale.y, Is.LessThan(dome.localScale.x),
+                "the ward is drawn standing up, and every aura lies flat on the floor now");
 
             // The Witch: plates on the ground out to the edge of the hex ward.
             int witch = Walkers(view, Witch).First();
@@ -2334,30 +2345,36 @@ namespace Tests.PlayMode
 
             view.Decorations.AuraPulsed(frozen, frostRadius, BubblePayload.Cooldown);
 
-            Assert.That(view.Decorations.FrostSpikesDrawn, Is.EqualTo(towers.Length),
-                "the frost reached a different number of towers than are standing inside it");
+            Assert.That(view.Decorations.FrostSpikesDrawn, Is.EqualTo(1),
+                "the frostbite pulsed and drew something other than its one circle");
 
-            Transform[] crowns = Pieces(view, "FrostSpikes").ToArray();
+            Transform crown = Pieces(view, "FrostSpikes").Single();
+            Vector3 frozenAt = view.Creeps.Live[frozen].transform.position;
+            float frostReach = SimUnits.MetresFromMilliHex(frostRadius);
+
+            Assert.That(
+                Vector3.Distance(
+                    crown.position, frozenAt + (Vector3.up * MatchTuning.FloorClearance)),
+                Is.LessThan(1e-3f),
+                "the circle is not under the body that pulsed it");
+
+            Assert.That(crown.localScale.x, Is.EqualTo(2f * frostReach).Within(1e-4f));
+
+            Assert.That(towers.Length, Is.GreaterThan(0),
+                "no tower was inside the frostbite, so this proves nothing");
 
             foreach (Vector3 tower in towers)
             {
-                Vector3 at = tower + (Vector3.up * MatchTuning.FloorClearance);
-
-                Assert.That(crowns.Min(crown => Vector3.Distance(crown.position, at)), Is.LessThan(1e-3f),
-                    "a tower inside the frostbite has no crown at its feet");
+                Assert.That(Flat(tower - frozenAt), Is.LessThan(frostReach + 1e-3f),
+                    "a tower the frostbite reached is outside the circle drawn for it");
             }
-
-            Assert.That(crowns[0].localScale.x,
-                Is.EqualTo(MatchTuning.FrostCrownDiameter).Within(1e-4f),
-                "the crown at a frozen tower's feet is scaled by the reach of the aura");
 
             Assert.That(view.Decorations.RingsDrawn, Is.EqualTo(0),
                 "a creep aura fell back to the plain disc, so its binding was not read");
 
             // And every one of them holds the size it reported. All four stand
-            // for a distance or for a body caught, and neither may close down
-            // over its life.
-            Transform[] shapes = { rings[0], dome, plates, crowns[0] };
+            // for a distance, and none may close down over its life.
+            Transform[] shapes = { haste, dome, plates, crown };
             Vector3[] drawnAt = shapes.Select(shape => shape.localScale).ToArray();
 
             for (var tick = 1; tick < MatchTuning.WardDomeTicks; tick++)
@@ -2475,19 +2492,6 @@ namespace Tests.PlayMode
                             * (carrying.Shield / (float)types.ById(unitId).MaxHp))
                         .Within(1e-4f),
                     $"unit {unitId}'s pool is not drawn as a share of the health it stands in front of");
-
-                // A pool washes nothing, and the wash on one of these bodies is
-                // never the pool. It is often not null: the Skeleton Mage walks
-                // in this wave too, and a hastened body is washed in the same
-                // colour a slowed one is -- which is the placeholder saying
-                // that the sign of a speed modifier is not distinguished.
-                Assert.That(
-                    marks.Wash == null
-                    || carrying.SpeedMagnitude != 0
-                    || carrying.ArmourMagnitude != 0,
-                    Is.True,
-                    $"unit {unitId} is washed while nothing has moved its speed or its armour, so the "
-                    + "wash is being driven by the pool");
 
                 Assert.That(types.ById(unitId).Bubble.Present, Is.False,
                     $"unit {unitId} authors a bubble, so its pool is no longer the case this is about");
@@ -2714,6 +2718,21 @@ namespace Tests.PlayMode
                 StreamingContent.ReadWave(types),
                 TheMatchOnScreen.Seed);
         }
+
+        /// <summary>
+        /// How far apart two points are across the floor, ignoring height.
+        /// </summary>
+        /// <remarks>
+        /// <b>Flat, because every aura's circle is.</b> The simulation reads a
+        /// bubble's radius as a sphere and adds half a hex per level of height;
+        /// the circle drawn for it lies on the floor and knows nothing about
+        /// how tall the ground is. So "inside the aura" is asked here the way
+        /// the circle answers it, and a tower a level up that the pulse just
+        /// missed is a tower the circle covers — visible, and cheaper than a
+        /// second opinion about a simulation rule.
+        /// </remarks>
+        private static float Flat(Vector3 between) =>
+            new Vector2(between.x, between.z).magnitude;
 
         /// <summary>The tower on the board drawn as the row with this id.</summary>
         private static TowerView Standing(MatchView view, int unitId) =>

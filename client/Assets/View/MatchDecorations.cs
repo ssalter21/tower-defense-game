@@ -81,10 +81,6 @@ namespace View
 
         private readonly Func<int, RowSignature?> _creepSignature;
 
-        private readonly Func<int, float, IReadOnlyList<Vector3>> _towersWithin;
-
-        private readonly Func<int, float, IReadOnlyList<Vector3>> _creepsWithin;
-
         /// <summary>
         /// Where every number and colour on this page is read from. <see
         /// cref="EffectLook.Shipped"/> unless a capture handed one in, and that
@@ -141,16 +137,6 @@ namespace View
         /// lookup that answered for creeps as well would draw a walking row's
         /// own aura shape under a body a mortar shell had just landed on.
         /// </param>
-        /// <param name="towersWithin">
-        /// Where every tower standing within so many metres of an entity is —
-        /// what the Blessing's glow is drawn on. Positions rather than ids,
-        /// because nothing here would do anything with an id but ask for the
-        /// position.
-        /// </param>
-        /// <param name="creepsWithin">
-        /// Where every creep within so many metres of an entity is — what the
-        /// Overgrowth's roots are drawn under, on the same terms.
-        /// </param>
         /// <param name="look">
         /// The look to draw every effect at, or null for the one the game
         /// ships. <b>Only a capture ever passes one</b>, and it passes one
@@ -167,8 +153,6 @@ namespace View
             Func<int, Vector3?> entityGround,
             Func<int, RowSignature?> towerSignature,
             Func<int, RowSignature?> creepSignature,
-            Func<int, float, IReadOnlyList<Vector3>> towersWithin,
-            Func<int, float, IReadOnlyList<Vector3>> creepsWithin,
             EffectLook look = null)
         {
             _look = look ?? EffectLook.Shipped;
@@ -178,33 +162,46 @@ namespace View
             _entityGround = entityGround ?? throw new ArgumentNullException(nameof(entityGround));
             _towerSignature = towerSignature ?? throw new ArgumentNullException(nameof(towerSignature));
             _creepSignature = creepSignature ?? throw new ArgumentNullException(nameof(creepSignature));
-            _towersWithin = towersWithin ?? throw new ArgumentNullException(nameof(towersWithin));
-            _creepsWithin = creepsWithin ?? throw new ArgumentNullException(nameof(creepsWithin));
-
             _materials[Piece.Tracer] = ViewMaterials.Create("Tracer", _look.TracerColor);
             _materials[Piece.MuzzleFlash] = ViewMaterials.Create("MuzzleFlash", _look.MuzzleFlashColor);
             _materials[Piece.Spark] = ViewMaterials.Create("HitSpark", _look.HitSparkColor);
-            _materials[Piece.BubbleRing] = ViewMaterials.Create("BubbleRing", _look.BubbleRingColor);
-            _materials[Piece.SlowRing] = ViewMaterials.Create("SlowRing", _look.SlowRingColor);
-            _materials[Piece.GroundShock] =
-                ViewMaterials.Create("GroundShock", _look.GroundShockColor);
-            _materials[Piece.TowerGlow] = ViewMaterials.Create("TowerGlow", _look.BlessingGlowColor);
             _materials[Piece.MortarBurst] =
                 ViewMaterials.Create("MortarBurst", _look.MortarBurstColor);
             _materials[Piece.LongShot] = ViewMaterials.Create("LongShot", _look.LongShotColor);
             _materials[Piece.ThrownKnife] = ViewMaterials.Create("ThrownKnife", _look.KnifeColor);
             _materials[Piece.MagicBolt] = ViewMaterials.Create("MagicBolt", _look.MagicBoltColor);
-            _materials[Piece.ConsecrationLight] =
-                ViewMaterials.Create("ConsecrationLight", _look.ConsecrationLightColor);
-            _materials[Piece.OvergrowthRoots] =
-                ViewMaterials.Create("OvergrowthRoots", _look.OvergrowthRootColor);
             _materials[Piece.ArmourStrip] =
                 ViewMaterials.Create("ArmourStrip", _look.ArmourStripColor);
-            _materials[Piece.HasteRing] = ViewMaterials.Create("HasteRing", _look.HasteRingColor);
-            _materials[Piece.WardDome] = ViewMaterials.Create("WardDome", _look.WardDomeColor);
-            _materials[Piece.HexPlates] = ViewMaterials.Create("HexPlates", _look.HexPlateColor);
-            _materials[Piece.FrostSpikes] =
-                ViewMaterials.Create("FrostSpikes", _look.FrostSpikeColor);
+
+            // Every aura is one translucent circle, so every aura's material is
+            // built the one way and differs only in colour.
+            Aura(Piece.BubbleRing, "BubbleRing", _look.BubbleRingColor);
+            Aura(Piece.SlowRing, "SlowRing", _look.SlowRingColor);
+            Aura(Piece.GroundShock, "GroundShock", _look.GroundShockColor);
+            Aura(Piece.TowerGlow, "TowerGlow", _look.BlessingGlowColor);
+            Aura(Piece.ConsecrationLight, "ConsecrationLight", _look.ConsecrationLightColor);
+            Aura(Piece.HasteRing, "HasteRing", _look.HasteRingColor);
+            Aura(Piece.WardDome, "WardDome", _look.WardDomeColor);
+            Aura(Piece.HexPlates, "HexPlates", _look.HexPlateColor);
+            Aura(Piece.FrostSpikes, "FrostSpikes", _look.FrostSpikeColor);
+        }
+
+        /// <summary>
+        /// Builds one aura's material: its own colour, at the one alpha every
+        /// aura circle is drawn at.
+        /// </summary>
+        /// <remarks>
+        /// <b>The alpha is applied here rather than carried on the colour.</b>
+        /// Each of those colours is written in <see cref="MatchTuning"/> as an
+        /// opaque hue, so how see-through the circles are is one number in one
+        /// place instead of nine that could drift apart — which matters while
+        /// it is a placeholder somebody is going to look at and change.
+        /// </remarks>
+        private void Aura(Piece piece, string name, Color colour)
+        {
+            colour.a = _look.AuraDiscAlpha;
+
+            _materials[piece] = ViewMaterials.Translucent(name, colour);
         }
 
         /// <summary>
@@ -227,7 +224,6 @@ namespace View
             ThrownKnife,
             MagicBolt,
             ConsecrationLight,
-            OvergrowthRoots,
             ArmourStrip,
             HasteRing,
             WardDome,
@@ -318,8 +314,6 @@ namespace View
         /// last clear. For tests. One per body the aura is holding, so a single
         /// pulse over four bodies counts four.
         /// </summary>
-        public int RootsDrawn => Drawn(Piece.OvergrowthRoots);
-
         /// <summary>How many of the Unravel's armour strips have been drawn since the last clear.</summary>
         public int StripsDrawn => Drawn(Piece.ArmourStrip);
 
@@ -842,85 +836,77 @@ namespace View
         }
 
         /// <summary>
-        /// The shape one row's bubble leaves, at the size the bubble reached.
+        /// The circle one row's aura leaves, as wide as the aura reached.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Every aura is the same shape and only the colour tells two
+        /// apart.</b> Nine shapes stood here — a ring, cracks, a halo, a light,
+        /// roots, a cage, plates and a crown of shards — and Sam replaced all
+        /// of them with one flat translucent circle on 7 Sep 2026. The
+        /// signature therefore no longer picks a shape; it picks a colour and
+        /// how long the circle stays. See <c>docs/decision-log.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>Nothing is drawn on the bodies the aura found.</b> Four of those
+        /// nine were: a ring over each hastened creep, a glow on each blessed
+        /// tower, a crown at each frostbitten one's feet and roots under each
+        /// held body. Which bodies an aura caught is read off the circle they
+        /// are standing in now, and a body carrying a payload is not marked at
+        /// all — see <see cref="EffectMarks"/>, which no longer washes one.
+        /// </para>
+        /// </remarks>
         private void Signature(BubbleSignature signature, int centreId, int radiusMilliHex)
         {
-            switch (signature)
+            // The Overgrowth alone draws nothing. Its aura reaches sixty hexes,
+            // so a circle at its radius is a hundred and twenty across on a
+            // board nineteen wide -- a screen washed flat rather than an area
+            // shown, which is the one case where the rule would report less
+            // than drawing nothing does.
+            if (signature == BubbleSignature.OvergrowthRoots)
             {
-                // The Shield Wall's: an open ring at the edge of the slow, so
-                // the bodies caught inside it stay visible through it.
-                case BubbleSignature.SlowRing:
-                    Flat(Piece.SlowRing, centreId, radiusMilliHex, _look.SlowRingTicks);
-                    break;
-
-                // The Slam's: cracks running out from under the man who swung
-                // to the edge of what the swing reached.
-                case BubbleSignature.GroundShock:
-                    Flat(Piece.GroundShock, centreId, radiusMilliHex, _look.GroundShockTicks);
-                    break;
-
-                case BubbleSignature.TowerGlow:
-                    TowerGlow(centreId, radiusMilliHex);
-                    break;
-
-                // The Consecration's: light filling the ground the font has
-                // claimed, rather than a band at the edge of it, because what
-                // that aura does happens to a body for standing anywhere
-                // inside.
-                case BubbleSignature.ConsecrationLight:
-                    Disc(
-                        Piece.ConsecrationLight,
-                        centreId,
-                        radiusMilliHex,
-                        _look.ConsecrationLightThickness,
-                        _look.ConsecrationLightTicks);
-                    break;
-
-                case BubbleSignature.OvergrowthRoots:
-                    Roots(centreId, radiusMilliHex);
-                    break;
-
-                // The Skeleton Mage's: a ring over the head of every body the
-                // haste reached, which is the Blessing's shape on the other
-                // side of the board and drawn on what the pulse found for the
-                // same reason -- what that aura does is make other bodies
-                // faster.
-                case BubbleSignature.HasteRing:
-                    HasteRings(centreId, radiusMilliHex);
-                    break;
-
-                // The Necromancer's: a cage standing over the ground the ward
-                // covered. It reports a radius in all three directions, so it
-                // is scaled uniformly rather than laid flat.
-                case BubbleSignature.WardDome:
-                    Dome(centreId, radiusMilliHex);
-                    break;
-
-                // The Witch's: plates lying on the ground out to the edge of
-                // the hex ward.
-                case BubbleSignature.HexPlates:
-                    Flat(Piece.HexPlates, centreId, radiusMilliHex, _look.HexPlateTicks);
-                    break;
-
-                // The Frost Wight's: a crown of shards at the feet of every
-                // tower the frost reached. The one aura on the roster that
-                // reaches the other side, so it is the one whose shape lands on
-                // something nothing else draws on.
-                case BubbleSignature.FrostSpikes:
-                    FrostCrowns(centreId, radiusMilliHex);
-                    break;
-
-                default:
-                    Disc(
-                        Piece.BubbleRing,
-                        centreId,
-                        radiusMilliHex,
-                        _look.BubbleRingThickness,
-                        _look.BubbleRingTicks);
-                    break;
+                return;
             }
+
+            Disc(
+                PieceFor(signature),
+                centreId,
+                radiusMilliHex,
+                _look.AuraDiscThickness,
+                TicksFor(signature));
         }
+
+        /// <summary>
+        /// The pool one aura's circle is drawn out of, which is what carries
+        /// its colour. A row with no signature of its own draws the plain one,
+        /// as every bubble did before any row had one.
+        /// </summary>
+        private static Piece PieceFor(BubbleSignature signature) => signature switch
+        {
+            BubbleSignature.SlowRing => Piece.SlowRing,
+            BubbleSignature.GroundShock => Piece.GroundShock,
+            BubbleSignature.TowerGlow => Piece.TowerGlow,
+            BubbleSignature.ConsecrationLight => Piece.ConsecrationLight,
+            BubbleSignature.HasteRing => Piece.HasteRing,
+            BubbleSignature.WardDome => Piece.WardDome,
+            BubbleSignature.HexPlates => Piece.HexPlates,
+            BubbleSignature.FrostSpikes => Piece.FrostSpikes,
+            _ => Piece.BubbleRing,
+        };
+
+        /// <summary>How long one aura's circle stays, in ticks.</summary>
+        private int TicksFor(BubbleSignature signature) => signature switch
+        {
+            BubbleSignature.SlowRing => _look.SlowRingTicks,
+            BubbleSignature.GroundShock => _look.GroundShockTicks,
+            BubbleSignature.TowerGlow => _look.BlessingGlowTicks,
+            BubbleSignature.ConsecrationLight => _look.ConsecrationLightTicks,
+            BubbleSignature.HasteRing => _look.HasteRingTicks,
+            BubbleSignature.WardDome => _look.WardDomeTicks,
+            BubbleSignature.HexPlates => _look.HexPlateTicks,
+            BubbleSignature.FrostSpikes => _look.FrostSpikeTicks,
+            _ => _look.BubbleRingTicks,
+        };
 
         /// <summary>
         /// What a blast that arrived on a body draws: the Unravel's strip where
@@ -1001,186 +987,6 @@ namespace View
             var scale = new Vector3(diameter, thickness * 0.5f, diameter);
 
             Stays(piece, disc, scale, lifetimeTicks, shrinks: false);
-        }
-
-        /// <summary>
-        /// The Overgrowth's: a patch of roots breaking the ground under every
-        /// body the aura is holding.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Drawn on what the bubble found rather than on the bubble, and
-        /// that is forced by the row.</b> Overgrowth's aura reaches sixty
-        /// hexes — the whole board, every board — so a shape at its radius
-        /// would be a hundred and twenty hexes across on a board nineteen
-        /// wide. What is worth seeing is which bodies are being held, which is
-        /// the same answer the Blessing's halo reached from the other side.
-        /// </para>
-        /// <para>
-        /// <b>Each patch is a fixed size</b>, for the same reason: it stands
-        /// for a body caught rather than for a distance, so nothing here is
-        /// scaled by the reach.
-        /// </para>
-        /// </remarks>
-        private void Roots(int emitterId, int radiusMilliHex)
-        {
-            if (radiusMilliHex <= 0)
-            {
-                return;
-            }
-
-            OnEachFound(
-                Piece.OvergrowthRoots,
-                _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                _look.FloorClearance,
-                _look.OvergrowthRootPatchDiameter,
-                _look.OvergrowthRootTicks);
-        }
-
-        /// <summary>
-        /// The Skeleton Mage's: a ring over the head of every creep its haste
-        /// reached, the emitter included.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>The Blessing's shape, on the other side of the board.</b> Both
-        /// auras make their own side faster, so what is worth seeing is the
-        /// same thing in both cases: which bodies got it. Its own pool and its
-        /// own colour, because the two are told apart by nothing else.
-        /// </para>
-        /// <para>
-        /// <b>It is the one of the three friend-side creep auras drawn on the
-        /// bodies.</b> The Skeleton Mage's haste, the Necromancer's ward and
-        /// the Witch's hex ward all reach creeps within two hexes, so all three
-        /// drawn that way would stack three shapes on one walking body, over
-        /// the bar <see cref="EffectMarks"/> already puts there. The other two
-        /// are drawn at their reach for that reason.
-        /// </para>
-        /// </remarks>
-        private void HasteRings(int emitterId, int radiusMilliHex)
-        {
-            if (radiusMilliHex <= 0)
-            {
-                return;
-            }
-
-            OnEachFound(
-                Piece.HasteRing,
-                _creepsWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                _look.HasteRingHeight,
-                _look.HasteRingDiameter,
-                _look.HasteRingTicks);
-        }
-
-        /// <summary>
-        /// The Frost Wight's: a crown of shards at the feet of every tower its
-        /// frostbite reached.
-        /// </summary>
-        /// <remarks>
-        /// <b>The one shape in this file drawn on a tower by a creep.</b>
-        /// Frostbite is the only aura on the roster whose <c>affects</c> column
-        /// reaches the other side, and a tower carrying a modifier wears
-        /// nothing of its own — <see cref="EffectMarks"/> is a creep's — so
-        /// this is the whole of what says a tower is firing slower.
-        /// </remarks>
-        private void FrostCrowns(int emitterId, int radiusMilliHex)
-        {
-            if (radiusMilliHex <= 0)
-            {
-                return;
-            }
-
-            OnEachFound(
-                Piece.FrostSpikes,
-                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                _look.FloorClearance,
-                _look.FrostCrownDiameter,
-                _look.FrostSpikeTicks);
-        }
-
-        /// <summary>
-        /// The Necromancer's: a cage of arcs standing over the ground its ward
-        /// covered, as wide as the pulse reached.
-        /// </summary>
-        /// <remarks>
-        /// <b>Scaled uniformly and not laid flat</b>, because it is as tall as
-        /// it is wide by construction: what it reports is a radius in all three
-        /// directions, the way the Mortar's burst does, where every shape lying
-        /// on the floor reports one across and keeps a thickness of its own.
-        /// </remarks>
-        private void Dome(int centreId, int radiusMilliHex) =>
-            Uniform(
-                Piece.WardDome,
-                centreId,
-                radiusMilliHex,
-                _look.FloorClearance,
-                _look.WardDomeTicks);
-
-        /// <summary>
-        /// The Blessing's: a ring over the head of every tower the pulse
-        /// reached, the emitter included.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>Drawn on what a bubble found rather than on the bubble, which
-        /// the Overgrowth's roots are too.</b> A ring on the ground would say
-        /// how far the blessing carries, which is true and is not what this
-        /// line is for: what the
-        /// Blessing does is make other towers fire faster, so the thing worth
-        /// seeing is which towers those are. It is a fixed size over each of
-        /// them, because it stands for a tower being blessed and not for a
-        /// distance.
-        /// </para>
-        /// <para>
-        /// <b>Who is inside is measured flat, against where the towers are
-        /// drawn.</b> The simulation reads the same radius as a sphere and adds
-        /// half a hex per level of height; nothing that draws a bubble asks how
-        /// tall the ground is, the same silence the disc keeps. A glow is
-        /// decoration, so a tower a level up that the pulse just missed is a
-        /// halo drawn on a tower whose cooldown did not move — visible, and
-        /// cheaper than a second opinion about a simulation rule.
-        /// </para>
-        /// </remarks>
-        private void TowerGlow(int emitterId, int radiusMilliHex)
-        {
-            if (radiusMilliHex <= 0)
-            {
-                return;
-            }
-
-            OnEachFound(
-                Piece.TowerGlow,
-                _towersWithin(emitterId, SimUnits.MetresFromMilliHex(radiusMilliHex)),
-                _look.BlessingGlowHeight,
-                _look.BlessingGlowDiameter,
-                _look.BlessingGlowTicks);
-        }
-
-        /// <summary>
-        /// One flat shape of a fixed size at each of the places a bubble found,
-        /// <paramref name="height"/> above each of them.
-        /// </summary>
-        /// <remarks>
-        /// <b>The size is fixed and not the reach, which is what makes this the
-        /// other kind of bubble shape.</b> Everything drawn on the bubble is
-        /// scaled by how far it went; these are drawn on the things it found,
-        /// so each one stands for one thing being caught and none of them
-        /// reports a distance. Nothing here shrinks, for the same reason.
-        /// </remarks>
-        private void OnEachFound(
-            Piece piece,
-            IReadOnlyList<Vector3> found,
-            float height,
-            float diameter,
-            int lifetimeTicks)
-        {
-            for (var index = 0; index < found.Count; index++)
-            {
-                Transform drawn = Take(piece);
-                drawn.position = found[index] + (Vector3.up * height);
-
-                Stays(piece, drawn, Flattened(diameter), lifetimeTicks, shrinks: false);
-            }
         }
 
         /// <summary>
@@ -1338,13 +1144,23 @@ namespace View
         }
 
         /// <summary>
-        /// The mesh one signature is drawn with, built the first time it is
+        /// The mesh one shot or blast is drawn with, built the first time it is
         /// asked for.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Lazily, because a match that stands no capstone should not pay for
         /// meshes it never draws — which is every match of the shipped
         /// defense.
+        /// </para>
+        /// <para>
+        /// <b>No aura is in here.</b> Every one of them is a flat translucent
+        /// circle now, which is a Unity cylinder scaled flat and needs nothing
+        /// generated; the three shapes left are the Mortar's burst, the
+        /// Unravel's strip and the Fan of Knives' knife. Anything else reaching
+        /// this has been given a pool but no shape, which is a mistake worth a
+        /// throw rather than a ring drawn as a guess.
+        /// </para>
         /// </remarks>
         private Mesh MeshFor(Piece piece)
         {
@@ -1355,36 +1171,9 @@ namespace View
 
             Mesh made = piece switch
             {
-                Piece.GroundShock => EffectMeshes.Cracks(
-                    _look.GroundShockCracks,
-                    _look.GroundShockInnerFraction * EffectMeshes.OuterRadius,
-                    _look.GroundShockWidthFraction * EffectMeshes.OuterRadius,
-                    _look.GroundShockThickness),
-
                 Piece.MortarBurst => EffectMeshes.Burst(
                     _look.MortarBurstShards,
                     _look.MortarBurstWidthFraction * EffectMeshes.OuterRadius),
-
-                Piece.OvergrowthRoots => EffectMeshes.Roots(
-                    _look.OvergrowthRootCount,
-                    _look.OvergrowthRootWidthFraction * EffectMeshes.OuterRadius,
-                    _look.OvergrowthRootThickness,
-                    _look.OvergrowthRootKink),
-
-                Piece.HexPlates => EffectMeshes.BrokenRing(
-                    _look.HexPlateSides,
-                    _look.HexPlateBandFraction * EffectMeshes.OuterRadius,
-                    _look.HexPlateThickness),
-
-                Piece.WardDome => EffectMeshes.Dome(
-                    _look.WardDomeRibs,
-                    _look.WardDomeSegments,
-                    _look.WardDomeRibWidthFraction * EffectMeshes.OuterRadius),
-
-                Piece.FrostSpikes => EffectMeshes.Spikes(
-                    _look.FrostSpikeCount,
-                    _look.FrostSpikeHeight,
-                    _look.FrostSpikeWidthFraction * EffectMeshes.OuterRadius),
 
                 Piece.ArmourStrip => EffectMeshes.BrokenRing(
                     _look.ArmourStripSides,
@@ -1398,13 +1187,9 @@ namespace View
                     _look.KnifeGuardFraction,
                     _look.KnifeThicknessFraction),
 
-                // The slow ring, the tower glow and the haste ring are one
-                // ring at three sizes, so they are one mesh. Their pools stay
-                // separate because their colours and lifetimes are not.
-                _ => EffectMeshes.Ring(
-                    _look.SignatureRingSides,
-                    _look.SignatureRingBandFraction * EffectMeshes.OuterRadius,
-                    _look.SignatureRingThickness),
+                _ => throw new InvalidOperationException(
+                    piece + " has no generated mesh. Every aura is a flat circle drawn on a Unity "
+                    + "cylinder, so only a shot or a blast shape should ever reach here."),
             };
 
             _meshes[piece] = made;
@@ -1427,7 +1212,9 @@ namespace View
                     GameObject.CreatePrimitive(PrimitiveType.Cube),
                 Piece.MuzzleFlash => GameObject.CreatePrimitive(PrimitiveType.Sphere),
                 Piece.Spark => GameObject.CreatePrimitive(PrimitiveType.Sphere),
-                Piece.BubbleRing or Piece.ConsecrationLight =>
+                Piece.BubbleRing or Piece.SlowRing or Piece.GroundShock
+                    or Piece.TowerGlow or Piece.ConsecrationLight or Piece.HasteRing
+                    or Piece.WardDome or Piece.HexPlates or Piece.FrostSpikes =>
                     GameObject.CreatePrimitive(PrimitiveType.Cylinder),
                 _ => Built(piece),
             };

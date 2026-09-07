@@ -348,7 +348,6 @@ namespace View.Editor
                         + view.Decorations.KnivesDrawn + " knife / "
                         + view.Decorations.BoltsDrawn + " bolt / "
                         + view.Decorations.LightsDrawn + " light / "
-                        + view.Decorations.RootsDrawn + " roots / "
                         + view.Decorations.StripsDrawn + " strip / "
                         + view.Decorations.HasteRingsDrawn + " haste / "
                         + view.Decorations.WardDomesDrawn + " ward / "

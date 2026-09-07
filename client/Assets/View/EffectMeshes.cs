@@ -4,10 +4,9 @@ using UnityEngine;
 namespace View
 {
     /// <summary>
-    /// The shapes a row's signature is drawn with, generated in code: a ring, a
-    /// ring in pieces, a set of cracks running out from a centre, a burst of
-    /// shards, a spread of roots, a cage of arcs, a crown of upright shards and
-    /// a thrown knife. Each one is a single mesh made of solid bars.
+    /// The shapes a row's shots and blasts are drawn with, generated in code: a
+    /// ring in pieces, a burst of shards and a thrown knife. Each one is a
+    /// single mesh made of solid bars.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -37,11 +36,18 @@ namespace View
     /// <para>
     /// <b>How far a shape stands off the plane it lies on is a distance in
     /// metres and is not scaled with the radius.</b> A caller scaling a flat
-    /// shape leaves its vertical axis at one, so a ring's thickness and a
-    /// crown's height come out of this file already in the units the board is
-    /// in. <see cref="Dome"/> is the exception on the other side: it is as tall
-    /// as it is wide because it stands for a radius in all three directions,
-    /// so its caller scales it uniformly.
+    /// shape leaves its vertical axis at one, so a band's thickness comes out
+    /// of this file already in the units the board is in. <see cref="Burst"/>
+    /// is the exception on the other side: it is as tall as it is wide because
+    /// it stands for a radius in all three directions, so its caller scales it
+    /// uniformly.
+    /// </para>
+    /// <para>
+    /// <b>Five shapes stood here and are gone.</b> A ring, cracks, roots, a
+    /// cage of arcs and a crown of upright shards were what nine auras were
+    /// drawn as; every aura is one flat translucent circle now, which is a
+    /// Unity cylinder and needs nothing generated. See
+    /// <c>docs/decision-log.md</c>.
     /// </para>
     /// <para>
     /// <b>Each bar is six four-cornered faces with its own vertices, so the
@@ -58,29 +64,6 @@ namespace View
         /// radius it meant.
         /// </summary>
         public const float OuterRadius = 0.5f;
-
-        /// <summary>
-        /// A flat ring lying in the XZ plane: <paramref name="sides"/> bars laid
-        /// end to end round a circle of <see cref="OuterRadius"/>.
-        /// </summary>
-        /// <param name="sides">How many bars the circle is made of.</param>
-        /// <param name="band">How wide the band is, radially, in mesh units.</param>
-        /// <param name="thickness">How tall the band stands off the plane.</param>
-        public static Mesh Ring(int sides, float band, float thickness)
-        {
-            var builder = new Bars();
-
-            for (var side = 0; side < sides; side++)
-            {
-                builder.Add(
-                    OnCircle(side, sides, OuterRadius),
-                    OnCircle(side + 1, sides, OuterRadius),
-                    band * 0.5f,
-                    thickness * 0.5f);
-            }
-
-            return builder.ToMesh("EffectRing");
-        }
 
         /// <summary>
         /// The same ring with every other bar left out, so it reads as a band
@@ -109,148 +92,6 @@ namespace View
             }
 
             return builder.ToMesh("EffectBrokenRing");
-        }
-
-        /// <summary>
-        /// Cracks running out from the middle: <paramref name="spokes"/> bars
-        /// lying in the XZ plane, each from <paramref name="inner"/> out to
-        /// <see cref="OuterRadius"/>.
-        /// </summary>
-        public static Mesh Cracks(int spokes, float inner, float width, float thickness)
-        {
-            var builder = new Bars();
-
-            for (var spoke = 0; spoke < spokes; spoke++)
-            {
-                Vector3 along = OnCircle(spoke, spokes, 1f);
-
-                builder.Add(along * inner, along * OuterRadius, width * 0.5f, thickness * 0.5f);
-            }
-
-            return builder.ToMesh("EffectCracks");
-        }
-
-        /// <summary>
-        /// Roots: <paramref name="roots"/> two-piece bars lying in the XZ
-        /// plane, each leaving the middle straight and then bending sideways
-        /// before it reaches <see cref="OuterRadius"/>.
-        /// </summary>
-        /// <param name="roots">How many roots break the ground.</param>
-        /// <param name="width">How wide one root is, in mesh units.</param>
-        /// <param name="thickness">How far a root stands off the plane.</param>
-        /// <param name="kink">
-        /// How far the outer half swings off the line it left on, as a share of
-        /// <see cref="OuterRadius"/>.
-        /// </param>
-        /// <remarks>
-        /// <b>The bend is the whole of what makes this a root and not a
-        /// crack.</b> <see cref="Cracks"/> is a straight radial spread — a
-        /// thing that happened at once, from a point — and a root is a thing
-        /// that grew, so each one leaves the middle straight and then turns.
-        /// Consecutive roots turn opposite ways, so the spread stays balanced
-        /// rather than winding one way like a pinwheel.
-        /// </remarks>
-        public static Mesh Roots(int roots, float width, float thickness, float kink)
-        {
-            var builder = new Bars();
-
-            for (var root = 0; root < roots; root++)
-            {
-                Vector3 along = OnCircle(root, roots, 1f);
-                var aside = new Vector3(-along.z, 0f, along.x);
-
-                Vector3 knee = along * (OuterRadius * 0.5f);
-                Vector3 tip =
-                    (along * OuterRadius) + (aside * (kink * OuterRadius * (root % 2 == 0 ? 1f : -1f)));
-
-                builder.Add(Vector3.zero, knee, width * 0.5f, thickness * 0.5f);
-                builder.Add(knee, tip, width * 0.5f, thickness * 0.5f);
-            }
-
-            return builder.ToMesh("EffectRoots");
-        }
-
-        /// <summary>
-        /// A dome standing on the XZ plane: <paramref name="ribs"/> arcs
-        /// leaving the rim at <see cref="OuterRadius"/> and meeting over the
-        /// middle at the same height, each drawn as
-        /// <paramref name="segments"/> straight bars.
-        /// </summary>
-        /// <param name="ribs">How many arcs the cage is made of.</param>
-        /// <param name="segments">How many bars one arc is broken into.</param>
-        /// <param name="width">How thick a bar is, in mesh units, in both of the directions that are not its length.</param>
-        /// <remarks>
-        /// <para>
-        /// <b>A cage rather than a shell, because a shell would hide what is
-        /// under it.</b> Everything here is opaque — the same constraint that
-        /// picked shrinking over fading — so a closed hemisphere over a body
-        /// would draw the body out of the picture entirely. Ribs with the gaps
-        /// left in are the plainest solid that says "there is something over
-        /// this" and still lets the thing be seen.
-        /// </para>
-        /// <para>
-        /// <b>It is as tall as it is wide, so a caller scales it uniformly by
-        /// a diameter</b> and gets a hemisphere of exactly the radius it asked
-        /// for — unlike the flat shapes, whose height is a thickness and is
-        /// left alone. The burst is the other shape scaled that way, for the
-        /// same reason: both leave the ground as well as crossing it.
-        /// </para>
-        /// </remarks>
-        public static Mesh Dome(int ribs, int segments, float width)
-        {
-            var builder = new Bars();
-
-            for (var rib = 0; rib < ribs; rib++)
-            {
-                Vector3 outward = OnCircle(rib, ribs, 1f);
-
-                for (var segment = 0; segment < segments; segment++)
-                {
-                    builder.Add(
-                        OnArc(outward, segment, segments),
-                        OnArc(outward, segment + 1, segments),
-                        width * 0.5f,
-                        width * 0.5f);
-                }
-            }
-
-            return builder.ToMesh("EffectDome");
-        }
-
-        /// <summary>
-        /// A crown of upright shards: <paramref name="count"/> bars standing on
-        /// the circle of <see cref="OuterRadius"/> in the XZ plane, every other
-        /// one half as tall as its neighbours.
-        /// </summary>
-        /// <param name="count">How many shards stand round the circle.</param>
-        /// <param name="height">How tall a full shard is, in mesh units.</param>
-        /// <param name="width">How thick one shard is, in mesh units.</param>
-        /// <remarks>
-        /// <b>Upright is the whole of what separates this from a ring.</b> Both
-        /// stand at the edge of what a bubble reached and both are read from
-        /// above; a band lying flat is a boundary drawn on the floor and a row
-        /// of shards standing off it is something that has come up out of the
-        /// floor. The alternating heights are the plainest thing that makes the
-        /// row read as broken shards rather than as a fence, on the same terms
-        /// <see cref="BrokenRing"/>'s equal gaps are: half, because any other
-        /// share would be a proportion somebody chose.
-        /// </remarks>
-        public static Mesh Spikes(int count, float height, float width)
-        {
-            var builder = new Bars();
-
-            for (var spike = 0; spike < count; spike++)
-            {
-                Vector3 foot = OnCircle(spike, count, OuterRadius);
-
-                builder.Add(
-                    foot,
-                    foot + (Vector3.up * (spike % 2 == 0 ? height : height * 0.5f)),
-                    width * 0.5f,
-                    width * 0.5f);
-            }
-
-            return builder.ToMesh("EffectSpikes");
         }
 
         /// <summary>
@@ -344,20 +185,6 @@ namespace View
             float angle = 2f * Mathf.PI * step / steps;
 
             return new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-        }
-
-        /// <summary>
-        /// The point <paramref name="step"/> steps of <paramref name="steps"/>
-        /// along a quarter circle of <see cref="OuterRadius"/> that leaves the
-        /// rim in the <paramref name="outward"/> direction and finishes over
-        /// the middle.
-        /// </summary>
-        private static Vector3 OnArc(Vector3 outward, int step, int steps)
-        {
-            float angle = 0.5f * Mathf.PI * step / steps;
-
-            return (outward * (Mathf.Cos(angle) * OuterRadius))
-                + (Vector3.up * (Mathf.Sin(angle) * OuterRadius));
         }
 
         /// <summary>

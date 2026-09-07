@@ -1,8 +1,8 @@
 namespace View
 {
     /// <summary>
-    /// What one row's <i>bubble</i> is drawn as, so that a row reads as itself
-    /// rather than as the disc every bubble in the game shares.
+    /// Which aura one row's <i>bubble</i> is, so that its circle reads as that
+    /// row's rather than as the plain one every bubble in the game shares.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -14,10 +14,22 @@ namespace View
     /// <see cref="MatchDecorations"/>.
     /// </para>
     /// <para>
-    /// <b>The names here are shapes and not rows.</b> What each shape is made
-    /// of is <see cref="EffectMeshes"/>'s business and how big and what colour
-    /// is <see cref="MatchTuning"/>'s; a row picks one of these and says
-    /// nothing else about how it looks.
+    /// <b>These used to be shapes and are now identities.</b> Each name below
+    /// picked a shape of its own — a ring, cracks, a halo, a light, roots, a
+    /// cage, plates, a crown of shards — until Sam replaced all of them with
+    /// one flat translucent circle on 7 Sep 2026; see
+    /// <c>docs/decision-log.md</c>. What a member selects now is a colour and
+    /// how long the circle stays, both out of <see cref="MatchTuning"/>. The
+    /// names are kept because they still say which row's aura it is, and
+    /// because the shapes are expected back when the effects are animated
+    /// properly.
+    /// </para>
+    /// <para>
+    /// <b>Nothing is drawn on the bodies an aura found.</b> Four of the members
+    /// below were: the Blessing's halo over each tower, the haste's ring over
+    /// each creep, the frostbite's crown at each tower's feet and the
+    /// Overgrowth's roots under each held body. Which bodies an aura caught is
+    /// read off the circle they are standing in.
     /// </para>
     /// <para>
     /// <b>A bubble's shape and a shot's shape are two fields of two types.</b>
@@ -51,76 +63,76 @@ namespace View
     public enum BubbleSignature
     {
         /// <summary>
-        /// The plain disc every bubble left before any row had a signature of
-        /// its own — as wide as the bubble reached, on the ground under
-        /// whatever it was centred on. Still what a row without one draws.
+        /// No aura of its own: the plain circle, in the colour every bubble
+        /// shared before any row was told apart from another. Still what a row
+        /// without a signature draws.
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// A ring lying on the ground at the edge of what the bubble reached,
-        /// open in the middle so the bodies inside it stay visible. The Shield
-        /// Wall's, whose whole read is where the slow stops.
+        /// The Shield Wall's slow, whose whole read is where it stops. It was
+        /// an open ring at that edge, for the same reason the circle is
+        /// translucent: so the bodies caught inside stay visible through it.
         /// </summary>
         SlowRing = 1,
 
         /// <summary>
-        /// Cracks running out from under the emitter to the edge of what the
-        /// bubble reached. The Slam's, which is one swing landing on everything
-        /// touching him.
+        /// The Slam's swing, landing on everything touching him. Drawn at the
+        /// reach like every other bubble, though it is a blow and not an aura
+        /// that stands — the one member here where that is arguable.
         /// </summary>
         GroundShock = 2,
 
         /// <summary>
-        /// A ring hanging over the head of every tower the bubble reached, the
-        /// emitter included. The Blessing's, and the first signature that is
-        /// drawn on the things a bubble found rather than on the bubble.
+        /// The Blessing's, which makes every tower inside it fire faster. It
+        /// used to hang a ring over each of those towers; the circle says the
+        /// same thing by covering the ground they stand on.
         /// </summary>
         TowerGlow = 3,
 
         /// <summary>
-        /// A disc of light lying on the ground out to the edge of the aura. The
-        /// Consecration's, whose read is the ground the font has claimed —
-        /// which is where a body loses its armour by standing.
+        /// The Consecration's, whose read is the ground the font has claimed —
+        /// where a body loses its armour by standing. The one aura the new rule
+        /// changed least, since it was already a disc out to its reach.
         /// </summary>
         ConsecrationLight = 4,
 
         /// <summary>
-        /// Roots breaking the ground under every body the aura is holding. The
-        /// Overgrowth's, and the second signature drawn on what a bubble found
-        /// rather than on the bubble — because that aura reaches sixty hexes,
-        /// so a shape at its radius would be a shape the size of ten boards.
+        /// The Overgrowth's, and <b>the one aura that draws nothing at all</b>.
+        /// It reaches sixty hexes, so a circle at its radius is a hundred and
+        /// twenty across on a board nineteen wide — the screen washed flat
+        /// rather than an area shown. Sam's call; see
+        /// <c>docs/decision-log.md</c>. The hold reads through the creeps not
+        /// moving.
         /// </summary>
         OvergrowthRoots = 5,
 
         /// <summary>
-        /// A ring over the head of every creep the pulse reached. The Skeleton
-        /// Mage's haste, and deliberately the shape the Blessing already wears
-        /// on the other side of the board: both auras make their own side
-        /// faster, so what is worth seeing is which bodies got it.
+        /// The Skeleton Mage's haste — the Blessing's opposite number, since
+        /// both auras make their own side faster. It used to put a ring over
+        /// each creep it reached.
         /// </summary>
         HasteRing = 6,
 
         /// <summary>
-        /// A cage of arcs standing over the emitter, as wide as the pulse
-        /// reached. The Necromancer's ward, and the one shape here that stands
-        /// for a pool rather than for a stat that has moved.
+        /// The Necromancer's ward, the one member here that stands for a pool
+        /// rather than for a stat that has moved. It used to be a cage of arcs
+        /// standing over the emitter, and lies flat like everything else now.
         /// </summary>
         WardDome = 7,
 
         /// <summary>
-        /// A band broken into plates lying on the ground out to the edge of
-        /// what the pulse reached. The Witch's hex ward, which is armour going
-        /// on, drawn as the shape the Unravel's strip already uses for armour
-        /// coming off.
+        /// The Witch's hex ward, which is armour going on. It used to borrow
+        /// the broken band the Unravel's strip still uses for armour coming
+        /// off; only the Unravel keeps that shape now, because a blast is not
+        /// an aura.
         /// </summary>
         HexPlates = 8,
 
         /// <summary>
-        /// A crown of upright shards at the feet of every tower the pulse
-        /// reached. The Frost Wight's frostbite, the one aura on the roster
-        /// that reaches the other side, and so the one signature a walking row
-        /// draws on something that stands still.
+        /// The Frost Wight's frostbite, the one aura on the roster that reaches
+        /// the other side. It used to stand a crown of shards at the feet of
+        /// every tower it caught; the circle covers those towers instead.
         /// </summary>
         FrostSpikes = 9,
     }

@@ -1,0 +1,14 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. Nothing loads this except
+# tools/capture-match-frames.ps1 -Effects, and nothing about the game is decided
+# here: client/Assets/View/MatchTuning.cs is what the game draws its effects at,
+# and every value in it that this file names is declared a placeholder in that
+# file's own header. This is one of the alternatives, so that signing one is
+# somebody looking at pictures rather than reading constants.
+#
+# THIS ONE NAMES NOTHING, DELIBERATELY. It is the baseline the other two are
+# read against, and it is a file rather than an absence so that all three
+# frames come out of one command and one code path. What it draws is whatever
+# MatchTuning.AuraDiscAlpha holds -- 0.28 as this is written.
+#
+question That every aura is a flat translucent circle is signed. How translucent is not. This is the middle of the bracket and the value the file currently holds, which was picked as the plainest thing that lets a two-hex circle read without covering what is standing in it. It is not a proposal.
+label alpha 0.28: what the file holds today

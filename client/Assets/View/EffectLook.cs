@@ -101,6 +101,20 @@ namespace View
             _colours != null && _colours.TryGetValue(name, out Color value) ? value : shipped;
 
         /// <summary>
+        /// <see cref="MatchTuning.AuraDiscAlpha"/>, or the candidate standing
+        /// in front of it.
+        /// </summary>
+        public float AuraDiscAlpha =>
+            N(nameof(MatchTuning.AuraDiscAlpha), MatchTuning.AuraDiscAlpha);
+
+        /// <summary>
+        /// <see cref="MatchTuning.AuraDiscThickness"/>, or the candidate
+        /// standing in front of it.
+        /// </summary>
+        public float AuraDiscThickness =>
+            N(nameof(MatchTuning.AuraDiscThickness), MatchTuning.AuraDiscThickness);
+
+        /// <summary>
         /// <see cref="MatchTuning.ArmourStripBandFraction"/>, or the candidate
         /// standing in front of it.
         /// </summary>
@@ -115,109 +129,11 @@ namespace View
             N(nameof(MatchTuning.ArmourStripThickness), MatchTuning.ArmourStripThickness);
 
         /// <summary>
-        /// <see cref="MatchTuning.BlessingGlowDiameter"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float BlessingGlowDiameter =>
-            N(nameof(MatchTuning.BlessingGlowDiameter), MatchTuning.BlessingGlowDiameter);
-
-        /// <summary>
-        /// <see cref="MatchTuning.BlessingGlowHeight"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float BlessingGlowHeight =>
-            N(nameof(MatchTuning.BlessingGlowHeight), MatchTuning.BlessingGlowHeight);
-
-        /// <summary>
-        /// <see cref="MatchTuning.BubbleRingThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float BubbleRingThickness =>
-            N(nameof(MatchTuning.BubbleRingThickness), MatchTuning.BubbleRingThickness);
-
-        /// <summary>
-        /// <see cref="MatchTuning.ConsecrationLightThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float ConsecrationLightThickness =>
-            N(nameof(MatchTuning.ConsecrationLightThickness), MatchTuning.ConsecrationLightThickness);
-
-        /// <summary>
         /// <see cref="MatchTuning.FloorClearance"/>, or the candidate
         /// standing in front of it.
         /// </summary>
         public float FloorClearance =>
             N(nameof(MatchTuning.FloorClearance), MatchTuning.FloorClearance);
-
-        /// <summary>
-        /// <see cref="MatchTuning.FrostCrownDiameter"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float FrostCrownDiameter =>
-            N(nameof(MatchTuning.FrostCrownDiameter), MatchTuning.FrostCrownDiameter);
-
-        /// <summary>
-        /// <see cref="MatchTuning.FrostSpikeHeight"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float FrostSpikeHeight =>
-            N(nameof(MatchTuning.FrostSpikeHeight), MatchTuning.FrostSpikeHeight);
-
-        /// <summary>
-        /// <see cref="MatchTuning.FrostSpikeWidthFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float FrostSpikeWidthFraction =>
-            N(nameof(MatchTuning.FrostSpikeWidthFraction), MatchTuning.FrostSpikeWidthFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.GroundShockInnerFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float GroundShockInnerFraction =>
-            N(nameof(MatchTuning.GroundShockInnerFraction), MatchTuning.GroundShockInnerFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.GroundShockThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float GroundShockThickness =>
-            N(nameof(MatchTuning.GroundShockThickness), MatchTuning.GroundShockThickness);
-
-        /// <summary>
-        /// <see cref="MatchTuning.GroundShockWidthFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float GroundShockWidthFraction =>
-            N(nameof(MatchTuning.GroundShockWidthFraction), MatchTuning.GroundShockWidthFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.HasteRingDiameter"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float HasteRingDiameter =>
-            N(nameof(MatchTuning.HasteRingDiameter), MatchTuning.HasteRingDiameter);
-
-        /// <summary>
-        /// <see cref="MatchTuning.HasteRingHeight"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float HasteRingHeight =>
-            N(nameof(MatchTuning.HasteRingHeight), MatchTuning.HasteRingHeight);
-
-        /// <summary>
-        /// <see cref="MatchTuning.HexPlateBandFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float HexPlateBandFraction =>
-            N(nameof(MatchTuning.HexPlateBandFraction), MatchTuning.HexPlateBandFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.HexPlateThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float HexPlateThickness =>
-            N(nameof(MatchTuning.HexPlateThickness), MatchTuning.HexPlateThickness);
 
         /// <summary>
         /// <see cref="MatchTuning.HitSparkHeight"/>, or the candidate
@@ -297,48 +213,6 @@ namespace View
             N(nameof(MatchTuning.MuzzleFlashRadius), MatchTuning.MuzzleFlashRadius);
 
         /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootKink"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float OvergrowthRootKink =>
-            N(nameof(MatchTuning.OvergrowthRootKink), MatchTuning.OvergrowthRootKink);
-
-        /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootPatchDiameter"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float OvergrowthRootPatchDiameter =>
-            N(nameof(MatchTuning.OvergrowthRootPatchDiameter), MatchTuning.OvergrowthRootPatchDiameter);
-
-        /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float OvergrowthRootThickness =>
-            N(nameof(MatchTuning.OvergrowthRootThickness), MatchTuning.OvergrowthRootThickness);
-
-        /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootWidthFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float OvergrowthRootWidthFraction =>
-            N(nameof(MatchTuning.OvergrowthRootWidthFraction), MatchTuning.OvergrowthRootWidthFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.SignatureRingBandFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float SignatureRingBandFraction =>
-            N(nameof(MatchTuning.SignatureRingBandFraction), MatchTuning.SignatureRingBandFraction);
-
-        /// <summary>
-        /// <see cref="MatchTuning.SignatureRingThickness"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float SignatureRingThickness =>
-            N(nameof(MatchTuning.SignatureRingThickness), MatchTuning.SignatureRingThickness);
-
-        /// <summary>
         /// <see cref="MatchTuning.TracerThickness"/>, or the candidate
         /// standing in front of it.
         /// </summary>
@@ -365,13 +239,6 @@ namespace View
         /// </summary>
         public float UnitBarThickness =>
             N(nameof(MatchTuning.UnitBarThickness), MatchTuning.UnitBarThickness);
-
-        /// <summary>
-        /// <see cref="MatchTuning.WardDomeRibWidthFraction"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public float WardDomeRibWidthFraction =>
-            N(nameof(MatchTuning.WardDomeRibWidthFraction), MatchTuning.WardDomeRibWidthFraction);
 
         /// <summary>
         /// <see cref="MatchTuning.ArmourStripSides"/>, or the candidate
@@ -409,25 +276,11 @@ namespace View
             I(nameof(MatchTuning.ConsecrationLightTicks), MatchTuning.ConsecrationLightTicks);
 
         /// <summary>
-        /// <see cref="MatchTuning.FrostSpikeCount"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int FrostSpikeCount =>
-            I(nameof(MatchTuning.FrostSpikeCount), MatchTuning.FrostSpikeCount);
-
-        /// <summary>
         /// <see cref="MatchTuning.FrostSpikeTicks"/>, or the candidate
         /// standing in front of it.
         /// </summary>
         public int FrostSpikeTicks =>
             I(nameof(MatchTuning.FrostSpikeTicks), MatchTuning.FrostSpikeTicks);
-
-        /// <summary>
-        /// <see cref="MatchTuning.GroundShockCracks"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int GroundShockCracks =>
-            I(nameof(MatchTuning.GroundShockCracks), MatchTuning.GroundShockCracks);
 
         /// <summary>
         /// <see cref="MatchTuning.GroundShockTicks"/>, or the candidate
@@ -442,13 +295,6 @@ namespace View
         /// </summary>
         public int HasteRingTicks =>
             I(nameof(MatchTuning.HasteRingTicks), MatchTuning.HasteRingTicks);
-
-        /// <summary>
-        /// <see cref="MatchTuning.HexPlateSides"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int HexPlateSides =>
-            I(nameof(MatchTuning.HexPlateSides), MatchTuning.HexPlateSides);
 
         /// <summary>
         /// <see cref="MatchTuning.HexPlateTicks"/>, or the candidate
@@ -507,27 +353,6 @@ namespace View
             I(nameof(MatchTuning.MuzzleFlashTicks), MatchTuning.MuzzleFlashTicks);
 
         /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootCount"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int OvergrowthRootCount =>
-            I(nameof(MatchTuning.OvergrowthRootCount), MatchTuning.OvergrowthRootCount);
-
-        /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootTicks"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int OvergrowthRootTicks =>
-            I(nameof(MatchTuning.OvergrowthRootTicks), MatchTuning.OvergrowthRootTicks);
-
-        /// <summary>
-        /// <see cref="MatchTuning.SignatureRingSides"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int SignatureRingSides =>
-            I(nameof(MatchTuning.SignatureRingSides), MatchTuning.SignatureRingSides);
-
-        /// <summary>
         /// <see cref="MatchTuning.SlowRingTicks"/>, or the candidate
         /// standing in front of it.
         /// </summary>
@@ -542,32 +367,11 @@ namespace View
             I(nameof(MatchTuning.TracerTicks), MatchTuning.TracerTicks);
 
         /// <summary>
-        /// <see cref="MatchTuning.WardDomeRibs"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int WardDomeRibs =>
-            I(nameof(MatchTuning.WardDomeRibs), MatchTuning.WardDomeRibs);
-
-        /// <summary>
-        /// <see cref="MatchTuning.WardDomeSegments"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public int WardDomeSegments =>
-            I(nameof(MatchTuning.WardDomeSegments), MatchTuning.WardDomeSegments);
-
-        /// <summary>
         /// <see cref="MatchTuning.WardDomeTicks"/>, or the candidate
         /// standing in front of it.
         /// </summary>
         public int WardDomeTicks =>
             I(nameof(MatchTuning.WardDomeTicks), MatchTuning.WardDomeTicks);
-
-        /// <summary>
-        /// <see cref="MatchTuning.ArmourEffectTint"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public Color ArmourEffectTint =>
-            C(nameof(MatchTuning.ArmourEffectTint), MatchTuning.ArmourEffectTint);
 
         /// <summary>
         /// <see cref="MatchTuning.ArmourStripColor"/>, or the candidate
@@ -675,13 +479,6 @@ namespace View
             C(nameof(MatchTuning.MuzzleFlashColor), MatchTuning.MuzzleFlashColor);
 
         /// <summary>
-        /// <see cref="MatchTuning.OvergrowthRootColor"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public Color OvergrowthRootColor =>
-            C(nameof(MatchTuning.OvergrowthRootColor), MatchTuning.OvergrowthRootColor);
-
-        /// <summary>
         /// <see cref="MatchTuning.ProjectileColor"/>, or the candidate
         /// standing in front of it.
         /// </summary>
@@ -701,13 +498,6 @@ namespace View
         /// </summary>
         public Color SlowRingColor =>
             C(nameof(MatchTuning.SlowRingColor), MatchTuning.SlowRingColor);
-
-        /// <summary>
-        /// <see cref="MatchTuning.SpeedEffectTint"/>, or the candidate
-        /// standing in front of it.
-        /// </summary>
-        public Color SpeedEffectTint =>
-            C(nameof(MatchTuning.SpeedEffectTint), MatchTuning.SpeedEffectTint);
 
         /// <summary>
         /// <see cref="MatchTuning.TracerColor"/>, or the candidate
@@ -751,30 +541,6 @@ namespace View
         // the three flags are off. A capture turns one on to photograph the
         // alternative beside the shipped picture, which is the whole of what
         // signing one of these needs.
-
-        /// <summary>
-        /// What a body whose speed has been raised is washed with.
-        /// <see cref="SpeedEffectTint"/> unless a candidate separates them,
-        /// which is the shipped answer: one colour covers both signs, so a
-        /// hastened body and a slowed one are told apart by the ring over the
-        /// head and by nothing on the body.
-        /// </summary>
-        public Color HasteEffectTint => C(nameof(HasteEffectTint), SpeedEffectTint);
-
-        /// <summary>
-        /// What a body carrying a speed modifier <i>and</i> an armour one is
-        /// washed with. <see cref="SpeedEffectTint"/> unless a candidate says
-        /// otherwise, which is the shipped answer: speed wins and the armour
-        /// modifier is not drawn.
-        /// </summary>
-        public Color BothModifiersTint => C(nameof(BothModifiersTint), SpeedEffectTint);
-
-        /// <summary>
-        /// Whether a tower carrying a modifier wears the wash a creep would.
-        /// Off, which is the shipped answer: the frostbite crown at its feet is
-        /// the whole of what says a tower is firing a third slower.
-        /// </summary>
-        public bool TowerMarksShown => B(nameof(TowerMarksShown));
 
         /// <summary>
         /// Whether a second bar is drawn across the first, so the pool is

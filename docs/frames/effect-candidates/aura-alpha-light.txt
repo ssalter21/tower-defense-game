@@ -7,10 +7,10 @@
 #
 # A KEY IS A MatchTuning MEMBER NAME and an unknown one is a fault that lists
 # the near misses -- View.Editor.EffectLookFile. A `signature <unit id> <shape>`
-# line moves which shape a row's bubble leaves, which is bound per unit and so
-# cannot be asked with a number at all.
+# line moves which aura a row's bubble is, which is bound per unit and so cannot
+# be asked with a number at all.
 #
-question What shape should the Witch's hex ward be, given that #266 named where it leaves from and named no shape at all?
-label hex ward: a cage of arcs standing over the Witch
+question That every aura is a flat translucent circle is signed. How translucent is not. This is the light end of the bracket: the corridor and the bodies read through almost untouched, at the cost of the circle being easy to miss at 1600x900 -- which is the failure issue #270 already found once.
+label alpha 0.15: the floor barely tinted
 
-signature 44 WardDome
+AuraDiscAlpha 0.15

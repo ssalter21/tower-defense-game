@@ -138,9 +138,11 @@ tower fired from one fixed height above its own root, whatever it was holding.
 And one that is **not** a frame of the recorded match:
 
 - `effects-roster-tick-0700.png` — **a placeholder, and the thing it is
-  showing has not been signed.** A creep the snapshot says is slowed is washed
-  in one colour, and the pool standing in front of a creep's health is a second
-  segment of a bar above it. Captured with `-Distance 20 -Width 1600` against
+  showing has not been signed.** The pool standing in front of a creep's health
+  is a second segment of a bar above it. A creep the snapshot says is slowed
+  used to be washed in one colour as well; that came off on 7 September 2026,
+  so what a slow looks like here is the Shield Wall's circle and nothing on the
+  body. Captured with `-Distance 20 -Width 1600` against
   [`effects-roster.txt`](effects-roster.txt), which is the shipped roster with a
   bubble added to two of its rows — the recorded wave sends Minions and Skeleton
   Scouts against Archers and Mages, and not one of those four rows authors a
@@ -338,28 +340,26 @@ than any of #263 to #265 made, and `MatchTuning`'s own header says so.
   from where a player sits.
 
 - `creep-auras-tick-0094.png` — **the Frost Wight's frostbite**, at
-  `-Distance 18`, which the three frames above cannot show. The pale shards
-  round the feet of the Archer standing among the wave are it: frostbite is the
-  one aura on the roster whose `affects` column reaches the *other* side, so it
-  is the one creep shape drawn on a tower. It is also the smallest of the four
-  and the question this frame asks — a frozen tower wears nothing else, because
-  the wash `EffectMarks` puts on a modified body is a creep's and there is no
-  tower equivalent, so this crown is the whole of what says that tower is firing
-  a third slower.
+  `-Distance 18`, which the three frames above cannot show. The pale circle
+  lying across the Archers standing among the wave is it: frostbite is the one
+  aura on the roster whose `affects` column reaches the *other* side. The
+  question this frame asks is whether a tower inside that circle reads as
+  frostbitten, because **the circle is the whole of what says so** — nothing is
+  drawn on a body an aura found, on either side of the board.
 
 **Three things about them are results rather than questions.** **The two rows
 with a pool of their own draw no effect at all**, and that is what #254 already
 built rather than an omission: a pool is a `CreepSnapshot` field and not a
 moment, which is why it survives a scrub, and the Vampire's blood and the Grave
 Robber's pack are the blue segment of the bar over the body in every frame here.
-**A hastened body is washed the same colour a slowed one is** — `SpeedEffectTint`
-covers both signs, which is a placeholder decision #254 recorded and this ticket
-did not reopen — so the haste ring over its head is what tells the two apart.
-And **the Necromancer's cage is a moment and the haste ring is a state**: the
-ward's duration is zero, so the cage stands ten ticks and the pool it granted
-goes on being drawn on the bar, where haste, hex ward and frostbite last exactly
-as long as the gap to the next pulse and are drawn for twenty-six of those
-thirty ticks.
+**Nothing on a body says a modifier is in force**, which stopped being a
+question on 7 September 2026 and became the answer: the wash came off with every
+other mark on a body an aura found, so the circle on the floor is the only thing
+that says anything happened. And **the Necromancer's ward is a moment where the
+haste is a state**: the ward's duration is zero, so its circle stands ten ticks
+and the pool it granted goes on being drawn on the bar, where haste, hex ward and
+frostbite last exactly as long as the gap to the next pulse and are drawn for
+twenty-six of those thirty ticks.
 
 **A tick number in a filename is a claim about the committed match**, and the
 overtake has moved twice already — re-capture the pair whenever it does. The

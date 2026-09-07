@@ -241,12 +241,16 @@ displaced by, and a magnitude is a displacement whose sign says which way — so
 haste both. They are snapshot fields and not events because a seek re-simulates and hears nothing, so an
 event-driven tint would be right until the first drag of the scrub bar; the reasoning is in
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md) and the line from the other side is in
-[ADR-0008](adr/0008-match-events-are-decorative.md). **What is left open is entirely the look.** The client
-draws a wash of one colour per payload and a two-segment bar, photographed in
-[`docs/frames/effects-roster-tick-0700.png`](frames/README.md); it does not say which way a speed moved, one
-colour covers a slow and a haste, a tower carrying a modifier is not drawn at all, and the bar does not turn to
-face the camera. Every one of those is a placeholder standing where a decision goes, and the decisions are
-Sam's.
+[ADR-0008](adr/0008-match-events-are-decorative.md). **What is left open is entirely the look, and most of it was closed on
+7 September 2026 by being answered in the negative.** Nothing is drawn on a body carrying a modifier at all:
+the wash of one colour per payload came off with every other mark on a body an aura found, so which bodies an
+aura caught is read off the translucent circle it lays on the floor. That settles four of the five things #254
+recorded as nobody's decision — which way a speed moved, a body carrying both a speed and an armour modifier, a
+tower carrying one, and the wash itself — by drawing none of them; see [the decision log](decision-log.md).
+**What is still a placeholder is the bar**: two segments above the body, photographed in
+[`docs/frames/effects-roster-tick-0700.png`](frames/README.md), which does not turn to face the camera and
+whose segments are both shares of the authored health. That decision is Sam's, and so is how see-through the
+circles should be.
 
 **Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
 the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads

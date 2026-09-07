@@ -77,38 +77,6 @@ namespace View
         /// <summary>The instantiated model.</summary>
         public GameObject Model { get; private set; }
 
-        /// <summary>
-        /// The wash this tower wears while a modifier is on it, or null — which
-        /// is what every tower the game ships has.
-        /// </summary>
-        /// <remarks>
-        /// <b>A CANDIDATE AND NOT THE GAME.</b> A tower carrying a modifier is
-        /// not drawn at all: the crown of shards at a frostbitten tower's feet
-        /// is the whole of what says it is firing a third slower, and whether
-        /// that is enough is one of the five undecided things
-        /// <c>docs/frames/README.md</c> records against the marks. Built only
-        /// where <see cref="EffectLook.TowerMarksShown"/> asks, so that
-        /// alternative can be photographed on the real board.
-        /// </remarks>
-        public EffectMarks Marks { get; private set; }
-
-        /// <summary>
-        /// Gives this tower a wash with no bar behind it. Called after the body
-        /// is built, and only by a capture drawing the candidate.
-        /// </summary>
-        public void BuildMarks(EffectLook look)
-        {
-            if (Model == null)
-            {
-                throw new InvalidOperationException(
-                    "BuildMarks was called before the body was built, so there are no renderers for a "
-                    + "wash to land on. Build the tower first.");
-            }
-
-            Marks = new EffectMarks(look);
-            Marks.Build(transform, Model, health: null, shield: null);
-        }
-
         /// <summary>What it holds in <c>handslot.r</c>, or null.</summary>
         public GameObject RightHand { get; private set; }
 

@@ -41,7 +41,7 @@ if (-not $OutDir) { $OutDir = Join-Path $repoRoot 'docs/frames/effect-candidates
 # needs a wave that sends one -- neither is in the recorded match.
 $contexts = @{
     # The recorded defense -- Archers and Mages, so a splash lands and leaves a
-    # blast ring -- with the six aura-carrying creep rows walking at it.
+    # blast circle -- with the six aura-carrying creep rows walking at it.
     'auras' = @{
         Wave    = 'docs/frames/creep-auras.txt'
         Defense = $null
@@ -52,13 +52,12 @@ $contexts = @{
         Wave    = 'docs/frames/creep-auras.txt'
         Defense = 'docs/frames/four-lines.txt'
     }
-    # The same defense, against a wave that sends a Skeleton Mage and two rows
-    # that author nothing. THE WITCH IS THE REASON IT IS NOT THE WAVE ABOVE: she
-    # armours every friend within two hexes, and a body carrying a speed
-    # modifier and an armour one is drawn as neither -- so against creep-auras
-    # nearly every hastened body is in the both-modifiers bucket and a candidate
-    # that moves the haste colour changes nothing. Measured: three of the four
-    # speed candidates came out byte-identical to the shipped look that way.
+    # The same defense against a wave that sends a Skeleton Mage and two rows
+    # that author nothing. NOTHING USES IT AS THIS IS WRITTEN: it was cut for
+    # the four speed candidates, which asked whether a hastened body could be
+    # told from a slowed one, and that question died with the wash. Kept
+    # because the fixture wave beside it is committed and a later bracket about
+    # two auras of opposite sign will want exactly this pair.
     'speed' = @{
         Wave    = 'docs/frames/speed-pair.txt'
         Defense = 'docs/frames/four-lines.txt'
@@ -68,34 +67,18 @@ $contexts = @{
 # candidate -> which context it is photographed in, which ticks, and how far the
 # close frame stands back.
 $plan = [ordered]@{
-    'auras-as-shipped'            = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
-    'haste-under-body'            = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'haste-ring-at-reach'         = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'ward-light-on-ground'        = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'ward-ring-at-reach'          = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'hex-cage'                    = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'hex-under-body'              = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'frost-halo'                  = @{ Context = 'auras'; Ticks = '94,272';     Close = 24 }
-    'frost-ring-at-reach'         = @{ Context = 'auras'; Ticks = '94,272';     Close = 24 }
-
-    'ring-as-shipped'             = @{ Context = 'auras'; Ticks = '272';    Close = 20 }
-    'ring-warm'                   = @{ Context = 'auras'; Ticks = '272';    Close = 20 }
-    'ring-heavy'                  = @{ Context = 'auras'; Ticks = '272';    Close = 20 }
-
-    'tower-marks-on'              = @{ Context = 'auras'; Ticks = '94,272';     Close = 24 }
-    'both-modifiers-third-colour' = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'bar-crossed'                 = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-    'bar-clamped'                 = @{ Context = 'auras'; Ticks = '272';    Close = 24 }
-
-    'blessing-halo-shipped'       = @{ Context = 'lines'; Ticks = '274';               Close = 20 }
-    'blessing-at-the-feet'        = @{ Context = 'lines'; Ticks = '274';               Close = 20 }
-    'blessing-collar'             = @{ Context = 'lines'; Ticks = '274';               Close = 20 }
-    'blessing-held-halo'          = @{ Context = 'lines'; Ticks = '274';               Close = 20 }
-
-    'speed-one-colour'            = @{ Context = 'speed'; Ticks = '240';               Close = 18 }
-    'speed-warm-haste'            = @{ Context = 'speed'; Ticks = '240';               Close = 18 }
-    'speed-green-haste'           = @{ Context = 'speed'; Ticks = '240';               Close = 18 }
-    'speed-both-moved'            = @{ Context = 'speed'; Ticks = '240';               Close = 18 }
+    # Three frames of one bracket. Every aura is a flat translucent circle now
+    # -- Sam signed the shape on 7 Sep 2026, see docs/decision-log.md -- so the
+    # only thing left standing on nobody's signature is how see-through it is.
+    #
+    # THE AURAS CONTEXT IS THE ONE THAT SHOWS IT. Tick 272 is the Necromancer,
+    # the Witch and the Skeleton Mage all pulsing within a few ticks of each
+    # other on a corridor with bodies walking down it, so a frame carries two
+    # circles overlapping and a body standing under one. That is the case the
+    # alpha is judged on; a single circle on empty floor reads at any value.
+    'aura-alpha-light'   = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
+    'aura-alpha-shipped' = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
+    'aura-alpha-heavy'   = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null

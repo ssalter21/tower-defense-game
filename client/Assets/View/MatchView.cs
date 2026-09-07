@@ -73,15 +73,6 @@ namespace View
 
         private readonly Dictionary<int, TowerView> _towers = new Dictionary<int, TowerView>();
 
-        /// <summary>
-        /// Scratch for <see cref="TowersWithin"/>, so an aura that pulses every
-        /// fifteen ticks all match long allocates nothing.
-        /// </summary>
-        private readonly List<Vector3> _towersReached = new List<Vector3>();
-
-        /// <summary>Scratch for <see cref="CreepsWithin"/>, on the same terms.</summary>
-        private readonly List<Vector3> _creepsReached = new List<Vector3>();
-
         private EntityViewPool<CreepView> _creepPool;
 
         private EntityViewPool<ProjectileView> _projectilePool;
@@ -230,8 +221,6 @@ namespace View
                 EntityGroundOf,
                 TowerSignatureOf,
                 CreepSignatureOf,
-                TowersWithin,
-                CreepsWithin,
                 _look);
 
             // Instant-resolve, and it is the same call as everything else:
@@ -448,15 +437,12 @@ namespace View
                     creep.State,
                     DyingFraction(creep, before, paired, alpha));
 
-                // What is on it, straight off the same row and never
-                // interpolated: a magnitude is in force or it is not, and a
-                // pool a creep half has is a pool nothing could spend.
-                view.Marks.Show(
-                    creep.Hp,
-                    _types.ById(creep.TypeId).MaxHp,
-                    creep.Shield,
-                    creep.SpeedMagnitude,
-                    creep.ArmourMagnitude);
+                // The pool it is carrying, straight off the same row and
+                // never interpolated: a pool a creep half has is a pool nothing
+                // could spend. What a payload is doing to it is not drawn on
+                // the body at all -- the aura's circle on the floor is the
+                // whole of what says so.
+                view.Marks.Show(creep.Hp, _types.ById(creep.TypeId).MaxHp, creep.Shield);
             }
 
             _creepPool.EndSync();
@@ -509,17 +495,6 @@ namespace View
                     : (Vector3?)null;
 
                 view.Pose(tower.State, ticksInState, target);
-
-                // A CANDIDATE AND NOT THE GAME, on the same terms the marks
-                // were built on. The sign is flipped because a tower's
-                // magnitude is a cooldown and a creep's is a speed: a positive
-                // cooldown displacement is a tower firing further apart, which
-                // is the same thing the wash on the other side of the board
-                // is drawn for.
-                if (view.Marks != null)
-                {
-                    view.Marks.ShowModifiers(-tower.CooldownMagnitude, 0);
-                }
             }
         }
 
@@ -619,15 +594,6 @@ namespace View
                 else
                 {
                     view.BuildStatic(id, placed.Type, art, resting);
-                }
-
-                // A CANDIDATE AND NOT THE GAME. Nothing the shipped look asks
-                // for: a tower carrying a modifier is drawn as the crown of
-                // shards at its feet and nothing on the body. See
-                // EffectLook.TowerMarksShown.
-                if (_look.TowerMarksShown)
-                {
-                    view.BuildMarks(_look);
                 }
 
                 _towers.Add(id, view);
@@ -793,94 +759,5 @@ namespace View
                 ? _art.ArtFor(typeId).Signature
                 : (RowSignature?)null;
 
-        /// <summary>
-        /// Where every tower standing within <paramref name="metres"/> of the
-        /// entity with this id is — what the Blessing's glow is drawn on.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Measured against where the towers are drawn, which for a tower is
-        /// exactly where it stands and never moves. The centre is looked up the
-        /// same way every other decoration looks one up, so a pulse from an id
-        /// the view is not holding reaches nothing rather than reaching
-        /// everything.
-        /// </para>
-        /// <para>
-        /// The list is reused between calls, so a pulse costs no allocation.
-        /// Its contents are read and drawn before anything else can ask again —
-        /// events arrive one at a time inside
-        /// <see cref="Match.Advance(int, IMatchEvents)"/>.
-        /// </para>
-        /// </remarks>
-        private IReadOnlyList<Vector3> TowersWithin(int entityId, float metres)
-        {
-            if (!Reaching(_towersReached, entityId, metres, out Vector3 centre, out float squared))
-            {
-                return _towersReached;
-            }
-
-            foreach (TowerView tower in _towers.Values)
-            {
-                if ((tower.transform.position - centre).sqrMagnitude <= squared)
-                {
-                    _towersReached.Add(tower.transform.position);
-                }
-            }
-
-            return _towersReached;
-        }
-
-        /// <summary>
-        /// Where every creep within <paramref name="metres"/> of the entity
-        /// with this id is — what the Overgrowth's roots are drawn under.
-        /// </summary>
-        /// <remarks>
-        /// <b>Measured against where the bodies were last drawn</b>, which is
-        /// the at-most-a-tick-behind answer <see cref="CreepPositionOf"/> gives
-        /// and is allowed to be for the same reason. Everything else about it
-        /// — the reused list, the centre looked up the ordinary way, the flat
-        /// measurement against a simulation that reads the radius as a sphere —
-        /// is <see cref="TowersWithin"/>'s, with the other side of the board in
-        /// it.
-        /// </remarks>
-        private IReadOnlyList<Vector3> CreepsWithin(int entityId, float metres)
-        {
-            if (!Reaching(_creepsReached, entityId, metres, out Vector3 centre, out float squared))
-            {
-                return _creepsReached;
-            }
-
-            foreach (Vector3 walking in _drawnCreepPositions.Values)
-            {
-                if ((walking - centre).sqrMagnitude <= squared)
-                {
-                    _creepsReached.Add(walking);
-                }
-            }
-
-            return _creepsReached;
-        }
-
-        /// <summary>
-        /// Empties one scratch list and works out where a pulse went off and
-        /// how far it carried, or false for an id the view is not holding.
-        /// </summary>
-        /// <remarks>
-        /// The two lookups above differ only in which collection they walk, so
-        /// everything before the walk is here: an id the view does not carry
-        /// reaches nothing rather than everything, and the reach is squared
-        /// once rather than a square root taken per candidate.
-        /// </remarks>
-        private bool Reaching(
-            List<Vector3> into, int entityId, float metres, out Vector3 centre, out float squared)
-        {
-            into.Clear();
-            squared = metres * metres;
-
-            Vector3? at = EntityGroundOf(entityId);
-            centre = at ?? default;
-
-            return at.HasValue;
-        }
     }
 }

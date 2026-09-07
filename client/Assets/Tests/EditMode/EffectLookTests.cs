@@ -82,17 +82,6 @@ namespace Tests.EditMode
         {
             EffectLook shipped = EffectLook.Shipped;
 
-            Assert.That(
-                shipped.HasteEffectTint,
-                Is.EqualTo(shipped.SpeedEffectTint),
-                "One colour covers both signs of a speed modifier until somebody signs otherwise.");
-
-            Assert.That(
-                shipped.BothModifiersTint,
-                Is.EqualTo(shipped.SpeedEffectTint),
-                "A body carrying both modifiers is drawn as the speed one.");
-
-            Assert.That(shipped.TowerMarksShown, Is.False, "A tower carrying a modifier is not drawn.");
             Assert.That(shipped.UnitBarCrossed, Is.False, "There is one bar and it does not turn.");
             Assert.That(shipped.UnitBarClamped, Is.False, "Both segments are shares of the authored health.");
         }
@@ -102,14 +91,14 @@ namespace Tests.EditMode
         {
             EffectLookFile candidate = EffectLookFile.Parse(
                 "one-member",
-                new[] { "HasteRingDiameter 2.5", "HasteRingColor 1,0,0" });
+                new[] { "AuraDiscAlpha 0.5", "HasteRingColor 1,0,0" });
 
-            Assert.That(candidate.Look.HasteRingDiameter, Is.EqualTo(2.5f).Within(0.0001f));
+            Assert.That(candidate.Look.AuraDiscAlpha, Is.EqualTo(0.5f).Within(0.0001f));
             Assert.That(candidate.Look.HasteRingColor, Is.EqualTo(Color.red));
 
             Assert.That(
-                candidate.Look.HasteRingHeight,
-                Is.EqualTo(MatchTuning.HasteRingHeight).Within(0.0001f),
+                candidate.Look.AuraDiscThickness,
+                Is.EqualTo(MatchTuning.AuraDiscThickness).Within(0.0001f),
                 "A member nobody named still answers out of MatchTuning.");
 
             Assert.That(candidate.Look.OverriddenCount, Is.EqualTo(2));
@@ -119,9 +108,9 @@ namespace Tests.EditMode
         [Test]
         public void AMemberThatCountsThingsReadsItsOverrideRounded()
         {
-            EffectLookFile candidate = EffectLookFile.Parse("rounded", new[] { "WardDomeRibs 11.5" });
+            EffectLookFile candidate = EffectLookFile.Parse("rounded", new[] { "SlowRingTicks 11.5" });
 
-            Assert.That(candidate.Look.WardDomeRibs, Is.EqualTo(12));
+            Assert.That(candidate.Look.SlowRingTicks, Is.EqualTo(12));
         }
 
         [Test]
@@ -144,10 +133,10 @@ namespace Tests.EditMode
         public void AColourReadsAsChannelsOrAsHex()
         {
             Assert.That(
-                EffectLookFile.Parse("channels", new[] { "SpeedEffectTint 0.5,0.25,1" }).Look.SpeedEffectTint,
+                EffectLookFile.Parse("channels", new[] { "SlowRingColor 0.5,0.25,1" }).Look.SlowRingColor,
                 Is.EqualTo(new Color(0.5f, 0.25f, 1f, 1f)));
 
-            Color hex = EffectLookFile.Parse("hex", new[] { "SpeedEffectTint #FF0000" }).Look.SpeedEffectTint;
+            Color hex = EffectLookFile.Parse("hex", new[] { "SlowRingColor #FF0000" }).Look.SlowRingColor;
 
             Assert.That(hex.r, Is.EqualTo(1f).Within(0.01f));
             Assert.That(hex.g, Is.EqualTo(0f).Within(0.01f));
@@ -165,10 +154,10 @@ namespace Tests.EditMode
                 {
                     "# a whole-line comment",
                     "question What should this be, given that #266 named no shape?",
-                    "SpeedEffectTint #00FF00",
+                    "SlowRingColor #00FF00",
                 });
 
-            Assert.That(candidate.Look.SpeedEffectTint.g, Is.EqualTo(1f).Within(0.01f));
+            Assert.That(candidate.Look.SlowRingColor.g, Is.EqualTo(1f).Within(0.01f));
             StringAssert.Contains("named no shape", candidate.Question);
             StringAssert.Contains("#266", candidate.Question);
         }
@@ -288,14 +277,11 @@ namespace Tests.EditMode
                 .Select(Path.GetFileNameWithoutExtension)
                 .ToArray();
 
-            // One per row of the four creep auras, one for the shared ring, one
-            // for the Blessing, one for telling a slow from a haste, and one
-            // each for the four other things #254 left standing.
-            foreach (string wanted in new[]
-            {
-                "haste", "ward", "hex", "frost", "ring", "blessing", "speed",
-                "both-modifiers", "tower-marks", "bar-crossed", "bar-clamped",
-            })
+            // The shapes are signed — one flat translucent circle per aura —
+            // so the only thing still standing on nobody's signature is how
+            // see-through that circle is. A bracket, and the middle of it is
+            // the value MatchTuning holds.
+            foreach (string wanted in new[] { "aura-alpha" })
             {
                 Assert.That(
                     names.Any(name => name.StartsWith(wanted, StringComparison.Ordinal)),

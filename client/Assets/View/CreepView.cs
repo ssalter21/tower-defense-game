@@ -169,7 +169,7 @@ namespace View
             // After the graph, because the wash lands on every renderer under
             // the body and what it is holding is part of the body by now.
             Marks = new EffectMarks(look);
-            Marks.Build(transform, Model, healthSegment, shieldSegment);
+            Marks.Build(transform, healthSegment, shieldSegment);
         }
 
         /// <summary>

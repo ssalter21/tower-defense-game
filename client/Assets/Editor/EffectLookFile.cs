@@ -236,7 +236,7 @@ namespace View.Editor
         /// <remarks>
         /// <b>A hash inside a line is not a comment, and treating it as one was
         /// wrong twice.</b> A colour may be written <c>#rrggbb</c>, so
-        /// <c>SpeedEffectTint #FF0000</c> cut at the first hash is a key with no
+        /// <c>SlowRingColor #FF0000</c> cut at the first hash is a key with no
         /// value; and a <c>question</c> naming the issue it came from —
         /// <c>#254</c>, <c>#266</c>, <c>#270</c> — would lose the rest of its
         /// sentence. Both are real lines in this folder. So a comment is a line

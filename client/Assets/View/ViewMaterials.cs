@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace View
 {
@@ -57,6 +58,69 @@ namespace View
             }
 
             return material;
+        }
+
+        /// <summary>
+        /// Builds one plain lit material that the floor and the bodies behind
+        /// it show through.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Alpha on the colour is not enough on its own.</b> Both shaders
+        /// above ship opaque: they write depth, they blend nothing, and they
+        /// sit in the geometry queue, so a colour handed in at half alpha draws
+        /// exactly as solid as one at full. What makes a surface see-through is
+        /// the blend state below, and it is set property by property because
+        /// the two shaders spell the surface mode differently while agreeing on
+        /// everything else.
+        /// </para>
+        /// <para>
+        /// <b>Depth writing goes off and that is the point, not a side
+        /// effect.</b> Two auras overlapping should show both, which is what
+        /// blending into the frame without claiming the depth buffer does. The
+        /// cost is that two translucent surfaces are drawn in whatever order
+        /// their distances put them in rather than in a correct one — which is
+        /// invisible for flat discs lying at one height on the floor, and is
+        /// why nothing standing up is drawn with this.
+        /// </para>
+        /// </remarks>
+        public static Material Translucent(string name, Color color)
+        {
+            Material material = Create(name, color);
+
+            // 1 is transparent in the universal pipeline's Lit, 3 is in the
+            // built-in Standard. Each ignores the other's property.
+            Set(material, "_Surface", 1f);
+            Set(material, "_Mode", 3f);
+
+            Set(material, "_SrcBlend", (float)BlendMode.SrcAlpha);
+            Set(material, "_DstBlend", (float)BlendMode.OneMinusSrcAlpha);
+            Set(material, "_ZWrite", 0f);
+
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+            // Behind everything solid, whichever shader answered. A material
+            // left in the geometry queue blends against whatever happens to
+            // have been drawn first, which reads as the effect flickering.
+            material.renderQueue = (int)RenderQueue.Transparent;
+
+            return material;
+        }
+
+        /// <summary>
+        /// Sets one float property if the shader that answered has it, because
+        /// the two shaders here do not carry the same set and setting an
+        /// absent one is neither an error nor a no-op worth branching on.
+        /// </summary>
+        private static void Set(Material material, string property, float value)
+        {
+            if (material.HasProperty(property))
+            {
+                material.SetFloat(property, value);
+            }
         }
 
         /// <summary>

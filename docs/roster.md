@@ -297,18 +297,20 @@ And the four creep auras, whose shapes **nobody has signed**:
 
 | Row | What it draws | Where it is drawn |
 |---|---|---|
-| 7 · Skeleton Mage | A ring over the head of every creep the haste reached, itself included — the Blessing's shape on the other side of the board | On what the aura found, not on the aura |
-| 38 · Necromancer | A cage of arcs standing over the ground the ward covered | Over the body, out to the two hexes it grants across |
-| 41 · Frost Wight | A crown of upright shards at the feet of every tower the frostbite reached | On what the aura found, and the only creep shape drawn on a tower |
-| 44 · Witch | A band broken into plates lying on the ground — the shape the Unravel's armour strip already uses, for armour going on rather than coming off | On the ground out to the edge of the hex ward |
+| 7 · Skeleton Mage | A flat translucent circle in its own green | On the ground out to the reach of the haste |
+| 38 · Necromancer | The same circle, in the pool's blue | On the ground out to the two hexes the ward grants across |
+| 41 · Frost Wight | The same circle, in a pale frost blue | On the ground out to the reach of the frostbite |
+| 44 · Witch | The same circle, in the armour violet | On the ground out to the edge of the hex ward |
 
-**Exactly one of the three friend-side creep auras is drawn on the bodies, and that is forced.** Haste, Ward and
-Hex Ward all reach creeps within two hexes, so all three drawn that way would stack three shapes on one walking
-body — over the bar #254 already puts there. The haste is the one that keeps it, because "which bodies got
-faster" is the same sentence the Blessing's halo already answers on the tower side; the other two are drawn at
-their reach. **Frostbite is drawn on the towers it froze because nothing else ever is**: `EffectMarks` washes a
-*creep* carrying a modifier and there is no tower equivalent, so a frostbitten tower would otherwise wear
-nothing at all.
+**Every aura on this roster is that one shape, and only the colour tells two apart.** Sam signed it on
+7 September 2026 — see [the decision log](decision-log.md) — replacing nine shapes picked one per row: a ring,
+cracks, a halo, a light, roots, a cage, plates and a crown of shards.
+
+**Nothing is drawn on the bodies an aura found.** No ring over a hastened creep, no glow on a blessed tower, no
+crown at a frostbitten one's feet, no roots under a held body, and no wash of colour on a body carrying a
+modifier at all. Which bodies an aura caught is read off the circle they are standing in, and that is the whole
+of it. **This is an interim look**: what these effects should finally be is animation and particle work nobody
+has done, and this client cannot host it as written — see the reservation below.
 
 **The Vampire's and the Grave Robber's pools get no shape, and that is #254 rather than a gap.** A pool is a
 `CreepSnapshot` field and not a moment — which is exactly why it survives a scrub — so there is no event to
@@ -342,11 +344,11 @@ out. **The Mage line draws no shot shape at all**, and that is its delivery colu
 projectile, so the thing crossing to the body is the shell in the snapshot and a bolt drawn beside it would be
 a second thing in the air saying what the shell already says.
 
-**Two shapes are drawn on what a bubble found rather than on the bubble, and both were forced.** The
-Blessing's read is which towers got the haste. The Overgrowth's aura reaches **sixty hexes** — the whole board,
-every board — so a shape scaled to its radius would be a hundred and twenty hexes across on a board nineteen
-wide; roots under each body it is holding is the only reading of "roots on every hex it slows" that fits in the
-picture.
+**One aura draws nothing at all, and it is the Overgrowth.** Its aura reaches **sixty hexes** — the whole
+board, every board — so the circle every other aura leaves would be a hundred and twenty hexes across on a
+board nineteen wide: the screen washed flat rather than an area shown. An aura that covers everything has no
+impact area worth outlining, so it gets none, and the hold reads through the creeps not moving. Sam's call, on
+the same day the circle was signed.
 
 **None of it is a `ParticleSystem` and none of it can be.** The client has none anywhere and two play-mode
 tests forbid one, for the reason the glow reservation above gives: the camera orbits and nothing may turn to
@@ -855,7 +857,8 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 2400 hp, speed 33, arcane, armourValue 25, dying 36, cost 19. Aura: origin `self`, affects
   `friend`, payload `speed`, magnitude **+20**, radius 2000, period 30, duration 30.
 - **Needs** — nothing. Layout 3 authors it and #217 plays it.
-- **Draws** — a green ring over the head of every creep the haste reached, itself included. **Unsigned**; see
+- **Draws** — a flat translucent circle on the ground, in its own green, out to the reach of the haste. The
+  shape is **signed**; how see-through it is is not. See
   [what a row is drawn as](#what-a-row-is-drawn-as).
 - **Open** — none. **The aura is signed**; it had stood unsigned since the row went live.
 
@@ -884,8 +887,9 @@ would re-baseline every measurement in the sweep.
   payload `shield`, magnitude 25, radius 2000, period 90, duration 0. Raise: `raises` 1, `raisePeriod` 150.
 - **Needs** — nothing. Both are on the row and playing as of
   [#268](https://github.com/ssalter21/tower-defense-game/issues/268).
-- **Draws** — a pale blue cage of arcs standing over the two hexes the ward covers, for ten ticks. It is the
-  moment the pool went out and not the pool: what a body then carries is the bar above it. **Unsigned**.
+- **Draws** — a flat translucent circle on the ground out to the two hexes the ward covers, in the pool's own
+  blue, for ten ticks. It is the moment the pool went out and not the pool: what a body then carries is the bar
+  above it. The shape is **signed**; the alpha is not.
 - **Open** — none.
 
 > **The first raise is a whole period after it arrives**, and every one after that a period apart — where an
@@ -944,9 +948,10 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 6000 hp, speed 16, arcane, armourValue 40, cost 53. Aura: origin `self`, affects **`enemy`**,
   payload `cooldown`, magnitude +30, radius 2000, period 30, duration 30.
 - **Needs** — nothing.
-- **Draws** — a crown of pale shards at the feet of every tower it froze. The only creep shape drawn on a
-  tower, and the only thing on screen that says a tower is firing slower — `EffectMarks` washes creeps and not
-  towers. **Unsigned**.
+- **Draws** — a flat translucent circle on the ground out to the reach of the frostbite, in a pale frost blue.
+  **It is the only thing on screen that says a tower is firing slower**, and that is now true of every
+  modifier: nothing is drawn on a body an aura found, on either side of the board. The shape is **signed**; the
+  alpha is not.
 - **Open** — none.
 
 ### 42 · Abomination · status live
@@ -980,8 +985,9 @@ would re-baseline every measurement in the sweep.
 - **Numbers** — 2000 hp, speed 33, arcane, armourValue 20, cost 15. Aura: origin `self`, affects `friend`,
   payload `armour`, magnitude +30, radius 2000, period 30, duration 30.
 - **Needs** — nothing.
-- **Draws** — a violet band broken into plates, on the ground out to two hexes. The shape the Unravel's strip
-  uses for armour coming off, for armour going on. **Unsigned**.
+- **Draws** — a flat translucent circle on the ground out to two hexes, in the armour violet the Unravel's
+  strip also uses. It used to borrow that strip's broken band; only the Unravel keeps it, because a blast is
+  not an aura. The shape is **signed**; the alpha is not.
 - **Open** — none.
 
 ### 45 · Fiend · status live
@@ -1457,22 +1463,20 @@ open.
    1" is the one shape on that ticket that was not built.** Either the two splashes are content with the
    burst, or telling them apart needs something that is neither the row nor the payload, and the payload, the
    delivery and the radius column shape are what those three rows have in common.
-9. **What ships for the Blessing is a halo and the word signed was "glow".** A ring hangs over the head of
-   every tower the pulse reached. It is real geometry, which the glow reservation above requires — nothing
-   here may billboard — but a ring of light above a head and a body lit from within are two different
-   pictures, and only the second is what "glow" plainly means. Whether the halo is the placeholder for it or
-   the answer to it is an eye check on
-   [`four-lines-tick-0572.png`](frames/four-lines-tick-0572.png).
-10. **The Consecration's light is a filled disc, which is the same solid the placeholder disc is.** What was
-    signed is "light on the ground from the font", and light on the ground is what ships: a disc lying flat
-    out to the three hexes the aura carries, in its own colour and on its own lifetime. It is nevertheless the
-    same cylinder the unsigned bubble placeholder uses, at a size that covers the ground its own tower stands
-    on — so whether a lit floor reads as *an aura being projected* or merely as a bigger version of the
-    placeholder is an eye check on
-    [`magic-lines-tick-0331.png`](frames/magic-lines-tick-0331.png). The same reading question the halo above
-    has, one row along.
-11. **"Roots on every hex it slows" ships as roots under every body it slows.** The two are not the same
-    sentence and the difference is forced: that aura reaches sixty hexes on a board nineteen across, so roots
-    on every hex it slows is roots on every hex, permanently, which is a floor texture rather than an effect.
-    Roots under each body it is holding says the same thing about what the tower is doing and moves with the
-    thing worth watching. Whether that reads as the board being held is an eye check on the same frame.
+9. **What ships for the Blessing is a circle on the floor and the word signed was "glow".** The halo over
+   each blessed tower's head is gone with every other mark on a body an aura found; what is left says where the
+   blessing reaches rather than who got it. A lit floor and a body lit from within are two different pictures
+   and only the second is what "glow" plainly means, so this stays open — and it is the same question the real
+   particle work will answer, rather than one to settle with another placeholder.
+10. **The Consecration's light is the same circle every other aura now draws, and that stopped being a
+    complaint.** What was signed is "light on the ground from the font", and light on the ground is what ships:
+    a translucent circle lying flat out to the three hexes the aura carries, in its own colour and on its own
+    lifetime. It was already this shape when eight other auras were something else, which is what made it read
+    as a bigger version of the placeholder; now that every aura is this shape, the only thing separating the
+    Consecration from its neighbours is the colour — which is the whole vocabulary, deliberately.
+11. **"Roots on every hex it slows" ships as nothing at all.** That aura reaches sixty hexes on a board
+    nineteen across, so roots on every hex it slows is roots on every hex, permanently — a floor texture rather
+    than an effect — and the circle every other aura draws is, at that radius, the screen washed flat. Sam took
+    the third option on 7 September 2026: the Overgrowth draws no decoration, and the hold reads through the
+    creeps not moving. **It is the one aura on the roster with nothing on screen**, which is worth an eye check
+    of its own: whether a board-wide hold is legible with no mark for it at all.

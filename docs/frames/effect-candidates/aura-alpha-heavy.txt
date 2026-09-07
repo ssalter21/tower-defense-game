@@ -7,10 +7,10 @@
 #
 # A KEY IS A MatchTuning MEMBER NAME and an unknown one is a fault that lists
 # the near misses -- View.Editor.EffectLookFile. A `signature <unit id> <shape>`
-# line moves which shape a row's bubble leaves, which is bound per unit and so
-# cannot be asked with a number at all.
+# line moves which aura a row's bubble is, which is bound per unit and so cannot
+# be asked with a number at all.
 #
-question What shape should the Frost Wight's frostbite be, given that #266 named where it leaves from and named no shape at all?
-label frostbite: a ring on the ground where the pulse stopped
+question That every aura is a flat translucent circle is signed. How translucent is not. This is the heavy end of the bracket: the circle reads at play size from any camera heading, at the cost of starting to do what the opaque ring did -- lie over the corridor and the bodies walking down it. Two circles overlapping is where this one is judged.
+label alpha 0.45: the circle reads first
 
-signature 41 SlowRing
+AuraDiscAlpha 0.45

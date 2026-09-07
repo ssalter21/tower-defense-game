@@ -2012,3 +2012,63 @@ EditMode **100 of 100** — six fewer cases than before, being the five `Unbound
 height assertion. PlayMode **165 of 165**, the built player **163 passed and 2 skipped**, and every static
 check green. The committed match is untouched at state `441D37E128517F3D`, 3 of 40 leaked, and a content hash
 that never moved: comments are not scanned, so a citation is free to be corrected.
+
+---
+
+## 7 September 2026 — every aura becomes one flat translucent circle, and nothing is drawn on a body again
+
+[#279](https://github.com/ssalter21/tower-defense-game/issues/279) rendered twenty-four candidate effect looks
+and put them in front of Sam. **He took none of them**, and signed something simpler than anything on the sheet.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning`** — capstone signatures | Ten shapes signed, four unsigned; each aura drawn as the plainest thing that says what that row does | **Every aura is one flat translucent circle** at the reach it reported, in its own colour. Nine shapes — a ring, cracks, a halo, a light, roots, a cage, plates, a crown of shards — became one | The shapes were placeholders competing to be a vocabulary, and the vocabulary is not what is wanted. What is wanted is animation and particle work nobody has done; until then one honest shape beats nine invented ones |
+| **`EffectMarks`** — the wash | A wash of colour on a body while a payload is in force | **Nothing is drawn on a body at all.** The colour wash is gone, and so are the four shapes drawn on the bodies an aura *found* — the Blessing's halo over each tower, the haste's ring over each creep, the frostbite's crown at each tower's feet, the Overgrowth's roots under each held body | Whether a body is affected is read off the circle it is standing in. A second thing saying so is a second thing to design |
+| **`BubbleSignature`** — what a member selects | A shape | **A colour and a lifetime.** The member names are kept, because they still say whose aura it is | The rows still need telling apart; only the means changed |
+| **The Overgrowth** | Roots under each held body, *because* a shape at its radius would cover ten boards | **Draws nothing at all** — the one aura on the roster with no decoration | Its reach is sixty hexes. A circle at that radius is a hundred and twenty across on a board nineteen wide: the screen washed flat rather than an area shown. An aura that covers everything has no impact area worth outlining |
+
+### The finding that made the rejection cheap
+
+**None of the twenty-four was wrong; the question they were answering was.** #279's own measurement said as
+much before Sam saw it — `tower-marks-on` moved 0.09% of a 1600×900 frame and `frost-halo` 0.04%, against ~2%
+for anything drawn on the ground. Nine shapes competing for a fifteenth of a percent of the screen is a
+vocabulary nobody can read, and the sheet made that visible in a way the constants never did.
+
+The other #279 finding is what the new rule fixes head-on: **the shared "ring" was a filled disc drawn opaque**,
+so at the two hexes every aura on the roster carries it was a plate over the corridor and the bodies standing on
+it. The shape was right and the surface was wrong. Nothing in this project had a transparent material until
+today — `ViewMaterials` shipped one opaque path, so alpha on a colour did nothing at all.
+
+### This is interim, and the thing standing in the way of the real answer is a test
+
+**What these effects should finally be is first-class animation with real particle work.** This client cannot
+host that as written: `MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera` forbids `ParticleSystem`, line
+renderers, trail renderers, sprites and canvases anywhere in the match, because all of them billboard and this
+camera orbits freely. Getting there means mesh-output VFX or a deliberate decision that the guard comes off for
+effects — **which is a decision, not a detail, and it is not taken here.**
+
+### What came out with it
+
+`EffectMeshes` lost five of its eight builders — `Ring`, `Cracks`, `Roots`, `Dome`, `Spikes` — and `MatchTuning`
+lost thirty-two constants that only those shapes read. `MatchView` lost `TowersWithin` and `CreepsWithin`
+entirely: they existed to answer "which bodies did this aura find", and nothing asks any more. The three shapes
+left in `EffectMeshes` are the Mortar's burst, the Unravel's strip and the Fan of Knives' knife — **shots and
+blasts, which are not auras and were not part of what moved.**
+
+The twenty-four candidate files and their committed frames are deleted rather than kept. They are pictures of
+nine shapes that no longer exist; the history of `docs/frames/effect-candidates/` and #279 hold them.
+
+### One thing is still unsigned, and it is a number
+
+**How translucent.** `MatchTuning.AuraDiscAlpha` is 0.28 and nobody chose it — it is the plainest value that
+lets a two-hex circle read without covering what is standing in it. A bracket of three candidates is committed
+beside the frames so it can be signed off pictures rather than off constants, and the case that decides it is
+two circles overlapping rather than one on empty floor.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905** — unchanged, which is the point: every constant in `MatchTuning` is
+declared not to be a simulation input, and thirty-two of them left without the match noticing. EditMode
+**114 of 114**, PlayMode **165 of 165** including `NothingInTheMatchTurnsToFaceTheCamera` and
+`EverythingDrawnIsRealGeometryLitByARealLight` — a translucent surface is still real geometry lit by the real
+light.
