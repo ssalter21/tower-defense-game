@@ -1,0 +1,15 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+# THIS FILE IS HALF A CANDIDATE. It names the shipped duty cycle and nothing
+# else; what makes it the two-hex candidate is the unit table it is rendered
+# against -- docs/frames/consecration-two-hex.txt -- which is paired with it in
+# the plan table in tools/capture-effect-candidates.ps1. It exists as a file of
+# its own only so the frames get a name of their own: a capture names its
+# output after the candidate look, so two runs sharing one look would overwrite
+# each other.
+#
+question How much of the Consecration reading as a hole in the floor is the radius rather than the duty cycle? This is the shipped duty -- up for 26 ticks in every 30 -- with the aura reaching two hexes instead of three. Read it against light-as-shipped, which is the same duty at three hexes: what differs between those two frames is the radius alone.
+label light 26 of 30 ticks, two hexes: the shipped duty, smaller
+
+ConsecrationLightTicks 26

@@ -1,0 +1,8 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+question Does the knife read at 1600x900 if it is half again as long, with its colour left where it is? The blade, the guard and the grip are all fractions of the length, so one number moves the whole object and none of its proportions.
+label knife 0.85 m, pale grey: half again as long
+
+KnifeLength 0.85
+KnifeColor 0.78,0.82,0.88

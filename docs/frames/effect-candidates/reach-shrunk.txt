@@ -1,0 +1,8 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+question The circle is narrowed until it fits on the board, so it stays a whole circle and no part of it is drawn over the background. The cost is that it is then drawn smaller than the reach it stands for, in every direction and not just the one the rim is in -- a three-hex aura can be drawn two hexes across next to a body it is affecting three hexes away. That is the thing to look for on this frame.
+label reach shrunk: a smaller whole circle
+
+GroundEffectClippedToBoard false
+GroundEffectShrunkToBoard true

@@ -49,13 +49,21 @@ namespace View
         /// Builds the shell: real geometry at a real size, because the camera
         /// orbits freely and anything flat would turn to face it.
         /// </summary>
-        public void Build(Material material)
+        /// <param name="radius">
+        /// How big across the shell is, in metres. <see cref="MatchTuning"/>'s
+        /// own value unless a capture is standing a candidate in front of it —
+        /// the shipped 0.16 is about twenty pixels of dark grey crossing a
+        /// bright floor at the size the game is played at, which issue #280
+        /// says reads as a hole rather than as a shell. Only a capture ever
+        /// passes anything else; see <see cref="EffectLook.ProjectileRadius"/>.
+        /// </param>
+        public void Build(Material material, float radius)
         {
             Model = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Model.name = "Shell";
             Model.transform.SetParent(transform, worldPositionStays: false);
             Model.transform.localPosition = Vector3.zero;
-            Model.transform.localScale = Vector3.one * (MatchTuning.ProjectileRadius * 2f);
+            Model.transform.localScale = Vector3.one * (radius * 2f);
 
             // The primitive arrives with a collider. Nothing in this project
             // uses physics -- every range, hit and splash question is an

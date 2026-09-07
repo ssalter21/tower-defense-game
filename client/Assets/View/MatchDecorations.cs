@@ -82,6 +82,22 @@ namespace View
         private readonly Func<int, RowSignature?> _creepSignature;
 
         /// <summary>
+        /// The board's footprint in world x and z, which is what a ground
+        /// effect is asked to stop at when a candidate asks it to stop
+        /// anywhere.
+        /// </summary>
+        /// <remarks>
+        /// <b>Nothing the game ships reads this.</b> Both members that consult
+        /// it are off in <see cref="EffectLook.Shipped"/>, so the shipped match
+        /// lays every circle at the reach the bubble reported and lets it hang
+        /// over the rim — which is the picture issue #280 is about, and which
+        /// nobody has signed either way. A <see cref="Rect"/> rather than a
+        /// <see cref="Bounds"/> because the question is only ever asked in
+        /// plan: <c>y</c> here is the board's z.
+        /// </remarks>
+        private readonly Rect _board;
+
+        /// <summary>
         /// Where every number and colour on this page is read from. <see
         /// cref="EffectLook.Shipped"/> unless a capture handed one in, and that
         /// one answers out of <see cref="MatchTuning"/> for every member it was
@@ -137,6 +153,13 @@ namespace View
         /// lookup that answered for creeps as well would draw a walking row's
         /// own aura shape under a body a mortar shell had just landed on.
         /// </param>
+        /// <param name="board">
+        /// The board's footprint in world x and z. Only the two candidate
+        /// members about where a ground effect stops read it, and both are off
+        /// in the look the game ships — so an empty rectangle is what a caller
+        /// with no board to hand passes, and it costs the shipped picture
+        /// nothing.
+        /// </param>
         /// <param name="look">
         /// The look to draw every effect at, or null for the one the game
         /// ships. <b>Only a capture ever passes one</b>, and it passes one
@@ -153,9 +176,11 @@ namespace View
             Func<int, Vector3?> entityGround,
             Func<int, RowSignature?> towerSignature,
             Func<int, RowSignature?> creepSignature,
+            Rect board = default,
             EffectLook look = null)
         {
             _look = look ?? EffectLook.Shipped;
+            _board = board;
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _creepPosition = creepPosition ?? throw new ArgumentNullException(nameof(creepPosition));
             _towerMuzzle = towerMuzzle ?? throw new ArgumentNullException(nameof(towerMuzzle));
@@ -979,8 +1004,33 @@ namespace View
                 return;
             }
 
+            if (_look.GroundEffectShrunkToBoard)
+            {
+                diameter = Mathf.Min(diameter, Fits(at));
+
+                // An emitter standing off the board has no circle that fits on
+                // it, and a circle of no width is a speck. Same rule as a
+                // bubble that reached only its centre.
+                if (diameter <= 0f)
+                {
+                    return;
+                }
+            }
+
             Transform disc = Take(piece);
             disc.position = at + (Vector3.up * _look.FloorClearance);
+
+            if (_look.GroundEffectClippedToBoard)
+            {
+                Cut(disc, at, diameter, thickness);
+
+                // The generated shape carries its own thickness in metres, the
+                // way every mesh out of EffectMeshes does, so its vertical axis
+                // is left alone where the cylinder's is scaled.
+                Stays(piece, disc, Flattened(diameter), lifetimeTicks, shrinks: false);
+
+                return;
+            }
 
             // A Unity cylinder is one unit across and two tall, so a diameter
             // goes into x and z unchanged and the thickness is halved into y.
@@ -988,6 +1038,78 @@ namespace View
 
             Stays(piece, disc, scale, lifetimeTicks, shrinks: false);
         }
+
+        /// <summary>
+        /// The widest circle centred at <paramref name="at"/> that lies wholly
+        /// on the board, or zero where none does.
+        /// </summary>
+        /// <remarks>
+        /// The nearest rim decides it, so a circle drawn this way is smaller
+        /// than the reach it stands for in exactly one direction and smaller
+        /// than it needs to be in the other three. That is the cost of keeping
+        /// it a circle, and it is the thing a candidate for
+        /// <see cref="EffectLook.GroundEffectShrunkToBoard"/> is being looked at
+        /// to judge.
+        /// </remarks>
+        private float Fits(Vector3 at)
+        {
+            float room = Mathf.Min(
+                Mathf.Min(at.x - _board.xMin, _board.xMax - at.x),
+                Mathf.Min(at.z - _board.yMin, _board.yMax - at.z));
+
+            return Mathf.Max(0f, room * 2f);
+        }
+
+        /// <summary>
+        /// Puts a disc cut to the board on <paramref name="disc"/>, in place of
+        /// the cylinder the pool handed over.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A mesh per drawing, because the cut depends on where the circle
+        /// is.</b> Every other shape in this file is one mesh shared by every
+        /// object out of its pool; this one is the board seen from a particular
+        /// centre at a particular width, so two discs of the same aura are two
+        /// different shapes. The previous one is destroyed on the way past —
+        /// a mesh is an unmanaged object and nothing else would ever collect
+        /// it.
+        /// </para>
+        /// <para>
+        /// <b>The rectangle handed over is in mesh units</b>: the board moved
+        /// so the circle's centre is the origin, then divided by the diameter
+        /// the transform is about to scale by. See
+        /// <see cref="EffectMeshes.ClippedDisc"/>.
+        /// </para>
+        /// </remarks>
+        private void Cut(Transform disc, Vector3 at, float diameter, float thickness)
+        {
+            var filter = disc.GetComponent<MeshFilter>();
+
+            if (filter == null)
+            {
+                return;
+            }
+
+            if (filter.sharedMesh != null && filter.sharedMesh.name == ClippedDiscMesh)
+            {
+                UnityEngine.Object.Destroy(filter.sharedMesh);
+            }
+
+            var keep = new Rect(
+                (_board.xMin - at.x) / diameter,
+                (_board.yMin - at.z) / diameter,
+                _board.width / diameter,
+                _board.height / diameter);
+
+            filter.sharedMesh = EffectMeshes.ClippedDisc(EffectMeshes.DiscSides, thickness, keep);
+        }
+
+        /// <summary>
+        /// What <see cref="EffectMeshes.ClippedDisc"/> names its mesh, so a
+        /// generated one can be told from the primitive's shared cylinder and
+        /// destroyed without taking that with it.
+        /// </summary>
+        private const string ClippedDiscMesh = "EffectClippedDisc";
 
         /// <summary>
         /// The Mortar's: shards thrown out of the body the shell arrived at, to

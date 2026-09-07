@@ -1,6 +1,7 @@
 # Renders every candidate effect look in docs/frames/effect-candidates/ through
-# the real match, twice: once at the framing the game is played at and once with
-# the camera three times closer.
+# the real match, at the framing the game is played at -- and, for the ones a
+# magnified frame says anything useful about, a second time with the camera
+# three times closer.
 #
 # WHY TWICE. Issue #270 established that a sheet and the built player disagree --
 # a slowed body reads plainly magnified and not at all at 1600x900, which is the
@@ -62,6 +63,29 @@ $contexts = @{
         Wave    = 'docs/frames/speed-pair.txt'
         Defense = 'docs/frames/four-lines.txt'
     }
+    # The six rows of the Archer and Rogue lines against the recorded wave, so
+    # the Fan of Knives is on the board and throwing. Nothing else on the
+    # roster throws a knife.
+    'pierce' = @{
+        Wave    = $null
+        Defense = 'docs/frames/pierce-lines.txt'
+    }
+    # The nine rows of the Mage, Cleric and Druid lines against the recorded
+    # wave. THREE OF THE FOUR QUESTIONS ARE ON THIS ONE BOARD: every rung of the
+    # Cleric and Druid lines fires the bolt, the Mage fires the ballistic shell,
+    # and the Consecration lays its light -- so tick 313 carries a bolt in
+    # flight, two shells in the air and the light on the ground at once.
+    'magic' = @{
+        Wave    = $null
+        Defense = 'docs/frames/magic-lines.txt'
+    }
+    # Two Consecrations standing on rims and one aura standing nowhere near
+    # one, with the six aura-carrying creep rows walking past them. The only
+    # context in which the overhang #280 is about is visible at all.
+    'rim' = @{
+        Wave    = 'docs/frames/creep-auras.txt'
+        Defense = 'docs/frames/rim-emitters.txt'
+    }
 }
 
 # candidate -> which context it is photographed in, which ticks, and how far the
@@ -79,6 +103,88 @@ $plan = [ordered]@{
     'aura-alpha-light'   = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
     'aura-alpha-shipped' = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
     'aura-alpha-heavy'   = @{ Context = 'auras'; Ticks = '94,272'; Close = 20 }
+
+    # ---------------------------------------------------------------
+    # Issue #280: the four things that do not read at 1600x900
+    # ---------------------------------------------------------------
+    #
+    # EVERY ONE OF THESE WAS FOUND BY PHOTOGRAPHING THE BUILT PLAYER rather than
+    # a sheet, so the wide frame is the deliverable and the close one is
+    # supporting. A Close of 0 means no close frame is drawn at all: for the two
+    # questions about a circle on the ground, the close camera crops out the
+    # rim, which is the only thing those frames are for.
+    #
+    # THE TICKS ARE NOT GUESSES. capture-match-frames.ps1 logs a per-tick line
+    # carrying the live shell count and the running totals for every effect, so
+    # a tick with a knife actually in flight is found by reading the log of a
+    # cheap narrow run rather than by opening pictures. Recorded here so nobody
+    # has to do it twice:
+    #
+    #   pierce  the Fan of Knives throws at 599, 607, 615 and 623, and a knife
+    #           lives 6 ticks -- so 617 and 624 each carry three in the air.
+    #   magic   the Consecration pulses at 301 and 331; bolts leave at 311 and
+    #           342 and live 5 ticks; shells are in the air from 295 to 343.
+    #   rim     both rim Consecrations pulse together at 271 and 301, and the
+    #           Blessing that is the control pulses with them.
+
+    # The knife: a size ladder, then the shipped size against a dark blade, so
+    # the sitting can tell a size answer from a contrast one.
+    'knife-as-shipped' = @{ Context = 'pierce'; Ticks = '617,624'; Close = 14 }
+    'knife-half-again' = @{ Context = 'pierce'; Ticks = '617,624'; Close = 14 }
+    'knife-double'     = @{ Context = 'pierce'; Ticks = '617,624'; Close = 14 }
+    'knife-dark'       = @{ Context = 'pierce'; Ticks = '617,624'; Close = 14 }
+
+    # The bolt: the same ladder asked of the other shape, on the board where six
+    # rows fire it.
+    'bolt-as-shipped'  = @{ Context = 'magic'; Ticks = '313,343'; Close = 14 }
+    'bolt-half-again'  = @{ Context = 'magic'; Ticks = '313,343'; Close = 14 }
+    'bolt-double'      = @{ Context = 'magic'; Ticks = '313,343'; Close = 14 }
+    'bolt-dark'        = @{ Context = 'magic'; Ticks = '313,343'; Close = 14 }
+
+    # The shell: three colours at the shipped size and the shipped colour at
+    # nearly twice the size, over the floor it actually crosses.
+    #
+    # WIDE ONLY, AND THAT WAS MEASURED RATHER THAN CHOSEN. These were drawn at
+    # a close distance of 14 first, and at that framing shell-pale and
+    # shell-warm are byte-identical to shell-as-shipped at both ticks -- zero
+    # pixels different, on a colour that goes from near-black to near-white. A
+    # shell at the shipped radius is behind a hex from that camera, and the only
+    # close frame that moved at all was shell-bigger, whose larger sphere pokes
+    # out past the terrain the smaller one hides behind. A magnified picture
+    # that cannot show the thing being decided is worse than no picture, so
+    # there is none.
+    'shell-as-shipped' = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
+    'shell-pale'       = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
+    'shell-warm'       = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
+    'shell-bigger'     = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
+
+    # Where a ground effect stops. Wide only, and it has to be: the whole
+    # question is what happens at the rim, and the close camera crops the rim
+    # out of the picture.
+    'reach-as-shipped' = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
+    'reach-clipped'    = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
+    'reach-shrunk'     = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
+
+    # The Consecration's duty cycle. Three ticks across one thirty-tick period,
+    # chosen so the three candidates disagree on the frame rather than only in
+    # the file: the pulse is at 301, so at 305 all three are lit, at 313 the
+    # eight-tick one has gone out, and at 320 only the shipped one is left.
+    'light-as-shipped' = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
+    'light-half'       = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
+    'light-brief'      = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
+
+    # And its radius, which is the other half of the same question and is NOT a
+    # look. Both of these name the shipped duty cycle and differ only in the
+    # unit table they are played against, so what changes between one of them
+    # and light-as-shipped is the radius alone. See the Units note below.
+    'light-two-hex'    = @{
+        Context = 'magic'; Ticks = '305,313,320'; Close = 0
+        Units   = 'docs/frames/consecration-two-hex.txt'
+    }
+    'light-one-hex'    = @{
+        Context = 'magic'; Ticks = '305,313,320'; Close = 0
+        Units   = 'docs/frames/consecration-one-hex.txt'
+    }
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -98,7 +204,14 @@ foreach ($name in $plan.Keys) {
 
     $framings = @()
     if (-not $CloseOnly) { $framings += @{ Suffix = 'played'; Distance = 0; Width = 1600 } }
-    if (-not $WideOnly) { $framings += @{ Suffix = 'close'; Distance = $entry.Close; Width = 900 } }
+    # A Close of zero is a candidate that has no close frame at all, rather than
+    # one drawn from the default distance. The two questions about a circle on
+    # the ground are the whole reason for it: what they ask is what happens
+    # where the board ends, and a camera three times closer has the rim outside
+    # the picture.
+    if ((-not $WideOnly) -and $entry.Close -gt 0) {
+        $framings += @{ Suffix = 'close'; Distance = $entry.Close; Width = 900 }
+    }
 
     foreach ($framing in $framings) {
         $into = Join-Path $OutDir $framing.Suffix
@@ -116,6 +229,19 @@ foreach ($name in $plan.Keys) {
         if ($context.Wave) { $arguments.Wave = (Join-Path $repoRoot $context.Wave) }
         if ($context.Defense) { $arguments.Defense = (Join-Path $repoRoot $context.Defense) }
         if ($entry.Ticks) { $arguments.Ticks = $entry.Ticks }
+
+        # ON THE CANDIDATE AND NOT ON THE CONTEXT, unlike the wave and the
+        # defense. A unit table here is not a board to photograph a look
+        # against -- it is half of the candidate itself, because how far an
+        # aura reaches is a simulation number and cannot be asked with a look
+        # constant. Two candidates naming the same look are told apart by the
+        # table they are played against, so the pairing has to live per entry.
+        #
+        # THE FRAME IS STILL NAMED AFTER THE LOOK. capture-match-frames.ps1
+        # names its output after -Effects ahead of -Units, which is why those
+        # two candidates are separate files naming the same one value rather
+        # than one file rendered twice.
+        if ($entry.Units) { $arguments.Units = (Join-Path $repoRoot $entry.Units) }
 
         Write-Host ""
         Write-Host "=== $name ($($framing.Suffix), distance $($framing.Distance)) ===" -ForegroundColor Cyan

@@ -575,7 +575,20 @@ namespace View
             host.transform.SetParent(transform, worldPositionStays: false);
 
             MatchView = host.AddComponent<MatchView>();
-            MatchView.Begin(Map, rules, types, layout, wave, seed, art, look);
+
+            // The floor's own bounds and not a second reckoning off the map.
+            // Only a candidate about where a ground effect stops reads this;
+            // see MatchDecorations, whose two members for it are off in the
+            // look the game ships.
+            Bounds footprint = Floor.WorldBounds;
+
+            var board = new Rect(
+                footprint.min.x,
+                footprint.min.z,
+                footprint.size.x,
+                footprint.size.z);
+
+            MatchView.Begin(Map, rules, types, layout, wave, seed, art, look, board);
 
             // The layout does not change for the life of a match, so the board
             // is dressed around it once rather than watched.

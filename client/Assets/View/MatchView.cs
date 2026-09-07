@@ -172,6 +172,16 @@ namespace View
         /// Starts drawing a match. Builds the towers, which are static for its
         /// whole length, and pulls the first snapshot.
         /// </summary>
+        /// <param name="board">
+        /// The board's footprint in world x and z, which only the two candidate
+        /// members about where a ground effect stops ever read — see
+        /// <see cref="MatchDecorations"/>. It is handed down from the floor
+        /// that was actually built rather than worked out again from the map,
+        /// because two answers to "where does the board end" is exactly the
+        /// second opinion this project keeps deleting. An empty rectangle is
+        /// what a caller with no floor passes, and it costs the shipped picture
+        /// nothing.
+        /// </param>
         public void Begin(
             HexMap map,
             Ruleset rules,
@@ -180,7 +190,8 @@ namespace View
             WaveScript wave,
             ulong seed,
             MatchArt art,
-            EffectLook look = null)
+            EffectLook look = null,
+            Rect board = default)
         {
             if (map is null) throw new ArgumentNullException(nameof(map));
             if (rules is null) throw new ArgumentNullException(nameof(rules));
@@ -221,6 +232,7 @@ namespace View
                 EntityGroundOf,
                 TowerSignatureOf,
                 CreepSignatureOf,
+                board,
                 _look);
 
             // Instant-resolve, and it is the same call as everything else:
@@ -628,7 +640,7 @@ namespace View
             host.transform.SetParent(_projectileParent, worldPositionStays: false);
 
             var view = host.AddComponent<ProjectileView>();
-            view.Build(_projectileMaterial);
+            view.Build(_projectileMaterial, _look.ProjectileRadius);
 
             return view;
         }

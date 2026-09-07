@@ -84,6 +84,16 @@ namespace Tests.EditMode
 
             Assert.That(shipped.UnitBarCrossed, Is.False, "There is one bar and it does not turn.");
             Assert.That(shipped.UnitBarClamped, Is.False, "Both segments are shares of the authored health.");
+
+            Assert.That(
+                shipped.GroundEffectClippedToBoard,
+                Is.False,
+                "A circle is laid at the reach the bubble reported and is not cut at the rim.");
+
+            Assert.That(
+                shipped.GroundEffectShrunkToBoard,
+                Is.False,
+                "A circle near a rim is not narrowed to fit the board either.");
         }
 
         [Test]
@@ -281,7 +291,20 @@ namespace Tests.EditMode
             // so the only thing still standing on nobody's signature is how
             // see-through that circle is. A bracket, and the middle of it is
             // the value MatchTuning holds.
-            foreach (string wanted in new[] { "aura-alpha" })
+            //
+            // The other four families are issue #280's, which is the same
+            // question asked of four things that were found by photographing
+            // the built player rather than a sheet: the thrown knife and the
+            // magic bolt, the mortar shell, where a ground effect stops, and
+            // how long the Consecration's light is up for. Every one of them is
+            // a bracket with the shipped value named outright in the middle of
+            // it — a baseline candidate that named nothing would quietly become
+            // a second picture of whatever the file happened to hold, which is
+            // what nearly happened to the alpha bracket when 0.45 was signed.
+            foreach (string wanted in new[]
+            {
+                "aura-alpha", "knife", "bolt", "shell", "reach", "light",
+            })
             {
                 Assert.That(
                     names.Any(name => name.StartsWith(wanted, StringComparison.Ordinal)),

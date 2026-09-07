@@ -1,0 +1,8 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+question MatchTuning.ProjectileColor is (0.22, 0.2, 0.19) at a radius of 0.16 m, and on a yellow-green floor that reads as a hole in the ground rather than as a shell in flight. This is what ships, named outright, so the bracket has a bottom that is the complaint itself.
+label shell 0.16 m, near-black: what ships today
+
+ProjectileRadius 0.16
+ProjectileColor 0.22,0.2,0.19

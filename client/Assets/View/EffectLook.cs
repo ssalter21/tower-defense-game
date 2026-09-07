@@ -213,6 +213,25 @@ namespace View
             N(nameof(MatchTuning.MuzzleFlashRadius), MatchTuning.MuzzleFlashRadius);
 
         /// <summary>
+        /// <see cref="MatchTuning.ProjectileRadius"/>, or the candidate
+        /// standing in front of it.
+        /// </summary>
+        /// <remarks>
+        /// <b>The one member here that is not an effect.</b> A shell is a
+        /// snapshot entity rather than something an event left behind, so it is
+        /// drawn by <c>ProjectileView</c> and not by <c>MatchDecorations</c> —
+        /// but the complaint against it is the same complaint as against a
+        /// knife, that a small dark thing crossing a bright floor is not
+        /// readable at the size the game is played at, and the answer to that
+        /// is a size and a colour together. <see cref="ProjectileColor"/> was
+        /// already here; asking about the colour without being able to ask
+        /// about the size would leave the sitting unable to tell which of the
+        /// two it was reacting to.
+        /// </remarks>
+        public float ProjectileRadius =>
+            N(nameof(MatchTuning.ProjectileRadius), MatchTuning.ProjectileRadius);
+
+        /// <summary>
         /// <see cref="MatchTuning.TracerThickness"/>, or the candidate
         /// standing in front of it.
         /// </summary>
@@ -557,5 +576,36 @@ namespace View
         /// </summary>
         public bool UnitBarClamped => B(nameof(UnitBarClamped));
 
+        /// <summary>
+        /// Whether a ground effect is cut off where the board ends, so no part
+        /// of it is drawn over the background. Off, which is the shipped
+        /// answer: a circle is laid at the reach the bubble reported and hangs
+        /// out over the rim when the emitter stands near one.
+        /// </summary>
+        /// <remarks>
+        /// <b>Where a ground effect is allowed to reach is signed nowhere.</b>
+        /// What the shapes <i>do</i> is <c>docs/roster.md</c>'s and is signed;
+        /// that they run off the edge of the board is a consequence nobody
+        /// chose, found by photographing the built player rather than a sheet.
+        /// So this is a new rule being drawn rather than a correction to an old
+        /// one — see issue #280 — and the shipped answer is on the menu
+        /// alongside the two that cost something.
+        /// </remarks>
+        public bool GroundEffectClippedToBoard => B(nameof(GroundEffectClippedToBoard));
+
+        /// <summary>
+        /// Whether a ground effect is drawn no wider than the board leaves room
+        /// for, so a circle near a rim is a smaller whole circle. Off, which is
+        /// the shipped answer.
+        /// </summary>
+        /// <remarks>
+        /// <b>This one draws a reach that is not the reach, and that is the
+        /// case against it.</b> It keeps the circle whole, which is the case
+        /// for it. Both belong in the picture, because the alternative to
+        /// clipping is not obviously worse until somebody has seen a
+        /// three-hex aura drawn two hexes across next to a body it is
+        /// affecting three hexes away.
+        /// </remarks>
+        public bool GroundEffectShrunkToBoard => B(nameof(GroundEffectShrunkToBoard));
     }
 }
