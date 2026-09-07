@@ -1,8 +1,9 @@
 # Candidate effect looks
 
-**One question is open here, and it is how see-through an aura's circle should
-be.** Everything else this folder used to ask was answered on 7 Sep 2026 by
-being rejected — see [`docs/decision-log.md`](../../decision-log.md).
+**Nothing here is open.** Every question this folder ever asked was answered on
+7 Sep 2026 — most of them by being rejected, the last of them by being picked.
+See [`docs/decision-log.md`](../../decision-log.md). What is left is the bracket
+that decided the alpha, kept as the record of how it was decided.
 
 ## What happened to the twenty-four candidates that were here
 
@@ -26,37 +27,42 @@ What he signed instead is simpler than any candidate on the sheet:
   shown.
 
 **This is an interim look and it is recorded as one.** What these effects should
-finally be is animation and particle work nobody has done, which this client
-cannot host as written — `MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera`
-forbids `ParticleSystem`, line renderers, trail renderers, sprites and canvases
-anywhere in the match, on the grounds that all of them billboard and this camera
-orbits. Until that is settled the plainest honest shape is one circle.
+finally be is animation and particle work nobody has done. That work is no longer
+blocked: `MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera` used to forbid
+`ParticleSystem` outright, and on 7 September 2026 it was narrowed to what
+[the vision](../../vision.md) actually says — nothing may **billboard**. A
+particle system in `Mesh` render mode emits real geometry and faces nothing, so
+it is allowed; line renderers, trail renderers, sprites and canvases still are
+not. Until somebody does that work the plainest honest shape is one circle.
 
 The rejected frames are not kept. They are pictures of nine shapes that no longer
 exist, and every one of them is in the history of this folder and on `#279`.
 
-## What is still open: the alpha
+## How the alpha was settled
 
-`MatchTuning.AuraDiscAlpha` is **0.28** and that number is nobody's decision. The
-three candidates here are a bracket around it:
+`MatchTuning.AuraDiscAlpha` is **0.45**, and it is one of the few numbers in that
+file somebody actually chose. Sam picked it off these three frames:
 
-| Candidate | Alpha | What it is trying to be |
-|---|---|---|
-| [`aura-alpha-light.txt`](aura-alpha-light.txt) | 0.15 | the floor barely tinted |
-| [`aura-alpha-shipped.txt`](aura-alpha-shipped.txt) | 0.28 | what the file holds today |
-| [`aura-alpha-heavy.txt`](aura-alpha-heavy.txt) | 0.45 | the circle reads first |
+| Candidate | Alpha | What it was trying to be | |
+|---|---|---|---|
+| [`aura-alpha-light.txt`](aura-alpha-light.txt) | 0.15 | the floor barely tinted | rejected — the three auras merge into one haze and stop being separable |
+| [`aura-alpha-shipped.txt`](aura-alpha-shipped.txt) | 0.28 | the value nobody chose | rejected — the cold circles read, the Blessing's gold does not |
+| [`aura-alpha-heavy.txt`](aura-alpha-heavy.txt) | 0.45 | the circle reads first | **signed** |
 
-**The middle one names no value on purpose.** It is the baseline the other two
-are read against, and it is a file rather than an absence so that all three
-frames come out of one command and one code path.
-
-**Two circles overlapping is the case that decides it, not one on empty floor.**
-A single circle reads at almost any alpha. What the heavy end risks is doing what
-the opaque ring did — lying over the corridor and the bodies walking down it —
-and that only shows where two auras cross. Tick 272 of the `auras` context has
-the Necromancer, the Witch and the Skeleton Mage all pulsing within a few ticks
-of each other with bodies walking through, which is why both ticks below are
+**Two circles overlapping is what decided it, not one on empty floor.** A single
+circle reads at almost any alpha. What the heavy end risked was doing what the
+opaque ring did — lying over the corridor and the bodies walking down it — and
+that only shows where two auras cross. Tick 272 of the `auras` context has the
+Necromancer, the Witch and the Skeleton Mage all pulsing within a few ticks of
+each other with bodies walking through, which is why both committed ticks are
 that context.
+
+**The three frames are kept and are not redrawn.** Each names its own alpha
+outright — the middle one included, which used to name none and stood for
+whatever the file held — so all three stay pictures of the values that were
+compared, and re-running the capture reproduces them. They are evidence for a
+decision rather than a description of the board, which is the same footing the
+Mage hat-pitch bracket sits on.
 
 ## Two framings, and the wide one is the one that decides
 
@@ -117,4 +123,5 @@ against the shipped one and say out loud what changed.
 ## Nothing here decides anything
 
 AGENTS.md rule 6 puts art and anything a player sees on the human side of the
-line. These are rendered alternatives and they stop there.
+line. These are rendered alternatives and they stop there; the signing above was
+Sam's, off these pictures.

@@ -183,11 +183,13 @@ the circles are.
   not an oversight, and **it is the only thing on screen that says which towers
   got the blessing**, because nothing is drawn on the towers themselves.
 
-  **This frame is also the alpha question.** The gold circle on yellow-green
-  grass is the faintest of the three: a warm colour on a warm floor at
-  `AuraDiscAlpha` 0.28 is close to invisible at play size, where the two cold
-  ones read. Whether that is the alpha or the colour is what
-  [`effect-candidates/`](effect-candidates/README.md) is for.
+  **This frame is why the alpha is 0.45 and not 0.28.** The gold circle is a warm
+  colour on a warm floor, so it was the faintest of the three and close to
+  invisible at play size while the two cold ones read cleanly. At the signed
+  alpha it carries a readable edge. It is still the softest of the three, which
+  is a fact about the colour rather than the number — see
+  [`effect-candidates/`](effect-candidates/README.md) for the bracket it was
+  chosen from.
 
 - `four-lines-tick-0572.png` — the same three signatures at the framing that
   fits the whole floor, so all twelve rows are in one picture. The Engineer's

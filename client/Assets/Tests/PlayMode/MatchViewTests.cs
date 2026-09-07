@@ -815,10 +815,37 @@ namespace Tests.PlayMode
         /// at a thing from another side is a real check rather than a formality.
         /// </summary>
         /// <remarks>
-        /// Checked by type rather than by looking, because the components that
-        /// billboard do so silently and by default: a line renderer faces the
-        /// camera unless told otherwise, and so does a particle system, and a
-        /// sprite is a flat card by definition.
+        /// <para>
+        /// <b>The rule is a consequence of the camera and not a taste.</b>
+        /// Issue #3 answered the playfield and the camera separately and made
+        /// the camera a free orbit, which the docs of the day recorded as
+        /// making "no billboards, no flat cards, no painted-on shadows" a
+        /// mandatory art rule — <c>docs/vision.md</c> §6 still carries it. A
+        /// billboard is a card that rotates to keep facing the viewer, so an
+        /// orbiting player either watches it spin or, if it is pinned, watches
+        /// it vanish edge-on. Neither survives.
+        /// </para>
+        /// <para>
+        /// <b>What is banned is billboarding, not any particular component,
+        /// and this test used to confuse the two.</b> Until 7 Sep 2026 it
+        /// asserted no <c>ParticleSystem</c> existed at all, which is stricter
+        /// than the rule: a particle system whose renderer is in
+        /// <see cref="ParticleSystemRenderMode.Mesh"/> emits real geometry per
+        /// particle and faces nothing. That ban was reading out of the vision a
+        /// sentence the vision does not contain, and it stood between the
+        /// effects work and the only tool built for it. Particles are allowed
+        /// here now **on the condition that they do not billboard**, which is
+        /// the actual rule, checked.
+        /// </para>
+        /// <para>
+        /// Checked by type and by render mode rather than by looking, because
+        /// the components that billboard do so silently and by default: a line
+        /// renderer faces the camera unless told otherwise, a particle system
+        /// defaults to <see cref="ParticleSystemRenderMode.Billboard"/>, and a
+        /// sprite is a flat card by definition. <c>CameraRigTests</c> holds the
+        /// behavioural half — orbit the rig and assert nothing moved — which is
+        /// what catches a billboard this list has not thought of.
+        /// </para>
         /// </remarks>
         [Test]
         public void NothingInTheMatchTurnsToFaceTheCamera()
@@ -827,21 +854,110 @@ namespace Tests.PlayMode
 
             RunUntil(view, () => view.Current.Tick > 400);
 
-            Assert.That(view.GetComponentsInChildren<LineRenderer>(true), Is.Empty,
-                "a line renderer billboards to the camera unless told not to");
-            Assert.That(view.GetComponentsInChildren<TrailRenderer>(true), Is.Empty);
-            Assert.That(view.GetComponentsInChildren<SpriteRenderer>(true), Is.Empty,
-                "a sprite is a flat card");
-            Assert.That(view.GetComponentsInChildren<ParticleSystem>(true), Is.Empty,
-                "default particles are camera-facing billboards");
-            Assert.That(view.GetComponentsInChildren<Canvas>(true), Is.Empty);
+            AssertNothingBillboards(view);
+        }
 
-            foreach (Renderer renderer in view.GetComponentsInChildren<Renderer>(true))
+        /// <summary>
+        /// The rule above, over whatever is under <paramref name="root"/>, so
+        /// that the test which proves it still bites can point it at a match it
+        /// has deliberately spoiled.
+        /// </summary>
+        private static void AssertNothingBillboards(Component root)
+        {
+            Assert.That(root.GetComponentsInChildren<LineRenderer>(true), Is.Empty,
+                "a line renderer billboards to the camera unless told not to");
+            Assert.That(root.GetComponentsInChildren<TrailRenderer>(true), Is.Empty);
+            Assert.That(root.GetComponentsInChildren<SpriteRenderer>(true), Is.Empty,
+                "a sprite is a flat card");
+            Assert.That(root.GetComponentsInChildren<Canvas>(true), Is.Empty);
+
+            foreach (ParticleSystemRenderer particles
+                in root.GetComponentsInChildren<ParticleSystemRenderer>(true))
             {
                 Assert.That(
-                    renderer is MeshRenderer || renderer is SkinnedMeshRenderer,
+                    particles.renderMode,
+                    Is.EqualTo(ParticleSystemRenderMode.Mesh),
+                    $"{particles.name} draws its particles as {particles.renderMode}, and every mode "
+                    + "but Mesh is a camera-facing card. Give it a mesh, or draw the effect some "
+                    + "other way.");
+
+                Assert.That(
+                    particles.alignment,
+                    Is.Not.EqualTo(ParticleSystemRenderSpace.View)
+                        .And.Not.EqualTo(ParticleSystemRenderSpace.Facing),
+                    $"{particles.name} draws real meshes and then turns them to face the camera, "
+                    + "which is a billboard with extra steps");
+            }
+
+            foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+            {
+                Assert.That(
+                    renderer is MeshRenderer
+                        || renderer is SkinnedMeshRenderer
+                        || renderer is ParticleSystemRenderer,
                     Is.True,
                     $"{renderer.name} is a {renderer.GetType().Name}, which is not real geometry");
+            }
+        }
+
+        /// <summary>
+        /// A particle system drawing camera-facing cards is refused by name,
+        /// which is the half of the rule above that nothing in the match
+        /// currently exercises.
+        /// </summary>
+        /// <remarks>
+        /// <b>Without this the relaxation is untested.</b> The match ships no
+        /// particle system at all, so every assertion in
+        /// <see cref="NothingInTheMatchTurnsToFaceTheCamera"/> about render
+        /// modes passes over an empty list — which is exactly how a guard that
+        /// has stopped guarding looks. This stands one up, points it at the
+        /// camera, and checks the rule bites.
+        /// </remarks>
+        [Test]
+        public void ABillboardingParticleSystemIsStillRefused()
+        {
+            MatchView view = Begin();
+
+            var host = new GameObject("Sparks");
+            host.transform.SetParent(view.transform, worldPositionStays: false);
+
+            ParticleSystemRenderer particles = host.AddComponent<ParticleSystem>()
+                .GetComponent<ParticleSystemRenderer>();
+
+            try
+            {
+                particles.renderMode = ParticleSystemRenderMode.Billboard;
+
+                Assert.That(
+                    () => AssertNothingBillboards(view),
+                    Throws.InstanceOf<AssertionException>(),
+                    "a particle system drawing camera-facing cards was allowed into the match");
+
+                // And the mesh mode the relaxation exists for is accepted, so
+                // this test says where the line is rather than only that there
+                // is one.
+                particles.renderMode = ParticleSystemRenderMode.Mesh;
+                particles.alignment = ParticleSystemRenderSpace.World;
+
+                Assert.That(
+                    () => AssertNothingBillboards(view),
+                    Throws.Nothing,
+                    "a particle system drawing real meshes in world space was refused, which is the "
+                    + "one thing the rule is supposed to permit");
+
+                // Real meshes turned to face the camera are a billboard with
+                // extra steps, and are refused on the second assertion rather
+                // than the first.
+                particles.alignment = ParticleSystemRenderSpace.Facing;
+
+                Assert.That(
+                    () => AssertNothingBillboards(view),
+                    Throws.InstanceOf<AssertionException>(),
+                    "meshes aligned to face the camera were allowed");
+            }
+            finally
+            {
+                Object.DestroyImmediate(host);
             }
         }
 

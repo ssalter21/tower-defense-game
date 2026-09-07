@@ -231,24 +231,27 @@ namespace View
         // hold still reads through the creeps not moving.
         //
         // THIS IS AN INTERIM LOOK AND IT SAYS SO. What these effects should
-        // finally be is animation and particle work nobody has done -- which
-        // this client cannot host as written, since MatchViewTests forbids the
-        // ParticleSystem, line, trail, sprite and canvas components on the
-        // grounds that all of them billboard and this camera orbits. Until
-        // that is settled the plainest honest shape is one circle.
+        // finally be is animation and particle work nobody has done. That work
+        // is no longer blocked: on 7 Sep 2026 the play-mode guard was narrowed
+        // from "no ParticleSystem" to "nothing that billboards", which is what
+        // docs/vision.md actually says, so particles in Mesh render mode are
+        // allowed. Until somebody does that work the plainest honest shape is
+        // one circle.
 
         /// <summary>
         /// How see-through an aura's circle is, where 0 is invisible and 1 is
         /// the opaque plate the shipped ring used to be.
         /// </summary>
         /// <remarks>
-        /// <b>A PLACEHOLDER.</b> That auras are translucent circles is signed;
-        /// how translucent is not, and this is the plainest value that lets the
-        /// corridor and the bodies read through a two-hex circle rather than a
-        /// number anybody chose. A candidate for it is a file rather than an
-        /// edit -- see <see cref="EffectLook"/>.
+        /// <b>SIGNED, and one of the few numbers in this file that is.</b> Sam
+        /// picked it on 7 Sep 2026 off a rendered bracket of 0.15, 0.28 and
+        /// 0.45 — see <c>docs/frames/effect-candidates/</c>, and
+        /// <c>docs/decision-log.md</c> for what it was picked against. The case
+        /// it was decided on is two circles overlapping with bodies walking
+        /// through, not one circle on empty floor, which reads at almost any
+        /// value.
         /// </remarks>
-        public const float AuraDiscAlpha = 0.28f;
+        public const float AuraDiscAlpha = 0.45f;
 
         /// <summary>
         /// How far the circle stands off the floor it lies on, in metres. Not

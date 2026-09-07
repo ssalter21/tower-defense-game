@@ -10,15 +10,16 @@ namespace View
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Bars, because a particle system is not available here and a card is
-    /// not allowed.</b> This project has no <c>ParticleSystem</c> anywhere and
-    /// two play-mode tests keep it that way —
+    /// <b>Bars, because a card is not allowed and nothing here needed more.</b>
+    /// The camera orbits freely, so nothing in the match may turn to face it —
     /// <c>NothingInTheMatchTurnsToFaceTheCamera</c> and
-    /// <c>EverythingDrawnIsRealGeometryLitByARealLight</c> — because the camera
-    /// orbits freely and Unity's default particles, line renderers and sprites
-    /// all billboard. So a signature is real triangles lit by the same
-    /// directional light everything else on the board is lit by, and it reads
-    /// the same from every heading. The same constraint already picked
+    /// <c>EverythingDrawnIsRealGeometryLitByARealLight</c> hold that line, and
+    /// Unity's default particles, line renderers and sprites all billboard. So
+    /// a signature is real triangles lit by the same directional light
+    /// everything else on the board is lit by, and it reads the same from every
+    /// heading. <b>A particle system is allowed here as of 7 Sep 2026</b>, in
+    /// <c>Mesh</c> render mode, which faces nothing; this file predates that
+    /// and none of the three shapes left in it wanted one. The same constraint already picked
     /// <see cref="MatchDecorations"/>'s stretched box for a tracer and its
     /// sphere for a spark; these are what it picks once a shape stops being
     /// expressible as one primitive.

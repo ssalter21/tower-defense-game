@@ -226,8 +226,9 @@ where one does not.** Knight, Cleric, Engineer and Druid take the second road.
 > **A glow is not a tier signal, and that is a reservation rather than an omission.** A persistent glow is
 > reserved for reading *"this tower is projecting an aura"* — Shield Wall, Blessing, Consecration and
 > Overgrowth. If it also meant "tier 3" the two readings would collide on exactly the rows that need the
-> first one. Note that it is not free either way: the client has no `ParticleSystem` and two play-mode tests
-> forbid one, so a glow has to be real mesh geometry or an emissive material.
+> first one. Note that it is not free either way: nothing in the match may **billboard** — turn to face the
+> camera — so a glow has to be real geometry, an emissive material, or particles drawn in mesh render mode.
+> A default particle system is a stack of camera-facing cards and is refused.
 
 **A line that shoots names where its shot leaves from, and that is part of choosing the prop.** `UnitArt`
 carries an effect anchor per row — a bone, or a transform inside the held prop, optionally its far end — and
@@ -350,10 +351,13 @@ board nineteen wide: the screen washed flat rather than an area shown. An aura t
 impact area worth outlining, so it gets none, and the hold reads through the creeps not moving. Sam's call, on
 the same day the circle was signed.
 
-**None of it is a `ParticleSystem` and none of it can be.** The client has none anywhere and two play-mode
-tests forbid one, for the reason the glow reservation above gives: the camera orbits and nothing may turn to
-face it. Each shape is a mesh of solid bars generated in `EffectMeshes`, or — for the two that are simply
-straight — a stretched box, lit by the one directional light everything else on the board is lit by.
+**None of it is a `ParticleSystem`, though one is now allowed to be.** Every shape here is a mesh of solid
+bars generated in `EffectMeshes`, or — for the two that are simply straight — a stretched box, lit by the one
+directional light everything else on the board is lit by. **What the rule forbids is billboarding, not
+particles.** Until 7 September 2026 the play-mode guard asserted no `ParticleSystem` existed at all, which was
+stricter than [the vision](vision.md) ever said; a particle system in `Mesh` render mode emits real geometry per
+particle and faces nothing. The guard now checks the render mode instead, so the VFX work has the tool it was
+always entitled to. See [the decision log](decision-log.md).
 
 **A shape that stands for a distance does not shrink as it ages.** The shared ageing closes a tracer, a flash
 and a spark down to nothing, because their size is how loud they are; a ring, a shock and a burst say how far

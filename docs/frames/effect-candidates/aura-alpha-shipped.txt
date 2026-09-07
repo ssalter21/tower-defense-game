@@ -5,10 +5,13 @@
 # file's own header. This is one of the alternatives, so that signing one is
 # somebody looking at pictures rather than reading constants.
 #
-# THIS ONE NAMES NOTHING, DELIBERATELY. It is the baseline the other two are
-# read against, and it is a file rather than an absence so that all three
-# frames come out of one command and one code path. What it draws is whatever
-# MatchTuning.AuraDiscAlpha holds -- 0.28 as this is written.
+# THIS ONE NAMED NOTHING AND NOW NAMES 0.28, WHICH IS NOT A TIDY-UP. It was the
+# baseline the other two were read against, drawing whatever MatchTuning held.
+# The file has since moved to 0.45, so a candidate naming nothing would quietly
+# become a second picture of the winner and this frame would stop being a
+# picture of what lost. It names the number it stood for instead.
 #
-question That every aura is a flat translucent circle is signed. How translucent is not. This is the middle of the bracket and the value the file currently holds, which was picked as the plainest thing that lets a two-hex circle read without covering what is standing in it. It is not a proposal.
-label alpha 0.28: what the file holds today
+question That every aura is a flat translucent circle was signed on 7 Sep 2026, and how translucent on the same day. This is the middle of the bracket -- the value the file held before anybody chose one, and the one Sam rejected because the cold circles read at it and the Blessing's gold does not.
+label alpha 0.28: the value nobody chose
+
+AuraDiscAlpha 0.28

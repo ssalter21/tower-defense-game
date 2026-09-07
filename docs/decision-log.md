@@ -2072,3 +2072,40 @@ declared not to be a simulation input, and thirty-two of them left without the m
 **114 of 114**, PlayMode **165 of 165** including `NothingInTheMatchTurnsToFaceTheCamera` and
 `EverythingDrawnIsRealGeometryLitByARealLight` — a translucent surface is still real geometry lit by the real
 light.
+
+---
+
+## 7 September 2026, later — the alpha is signed, and the particle ban turns out never to have been the rule
+
+Two things, and the second is a correction rather than a reversal.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning.AuraDiscAlpha`** | `0.28`, declared a placeholder — that auras are translucent circles was signed, how translucent was not | **`0.45`, signed.** Picked off a rendered bracket of 0.15, 0.28 and 0.45 | At 0.28 the cold circles read and the Blessing's gold, on yellow-green grass, does not. At 0.15 all three auras merge into one haze and stop being separable. 0.45 keeps them apart without doing what the opaque ring did |
+| **`MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera`** | No `ParticleSystem` may exist anywhere in the match | **Nothing may billboard.** A particle system is allowed in `Mesh` render mode, refused in every other, and refused in mesh mode if its alignment is `View` or `Facing` | The test was enforcing something stricter than the rule it was named after, and the difference had begun to cost real work |
+
+### The alpha was decided on the right frame, which is the only interesting thing about it
+
+**Two circles overlapping, not one on empty floor.** A single circle reads at almost any alpha; what the heavy end of the bracket risks is lying over the corridor and the bodies walking down it, and that only shows where two auras cross. Tick 272 of the `creep-auras` context has the Necromancer, the Witch and the Skeleton Mage all pulsing within a few ticks of each other with bodies walking through, which is why both committed ticks are that context.
+
+The three frames stay in [`docs/frames/effect-candidates/`](frames/effect-candidates/README.md) as evidence for a decision rather than as a description of the board — the footing the Mage hat-pitch bracket already sits on. **The baseline candidate now names `0.28` outright**, where it used to name no value and draw whatever the file held: with the file at 0.45 a candidate naming nothing would quietly become a second picture of the winner, and that frame would stop being a picture of what lost.
+
+### The particle ban was reading a sentence the vision does not contain
+
+**Where the no-billboards rule actually comes from.** [#3](https://github.com/ssalter21/tower-defense-game/issues/3) — "Top-down grid or side-on lane?" — welded the playfield shape to the camera and was closed on 1 August 2026 by answering them separately. The playfield became the hex corridor; the camera became a free orbit, overturning Part III's "fixed camera, no free rotation". The docs of that day record the cost in the same sentence that records the answer: a free orbit *"makes no billboards, no flat cards, no painted-on shadows a mandatory art rule"*. [`vision.md`](vision.md) §6 still carries it.
+
+**That rule is about behaviour and the test was about a component.** A billboard is a card that rotates to keep facing the viewer, so an orbiting player either watches it spin or, pinned, watches it vanish edge-on — the rule is sound and is not being weakened. But Unity's particle renderer has a `Mesh` render mode that emits real geometry per particle and faces nothing, which satisfies the rule completely. The guard rejected it twice over anyway: once by asserting no `ParticleSystem` existed, and again by a loop demanding every `Renderer` be a `MeshRenderer` or `SkinnedMeshRenderer`, which `ParticleSystemRenderer` is not.
+
+**The cost of the confusion was not hypothetical.** Hours earlier the same day, the interim circle look was written up — in this log, in `roster.md`, in `MatchTuning`'s own header and in the candidates sidecar — as blocked on a client that "cannot host" particle work. That was wrong in every one of those places, and all four now say what the rule says.
+
+**Nothing was loosened that catches a real billboard.** Line renderers, trail renderers, sprites and canvases are still refused outright, because none of them has a non-billboarding mode worth the branch. `CameraRigTests` still holds the behavioural half — orbit the rig, assert nothing moved — which is what catches a billboard this list has not thought of.
+
+**And the relaxation is tested rather than assumed.** The match ships no particle system, so every new assertion about render modes would otherwise pass over an empty list, which is exactly how a guard that has stopped guarding looks. `ABillboardingParticleSystemIsStillRefused` stands one up inside a real match and walks it through three states: billboard mode is refused, mesh mode in world space is accepted, and mesh mode aligned to face the camera is refused again. That last case is the one worth having — real meshes turned to face the camera are a billboard with extra steps.
+
+### What is still Sam's
+
+**Whether the no-billboards rule survives at all.** Nothing above touches it; the correction only stops the test claiming more than the rule does. Sam has asked to see what billboarding actually costs before deciding whether to keep the rule, which is [#290](https://github.com/ssalter21/tower-defense-game/issues/290) and is a prototype rather than an argument.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **114 of 114**, PlayMode **166 of 166** — one more than before, being the new particle test. Twelve committed frames redrawn at the signed alpha.
