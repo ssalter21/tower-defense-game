@@ -216,6 +216,32 @@ namespace Tests.PlayMode
         }
 
         [Test]
+        public void TheFootprintAgreesWithTheFloorThatWasActuallyBuilt()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+
+            Bounds built = root.Floor.WorldBounds;
+            Rect reckoned = HexGeometry.Footprint(map.Width, map.Height);
+
+            // Two ways of saying where the board stops, and they have to be one
+            // answer. The floor measures the tiles it placed; the footprint
+            // works it out from the map for the things that need the rim
+            // without holding a floor -- a match drawn in a fixture, which is
+            // most of them. Ground effects are clipped to this, so a
+            // disagreement is auras cut in the wrong place, on the board where
+            // no test builds a floor.
+            Assert.That(
+                reckoned.xMin, Is.EqualTo(built.min.x).Within(Tolerance), "left edge");
+            Assert.That(
+                reckoned.xMax, Is.EqualTo(built.max.x).Within(Tolerance), "right edge");
+            Assert.That(
+                reckoned.yMin, Is.EqualTo(built.min.z).Within(Tolerance), "near edge");
+            Assert.That(
+                reckoned.yMax, Is.EqualTo(built.max.z).Within(Tolerance), "far edge");
+        }
+
+        [Test]
         public void RoadIsOnTheCorridorAndGrassIsEverywhereElse()
         {
             MatchRoot root = BuildPlayfield();

@@ -588,7 +588,7 @@ namespace View
                 footprint.size.x,
                 footprint.size.z);
 
-            MatchView.Begin(Map, rules, types, layout, wave, seed, art, look, board);
+            MatchView.Begin(Map, rules, types, layout, wave, seed, art, board, look);
 
             // The layout does not change for the life of a match, so the board
             // is dressed around it once rather than watched.

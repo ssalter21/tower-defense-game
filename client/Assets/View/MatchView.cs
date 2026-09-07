@@ -173,14 +173,11 @@ namespace View
         /// whole length, and pulls the first snapshot.
         /// </summary>
         /// <param name="board">
-        /// The board's footprint in world x and z, which only the two candidate
-        /// members about where a ground effect stops ever read — see
-        /// <see cref="MatchDecorations"/>. It is handed down from the floor
-        /// that was actually built rather than worked out again from the map,
-        /// because two answers to "where does the board end" is exactly the
-        /// second opinion this project keeps deleting. An empty rectangle is
-        /// what a caller with no floor passes, and it costs the shipped picture
-        /// nothing.
+        /// The board's footprint in world x and z, which is where a ground
+        /// effect stops — see <see cref="MatchDecorations"/>. It is handed down
+        /// from the floor that was actually built rather than worked out again
+        /// from the map, because two answers to "where does the board end" is
+        /// exactly the second opinion this project keeps deleting.
         /// </param>
         public void Begin(
             HexMap map,
@@ -190,8 +187,8 @@ namespace View
             WaveScript wave,
             ulong seed,
             MatchArt art,
-            EffectLook look = null,
-            Rect board = default)
+            Rect board,
+            EffectLook look = null)
         {
             if (map is null) throw new ArgumentNullException(nameof(map));
             if (rules is null) throw new ArgumentNullException(nameof(rules));

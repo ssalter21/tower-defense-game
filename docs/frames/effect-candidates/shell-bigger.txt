@@ -2,7 +2,7 @@
 # file is and what it may not decide.
 #
 question Is it the colour that does not read, or the size? This is the shipped near-black at nearly twice the radius. The complaint in #280 is written as a colour complaint, and a shell at 0.16 m is about twenty pixels across at 1600x900 whatever colour it is -- so the size is on the menu beside the three colours or the sitting cannot tell which it is reacting to.
-label shell 0.28 m, near-black: the shipped colour, larger
+label shell 0.28 m, near-black: the shipped colour, larger -- PARKED 7 Sep 2026
 
 ProjectileRadius 0.28
 ProjectileColor 0.22,0.2,0.19

@@ -86,14 +86,10 @@ namespace Tests.EditMode
             Assert.That(shipped.UnitBarClamped, Is.False, "Both segments are shares of the authored health.");
 
             Assert.That(
-                shipped.GroundEffectClippedToBoard,
-                Is.False,
-                "A circle is laid at the reach the bubble reported and is not cut at the rim.");
-
-            Assert.That(
                 shipped.GroundEffectShrunkToBoard,
                 Is.False,
-                "A circle near a rim is not narrowed to fit the board either.");
+                "A circle near a rim is not narrowed to fit the board -- it is cut at the rim, "
+                + "which is GroundEffectsClipToBoard and has a constant of its own.");
         }
 
         [Test]
@@ -303,7 +299,7 @@ namespace Tests.EditMode
             // what nearly happened to the alpha bracket when 0.45 was signed.
             foreach (string wanted in new[]
             {
-                "aura-alpha", "knife", "bolt", "shell", "reach", "light",
+                "aura-alpha", "knife", "bolt", "shell", "reach",
             })
             {
                 Assert.That(

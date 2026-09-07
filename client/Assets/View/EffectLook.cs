@@ -539,6 +539,13 @@ namespace View
         private bool B(string name) =>
             _numbers != null && _numbers.TryGetValue(name, out float value) && value >= 0.5f;
 
+        /// <summary>
+        /// The same for a flag that <i>does</i> have a constant behind it, so it
+        /// answers out of <see cref="MatchTuning"/> when nobody named it.
+        /// </summary>
+        private bool B(string name, bool shipped) =>
+            _numbers != null && _numbers.TryGetValue(name, out float value) ? value >= 0.5f : shipped;
+
         // ---------------------------------------------------------------
         // The candidate axes with no constant behind them
         // ---------------------------------------------------------------
@@ -577,21 +584,19 @@ namespace View
         public bool UnitBarClamped => B(nameof(UnitBarClamped));
 
         /// <summary>
-        /// Whether a ground effect is cut off where the board ends, so no part
-        /// of it is drawn over the background. Off, which is the shipped
-        /// answer: a circle is laid at the reach the bubble reported and hangs
-        /// out over the rim when the emitter stands near one.
+        /// <see cref="MatchTuning.GroundEffectsClipToBoard"/>, or the candidate
+        /// standing in front of it. On, as of 7 Sep 2026.
         /// </summary>
         /// <remarks>
-        /// <b>Where a ground effect is allowed to reach is signed nowhere.</b>
-        /// What the shapes <i>do</i> is <c>docs/roster.md</c>'s and is signed;
-        /// that they run off the edge of the board is a consequence nobody
-        /// chose, found by photographing the built player rather than a sheet.
-        /// So this is a new rule being drawn rather than a correction to an old
-        /// one — see issue #280 — and the shipped answer is on the menu
-        /// alongside the two that cost something.
+        /// <b>This one moved from a candidate axis to a signed constant.</b> It
+        /// was a flag with nothing behind it while where a ground effect may
+        /// reach was written down nowhere; issue #280 drew the three answers and
+        /// Sam signed clipping, so it now has a home in
+        /// <see cref="MatchTuning"/> like every other shipped value, and a
+        /// candidate naming it false is what photographs the road not taken.
         /// </remarks>
-        public bool GroundEffectClippedToBoard => B(nameof(GroundEffectClippedToBoard));
+        public bool GroundEffectsClipToBoard =>
+            B(nameof(MatchTuning.GroundEffectsClipToBoard), MatchTuning.GroundEffectsClipToBoard);
 
         /// <summary>
         /// Whether a ground effect is drawn no wider than the board leaves room
@@ -599,12 +604,12 @@ namespace View
         /// the shipped answer.
         /// </summary>
         /// <remarks>
-        /// <b>This one draws a reach that is not the reach, and that is the
-        /// case against it.</b> It keeps the circle whole, which is the case
-        /// for it. Both belong in the picture, because the alternative to
-        /// clipping is not obviously worse until somebody has seen a
-        /// three-hex aura drawn two hexes across next to a body it is
-        /// affecting three hexes away.
+        /// <b>Rejected on 7 Sep 2026, and kept as the road not taken.</b> It
+        /// draws a reach that is not the reach — a three-hex aura drawn two
+        /// hexes across next to a body it is affecting three hexes away — which
+        /// is what it was rejected for, against clipping. It stays a flag with
+        /// no constant behind it, and stays here so the bracket can be redrawn
+        /// rather than argued about from memory.
         /// </remarks>
         public bool GroundEffectShrunkToBoard => B(nameof(GroundEffectShrunkToBoard));
     }

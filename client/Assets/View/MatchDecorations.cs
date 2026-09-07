@@ -82,18 +82,19 @@ namespace View
         private readonly Func<int, RowSignature?> _creepSignature;
 
         /// <summary>
-        /// The board's footprint in world x and z, which is what a ground
-        /// effect is asked to stop at when a candidate asks it to stop
-        /// anywhere.
+        /// The board's footprint in world x and z, which is where a ground
+        /// effect stops.
         /// </summary>
         /// <remarks>
-        /// <b>Nothing the game ships reads this.</b> Both members that consult
-        /// it are off in <see cref="EffectLook.Shipped"/>, so the shipped match
-        /// lays every circle at the reach the bubble reported and lets it hang
-        /// over the rim — which is the picture issue #280 is about, and which
-        /// nobody has signed either way. A <see cref="Rect"/> rather than a
-        /// <see cref="Bounds"/> because the question is only ever asked in
-        /// plan: <c>y</c> here is the board's z.
+        /// <b>The shipped match reads this on every disc it lays.</b> Auras used
+        /// to be drawn at the reach the bubble reported and stop nowhere, so one
+        /// pulsing near a rim hung out over the background; Sam signed clipping
+        /// on 7 Sep 2026 — see <see cref="MatchTuning.GroundEffectsClipToBoard"/>
+        /// — so an empty rectangle here is now a board with no room on it and
+        /// every disc comes out empty. It is handed down from the floor that was
+        /// actually built rather than worked out again from the map. A
+        /// <see cref="Rect"/> rather than a <see cref="Bounds"/> because the
+        /// question is only ever asked in plan: <c>y</c> here is the board's z.
         /// </remarks>
         private readonly Rect _board;
 
@@ -154,11 +155,10 @@ namespace View
         /// own aura shape under a body a mortar shell had just landed on.
         /// </param>
         /// <param name="board">
-        /// The board's footprint in world x and z. Only the two candidate
-        /// members about where a ground effect stops read it, and both are off
-        /// in the look the game ships — so an empty rectangle is what a caller
-        /// with no board to hand passes, and it costs the shipped picture
-        /// nothing.
+        /// The board's footprint in world x and z, which is where a ground
+        /// effect stops. <b>Required, because the shipped look clips to it</b>:
+        /// a rectangle with no area would draw every aura as nothing, so one is
+        /// refused rather than obeyed.
         /// </param>
         /// <param name="look">
         /// The look to draw every effect at, or null for the one the game
@@ -176,11 +176,24 @@ namespace View
             Func<int, Vector3?> entityGround,
             Func<int, RowSignature?> towerSignature,
             Func<int, RowSignature?> creepSignature,
-            Rect board = default,
+            Rect board,
             EffectLook look = null)
         {
             _look = look ?? EffectLook.Shipped;
             _board = board;
+
+            // A board of no width is not a board, and since the shipped look
+            // clips to it every disc would come out empty -- which looks
+            // exactly like a roster whose auras stopped firing. Loud here
+            // rather than silent on screen.
+            if (_look.GroundEffectsClipToBoard && (board.width <= 0f || board.height <= 0f))
+            {
+                throw new ArgumentException(
+                    "Ground effects clip to the board, and this one has no area, so every aura "
+                    + "would be drawn as nothing. Pass the floor's own footprint -- MatchRoot "
+                    + "hands down HexFloor.WorldBounds -- or a look that turns clipping off.",
+                    nameof(board));
+            }
             _parent = parent != null ? parent : throw new ArgumentNullException(nameof(parent));
             _creepPosition = creepPosition ?? throw new ArgumentNullException(nameof(creepPosition));
             _towerMuzzle = towerMuzzle ?? throw new ArgumentNullException(nameof(towerMuzzle));
@@ -1020,7 +1033,7 @@ namespace View
             Transform disc = Take(piece);
             disc.position = at + (Vector3.up * _look.FloorClearance);
 
-            if (_look.GroundEffectClippedToBoard)
+            if (_look.GroundEffectsClipToBoard)
             {
                 Cut(disc, at, diameter, thickness);
 

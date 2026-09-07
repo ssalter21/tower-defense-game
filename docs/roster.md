@@ -505,7 +505,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 
 ### 25 · Consecration · tier 3 · status live
 
-- **Does** — every undead within three hexes loses a third of its armour while it is there.
+- **Does** — every undead within two hexes loses a third of its armour while it is there.
 - **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`, and the `Cleric_Font` on the tile beside him, light
   on the ground — **drawn at 1**, which is 0.81 m tall and 1.44 across, a basin at knee height. The Cleric has
   **no second model anywhere in the collection**, so this line is colour and props at every rung. Every pulse
@@ -513,7 +513,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
   itself rather than a boundary round it; the bolt is the line's, off the mace head. **The light is centred on
   the tower and not on the font**, which stands one tile away: the aura's own centre is the tower, and a disc
   drawn round the prop would report a reach the simulation never had.
-- **Numbers** — aura: origin `self`, radius 3000, affects `enemy`, payload `armour`, magnitude −30, period 30,
+- **Numbers** — aura: origin `self`, radius 2000, affects `enemy`, payload `armour`, magnitude −30, period 30,
   duration 30.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — none.
@@ -1474,10 +1474,21 @@ open.
    particle work will answer, rather than one to settle with another placeholder.
 10. **The Consecration's light is the same circle every other aura now draws, and that stopped being a
     complaint.** What was signed is "light on the ground from the font", and light on the ground is what ships:
-    a translucent circle lying flat out to the three hexes the aura carries, in its own colour and on its own
+    a translucent circle lying flat out to the two hexes the aura carries, in its own colour and on its own
     lifetime. It was already this shape when eight other auras were something else, which is what made it read
     as a bigger version of the placeholder; now that every aura is this shape, the only thing separating the
     Consecration from its neighbours is the colour — which is the whole vocabulary, deliberately.
+    **Two things about it were signed on 7 September 2026 and it is no longer open**: the light is
+    always on rather than up for 26 ticks in every 30, because ground a font has claimed should not
+    flicker; and the aura reaches **two hexes rather than three**, which is a balance change and
+    lives in `content/units.txt`. Sam took the second off a rendered bracket of three, two and one
+    hex; the first he took by rejecting the bracket's premise outright. See `docs/decision-log.md`.
+12. **Every ground effect is cut off where the board ends, as of 7 September 2026.** Auras used to be
+    laid at the radius the bubble reported and stop nowhere, so one pulsing near a rim hung out over
+    the background — the only thing in the match drawn over it. The alternative that keeps a whole
+    circle is shrinking it until it fits, which draws a reach that is not the reach and was rejected
+    for exactly that. **This is a rule the roster did not previously state**: what the shapes *do*
+    was signed here, how far they were allowed to reach was signed nowhere.
 11. **"Roots on every hex it slows" ships as nothing at all.** That aura reaches sixty hexes on a board
     nineteen across, so roots on every hex it slows is roots on every hex, permanently — a floor texture rather
     than an effect — and the circle every other aura draws is, at that radius, the screen washed flat. Sam took

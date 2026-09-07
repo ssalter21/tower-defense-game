@@ -2,7 +2,7 @@
 # file is and what it may not decide.
 #
 question Does the knife read at 1600x900 at double the shipped length, with its colour left where it is? At 1.1 m it is over half a hex end to end, which is the point where the object stops being a speck and starts being a thing lying across the corridor -- the case against it is on the same frame as the case for it.
-label knife 1.1 m, pale grey: twice as long
+label knife 1.1 m, pale grey: twice as long -- rejected 7 Sep 2026
 
 KnifeLength 1.1
 KnifeColor 0.78,0.82,0.88

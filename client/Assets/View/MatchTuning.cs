@@ -239,6 +239,38 @@ namespace View
         // one circle.
 
         /// <summary>
+        /// Whether a shape lying on the ground is cut off where the board ends,
+        /// so that no part of it is drawn over the background.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>SIGNED on 7 Sep 2026, and it is a rule rather than a number.</b>
+        /// Every aura used to be laid at the radius the bubble reported and
+        /// stopped nowhere, so an emitter standing near a rim threw a disc of
+        /// light out over the background — which nothing else in the match
+        /// does. What the shapes <i>do</i> is <c>docs/roster.md</c>'s and was
+        /// already signed; how far they were allowed to reach was written down
+        /// nowhere at all, so issue #280 put three answers up and Sam took this
+        /// one: <b>the aura may be clipped by the play surface</b>. See
+        /// <c>docs/decision-log.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>What it costs is a mesh per drawn disc.</b> A cut circle is not a
+        /// Unity cylinder, so <see cref="View.EffectMeshes.ClippedDisc"/> builds
+        /// one against the board — the alternative that keeps a shared cylinder
+        /// is shrinking the circle until it fits, which draws a reach that is
+        /// not the reach and was rejected for exactly that.
+        /// </para>
+        /// <para>
+        /// <b>A bool in a file of numbers, deliberately.</b> It is here rather
+        /// than hard-coded in <see cref="View.MatchDecorations"/> so the look
+        /// the game ships has one home and a capture can still photograph the
+        /// unclipped board beside it.
+        /// </para>
+        /// </remarks>
+        public const bool GroundEffectsClipToBoard = true;
+
+        /// <summary>
         /// How see-through an aura's circle is, where 0 is invisible and 1 is
         /// the opaque plate the shipped ring used to be.
         /// </summary>
@@ -327,7 +359,22 @@ namespace View
         public const int LongShotTicks = 12;
 
         /// <summary>How long one of the Fan of Knives' knives is, in metres.</summary>
-        public const float KnifeLength = 0.55f;
+        /// <remarks>
+        /// <b>SIGNED on 7 Sep 2026, off a rendered bracket of 0.55, 0.85 and
+        /// 1.1 metres and a dark-bladed alternative at the shipped length</b> —
+        /// see <c>docs/frames/effect-candidates/</c> and
+        /// <c>docs/decision-log.md</c>. Sam took 0.85 in the shipped pale grey,
+        /// so the answer was a size and not a contrast.
+        /// <para>
+        /// <b>It is signed knowing it is nearly invisible at play size.</b>
+        /// Against the shipped 0.55, this moves 117 pixels of a 1600×900 frame
+        /// — 0.008% — and the boldest candidate on the sheet, 1.1 m, moved 209.
+        /// Issue #280 measured that and it is not a reason to reopen this:
+        /// what a knife needs to read is a trail or a shape rather than a
+        /// bigger number, and that is VFX work nobody has done.
+        /// </para>
+        /// </remarks>
+        public const float KnifeLength = 0.85f;
 
         /// <summary>How wide the blade is, as a share of that length.</summary>
         public const float KnifeBladeWidthFraction = 0.13f;
@@ -381,12 +428,26 @@ namespace View
         /// How long that light lasts, in ticks.
         /// </summary>
         /// <remarks>
-        /// Nearly the whole of the thirty-tick period the aura pulses on, so
-        /// the ground under the font reads as claimed rather than as flashing
-        /// — and still short of it, so two pulses never lay two discs on top of
-        /// each other.
+        /// <para>
+        /// <b>SIGNED on 7 Sep 2026: the light is always on.</b> It used to be
+        /// 26, which is nearly the period and not all of it, and issue #280 put
+        /// 26, 15 and 8 up on the reading that a font lit 26 ticks in 30 reads
+        /// as a permanent hole in the floor rather than as light on it. Sam
+        /// rejected the premise rather than picking from the bracket: the
+        /// Consecration claims ground, and ground it has claimed should not
+        /// flicker. See <c>docs/decision-log.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>Thirty is not a free number — it is the aura's own period</b>,
+        /// authored in <c>content/units.txt</c> on unit 25, and the two are
+        /// coupled by hand because a pulse event carries a radius and a payload
+        /// and never says how often it will happen. A disc laid on the tick of
+        /// a pulse is retired on the tick of the next one, so the cover is
+        /// continuous and no two discs are ever stacked. <b>Move that period and
+        /// this has to move with it</b>, or the light starts blinking again.
+        /// </para>
         /// </remarks>
-        public const int ConsecrationLightTicks = 26;
+        public const int ConsecrationLightTicks = 30;
 
         /// <summary>
         /// How many bars a whole ring of the Unravel's armour strip would take.

@@ -2109,3 +2109,38 @@ The three frames stay in [`docs/frames/effect-candidates/`](frames/effect-candid
 ### What the numbers came to
 
 `dotnet test sim.tests` **905 of 905**, EditMode **114 of 114**, PlayMode **166 of 166** — one more than before, being the new particle test. Twelve committed frames redrawn at the signed alpha.
+
+## 7 September 2026, later still — four of the things that do not read at 1x are signed, and three of them turn out not to be size questions
+
+Issue [#280](https://github.com/ssalter21/tower-defense-game/issues/280) rendered twenty candidates for the four findings [#270](https://github.com/ssalter21/tower-defense-game/issues/270) made by photographing the built player rather than a sheet. Sam signed four things off them, and one of the four is a rule the roster never stated.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning.GroundEffectsClipToBoard`** | did not exist; an aura was laid at the radius the bubble reported and stopped nowhere | **`true`, signed.** A ground effect is cut off where the board ends | An emitter near a rim threw a disc out over the background, which nothing else in the match does. The alternative that keeps a whole circle shrinks it until it fits, and that draws a reach that is not the reach |
+| **`MatchTuning.ConsecrationLightTicks`** | `26`, of a thirty-tick period — "nearly the whole of it" | **`30`: the light is always on** | Sam rejected the bracket's premise rather than picking from it. Ground a font has claimed should not flicker, and 26 of 30 was a hole in the floor that blinked |
+| **`content/units.txt`, unit 25's `bubbleRadius`** | `3000` — three hexes | **`2000` — two hexes** | Off a rendered bracket of three, two and one. **This is a balance change and not a look**: it decides which bodies the aura finds |
+| **`MatchTuning.KnifeLength`** | `0.55` m, declared a placeholder | **`0.85` m, signed**, in the shipped pale grey | Off a bracket of 0.55, 0.85 and 1.1 plus a dark blade at the shipped length. The answer was a size and not a contrast |
+
+### The measurement is the finding, and it says three of the four questions were the wrong questions
+
+Against its own baseline, a candidate that moves a circle **on the ground** changes one to two per cent of a 1600x900 frame. A candidate that moves an object **through the air** changes between four hundredths and three hundredths of one per cent. Doubling the thrown knife's length is 209 pixels out of 1,440,000; darkening it is 58.
+
+So the knife was signed at 0.85 knowing it is very nearly invisible at play size, and **the magic bolt and the mortar shell were not signed at all**. Sam's words: they *"look horrendous as is without any particle effects such as a smoke cloud or magical effects"*, and they stay exactly as they are as placeholders until that work is done. Their brackets are kept in [`docs/frames/effect-candidates/`](frames/effect-candidates/README.md) as the record that a size and a colour were tried and measured, so the next person does not try them again. That work is not blocked: the particle ban was corrected earlier the same day and a `Mesh`-mode particle system is allowed.
+
+### Clipping a circle costs a mesh, because this project has no shader
+
+Every other effect is a Unity primitive or bars out of `EffectMeshes`. A circle that stops at a line is neither, so `EffectMeshes.ClippedDisc` cuts the outline against the board with four half-planes -- the standard Sutherland-Hodgman -- and builds the flat solid that is left. **It rendered inside out first**, because an anticlockwise outline in Unity's left-handed frame winds the top face downwards; a translucent disc drawn inside out is not visibly wrong, it is simply absent, which reads as an aura that never fired. Only opening the frame caught it. `EffectMeshTests.AWindingIsNotTakenOnTrust` now checks every triangle against its own normal.
+
+**Where the board ends is now load-bearing**, so it has one definition and a test says so. `MatchRoot` hands `MatchView` the floor's own `WorldBounds`; a fixture with no floor works it out through `HexGeometry.Footprint`, and `HexFloorTests.TheFootprintAgreesWithTheFloorThatWasActuallyBuilt` asserts the two agree on the shipped map. A board with no area is refused outright rather than obeyed, because obeying it would draw every aura as nothing.
+
+### The radius change retired the record, and the record came back unchanged
+
+Moving one number in `content/units.txt` moves the content hash, so `content/match.replay` and every golden artefact stamped against it were retired and regenerated with `./tools/run-headless-match.ps1 -Regenerate`. **Only the header stamps moved.** Every simulated tick, all four landmarks and the run outcome are byte-identical -- 3 of 40 leaked, tick 5302, state `441D37E128517F3D` -- because the recorded defense is Archers and Mages and stands no Consecration at all. The regeneration is real and the branch carries it; what it proves is that this balance change is inert for the run everything else is measured against.
+
+### What is still Sam's
+
+**The bolt and the shell**, once there is VFX work to judge them with. And the chrome half of [#285](https://github.com/ssalter21/tower-defense-game/issues/285), which is still waiting on [#282](https://github.com/ssalter21/tower-defense-game/issues/282).
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **120 of 120**, PlayMode **167 of 167** -- one more than before, being the footprint assertion. Forty-four candidate frames and nineteen committed frames redrawn under the signed look.

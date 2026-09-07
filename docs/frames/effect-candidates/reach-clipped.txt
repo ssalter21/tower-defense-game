@@ -1,8 +1,13 @@
 # A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
 # file is and what it may not decide.
 #
-question The circle is cut off where the board ends, so no part of it is drawn over the background. It stays a true picture of the reach -- what is drawn is exactly the part of that reach that is on the board -- at the cost of the shape no longer being a circle, which is the read every other aura on the roster has. A cut disc is generated geometry rather than a Unity cylinder; see EffectMeshes.ClippedDisc.
-label reach clipped: cut off at the rim
+# SIGNED 7 Sep 2026, AND THIS FILE NOW NAMES WHAT THE GAME DRAWS. It is kept
+# because a bracket is the record of how a thing was decided, and because a
+# candidate that names its value outright goes on being a picture of that value
+# after the file moves -- which is the lesson the alpha bracket taught.
+#
+question The circle is cut off where the board ends, so no part of it is drawn over the background. It stays a true picture of the reach -- what is drawn is exactly the part of that reach that is on the board -- at the cost of the shape no longer being a circle, and of a generated mesh per disc where the other two keep a shared cylinder. See EffectMeshes.ClippedDisc.
+label reach clipped: cut off at the rim -- SIGNED 7 Sep 2026
 
-GroundEffectClippedToBoard true
+GroundEffectsClipToBoard true
 GroundEffectShrunkToBoard false

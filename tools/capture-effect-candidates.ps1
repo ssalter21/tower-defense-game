@@ -158,33 +158,23 @@ $plan = [ordered]@{
     'shell-warm'       = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
     'shell-bigger'     = @{ Context = 'magic'; Ticks = '313,320'; Close = 0 }
 
-    # Where a ground effect stops. Wide only, and it has to be: the whole
-    # question is what happens at the rim, and the close camera crops the rim
-    # out of the picture.
-    'reach-as-shipped' = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
+    # Where a ground effect stops -- SIGNED 7 Sep 2026, clipped. The bracket is
+    # kept as the record of how it was decided, which is the same call the alpha
+    # bracket above sits on. Wide only, and it has to be: the whole question is
+    # what happens at the rim, and the close camera crops the rim out of the
+    # picture.
     'reach-clipped'    = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
+    'reach-unclipped'  = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
     'reach-shrunk'     = @{ Context = 'rim'; Ticks = '272,305'; Close = 0 }
 
-    # The Consecration's duty cycle. Three ticks across one thirty-tick period,
-    # chosen so the three candidates disagree on the frame rather than only in
-    # the file: the pulse is at 301, so at 305 all three are lit, at 313 the
-    # eight-tick one has gone out, and at 320 only the shipped one is left.
-    'light-as-shipped' = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
-    'light-half'       = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
-    'light-brief'      = @{ Context = 'magic'; Ticks = '305,313,320'; Close = 0 }
-
-    # And its radius, which is the other half of the same question and is NOT a
-    # look. Both of these name the shipped duty cycle and differ only in the
-    # unit table they are played against, so what changes between one of them
-    # and light-as-shipped is the radius alone. See the Units note below.
-    'light-two-hex'    = @{
-        Context = 'magic'; Ticks = '305,313,320'; Close = 0
-        Units   = 'docs/frames/consecration-two-hex.txt'
-    }
-    'light-one-hex'    = @{
-        Context = 'magic'; Ticks = '305,313,320'; Close = 0
-        Units   = 'docs/frames/consecration-one-hex.txt'
-    }
+    # THE CONSECRATION'S TWO QUESTIONS ARE GONE FROM HERE, BOTH ANSWERED. Sam
+    # rejected the duty-cycle bracket's premise outright on 7 Sep 2026 -- the
+    # light is always on now, so there is no cycle left to photograph -- and
+    # took two hexes for the radius, which moved content/units.txt rather than
+    # MatchTuning. Neither has a road not taken worth keeping a file for: one is
+    # a constant that matches the aura's own period and the other is a unit row.
+    # docs/decision-log.md carries both. The two fixture unit tables that asked
+    # the radius went with them.
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -230,17 +220,14 @@ foreach ($name in $plan.Keys) {
         if ($context.Defense) { $arguments.Defense = (Join-Path $repoRoot $context.Defense) }
         if ($entry.Ticks) { $arguments.Ticks = $entry.Ticks }
 
-        # ON THE CANDIDATE AND NOT ON THE CONTEXT, unlike the wave and the
-        # defense. A unit table here is not a board to photograph a look
-        # against -- it is half of the candidate itself, because how far an
-        # aura reaches is a simulation number and cannot be asked with a look
-        # constant. Two candidates naming the same look are told apart by the
-        # table they are played against, so the pairing has to live per entry.
-        #
-        # THE FRAME IS STILL NAMED AFTER THE LOOK. capture-match-frames.ps1
-        # names its output after -Effects ahead of -Units, which is why those
-        # two candidates are separate files naming the same one value rather
-        # than one file rendered twice.
+        # A candidate may name a unit table of its own, on the entry rather than
+        # on the context: a table here is not a board to photograph a look
+        # against, it is half of the candidate, for a question that is a
+        # simulation number and cannot be asked with a look constant. Nothing
+        # uses it as this is written -- the Consecration's radius was the one
+        # such question and it was answered on 7 Sep 2026 -- and it is kept
+        # because the next aura whose reach is argued about will want exactly
+        # this, and because capture-match-frames.ps1 already takes -Units.
         if ($entry.Units) { $arguments.Units = (Join-Path $repoRoot $entry.Units) }
 
         Write-Host ""

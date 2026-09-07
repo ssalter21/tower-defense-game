@@ -115,6 +115,64 @@ namespace View
             ToWorld(Sim.Hex.FromOddRowOffset(column, row));
 
         /// <summary>
+        /// The ground a board of <paramref name="width"/> by
+        /// <paramref name="height"/> cells covers, in world x and z.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Where a board ends, for the things that need it without holding a
+        /// floor.</b> Ground effects are cut at the rim — see
+        /// <see cref="MatchTuning.GroundEffectsClipToBoard"/> — so
+        /// <see cref="MatchDecorations"/> has to be told where that is, and a
+        /// match drawn in a test has no <see cref="HexFloor"/> to ask.
+        /// </para>
+        /// <para>
+        /// <b>It agrees with <see cref="HexFloor.WorldBounds"/> and a test says
+        /// so</b>, rather than a comment claiming it. That one is measured off
+        /// the tiles actually placed and carries a height this cannot know;
+        /// across and down the board they are the same rectangle, and
+        /// <c>HexFloorTests</c> asserts it on the shipped map so the two cannot
+        /// drift into being two opinions about where the board stops.
+        /// </para>
+        /// <para>
+        /// Every row is half a hex wider than the columns suggest, because the
+        /// odd ones are shifted — so the span is taken from the corners the
+        /// grid actually reaches rather than from the column count.
+        /// </para>
+        /// </remarks>
+        public static Rect Footprint(int width, int height)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                return Rect.zero;
+            }
+
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+
+            // The four corner cells do not bound an odd-r grid on their own:
+            // the widest row is whichever parity is shifted, and the shift is
+            // half a hex. Walking the rim is cheap and cannot be got wrong.
+            for (var row = 0; row < height; row++)
+            {
+                foreach (int column in new[] { 0, width - 1 })
+                {
+                    Vector3 centre = ToWorld(column, row);
+
+                    min = Vector2.Min(min, new Vector2(centre.x, centre.z));
+                    max = Vector2.Max(max, new Vector2(centre.x, centre.z));
+                }
+            }
+
+            var half = new Vector2(AcrossFlats * 0.5f, PointToPoint * 0.5f);
+
+            min -= half;
+            max += half;
+
+            return new Rect(min.x, min.y, max.x - min.x, max.y - min.y);
+        }
+
+        /// <summary>
         /// Where the centre of a hex on a given tier is. The same place as
         /// <see cref="ToWorld(Sim.Hex)"/>, lifted by the tier.
         /// </summary>

@@ -14,7 +14,7 @@
 # which is what nearly happened to the alpha bracket when 0.45 was signed.
 #
 question The knife is built 0.55 m against a hex of about two metres, which is about twenty pixels of pale grey on a bright board -- six rows fire one of these or a bolt, and the Fan of Knives' capstone had to be photographed at 4x to be photographed at all. This is the shipped size and the shipped colour, and it is in the bracket so the ladder has a bottom that is the thing being complained about.
-label knife 0.55 m, pale grey: what ships today
+label knife 0.55 m, pale grey: what shipped until 7 Sep 2026
 
 KnifeLength 0.55
 KnifeColor 0.78,0.82,0.88
