@@ -5,7 +5,9 @@ answered on 7 Sep 2026; the bracket that decided it is kept below as the record
 of how. The open five are
 [#280](https://github.com/ssalter21/tower-defense-game/issues/280)'s — the
 things that do not read at the size the game is played at — and they are waiting
-on [#284](https://github.com/ssalter21/tower-defense-game/issues/284).
+on [#285](https://github.com/ssalter21/tower-defense-game/issues/285), which is
+the sitting for what can be seen at 1600×900. The alpha above was `#284`'s; the
+five open ones are not, and the two tickets are easy to mix up.
 
 **Read [the measurement](#what-the-frames-measure) before the pictures.** The
 five open questions split cleanly in two, and the split is not what the ticket

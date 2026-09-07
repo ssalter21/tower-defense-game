@@ -24,7 +24,7 @@
 # says why a fixture wave is preferred to a fixture roster, and this is the case
 # it warned about: the moment a row moves in the shipped table, this file is a
 # photograph of a roster that no longer exists. It is here because there is no
-# other way to ask the question, and it should go when #284 signs the radius.
+# other way to ask the question, and it should go when #285 signs the radius.
 # The only line that differs from the shipped table is unit 25's, and only in
 # the aura radius column: 2000 where the shipped one says 3000.
 #

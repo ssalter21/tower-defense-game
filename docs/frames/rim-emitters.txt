@@ -34,7 +34,7 @@
 # UNLIKE four-lines.txt, magic-lines.txt AND pierce-lines.txt, NO PLAYMODE TEST
 # STANDS THIS ONE. Those three are asserted in Tests.PlayMode/MatchViewTests
 # because what they are for is counting the shapes a capstone puts on screen.
-# This file is for one picture of one rim and is expected to go when #284 signs
+# This file is for one picture of one rim and is expected to go when #285 signs
 # the rule, so it is not worth pinning a test to.
 #
 # The map, the wave and the seed still come out of content/match.replay unless
