@@ -376,68 +376,20 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// The prop that stands beside the character, null for <c>-</c>, or a
-        /// fault naming what was wrong with it. A <c>*scale</c> suffix comes
-        /// back in <paramref name="scale"/>, and a prop that names none is
-        /// drawn at the size it imported at.
+        /// What stands beside the character, null for <c>-</c>, or a fault
+        /// naming what was wrong with it. A <c>*scale</c> suffix comes back in
+        /// <paramref name="scale"/>, and a prop that names none is drawn at the
+        /// size it imported at.
         /// </summary>
+        /// <remarks>
+        /// <b>It may name more than one.</b> Props joined with <c>+</c> stand
+        /// together on the one tile — see <see cref="BesideGroup"/>, which is
+        /// also what the match capture's own candidate art reads, so a group
+        /// spells the same on a sheet and in a frame.
+        /// </remarks>
         private static GameObject LoadBeside(
-            string where, string spec, List<string> faults, out float scale)
-        {
-            scale = 1f;
-
-            if (spec == Empty)
-            {
-                return null;
-            }
-
-            // A turn belongs on a held prop, whose bone decides where it points.
-            // Something on the floor takes the rotation its importer gave it, so
-            // a '@' here is refused rather than quietly dropped.
-            if (spec.IndexOf('@') >= 0)
-            {
-                faults.Add(
-                    where + ": beside prop '" + spec + "' carries a turn. A '@x,y,z' belongs on a held "
-                    + "prop; a thing standing on the ground keeps the rotation it was imported with.");
-
-                return null;
-            }
-
-            int star = spec.IndexOf('*');
-            string relative = star < 0 ? spec : spec.Substring(0, star);
-
-            // One mistake, one fault. A size that will not parse leaves nothing
-            // to say anything about, so the range check is the else and not the
-            // next statement -- two lines about one typo is how a file of these
-            // stops being readable.
-            if (star < 0)
-            {
-                // Nothing said, so the prop is drawn as imported.
-            }
-            else if (!float.TryParse(
-                spec.Substring(star + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out scale))
-            {
-                faults.Add(
-                    where + ": beside prop '" + spec + "' — the size after '*' is not a number, as in "
-                    + "'*0.5'.");
-            }
-            else if (scale <= 0f)
-            {
-                faults.Add(
-                    where + ": beside prop '" + spec + "' is drawn at " + scale + ", which is a prop that "
-                    + "never appeared.");
-            }
-
-            string path = ArtRoot + relative;
-            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-
-            if (model == null)
-            {
-                faults.Add(where + ": beside prop '" + relative + "' — nothing imported at " + path);
-            }
-
-            return model;
-        }
+            string where, string spec, List<string> faults, out float scale) =>
+            BesideGroup.Parse(where, spec, faults, out scale);
 
         /// <summary>
         /// The atlas at an art-relative path, null for <c>-</c>, or a fault

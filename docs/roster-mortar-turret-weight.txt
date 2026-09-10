@@ -1,0 +1,57 @@
+# The Mortar's turret, at the sizes a tile leaves room for.
+#
+# WHAT THIS IS FOR. docs/roster.md:735 signs the Mortar with "a heavier
+# turret_base beside him", and rows 35, 36 and 37 all bind the same prop at the
+# same scale. The pack ships exactly ONE turret model -- there is no second,
+# heavier one anywhere in the 4,247 models of the whole collection -- so
+# "heavier" can only mean a larger scale, and a scale is a number a player sees.
+# Issue #281. DECIDES NOTHING.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt
+#
+# The committed copy is docs/frames/roster/mortar-turret-weight-sheet.png, under
+# a name the tool does not write, because every candidate run rewrites
+# candidates-sheet.png.
+#
+# THE PAGE'S OWN RULE SAYS A SIZE IS NOT A TIER SIGNAL. Commit 7a7e8921 -- "A
+# rung is a colour, a prop or a second model -- never a size" -- retired size as
+# a tier signal for the BODY, and 7f4ace2b is Sam signing that. Whether it also
+# retired size for a PROP is the question this sheet exists to put, because if
+# it did then "a heavier turret_base" is a line roster.md has to give up rather
+# than a scale anybody picks off this picture. That is the sitting's, not this
+# file's.
+#
+# THE BRACKET IS DERIVED AND NOT TASTED. turret_base measures 1.13 m tall and
+# 1.00 x 1.13 on the ground at *1, on a board whose tiles are 2.0 m across the
+# flats -- the numbers the beside-props capture logged on 5 September 2026. So
+# *2.0 is the size at which the prop exactly fills the tile it stands on and
+# anything above it overhangs onto the corridor. The five sizes are that range
+# in even steps. No agent picked a value; the tile picked the ceiling.
+#
+# THE ENGINEER AT *1 IS THE FIRST TILE AND HAS TO BE. "Heavier" is a comparison
+# and a solo render cannot answer one -- the whole line stands beside the same
+# prop at every rung, so what is being asked is whether tier 3's turret reads as
+# heavier THAN TIER 1'S, in a sheet where both are in view.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# Idle_A IS FRAMING AND NOT A BINDING, exactly as it is on
+# docs/roster-pierce-turret-lines.txt: all three Engineer rows are bound with no
+# clips at all, because roster.md names one on no rung of that line, so they
+# stand in their bind pose in the game. A bind pose is not a photograph of
+# anything. The `_` on that line's windup and backswing still stands.
+
+# Engineer, tier 1, the reference: the turret at the size it imports at, in the
+# atlas the model imports wearing. This is what "heavier" is heavier than.
+tower engineer-turret-1.00  Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  -                              Kaykit/adventurers/turret_base.fbx*1
+# Mortar as shipped: engineer_texture_alt_B and the same prop at the same size.
+tower mortar-turret-1.00    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*1
+tower mortar-turret-1.25    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*1.25
+tower mortar-turret-1.50    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*1.5
+tower mortar-turret-1.75    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*1.75
+# The ceiling: 1.00 x 1.13 at *1 becomes 2.00 x 2.26, so the prop is exactly as
+# wide as the tile it stands on and already deeper than it.
+tower mortar-turret-2.00    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_B.png  Kaykit/adventurers/turret_base.fbx*2

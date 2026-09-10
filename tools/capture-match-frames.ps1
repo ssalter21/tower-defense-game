@@ -56,6 +56,19 @@
 # roster's are named after the roster. NOTHING IN THE FILE THE GAME SHIPS FROM
 # MOVES -- the override lives for the length of the run and no longer.
 
+# -Art names a candidate look for what the rows on the board are HOLDING, drawn
+# instead of what the scene builder binds them. -Effects moves an effect's
+# colour, size and duration, which are numbers in MatchTuning; a row's props,
+# atlas and effect anchor are bound in MatchSceneBuilder's own table, so until
+# this argument existed there was no way to photograph "what if the Mortar's
+# turret were half again as big" at all. docs/roster.md signs four rungs whose
+# look the bindings do not deliver -- issue #281 -- and the Mage's flash anchor
+# is a fifth, which docs/frames/roster/mage-hat-pitch.txt asked for by name. The
+# file names rows by their id in content/units.txt; see UnitArtFile.cs. Frames
+# from such a run are named after the candidate. NOTHING IN THE FILE THE GAME
+# SHIPS FROM MOVES -- not MatchSceneBuilder, not MatchArt.asset, not the
+# generated scene and not content/units.txt.
+
 param(
     [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.5.6f1\Editor\Unity.exe",
     [string]$OutDir,
@@ -64,6 +77,7 @@ param(
     [string]$Defense,
     [string]$Wave,
     [string]$Effects,
+    [string]$Art,
     [float]$Yaw = 0,
     [float]$Pitch = 0,
     [float]$Distance = 0,
@@ -139,6 +153,11 @@ if ($Wave) {
 if ($Effects) {
     $effectsPath = (Resolve-Path $Effects).Path
     $unityArgs += @('-matchFrameEffects', "`"$effectsPath`"")
+}
+
+if ($Art) {
+    $artPath = (Resolve-Path $Art).Path
+    $unityArgs += @('-matchFrameArt', "`"$artPath`"")
 }
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a

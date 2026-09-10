@@ -1,0 +1,22 @@
+# The Bishop's tome in the off hand, and the bolt leaving the tome.
+#
+# THE QUESTION. The same as bishop-tome-off-hand.txt with the second half done:
+# the tome is back on the body AND the bolt comes off it, the way it does at
+# tier 1 where the Cleric holds the tome in his fist. Issue #281.
+#
+# WHAT THIS COSTS. The bolt then leaves the hand the body does not swing, so a
+# rung whose Looks line is about a mace fires from the other side of the
+# character. Whether that reads worse than a bolt off a mace head is exactly
+# what the frame is for.
+#
+# THE NODE IS NOT CHECKED WHEN THE FILE IS READ, because a candidate names a
+# ROW and which nodes a body carries depends on the model bound to it.
+# EffectAnchor throws by name at bind time when a node is not there, which is a
+# loud failure in the run rather than a silent one in the picture -- and the
+# node is there only because the line above put the tome in the hand.
+
+label     the tome in the off hand, bolt off the tome
+question  whether the bolt should leave the book rather than the mace
+
+hand    24  left  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx
+anchor  24  Cleric_Tome

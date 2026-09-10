@@ -92,6 +92,19 @@ namespace Tests.EditMode
 
             // Id 49 with the sheathed sword and without, and with the backpack.
             ("docs/roster-grave-robber-sword.txt", 5),
+
+            // The four rungs docs/roster.md signs a look the bindings do not
+            // deliver -- issue #281. The Engineer at *1 leads the Mortar's five
+            // sizes, because "heavier" is a comparison; the Artificer's three
+            // are one prop, two props and the other prop; the Bishop's four are
+            // where a tome can go; and the Elder's forty-six are the shipped
+            // row plus EVERY prop his own pack ships that is not already
+            // another line's identity, because a shortlist is a decision and
+            // this map's notes put that on the human side of the line.
+            ("docs/roster-mortar-turret-weight.txt", 6),
+            ("docs/roster-artificer-second-prop.txt", 3),
+            ("docs/roster-bishop-tome.txt", 4),
+            ("docs/roster-elder-prop.txt", 46),
         };
 
         [Test]

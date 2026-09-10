@@ -175,6 +175,67 @@ namespace View
             return copy;
         }
 
+        /// <summary>
+        /// The same art wearing a different set of looks: what it holds, what
+        /// stands beside it, the atlas it wears and where its effects leave
+        /// from.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For a capture and for nothing else</b>, exactly as
+        /// <see cref="WithSignature"/> is. What a row holds is bound once by
+        /// the scene builder and is a fact about the row; this exists because
+        /// <c>docs/roster.md</c> signs four rungs whose look the shipped
+        /// bindings do not deliver — a heavier turret that has no heavier
+        /// model, a second beside prop where there is one socket, a tier-2
+        /// Elder with no prop at all, and a magic bolt leaving the head of a
+        /// mace — and the way one of those gets settled is somebody seeing the
+        /// alternatives on the real board at the size the game is played at.
+        /// </para>
+        /// <para>
+        /// Nothing in the built player calls it, and the copy it hands back is
+        /// a copy — the bound art is not touched. A null argument leaves that
+        /// field alone, so a candidate that moves one thing spells one thing.
+        /// </para>
+        /// </remarks>
+        public UnitArt WithLook(
+            GameObject rightHandOrNull,
+            GameObject leftHandOrNull,
+            BesideProp? besideOrNull,
+            Texture2D textureOrNull,
+            EffectAnchor? anchorOrNull)
+        {
+            var copy = (UnitArt)MemberwiseClone();
+
+            if (rightHandOrNull != null) copy.rightHand = rightHandOrNull;
+            if (leftHandOrNull != null) copy.leftHand = leftHandOrNull;
+            if (besideOrNull.HasValue) copy.beside = besideOrNull.Value;
+            if (textureOrNull != null) copy.texture = textureOrNull;
+            if (anchorOrNull.HasValue) copy.effectAnchor = anchorOrNull.Value;
+
+            return copy;
+        }
+
+        /// <summary>
+        /// The same art holding nothing in the hand named, for a candidate that
+        /// takes a prop away rather than swapping one.
+        /// </summary>
+        /// <remarks>
+        /// Separate from <see cref="WithLook"/> because null there means "leave
+        /// this alone", which is the right default for a file where most rows
+        /// move one field — so there has to be another way to spell an empty
+        /// hand, and a bool argument on the same method would read as neither.
+        /// </remarks>
+        public UnitArt WithEmptyHands(bool right, bool left)
+        {
+            var copy = (UnitArt)MemberwiseClone();
+
+            if (right) copy.rightHand = null;
+            if (left) copy.leftHand = null;
+
+            return copy;
+        }
+
         /// <summary>The row in <c>content/units.txt</c> this stands for.</summary>
         public int UnitId => unitId;
 

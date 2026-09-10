@@ -1,0 +1,18 @@
+# The Bishop's tome on the ground beside him.
+#
+# THE QUESTION. The third place a tome could go: the beside socket, which is
+# where the Consecration's font and the Blessing's statue already stand. Issue
+# #281.
+#
+# WHAT TO LOOK AT. A font is a piece of furniture and a tome is a book. Whether
+# a book on the floor reads as a tier signal or as dropped litter is the eye
+# check, and it is the reason this candidate is drawn rather than argued about.
+#
+# THE ANCHOR STAYS ON THE MACE, and it has to: the beside prop hangs off the
+# tower root rather than a bone, so a bolt anchored to a book on the floor
+# would leave the ground.
+
+label     the tome standing on the tile beside him
+question  whether a tome reads as a beside prop the way a font does
+
+beside  24  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx*1

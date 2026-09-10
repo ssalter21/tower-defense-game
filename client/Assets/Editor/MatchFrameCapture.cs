@@ -155,6 +155,30 @@ namespace View.Editor
         public const string EffectsArgument = "-matchFrameEffects";
 
         /// <summary>
+        /// A candidate look for what the rows on the board are holding, drawn
+        /// instead of what the scene builder binds them.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>For the rungs whose signed look the bindings do not deliver.</b>
+        /// <see cref="EffectsArgument"/> moves an effect's colour, size and
+        /// duration, which are numbers; what a tower is holding, what stands
+        /// beside it and where its shots leave from are bound in
+        /// <c>MatchSceneBuilder</c>'s table, so no argument could ask "what if
+        /// the Mortar's turret were half again as big" until this one. Issue
+        /// #281 is four such questions and <c>mage-hat-pitch.txt</c> is a
+        /// fifth.
+        /// </para>
+        /// <para>
+        /// The file names rows by their id in <c>content/units.txt</c> and is
+        /// applied to a copy of the wired art, so nothing the game ships from
+        /// moves. See <see cref="UnitArtFile"/>. Frames from such a run are
+        /// named after the candidate, for the reason a candidate look's are.
+        /// </para>
+        /// </remarks>
+        public const string ArtArgument = "-matchFrameArt";
+
+        /// <summary>
         /// A wave to send down the recorded board instead of the one the record
         /// carries.
         /// </summary>
@@ -222,6 +246,7 @@ namespace View.Editor
             string defense = BatchArguments.Value(DefenseArgument);
             string wave = BatchArguments.Value(WaveArgument);
             string effects = BatchArguments.Value(EffectsArgument);
+            string art = BatchArguments.Value(ArtArgument);
             int[] ticks = ParseTicks(BatchArguments.Value(TicksArgument)) ?? DefaultTicks;
             float yaw = ParseFloat(BatchArguments.Value(YawArgument), SceneFraming.CameraDefaultYawDegrees);
             float pitch = ParseFloat(
@@ -265,7 +290,16 @@ namespace View.Editor
                         + candidate.Question);
                 }
 
-                MatchView view = BeginMatch(root, record, units, defense, wave, candidate);
+                UnitArtFile looks = string.IsNullOrWhiteSpace(art) ? null : UnitArtFile.Read(art);
+
+                if (looks != null)
+                {
+                    Debug.Log(
+                        "MatchFrameCapture: candidate art '" + looks.Label + "' moves "
+                        + looks.Changes.Count + " row(s) -- " + looks.Question);
+                }
+
+                MatchView view = BeginMatch(root, record, units, defense, wave, candidate, looks);
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -323,7 +357,7 @@ namespace View.Editor
 
                     string path = Path.Combine(
                         outDir,
-                        NameOf(units, defense, wave, effects)
+                        NameOf(units, defense, wave, effects, art)
                         + view.Current.Tick.ToString("D4", CultureInfo.InvariantCulture)
                         + ".png");
 
@@ -391,7 +425,8 @@ namespace View.Editor
             string units,
             string defense,
             string wave,
-            EffectLookFile candidate)
+            EffectLookFile candidate,
+            UnitArtFile looks)
         {
             Ruleset rules = StreamingContent.ReadRuleset();
             EffectLook look = candidate?.Look;
@@ -410,7 +445,7 @@ namespace View.Editor
                 // argument only the other overload takes -- so it plays the
                 // four things a match is made of straight out of the record
                 // instead, which is exactly what a fixture roster already does.
-                return candidate == null
+                return candidate == null && looks == null
                     ? root.BeginMatch(shipped, rules, record, art: LoadArt())
                     : root.BeginMatch(
                         shipped,
@@ -418,7 +453,7 @@ namespace View.Editor
                         record.Ghost.ToLayout(shipped),
                         record.Wave.ToScript(shipped),
                         record.Seed,
-                        ArtFor(candidate),
+                        ArtFor(candidate, looks),
                         look);
             }
 
@@ -434,17 +469,28 @@ namespace View.Editor
                 ? record.Wave.ToScript(types)
                 : WaveScript.ParseUtf8(wave, Read(wave, WaveArgument, "wave"), types);
 
-            return root.BeginMatch(types, rules, layout, script, record.Seed, ArtFor(candidate), look);
+            return root.BeginMatch(
+                types, rules, layout, script, record.Seed, ArtFor(candidate, looks), look);
         }
 
         /// <summary>
-        /// The wired art, with a candidate's shapes on the rows it names.
+        /// The wired art, with a candidate's shapes and a candidate's looks on
+        /// the rows they name.
         /// </summary>
-        private static MatchArt ArtFor(EffectLookFile candidate)
+        /// <remarks>
+        /// The shapes first and the looks second, because a look may move the
+        /// prop an anchor names and a shape never does — so applying them the
+        /// other way round would let a shape resolve against a prop the frame
+        /// does not draw.
+        /// </remarks>
+        private static MatchArt ArtFor(EffectLookFile candidate, UnitArtFile looks)
         {
             MatchArt art = LoadArt();
 
-            return candidate == null ? art : candidate.Applied(art);
+            if (candidate != null) art = candidate.Applied(art);
+            if (looks != null) art = looks.Applied(art);
+
+            return art;
         }
 
         /// <summary>
@@ -480,11 +526,20 @@ namespace View.Editor
         /// is; the wave wins over the defense, because what is walking is the
         /// larger change to a picture of a corridor.
         /// </summary>
-        private static string NameOf(string units, string defense, string wave, string effects)
+        private static string NameOf(
+            string units, string defense, string wave, string effects, string art)
         {
             // The candidate first, because it is the thing being decided: a run
             // that moved the look and the wave is a picture of the look, taken
-            // on a wave that could show it.
+            // on a wave that could show it. Candidate art outranks a candidate
+            // effect for the same reason it outranks a wave -- what a tower is
+            // holding is the larger change to a picture of a tower -- and the
+            // two are not asked in one run in practice.
+            if (!string.IsNullOrWhiteSpace(art))
+            {
+                return Path.GetFileNameWithoutExtension(art) + "-tick-";
+            }
+
             if (!string.IsNullOrWhiteSpace(effects))
             {
                 return Path.GetFileNameWithoutExtension(effects) + "-tick-";

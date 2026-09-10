@@ -1,0 +1,25 @@
+# The folder above ignores every PNG and names its exceptions one at a time,
+# because the default capture writes six frames nobody asked for and an
+# untracked file there fails the gate's tree-clean step for a reason that has
+# nothing to do with the push. The same rule applies here, and it lands on the
+# same split docs/frames/effect-candidates/.gitignore lands on: which framing
+# decides.
+#
+# THE WIDE FRAME IS COMMITTED AND THE CLOSE ONE IS NOT. Both are rendered and
+# both were looked at -- issue #270 settled that a sheet and the built player
+# disagree, so a candidate that is not read at 1600x900 has not been read. But
+# only one of the two is an artefact worth keeping: the played/ frame is the one
+# a decision is taken from, and the close/ frame is a supporting picture that
+# regenerates in one command.
+#
+# THE WHOLE FOLDER IS TEMPORARY. It is the set of alternatives #284 signs from,
+# and it goes when the signing does.
+#
+#   ./tools/capture-rung-candidates.ps1 -CloseOnly     redraws what is ignored
+!played/*.png
+
+# And the record the capture writes beside the frames it drew. The played/ one
+# is kept, because check-docs.ps1 reads it where a commit date cannot answer;
+# this directory is not committed at all, so its copy would be a record of
+# pictures nobody has.
+close/

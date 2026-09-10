@@ -89,6 +89,37 @@
 !roster/prop-turns-sheet.png
 !roster/grave-robber-sword-sheet.png
 
+# And four out of the roster sign-off's third prototype ticket -- issue #281 --
+# each the one sheet its own question is asked on. Same naming rule as every
+# sheet above: the tool writes candidates-sheet.png on every set run, so a
+# committed copy carries a name nothing else writes.
+#
+#   the Engineer's turret at *1 leading the Mortar's four larger sizes, because
+#   docs/roster.md asks for "a heavier turret_base" and the collection ships one
+#   turret, so heavier can only be a size and a size is a comparison;
+#   the Artificer beside one prop, two props and the other prop, because his
+#   look names two things and a tower has one beside socket;
+#   the Elder holding every prop his own pack ships that is not already another
+#   line's identity, because his tier says colour PLUS a prop and his binding
+#   gives him colour;
+#   the Bishop's tome in three places, because the mace took its hand and a
+#   magic bolt now leaves the head of a blunt weapon.
+!roster/mortar-turret-weight-sheet.png
+!roster/artificer-second-prop-sheet.png
+!roster/elder-prop-sheet.png
+!roster/bishop-tome-sheet.png
+
+# And the four of them again at the size a body gets in the built player -- about
+# twenty-four pixels tall, which is what 1600x900 gives it. Issue #270 settled
+# that a sheet and the player disagree, and a difference that disappears here is
+# not a difference a player has. Kept beside the magnified sheet rather than
+# instead of it, because the pair IS the finding on three of these four
+# questions.
+!roster/mortar-turret-weight-played-sheet.png
+!roster/artificer-second-prop-played-sheet.png
+!roster/elder-prop-played-sheet.png
+!roster/bishop-tome-played-sheet.png
+
 # And three frames of the recorded match at tick 1546, the same tick and the
 # same distance as the committed match-tick-1546.png, at three camera pitches.
 # NOT a sheet -- the armed-roster tool stitches contact sheets and the match
