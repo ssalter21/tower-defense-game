@@ -263,6 +263,12 @@ if (-not $pictures) { throw "No committed picture found under docs/chrome/ or do
 # pierce-turret-lines sheets are the same sheet for the other six lines, and the
 # two creep-bodies sheets are the same sheet for the twelve creep rows, all
 # exempt on the same grounds. The grave-robber-sword, paladin-clips and
+# The eight from issue #281 are four more of the same species drawn twice each:
+# the Mortar's turret at five sizes, the Artificer beside one prop and two, the
+# Elder holding every prop his pack ships, and the Bishop's tome in three
+# places. Each is drawn from a set file at -Width 700 and again at -Width 28,
+# which is the size a body gets at 1600x900 -- and neither pass reads an
+# authored file to draw a tile.
 # prop-turns sheets are three more of the same species, drawn by the same tool
 # from set files of their own: they ask whether a sword stays, which clip a rung
 # swings and which turn a prop hangs at, and not one of the three reads an
@@ -287,6 +293,14 @@ $decisionSheets = @(
     'docs/frames/roster/grave-robber-sword-sheet.png'
     'docs/frames/roster/paladin-clips-sheet.png'
     'docs/frames/roster/prop-turns-sheet.png'
+    'docs/frames/roster/mortar-turret-weight-sheet.png'
+    'docs/frames/roster/artificer-second-prop-sheet.png'
+    'docs/frames/roster/elder-prop-sheet.png'
+    'docs/frames/roster/bishop-tome-sheet.png'
+    'docs/frames/roster/mortar-turret-weight-played-sheet.png'
+    'docs/frames/roster/artificer-second-prop-played-sheet.png'
+    'docs/frames/roster/elder-prop-played-sheet.png'
+    'docs/frames/roster/bishop-tome-played-sheet.png'
 )
 
 # The photographs of a played session. A list of their own rather than more

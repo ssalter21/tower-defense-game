@@ -1,0 +1,57 @@
+# bishop-tome-sheet.png and bishop-tome-played-sheet.png
+
+**What they are.** Four tiles: the Bishop as he ships with the mace and no tome, the tome in his off
+hand, the tome standing on the tile beside him, and the two props swapped. Drawn through the real
+`TowerView` by `tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt`, once at
+`-Width 700` and once at `-Width 28`. Issue #281.
+
+**The question.** `docs/roster.md`'s tier-2 Cleric line names `Cleric_Mace` and never says where
+`Cleric_Tome` goes. A hand holds one thing, so the mace took the hand the tome was in — the way the
+Blessing's book takes the Templar's hammer's — and the visible consequence is that **a hitscan magic
+bolt now leaves the head of a blunt weapon**, because the anchor follows the prop.
+
+**The fourth candidate is a frame and not a tile.** "The anchor moved off the mace" cannot be shown on a
+sheet, because a sheet is a still of a posed character and carries no bolt. It is
+`docs/frames/rung-candidates/bishop-tome-off-hand-anchored.txt`, drawn through the real match.
+
+**Swapping the hands does not move the bolt, and it reads as though it would.** The anchor names
+`Cleric_Mace`'s **tip**, and an anchor follows its prop rather than its hand — so with the mace in the
+off fist the bolt leaves the off-hand mace's head, which is the same complaint from the other side of
+the body. `bishop-mace-off-hand.txt` carries an explicit `anchor` line for exactly that reason.
+
+**A bolt lives four ticks, and finding that took the whole instrument.** The two candidates that differ
+*only* in where the bolt leaves from were rendered at every tick from 311 to 326: they are
+**pixel-identical from 315 onward** and differ at 311, 312, 313 and 314. The first four ticks tried —
+300, 320, 340 and 700 — produced two candidate sets that were byte-identical to each other, which would
+have been a picture answering a question nobody asked. **Tick 700 on this defense is an empty corridor**:
+five towers that all reach four hexes clear the wave by about tick 420.
+
+**What the anchor is worth at the size the game is played at: 225 pixels.** Moving the bolt from the mace
+head to the tome, at a fixed 1600×900 camera, against the same board:
+
+| tick | pixels moved | of a 1,440,000-pixel frame |
+|---|---|---|
+| 311 | 225 | 0.016% |
+| 312 | 120 | 0.008% |
+| 313 | 91 | 0.006% |
+| 314 | 19 | 0.001% |
+
+And every one of the four candidates moves **at most 871 pixels — 0.06% of the frame**. Issue #280 put
+anything crossing the air at 0.004–0.030%; **this whole question sits in that band.** So the head-of-a-mace
+complaint is real and it is not a complaint a player can see at 1600×900. It is decided at magnification,
+on the sheet, or it is decided as a matter of what the record should say rather than what the screen shows.
+
+**Two things the eye found on the sheet.** The shipped mace is held low against the body and reads as
+part of the silhouette, while the off-hand mace reads plainly as a mace — so *"where does the tome go"*
+may be the smaller half of the question and *"is the mace visible at all"* the larger. And the tome on
+the ground lies flat and dark, where the Consecration's font and the Blessing's statue both stand up.
+
+**Regenerate:**
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt -Width 700
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt -Width 28
+./tools/capture-rung-candidates.ps1 -Only bishop-tome-off-hand,bishop-tome-off-hand-anchored,bishop-tome-beside,bishop-mace-off-hand
+```
+
+**It draws no board, no roster row and no price**, which is why `check-docs.ps1` exempts it.

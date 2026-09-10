@@ -1,0 +1,31 @@
+# What the Engineer's own body is carrying before anybody hands him anything.
+#
+# WHAT THIS IS FOR. The Artificer's sheet came back with a gold box standing at
+# the man's feet on ALL THREE tiles -- including the one whose beside socket
+# holds only the turret and nothing else. Something on that tile is not a prop
+# this project put there, and until it is known what, no candidate about giving
+# the Artificer a second prop can be read: "a crate beside him" is a different
+# question if his body already wears one. Issue #281.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-engineer-body-kit.txt
+#
+# NOT COMMITTED AS A SHEET. This is a diagnostic and not a question for the
+# sitting -- three tiles that answer where a box came from. The set file stays
+# because the answer is a fact about an imported model that nothing else in the
+# repository records, and the next person to look at this line will otherwise
+# find the same box and wonder the same thing.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out. Idle_A is framing, for the reason
+# docs/roster-mortar-turret-weight.txt gives: this line is bound with no clips
+# at all.
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+
+# The body alone: no hand prop, no beside prop, the atlas it imports wearing.
+# Anything visible on this tile is in the model.
+tower engineer-body-alone     Kaykit/adventurers/Engineer.fbx  -                                       -  Rig_Medium_General/Idle_A
+# The body with only the wrench roster.md puts in his hand.
+tower engineer-body-wrench    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A
+# The body with only the turret beside him, and nothing in the hand.
+tower engineer-body-turret    Kaykit/adventurers/Engineer.fbx  -                                       -  Rig_Medium_General/Idle_A  -  Kaykit/adventurers/turret_base.fbx*1

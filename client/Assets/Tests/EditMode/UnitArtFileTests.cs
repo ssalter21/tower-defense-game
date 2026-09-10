@@ -167,6 +167,36 @@ namespace Tests.EditMode
         }
 
         /// <summary>
+        /// Every member of a group keeps the name of the asset it came from,
+        /// because an effect anchor finds a prop by that name.
+        /// </summary>
+        /// <remarks>
+        /// <b>This is a fixed bug and not a hypothetical.</b>
+        /// <c>Object.Instantiate</c> names a clone <c>turret_base(Clone)</c>,
+        /// and <see cref="EffectAnchor"/> resolves where a shot leaves from by
+        /// looking for a transform named exactly <c>turret_base</c> — inside a
+        /// beside prop as well as inside a held one. The first render of the
+        /// Artificer's own candidate threw "No transform named 'turret_base' on
+        /// Tower 2 artificer, so its shots have nowhere to leave from", which
+        /// is the loudest possible version of this and the reason it is a test
+        /// rather than a committed picture of a rung that cannot fire.
+        /// </remarks>
+        [Test]
+        public void EveryMemberOfAGroupKeepsItsAssetsName()
+        {
+            var faults = new List<string>();
+
+            GameObject drawn = BesideGroup.Parse(
+                "test:1", Turret + "*1~0,0+" + Crate + "*1~0.65,0.35", faults, out _);
+
+            Assert.That(faults, Is.Empty);
+            Assert.That(drawn.transform.GetChild(0).name, Is.EqualTo("turret_base"));
+            Assert.That(drawn.transform.GetChild(1).name, Is.EqualTo("ammo_crate"));
+
+            Object.DestroyImmediate(drawn);
+        }
+
+        /// <summary>
         /// Two props at one offset is one prop inside another, which reads as a
         /// broken import rather than as a candidate.
         /// </summary>

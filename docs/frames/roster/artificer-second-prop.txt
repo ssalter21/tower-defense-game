@@ -1,0 +1,54 @@
+# artificer-second-prop-sheet.png and artificer-second-prop-played-sheet.png
+
+**What they are.** Three tiles: the Artificer beside the turret alone as he ships, beside the turret
+**and** an `ammo_crate`, and beside the crate with the turret gone. Drawn through the real `TowerView`
+by `tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt`, once at
+`-Width 700` and once at `-Width 28`. Issue #281.
+
+**The question.** `docs/roster.md`'s tier-2 Engineer line wants a turret **and** an `ammo_crate`.
+`BesideProp` holds one model and `TowerView` places one instance of it, and the turret wins because it
+is where the shell leaves from — so that rung is told from the Engineer **by colour alone**, which is
+thinner than the rule the same page sets for a tier 2.
+
+**A second socket and a combined prop are the same picture.** The ticket names three candidates and two
+of them differ only in how they would be *built* — a second beside socket on every tower in the game, or
+one authored model that is both — not in what the camera sees. So the sheet draws that picture once,
+under the name of the question rather than of either mechanism. **Which mechanism a signed candidate
+becomes is the sitting's**, and it is a real choice: a second socket is a change to `BesideProp`,
+`UnitArt`, `TowerView`, `MatchArt.asset` and the generated scene, and a combined prop is an art task.
+
+**How two props got onto one tile without the engine gaining a socket.** They are parented under one
+throwaway object at capture time and that object goes into the one socket the game has — see
+`BesideGroup.cs`. Nothing the game ships from moves.
+
+**A finding off the render rather than out of the ask: the gold box beside the Engineer is his own.**
+Every tile on this sheet shows a gold box at the man's hip, *including* the one whose beside socket
+holds only the turret. It is not a crate anybody put there — it is part of `Engineer.fbx`'s own mesh,
+which `docs/roster-engineer-body-kit.txt` renders three ways to prove. **So the Artificer already wears
+a small gold box**, and an `ammo_crate` beside him is a second gold box in the same silhouette. That is
+worth knowing before signing the candidate that adds one.
+
+**At 1600x900 both candidates are near-invisible.** Against the same board with nothing moved: the
+turret-and-crate moves **109 pixels of 1,440,000 (0.008%)** standing still, and 443 (0.031%) with a
+shell in the air; the crate-only moves 125–560 (0.009–0.039%). Both sit inside issue #280's band for
+things that cross the air rather than its band for things drawn on the ground. **This question is
+decided at magnification or not at all.**
+
+**The muzzle assertion, and it passes.** `artificer-crate-only` re-anchors the shell onto the crate with
+`anchor 36 tip-of ammo_crate 0,1,0`, and the shell then leaves 0.46 m up instead of `turret_base`'s
+0.77 m. That the anchor resolves at all is asserted by the run itself rather than by a doc: `EffectAnchor`
+throws by name when a node is not there, and the first render of the turret-and-crate candidate did
+exactly that — *"No transform named 'turret_base' on Tower 2 artificer, so its shots have nowhere to
+leave from"* — because `Object.Instantiate` names a clone `turret_base(Clone)`.
+`UnitArtFileTests.EveryMemberOfAGroupKeepsItsAssetsName` is the test that now pins it, and the four
+committed `artificer-crate-only` frames are the muzzle resolving.
+
+**Regenerate:**
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt -Width 700
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt -Width 28
+./tools/capture-rung-candidates.ps1 -Only artificer-turret-and-crate,artificer-crate-only
+```
+
+**It draws no board, no roster row and no price**, which is why `check-docs.ps1` exempts it.

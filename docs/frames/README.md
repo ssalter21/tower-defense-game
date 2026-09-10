@@ -666,6 +666,39 @@ last step fails the next push for a dirty repository.
 
 ## And a folder that is not a picture of what the game draws
 
+## And four sheets from the four under-served rungs
+
+- [`roster/mortar-turret-weight-sheet.png`](roster/mortar-turret-weight-sheet.png),
+  [`roster/artificer-second-prop-sheet.png`](roster/artificer-second-prop-sheet.png),
+  [`roster/elder-prop-sheet.png`](roster/elder-prop-sheet.png) and
+  [`roster/bishop-tome-sheet.png`](roster/bishop-tome-sheet.png) — the alternatives for the four rungs
+  `docs/roster.md` signs with a look the shipped bindings do not deliver, issue #281. Each is drawn
+  through the real `TowerView` by `tools/capture-armed-roster.ps1 -SetFile docs/roster-<question>.txt`,
+  and each carries a `.txt` beside it saying what is on it, what it measured and the exact command to
+  redraw it.
+
+  **Each is committed twice, and the pair is the finding on three of the four.** The `-sheet.png` is
+  `-Width 700` and the `-played-sheet.png` is `-Width 28`, which puts a body at about the twenty-four
+  pixels it gets at 1600x900 — measured off `played-run/a-slow-nobody-can-see.png`. Issue #270 settled
+  that a sheet and the built player disagree, so a candidate that has not been read at play size has
+  not been read.
+
+  **Three of the four questions do not read at 1600x900 and one does.** Drawn on the real board at a
+  fixed camera, the Mortar's turret at twice its imported size moves 0.19% of the frame, where every
+  Bishop and Artificer candidate moves at most 0.06% and the Bishop's anchor alone moves 0.016%. Issue
+  #280's bands are 1–2% for anything on the ground and 0.004–0.030% for anything crossing the air, so
+  the turret is the only one of the four that clears the second — and the other three are decided at
+  magnification or not at all. Those frames are [`rung-candidates/`](rung-candidates/README.md).
+
+  **The Elder's sheet is forty-six tiles and nothing was shortlisted**, because a shortlist is the
+  decision made quietly with the rejected alternatives never shown. It is every prop his own pack ships
+  minus the characters and the thirteen already bound to another line. Its own `.txt` measures which
+  thirteen of the forty-five cannot be told from an empty hand even at magnification.
+
+  Like every set sheet above, none of the eight draws a board, a price or a roster row, which is why
+  `check-docs.ps1` exempts them from being dated against the authored content. Regenerate with the
+  commands in each `.txt` and copy `candidates-sheet.png` over the committed name.
+
 [`effect-candidates/`](effect-candidates/README.md) holds the alternatives to
 every effect look that ships standing on nobody's signature — the four creep
 aura shapes, the ring a blast and an aura share, the Blessing, telling a slow

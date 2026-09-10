@@ -271,6 +271,19 @@ namespace View.Editor
             foreach ((GameObject model, float scale, Vector3 offset, string _) in members)
             {
                 GameObject member = UnityEngine.Object.Instantiate(model, root.transform);
+
+                // THE NAME IS LOAD-BEARING AND Instantiate TAKES IT AWAY. A
+                // clone is named "turret_base(Clone)", and EffectAnchor finds
+                // where a shot leaves from by looking for a transform named
+                // exactly "turret_base" — including inside a beside prop. So a
+                // group that kept the clone's name threw
+                // "No transform named 'turret_base' on Tower 2 artificer, so
+                // its shots have nowhere to leave from" the first time the
+                // Artificer's own candidate was drawn. Loudly, which is the
+                // only reason this is a fixed bug rather than a committed
+                // picture of a rung that cannot fire.
+                member.name = model.name;
+
                 member.transform.localPosition = offset;
                 member.transform.localScale = model.transform.localScale * scale;
                 member.SetActive(true);

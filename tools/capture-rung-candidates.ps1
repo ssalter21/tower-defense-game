@@ -28,12 +28,32 @@
 # and its -Width 28 pass is what says whether an off-hand prop reads at play
 # size at all. If that pass says it does, a short bracket belongs here.
 #
-# WHY TWICE. Issue #270 established that a sheet and the built player disagree --
-# a slowed body reads plainly magnified and not at all at 1600x900, which is the
-# size a person actually plays at. So the wide frame is the one that decides and
-# the close one is there to say what the shape is made of. Both are 1600 pixels
-# across; the magnification is the camera moving in rather than the picture
-# getting bigger.
+# WIDE ONLY, AND THAT WAS MEASURED RATHER THAN CHOSEN. Every candidate here was
+# drawn at a close distance of 16 first, the way capture-effect-candidates.ps1
+# draws its bracket, and the close pass answers NOTHING on this defense:
+#
+#   * all four Mortar close frames came back BYTE-IDENTICAL TO EACH OTHER at
+#     every tick, on a candidate whose whole content is the turret's size; and
+#   * the close frame is 90% empty grass.
+#
+# The reason is the rig rather than the distance. OrbitCameraRig frames the WHOLE
+# board and -Distance moves the camera in along that same heading, so a closer
+# camera crops toward the middle of the corridor -- and the five rows this
+# defense stands are in the top-left CORNER of the board. The Mortar and the
+# Bishop fall outside the close frame entirely, so their candidates cannot
+# differ in it. A magnified picture that cannot show the thing being decided is
+# worse than no picture, which is the call #280 made about the shell.
+#
+# THE MAGNIFIED VIEW OF THESE FOUR QUESTIONS IS A SHEET, and that is the right
+# instrument anyway: a prop is a solid object standing still, which is what
+# capture-armed-roster.ps1 frames one of per tile. docs/frames/roster carries
+# one sheet per question at -Width 700 and the same set again at -Width 28,
+# which is the size a body gets at 1600x900. So the pair issue #270 asks for is
+# the sheet and the played frame, and not two cameras on one board.
+#
+# What would make a close frame work is pointing the camera AT a cell rather
+# than standing it closer to the board's centre, which MatchFrameCapture has no
+# argument for. That is a tool change and not this ticket's.
 #
 # NOTHING HERE DECIDES ANYTHING. AGENTS.md rule 6 puts anything a player sees on
 # the human side of the line. This renders the alternatives and stops.
@@ -70,18 +90,32 @@ $defense = 'docs/frames/underserved-rungs.txt'
 # THE TICKS. Two of these questions are about a thing standing still and two are
 # about a thing in flight, so they do not want the same moment:
 #
-#   a prop      any tick with the tower on screen shows it; 300 and 700 are the
-#               two docs/frames/four-lines.txt already uses, so a reader can put
-#               these beside a frame of the same board without a candidate on.
-#   an anchor   needs a shot actually in the air. The Bishop is hitscan and the
-#               Artificer is a 45-tick projectile, so a shell is visible for far
-#               longer than a bolt. capture-match-frames.ps1 logs a per-tick
-#               line with the live shell count, so the tick to name is read off
-#               a cheap narrow run rather than found by opening pictures --
-#               which is how the ticks below were arrived at, and they are
-#               re-read whenever the defense moves.
-$propTicks = '300,700'
-$shotTicks = '300,320,340,700'
+#   a prop      any tick with the tower on screen and bodies walking past it.
+#   an anchor   needs a shot actually in the air.
+#
+# THESE FOUR NUMBERS WERE MEASURED AND THE FIRST FOUR TRIED WERE ALL WRONG.
+# capture-match-frames.ps1 logs a per-tick line carrying the live creep count,
+# the live shell count and a running total per effect, so the ticks are read off
+# a cheap narrow run rather than found by opening pictures. What that run said
+# about the obvious guesses -- 300 and 700, which docs/frames/four-lines.txt
+# uses -- is that both are useless here:
+#
+#   tick 300   3 creeps, ZERO shells in the air
+#   tick 700   ZERO creeps and zero shells: five long-range towers have cleared
+#              the board and the frame is an empty corridor
+#
+# FIVE TOWERS THAT ALL REACH FOUR HEXES KILL THE WAVE FASTER THAN THE TWELVE
+# SHORT-RANGE ROWS four-lines.txt STANDS, which is why its ticks do not carry
+# over. Anything past about 420 on this defense is an empty board.
+#
+# AND A HITSCAN BOLT LIVES FOUR TICKS, NOT FIVE. The two Bishop candidates that
+# differ ONLY in where the bolt leaves from were rendered at every tick from 311
+# to 326: they are pixel-identical from 315 onward and differ at 311, 312, 313
+# and 314. So a bolt fired in that window is on screen for four ticks and the
+# window is the only place either candidate says anything at all. 311 and 313
+# are the two kept.
+$propTicks = '200,320'
+$shotTicks = '311,313,320,340'
 
 # candidate -> which ticks, and how far the close frame stands back. A Close of
 # zero draws no close frame at all.
@@ -98,10 +132,10 @@ $plan = [ordered]@{
     # THE CLOSE FRAME EARNS ITS PLACE HERE, unlike on most of #280's bracket:
     # what is being compared is the SIZE of a solid object standing on the
     # ground, which is the one thing magnification shows honestly.
-    'mortar-turret-1.25' = @{ Ticks = $propTicks; Close = 16 }
-    'mortar-turret-1.50' = @{ Ticks = $propTicks; Close = 16 }
-    'mortar-turret-1.75' = @{ Ticks = $propTicks; Close = 16 }
-    'mortar-turret-2.00' = @{ Ticks = $propTicks; Close = 16 }
+    'mortar-turret-1.25' = @{ Ticks = $propTicks; Close = 0 }
+    'mortar-turret-1.50' = @{ Ticks = $propTicks; Close = 0 }
+    'mortar-turret-1.75' = @{ Ticks = $propTicks; Close = 0 }
+    'mortar-turret-2.00' = @{ Ticks = $propTicks; Close = 0 }
 
     # ---------------------------------------------------------------
     # The Artificer: a second prop, or the other prop
@@ -111,8 +145,8 @@ $plan = [ordered]@{
     # the shell leaves from, so it takes the shot ticks -- a crate is 0.46 m
     # tall against the turret's 0.77 m muzzle, and the only way to see that is a
     # shell leaving one.
-    'artificer-turret-and-crate' = @{ Ticks = $propTicks; Close = 16 }
-    'artificer-crate-only'       = @{ Ticks = $shotTicks; Close = 16 }
+    'artificer-turret-and-crate' = @{ Ticks = $propTicks; Close = 0 }
+    'artificer-crate-only'       = @{ Ticks = $shotTicks; Close = 0 }
 
     # ---------------------------------------------------------------
     # The Bishop: where the tome goes, and what the bolt leaves
@@ -122,10 +156,10 @@ $plan = [ordered]@{
     # shot ticks rather than the prop ones even though two of them are also
     # about where a prop sits. A frame with no bolt in it cannot say which of
     # these four answers the thing they were all written about.
-    'bishop-tome-off-hand'          = @{ Ticks = $shotTicks; Close = 16 }
-    'bishop-tome-off-hand-anchored' = @{ Ticks = $shotTicks; Close = 16 }
-    'bishop-tome-beside'            = @{ Ticks = $shotTicks; Close = 16 }
-    'bishop-mace-off-hand'          = @{ Ticks = $shotTicks; Close = 16 }
+    'bishop-tome-off-hand'          = @{ Ticks = $shotTicks; Close = 0 }
+    'bishop-tome-off-hand-anchored' = @{ Ticks = $shotTicks; Close = 0 }
+    'bishop-tome-beside'            = @{ Ticks = $shotTicks; Close = 0 }
+    'bishop-mace-off-hand'          = @{ Ticks = $shotTicks; Close = 0 }
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -141,13 +175,17 @@ $failed = @()
 # this whole route is built to avoid. Its frames are named after the defense
 # rather than after a candidate, which is capture-match-frames.ps1's own rule.
 $baselines = @(
-    @{ Suffix = 'played'; Distance = 0;  Width = 1600; Ticks = $shotTicks },
-    @{ Suffix = 'close';  Distance = 16; Width = 1600; Ticks = $shotTicks }
+    # DEDUPED, AND IT HAS TO BE. The two tick sets share 320, and asking the
+    # capture for one tick twice makes it write the NEXT one instead -- the
+    # first run of this left a stray underserved-rungs-tick-0321.png that no
+    # candidate had a partner for, because the view is already past 320 when the
+    # second request arrives.
+    @{ Suffix = 'played'; Distance = 0; Width = 1600
+       Ticks = (($propTicks + ',' + $shotTicks) -split ',' | Sort-Object { [int]$_ } -Unique) -join ',' }
 )
 
 foreach ($framing in $baselines) {
-    if ($WideOnly -and $framing.Suffix -eq 'close') { continue }
-    if ($CloseOnly -and $framing.Suffix -eq 'played') { continue }
+    if ($CloseOnly) { continue }
 
     $into = Join-Path $OutDir $framing.Suffix
     New-Item -ItemType Directory -Force -Path $into | Out-Null

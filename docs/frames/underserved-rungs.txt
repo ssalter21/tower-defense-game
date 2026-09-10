@@ -47,10 +47,17 @@
 # Same format as content/defense.txt: type, column, row, counted the way
 # content/map.txt is written, ascending by row and then by column.
 #
+# THE ORDER IS ASSERTED AND NOT SORTED. TowerLayout refuses a file whose rows
+# do not ascend by row and then by column, because that order is the order the
+# match iterates towers in and so decides who lands the killing shot when two
+# fire at one creep on one tick. So this list is grouped by BOARD ROW rather
+# than by unit id, and the three Engineer rungs are not adjacent in the file
+# even though they are adjacent on the board.
+#
 #       type  col  row
 
-tower   24    2    2
-tower   29    5    2
 tower   35    3    0
 tower   36    5    0
+tower   24    2    2
+tower   29    5    2
 tower   37    2    4

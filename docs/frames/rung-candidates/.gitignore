@@ -5,21 +5,24 @@
 # same split docs/frames/effect-candidates/.gitignore lands on: which framing
 # decides.
 #
-# THE WIDE FRAME IS COMMITTED AND THE CLOSE ONE IS NOT. Both are rendered and
-# both were looked at -- issue #270 settled that a sheet and the built player
-# disagree, so a candidate that is not read at 1600x900 has not been read. But
-# only one of the two is an artefact worth keeping: the played/ frame is the one
-# a decision is taken from, and the close/ frame is a supporting picture that
-# regenerates in one command.
+# THE WIDE FRAME IS THE ONLY ONE THERE IS, AND IT IS COMMITTED. Issue #270
+# settled that a sheet and the built player disagree, so a candidate that is not
+# read at 1600x900 has not been read -- and played/ is where that reading
+# happens. The other half of the pair issue #270 asks for is not a second camera
+# on this board; it is the -Width 28 sheet under docs/frames/roster, for the
+# reason the block below gives.
 #
 # THE WHOLE FOLDER IS TEMPORARY. It is the set of alternatives #284 signs from,
 # and it goes when the signing does.
 #
-#   ./tools/capture-rung-candidates.ps1 -CloseOnly     redraws what is ignored
+#   ./tools/capture-rung-candidates.ps1                redraws everything
 !played/*.png
 
-# And the record the capture writes beside the frames it drew. The played/ one
-# is kept, because check-docs.ps1 reads it where a commit date cannot answer;
-# this directory is not committed at all, so its copy would be a record of
-# pictures nobody has.
+# THERE IS NO close/ HERE, unlike in effect-candidates. Every candidate was
+# drawn at a close distance first and the pass answered nothing: OrbitCameraRig
+# frames the whole board and -Distance crops toward its middle, so the five rows
+# this defense stands -- which are in the top-left corner -- fall outside the
+# closer frame, and all four Mortar candidates came back byte-identical to each
+# other. README.md carries the whole of it. The magnified view of these
+# questions is a sheet under docs/frames/roster instead.
 close/

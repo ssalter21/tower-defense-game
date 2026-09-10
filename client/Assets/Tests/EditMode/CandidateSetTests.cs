@@ -105,6 +105,13 @@ namespace Tests.EditMode
             ("docs/roster-artificer-second-prop.txt", 3),
             ("docs/roster-bishop-tome.txt", 4),
             ("docs/roster-elder-prop.txt", 46),
+
+            // Not a question for the sitting but a diagnostic that answered
+            // one: the Engineer's body alone, with the wrench, and with the
+            // turret. The Artificer's sheet came back with a gold box at the
+            // man's feet on every tile including the one holding only a
+            // turret, and these three say it is in Engineer.fbx's own mesh.
+            ("docs/roster-engineer-body-kit.txt", 3),
         };
 
         [Test]

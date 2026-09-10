@@ -1,0 +1,55 @@
+# mortar-turret-weight-sheet.png and mortar-turret-weight-played-sheet.png
+
+**What they are.** Six tiles: the Engineer's turret at the size it imports at, then the Mortar's at
+*1.00, *1.25, *1.50, *1.75 and *2.00. Drawn through the real `TowerView` by
+`tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt`, once at `-Width 700`
+and once at `-Width 28`, which is about the twenty-four pixels a body gets at 1600x900. Issue #281.
+
+**The question.** `docs/roster.md:735` signs the Mortar with *"a heavier `turret_base` beside him"*,
+and rows 35, 36 and 37 all bind the same prop at the same scale. **The collection ships one turret** —
+one model in 4,247 — so heavier can only mean larger, and a size is a number a player sees.
+
+**The bracket is derived, not tasted.** `turret_base` is 1.00 x 1.13 on the ground at *1, on tiles 2.0 m
+across the flats, so **\*2.00 is where the prop exactly fills its tile** and anything above it overhangs
+the corridor. The five sizes are that range in even steps. The tile picked the ceiling.
+
+**The page's own rule may already answer this.** Commit `7a7e8921` — *"A rung is a colour, a prop or a
+second model — never a size"* — retired size as a tier signal for the **body**, and `7f4ace2b` is Sam
+signing that. Whether it also retired size for a **prop** is the thing to settle: if it did, *"a heavier
+`turret_base`"* is a line `roster.md` gives up rather than a scale anybody picks off this picture.
+
+**A finding the sheet made rather than the ask: the contact sheet cannot answer "beside an Engineer at
+1.0".** The capture frames each tile on its own contents, so as the turret grows the man shrinks with
+it — the comparison that reads on this sheet is the turret against **its own** man, tile by tile, and
+not one tile against the next. The frame that puts the tier-1 turret and a candidate tier-3 turret side
+by side **at one camera** is the match frame, `docs/frames/rung-candidates/played/`, where rows 35, 36
+and 37 stand three cells apart on the same board.
+
+**And the size does read at 1600x900**, which is not what this map's other measurements have been
+saying. Against the same board with nothing moved, at a fixed camera:
+
+| turret | pixels moved | of a 1,440,000-pixel frame |
+|---|---|---|
+| *1.25 | 887 | 0.062% |
+| *1.50 | 1,446 | 0.100% |
+| *1.75 | 2,061 | 0.143% |
+| *2.00 | 2,696 | 0.187% |
+
+For scale, issue #280 measured anything drawn on the ground at 1–2% of the frame and anything crossing
+it through the air at 0.004–0.030%. **A turret's size sits an order of magnitude above a knife in
+flight and an order below a circle on the ground** — so unlike the four questions #280 looked at, this
+one is decidable from a played frame.
+
+**Regenerate:**
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt -Width 700
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt -Width 28
+./tools/capture-rung-candidates.ps1 -Only mortar-turret-1.25,mortar-turret-1.50,mortar-turret-1.75,mortar-turret-2.00
+```
+
+and copy `candidates-sheet.png` over each committed name — the tool's own output name is deliberately
+not the committed one, because every candidate run rewrites it.
+
+**It draws no board, no roster row and no price**, which is why `check-docs.ps1` exempts it from being
+dated against the authored content, like every set sheet in this folder.
