@@ -96,18 +96,52 @@ namespace Tests.EditMode
         /// </para>
         /// <para>
         /// <b>Which way it leans is measured, how far it climbs is not.</b> The
-        /// slope is not a plane — it eases off towards the top, so the two rims
+        /// slope is not a plane â€” it eases off towards the top, so the two rims
         /// are at different points on the curve and the difference between them
         /// at any one probe is not the rise. The rise is read off the bounding
         /// box instead, against the straight's, so the metre of body every tile
         /// hangs below its face cancels rather than being assumed.
         /// </para>
         /// </remarks>
+        /// <summary>
+        /// The two ramps and the two grass slopes, and how many levels each is
+        /// claimed to climb. This is the table the whole half-step grid rests
+        /// on: a level is half a block because the pack cuts a piece that rises
+        /// half a block, and if that stopped being true the board would be
+        /// drawn with gaps in every hillside.
+        /// </summary>
+        private static readonly (TilePiece Piece, TilePiece Flat, int Levels)[] Climbing =
+        {
+            (TilePiece.StraightHalfRamp, TilePiece.Straight, 1),
+            (TilePiece.StraightRamp, TilePiece.Straight, 2),
+            (TilePiece.GroundSlopeLow, TilePiece.Ground, 1),
+            (TilePiece.GroundSlopeHigh, TilePiece.Ground, 2),
+        };
+
         [Test]
-        public void TheRampClimbsOneTierTowardsItsHighEdge()
+        public void EveryRampClimbsTheLevelsItIsBoundFor(
+            [ValueSource(nameof(Climbing))] (TilePiece Piece, TilePiece Flat, int Levels) climb)
+        {
+            Mesh ramp = MatchSceneBuilder.TileMesh(climb.Piece);
+            Mesh flat = MatchSceneBuilder.TileMesh(climb.Flat);
+
+            Assert.That(
+                ramp.bounds.min.y,
+                Is.EqualTo(flat.bounds.min.y).Within(0.01f),
+                climb.Piece + "'s low end does not stand where a flat tile stands, so the run onto "
+                + "it steps.");
+
+            Assert.That(
+                ramp.bounds.max.y - flat.bounds.max.y,
+                Is.EqualTo(HexGeometry.LevelStep * climb.Levels).Within(0.01f),
+                climb.Piece + " does not climb " + climb.Levels + " level(s), so either the pack's "
+                + "rise is not a multiple of LevelStep or this is not the piece we think it is.");
+        }
+
+        [Test]
+        public void TheRoadRampLeansTowardsItsHighEdge()
         {
             Mesh ramp = MatchSceneBuilder.TileMesh(TilePiece.StraightRamp);
-            Mesh flat = MatchSceneBuilder.TileMesh(TilePiece.Straight);
 
             int high = RoadTiling.RampHighEdge;
             int low = (high + (Hex.DirectionCount / 2)) % Hex.DirectionCount;
@@ -116,17 +150,6 @@ namespace Tests.EditMode
                 SurfaceHeight(ramp, high) - SurfaceHeight(ramp, low),
                 Is.GreaterThan(HexGeometry.LevelStep * 0.5f),
                 "The ramp does not lean towards edge " + high + ", so every hill is entered from its top.");
-
-            Assert.That(
-                ramp.bounds.min.y,
-                Is.EqualTo(flat.bounds.min.y).Within(0.01f),
-                "The ramp's low end does not stand where a flat tile stands, so the run onto it steps.");
-
-            Assert.That(
-                ramp.bounds.max.y - flat.bounds.max.y,
-                Is.EqualTo(HexGeometry.LevelStep).Within(0.01f),
-                "The ramp does not climb exactly one tier, so either the pack's rise is not LevelStep "
-                + "or this is not the piece we think it is.");
         }
 
         /// <summary>

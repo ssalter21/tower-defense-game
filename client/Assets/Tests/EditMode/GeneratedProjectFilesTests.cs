@@ -74,6 +74,55 @@ namespace Tests.EditMode
         {
             AssertColour(MatchSceneBuilder.RoadMaterialPath, SceneFraming.RoadColor);
             AssertColour(MatchSceneBuilder.GrassMaterialPath, SceneFraming.GrassColor);
+            AssertColour(MatchSceneBuilder.LandMaterialPath, SceneFraming.LandColor);
+        }
+
+        /// <summary>
+        /// The committed sky carries the committed sky numbers.
+        /// </summary>
+        /// <remarks>
+        /// Same drift as the colours above and one step worse, because a sky is
+        /// four numbers rather than one and three of them are invisible until
+        /// somebody lowers the camera. A tint left behind by a half-finished
+        /// edit would show up as "the sky looks a bit off in the wide shot"
+        /// months later, if at all.
+        /// </remarks>
+        [Test]
+        public void TheCommittedSkyCarriesTheCommittedSkyNumbers()
+        {
+            var sky = AssetDatabase.LoadAssetAtPath<Material>(MatchSceneBuilder.SkyMaterialPath);
+
+            if (sky == null)
+            {
+                Assert.Ignore(
+                    "No material at " + MatchSceneBuilder.SkyMaterialPath + ". A project without the "
+                    + SkyMaterial.ShaderName + " shader is built without one, and the board still "
+                    + "draws -- see MatchSceneBuilder.WriteSky.");
+            }
+
+            SkySettings want = SkySettings.Default;
+
+            AssertProperty(sky, "_SkyTint", want.Zenith);
+            AssertProperty(sky, "_GroundColor", want.Haze);
+
+            Assert.That(
+                sky.GetFloat("_Exposure"),
+                Is.EqualTo(want.Exposure).Within(0.002f),
+                "Sky.mat exposure");
+
+            Assert.That(
+                sky.GetFloat("_AtmosphereThickness"),
+                Is.EqualTo(want.Atmosphere).Within(0.002f),
+                "Sky.mat atmosphere");
+        }
+
+        private static void AssertProperty(Material material, string property, Color expected)
+        {
+            Color actual = material.GetColor(property);
+
+            Assert.That(actual.r, Is.EqualTo(expected.r).Within(0.002f), property + " red");
+            Assert.That(actual.g, Is.EqualTo(expected.g).Within(0.002f), property + " green");
+            Assert.That(actual.b, Is.EqualTo(expected.b).Within(0.002f), property + " blue");
         }
 
         private static void AssertColour(string path, Color expected)

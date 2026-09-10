@@ -181,13 +181,20 @@ public class MatchTests
         //   shot for longer.
         //
         //   THE CURSED VILLAGER LEFT THIS LIST WHEN IT LEARNED TO TRANSFORM,
-        //   36 to 88, and it is the only reading #267 moved. Thirty-six of them
-        //   is still the densest column the splash can be pointed at; what
-        //   changed is that each body is now the Werewolf's 2860 effective
-        //   health at the Villager's 11 gold, where it was the Villager's 1800.
-        //   The Werewolf's own reading is 86 either way, because nothing sends
-        //   one -- a Werewolf reached by sending Werewolves is the row nobody
-        //   buys.
+        //   and it is the only reading #267 moved. Thirty-six of them is still
+        //   the densest column the splash can be pointed at; what changed is
+        //   that each body is now the Werewolf's 2860 effective health at the
+        //   Villager's 11 gold, where it was the Villager's 1800. The Werewolf's
+        //   own reading matches it, because nothing sends one -- a Werewolf
+        //   reached by sending Werewolves is the row nobody buys.
+        //
+        //   EVERY READING ON THIS PAGE MOVED WHEN THE BOARD BECAME A LANDSCAPE,
+        //   and none of the five names below changed. The Villager read 88 and
+        //   the Werewolf 86 while the map climbed three flat tiers; they read 94
+        //   and 90 across the regraded one, because the hand-placed six no
+        //   longer reach the whole route. The band is missed at both ends for
+        //   the same reasons it was missed before -- which is why the lists are
+        //   what is written down and the readings are not.
         //
         //   OVER THE BAND, one row, and it is the Necromancer -- by twelve
         //   times, since #268. Nineteen of them walk together and every one
@@ -255,11 +262,11 @@ public class MatchTests
         Assert.Equal(
             new[]
             {
-                "minion at 25",
-                "skeleton-warrior at 41",
-                "bone-golem at 25",
-                "abomination at 20",
-                "shade at 42",
+                "minion at 37",
+                "skeleton-warrior at 58",
+                "bone-golem at 50",
+                "abomination at 40",
+                "shade at 36",
             },
             under);
 

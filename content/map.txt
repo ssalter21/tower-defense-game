@@ -2,7 +2,22 @@
 // the tier every hex of it stands at. It folds, and it climbs.
 //
 // '.' ground   '#' corridor   'S' the entrance   'E' the exit
-// 'a' the ground tier   'b' the tier above it   'c' the one above that
+// 'a' the ground, then a letter per HALF BLOCK of height above it, up to 'i'.
+//
+// HALF BLOCKS, NOT BLOCKS. A level used to be a whole block, and halving it
+// halved what a level is worth to Reach in the same change -- so two levels is
+// one block, a block is worth exactly what it always was, and no tower's reach
+// moved when this grid got twice as fine.
+//
+// AND NOTHING HERE STEPS A WHOLE BLOCK. Every one of the places this ground
+// stands above its neighbour is a single level, which is half a block, which is
+// the step the pack cuts its low road ramp and its two grass slopes for. The
+// board this replaced climbed 'a' 'c' 'e' and stepped a whole block in all 121
+// of them, and they drew as bare sawn faces because nothing is cut to cover
+// one. This is the rolling-country prototype, chosen off the contact sheet in
+// docs/prototypes/scenery/ and regraded by a slope limiter until no two
+// touching cells differed by more than a level. It uses the odd letters, and
+// that is the whole point of them.
 //
 // A comment here starts with '//' rather than '#', because '#' is a corridor
 // cell and sharing the marker would make a corridor beginning at column one
@@ -52,16 +67,16 @@
  ...#############...
 ...................
 
-aaaaaaaaaaaaaaaabbb
- aaaaaaaaaaaaaaaabbb
-aaaaaaaaaaaaaaaabbb
- aaaaaaaaaaaaabbbbbb
-aaaaaaaaabbbbbbbbbb
- aaaaaaaaabaaabbbbbb
-aaaaaaaaababbbbbbbb
- aaaaaaaabbaabbbbbbb
-aaaaaaaabbbbbbbbbbc
- aaaaaaabbbbbbbccbcc
-abbabbbbbbbbbcccbcc
- bbbaabbbbbbbbbbbbcc
-bbbbbbbbbbbbccccccc
+ddedddcbbbbbccddedc
+ deeeddccbbcccdddedd
+deeddeddccccdddeedd
+ eedeeedddddddeeeedd
+eeeddeedddddeeeeeed
+ eeeeededddddeeeeedd
+deeeddedcdddeeeeedd
+ ddddddedccdddedddcc
+ddddeeedcbccdddddcc
+ dddedddcbbccdddddcb
+cddeddccbbbccddddcb
+ dddeedcbabbcdddddcb
+ddddddcbaabccddeddc

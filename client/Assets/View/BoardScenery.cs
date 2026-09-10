@@ -22,6 +22,13 @@ namespace View
         /// <summary>A mountain. Tall enough to be a silhouette rather than a detail.</summary>
         Peak,
 
+        /// <summary>
+        /// A low mound, sat on the lip where the ground falls to a lower
+        /// neighbour so that the step between two levels has something growing
+        /// over it instead of a clean hexagonal edge.
+        /// </summary>
+        Hill,
+
         /// <summary>Above the board, touching nothing.</summary>
         Cloud,
     }
@@ -242,6 +249,13 @@ namespace View
         private static void Dress(
             HexMap map, DressingSettings weight, int column, int row, List<SceneryPlacement> placements)
         {
+            // Nothing grows under water. The cell is ordinary ground as far as
+            // the simulation is concerned, so this is the only place that knows.
+            if (map.LevelAt(column, row) <= weight.WaterLevel)
+            {
+                return;
+            }
+
             bool besideTheRoad = TouchesCorridor(map, column, row);
 
             if (!besideTheRoad && TryFiller(map, weight, column, row, out SceneryPlacement filler))
@@ -257,6 +271,16 @@ namespace View
             if (besideTheRoad && Unit(column, row, 11) < weight.CampChance)
             {
                 placements.Add(Standing(weight, SceneryGroup.Camp, column, row, 12));
+
+                return;
+            }
+
+            // The lip of a drop, before the small props, because a mound is
+            // the thing the cell is for where it has one and a barrel beside it
+            // is noise.
+            if (TryRidge(map, weight, column, row, out SceneryPlacement mound))
+            {
+                placements.Add(mound);
 
                 return;
             }
@@ -323,6 +347,94 @@ namespace View
                 0.94f + (Unit(column, row, 6) * 0.16f));
 
             return true;
+        }
+
+        /// <summary>
+        /// A mound on the lip of a drop, if this cell stands over one and the
+        /// roll goes that way.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Toward the lowest neighbour, and off centre.</b> The mound is
+        /// pushed out along the edge the ground falls over, so it straddles the
+        /// step rather than sitting on the plateau behind it. The centre of the
+        /// hex is left alone for the same reason every other prop leaves it
+        /// alone: a tower goes there.
+        /// </para>
+        /// <para>
+        /// <b>A cell on the board's rim counts as standing over a drop.</b> The
+        /// world ends there, and an edge with nothing growing over it is the
+        /// most obviously sawn-off part of any board.
+        /// </para>
+        /// </remarks>
+        private static bool TryRidge(
+            HexMap map, DressingSettings weight, int column, int row, out SceneryPlacement placement)
+        {
+            placement = default;
+
+            if (Unit(column, row, 40) >= weight.RidgeChance)
+            {
+                return false;
+            }
+
+            if (!Falls(map, column, row, out int direction))
+            {
+                return false;
+            }
+
+            // Where the middle of that edge is, in metres from the cell centre.
+            // Direction zero is east and they run anticlockwise, which is the
+            // order Hex.Neighbour counts in.
+            double bearing = direction * (System.Math.PI / 3d);
+            float reach = HexGeometry.AcrossFlats * 0.5f * (0.62f + (Unit(column, row, 41) * 0.22f));
+
+            placement = new SceneryPlacement(
+                SceneryGroup.Hill,
+                (int)(Hash(column, row, 42) % 64u),
+                column,
+                row,
+                (float)System.Math.Cos(bearing) * reach,
+                0f,
+                (float)System.Math.Sin(bearing) * reach,
+                Unit(column, row, 43) * 360f,
+                1.1f + (Unit(column, row, 44) * 0.7f));
+
+            return true;
+        }
+
+        /// <summary>
+        /// The direction the ground falls furthest from a cell, or false where
+        /// it does not fall at all. Off the grid counts as the deepest fall
+        /// there is.
+        /// </summary>
+        private static bool Falls(HexMap map, int column, int row, out int direction)
+        {
+            Hex hex = Hex.FromOddRowOffset(column, row);
+            int here = map.LevelAt(column, row);
+            int deepest = 0;
+
+            direction = -1;
+
+            for (int step = 0; step < Hex.DirectionCount; step++)
+            {
+                Hex neighbour = hex.Neighbour(step);
+                Hex.ToOddRowOffset(neighbour, out int otherColumn, out int otherRow);
+
+                bool offGrid = otherColumn < 0 || otherColumn >= map.Width
+                    || otherRow < 0 || otherRow >= map.Height;
+
+                int drop = offGrid
+                    ? here + 1
+                    : here - map.LevelAt(otherColumn, otherRow);
+
+                if (drop > deepest)
+                {
+                    deepest = drop;
+                    direction = step;
+                }
+            }
+
+            return direction >= 0;
         }
 
         /// <summary>One small thing, out near a rim, turned any way.</summary>

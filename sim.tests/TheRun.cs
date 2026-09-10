@@ -83,10 +83,10 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRun => new[]
     {
-        new RoundOutcome(26, 239, 0),
-        new RoundOutcome(108, 229, 0),
-        new RoundOutcome(281, 184, 0),
-        new RoundOutcome(376, 200, 0),
+        new RoundOutcome(34, 239, 0),
+        new RoundOutcome(127, 229, 0),
+        new RoundOutcome(292, 197, 0),
+        new RoundOutcome(373, 217, 0),
     };
 
     /// <summary>
@@ -100,16 +100,16 @@ public static class TheRun
     /// </remarks>
     public static IReadOnlyList<RoundOutcome> TheCommittedRunWithoutDeath => new[]
     {
-        new RoundOutcome(26, 239, 0),
-        new RoundOutcome(108, 229, 0),
-        new RoundOutcome(281, 184, 0),
-        new RoundOutcome(376, 200, 0),
-        new RoundOutcome(577, 82, 0),
-        new RoundOutcome(788, 25, 0),
-        new RoundOutcome(1178, 22, 0),
-        new RoundOutcome(1653, 25, 0),
-        new RoundOutcome(2218, 23, 0),
-        new RoundOutcome(2927, 22, 0),
+        new RoundOutcome(34, 239, 0),
+        new RoundOutcome(127, 229, 0),
+        new RoundOutcome(292, 197, 0),
+        new RoundOutcome(373, 217, 0),
+        new RoundOutcome(575, 97, 0),
+        new RoundOutcome(756, 45, 0),
+        new RoundOutcome(1172, 31, 0),
+        new RoundOutcome(1668, 45, 0),
+        new RoundOutcome(2244, 38, 0),
+        new RoundOutcome(2955, 36, 0),
     };
 
     /// <summary>What that run had left of the pool when it stopped: none of it.</summary>

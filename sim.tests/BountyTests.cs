@@ -77,9 +77,9 @@ public class BountyTests
         // Both outcomes happen in this match, which is what makes it an
         // assertion about the difference between them rather than about one of
         // them.
-        Assert.Equal(13, result.Leaked);
-        Assert.Equal(3, match.Killed);
-        Assert.Equal(3 * TwelveGold, match.Bounty);
+        Assert.Equal(14, result.Leaked);
+        Assert.Equal(2, match.Killed);
+        Assert.Equal(2 * TwelveGold, match.Bounty);
         Assert.Equal(match.Bounty, result.Bounty);
     }
 

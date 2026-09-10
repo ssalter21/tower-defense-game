@@ -23,9 +23,16 @@ the creep standing on the ridge above it, which is the one shot its position oug
 difference makes the same tower better at shooting the valley and worse at shooting the ridge, so where you
 build is a read of what walks past rather than a search for the highest cell.
 
-**Half a hex per tier and not a whole one.** At 1000 an archer swings between 1.2 and 5.2 hexes across three
-tiers, and the height map dominates every other thing about a placement. At 500 the *shape* of a fold matters
-more than its heights, which is what the fold is for.
+**Half a hex per block and not a whole one.** At 1000 an archer swings between 1.2 and 5.2 hexes across the
+board's relief, and the height map dominates every other thing about a placement. At 500 the *shape* of a fold
+matters more than its heights, which is what the fold is for.
+
+**A level is half a block, and that is a re-gridding rather than a rebalance.** This originally read *half a
+hex per tier*, with a tier being the whole height a tile stands: three of them, 500 milli-hex each. A tier is
+now two levels of 250, so a block of climb is worth exactly what it always was and a map is ported by doubling
+its levels. What the finer grid buys is not range at all — it is that the terrain can rise through a half step,
+which is the granularity the tile pack was cut for and the only thing separating a hillside from a flight of
+stairs. See the decision log, 29 August 2026.
 
 **A radius is a sphere, and that is a different rule rather than the same one.** Everything with a radius —
 a sweep, a blast, an aura, the Soldier's self-centred bubble — takes the magnitude of the level difference,

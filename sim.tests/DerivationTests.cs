@@ -222,7 +222,52 @@ public class DerivationTests
         // 4B15804EC1BEDE48, and with the rule in it is the value below.
         (10u, 0x13EB7A4673B75F21UL),
 
-        // Version 11 is #267 -- a creep becomes another row mid-lane. The first
+        // Version 11 is the half step. A level was a whole block of height and
+        // is now half of one, so Reach.MilliHexPerLevel went from 500 to 250 and
+        // HexMap.LevelCount from three to nine. The pair is deliberate: two
+        // levels is one block and two times 250 is the 500 that was there
+        // before, so a map ported by doubling its levels gives every tower
+        // exactly the reach it had. What is new is that the levels in between
+        // now exist, and terrain that could only jump a block can rise through
+        // one of them.
+        //
+        // IT IS A RULE CHANGE ANYWAY, and this row is why. A stored record
+        // carries its map inline at whatever levels it was written with, and
+        // under the new value every one of those levels is worth half what the
+        // record was played at -- so a defense that reached the route no longer
+        // does. Nothing in any content file had to move for that to be true,
+        // which is the case this table exists to tell apart from a retune, and
+        // content/map.txt moving as well is a second and separate retirement
+        // that the map hash already covers.
+        //
+        // OBSERVED, both ways round, on this build. With MilliHexPerLevel back
+        // at 500 -- every other line of the change left in, the level count
+        // included -- the fingerprint is 13EB7A4673B75F21, which is version
+        // 10's, because a wider alphabet of levels no map in the scenario uses
+        // is not a rule. With the halving in it, it is the value below.
+        (11u, 0x323FC7D7E95AF97FUL),
+        // THE THREE ROWS BELOW WERE TAKEN AS 11, 12 AND 13, on the roster
+        // branch, and are renumbered here. Both branches minted version 11 --
+        // main for the half step above, the roster branch for #267 -- and the
+        // rule for that is the one docs/decision-log.md wrote for the ADR
+        // collision of 6 September: main is where a number becomes public, so
+        // main keeps 11 and the branch moves. The three rule changes are
+        // untouched; only what they are called is.
+        //
+        // AND WHAT MOVING THEM COSTS, WHICH IS WHY IT IS WRITTEN HERE. The two
+        // intermediate values are what the ROSTER BRANCH's builds folded to,
+        // taken before the half step above ever reached them. No build on this
+        // line was version 12 or version 13 -- the three rules arrive together,
+        // in one merge, on top of the half step -- so neither number is
+        // reproducible by anything, and the half step would have moved both had
+        // those builds existed. They are kept because they are the measurements
+        // that were actually taken, and because the evidence written above each
+        // is about the rule rather than about the number. They are not kept as a
+        // claim about a build on this line. Only the row for
+        // SimulationVersion.Current is asserted, and that one is read off this
+        // build.
+
+        // Version 12 is #267 -- a creep becomes another row mid-lane. The first
         // damage that reaches a body's health changes the row it is, ahead of
         // the matrix and ahead of the death check, so the roll lands on the new
         // row's armour and against the new row's pool and a body that named a
@@ -246,9 +291,9 @@ public class DerivationTests
         // folded, and the tick loop never acting on it, every other line
         // untouched -- the fingerprint is 5AC52DFE9393CC7D, and with the rule in
         // it is the value below.
-        (11u, 0x4A90FFAD025E6DA7UL),
+        (12u, 0x4A90FFAD025E6DA7UL),
 
-        // Version 12 is #268 -- a creep raises a creep. A row names the row it
+        // Version 13 is #268 -- a creep raises a creep. A row names the row it
         // puts on the corridor beside itself and the cadence it does it on, so a
         // body arrives that no wave order released, in no order, priced by
         // nobody; and the tick loop grew a phase for it, beside the wave's own
@@ -268,9 +313,9 @@ public class DerivationTests
         // out of Match.Step -- the two columns read, linked and folded, and the
         // tick loop never putting a body down -- the fingerprint is
         // 79786A8DE9C1F0A2, and with the phase in it is the value below.
-        (12u, 0xC3B4DE54701BCD2DUL),
+        (13u, 0xC3B4DE54701BCD2DUL),
 
-        // Version 13 is #269 -- a kill pays the defender. A row names what
+        // Version 14 is #269 -- a kill pays the defender. A row names what
         // killing a body of it pays, the payment is made where a body's health
         // reaches zero, and what a match has paid comes back on its result for
         // a build phase to spend. What the kills have paid joined the per-tick
@@ -286,11 +331,19 @@ public class DerivationTests
         // that are not a wave order -- and the label went to
         // rule-fingerprint/11.
         //
-        // OBSERVED, both ways round, on this build. With the payment struck out
-        // of Match.Damage -- the column read, linked and folded, and no kill
-        // ever paying for it -- the fingerprint is 3E54D6F70DE235B6, and with
-        // the payment in it is the value below.
-        (13u, 0x658CECEC487BCB6EUL),
+        // OBSERVED, both ways round, on the branch's build. With the payment
+        // struck out of Match.Damage -- the column read, linked and folded, and
+        // no kill ever paying for it -- the fingerprint was 3E54D6F70DE235B6
+        // against the branch's 658CECEC487BCB6E, which is the difference the
+        // observation is about and is what makes the row load bearing.
+        //
+        // THE VALUE BELOW IS THIS BUILD'S AND THE STRUCK-OUT ONE ABOVE IS NOT.
+        // The half step reached this row in the merge, so the with-payment
+        // number was re-read off the merged build and moved; the without-payment
+        // number was never taken here and is left as what was measured rather
+        // than quietly recomputed. Repeating the observation on this build gives
+        // a different pair and the same answer.
+        (14u, 0xDB1DD323BF7FC763UL),
     };
 
     /// <summary>

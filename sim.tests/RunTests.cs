@@ -580,7 +580,7 @@ public class RunTests
         //
         // OBSERVED: leave the spend out of the fold -- drop the Purse.Holding
         // line below, which is the shape this test had while the run it folded
-        // over bought nothing. It goes red by the 8830 gold of creeps it spent,
+        // over bought nothing. It goes red by the 8750 gold of creeps it spent,
         // and the interest a bank that never paid for them would have
         // compounded on top.
         Run run = TheRun.Wealthy(2000);
@@ -615,8 +615,8 @@ public class RunTests
 
         // And all three are money rather than columns of zeroes: the run bought
         // waves, attacking paid its sender, and turning up paid on top.
-        Assert.Equal(8830, spent);
-        Assert.Equal(9205, bonus);
+        Assert.Equal(8750, spent);
+        Assert.Equal(9096, bonus);
         Assert.Equal(10, rounds.Count(round => round.Payment.Bonus > 0));
         Assert.Equal(1680, rules.IncomeBasePerWave * run.Round);
     }
@@ -894,33 +894,53 @@ public class RunTests
 
         // The committed defense is the wall it opens behind, cell for cell, and
         // what the first round adds to it is whatever half of the opening purse
-        // pays for -- which on the committed content is nothing at all. The six
-        // towers already cover the route end to end, so the covering half of the
-        // bot's rule has nothing to buy, and the value half's best-scoring
-        // purchase costs more than the fifty-gold half. The rule stops at the
-        // first thing the half will not pay for rather than falling back on a
-        // cheaper one, so the opening round banks its share.
+        // pays for. The rule stops at the first thing the half will not pay for
+        // rather than falling back on a cheaper one, so a round that finds
+        // nothing it can afford banks its share instead.
         //
-        // It bought one forty-gold archer here while the roster was four rows.
-        // What moved is the candidate list and not the rule: nine roots and
-        // eighteen rungs put a dearer row at the top of the score.
+        // TWO SEPARATE THINGS MOVED THIS ASSERTION, FROM TWO BRANCHES, AND THE
+        // MERGE IS WHERE THEY MEET. It bought one forty-gold archer while the
+        // roster was four rows and the map climbed three flat tiers. Then the
+        // roster went to nine roots and eighteen rungs, which puts a dearer row
+        // at the top of the score and can price the best-scoring purchase out of
+        // a fifty-gold half; and the map was regraded into a landscape, which
+        // the hand-placed committed six no longer reach across, so there is
+        // somewhere unwatched to place. One force takes the purchase away and
+        // the other hands it somewhere to go, and neither branch could see the
+        // other. The count below is what the merged build actually does, read
+        // off a run rather than argued from either half.
+        //
+        // <b>That the committed six no longer cover the route is a finding, not
+        // a fixture detail.</b> The defense is hand-placed and the board under it
+        // moved; that is the honest consequence, and it is written down here
+        // rather than papered over by widening the assertion to "roughly the
+        // same wall".
         TowerLayout opening = canned.StandingIn(0, 0).Defense;
 
-        Assert.Equal(defense.Count, opening.Count);
+        Assert.Equal(defense.Count + 1, opening.Count);
         Assert.All(
             TheMatch.Spelling(defense),
             tower => Assert.Contains(tower, TheMatch.Spelling(opening)));
 
-        // And by the last round it is a bigger wall and a dearer one. The route
-        // is covered end to end already, so every round of it is bought by the
-        // value half of the rule: a second tower on route something already
-        // watches, or an upgrade of what stands, whichever scores more damage
-        // over the route per gold.
+        foreach (PlacedTower placed in defense.Towers)
+        {
+            Assert.Contains(
+                opening.Towers,
+                standing => standing.Column == placed.Column && standing.Row == placed.Row);
+        }
+
+        // And by the last round it is a bigger wall and a dearer one -- fifteen
+        // towers against the seven it opened behind. Every round is bought by
+        // the value half of the rule: another tower on route, or an upgrade of
+        // what stands, whichever scores more damage over the route per gold.
+        // The regraded board leaves room to keep placing all the way to the
+        // last round, so this run never reaches the covered-end-to-end state
+        // the flat map put it in by round one.
         TowerLayout closing = canned.StandingIn(9, 0).Defense;
 
         Assert.True(
-            closing.Count > defense.Count,
-            "The stand-in stood " + closing.Count + " towers by the last round against the " + defense.Count
+            closing.Count > opening.Count,
+            "The stand-in stood " + closing.Count + " towers by the last round against the " + opening.Count
             + " it opened behind.");
         Assert.True(
             Worth(costs, closing) > Worth(costs, opening),

@@ -35,15 +35,15 @@ namespace Sim
     /// </para>
     /// <para>
     /// <b>A map is two blocks and not one: the terrain grid, a blank line, and
-    /// a level grid of the same shape.</b> A level is <c>a</c>, <c>b</c> or
-    /// <c>c</c> -- the three tiers, counted from the ground up -- and it is a
-    /// letter for the same reason the terrain is: this file holds no numbers,
+    /// a level grid of the same shape.</b> A level is a letter from <c>a</c>
+    /// up -- half a block of height each, counted from the ground -- and it is
+    /// a letter for the same reason the terrain is: this file holds no numbers,
     /// so a digit is refused wherever it appears and the decimal-point question
     /// never has to be asked here. The second plane is why a level is a second
     /// block rather than a wider alphabet in the first: the terrain a hex is
     /// and the height it stands at are two facts, and folding them into one
-    /// character would need twelve characters to spell four kinds at three
-    /// tiers, none of which anybody could read.
+    /// character would need thirty-six characters to spell four kinds at nine
+    /// levels, none of which anybody could read.
     /// </para>
     /// <para>
     /// <b>A row is trimmed at both ends, and the whitespace that goes is
@@ -72,7 +72,7 @@ namespace Sim
     /// same order -- and not over the file. So nudging one hex under a stored
     /// record fails loudly whether the map was typed by hand, generated, or
     /// downloaded from somebody else, and rewrapping the comment above it does
-    /// nothing at all. Raising one hex a tier is such a nudge: two maps with
+    /// nothing at all. Raising one hex a level is such a nudge: two maps with
     /// the same corridor at different heights are two maps.
     /// </para>
     /// <para>
@@ -96,8 +96,38 @@ namespace Sim
         /// </remarks>
         public const int HashLayout = 2;
 
-        /// <summary>How many tiers there are. The letters are <c>a</c> to this many.</summary>
-        public const int LevelCount = 3;
+        /// <summary>
+        /// How many levels there are. The letters are <c>a</c> to this many.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A level is half a block, and there are nine of them.</b> There
+        /// were three, one per block, and a board could only ever step a whole
+        /// block at a time -- so every change of height was a full vertical
+        /// face and the ground read as a stack of plates. The grid is now half
+        /// that fine, which is the granularity the tile pack was cut for: its
+        /// <c>*_sloped_low</c> pieces climb exactly half of what its
+        /// <c>*_sloped_high</c> pieces do, and there was no level for the low
+        /// ones to land on.
+        /// </para>
+        /// <para>
+        /// <b>Nine and not six, because relief is worth having.</b> Six would
+        /// have been the three old blocks exactly. Nine is four blocks of
+        /// climb, which buys a ridge that stands over a valley rather than
+        /// beside it. It is a ceiling and not a quota: a board that wants two
+        /// blocks of relief uses <c>a</c> to <c>e</c> and the rest is headroom.
+        /// </para>
+        /// <para>
+        /// <b>Porting a map is doubling its levels.</b> <c>a b c</c> becomes
+        /// <c>a c e</c> and every tower reaches exactly what it reached before,
+        /// because <c>Reach</c> halved what a level is worth in the same
+        /// change. What does move is <see cref="MapHash"/> -- the level plane
+        /// is folded into it -- so a port retires the records stamped against
+        /// the old board, loudly, which is the behaviour that paragraph
+        /// promises.
+        /// </para>
+        /// </remarks>
+        public const int LevelCount = 9;
 
         /// <summary>
         /// Names this grid's layout inside the hash. The digit is
@@ -121,7 +151,7 @@ namespace Sim
 
         private const char ExitCharacter = 'E';
 
-        /// <summary>The letter the lowest tier is written with; the rest follow it.</summary>
+        /// <summary>The letter the ground level is written with; the rest follow it.</summary>
         private const char FirstLevelCharacter = 'a';
 
         private readonly MapCell[] _cells;
@@ -355,8 +385,11 @@ namespace Sim
                     + ((index % width) + 1).ToString(CultureInfo.InvariantCulture)
                     + ". There are "
                     + LevelCount.ToString(CultureInfo.InvariantCulture)
-                    + " tiers, counted from the ground up, so a level byte is 0, 1 or 2 -- and one "
-                    + "outside that range is refused rather than flattened onto the tier below it.");
+                    + " levels of half a block each, counted from the ground up, so a level byte runs "
+                    + "from 0 to "
+                    + (LevelCount - 1).ToString(CultureInfo.InvariantCulture)
+                    + " -- and one outside that range is refused rather than flattened onto the level "
+                    + "below it.");
             }
 
             return value;
@@ -408,8 +441,9 @@ namespace Sim
         }
 
         /// <summary>
-        /// The tier the hex at an offset column and row stands at: zero for the
-        /// ground, up to <see cref="LevelCount"/> minus one.
+        /// The level the hex at an offset column and row stands at: zero for
+        /// the ground, up to <see cref="LevelCount"/> minus one, counted in
+        /// half blocks.
         /// </summary>
         /// <remarks>
         /// The level belongs to the hex and not to whatever stands on it, which
@@ -769,11 +803,9 @@ namespace Sim
                         source,
                         blocks[0].FirstLine + blocks[0].Rows.Count,
                         "ends after one block of rows, and a map is two: the terrain grid, a blank line, "
-                        + "then a level grid of the same shape carrying '"
+                        + "then a level grid of the same shape carrying a letter from '"
                         + FirstLevelCharacter
-                        + "', '"
-                        + (char)(FirstLevelCharacter + 1)
-                        + "' or '"
+                        + "' to '"
                         + (char)(FirstLevelCharacter + LevelCount - 1)
                         + "' on every hex. The level block is missing, and there is no height a reader "
                         + "could supply on its behalf.");
@@ -875,12 +907,10 @@ namespace Sim
                         + (column + 1).ToString(CultureInfo.InvariantCulture)
                         + " of the level grid. A level is '"
                         + FirstLevelCharacter
-                        + "' for the ground, '"
-                        + (char)(FirstLevelCharacter + 1)
-                        + "' for the tier above it or '"
+                        + "' for the ground and a letter up to '"
                         + (char)(FirstLevelCharacter + LevelCount - 1)
-                        + "' for the one above that, and nothing else -- a digit least of all, because "
-                        + "this file holds no numbers.");
+                        + "' for each half block above it, and nothing else -- a digit least of all, "
+                        + "because this file holds no numbers.");
                 }
 
                 return (byte)level;

@@ -14,6 +14,98 @@ This file exists so the vision can stay readable. It grows; the vision should no
 
 ---
 
+## 30 August 2026 — rolling-country is the committed board
+
+The prototype was chosen off the contact sheet and is now `content/map.txt`. Its level block, its dressing
+chances and its atlas all moved across; the corridor did not move at all, cell for cell.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `content/map.txt` | **Three heights, `a c e`**, and a whole block between each — 121 falls, every one of them a bare sawn face | **Five levels, `a` to `e`, and nothing steps a whole block.** Every change of height on the board is one level, which is half a block, which is what the pack cuts a low ramp and two grass slopes for. |
+| `client/Assets/Materials/Tiles.mat` | The pack's default atlas | **`hexagons_medieval_Summer`.** Same geometry, same UVs, one texture — the default puts an olive-yellow in the swatch the grass tiles sample and reads as scorched at board framing. |
+| `BoardDressingAsset` | Twelve serialized fields | **Fifteen.** `ridgeChance`, `rimDrop` and `waterLevel` existed on `DressingSettings` and had never been given a slider, so the shipped board could not express two of rolling-country's numbers at all. |
+| `content/defense.txt` | Six hand-placed towers | **The same six, one of them moved.** See below. |
+
+**The defense had to move, and that is the honest cost.** Tower reach is priced off the level a tower stands
+on, so regrading the ground repriced every tower on it. Two properties the repo asserts stopped holding: the
+archer at 14,3 had its stretch of corridor entirely to itself, and the route stopped being covered end to end.
+Moving the most redundant tower — the archer at 6,10, whose coverage was almost entirely inside two other
+towers' — to 11,4 restores the overlap and closes the gap at route steps 40 and 41. **Steps 16 and 17 are
+still covered by nothing**, and no placement of a single tower closes them: that would take re-authoring more
+of a defense somebody placed by hand, which is a bigger decision than adopting a map.
+
+**What it cost the defense, measured rather than argued.** The recorded match went from **12 of 40 leaked to
+18**, and from 5581 ticks to 5758. The canned opponent's opening now buys a tower where it used to buy
+nothing, because there is somewhere left to place. None of that is tuned back out — it is what this board
+does to this defense, and softening it would hide the finding.
+
+**What did not change:** any rule. `SimulationVersion` stays at 11, because the version stamps the rules and
+the rules are untouched; what retires the stored records is the map hash, and they were regenerated. Reach,
+the ruleset and the ladder are all byte-identical.
+
+---
+
+## 30 August 2026 — the board stops floating, and stops stepping a block
+
+`rolling-country` was chosen off the contact sheet, and a second pass on it turned up two things that were
+not about which landscape it was.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `SceneFraming.BackgroundColor`, and every frame ever captured | The camera **clears to a flat colour** where there is no floor | **There is a world behind the board.** A procedural sky, a plain of land laid at the depth the board's own rim falls to, and linear haze joining them — `View/Horizon.cs`. The flat colour survives only as the fallback for a project without the skybox shader. The board's cliff columns bury themselves in the plain, so it reads as country cut out of a landscape rather than as a slab hanging in nothing. |
+| The board generator's slope rules | A cell could sit **two levels** clear of the one touching it | **One level, on the chosen board.** A whole-block face has no ramp and no grass slope cut for it, so it drew as a sawn edge — 29 of them on the first cut of `rolling-country`. A slope limiter files them: 44 of 247 cells moved, 7 of 275 falls lost, the same `a` to `e` relief, and `presets.txt` now reads **`0 of a block or more`** where the shipped board reads `121`. |
+
+**What was tried and did not work, so it is not tried again:** shrinking the plain to put the horizon in the
+shipped shot. The horizon of a flat plain sits at eye level, and the shipped camera looks between 15 and 55
+degrees below horizontal — so the horizon is above the top of the frame at *any* radius. Land behind the
+board at that pitch is what looking down at a landscape looks like; the sky arrives when the camera comes
+down.
+
+**What did not change:** anything the simulation can see. The horizon carries no collider, is never a tile,
+is never picked and is not in `TileCount`; the regrade is a prototype board under `docs/`, not
+`content/map.txt`, so no stored record moved and `SimulationVersion` stays at 11. Adopting the board into
+`content/map.txt` is a separate step and does retire every record.
+
+**The plain was planted, and the planting was reverted the same day.** The bare plain grounded the board but
+was not country, so a treeline went in four to seventeen metres off the rim with a range of hills behind it,
+placed off a jittered lattice and kept clear of the board by its distance to the board's *footprint* rather
+than to its middle. It was tuned over a dozen renders and rejected on sight: the pack's models scattered on
+open ground read as clutter around the board rather than as country behind it, and the diorama the whole
+landscape is after was worse for having them. **The plain is bare, and that is the decision, not the default.**
+`View/HorizonScenery.cs` and its tests are gone with it; what survived is the shader finding below, which was
+turned up while chasing a symptom the planting did not cause.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| `ViewMaterials.Create`, used for everything | One plain lit material, **shader defaults and all** | **Anything very large and very flat gets `Matte` instead.** Both shaders default to half smoothness. On a hex tile that is a sheen nobody notices; on a plane two hundred metres across the grazing edge blows to white and reads as fog piled against the far clip. It cost two rounds of moving the fog before a column of sampled pixels showed the ground brighter than the colour it was supposedly fading into — which no amount of fog can do. |
+
+---
+
+## 29 August 2026 — a level is half a block
+
+The board read as a stack of plates and the cause was measured rather than felt: of the 121 places where one
+hex stood above its neighbour on the committed map, **118 were drawn as a bare vertical face and three were
+ramped**. Every change of height was a whole block because a level *was* a whole block, and the tile pack cuts
+a piece that rises half of one — `hex_grass_sloped_low`, `hex_road_A_sloped_low` — which had no level to land
+on and had never been imported.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **§ elevation**, ADR-0054, build-order seam 9 | **Three tiers**, a tier worth **500 milli-hex** | **Nine levels of half a block, a level worth 250.** Two levels is one block and two times 250 is the 500 that was there before, so *every tower reaches exactly what it reached* and a map is ported by doubling its levels. `content/map.txt` went from `a b c` to `a c e` and did not otherwise move. |
+| — | Height was capped at a **one-hex** refund by there being three tiers | **Two hexes**, because nine levels is four blocks of relief. A board need not use them; the ceiling is asserted in `ReachTests` so that raising it again is a deliberate edit. |
+| — | Half steps were **view-only geometry** — an extra copy of the tile drawn under the rim | **Withdrawn as insufficient.** Measured: the side-to-top luminance ratio did not move as ledges were added (0.62 / 0.62 / 0.63 for none, one and two), because every ledge is the same material at the same angle. It bought silhouette and no depth, and the boards drawn with it were rejected on sight. Real levels replaced it. |
+
+**It is a rule change and it retired every stored record**, which is what simulation version 11 and the row
+added to `DerivationTests` are for. The fingerprint was observed both ways round: with the halving reverted and
+every other line of the change left in, it comes back as version 10's, because a wider alphabet of levels no
+map uses is not a rule.
+
+**What it does not decide.** Which of the six prototype landscapes in `docs/prototypes/` the game adopts, and
+whether `content/map.txt` is regraded onto the finer grid at all. It stands at three heights on a grid that
+would carry nine, and that is a decision waiting rather than an omission.
+
+---
+
 ## Before 6 August 2026 — reading the finished skeleton
 
 Three claims were written before the walking skeleton existed, and reading the finished skeleton changed them.

@@ -30,12 +30,12 @@ namespace View
     /// thing on the floor that carries no information about the match.
     /// </para>
     /// <para>
-    /// <b>Height is drawn, and it is not decoration.</b> A tier is worth half a
-    /// hex of reach in the simulation, so a player who cannot see which tier a
-    /// cell is on cannot read the range of a tower placed there. The floor
-    /// lifts each tile by <see cref="HexGeometry.LevelStep"/> per tier and
-    /// reports a bounding box that includes the climb, so the camera frames a
-    /// board with tiers as a board with tiers.
+    /// <b>Height is drawn, and it is not decoration.</b> A level is worth a
+    /// quarter of a hex of reach in the simulation, so a player who cannot see
+    /// which level a cell is on cannot read the range of a tower placed there.
+    /// The floor lifts each tile by <see cref="HexGeometry.LevelStep"/> per
+    /// level and reports a bounding box that includes the climb, so the camera
+    /// frames a board with relief as a board with relief.
     /// </para>
     /// <para>
     /// <b>The map arrives parsed.</b> This class never opens a file and never
@@ -95,7 +95,8 @@ namespace View
             host.transform.SetParent(parent, worldPositionStays: false);
 
             var floor = host.AddComponent<HexFloor>();
-            floor.Draw(map, tiles);
+            floor.Draw(map, tiles, settings);
+            floor.Underpin(map, tiles, settings);
             floor.Scatter(map, scenery, settings, dressing);
 
             return floor;
@@ -115,11 +116,22 @@ namespace View
         /// True if the tile at this cell is drawn as road.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Read off the piece rather than off the material, because a set of
         /// real tiles wears one atlas everywhere and the material stopped being
         /// able to tell road from ground the moment the blockout did.
+        /// </para>
+        /// <para>
+        /// <b>And read off the edge table rather than by comparing against
+        /// <see cref="TilePiece.Ground"/>, which is what it used to do.</b> A
+        /// piece has road on it exactly when its road meets an edge, and that
+        /// table is already the one place the answer lives. The comparison was
+        /// right for as long as <c>Ground</c> was the only pathless piece; the
+        /// grass slopes made it wrong, and every ground cell on a hillside
+        /// started reporting itself as corridor.
+        /// </para>
         /// </remarks>
-        public bool IsRoadTile(int column, int row) => PieceAt(column, row) != TilePiece.Ground;
+        public bool IsRoadTile(int column, int row) => RoadTiling.EdgesOf(PieceAt(column, row)) != 0;
 
         /// <summary>True if anything stands on this cell that a tower would displace.</summary>
         public bool HasSceneryAt(int column, int row) => SceneryAt(column, row) != null;
@@ -186,8 +198,10 @@ namespace View
             }
         }
 
-        private void Draw(HexMap map, TileSet tiles)
+        private void Draw(HexMap map, TileSet tiles, DressingSettings settings)
         {
+            int waterLine = settings?.WaterLevel ?? DressingSettings.Default.WaterLevel;
+
             Map = map;
             RoadMaterial = tiles.RoadMaterial;
             GrassMaterial = tiles.GrassMaterial;
@@ -202,7 +216,18 @@ namespace View
                 for (int column = 0; column < map.Width; column++)
                 {
                     TileChoice choice = RoadTiling.For(map, column, row);
-                    Vector3 centre = HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
+                    int level = map.LevelAt(column, row);
+
+                    // The water line is a dressing decision, so it is applied
+                    // here rather than in RoadTiling, which answers only what
+                    // the map says. Flat ground under the line goes to water; a
+                    // slope keeps its slope, which is what a shore looks like.
+                    if (choice.Piece == TilePiece.Ground && level <= waterLine)
+                    {
+                        choice = new TileChoice(TilePiece.Water, 0);
+                    }
+
+                    Vector3 centre = HexGeometry.ToWorld(column, row, level);
                     MapCell cell = map.CellAt(column, row);
 
                     var cellObject = new GameObject(Name(column, row, cell));
@@ -234,6 +259,125 @@ namespace View
             }
 
             WorldBounds = new Bounds((min + max) * 0.5f, max - min);
+        }
+
+        /// <summary>
+        /// Stacks bare columns of earth under any tile whose drop to a
+        /// neighbour is deeper than the tile's own body, so that a cliff is a
+        /// cliff rather than a plate hanging over a hole.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>A tile carries one metre of earth and a level is now half of
+        /// one.</b> That covers a drop of two levels exactly and anything
+        /// shallower with room to spare, which is most of a graded board and
+        /// costs nothing. It stops covering at three levels, and the daylight
+        /// under the rim is the failure this closes: one more copy of
+        /// <c>hex_grass_bottom</c> per further metre, hung straight down from
+        /// where the body ran out.
+        /// </para>
+        /// <para>
+        /// <b>The depth is measured against the lowest neighbour and not
+        /// against the board.</b> A ridge standing four levels over the valley
+        /// on one side and one level over the shelf on the other needs the
+        /// column the valley asks for, and running every cell down to the
+        /// board's floor instead would bury the whole map in a solid block that
+        /// nothing can see into and every shadow lands on.
+        /// </para>
+        /// <para>
+        /// <b>The rim is a separate number.</b> Off the grid there is no
+        /// neighbour to measure against, so how far the board's edge falls away
+        /// is a decision rather than a consequence, and
+        /// <see cref="DressingSettings.RimDrop"/> is where it is made. It is
+        /// what makes the board read as a piece of country lifted out of a
+        /// landscape rather than as a sheet of tiles.
+        /// </para>
+        /// <para>
+        /// <b>The columns are not tiles.</b> They are not counted in
+        /// <see cref="TileCount"/>, never returned by <see cref="TileAt"/> and
+        /// never picked, because a thing a player can click is a thing the
+        /// simulation has to have an opinion about, and the simulation has no
+        /// idea these exist.
+        /// </para>
+        /// </remarks>
+        private void Underpin(HexMap map, TileSet tiles, DressingSettings settings)
+        {
+            Mesh mesh = tiles.MeshFor(TilePiece.Cliff);
+            Material surface = tiles.MaterialFor(TilePiece.Cliff);
+
+            if (mesh == null || surface == null)
+            {
+                return;
+            }
+
+            float rim = settings?.RimDrop ?? DressingSettings.Default.RimDrop;
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    int level = map.LevelAt(column, row);
+                    float floorHeight = Lowest(map, column, row, level, rim);
+                    float covered = (level * HexGeometry.LevelStep) - HexGeometry.TileBody;
+
+                    for (int index = 0; covered > floorHeight; index++)
+                    {
+                        var post = new GameObject(
+                            "Cliff " + column.ToString(CultureInfo.InvariantCulture)
+                            + "," + row.ToString(CultureInfo.InvariantCulture)
+                            + " -" + index.ToString(CultureInfo.InvariantCulture));
+
+                        post.transform.SetParent(transform, worldPositionStays: false);
+                        post.transform.localPosition =
+                            HexGeometry.ToWorld(column, row) + (Vector3.up * covered);
+
+                        post.AddComponent<MeshFilter>().sharedMesh = mesh;
+
+                        var renderer = post.AddComponent<MeshRenderer>();
+                        renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                        renderer.receiveShadows = true;
+                        renderer.sharedMaterial = surface;
+
+                        covered -= HexGeometry.TileBody;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// How far down the earth under a cell has to reach, in metres: the
+        /// face of its lowest neighbour, or <paramref name="rim"/> below the
+        /// cell where it is on the board's edge.
+        /// </summary>
+        /// <remarks>
+        /// Adjacency comes from the simulation's own neighbour walk rather than
+        /// from an offset table typed out here, for the reason
+        /// <see cref="RoadTiling.CorridorEdges"/> gives: a second opinion about
+        /// which cells touch is a bug that only shows on the odd rows.
+        /// </remarks>
+        private static float Lowest(HexMap map, int column, int row, int level, float rim)
+        {
+            Hex hex = Hex.FromOddRowOffset(column, row);
+            float here = level * HexGeometry.LevelStep;
+            float lowest = here;
+
+            for (int direction = 0; direction < Hex.DirectionCount; direction++)
+            {
+                Hex neighbour = hex.Neighbour(direction);
+                Hex.ToOddRowOffset(neighbour, out int otherColumn, out int otherRow);
+
+                float face = otherColumn < 0 || otherColumn >= map.Width
+                    || otherRow < 0 || otherRow >= map.Height
+                    ? here - rim
+                    : map.LevelAt(otherColumn, otherRow) * HexGeometry.LevelStep;
+
+                if (face < lowest)
+                {
+                    lowest = face;
+                }
+            }
+
+            return lowest;
         }
 
         /// <summary>

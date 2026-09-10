@@ -12,15 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15d20107261fc24fa4a431500b6dc3d, type: 3}
   m_Name: BoardDressing
   m_EditorClassIdentifier: View::View.BoardDressingAsset
-  groveChance: 0.3
-  peakChance: 0.34
-  borderGroveChance: 0.32
-  propChance: 0.42
-  secondPropChance: 0.3
-  campChance: 0.14
+  groveChance: 0.46
+  peakChance: 0.3
+  borderGroveChance: 0.44
+  propChance: 0.24
+  secondPropChance: 0.22
+  campChance: 0.08
   propScale: 1.7
   rimNear: 0.52
   rimFar: 0.7
-  cloudCount: 5
+  cloudCount: 4
   cloudHeight: 6
   cloudSpread: 2.5
+  ridgeChance: 0.44
+  rimDrop: 0.8
+  waterLevel: -1

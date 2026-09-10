@@ -266,7 +266,7 @@ public class ReplayGateTests
         // folds what the kills have paid because a body can now be worth gold
         // for dying.
         Assert.Equal(
-            "D55119ECD678CB04",
+            "C3FEADE2243BB378",
             restaged.Match.Resolve().RollingStateHash.ToString());
     }
 

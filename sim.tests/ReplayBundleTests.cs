@@ -191,7 +191,7 @@ public class ReplayBundleTests
     }
 
     [Fact]
-    public void A_level_byte_outside_the_three_tiers_refuses()
+    public void A_level_byte_above_the_top_of_the_board_refuses()
     {
         // The terrain plane's own validation is untouched by the levels
         // arriving, which is the whole reason they arrive as a second plane
@@ -204,7 +204,7 @@ public class ReplayBundleTests
         ContentException thrown = Assert.Throws<ContentException>(
             () => HexMap.FromCells("inlined", map.Width, map.Height, map.ToCellBytes(), levels));
 
-        Assert.Contains("tiers", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("levels", thrown.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -267,25 +267,32 @@ public class ReplayBundleTests
         // LAYOUT is not a retired record.
         Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
 
-        // IT REPLAYS, AND WHAT IT LEAKS NO LONGER TELLS THE PLANE APART. A
+        // IT REPLAYS, AND WHAT IT LEAKS TELLS THE PLANE APART AGAIN. A
         // version-1 bundle carries no levels, so it replays the folded board
-        // flat, and flat the towers lose the height their range was priced with:
-        // this leaked fifteen against the folded twelve while the committed
-        // match was tuned to a partial break. It leaks three either way now,
-        // because the Mage's splash stops nearly everything on both boards --
-        // see MatchTests.The_match_is_under_the_partial_break_it_is_tuned_for
-        // _and_that_is_the_splash, which is the same finding read off the same
-        // run.
+        // flat: this leaked fifteen against the folded twelve while the
+        // committed match was tuned to a partial break, and then the Mage's
+        // splash arrived and stopped nearly everything on both boards, which
+        // collapsed the two readings onto three apiece.
+        //
+        // THE REGRADE PARTED THEM AGAIN, WHICH IS EXACTLY WHAT THIS SAID IT
+        // WOULD DO. Flat leaks four and the committed board leaks eight, and
+        // the sign is the surprise: the levelled board is now the WORSE one for
+        // this defense. Height used to be the towers' advantage; a landscape of
+        // half-block steps is a board the hand-placed six no longer reach
+        // across, and folding it flat hands them back the route they cannot
+        // watch. Nothing was retuned to produce that and nothing is retuned to
+        // answer it -- see RunTests.The_canned_pool_is_one_opponent_who_builds
+        // _a_wall_and_buys_the_same_wave_again, which is the same finding read
+        // off a different run.
         //
         // The reading is asserted rather than dropped, and so is the fact that
-        // the two agree: what proves the flat branch here is the level plane
-        // above -- every cell at level zero and a map hash that checks out under
-        // layout 1 -- and the leak count is a reading beside it. When the match
-        // is retuned the two will part again, and this goes red saying so.
+        // the two now differ: what proves the flat branch here is the level
+        // plane above -- every cell at level zero and a map hash that checks out
+        // under layout 1 -- and the leak count is a reading beside it.
         int flat = old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked;
 
-        Assert.Equal(3, flat);
-        Assert.Equal(TheMatch.LeakedInTheCommittedRun, flat);
+        Assert.Equal(4, flat);
+        Assert.NotEqual(TheMatch.LeakedInTheCommittedRun, flat);
     }
 
     [Fact]

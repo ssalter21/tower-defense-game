@@ -322,10 +322,20 @@ public class BuildPolicyTests
         Assert.Equal(Engineer, built[0]);
         Assert.DoesNotContain(Ranger, built);
 
-        // Six different roots get built, so the ranger's absence is the two
+        // Eight different roots get built, so the ranger's absence is the two
         // rules above and not a player that only ever buys one thing. Every one
         // of them is a root: nothing an edge points at is ever reached.
-        Assert.Equal(new[] { Engineer, Druid, Soldier, Cleric, Rogue, Archer }, built);
+        //
+        // IT WAS SIX WHILE THE MAP CLIMBED THREE FLAT TIERS. The barbarian and
+        // the paladin are what the landscape added: the committed six do not
+        // reach across a regraded board, so the covering half keeps finding
+        // route left to watch and goes on buying roots for cells the flat map
+        // never left open. Two more names on this list is the board moving and
+        // not the rule -- the rule is unchanged, and the ranger is still absent
+        // from it for the reason above.
+        Assert.Equal(
+            new[] { Engineer, Druid, Soldier, Cleric, Rogue, Archer, Barbarian, Paladin },
+            built);
 
         UpgradeLadder ladder = TheMatch.Ladder(types);
 
