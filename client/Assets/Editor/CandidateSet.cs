@@ -322,7 +322,8 @@ namespace View.Editor
             candidate.Clip = FindClip(where, fields[5], faults);
             VerifyHidden(where, candidate.Model, hidden, faults);
             candidate.Texture = LoadTexture(where, candidate.TexturePath, faults);
-            candidate.Beside = LoadBeside(where, candidate.BesidePath, faults, out float besideScale);
+            candidate.Beside =
+                BesideGroup.Parse(where, candidate.BesidePath, faults, out float besideScale);
             candidate.BesideScale = besideScale;
 
             // Only a tower has the socket. CreepView draws no beside prop --
@@ -374,22 +375,6 @@ namespace View.Editor
 
             return model;
         }
-
-        /// <summary>
-        /// What stands beside the character, null for <c>-</c>, or a fault
-        /// naming what was wrong with it. A <c>*scale</c> suffix comes back in
-        /// <paramref name="scale"/>, and a prop that names none is drawn at the
-        /// size it imported at.
-        /// </summary>
-        /// <remarks>
-        /// <b>It may name more than one.</b> Props joined with <c>+</c> stand
-        /// together on the one tile — see <see cref="BesideGroup"/>, which is
-        /// also what the match capture's own candidate art reads, so a group
-        /// spells the same on a sheet and in a frame.
-        /// </remarks>
-        private static GameObject LoadBeside(
-            string where, string spec, List<string> faults, out float scale) =>
-            BesideGroup.Parse(where, spec, faults, out scale);
 
         /// <summary>
         /// The atlas at an art-relative path, null for <c>-</c>, or a fault

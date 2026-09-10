@@ -197,23 +197,26 @@ namespace View.Editor
             // One mistake, one fault. A size that will not parse leaves nothing
             // to say anything about, so the range check is the else and not the
             // next statement -- two lines about one typo is how a file of these
-            // stops being readable.
-            if (star < 0)
+            // stops being readable. A member naming no size is drawn as
+            // imported, which is the default `size` already holds.
+            if (star >= 0)
             {
-                // Nothing said, so the prop is drawn as imported.
-            }
-            else if (!float.TryParse(
-                rest.Substring(star + 1), NumberStyles.Float, CultureInfo.InvariantCulture, out size))
-            {
-                faults.Add(
-                    where + ": beside prop '" + spec + "' — the size after '" + Size + "' is not a "
-                    + "number, as in '" + Size + "0.5'.");
-            }
-            else if (size <= 0f)
-            {
-                faults.Add(
-                    where + ": beside prop '" + spec + "' is drawn at " + size + ", which is a prop that "
-                    + "never appeared.");
+                if (!float.TryParse(
+                        rest.Substring(star + 1),
+                        NumberStyles.Float,
+                        CultureInfo.InvariantCulture,
+                        out size))
+                {
+                    faults.Add(
+                        where + ": beside prop '" + spec + "' — the size after '" + Size + "' is not "
+                        + "a number, as in '" + Size + "0.5'.");
+                }
+                else if (size <= 0f)
+                {
+                    faults.Add(
+                        where + ": beside prop '" + spec + "' is drawn at " + size + ", which is a "
+                        + "prop that never appeared.");
+                }
             }
 
             string path = ArtRoot + relative;

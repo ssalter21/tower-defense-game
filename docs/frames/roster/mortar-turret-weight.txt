@@ -44,7 +44,7 @@ one is decidable from a played frame.
 
 ```powershell
 ./tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt -Width 700
-./tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt -Width 28
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-mortar-turret-weight.txt -Width 28 -SheetTile 28
 ./tools/capture-rung-candidates.ps1 -Only mortar-turret-1.25,mortar-turret-1.50,mortar-turret-1.75,mortar-turret-2.00
 ```
 

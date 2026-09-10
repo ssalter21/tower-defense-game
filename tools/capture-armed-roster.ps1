@@ -57,6 +57,7 @@ param(
     [string]$OutDir,
     [string]$SetFile,
     [int]$Width = 700,
+    [int]$SheetTile = 0,
     [int]$Strip = 1,
     [string]$LogFile = "$PSScriptRoot\..\capture-armed-roster.log"
 )
@@ -94,6 +95,18 @@ $unityArgs = @(
 )
 
 $unityArgs += @('-rosterOutDir', "`"$OutDir`"")
+
+# -SheetTile SIZES THE CONTACT SHEET, WHICH -Width DOES NOT. -Width sizes the
+# per-candidate PNGs; the sheet grabbed its own tiles at a hard-coded 260, so a
+# set drawn at -Width 28 -- the size the built player gives a body, which is how
+# issue #270 says a candidate has to be read -- came back with a contact sheet
+# byte-identical to the magnified one. Four such files were committed under
+# issue #281 before anybody compared the two sheets to each other.
+#
+# Passed only when asked for, so every sheet committed before this argument
+# existed still regenerates byte-for-byte from the command its own sidecar
+# names.
+if ($SheetTile -gt 0) { $unityArgs += @('-rosterSheetTile', $SheetTile) }
 
 if ($Strip -gt 1) { $unityArgs += @('-rosterStrip', $Strip) }
 

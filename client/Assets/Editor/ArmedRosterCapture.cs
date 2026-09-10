@@ -78,13 +78,36 @@ namespace View.Editor
         /// </remarks>
         private const int SheetColumns = 6;
 
-        /// <summary>How wide one tile of that sheet is, in pixels.</summary>
+        /// <summary>How wide one tile of that sheet is by default, in pixels.</summary>
         /// <remarks>
         /// Rendered at this size rather than resampled down from the full
         /// frame: the camera is already standing where it needs to, so a second
         /// grab is cheaper than a filter and sharper than one.
         /// </remarks>
-        private const int SheetTileWidth = 260;
+        private const int DefaultSheetTileWidth = 260;
+
+        /// <summary>
+        /// How wide one tile of the contact sheet is drawn, when the default is
+        /// not what is wanted.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Because <see cref="WidthArgument"/> never reached the sheet.</b>
+        /// It sizes the per-candidate PNGs, and the sheet grabbed its own tiles
+        /// at a hard-coded 260 — so a set drawn at <c>-Width 28</c> to see it at
+        /// the size the built player gives a body produced a contact sheet
+        /// byte-identical to the magnified one. Four such files were committed
+        /// under issue #281 before the spec review noticed that eight names
+        /// held four pictures.
+        /// </para>
+        /// <para>
+        /// A separate argument rather than following
+        /// <see cref="WidthArgument"/>, so every sheet committed before this
+        /// existed still regenerates byte-for-byte from the command its own
+        /// sidecar names.
+        /// </para>
+        /// </remarks>
+        private const string SheetTileArgument = "-rosterSheetTile";
 
         /// <summary>
         /// How far through its clip a candidate is posed, in [0,1].
@@ -125,6 +148,8 @@ namespace View.Editor
             string setFile = BatchArguments.Value(SetArgument);
             int width = ParseInt(BatchArguments.Value(WidthArgument), 700);
             int stripFrames = Mathf.Clamp(ParseInt(BatchArguments.Value(StripArgument), 1), 1, 60);
+            int sheetTile = Mathf.Max(
+                1, ParseInt(BatchArguments.Value(SheetTileArgument), DefaultSheetTileWidth));
             int height = Mathf.Max(1, Mathf.RoundToInt(width / FrameAspect));
 
             // Read and resolve the whole set BEFORE the first render. A set of
@@ -154,7 +179,7 @@ namespace View.Editor
                 {
                     DrawSet(
                         host.transform, camera, candidates, setFile, outDir, width, height,
-                        stripFrames, written);
+                        sheetTile, stripFrames, written);
                 }
             }
             finally
@@ -234,6 +259,7 @@ namespace View.Editor
             string outDir,
             int width,
             int height,
+            int sheetTile,
             int stripFrames,
             List<string> written)
         {
@@ -245,7 +271,7 @@ namespace View.Editor
             // reaches the picture.
             UnitType standIn = FirstTower();
 
-            int tileHeight = Mathf.Max(1, Mathf.RoundToInt(SheetTileWidth / FrameAspect));
+            int tileHeight = Mathf.Max(1, Mathf.RoundToInt(sheetTile / FrameAspect));
             var tiles = new List<Texture2D>(candidates.Count);
             var manifest = new List<string>(candidates.Count);
             var strips = new List<string>(candidates.Count);
@@ -285,7 +311,7 @@ namespace View.Editor
                         Write(path, Grab(camera, width, height));
                         written.Add(path);
 
-                        tiles.Add(Grab(camera, SheetTileWidth, tileHeight));
+                        tiles.Add(Grab(camera, sheetTile, tileHeight));
                     }
                     finally
                     {
@@ -340,7 +366,7 @@ namespace View.Editor
                 }
 
                 string sheet = Path.Combine(outDir, "candidates-sheet.png");
-                Write(sheet, Stitch(tiles, SheetTileWidth, tileHeight));
+                Write(sheet, Stitch(tiles, sheetTile, tileHeight));
                 written.Add(sheet);
             }
             finally

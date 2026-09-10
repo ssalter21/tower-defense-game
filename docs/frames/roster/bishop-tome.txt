@@ -50,7 +50,7 @@ the ground lies flat and dark, where the Consecration's font and the Blessing's 
 
 ```powershell
 ./tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt -Width 700
-./tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt -Width 28
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt -Width 28 -SheetTile 28
 ./tools/capture-rung-candidates.ps1 -Only bishop-tome-off-hand,bishop-tome-off-hand-anchored,bishop-tome-beside,bishop-mace-off-hand
 ```
 

@@ -67,8 +67,6 @@ param(
     [string]$CandidateDir,
     [string]$OutDir,
     [string[]]$Only,
-    [switch]$WideOnly,
-    [switch]$CloseOnly,
     [switch]$BaselineOnly
 )
 
@@ -117,8 +115,8 @@ $defense = 'docs/frames/underserved-rungs.txt'
 $propTicks = '200,320'
 $shotTicks = '311,313,320,340'
 
-# candidate -> which ticks, and how far the close frame stands back. A Close of
-# zero draws no close frame at all.
+# candidate -> which ticks it is drawn at. There is no second framing here and
+# no switch for one: see WIDE ONLY above.
 $plan = [ordered]@{
     # ---------------------------------------------------------------
     # The Mortar: what "a heavier turret_base" can mean
@@ -132,10 +130,10 @@ $plan = [ordered]@{
     # THE CLOSE FRAME EARNS ITS PLACE HERE, unlike on most of #280's bracket:
     # what is being compared is the SIZE of a solid object standing on the
     # ground, which is the one thing magnification shows honestly.
-    'mortar-turret-1.25' = @{ Ticks = $propTicks; Close = 0 }
-    'mortar-turret-1.50' = @{ Ticks = $propTicks; Close = 0 }
-    'mortar-turret-1.75' = @{ Ticks = $propTicks; Close = 0 }
-    'mortar-turret-2.00' = @{ Ticks = $propTicks; Close = 0 }
+    'mortar-turret-1.25' = @{ Ticks = $propTicks }
+    'mortar-turret-1.50' = @{ Ticks = $propTicks }
+    'mortar-turret-1.75' = @{ Ticks = $propTicks }
+    'mortar-turret-2.00' = @{ Ticks = $propTicks }
 
     # ---------------------------------------------------------------
     # The Artificer: a second prop, or the other prop
@@ -145,8 +143,8 @@ $plan = [ordered]@{
     # the shell leaves from, so it takes the shot ticks -- a crate is 0.46 m
     # tall against the turret's 0.77 m muzzle, and the only way to see that is a
     # shell leaving one.
-    'artificer-turret-and-crate' = @{ Ticks = $propTicks; Close = 0 }
-    'artificer-crate-only'       = @{ Ticks = $shotTicks; Close = 0 }
+    'artificer-turret-and-crate' = @{ Ticks = $propTicks }
+    'artificer-crate-only'       = @{ Ticks = $shotTicks }
 
     # ---------------------------------------------------------------
     # The Bishop: where the tome goes, and what the bolt leaves
@@ -156,10 +154,10 @@ $plan = [ordered]@{
     # shot ticks rather than the prop ones even though two of them are also
     # about where a prop sits. A frame with no bolt in it cannot say which of
     # these four answers the thing they were all written about.
-    'bishop-tome-off-hand'          = @{ Ticks = $shotTicks; Close = 0 }
-    'bishop-tome-off-hand-anchored' = @{ Ticks = $shotTicks; Close = 0 }
-    'bishop-tome-beside'            = @{ Ticks = $shotTicks; Close = 0 }
-    'bishop-mace-off-hand'          = @{ Ticks = $shotTicks; Close = 0 }
+    'bishop-tome-off-hand'          = @{ Ticks = $shotTicks }
+    'bishop-tome-off-hand-anchored' = @{ Ticks = $shotTicks }
+    'bishop-tome-beside'            = @{ Ticks = $shotTicks }
+    'bishop-mace-off-hand'          = @{ Ticks = $shotTicks }
 }
 
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -174,32 +172,25 @@ $failed = @()
 # changed something from one whose file was misspelt -- which is the failure
 # this whole route is built to avoid. Its frames are named after the defense
 # rather than after a candidate, which is capture-match-frames.ps1's own rule.
-$baselines = @(
-    # DEDUPED, AND IT HAS TO BE. The two tick sets share 320, and asking the
-    # capture for one tick twice makes it write the NEXT one instead -- the
-    # first run of this left a stray underserved-rungs-tick-0321.png that no
-    # candidate had a partner for, because the view is already past 320 when the
-    # second request arrives.
-    @{ Suffix = 'played'; Distance = 0; Width = 1600
-       Ticks = (($propTicks + ',' + $shotTicks) -split ',' | Sort-Object { [int]$_ } -Unique) -join ',' }
-)
+# DEDUPED, AND IT HAS TO BE. The two tick sets share 320, and asking the capture
+# for one tick twice makes it write the NEXT one instead -- the first run of this
+# left a stray underserved-rungs-tick-0321.png that no candidate had a partner
+# for, because the view is already past 320 when the second request arrives.
+$baselineTicks =
+    (($propTicks + ',' + $shotTicks) -split ',' | Sort-Object { [int]$_ } -Unique) -join ','
 
-foreach ($framing in $baselines) {
-    if ($CloseOnly) { continue }
+$played = Join-Path $OutDir 'played'
+New-Item -ItemType Directory -Force -Path $played | Out-Null
 
-    $into = Join-Path $OutDir $framing.Suffix
-    New-Item -ItemType Directory -Force -Path $into | Out-Null
+Write-Host ""
+Write-Host "=== baseline ===" -ForegroundColor Cyan
 
-    Write-Host ""
-    Write-Host "=== baseline ($($framing.Suffix), distance $($framing.Distance)) ===" -ForegroundColor Cyan
+& $capture -Unity $Unity -OutDir $played -Defense (Join-Path $repoRoot $defense) `
+    -Ticks $baselineTicks -Width 1600 -LogFile $logFile
 
-    & $capture -Unity $Unity -OutDir $into -Defense (Join-Path $repoRoot $defense) `
-        -Ticks $framing.Ticks -Width $framing.Width -Distance $framing.Distance -LogFile $logFile
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "  FAILED with $LASTEXITCODE" -ForegroundColor Red
-        $failed += "baseline/$($framing.Suffix)"
-    }
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "  FAILED with $LASTEXITCODE" -ForegroundColor Red
+    $failed += 'baseline'
 }
 
 if (-not $BaselineOnly) {
@@ -210,30 +201,16 @@ if (-not $BaselineOnly) {
 
         if (-not (Test-Path $file)) { throw "No candidate art at $file" }
 
-        $entry = $plan[$name]
+        Write-Host ""
+        Write-Host "=== $name ===" -ForegroundColor Cyan
 
-        $framings = @()
-        if (-not $CloseOnly) { $framings += @{ Suffix = 'played'; Distance = 0; Width = 1600 } }
-        if ((-not $WideOnly) -and $entry.Close -gt 0) {
-            $framings += @{ Suffix = 'close'; Distance = $entry.Close; Width = 1600 }
-        }
+        & $capture -Unity $Unity -OutDir $played -Art $file `
+            -Defense (Join-Path $repoRoot $defense) `
+            -Ticks $plan[$name].Ticks -Width 1600 -LogFile $logFile
 
-        foreach ($framing in $framings) {
-            $into = Join-Path $OutDir $framing.Suffix
-            New-Item -ItemType Directory -Force -Path $into | Out-Null
-
-            Write-Host ""
-            Write-Host "=== $name ($($framing.Suffix), distance $($framing.Distance)) ===" -ForegroundColor Cyan
-
-            & $capture -Unity $Unity -OutDir $into -Art $file `
-                -Defense (Join-Path $repoRoot $defense) `
-                -Ticks $entry.Ticks -Width $framing.Width -Distance $framing.Distance `
-                -LogFile $logFile
-
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "  FAILED with $LASTEXITCODE" -ForegroundColor Red
-                $failed += "$name/$($framing.Suffix)"
-            }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  FAILED with $LASTEXITCODE" -ForegroundColor Red
+            $failed += $name
         }
     }
 }

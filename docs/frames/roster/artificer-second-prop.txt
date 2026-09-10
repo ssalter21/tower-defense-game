@@ -47,7 +47,7 @@ committed `artificer-crate-only` frames are the muzzle resolving.
 
 ```powershell
 ./tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt -Width 700
-./tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt -Width 28
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt -Width 28 -SheetTile 28
 ./tools/capture-rung-candidates.ps1 -Only artificer-turret-and-crate,artificer-crate-only
 ```
 

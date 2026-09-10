@@ -277,29 +277,32 @@ namespace View.Editor
                 // with no sides and shows the background through every step.
                 root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
 
-                EffectLookFile candidate = string.IsNullOrWhiteSpace(effects)
+                EffectLookFile effectCandidate = string.IsNullOrWhiteSpace(effects)
                     ? null
                     : EffectLookFile.Read(effects);
 
-                if (candidate != null)
+                if (effectCandidate != null)
                 {
                     Debug.Log(
-                        "MatchFrameCapture: candidate '" + candidate.Label + "' stands in front of "
-                        + candidate.Look.OverriddenCount + " members and moves "
-                        + (candidate.Bubbles.Count + candidate.Shots.Count) + " shapes -- "
-                        + candidate.Question);
+                        "MatchFrameCapture: effect candidate '" + effectCandidate.Label
+                        + "' stands in front of " + effectCandidate.Look.OverriddenCount
+                        + " members and moves "
+                        + (effectCandidate.Bubbles.Count + effectCandidate.Shots.Count)
+                        + " shapes -- " + effectCandidate.Question);
                 }
 
-                UnitArtFile looks = string.IsNullOrWhiteSpace(art) ? null : UnitArtFile.Read(art);
+                UnitArtFile artCandidate =
+                    string.IsNullOrWhiteSpace(art) ? null : UnitArtFile.Read(art);
 
-                if (looks != null)
+                if (artCandidate != null)
                 {
                     Debug.Log(
-                        "MatchFrameCapture: candidate art '" + looks.Label + "' moves "
-                        + looks.Changes.Count + " row(s) -- " + looks.Question);
+                        "MatchFrameCapture: art candidate '" + artCandidate.Label + "' moves "
+                        + artCandidate.Changes.Count + " row(s) -- " + artCandidate.Question);
                 }
 
-                MatchView view = BeginMatch(root, record, units, defense, wave, candidate, looks);
+                MatchView view = BeginMatch(
+                    root, record, units, defense, wave, effectCandidate, artCandidate);
 
                 Camera camera = root.CameraRig.Camera;
                 camera.backgroundColor = SceneFraming.BackgroundColor;
@@ -425,11 +428,11 @@ namespace View.Editor
             string units,
             string defense,
             string wave,
-            EffectLookFile candidate,
-            UnitArtFile looks)
+            EffectLookFile effectCandidate,
+            UnitArtFile artCandidate)
         {
             Ruleset rules = StreamingContent.ReadRuleset();
-            EffectLook look = candidate?.Look;
+            EffectLook look = effectCandidate?.Look;
 
             if (string.IsNullOrWhiteSpace(units)
                 && string.IsNullOrWhiteSpace(defense)
@@ -445,7 +448,7 @@ namespace View.Editor
                 // argument only the other overload takes -- so it plays the
                 // four things a match is made of straight out of the record
                 // instead, which is exactly what a fixture roster already does.
-                return candidate == null && looks == null
+                return effectCandidate == null && artCandidate == null
                     ? root.BeginMatch(shipped, rules, record, art: LoadArt())
                     : root.BeginMatch(
                         shipped,
@@ -453,7 +456,7 @@ namespace View.Editor
                         record.Ghost.ToLayout(shipped),
                         record.Wave.ToScript(shipped),
                         record.Seed,
-                        ArtFor(candidate, looks),
+                        ArtFor(effectCandidate, artCandidate),
                         look);
             }
 
@@ -470,7 +473,8 @@ namespace View.Editor
                 : WaveScript.ParseUtf8(wave, Read(wave, WaveArgument, "wave"), types);
 
             return root.BeginMatch(
-                types, rules, layout, script, record.Seed, ArtFor(candidate, looks), look);
+                types, rules, layout, script, record.Seed,
+                ArtFor(effectCandidate, artCandidate), look);
         }
 
         /// <summary>
@@ -483,12 +487,13 @@ namespace View.Editor
         /// other way round would let a shape resolve against a prop the frame
         /// does not draw.
         /// </remarks>
-        private static MatchArt ArtFor(EffectLookFile candidate, UnitArtFile looks)
+        private static MatchArt ArtFor(
+            EffectLookFile effectCandidate, UnitArtFile artCandidate)
         {
             MatchArt art = LoadArt();
 
-            if (candidate != null) art = candidate.Applied(art);
-            if (looks != null) art = looks.Applied(art);
+            if (effectCandidate != null) art = effectCandidate.Applied(art);
+            if (artCandidate != null) art = artCandidate.Applied(art);
 
             return art;
         }

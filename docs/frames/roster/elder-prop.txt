@@ -50,7 +50,7 @@ part of what is being looked at rather than a fault in the render.
 
 ```powershell
 ./tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt -Width 700
-./tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt -Width 28
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt -Width 28 -SheetTile 28
 ```
 
 **It draws no board, no roster row and no price**, which is why `check-docs.ps1` exempts it.
