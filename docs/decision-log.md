@@ -2292,5 +2292,7 @@ records rather than one tick at a time.
 
 ### What the numbers came to
 
-`dotnet test sim.tests` **905 of 905**, `check-docs.ps1` green on every claim, the headless verify agreeing
-with all four regenerated artefacts, and the streaming copy back in sync.
+`dotnet test sim.tests` **905 of 905**, EditMode **138 of 138**, PlayMode **172 of 172** -- neither of the
+last two runs anywhere but here, and nothing had compiled the two branches' engine-side code together until
+this ran. `check-docs.ps1` green on every claim, the headless verify agreeing with all four regenerated
+artefacts, the streaming copy back in sync, and the determinism matrix green on all six rows.
