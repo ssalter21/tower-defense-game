@@ -2236,3 +2236,61 @@ Moving one number in `content/units.txt` moves the content hash, so `content/mat
 ### What the numbers came to
 
 `dotnet test sim.tests` **905 of 905**, EditMode **120 of 120**, PlayMode **167 of 167** -- one more than before, being the footprint assertion. Forty-four candidate frames and nineteen committed frames redrawn under the signed look.
+---
+
+## 10 September 2026, integrating again — the collision rule turns out not to be about ADR numbers
+
+The roster branch met `main` a second time, and the thing that collided was not a record number.
+
+### Both branches minted simulation version 11
+
+`main` took 10 to 11 for the half step. The roster branch took 10 to 11, 12 and 13 for #267, #268 and #269.
+Neither could see the other, which is the same shape as [6 September's ADR
+collision](#the-branch-and-main-both-minted-adr-0058) one seam over.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| The branch's three versions | 11 becomes, 12 raises, 13 bounty | **12, 13 and 14.** The branch renumbers and `main` keeps 11. |
+| `SimulationVersion.Current` | 13 here, 11 there | **14** — the merged build is neither, and every record made under either is retired |
+
+**The rule written for ADR numbers is the rule, and it was not rewritten to fit.** *`main` is where a number
+becomes public.* Nothing about it was specific to `docs/adr/`, and applying it to a version constant took no
+amendment — which is the useful thing to know about it, and the reason this entry is four lines rather than a
+second ruling.
+
+**What renumbering costs here that it did not cost there, and it is written into the table rather than
+here.** An ADR keeps saying what it said under a new number. A `BehaviourByVersion` row is a *measurement*, and
+no build on this line was ever version 12 or 13 — the three rules arrive together, on top of the half step, in
+one merge. So those two fingerprints are kept as what the branch's builds folded to and are labelled as that,
+rather than being recomputed into numbers no build ever produced. Only the row for `Current` is asserted, and
+that one was read off the merged build.
+
+### Four assertions moved that neither branch touched, and every one is the board
+
+The merged simulation leaks **8 of 40** and ends on **tick 5439**, against the branch's 3 and 5302 and main's
+18 and 5758. Downstream of that, four tests went red in files that never conflicted. None was retuned green.
+
+- **A version-1 bundle tells the level plane apart again.** Flat leaks four where the committed board leaks
+  eight — and the *sign* is the finding. Height used to be the towers' advantage; the regraded board is one
+  the hand-placed six cannot reach across, so folding it flat now **helps** the defense. The assertion said in
+  its own comment that the two would part again when the match moved. They did.
+- **The canned pool opens one tower up.** Both branches had moved this line for opposite reasons — a dearer
+  candidate list prices the opening purchase out, a landscape hands it somewhere to go — so the count is read
+  off the merged run rather than argued from either half.
+- **The build bot buys eight different roots where it bought six.** The barbarian and the paladin are route
+  the flat map never left open.
+- **Every gold-share reading moved and not one row changed list.** Which is exactly why the lists are what is
+  written down and the readings are not.
+
+### The pictures again, and this time they are genuinely different
+
+`content/map.txt` is one of the four files the drawn-content stamp digests, so main's regrade aged twenty
+committed pictures. Unlike September's twenty-two — which came back byte-identical, because only a comment had
+moved — these are photographs of a board that no longer exists, and all twenty came back changed. Three chrome
+sheets, seven match frames and ten effect candidates, each re-captured with the tick list its own README
+records rather than one tick at a time.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, `check-docs.ps1` green on every claim, the headless verify agreeing
+with all four regenerated artefacts, and the streaming copy back in sync.
