@@ -158,8 +158,9 @@ Three facts, measured. The evidence is in
   [`docs/decision-log.md`](docs/decision-log.md) every reversal.
 - [`docs/roster.md`](docs/roster.md) — the design side of `content/units.txt`: what each unit is for and what
   about it is still unsigned.
-- [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. Source comments say *what* the code does; the
-  reasoning lives here.
+- [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. **The source carries no comments** — the code
+  says what it does through its names — so everything a comment would have held lives here, in the commit
+  message, or on the ticket.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
 - [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the effort review
   boundary, and how blocking, claiming and closing a ticket are done here.
