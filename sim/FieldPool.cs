@@ -104,6 +104,13 @@ namespace Sim
         /// </summary>
         private const int NothingDealt = 0;
 
+        /// <summary>
+        /// The bounty a round of the canned stand-in is closed on. Nothing here
+        /// plays a match, so nothing was killed in front of the wall being
+        /// built and there is nothing to be paid for.
+        /// </summary>
+        private const int NothingEarned = 0;
+
         private static readonly RoundOrders[] Nobody = new RoundOrders[0];
 
         private readonly RoundOrders[][] _standIn;
@@ -378,8 +385,15 @@ namespace Sim
             Board board = Standing(defense);
             Purse purse = Purse.Holding(rules.StartingPurseGold);
 
+            // The stand-in is handed the same grant schedule a run is, so the
+            // wall a growing wave is measured against climbs to the top of a
+            // line on the rounds a player's does. A second schedule here would
+            // be an opponent written to be weak.
+            int tokens = 0;
+
             for (int round = 0; round < recorded.Length; round++)
             {
+                tokens += Run.CapstoneTokensGrantedAt(round + 1);
                 // The share the wall may spend, taken out of the purse before
                 // the wall is offered it: what is left of the round's gold is
                 // the offensive share, and the authored wave is what that share
@@ -392,12 +406,14 @@ namespace Sim
                 // this round built.
                 Build built = BuildPhase
                     .Of()
-                    .With(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse, only))
-                    .Resolve(round + 1, WaveScript.Nothing, ladder, share, costs, types, map, board);
+                    .With(CoverThenUpgradeBot.Decide(map, types, costs, ladder, board, purse, tokens, only))
+                    .Resolve(
+                        round + 1, WaveScript.Nothing, ladder, share, tokens, costs, types, map, board);
 
                 board = built.Board;
+                tokens -= built.CapstoneTokensSpent;
                 recorded[round] = new[] { RoundOrders.Of(board.Layout(), Grown(wave, round + 1)) };
-                purse = built.Purse.CloseWave(rules, NothingDealt).Purse;
+                purse = built.Purse.CloseWave(rules, NothingDealt, NothingEarned).Purse;
             }
 
             return OfRounds(recorded);

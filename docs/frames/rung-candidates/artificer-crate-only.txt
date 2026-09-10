@@ -1,0 +1,28 @@
+# The crate in the turret's place, and the shell leaving the crate.
+#
+# THE QUESTION. The third of the three things that could answer the Artificer's
+# missing prop: give the socket to the crate and re-anchor the muzzle onto it.
+# Issue #281.
+#
+# THIS IS THE ONE CANDIDATE A SHEET CANNOT SHOW. A candidate sheet is a still
+# of a posed character and carries no shell, so where the shell leaves from is
+# invisible on it. The tile on
+# docs/frames/roster/artificer-second-prop-sheet.png shows the crate standing
+# there; only a frame of the real match shows what comes out of it.
+#
+# WHAT TO LOOK AT. The shell leaves ammo_crate's own top rather than
+# turret_base's, so it starts 0.46 m up instead of 0.77 m -- and the Artificer
+# then fires from a box on the floor while the Engineer below him and the
+# Mortar above him both fire from a turret. Whether that reads as a rung or as
+# a regression is the eye check.
+#
+# IT ALSO BREAKS THE LINE'S IDENTITY ON PURPOSE, so the sitting can see the
+# cost: roster.md calls the turret "the machine that stands beside the Engineer
+# and does the firing" at every rung, and this is the only candidate of the
+# three that takes it away.
+
+label     the crate in the turret's place, muzzle re-anchored
+question  whether the Artificer can be told apart by swapping the prop rather than adding one
+
+beside  36  Kaykit/adventurers/ammo_crate.fbx*1
+anchor  36  tip-of ammo_crate 0,1,0

@@ -243,5 +243,63 @@ namespace Tests.EditMode
 
             Assert.Throws<InvalidOperationException>(pool.BeginSync);
         }
+
+        /// <summary>
+        /// A body that changes what it is keeps its id and gives up its view.
+        /// The Cursed Villager becomes the Werewolf, so a creep's variant is its
+        /// unit type and its unit type can move — and this used to throw.
+        /// </summary>
+        [Test]
+        public void AnIdThatComesBackAsAnotherVariantIsDrawnByAnotherView()
+        {
+            EntityViewPool<Transform> pool = Pool();
+
+            pool.BeginSync();
+            Transform villager = pool.Claim(1, variant: 47);
+            pool.EndSync();
+
+            pool.BeginSync();
+            Transform werewolf = pool.Claim(1, variant: 48);
+            pool.EndSync();
+
+            Assert.That(werewolf, Is.Not.SameAs(villager), "the body is still being drawn as what it was");
+            Assert.That(pool.LiveCount, Is.EqualTo(1), "one body is being drawn twice");
+            Assert.That(pool.EverCreated, Is.EqualTo(2), "a Werewolf was drawn with a Villager's view");
+
+            // The view it gave up is idle rather than lost, so the next body of
+            // that row reuses it instead of building one.
+            pool.BeginSync();
+            Transform another = pool.Claim(2, variant: 47);
+            pool.Claim(1, variant: 48);
+            pool.EndSync();
+
+            Assert.That(another, Is.SameAs(villager), "the view a transformed body gave up was thrown away");
+            Assert.That(pool.EverCreated, Is.EqualTo(2));
+        }
+
+        /// <summary>
+        /// And the view it gives up is on its stack in time for the rest of the
+        /// same sync to take it, which is what a column of bodies transforming
+        /// while another one spawns behind them looks like.
+        /// </summary>
+        [Test]
+        public void TheViewAChangedBodyGivesUpIsAvailableInsideTheSameSync()
+        {
+            EntityViewPool<Transform> pool = Pool();
+
+            pool.BeginSync();
+            Transform villager = pool.Claim(1, variant: 47);
+            pool.EndSync();
+
+            pool.BeginSync();
+            pool.Claim(1, variant: 48);
+            Transform arriving = pool.Claim(2, variant: 47);
+            pool.EndSync();
+
+            Assert.That(arriving, Is.SameAs(villager), "the view was not free until the sync ended");
+            Assert.That(pool.LiveCount, Is.EqualTo(2));
+            Assert.That(pool.IdleCount, Is.EqualTo(0));
+            Assert.That(pool.EverCreated, Is.EqualTo(2), "a third view was built for two bodies");
+        }
     }
 }

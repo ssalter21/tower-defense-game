@@ -38,10 +38,23 @@ public class BuildPhaseTests
     private const int Minion = 1;
 
     /// <summary>
-    /// The committed ranger: the target of the one edge <c>content/upgrades.txt</c>
-    /// carries, so the one row on the roster that may not be placed outright.
+    /// The committed ranger: the target of a gold-priced edge of
+    /// <c>content/upgrades.txt</c>, so a row that may not be placed outright and
+    /// is climbed by paying its own price.
     /// </summary>
     private const int Ranger = 14;
+
+    /// <summary>
+    /// The committed overwatch: the target of the ranger's capstone edge, so the
+    /// row that is climbed with a token and no gold.
+    /// </summary>
+    private const int Overwatch = 31;
+
+    /// <summary>What a round holds where the assertion is about gold and never about a token.</summary>
+    private const int NoTokens = 0;
+
+    /// <summary>One capstone token: what a capstone edge costs, and all a grant round hands out.</summary>
+    private const int OneToken = 1;
 
     /// <summary>A ground cell of the committed map that these assertions leave empty.</summary>
     private const int FreeColumn = 0;
@@ -962,6 +975,136 @@ public class BuildPhaseTests
     }
 
     [Fact]
+    public void A_capstone_costs_one_capstone_token_and_no_gold()
+    {
+        // The top of a line is the one rung gold does not buy. The archer and
+        // the ranger are charged in full and the overwatch above them is charged
+        // nothing at all, out of a purse holding exactly the two below it -- so
+        // the assertion is that the third action moved the token and left the
+        // gold alone, rather than that some total happened to come out right.
+        //
+        // OBSERVED: charge a capstone the target row's price as well as the
+        // token -- delete the early return from BuildPhase.Applied's token
+        // branch and fall through to the gold. The resolve throws instead of
+        // returning: 60 gold out of a purse holding nothing, which is the
+        // overwatch's own cost column being billed for a rung nothing bills.
+        Run run = TheBuild.Fresh();
+        int archer = run.Costs.PriceOf(Purchase.Unit(Archer));
+        int ranger = run.Costs.PriceOf(Purchase.Unit(Ranger));
+
+        Assert.True(
+            run.Ladder.IsCapstoneEdge(Ranger, Overwatch),
+            "The committed ladder does not price the ranger's capstone in tokens.");
+        Assert.False(
+            run.Ladder.IsCapstoneEdge(Archer, Ranger),
+            "The committed ladder prices the ranger itself in tokens.");
+
+        BuildPhase toTheTop = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Overwatch, FreeColumn, FreeRow));
+
+        Build climbed = Resolved(run, toTheTop, archer + ranger, tokens: OneToken);
+
+        Assert.Equal(archer + ranger, climbed.Spent);
+        Assert.Equal(archer + ranger, climbed.Defense);
+        Assert.Equal(OneToken, climbed.CapstoneTokensSpent);
+        Assert.Equal(0, climbed.Purse.Gold);
+        Assert.Equal(
+            Overwatch,
+            climbed.Board.Placements.First(
+                placement => placement.Column == FreeColumn && placement.Row == FreeRow).Type.Id);
+
+        // The token is not gold and is never added to it. What the phase spent
+        // is the two gold rungs, and a run reading Spent to work out what is
+        // left in its purse gets the right number.
+        //
+        // OBSERVED: add the tokens spent into the Spent total in
+        // BuildPhase.Resolve. This clause goes red, 81 against 80, and every
+        // report that folds Spent starts counting a currency the purse never
+        // held.
+        Assert.Equal(60, run.Costs.PriceOf(Purchase.Unit(Overwatch)));
+        Assert.NotEqual(archer + ranger + OneToken, climbed.Spent);
+    }
+
+    [Fact]
+    public void A_capstone_bought_with_no_capstone_token_is_refused()
+    {
+        // The token is refused the way the gold is: at the decision, by name,
+        // and never by quietly dropping the action. A round with every gold
+        // piece it could want and no token cannot reach the top of a line, which
+        // is the whole of what makes three tokens against nine capstones a
+        // choice.
+        //
+        // OBSERVED: spend a token the round does not hold -- drop the
+        // `tokens < OneCapstone` guard from BuildPhase.Applied. The refusal goes
+        // red having caught nothing, the overwatch is climbed for free at wave
+        // one, and every capstone on the board is reachable in the opening
+        // round.
+        Run run = TheBuild.Fresh();
+
+        BuildPhase toTheTop = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Overwatch, FreeColumn, FreeRow));
+
+        SimulationException refused = Assert.Throws<SimulationException>(
+            () => Resolved(run, toTheTop, 1000, tokens: NoTokens));
+
+        Assert.Contains(
+            "A build phase at wave 1 upgrades at column 0, row 0 into type id "
+            + Overwatch.ToString(CultureInfo.InvariantCulture),
+            refused.Message,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "costs a capstone token the round does not hold",
+            refused.Message,
+            StringComparison.Ordinal);
+        Assert.Contains("at rounds 3, 6 and 9", refused.Message, StringComparison.Ordinal);
+
+        // One token buys one capstone and not two. The second is refused where
+        // the first was afforded, out of the same phase, because a phase carries
+        // no credit between its own actions in either currency.
+        //
+        // OBSERVED, on this clause: leave the token count unspent -- return
+        // `tokens` rather than `tokens - OneCapstone` from the token branch.
+        // This goes red having caught nothing, and one token buys every capstone
+        // on the board in a single round.
+        BuildPhase twoTops = BuildPhase
+            .Of()
+            .With(BuildAction.Of(ActionKind.Place, Archer, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Overwatch, FreeColumn, FreeRow))
+            .With(BuildAction.Of(ActionKind.Place, Archer, StandingColumn, StandingRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Ranger, StandingColumn, StandingRow))
+            .With(BuildAction.Of(ActionKind.Upgrade, Overwatch, StandingColumn, StandingRow));
+
+        Assert.Contains(
+            "costs a capstone token the round does not hold",
+            Assert.Throws<SimulationException>(
+                () => Resolved(run, twoTops, 1000, tokens: OneToken)).Message,
+            StringComparison.Ordinal);
+
+        // And a phase handed fewer than none is refused before it acts, on the
+        // rule Purse.Holding is refused by: there is no credit in this economy,
+        // so a count below zero is a capstone somebody was charged for twice
+        // rather than a debt with a spelling.
+        //
+        // OBSERVED, on this clause: drop the guard at the top of
+        // BuildPhase.Resolve. Nothing goes red until a capstone is reached, at
+        // which point the round is refused for holding no token -- which is the
+        // right outcome by accident and says nothing about where the wrong
+        // number came from.
+        Assert.Contains(
+            "was handed -1 capstone tokens",
+            Assert.Throws<SimulationException>(
+                () => Resolved(run, TheBuild.BuyingNothing(), 1000, tokens: -OneToken)).Message,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_rung_is_climbed_only_from_the_rung_under_it()
     {
         // The other half of #179's acceptance criterion, and the half that was
@@ -1181,12 +1324,14 @@ public class BuildPhaseTests
         return match.Result().RollingStateHash;
     }
 
-    private static Build Resolved(Run run, BuildPhase phase, int gold, Board? board = null) =>
+    private static Build Resolved(
+        Run run, BuildPhase phase, int gold, Board? board = null, int tokens = NoTokens) =>
         phase.Resolve(
             run.Round + 1,
             run.Carrying,
             run.Ladder,
             Purse.Holding(gold),
+            tokens,
             run.Costs,
             run.Types,
             run.Map,

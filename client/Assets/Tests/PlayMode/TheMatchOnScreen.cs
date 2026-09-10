@@ -76,7 +76,21 @@ namespace Tests.PlayMode
             ulong seed)
         {
             var view = host.AddComponent<MatchView>();
-            view.Begin(map, rules, types, defense, wave, seed, Art());
+
+            // Ground effects are cut at the rim, so a match needs to be told
+            // where the board stops. A fixture builds no floor to ask, so it
+            // works the footprint out of the map through the one function that
+            // knows how -- HexFloorTests asserts that function agrees with the
+            // floor the game actually builds.
+            view.Begin(
+                map,
+                rules,
+                types,
+                defense,
+                wave,
+                seed,
+                Art(),
+                HexGeometry.Footprint(map.Width, map.Height));
 
             return view;
         }

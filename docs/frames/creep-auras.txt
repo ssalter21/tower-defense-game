@@ -1,0 +1,46 @@
+# A FIXTURE WAVE, AND NOT CONTENT. Nothing loads this except
+# tools/capture-match-frames.ps1 -Wave, and nothing about the game is decided
+# here: content/wave.txt is the wave the recorded match is fought against,
+# content/units.txt is the roster, docs/roster.md is the design behind it, and
+# this file exists for one reason only.
+#
+# THAT REASON: the recorded wave releases Minions and Skeleton Scouts, and
+# neither of those two rows carries an aura or a pool. The six rows issue #266
+# is about -- the Skeleton Mage's haste, the Necromancer's ward, the Witch's hex
+# ward, the Frost Wight's frostbite, and the Vampire's and the Grave Robber's
+# pools -- are all live in content/units.txt and none of them is ever sent, so
+# a frame of the recorded match is a frame of none of it happening.
+#
+# IT IS A WAVE AND NOT A ROSTER, which is the whole difference from
+# docs/frames/effects-roster.txt beside it. That file is content/units.txt with
+# two rows edited, so it goes stale the moment the roster moves and the frame
+# beside it goes stale with it. Every row this file sends is the shipped row,
+# with the aura and the pool the shipped table authors on it, so what moving
+# the roster does to these frames is change what they are a picture of rather
+# than make them a picture of nothing.
+#
+# The board, the defense and the seed still come out of content/match.replay,
+# so what is standing is the recorded six towers and what is walking is this.
+#
+# ORDERS ASCEND BY TICK AND THEN BY TYPE ID, which the loader asserts rather
+# than sorts -- the same rule content/wave.txt is held to.
+#
+# ALL SIX ARE RELEASED TOGETHER, so they stand in each other's spheres. Three
+# of the four auras reach friends within two hexes, and a column walking on its
+# own would be one body pulsing at nobody. A count is a column and not a pile:
+# the units of one order come out one every forty-five ticks, which is a rule
+# the simulation owns, so six orders leave a knot of bodies at the entrance and
+# then a thinner stream behind it.
+#
+# The frames this produces are named creep-auras-tick-NNNN.png rather than
+# match-tick-NNNN.png, because a tick of this is a tick of a match nobody can
+# scrub to -- content/landmarks.txt was made from the other one.
+#
+#       tick  type  count  corridor
+
+order   0      7     6      0
+order   0     38     6      0
+order   0     41     4      0
+order   0     43     4      0
+order   0     44     6      0
+order   0     49     4      0

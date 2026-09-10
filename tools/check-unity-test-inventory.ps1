@@ -50,27 +50,31 @@ $declaration = @'
  10  client/Assets/Tests/EditMode/BoardDressingTests.cs
   3  client/Assets/Tests/EditMode/BoardPreviewTests.cs
   5  client/Assets/Tests/EditMode/BoardSceneryTests.cs
- 11  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
+  9  client/Assets/Tests/EditMode/CandidateSetTests.cs
+ 12  client/Assets/Tests/EditMode/EffectLookTests.cs
+  6  client/Assets/Tests/EditMode/EffectMeshTests.cs
+ 13  client/Assets/Tests/EditMode/EntityViewPoolTests.cs
   6  client/Assets/Tests/EditMode/GeneratedProjectFilesTests.cs
- 10  client/Assets/Tests/EditMode/ImportedArtTests.cs
+ 19  client/Assets/Tests/EditMode/ImportedArtTests.cs
   4  client/Assets/Tests/EditMode/MatchContentTests.cs
   4  client/Assets/Tests/EditMode/RoadTilingMeshTests.cs
   3  client/Assets/Tests/EditMode/RosterNamesTests.cs
  10  client/Assets/Tests/EditMode/RoutePathTests.cs
   4  client/Assets/Tests/EditMode/SceneRootTests.cs
+ 13  client/Assets/Tests/EditMode/UnitArtFileTests.cs
   4  client/Assets/Tests/PlayMode/BoardSceneryViewTests.cs
- 17  client/Assets/Tests/PlayMode/BuildingTests.cs
+ 18  client/Assets/Tests/PlayMode/BuildingTests.cs
  11  client/Assets/Tests/PlayMode/CameraRigTests.cs
   2  client/Assets/Tests/PlayMode/ChromeLayoutTests.cs
-  8  client/Assets/Tests/PlayMode/HexFloorTests.cs
+  9  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
   5  client/Assets/Tests/PlayMode/HorizonTests.cs
   2  client/Assets/Tests/PlayMode/LocomotionTests.cs
- 20  client/Assets/Tests/PlayMode/MatchViewTests.cs
+ 40  client/Assets/Tests/PlayMode/MatchViewTests.cs
   2  client/Assets/Tests/PlayMode/ParityRunTests.cs
   4  client/Assets/Tests/PlayMode/PlayableHeadPoisonTests.cs
  10  client/Assets/Tests/PlayMode/PlayablesSamplingTests.cs
-  5  client/Assets/Tests/PlayMode/PlaybackTests.cs
+  6  client/Assets/Tests/PlayMode/PlaybackTests.cs
   3  client/Assets/Tests/PlayMode/PlayfieldRebuildTests.cs
   3  client/Assets/Tests/PlayMode/RealRigSamplingTests.cs
  14  client/Assets/Tests/PlayMode/RunLoopTests.cs

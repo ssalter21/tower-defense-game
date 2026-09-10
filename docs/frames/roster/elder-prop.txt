@@ -1,0 +1,56 @@
+# elder-prop-sheet.png and elder-prop-played-sheet.png
+
+**What they are.** Forty-six tiles: the Elder as he ships, then **every prop his own pack ships** in his
+off hand. Drawn through the real `TowerView` by
+`tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt`, once at `-Width 700` and once at
+`-Width 28`. Issue #281.
+
+**The question.** `docs/roster.md` says tier 2 is **colour plus a prop**, and its own Elder block names
+`druid_texture_alt_A`, no prop, and *"Open — none"*. The row is bound exactly as its block is written,
+so the block and the rule disagree and the Elder is colour and nothing else.
+
+**Nothing was shortlisted, and that is the point.** A shortlist *is* the decision, made quietly, with the
+rejected alternatives never shown — and AGENTS.md rule 6 and this map's own notes put that on the human
+side of the line. So this is every `.fbx` in `Kaykit/adventurers/` minus two mechanical exclusions: the
+six **characters**, which are bodies rather than props; and the thirteen props already bound to another
+line, each listed in the set file with the line that holds it. **A prop two lines share tells no rung
+apart** — that is `roster.md`'s own tier grammar rather than a taste, which is why it can be written down.
+A shotgun in a druid's off hand is a silly picture and it is also the honest edge of the space.
+
+**The measurement is worth more than the pictures, and it retires a third of the sheet.** Against the
+shipped Elder at **sheet magnification** — a body about 400 px tall, not at play size:
+
+| what | tiles | pixels moved | of the tile |
+|---|---|---|---|
+| the 12 potions below `huge`, and the loose crossbow arrow | 13 | 57–473 | 0.009–0.072% |
+| the 4 `huge` potions, both mugs, the smokebomb, the closed spellbook, both bundles | 9 | 1,109–2,916 | 0.17–0.45% |
+| the shields, the crate, the bow arrow | 9 | 5,272–9,151 | 0.81–1.40% |
+| the large mugs, the big shields, the wand, the staff, the swords, the axes, the shotgun, the crossbow | 14 | 28,341–72,478 | 4.3–11.1% |
+
+**Thirteen of the forty-five cannot be told from an empty hand at four hundred pixels**, so they cannot
+possibly be told apart at twenty-four. They are on the sheet because leaving them off would be the sheet
+deciding; they are measured here so nobody has to squint at them.
+
+**Why there are no match frames for this one.** The Elder's question is *which prop*, and the space is
+forty-five of them. Forty-five batchmode runs of the whole match to compare objects that occupy a few
+dozen pixels each is the wrong instrument. The `-Width 28` sheet puts all forty-six up at once at the
+size a body gets at 1600x900, which is what says whether an off-hand prop reads at play size at all.
+**If the sitting picks one, a short bracket belongs in `docs/frames/rung-candidates/`.**
+
+**A beside prop is the other place one could go, and is not here.** The Overgrowth above him already
+stands beside the weirwood; a tier 2 that also stood beside something would be told from tier 3 by which
+object is on the tile, which is thinner than the signal it is meant to fix. If the sitting wants it
+anyway, a beside line spells the same as on `docs/roster-expansion-beside-candidates.txt`.
+
+**Every weapon in this pack is authored for the right hand**, so an off-hand prop hangs untilted — the
+finding `docs/roster-expansion-candidates.txt` recorded about the Fan of Knives' second dagger. That is
+part of what is being looked at rather than a fault in the render.
+
+**Regenerate:**
+
+```powershell
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt -Width 700
+./tools/capture-armed-roster.ps1 -SetFile docs/roster-elder-prop.txt -Width 28 -SheetTile 28
+```
+
+**It draws no board, no roster row and no price**, which is why `check-docs.ps1` exempts it.

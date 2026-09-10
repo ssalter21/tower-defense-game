@@ -1,8 +1,35 @@
 # Roster expansion proposal — 5 September 2026
 
-**Status: proposal. Nothing on this page is decided.** It is written for Sam to review, strike through, and
-write into. Every name is a placeholder until he keeps it; every model is a candidate until he has looked at it;
-every number is a suggestion until it is in `content/units.txt`.
+> ## Status: signed on 5 September 2026, with five changes
+>
+> **Sam reviewed this page in full and took it.** All 23 tower names, all 12 creep names and the id 7 relabel
+> are kept as written; every model is confirmed from a rendered sheet of all 32 candidates. All five reversals
+> in the table below are taken.
+>
+> **[`roster.md`](roster.md) is now the signed record** — every row on this page is there with `status:
+> signed`, its model and props on its `Looks` line, and its numbers on its `Numbers` line. The reasoning for
+> each reversal is in
+> [the decision log](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move).
+> **This page is kept as the argument, not as the record.** Where the two disagree, `roster.md` wins.
+>
+> **The five things the review changed:**
+>
+> | On this page | What was signed |
+> |---|---|
+> | A capstone is bought with a **gate token** | A capstone token, granted at rounds 3, 6 and 9 — but **as a plain currency, not a gate**. No capacity schedule comes back with it |
+> | Tier signal: **texture at 2, model at 3, size where the pack ships neither** | **Size is retired entirely**, including the live Ranger's 1.5. A rung is colour, a prop, or a second model — never size |
+> | The Mage's splash is authored **and the 92 is kept** | The splash is authored; **the price is deferred** until the automated balance sweeps can derive it, rather than kept on the old reasoning |
+> | The Druid's tier 3 is the **`PlantWarrior`** model | **Set aside.** It read as a different creature rather than the same person promoted. The Druid keeps his body and gains a **bare weirwood** beside him — `Tree_Bare_*_Color8`, Forest Nature pack |
+> | The Grave Robber wears **`Hoarder_Backpack`**; the Marksman *may* hold a crossbow | Backpack confirmed and **the sword dropped**; the **crossbow is signed** over the rifle |
+>
+> **The three engine asks were answered too:** the Villager transforms on the **first damage taken** and a
+> lethal first hit produces a full-health Werewolf rather than a corpse; the Necromancer raises every **150
+> ticks with no cap**; the Grave Robber pays **12**. The Cleric's capstone is **Consecration**, with Zeal kept
+> as its named successor and the payload keyword's naming deliberately deferred.
+
+**Written as a proposal.** Below this line the page is unchanged from the version Sam reviewed: every name a
+placeholder, every model a candidate, every number a suggestion. It is left that way on purpose, so the
+argument that was actually put is legible beside the decision that came out of it.
 
 **What it answers.** The build changes direction: the game is to be fun to play *now*, which means breadth —
 as many towers and creeps as the collection supports. Every one of the 61 rigged KayKit characters is

@@ -1,0 +1,90 @@
+# The Knight, Barbarian and Paladin lines as they are now bound, as a set.
+#
+# WHAT THIS IS FOR. docs/roster-expansion-candidates.txt asked whether these
+# characters were the right ones and the answer was yes. This asks the next
+# question: whether the nine rungs read as three lines of three once each row
+# is wearing the atlas, holding the props and playing the clip its binding
+# gives it. A rung is told apart from the rung below it by colour, by a prop or
+# by a second model, and none of those three can be seen on a sheet of one
+# character per model.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-melee-lines.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle and no test reads it.
+# Edit a line, run it again, look again. The one committed copy is
+# docs/frames/roster/melee-lines-sheet.png, under a name the tool does not
+# write, because every candidate run rewrites candidates-sheet.png.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# THIS TRANSCRIBES THE BINDINGS AND DOES NOT DECIDE THEM. Every model, prop and
+# atlas below is the one MatchSceneBuilder and Tests.Fixtures.ChosenArt bind for
+# that row, which is what docs/roster.md signs. A line here that disagrees with
+# those tables is this file being wrong, not the tables.
+#
+# A RUNG CARRIES UP WHAT THE RUNG BELOW IT HELD. A Looks line in roster.md names
+# what CHANGES at that rung, so the Sergeant and the Shield Wall hold the
+# Soldier's sword, the Slam holds the Berserker's axe and the Blessing keeps the
+# Templar's shield in the hand its book does not fill -- none of which those
+# lines repeat. A colour does not carry the same way: it is one of the three
+# things that tell a rung apart, and roster.md gives tier 3 the second model
+# instead wherever one exists, which is why the Slam wears the atlas
+# Barbarian_Large imports with rather than the Berserker's.
+#
+# THE POSE IS THE ONE PLACE THAT IS NOT A TRANSCRIPTION, AND ONLY FOR THE
+# PALADIN. A set line carries one clip and a row carries three, so what is shown
+# is each row's idle -- the clip it stands in between shots, which is the pose a
+# player sees most of. The three Paladin rows have no clips at all:
+# docs/roster.md names one on every rung of the Knight and Barbarian lines and
+# none on any rung of the Paladin's, whose windup and backswing carry that
+# page's `_` for a number nobody has signed, so those rows are bound unposed and
+# stand in their bind pose in the game. A bind pose is not a photograph of
+# anything, so the three lines below are posed in the clips the two candidate
+# sheets already put those two models up in -- Melee_1H_Attack_Chop, Melee_Block
+# and Ranged_Magic_Shoot. Those are framing for this picture and NOT bindings.
+# The ask stands.
+
+# --------------------------------------------------------- the Knight line ---
+
+# Soldier, tier 1: live since #44, and here as the rung the other two are read
+# against. Knight, the sword, the atlas the model imports wearing.
+tower soldier      Characters/Knight.fbx  Weapons/sword_1handed.fbx  -                                    Idle_A
+
+# Sergeant, tier 2: knight_texture_alt_A and shield_square in the off hand. One
+# stat and two changes to the look, which is what a tier 2 is.
+tower sergeant     Characters/Knight.fbx  Weapons/sword_1handed.fbx  Kaykit/adventurers/shield_square.fbx  Idle_A          Kaykit/adventurers/knight_texture_alt_A.png
+
+# Shield Wall, tier 3: knight_texture_alt_B, and the guard up. This line has no
+# second model anywhere in the collection, so the raised shield is the whole of
+# its capstone read -- it is the row's idle and its backswing both.
+tower shield-wall  Characters/Knight.fbx  Weapons/sword_1handed.fbx  Kaykit/adventurers/shield_square.fbx  Melee_Blocking  Kaykit/adventurers/knight_texture_alt_B.png
+
+# ------------------------------------------------------ the Barbarian line ---
+
+# Barbarian, tier 1: the two-handed axe, in the atlas the model imports with.
+tower barbarian    Kaykit/adventurers/Barbarian.fbx        Kaykit/adventurers/axe_2handed.fbx        -  Idle_A                     -
+# Berserker, tier 2: barbarian_texture_alt_A and the bigger axe. The axe is the
+# Large export on a medium body and measures 2.58 m from grip to head, which is
+# the thing to look at on this tile.
+tower berserker    Kaykit/adventurers/Barbarian.fbx        Kaykit/adventurers/axe_2handed_Large.fbx  -  Idle_A                     Kaykit/adventurers/barbarian_texture_alt_A.png
+# Slam, tier 3: the second model, and the only body in the game on the Large
+# rig. Its idle names its bank -- Idle_A is in both rigs and the medium one
+# drives bones this skeleton does not have.
+tower slam         Kaykit/adventurers/Barbarian_Large.fbx  Kaykit/adventurers/axe_2handed_Large.fbx  -  Rig_Large_General/Idle_A
+
+# -------------------------------------------------------- the Paladin line ---
+
+# Paladin, tier 1: bare head and the hammer.
+tower paladin      Kaykit/mystery-monthly-series-4/paladin/Paladin.fbx              Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  -                                                           Melee_1H_Attack_Chop
+# Templar, tier 2: the second model arrives early on this line -- the helmet is
+# the smaller of the two changes it has available -- with the hammer and the
+# shield.
+tower templar      Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_hammer.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Melee_Block
+# Blessing, tier 3: paladin_texture_B, the book open in place of the hammer, the
+# Templar's shield still in the off hand, and the gold statue on the tile beside
+# him at the size it imports at.
+tower blessing     Kaykit/mystery-monthly-series-4/paladin/Paladin_with_Helmet.fbx  Kaykit/mystery-monthly-series-4/paladin/paladin_book.fbx    Kaykit/mystery-monthly-series-4/paladin/paladin_shield.fbx  Ranged_Magic_Shoot    Kaykit/mystery-monthly-series-4/paladin/paladin_texture_B.png  Kaykit/mystery-monthly-series-4/paladin/paladin_statue.fbx*1

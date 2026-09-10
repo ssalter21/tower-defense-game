@@ -41,10 +41,19 @@ namespace Sim
 
     /// <summary>One creep, as of one tick.</summary>
     /// <remarks>
+    /// <para>
     /// Position is <see cref="DistanceAlongPath"/> plus
     /// <see cref="LateralOffset"/> and never a point in a plane. Turning that
     /// into somewhere to stand is the view's job and needs the route, which the
     /// view already has because the map is static data loaded once.
+    /// </para>
+    /// <para>
+    /// <see cref="SpeedMagnitude"/>, <see cref="ArmourMagnitude"/> and
+    /// <see cref="Shield"/> are what is on it: the two percentages in force and
+    /// the pool standing in front of its health. They are state and not a
+    /// moment, which is why they are here rather than on the event stream --
+    /// see <c>docs/adr/0007-snapshot-is-the-only-view-input.md</c>.
+    /// </para>
     /// </remarks>
     public readonly struct CreepSnapshot
     {
@@ -54,16 +63,22 @@ namespace Sim
             Fix64 distanceAlongPath,
             Fix64 lateralOffset,
             int hp,
+            int shield,
             CreepState state,
-            int ticksInState)
+            int ticksInState,
+            int speedMagnitude,
+            int armourMagnitude)
         {
             Id = id;
             TypeId = typeId;
             DistanceAlongPath = distanceAlongPath;
             LateralOffset = lateralOffset;
             Hp = hp;
+            Shield = shield;
             State = state;
             TicksInState = ticksInState;
+            SpeedMagnitude = speedMagnitude;
+            ArmourMagnitude = armourMagnitude;
         }
 
         /// <summary>The entity id. An entity that vanished is an id that stopped appearing.</summary>
@@ -81,11 +96,38 @@ namespace Sim
         /// <summary>Health remaining.</summary>
         public int Hp { get; }
 
+        /// <summary>
+        /// Everything standing in front of that health: the pool its own row
+        /// authored plus whatever a shield payload granted it, added together.
+        /// </summary>
+        /// <remarks>
+        /// One number rather than two, because which pool a point came off
+        /// changes nothing a view can draw -- both are spent raw and both carry
+        /// overkill through, and the order they are spent in is a rule about
+        /// what can be taken away rather than a difference on screen. The two
+        /// are still separate in the state hash, so a run that moved a point
+        /// from one to the other is caught there.
+        /// </remarks>
+        public int Shield { get; }
+
         /// <summary>Walking or dying.</summary>
         public CreepState State { get; }
 
         /// <summary>How many ticks it has been in that state.</summary>
         public int TicksInState { get; }
+
+        /// <summary>
+        /// The percentage its walking speed is displaced by. Negative is a
+        /// slow, positive a haste, and zero is a creep walking at the speed its
+        /// row authored.
+        /// </summary>
+        public int SpeedMagnitude { get; }
+
+        /// <summary>
+        /// The percentage its armour is displaced by. Negative is a curse,
+        /// positive a hardening, and zero is unmodified.
+        /// </summary>
+        public int ArmourMagnitude { get; }
     }
 
     /// <summary>One tower, as of one tick.</summary>
@@ -98,12 +140,18 @@ namespace Sim
     /// </remarks>
     public readonly struct TowerSnapshot
     {
-        internal TowerSnapshot(int id, TowerState state, int targetId, int ticksInState)
+        internal TowerSnapshot(
+            int id,
+            TowerState state,
+            int targetId,
+            int ticksInState,
+            int cooldownMagnitude)
         {
             Id = id;
             State = state;
             TargetId = targetId;
             TicksInState = ticksInState;
+            CooldownMagnitude = cooldownMagnitude;
         }
 
         /// <summary>The entity id, which is the tower's one-based place in the defense.</summary>
@@ -117,6 +165,21 @@ namespace Sim
 
         /// <summary>How many ticks it has been in that state.</summary>
         public int TicksInState { get; }
+
+        /// <summary>
+        /// The percentage its cooldown is displaced by. Negative is a rally --
+        /// it fires oftener -- positive is a curse, and zero is a tower firing
+        /// on the cadence its row authored.
+        /// </summary>
+        /// <remarks>
+        /// The modifier and not the counter. How many ticks are left before it
+        /// may attack again is still internal, for the reason
+        /// <see cref="TowerState"/> has no <c>Cooling</c> member: a tower
+        /// between shots is idle to look at. What is on it is a different
+        /// question from where it is in its own wait, and only the first of the
+        /// two is a fact a view can draw.
+        /// </remarks>
+        public int CooldownMagnitude { get; }
     }
 
     /// <summary>One projectile in flight, as of one tick.</summary>

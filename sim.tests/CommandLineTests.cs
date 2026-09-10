@@ -367,7 +367,7 @@ public class CommandLineTests
                 .With("kind", "coverage")
                 .With("subject", "creeps")
                 .With("value", "2")
-                .With("of", "5")
+                .With("of", "17")
                 .With("bounded", "yes")
                 .Line,
             rows,

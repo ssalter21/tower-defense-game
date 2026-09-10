@@ -193,10 +193,13 @@ public class GoldenTraceTests
             if (a.Id != b.Id
                 || a.TypeId != b.TypeId
                 || a.Hp != b.Hp
+                || a.Shield != b.Shield
                 || a.DistanceAlongPath != b.DistanceAlongPath
                 || a.LateralOffset != b.LateralOffset
                 || a.State != b.State
-                || a.TicksInState != b.TicksInState)
+                || a.TicksInState != b.TicksInState
+                || a.SpeedMagnitude != b.SpeedMagnitude
+                || a.ArmourMagnitude != b.ArmourMagnitude)
             {
                 return false;
             }
@@ -207,7 +210,11 @@ public class GoldenTraceTests
             TowerSnapshot a = left.Towers[index];
             TowerSnapshot b = right.Towers[index];
 
-            if (a.Id != b.Id || a.State != b.State || a.TargetId != b.TargetId || a.TicksInState != b.TicksInState)
+            if (a.Id != b.Id
+                || a.State != b.State
+                || a.TargetId != b.TargetId
+                || a.TicksInState != b.TicksInState
+                || a.CooldownMagnitude != b.CooldownMagnitude)
             {
                 return false;
             }

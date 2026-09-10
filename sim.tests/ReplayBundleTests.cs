@@ -267,12 +267,32 @@ public class ReplayBundleTests
         // LAYOUT is not a retired record.
         Assert.Equal(old.Ghost.MapHash, old.Map.MapHashUnder(1));
 
-        // FIFTEEN AND NOT TWELVE, and the difference is the whole point of the
-        // plane this version predates. A version-1 bundle carries no levels, so
-        // it replays the folded board flat -- and flat, the towers lose the
-        // height their range was priced with and three more creeps get through.
-        // While the map was flat this assertion could not tell the two apart.
-        Assert.Equal(15, old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked);
+        // IT REPLAYS, AND WHAT IT LEAKS TELLS THE PLANE APART AGAIN. A
+        // version-1 bundle carries no levels, so it replays the folded board
+        // flat: this leaked fifteen against the folded twelve while the
+        // committed match was tuned to a partial break, and then the Mage's
+        // splash arrived and stopped nearly everything on both boards, which
+        // collapsed the two readings onto three apiece.
+        //
+        // THE REGRADE PARTED THEM AGAIN, WHICH IS EXACTLY WHAT THIS SAID IT
+        // WOULD DO. Flat leaks four and the committed board leaks eight, and
+        // the sign is the surprise: the levelled board is now the WORSE one for
+        // this defense. Height used to be the towers' advantage; a landscape of
+        // half-block steps is a board the hand-placed six no longer reach
+        // across, and folding it flat hands them back the route they cannot
+        // watch. Nothing was retuned to produce that and nothing is retuned to
+        // answer it -- see RunTests.The_canned_pool_is_one_opponent_who_builds
+        // _a_wall_and_buys_the_same_wave_again, which is the same finding read
+        // off a different run.
+        //
+        // The reading is asserted rather than dropped, and so is the fact that
+        // the two now differ: what proves the flat branch here is the level
+        // plane above -- every cell at level zero and a map hash that checks out
+        // under layout 1 -- and the leak count is a reading beside it.
+        int flat = old.Replay(TheMatch.Types(), TheRuleset.Committed()).Resolve().Leaked;
+
+        Assert.Equal(4, flat);
+        Assert.NotEqual(TheMatch.LeakedInTheCommittedRun, flat);
     }
 
     [Fact]

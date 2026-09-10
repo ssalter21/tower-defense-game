@@ -1,0 +1,31 @@
+# The Bishop's magic bolt leaving his empty off hand instead of his mace.
+#
+# THE DECISION THIS DRAWS. Sam ruled on 10 Sep 2026 that the mace does not fire
+# a bolt -- it is a melee weapon -- and in the same breath rejected the tome in
+# every position, because it fouls the animation and the model. That settles
+# what the bolt must not leave from and leaves exactly one question: where it
+# leaves from instead.
+#
+# WHY THE OFF HAND, AND WHY IT IS NEARLY FREE. content/units.txt:470 has the
+# bishop at hitscan, range 4200, damage magic -- so it is a caster and the bolt
+# has to come from somewhere. Today MatchArt anchors it on Cleric_Mace, because
+# an anchor follows its prop and the mace took the hand the tome used to be in.
+# With the tome rejected, handslot.l is empty. A bolt from an open off hand is
+# the one origin on this body that needs no prop, no new model and no second
+# socket: WeaponSocket.OffHand is that bone and EffectAnchor resolves a bone
+# name exactly as it resolves a node inside a prop.
+#
+# WHAT IT IS WORTH LOOKING AT. Moving the origin is worth 19-225 px of a
+# 1,440,000-pixel frame across the four ticks a hitscan bolt lives -- so this is
+# not a change a player will catch. It is a change to what the record says the
+# tower is doing, which is the ground Sam put the whole Cleric question on.
+# Ticks 311 to 314 are the whole life of the bolt; from 315 the two are
+# pixel-identical.
+#
+# NOTHING THE GAME SHIPS FROM MOVES. Applied to a copy of the wired art for the
+# length of one run. See UnitArtFile.cs.
+
+label     the Bishop's bolt leaving his open off hand
+question  where a magic bolt comes from once the mace is ruled out and the tome is gone
+
+anchor  24  handslot.l

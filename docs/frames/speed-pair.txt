@@ -1,0 +1,41 @@
+# A FIXTURE WAVE, AND NOT CONTENT. Nothing loads this except
+# tools/capture-match-frames.ps1 -Wave, and nothing about the game is decided
+# here: content/wave.txt is the wave the recorded match is fought against,
+# content/units.txt is the roster, docs/roster.md is the design behind it, and
+# this file exists for one reason only.
+#
+# THAT REASON: a slowed body and a hastened body have to be in one frame, and
+# nothing else on the roster puts them there without a third modifier landing on
+# the same bodies. A hastened creep and a slowed creep wear the same wash today,
+# which is the defect docs/frames/effect-candidates/ is asking about; the frame
+# that asks it has to have one of each on it.
+#
+# WHY NOT docs/frames/creep-auras.txt, WHICH ALREADY SENDS A SKELETON MAGE. It
+# sends the Witch as well, and the Witch armours every friend within two hexes.
+# A body carrying a speed modifier AND an armour one is drawn as neither of the
+# two -- it takes the both-modifiers colour, which is itself one of the five
+# things #254 left undecided -- so in that wave nearly every hastened body is in
+# the third bucket and a candidate that moves the haste colour changes nothing
+# visible. MEASURED, NOT ASSUMED: three of the four speed candidates rendered
+# byte-identical to the shipped look against that wave.
+#
+# So this wave sends the Skeleton Mage, whose haste reaches its friends, and
+# Minions and Skeletons, which author no bubble at all. Nothing here moves an
+# armour value, and no tower in docs/frames/four-lines.txt does either -- the
+# Consecration and the Unravel are not in that defense -- so every washed body
+# in the frame is washed for its speed and for nothing else.
+#
+# THE SLOW COMES FROM THE DEFENSE and not from here: the Shield Wall is the
+# third rung of the Knight line and slows what it hits. Fight this against
+# docs/frames/four-lines.txt or there is nothing on the board to slow anything.
+#
+# The board, the defense and the seed still come out of content/match.replay.
+#
+# ORDERS ASCEND BY TICK AND THEN BY TYPE ID, which the loader asserts rather
+# than sorts -- the same rule content/wave.txt is held to.
+#
+#       tick  type  count  corridor
+
+order   0      1     8      0
+order   0      7     6      0
+order   0     12     6      0

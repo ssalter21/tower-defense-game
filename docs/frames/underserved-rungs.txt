@@ -1,0 +1,63 @@
+# The five rows issue #281 is about, standing on the recorded board.
+#
+# WHAT THIS IS FOR. tools/capture-match-frames.ps1 draws the recorded match, and
+# the recorded defense is six towers of two types -- content/defense.txt's own
+# header says they were computed by a bot's rule rather than chosen. So a frame
+# of the record can only ever show an Archer and a Mage firing, and none of the
+# four under-served rungs is on the board at all.
+#
+#     ./tools/capture-match-frames.ps1 -Defense "docs/frames/underserved-rungs.txt" `
+#         -Ticks "300,500,700" -Distance 22 -Width 1600
+#
+# and, with a candidate look for what those rows are holding:
+#
+#     ./tools/capture-rung-candidates.ps1
+#
+# FIVE ROWS AND FOUR QUESTIONS. The Engineer is here because he is not a
+# question: "a heavier turret_base" is a comparison, and the thing the Mortar's
+# turret has to be heavier than is the one standing beside him at tier 1. The
+# Artificer is here for his missing second prop, the Mortar for the weight, the
+# Bishop for where his tome went, and the Elder for the prop his tier says he
+# has and his binding does not give him.
+#
+# The map, the wave and the seed still come out of content/match.replay, so the
+# corridor and the bodies walking it are the ones every other frame shows. Only
+# what is standing beside them has moved. Frames from such a run are named after
+# this file rather than match-tick-, because the tick in a match-tick- filename
+# is a claim about the run content/landmarks.txt was made from and this is not
+# that run.
+#
+# NOTHING HERE IS A BALANCE PROPOSAL. It is five rows put where they can be
+# photographed. content/defense.txt is the defense the authored match is fought
+# by and this changes nothing about it.
+#
+# EVERY CELL IS ONE docs/frames/four-lines.txt ALREADY USES, and that matters:
+# those twelve were chosen because the loader refuses a tower whose range cannot
+# touch the route, and nine of them reach one hex. Every row here reaches at
+# least four -- the Engineer 4000, the Bishop 4200, the Elder 4600, the
+# Artificer and the Mortar 5000 -- so a cell that took a Soldier certainly takes
+# these.
+#
+# THE THREE ENGINEER ROWS ARE ADJACENT ON PURPOSE. 35 and 36 sit on the same
+# row of the board and 37 two rows below, so one frame carries the tier-1
+# turret, the tier-2 turret and the tier-3 turret without the camera moving --
+# which is the only way a size comparison is a comparison rather than three
+# pictures taken at different times.
+#
+# Same format as content/defense.txt: type, column, row, counted the way
+# content/map.txt is written, ascending by row and then by column.
+#
+# THE ORDER IS ASSERTED AND NOT SORTED. TowerLayout refuses a file whose rows
+# do not ascend by row and then by column, because that order is the order the
+# match iterates towers in and so decides who lands the killing shot when two
+# fire at one creep on one tick. So this list is grouped by BOARD ROW rather
+# than by unit id, and the three Engineer rungs are not adjacent in the file
+# even though they are adjacent on the board.
+#
+#       type  col  row
+
+tower   35    3    0
+tower   36    5    0
+tower   24    2    2
+tower   29    5    2
+tower   37    2    4

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace Sim
 {
@@ -124,6 +125,33 @@ namespace Sim
         public const int DefaultFieldSize = 10;
 
         /// <summary>
+        /// The rounds a run is handed a capstone token at, ascending.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Three of them against nine capstones, which is what makes the
+        /// choice of line a decision.</b> A capstone edge costs one token and no
+        /// gold -- see <see cref="EdgePrice.CapstoneToken"/> -- so what is
+        /// scarce about the top of a line is the schedule and never the price.
+        /// </para>
+        /// <para>
+        /// <b>A token lands at the opening of its round and is spendable in
+        /// it.</b> Gold arrives when a wave closes because a wave has to be
+        /// fought before anybody knows what it earned; a token is earned by
+        /// nothing and depends on nothing, so holding it back a round would be a
+        /// third token no nine-round run could ever spend.
+        /// </para>
+        /// <para>
+        /// <b>Here rather than in <c>content/ruleset.txt</c>.</b> A ruleset
+        /// column would be a ruleset layout and a new stamp, which retires every
+        /// replay bundle that names the old one -- a price worth paying for a
+        /// number somebody tunes, and this is not one. See
+        /// <c>docs/adr/0062-a-capstone-costs-a-token.md</c>.
+        /// </para>
+        /// </remarks>
+        public static readonly IReadOnlyList<int> CapstoneTokenRounds = new[] { 3, 6, 9 };
+
+        /// <summary>
         /// How many of the pool's own rounds are played to measure what a round
         /// of it is worth. Ten samples put the percentiles on the deciles; it is
         /// a number about the measurement and not about the run, so it moves
@@ -151,6 +179,9 @@ namespace Sim
 
         private readonly FieldPool _pool;
 
+        /// <summary>The ceiling, worked out once. See <see cref="MostBountyEarnable"/>.</summary>
+        private int? _mostBountyEarnable;
+
         /// <summary>The vector. Every number this run reports is a fold over it.</summary>
         private readonly List<RoundOutcome> _rounds = new List<RoundOutcome>();
 
@@ -159,6 +190,14 @@ namespace Sim
         private RunOutcome _outcome;
 
         private PerformanceField? _field;
+
+        /// <summary>
+        /// How many capstone tokens this run's build phases have spent. What it
+        /// still holds is the schedule's grants less this -- see
+        /// <see cref="CapstoneTokens"/> -- rather than a second counter free to
+        /// disagree with the rounds that were played.
+        /// </summary>
+        private int _capstoneTokensSpent;
 
         /// <summary>
         /// Builds a run. Everything it will ever know arrives here: nothing in
@@ -317,10 +356,116 @@ namespace Sim
 
         /// <summary>
         /// The one wallet. Every wave pays it interest on what was banked, the
-        /// flat base, and a share of the leak cost the wave dealt on top of
-        /// that.
+        /// flat base, a share of the leak cost the wave dealt, and whatever this
+        /// round's defense was paid for the bodies it killed.
         /// </summary>
         public Purse Purse { get; private set; }
+
+        /// <summary>
+        /// The capstone tokens the next round may spend: what
+        /// <see cref="CapstoneTokenRounds"/> has granted by the round about to
+        /// be played, less what the rounds already played spent.
+        /// </summary>
+        /// <remarks>
+        /// <b>The second scarcity, and it is on the tower side alone.</b> The
+        /// purse is still the only thing bounding what a round sends; what this
+        /// bounds is how many tops of lines a run reaches, and nothing else is
+        /// priced in it.
+        /// </remarks>
+        public int CapstoneTokens =>
+            CapstoneTokensGrantedThrough(Round + 1) - _capstoneTokensSpent;
+
+        /// <summary>
+        /// How many capstone tokens a run has been granted by the time round
+        /// <paramref name="wave"/> builds: the grant rounds at or below it.
+        /// </summary>
+        /// <remarks>
+        /// A count over <see cref="CapstoneTokenRounds"/> rather than a division,
+        /// so the schedule is the list and not a rule that happens to reproduce
+        /// it -- a fourth grant round is a fourth entry and nothing else. A wave
+        /// number below the first grant is none, which is what an opening round
+        /// holds.
+        /// </remarks>
+        public static int CapstoneTokensGrantedThrough(int wave)
+        {
+            int granted = 0;
+
+            for (int index = 0; index < CapstoneTokenRounds.Count; index++)
+            {
+                if (CapstoneTokenRounds[index] <= wave)
+                {
+                    granted++;
+                }
+            }
+
+            return granted;
+        }
+
+        /// <summary>
+        /// How many capstone tokens the schedule hands out at the opening of one
+        /// round: one on a grant round and none on any other.
+        /// </summary>
+        /// <remarks>
+        /// The difference between two <see cref="CapstoneTokensGrantedThrough"/>
+        /// readings, said once here so that a walk folding tokens forward a
+        /// round at a time -- <see cref="CommandStream.Check"/>,
+        /// <see cref="FieldPool.Canned"/> -- takes the schedule from the same
+        /// place a run does.
+        /// </remarks>
+        public static int CapstoneTokensGrantedAt(int wave) =>
+            CapstoneTokensGrantedThrough(wave) - CapstoneTokensGrantedThrough(wave - 1);
+
+        /// <summary>
+        /// The grant schedule as a sentence reads it: <c>3, 6 and 9</c>.
+        /// </summary>
+        /// <remarks>
+        /// Here rather than wherever a refusal is written, so that a fourth
+        /// grant round makes every message that names the schedule say so. See
+        /// <see cref="BuildPhase.Resolve"/>, which is the one caller.
+        /// </remarks>
+        public static string CapstoneTokenRoundsInWords()
+        {
+            var said = new StringBuilder();
+
+            for (int index = 0; index < CapstoneTokenRounds.Count; index++)
+            {
+                if (index > 0)
+                {
+                    said.Append(index == CapstoneTokenRounds.Count - 1 ? " and " : ", ");
+                }
+
+                said.Append(CapstoneTokenRounds[index].ToString(CultureInfo.InvariantCulture));
+            }
+
+            return said.ToString();
+        }
+
+        /// <summary>
+        /// The most any one round of this run could be paid for killing: a
+        /// ceiling for whoever has to bound a purse without playing anything.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>The most bountiful wave in the pool.</b> A round's bounty comes
+        /// out of the opponents it met and never out of what it sent, and it is
+        /// the <i>average</i> over the K of them -- and an average is at most
+        /// the largest of them -- so the one wave in the population that could
+        /// pay most bounds every round of this run at once. What one wave can
+        /// pay is <see cref="WaveScript.MostBountyPayable"/>.
+        /// </para>
+        /// <para>
+        /// <b>It is a ceiling and never the payment</b>, exactly as
+        /// <see cref="WaveScript.FullPrice"/> is one on what a round can deal.
+        /// Bounded the other way, a walk over a stored stream would refuse
+        /// decisions the run affords perfectly well. See
+        /// <see cref="CommandStream.Check"/>, which is the one caller.
+        /// </para>
+        /// <para>
+        /// Worked out on first use and kept, because the pool cannot change
+        /// under a run.
+        /// </para>
+        /// </remarks>
+        public int MostBountyEarnable => _mostBountyEarnable ??= MostBountifulWaveInThePool();
 
         /// <summary>How many rounds have resolved.</summary>
         public int Round => _rounds.Count;
@@ -382,7 +527,7 @@ namespace Sim
         /// <para>
         /// The decision is checked against this run's upgrade ladder, this run's
         /// board and map, and this run's purse -- by
-        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>,
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, int, CostTable, UnitTypeTable, HexMap, Board)"/>,
         /// which is the surface a stored command stream is validated against
         /// too, so there is one implementation of the rules and not two.
         /// </para>
@@ -433,13 +578,14 @@ namespace Sim
                 throw new ArgumentNullException(nameof(phase));
             }
 
-            Build build = phase.Resolve(Round + 1, Carrying, Ladder, Purse, Costs, Types, Map, Board);
+            Build build = phase.Resolve(
+                Round + 1, Carrying, Ladder, Purse, CapstoneTokens, Costs, Types, Map, Board);
             RoundOrders orders = RoundOrders.Of(build.Board.Layout(), build.Wave);
 
             RequireUnfinished();
 
             (RoundOutcome outcome, WavePayment payment, FieldDraw field) = Play(
-                orders, build.Purse, build.Board);
+                orders, build.Purse, build.CapstoneTokensSpent, build.Board);
 
             return new RoundReport(outcome, build, payment, field);
         }
@@ -569,10 +715,12 @@ namespace Sim
         /// </remarks>
         /// <param name="orders">The defense that stands and the wave that is sent.</param>
         /// <param name="purse">What the round carries into the wave, after whatever it bought.</param>
+        /// <param name="tokensSpent">How many capstone tokens the round's decision took.</param>
         /// <param name="board">What stands after whatever the round built.</param>
         private (RoundOutcome Outcome, WavePayment Payment, FieldDraw Field) Play(
             RoundOrders orders,
             Purse purse,
+            int tokensSpent,
             Board board)
         {
             int round = _rounds.Count;
@@ -580,25 +728,40 @@ namespace Sim
             IReadOnlyList<RoundOrders> against = drawn.Members;
             long dealt = 0;
             long taken = 0;
+            long earned = 0;
 
             for (int index = 0; index < against.Count; index++)
             {
                 dealt += LeakCost(orders, against[index], round, index, Side.Attacking);
-                taken += LeakCost(orders, against[index], round, index, Side.Defending);
+
+                // The one direction this round's own towers are the ones
+                // standing, so it is the one direction a kill pays this purse.
+                // What the opponent's defense was paid for killing this round's
+                // wave is income for a stored ghost, which has no purse to be
+                // paid into.
+                (int cost, int bounty) = Scored(orders, against[index], round, index, Side.Defending);
+
+                taken += cost;
+                earned += bounty;
             }
 
-            // The average rather than the sum, on both sides. Summed, one round
+            // The average rather than the sum, on all three. Summed, one round
             // against ten opponents would cost ten rounds' worth of health, and
-            // a field would be a punishment for being in one.
-            var outcome = new RoundOutcome((int)(dealt / against.Count), (int)(taken / against.Count));
+            // a field would be a punishment for being in one -- and a defense
+            // would be paid ten times for killing one wave.
+            var outcome = new RoundOutcome(
+                (int)(dealt / against.Count),
+                (int)(taken / against.Count),
+                (int)(earned / against.Count));
 
-            // Interest, the flat base, and a share of what this round's offense
-            // got past on top. Nothing is taken off anybody to pay it: the wave
-            // is paid for the damage it dealt and not against whichever opponent
-            // it was drawn against.
-            WavePayment payment = purse.CloseWave(Rules, outcome.LeakCostDealt);
+            // Interest, the flat base, a share of what this round's offense got
+            // past, and what its defense was paid for killing. Nothing is taken
+            // off anybody to pay any of it: the wave is paid for the damage it
+            // dealt and not against whichever opponent it was drawn against, and
+            // a bounty comes out of nowhere rather than out of the sender.
+            WavePayment payment = purse.CloseWave(Rules, outcome.LeakCostDealt, outcome.BountyEarned);
 
-            Commit(orders, outcome, payment.Purse, board, FoldedWith(outcome));
+            Commit(orders, outcome, payment.Purse, tokensSpent, board, FoldedWith(outcome));
 
             return (outcome, payment, drawn);
         }
@@ -617,12 +780,14 @@ namespace Sim
             RoundOrders orders,
             RoundOutcome outcome,
             Purse purse,
+            int tokensSpent,
             Board board,
             RunOutcome folded)
         {
             _rounds.Add(outcome);
             _sent.Add(orders);
             Purse = purse;
+            _capstoneTokensSpent += tokensSpent;
             Board = board;
             _outcome = folded;
         }
@@ -788,22 +953,69 @@ namespace Sim
         }
 
         /// <summary>
-        /// What one match let through, priced. A leaked creep costs what it cost
-        /// to send, one for one, so what got past is the wave's own orders read
-        /// off the cost table.
+        /// What one match let through, priced. The half of
+        /// <see cref="Scored"/> the two directions that do not collect a bounty
+        /// ask for.
         /// </summary>
-        private int LeakCost(RoundOrders sent, RoundOrders against, int round, int opponent, Side side)
+        private int LeakCost(RoundOrders sent, RoundOrders against, int round, int opponent, Side side) =>
+            Scored(sent, against, round, opponent, side).LeakCost;
+
+        /// <summary>
+        /// One pairing played out: what it let past, priced, and what the
+        /// defense standing in it was paid for killing.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Both come out of one resolution</b>, because they are two readings
+        /// of the same match -- what reached the exit and what did not. Asking
+        /// for them separately would mean playing the pairing twice.
+        /// </para>
+        /// <para>
+        /// <b>A leaked creep costs what it cost to send, one for one</b>, so
+        /// what got past is the wave's own orders read off the cost table -- and
+        /// <b>a body nobody sent is charged at the price of the row it was
+        /// raised as</b>. A spawner puts bodies on the corridor that no order
+        /// paid for, and one of those reaching the exit takes exactly as much
+        /// health off a defense as one that was bought, so it is charged at what
+        /// the raised row costs rather than at what the order that raised it
+        /// costs. That the sender never paid the difference is the pricing gap
+        /// that mechanic opens, and it is held open rather than closed: cost is
+        /// derived from health and armour and is never authored, and a spawner's
+        /// price cannot see what it spawns. See
+        /// <c>docs/adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md</c>.
+        /// </para>
+        /// <para>
+        /// <b>What was killed is read off the match rather than counted here</b>,
+        /// because a bounty is paid off the row a body was standing as and a
+        /// count per wave order cannot say what that was. See
+        /// <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
+        /// </para>
+        /// </remarks>
+        private (int LeakCost, int Bounty) Scored(
+            RoundOrders sent,
+            RoundOrders against,
+            int round,
+            int opponent,
+            Side side)
         {
             Match match = MatchFor(sent, against, round, opponent, side);
-            match.Resolve();
+            MatchResult result = match.Resolve();
 
             WaveScript wave = Walking(sent, against, side);
             IReadOnlyList<int> leaked = match.LeakedByOrder;
+            IReadOnlyList<int> raised = match.LeakedRaisedByOrder;
             long cost = 0;
 
             for (int index = 0; index < leaked.Count; index++)
             {
-                cost += Costs.PriceOf(Purchase.Unit(wave.Orders[index].TypeId), leaked[index]);
+                UnitType type = wave.Orders[index].Type;
+
+                cost += Costs.PriceOf(Purchase.Unit(type.Id), leaked[index]);
+
+                if (type.Raises is UnitType puts)
+                {
+                    cost += Costs.PriceOf(Purchase.Unit(puts.Id), raised[index]);
+                }
             }
 
             if (cost > int.MaxValue)
@@ -816,7 +1028,29 @@ namespace Sim
                     + "authored in the wrong units.");
             }
 
-            return (int)cost;
+            return ((int)cost, result.Bounty);
+        }
+
+        /// <summary>
+        /// The most any one wave in this run's pool could pay in bounties. See
+        /// <see cref="MostBountyEarnable"/>, which is what it bounds.
+        /// </summary>
+        private int MostBountifulWaveInThePool()
+        {
+            IReadOnlyList<RoundOrders> members = _pool.Members;
+            int most = 0;
+
+            for (int index = 0; index < members.Count; index++)
+            {
+                int payable = members[index].Wave.MostBountyPayable();
+
+                if (payable > most)
+                {
+                    most = payable;
+                }
+            }
+
+            return most;
         }
 
         /// <summary>Refuses a round past the end of a run.</summary>

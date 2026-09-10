@@ -495,7 +495,7 @@ namespace Sim
         /// naming a unit some edge of the ladder targets, an action on a cell no
         /// tower could stand on, two slots of one wave on one creep and a wave
         /// nobody can afford are all
-        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, int, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// refusing -- the same surface a live build phase is checked by, so
         /// there is one implementation of the rules and not two.
         /// </para>
@@ -531,12 +531,25 @@ namespace Sim
         /// closes every wave at <see cref="Purse.CloseWaveAtBest"/>, against the
         /// most the round could possibly have dealt: the full price of the wave
         /// the stored decision composes, every creep of it leaking against every
-        /// opponent. Every decision refused here is one no run could have
-        /// afforded however well it played; a decision the ceiling admits is
+        /// opponent. <b>What a round is paid for killing is bounded the same
+        /// way</b>, by <see cref="Run.MostBountyEarnable"/> -- income earned
+        /// inside a match is a number only a resolved round has, and a ceiling
+        /// that left it out would stop being one. Every decision refused here is
+        /// one no run could have afforded however well it played; a decision the ceiling admits is
         /// checked again, against the purse the round really holds, by the same
-        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, CostTable, UnitTypeTable, HexMap, Board)"/>
+        /// <see cref="BuildPhase.Resolve(int, WaveScript, UpgradeLadder, Purse, int, CostTable, UnitTypeTable, HexMap, Board)"/>
         /// when the round is played. Bounded the other way -- at no bonus -- this
         /// would refuse waves the run affords perfectly well.
+        /// </para>
+        /// <para>
+        /// <b>The capstone tokens are folded forward exactly, and that is why
+        /// no byte of this record carries a count.</b> What the schedule grants
+        /// is a function of the round number this walk is already counting, and
+        /// what a decision spends is a function of the actions the stream
+        /// already stores -- so a stored token balance would be a second copy of
+        /// a derivation, free to disagree with the first. Which edges cost a
+        /// token is pinned by the ladder stamp the replay gate checks, so a
+        /// stream cannot be read against a file that has since re-priced them.
         /// </para>
         /// <para>
         /// <b>With the board folded, that ceiling is the last thing a decision
@@ -559,6 +572,14 @@ namespace Sim
             var builds = new List<Build>();
             Purse purse = run.Purse;
             Board board = run.Board;
+
+            // Folded forward like the purse, and exactly rather than at a
+            // ceiling: what the schedule grants is a function of the round, and
+            // what a decision spends is a function of the actions the stream
+            // already carries. Nothing about a token depends on how a round
+            // played, which is why no stored count is needed and why this walk
+            // can refuse an unaffordable capstone outright.
+            int tokens = run.CapstoneTokens;
 
             // Folded forward exactly as the purse and the board are, and for the
             // same reason: what a stored decision is charged depends on what the
@@ -585,9 +606,12 @@ namespace Sim
                 }
 
                 Build build = command.ToPhase().Resolve(
-                    round, carried, run.Ladder, purse, run.Costs, run.Types, run.Map, board);
+                    round, carried, run.Ladder, purse, tokens, run.Costs, run.Types, run.Map, board);
 
-                purse = build.Purse.CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs)).Purse;
+                purse = build.Purse
+                    .CloseWaveAtBest(run.Rules, build.Wave.FullPrice(run.Costs), run.MostBountyEarnable)
+                    .Purse;
+                tokens = tokens - build.CapstoneTokensSpent + Run.CapstoneTokensGrantedAt(round + 1);
                 board = build.Board;
                 carried = build.Wave;
                 builds.Add(build);

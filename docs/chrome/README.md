@@ -45,10 +45,11 @@ A spec names an output directory, a sheet width, and the shots:
   same, with the cell under the pointer lit through `BuildBoard.Lit`) or `build-offer` (the upgrade ladder
   open). `build-hover` spends less on creeps than it could, on purpose: a hex lights only where the rules would
   take a tower, so a state that had spent the last of the gold refuses to hover at all.
-- **`place`** — which tower a composed state buys, by its label in `content/units.txt`. The ladder has one edge
-  in it today, so a shot of the upgrade offer is a shot of an **archer** and of nothing else; a shot that asks
-  for the offer and does not get it is refused rather than written, because an offer that did not open renders
-  as an ordinary build phase.
+- **`place`** — which tower a composed state buys, by its label in `content/units.txt`. Every one of the nine
+  roots has a rung above it, so any of them can be the subject of an upgrade shot; the committed sheet stays on
+  the **archer** so that a candidate layout is compared against the same picture. A shot that asks for the
+  offer and does not get it is refused rather than written, because an offer that did not open renders as an
+  ordinary build phase.
 - **`candidate`** — the `UiPreviewCapture.IUiPreviewLayout` to run, by type name. Empty means the chrome the
   game ships, which is what every candidate is compared against.
 
@@ -68,7 +69,7 @@ it as *invalid escape character* rather than as a bad path.
 **The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.
-- `as-built-placed.png` — a soldier down and two creeps in the wave, at 44 gold left.
+- `as-built-placed.png` — a soldier down and two creeps in the wave, at 52 gold left.
 - `as-built-offer.png` — the ladder open on an archer, offering a ranger for 40.
 
 The rest is regenerable and not committed, and that is arranged by [`.gitignore`](.gitignore) rather than by
@@ -80,6 +81,11 @@ what stands on it and these three are stale while going on looking entirely reas
 wrong number in it is not a picture that announces itself. Re-capture them whenever `content/units.txt`,
 `content/upgrades.txt`, `content/map.txt` or `content/dressing.txt` moves. Those four are the ones
 [`check-docs.ps1`](../../tools/check-docs.ps1) dates the committed sheets against.
+
+**`rendered-from.txt` is what the capture leaves behind saying which content it drew.** A re-capture that comes
+out pixel-identical — which is what happens whenever the content that moved is not on these sheets — leaves
+nothing for a date to see, so the date alone would call a current sheet stale. The record answers that, and it
+is written by the capture and never by hand. See [`_rendered-from.ps1`](../../tools/_rendered-from.ps1).
 
 ## Two things that had to be measured
 

@@ -170,6 +170,93 @@ namespace Sim
         }
 
         /// <summary>
+        /// The most this wave could pay a defense in bounties: every body it can
+        /// put on the corridor, at the largest bounty that body could be
+        /// standing as.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the ceiling on what a round can be paid for killing</b>,
+        /// as <see cref="FullPrice"/> is the ceiling on what a round can deal,
+        /// and it is used the same way -- see
+        /// <see cref="Purse.CloseWaveAtBest"/> and
+        /// <see cref="Run.MostBountyEarnable"/>. A body pays at most once,
+        /// because it is killed at most once.
+        /// </para>
+        /// <para>
+        /// <b>Two terms, and the second is what makes it arithmetic.</b> A body
+        /// pays its own row's bounty, or its successor's where that is larger,
+        /// because which of the two it is standing as when it dies is unknown
+        /// here. And a body that raises puts more bodies down, each of which
+        /// pays on the same reading: it raises once a period for as long as it
+        /// walks, and a match that has not ended by
+        /// <see cref="Match.TickCeiling"/> throws rather than returning a result
+        /// -- so the ceiling divided by the period is a count no spawner can
+        /// exceed in a match anybody ever gets an answer out of. <b>What a raise
+        /// puts down may become another row but may not raise</b>, which is what
+        /// stops the term recurring after one step.
+        /// </para>
+        /// <para>
+        /// <b>Loose in the direction that is safe.</b> The raise term is enormous
+        /// against what a real board allows, and it is zero for every wave whose
+        /// rows raise nothing that pays -- which is every wave this roster can
+        /// compose. Bounded the other way, a walk over a stored stream would
+        /// refuse decisions the run affords perfectly well.
+        /// </para>
+        /// </remarks>
+        public int MostBountyPayable()
+        {
+            long paid = 0;
+
+            for (int index = 0; index < _orders.Length; index++)
+            {
+                paid += (long)_orders[index].Count * MostOneBodyPays(_orders[index].Type);
+            }
+
+            if (paid > int.MaxValue)
+            {
+                throw new SimulationException(
+                    "A wave of "
+                    + TotalUnits.ToString(CultureInfo.InvariantCulture)
+                    + " creeps could pay "
+                    + paid.ToString(CultureInfo.InvariantCulture)
+                    + " gold in bounties, which does not fit in the 32-bit integer a purse is kept in. A "
+                    + "bounty past that range is a bounty column authored in the wrong units.");
+            }
+
+            return (int)paid;
+        }
+
+        /// <summary>
+        /// The most one body of a row pays: what it can pay itself, and
+        /// everything it can raise on top. See
+        /// <see cref="MostBountyPayable"/>.
+        /// </summary>
+        private static long MostOneBodyPays(UnitType type)
+        {
+            long paid = MostAStandingBodyPays(type);
+
+            if (type.Raises is UnitType raised)
+            {
+                long each = MostAStandingBodyPays(raised);
+
+                if (each > 0)
+                {
+                    paid += each * (Match.TickCeiling / type.RaisePeriodTicks);
+                }
+            }
+
+            return paid;
+        }
+
+        /// <summary>
+        /// The larger of the two bounties a body of a row can be standing on
+        /// when it dies: its own, and the one it turns into.
+        /// </summary>
+        private static long MostAStandingBodyPays(UnitType type) =>
+            type.Becomes is UnitType next && next.Bounty > type.Bounty ? next.Bounty : type.Bounty;
+
+        /// <summary>
         /// This wave as the slots a build phase would compose it from, in the
         /// order it sends them.
         /// </summary>

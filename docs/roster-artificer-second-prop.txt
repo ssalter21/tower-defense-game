@@ -1,0 +1,57 @@
+# The Artificer's second beside prop, which the engine has one socket for.
+#
+# WHAT THIS IS FOR. docs/roster.md's tier-2 Engineer line wants a turret AND an
+# ammo_crate. BesideProp holds one model and TowerView places one instance of
+# it, and the turret wins because it is where the shell leaves from -- so that
+# rung is told from the Engineer by COLOUR ALONE, which is thinner than the
+# rule the same page sets for a tier 2 ("colour plus a prop"). Issue #281.
+# DECIDES NOTHING.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-artificer-second-prop.txt
+#
+# The committed copy is docs/frames/roster/artificer-second-prop-sheet.png.
+#
+# THREE CANDIDATES, AND TWO OF THEM ARE ONE PICTURE. The ticket names a second
+# socket, a combined prop, and the crate replacing the turret with the muzzle
+# re-anchored. The first two are the SAME PICTURE -- two things on the tile --
+# and differ only in how they would be built: a second socket on every tower in
+# the game, or one authored model that is both. So this sheet draws the picture
+# once, under the name of the question rather than of either mechanism, and
+# which mechanism a signed candidate becomes is the sitting's.
+#
+# A '+' PUTS BOTH ON THE TILE WITHOUT THE ENGINE GAINING A SOCKET. The members
+# are parented under one throwaway object at capture time and that object is
+# what goes into the one BesideProp -- see BesideGroup.cs. Nothing in
+# BesideProp, UnitArt, TowerView, MatchArt.asset or the generated scene moves,
+# so this is a picture of the shipped view drawing something extra rather than a
+# picture of a changed view.
+#
+# THE OFFSETS ARE THE CANDIDATE'S. A '~dx,dz' moves a member sideways then
+# forward within the tile, in metres. The turret is 1.00 x 1.13 on the ground
+# and the crate 0.57 x 0.49, on a 2.0 m tile -- so 0.65 sideways clears the
+# turret's own footprint by 0.15 m and keeps the crate inside the tile. That is
+# a starting layout for somebody to move and re-render, not a layout anybody
+# signed: AGENTS.md rule 6 puts a layout on the human side of the line, and this
+# file is edited and run again without an agent, a recompile or a commit.
+#
+# THE THIRD CANDIDATE IS ONLY HALF HERE, AND THIS IS THE HALF A SHEET CAN SHOW.
+# "The crate replacing the turret with the muzzle re-anchored" moves where the
+# shell leaves from, and a sheet is a still of a posed character with no shell
+# in it. The other half is docs/roster-art-artificer-crate-only.txt, drawn
+# through the real match by tools/capture-match-frames.ps1 -Art, which is the
+# only place an anchor can be seen at all.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out. Idle_A is framing, for the reason
+# docs/roster-mortar-turret-weight.txt gives.
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+
+# Shipped: the turret alone, and the rung told apart by colour only. The thing
+# the other two are read against.
+tower artificer-turret-only   Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_A.png  Kaykit/adventurers/turret_base.fbx*1
+# Both on the tile -- a second socket, or one combined prop; the same picture.
+tower artificer-turret-crate  Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_A.png  Kaykit/adventurers/turret_base.fbx*1~0,0+Kaykit/adventurers/ammo_crate.fbx*1~0.65,0.35
+# The crate instead of the turret. The shell then leaves a crate, which is what
+# the match frames are for; this tile is what it looks like standing still.
+tower artificer-crate-only    Kaykit/adventurers/Engineer.fbx  Kaykit/adventurers/engineer_Wrench.fbx  -  Rig_Medium_General/Idle_A  Kaykit/adventurers/engineer_texture_alt_A.png  Kaykit/adventurers/ammo_crate.fbx*1

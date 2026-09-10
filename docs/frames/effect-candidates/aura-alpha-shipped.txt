@@ -1,0 +1,17 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. Nothing loads this except
+# tools/capture-match-frames.ps1 -Effects, and nothing about the game is decided
+# here: client/Assets/View/MatchTuning.cs is what the game draws its effects at,
+# and every value in it that this file names is declared a placeholder in that
+# file's own header. This is one of the alternatives, so that signing one is
+# somebody looking at pictures rather than reading constants.
+#
+# THIS ONE NAMED NOTHING AND NOW NAMES 0.28, WHICH IS NOT A TIDY-UP. It was the
+# baseline the other two were read against, drawing whatever MatchTuning held.
+# The file has since moved to 0.45, so a candidate naming nothing would quietly
+# become a second picture of the winner and this frame would stop being a
+# picture of what lost. It names the number it stood for instead.
+#
+question That every aura is a flat translucent circle was signed on 7 Sep 2026, and how translucent on the same day. This is the middle of the bracket -- the value the file held before anybody chose one, and the one Sam rejected because the cold circles read at it and the Blessing's gold does not.
+label alpha 0.28: the value nobody chose
+
+AuraDiscAlpha 0.28

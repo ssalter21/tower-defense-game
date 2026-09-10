@@ -21,11 +21,19 @@ namespace View
     /// <b>The name is derived from the label and never authored here.</b>
     /// <c>docs/roster.md</c>'s index is the naming authority, and the labels in
     /// <c>content/units.txt</c> are those names in kebab case — so replacing the
-    /// hyphens and capitalising reproduces all nine of them exactly, from
+    /// hyphens and capitalising reproduces every one of them, from
     /// <c>minion</c> to <c>skeleton-warrior</c>. That is a derivation, and an
     /// edit-mode test holds it against the roster's table. A per-unit display
     /// name typed over here would be a second roster, free to drift from the one
     /// the design document keeps.
+    /// </para>
+    /// <para>
+    /// <b>One word inside a name stays lowercase, and it is read off the roster
+    /// rather than off English.</b> The index signs <i>Fan of Knives</i>, so
+    /// capitalising every word of <c>fan-of-knives</c> would produce a name the
+    /// naming authority does not carry. <see cref="LowercaseInside"/> is that
+    /// list and it holds one word today; a name whose joining word is not on it
+    /// goes red in the edit-mode test rather than reaching a screen wrong.
     /// </para>
     /// <para>
     /// <b>The price format is the command line's, moved rather than
@@ -37,6 +45,12 @@ namespace View
     {
         /// <summary>The character <c>content/units.txt</c> joins words with.</summary>
         private const char LabelSeparator = '-';
+
+        /// <summary>
+        /// The words <c>docs/roster.md</c>'s index leaves lowercase when they
+        /// are not the first word of a name.
+        /// </summary>
+        private static readonly string[] LowercaseInside = { "of" };
 
         /// <summary>What this unit is called on screen.</summary>
         public static string Of(UnitType type) => Of(type is null ? string.Empty : type.Label);
@@ -52,21 +66,29 @@ namespace View
                 return string.Empty;
             }
 
+            string[] words = label.Split(LabelSeparator);
             var name = new StringBuilder(label.Length);
-            bool starting = true;
 
-            foreach (char letter in label)
+            for (var index = 0; index < words.Length; index++)
             {
-                if (letter == LabelSeparator)
+                if (index > 0)
                 {
                     name.Append(' ');
-                    starting = true;
+                }
 
+                string word = words[index];
+
+                if (word.Length == 0)
+                {
                     continue;
                 }
 
-                name.Append(starting ? char.ToUpperInvariant(letter) : letter);
-                starting = false;
+                // The first word is always capitalised; a joining word after it
+                // is left as the roster's index writes it.
+                bool lower = index > 0 && System.Array.IndexOf(LowercaseInside, word) >= 0;
+
+                name.Append(lower ? word[0] : char.ToUpperInvariant(word[0]));
+                name.Append(word, 1, word.Length - 1);
             }
 
             return name.ToString();
@@ -75,6 +97,16 @@ namespace View
         /// <summary>An amount of gold, in words: <c>40 gold</c>.</summary>
         public static string Gold(int gold) =>
             gold.ToString(CultureInfo.InvariantCulture) + " gold";
+
+        /// <summary>What a capstone edge costs, in words: <c>1 capstone token</c>.</summary>
+        /// <remarks>
+        /// Beside <see cref="Gold"/> for the reason that is here: it is
+        /// player-facing wording, and a second surface that showed a token would
+        /// otherwise invent its own name for it. It takes no amount because
+        /// there is none to take — a capstone edge costs one token and there is
+        /// no column anywhere that could make it another number.
+        /// </remarks>
+        public static string CapstoneToken() => "1 capstone token";
 
         /// <summary>
         /// How many of one creep a wave box is sending: <c>x3</c>.

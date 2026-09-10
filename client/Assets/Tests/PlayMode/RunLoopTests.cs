@@ -311,8 +311,8 @@ namespace Tests.PlayMode
 
             Assert.That(
                 header.Gold.text,
-                Is.EqualTo("61 gold"),
-                "A hundred, less a Soldier at 30 and the cheapest creep the box offered at 9. The gold on "
+                Is.EqualTo("62 gold"),
+                "A hundred, less a Soldier at 30 and the cheapest creep the box offered at 8. The gold on "
                 + "the bar is what the composed round would leave, which is what a wave is composed against.");
 
             loop.Press();

@@ -47,10 +47,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$project = (Resolve-Path "$PSScriptRoot\..\client").Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$project = Join-Path $repoRoot 'client'
 $specPath = (Resolve-Path $Spec).Path
 
 if (-not (Test-Path $Unity)) { throw "Unity Editor not found at: $Unity" }
+
+. (Join-Path $PSScriptRoot '_rendered-from.ps1')
+
+# Where the sheets land, out of the spec itself rather than out of a second copy
+# of it here. A relative path in a spec is relative to the repository, which is
+# what docs/chrome/README.md's committed spec writes.
+$outDir = (Get-Content -LiteralPath $specPath -Raw | ConvertFrom-Json).outDir
+
+if (-not [System.IO.Path]::IsPathRooted($outDir)) { $outDir = Join-Path $repoRoot $outDir }
+
+# What is already sitting there, so the sheets this run writes can be told from
+# the ones it did not touch.
+$before = Get-PictureWriteTimes $outDir
 
 # Start-Process plus an explicit WaitForExit is what actually blocks on a
 # GUI-subsystem executable and what actually yields its exit code. `& $Unity`
@@ -64,6 +78,12 @@ $null = $proc.Handle
 $proc.WaitForExit()
 
 Write-Host "editor exited with $($proc.ExitCode)"
-if ($proc.ExitCode -ne 0) { Write-Host "see $LogFile" -ForegroundColor Red }
 
-exit $proc.ExitCode
+if ($proc.ExitCode -ne 0) {
+    Write-Host "see $LogFile" -ForegroundColor Red
+    exit $proc.ExitCode
+}
+
+Update-RenderedFrom $outDir (Get-WrittenPictures $outDir $before) (Get-DrawnContentStamp $repoRoot)
+
+exit 0

@@ -9,11 +9,12 @@ namespace Sim
     /// </summary>
     public readonly struct MatchResult
     {
-        internal MatchResult(int leaked, int total, int finalTick, Hash64 rollingStateHash)
+        internal MatchResult(int leaked, int total, int finalTick, int bounty, Hash64 rollingStateHash)
         {
             Leaked = leaked;
             Total = total;
             FinalTick = finalTick;
+            Bounty = bounty;
             RollingStateHash = rollingStateHash;
         }
 
@@ -26,6 +27,14 @@ namespace Sim
         /// <summary>The tick the last of them stopped existing on.</summary>
         public int FinalTick { get; }
 
+        /// <summary>
+        /// What the kills paid the defense, in gold. The one number here that a
+        /// build phase reads rather than reports: it is income earned inside the
+        /// match, and it lands in the same purse the towers were bought out of.
+        /// See <c>docs/adr/0061-a-kill-pays-the-defender.md</c>.
+        /// </summary>
+        public int Bounty { get; }
+
         /// <summary>Internal simulation state, folded once per tick from the first tick to this one.</summary>
         public Hash64 RollingStateHash { get; }
 
@@ -35,7 +44,9 @@ namespace Sim
             + Total.ToString(CultureInfo.InvariantCulture)
             + " leaked by tick "
             + FinalTick.ToString(CultureInfo.InvariantCulture)
-            + ", state "
+            + ", "
+            + Bounty.ToString(CultureInfo.InvariantCulture)
+            + " gold paid, state "
             + RollingStateHash.ToString();
     }
 }

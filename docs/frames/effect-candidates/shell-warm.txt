@@ -1,0 +1,8 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+question Does the shell read as a shell if it is the one warm thing on a yellow-green board? Same size as ships. This is the option that separates the shell from the floor by hue rather than by value, which is the axis the other two candidates leave alone.
+label shell 0.16 m, hot orange: away from the floor in hue -- PARKED 7 Sep 2026
+
+ProjectileRadius 0.16
+ProjectileColor 0.95,0.55,0.15

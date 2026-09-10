@@ -1,0 +1,9 @@
+# A CANDIDATE LOOK, AND NOT CONTENT. See knife-as-shipped.txt for what this
+# file is and what it may not decide.
+#
+question Does the bolt read at 1600x900 at half again its length and thickness, with its colour left where it is? Both numbers move together because a bolt that grows only in one of them stops being the same shape.
+label bolt 0.68 m, pale blue: half again as big -- PARKED 7 Sep 2026
+
+MagicBoltLength 0.68
+MagicBoltThickness 0.18
+MagicBoltColor 0.85,0.92,1

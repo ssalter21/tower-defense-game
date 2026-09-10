@@ -1,0 +1,65 @@
+# What each picture in this directory was drawn from: one line per
+# picture, and a digest over content/map.txt, content/units.txt,
+# content/upgrades.txt and content/dressing.txt as they stood when it
+# was captured.
+#
+# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
+# and only the thing that drew it knows that. tools/check-docs.ps1 reads
+# it where a commit date cannot answer -- a re-render that came out
+# pixel-identical leaves git nothing to date.
+#
+#       picture                        drawn from
+
+picture  aura-alpha-heavy-tick-0094.png  C5F1D76F3B7EC4D1
+picture  aura-alpha-heavy-tick-0272.png  C5F1D76F3B7EC4D1
+picture  aura-alpha-light-tick-0094.png  C5F1D76F3B7EC4D1
+picture  aura-alpha-light-tick-0272.png  C5F1D76F3B7EC4D1
+picture  aura-alpha-shipped-tick-0094.png  C5F1D76F3B7EC4D1
+picture  aura-alpha-shipped-tick-0272.png  C5F1D76F3B7EC4D1
+picture  bolt-as-shipped-tick-0313.png   C5F1D76F3B7EC4D1
+picture  bolt-as-shipped-tick-0343.png   C5F1D76F3B7EC4D1
+picture  bolt-dark-tick-0313.png         C5F1D76F3B7EC4D1
+picture  bolt-dark-tick-0343.png         C5F1D76F3B7EC4D1
+picture  bolt-double-tick-0313.png       C5F1D76F3B7EC4D1
+picture  bolt-double-tick-0343.png       C5F1D76F3B7EC4D1
+picture  bolt-half-again-tick-0313.png   C5F1D76F3B7EC4D1
+picture  bolt-half-again-tick-0343.png   C5F1D76F3B7EC4D1
+picture  knife-as-shipped-tick-0617.png  98DDCD917FDC5CD1
+picture  knife-as-shipped-tick-0624.png  98DDCD917FDC5CD1
+picture  knife-dark-tick-0617.png        98DDCD917FDC5CD1
+picture  knife-dark-tick-0624.png        98DDCD917FDC5CD1
+picture  knife-double-tick-0617.png      98DDCD917FDC5CD1
+picture  knife-double-tick-0624.png      98DDCD917FDC5CD1
+picture  knife-half-again-tick-0617.png  98DDCD917FDC5CD1
+picture  knife-half-again-tick-0624.png  98DDCD917FDC5CD1
+picture  light-as-shipped-tick-0305.png  F3896E6D53F411C4
+picture  light-as-shipped-tick-0313.png  F3896E6D53F411C4
+picture  light-as-shipped-tick-0320.png  F3896E6D53F411C4
+picture  light-brief-tick-0305.png       F3896E6D53F411C4
+picture  light-brief-tick-0313.png       F3896E6D53F411C4
+picture  light-brief-tick-0320.png       F3896E6D53F411C4
+picture  light-half-tick-0305.png        F3896E6D53F411C4
+picture  light-half-tick-0313.png        F3896E6D53F411C4
+picture  light-half-tick-0320.png        F3896E6D53F411C4
+picture  light-one-hex-tick-0305.png     F3896E6D53F411C4
+picture  light-one-hex-tick-0313.png     F3896E6D53F411C4
+picture  light-one-hex-tick-0320.png     F3896E6D53F411C4
+picture  light-two-hex-tick-0305.png     F3896E6D53F411C4
+picture  light-two-hex-tick-0313.png     F3896E6D53F411C4
+picture  light-two-hex-tick-0320.png     F3896E6D53F411C4
+picture  reach-as-shipped-tick-0272.png  F3896E6D53F411C4
+picture  reach-as-shipped-tick-0305.png  F3896E6D53F411C4
+picture  reach-clipped-tick-0272.png     C5F1D76F3B7EC4D1
+picture  reach-clipped-tick-0305.png     C5F1D76F3B7EC4D1
+picture  reach-shrunk-tick-0272.png      98DDCD917FDC5CD1
+picture  reach-shrunk-tick-0305.png      98DDCD917FDC5CD1
+picture  reach-unclipped-tick-0272.png   C5F1D76F3B7EC4D1
+picture  reach-unclipped-tick-0305.png   C5F1D76F3B7EC4D1
+picture  shell-as-shipped-tick-0313.png  C5F1D76F3B7EC4D1
+picture  shell-as-shipped-tick-0320.png  C5F1D76F3B7EC4D1
+picture  shell-bigger-tick-0313.png      C5F1D76F3B7EC4D1
+picture  shell-bigger-tick-0320.png      C5F1D76F3B7EC4D1
+picture  shell-pale-tick-0313.png        C5F1D76F3B7EC4D1
+picture  shell-pale-tick-0320.png        C5F1D76F3B7EC4D1
+picture  shell-warm-tick-0313.png        C5F1D76F3B7EC4D1
+picture  shell-warm-tick-0320.png        C5F1D76F3B7EC4D1

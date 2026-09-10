@@ -38,15 +38,49 @@ namespace Tests.PlayMode
     public class WaveTests : ViewTest
     {
         /// <summary>Walking rows of <c>content/units.txt</c>, named so the tests read.</summary>
+        /// <summary>
+        /// What a round-one run holds of the second currency. The first grant is
+        /// at round three, and nothing on the wave bar is bought with one.
+        /// </summary>
+        private const int NoCapstoneTokens = 0;
+
         private const int MinionId = 1;
 
         private const int SkeletonScoutId = 2;
 
-        private const int NecromancerId = 7;
+        private const int SkeletonMageId = 7;
 
         private const int SkeletonId = 12;
 
         private const int SkeletonWarriorId = 13;
+
+        /// <summary>
+        /// The twelve walking rows the roster widened to on 5 September 2026,
+        /// in the order <c>content/units.txt</c> carries them.
+        /// </summary>
+        private const int NecromancerId = 38;
+
+        private const int BoneGolemId = 39;
+
+        private const int BlackKnightId = 40;
+
+        private const int FrostWightId = 41;
+
+        private const int AbominationId = 42;
+
+        private const int VampireId = 43;
+
+        private const int WitchId = 44;
+
+        private const int FiendId = 45;
+
+        private const int ShadeId = 46;
+
+        private const int CursedVillagerId = 47;
+
+        private const int WerewolfId = 48;
+
+        private const int GraveRobberId = 49;
 
         /// <summary>The committed archer, which is what these tests spend on the board.</summary>
         private const int ArcherId = 3;
@@ -161,12 +195,12 @@ namespace Tests.PlayMode
 
             Send(root, 1, SkeletonScoutId);
             Send(root, 2, SkeletonId);
-            Send(root, 3, NecromancerId);
+            Send(root, 3, SkeletonMageId);
             Send(root, 4, SkeletonWarriorId);
 
             Assert.That(
                 Sent(root),
-                Is.EqualTo(new[] { MinionId, SkeletonScoutId, SkeletonId, NecromancerId, SkeletonWarriorId }),
+                Is.EqualTo(new[] { MinionId, SkeletonScoutId, SkeletonId, SkeletonMageId, SkeletonWarriorId }),
                 "Five creep types in one round, which no width in the old rules would have allowed at "
                 + "wave one.");
 
@@ -225,10 +259,12 @@ namespace Tests.PlayMode
                 Ids(root.Composing.Sendable(0)),
                 Is.EqualTo(new[]
                 {
-                    SkeletonScoutId, MinionId, SkeletonId, NecromancerId, SkeletonWarriorId,
+                    ShadeId, SkeletonScoutId, MinionId, CursedVillagerId, WitchId, SkeletonId,
+                    WerewolfId, SkeletonMageId, NecromancerId, VampireId, GraveRobberId, FiendId,
+                    SkeletonWarriorId, FrostWightId, BlackKnightId, AbominationId, BoneGolemId,
                 }),
-                "Every walking row, cheapest first. There are no unlocks: what a wave may carry is the "
-                + "roster, and the only question left is price.");
+                "Every walking row, cheapest first and then by id. There are no unlocks: what a wave "
+                + "may carry is the roster, and the only question left is price.");
 
             Send(root, 0, MinionId);
 
@@ -237,7 +273,7 @@ namespace Tests.PlayMode
                 Has.No.Member(MinionId),
                 "A repeat is spelled by raising that box's count, never by a second box.");
 
-            Assert.That(root.Composing.Sendable(1).Count, Is.EqualTo(4));
+            Assert.That(root.Composing.Sendable(1).Count, Is.EqualTo(16));
         }
 
         /// <summary>
@@ -252,8 +288,13 @@ namespace Tests.PlayMode
 
             Assert.That(
                 Ids(root.Composing.Sendable(0)),
-                Is.EqualTo(new[] { SkeletonScoutId, MinionId, SkeletonId }),
-                "A Necromancer is 19 and a Skeleton Warrior 31.");
+                Is.EqualTo(new[]
+                {
+                    ShadeId, SkeletonScoutId, MinionId, CursedVillagerId, WitchId, SkeletonId,
+                    WerewolfId,
+                }),
+                "The Werewolf at 18 is the dearest thing eighteen gold reaches; a Skeleton Mage is 19 "
+                + "and a Bone Golem 90.");
 
             Send(root, 0, SkeletonId);
 
@@ -279,7 +320,11 @@ namespace Tests.PlayMode
         {
             MatchRoot root = Building(Opening(gold: 50));
 
-            Assert.That(root.Composing.Sendable(0).Count, Is.EqualTo(5), "The whole roster, at 50 gold.");
+            Assert.That(
+                root.Composing.Sendable(0).Count,
+                Is.EqualTo(13),
+                "Thirteen of the seventeen walking rows, at 50 gold — the Frost Wight at 53 is the first "
+                + "the purse does not reach.");
 
             Select(root, ArcherId);
             root.Pointer.Click(ScreenPointOf(root, FreeColumn, FreeRow));
@@ -287,7 +332,7 @@ namespace Tests.PlayMode
             Assert.That(root.Composing.Gold, Is.EqualTo(10), "Fifty, less an Archer.");
             Assert.That(
                 Ids(root.Composing.Sendable(0)),
-                Is.EqualTo(new[] { SkeletonScoutId, MinionId }),
+                Is.EqualTo(new[] { ShadeId, SkeletonScoutId, MinionId }),
                 "The tower was paid for first, so the wave is priced against what it left.");
 
             Send(root, 0, MinionId);
@@ -673,7 +718,7 @@ namespace Tests.PlayMode
                 "And the Minion is in the box in front of it, which is the duplicate rule preventing "
                 + "rather than refusing.");
 
-            Assert.That(Wording(root.Wave.Choices), Does.Contain("Necromancer   19 gold"));
+            Assert.That(Wording(root.Wave.Choices), Does.Contain("Skeleton Mage   19 gold"));
         }
 
         /// <summary>
@@ -857,6 +902,7 @@ namespace Tests.PlayMode
                 carried ?? WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(gold),
+                NoCapstoneTokens,
                 CostTable.From(rules, types),
                 types,
                 StreamingContent.ReadMap(),
@@ -901,6 +947,7 @@ namespace Tests.PlayMode
                 WaveScript.Nothing,
                 StreamingContent.ReadUpgrades(types),
                 Purse.Holding(100),
+                NoCapstoneTokens,
                 CostTable.From(StreamingContent.ReadRuleset(), types),
                 types,
                 StreamingContent.ReadMap(),

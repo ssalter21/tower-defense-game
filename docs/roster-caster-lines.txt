@@ -1,0 +1,97 @@
+# The Cleric, Mage and Druid lines as they are now bound, as a set.
+#
+# WHAT THIS IS FOR. The same question docs/roster-melee-lines.txt asks of the
+# other three lines: whether the nine rungs read as three lines of three once
+# each row is wearing the atlas, holding the props and playing the clip its
+# binding gives it. A rung is told apart from the rung below it by colour, by a
+# prop or by a second model, and none of those three can be seen on a sheet of
+# one character per model.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-caster-lines.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle and no test reads it.
+# Edit a line, run it again, look again. The one committed copy is
+# docs/frames/roster/caster-lines-sheet.png, under a name the tool does not
+# write, because every candidate run rewrites candidates-sheet.png.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# THIS TRANSCRIBES THE BINDINGS AND DOES NOT DECIDE THEM. Every model, prop,
+# atlas, turn and beside prop below is the one MatchSceneBuilder and
+# Tests.Fixtures.ChosenArt bind for that row, which is what docs/roster.md
+# signs. A line here that disagrees with those tables is this file being wrong,
+# not the tables.
+#
+# THE POSE IS EACH ROW'S IDLE, AND NOTHING HERE IS FRAMING. A set line carries
+# one clip and a row carries three, so what is shown is the clip a row stands
+# in between shots -- the pose a player sees most of. All nine of these rows
+# are posed, so unlike the three Paladin rows on the melee sheet none of them
+# needed a clip invented to photograph it. Where roster.md names a clip on one
+# of these lines it is the swing -- Ranged_Magic_Shoot for the Cleric and the
+# Druid -- and the swing is the windup, not the idle. The windup and backswing
+# NUMBERS on the Cleric and Druid blocks are still that page's `_`, and that
+# ask stands.
+#
+# TWO THINGS HERE ARE ASKS FOR roster.md RATHER THAN FOR THE EYE. That page
+# does not say where Cleric_Tome goes when the Bishop's mace arrives, so the
+# mace takes the hand it was in and the tome is put down -- moving it to the
+# off hand would be inventing an assignment rather than reading one. And the
+# Elder is colour and nothing else, against that page's own "tier 2 is colour
+# plus a prop": its Elder block names druid_texture_alt_A, no prop, and
+# `Open -- none`. The rows below are bound as their blocks are written.
+#
+# A RUNG CARRIES UP WHAT THE RUNG BELOW IT HELD, AND WHAT ITS Looks LINE NAMES
+# REPLACES WHAT WAS IN THAT HAND. So the Elder and the Overgrowth carry the
+# Druid's staff, which neither of their lines repeats, and the Bishop's mace
+# takes the hand the Cleric's tome was in. A colour does not carry up at all:
+# it is one of the three things that tell a rung apart, and roster.md gives
+# tier 3 the second model instead wherever one exists -- which is why the
+# Unravel wears the atlas the Lorekeeper imports with rather than the
+# Sorcerer's. That character ships no alternate atlas, and the Sorcerer's
+# belongs to a different character's UVs.
+
+# --------------------------------------------------------- the Cleric line ---
+
+# Cleric, tier 1: the tome, in the atlas the model imports wearing. This line
+# has no second model anywhere in the collection, so it is colour and props at
+# every rung.
+tower cleric        Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx  -  Idle_A
+# Bishop, tier 2: cleric_texture_B and the mace in place of the tome.
+tower bishop        Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  -  Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png
+# Consecration, tier 3: the Bishop again with the font on the tile beside him,
+# at the size it imports at -- 0.81 m tall and 1.44 across, a basin at knee
+# height. The font is the whole of this rung's read, so whether it carries at
+# the camera's fixed pitch is the thing to look at on this tile.
+tower consecration  Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  -  Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png  Kaykit/mystery-monthly-series-6/cleric/Cleric_Font.fbx*1
+
+# ----------------------------------------------------------- the Mage line ---
+
+# Mage, tier 1: live since #44, and the open spellbook is new here -- the row
+# held a staff while the weapon was chosen per delivery rather than per row,
+# and roster.md says "the mage, book in hand".
+tower mage          Characters/Mage.fbx  Kaykit/adventurers/spellbook_open.fbx  -  Idle_A
+# Sorcerer, tier 2: mage_texture_alt_A and the staff the tier below has just
+# put down. The quarter turn is what stands the staff on end in the fist.
+tower sorcerer      Characters/Mage.fbx  Weapons/staff.fbx@0,0,-90  -  Idle_A  Kaykit/adventurers/mage_texture_alt_A.png
+# Unravel, tier 3: the second model, and the only model swap on this sheet. The
+# Lorekeeper is the one character in the roster with no alternate texture,
+# which costs this rung nothing -- the body IS the change.
+tower unravel       Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper.fbx  Kaykit/mystery-monthly-series-6/lorekeeper/Lorekeeper_Tome.fbx  -  Idle_A
+
+# ---------------------------------------------------------- the Druid line ---
+
+# Druid, tier 1: his own staff, in the atlas the model imports wearing.
+tower druid         Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Idle_A
+# Elder, tier 2: druid_texture_alt_A and nothing else. One stat and one change
+# to the look, which is the thinnest tier 2 on this sheet.
+tower elder         Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Idle_A  Kaykit/adventurers/druid_texture_alt_A.png
+# Overgrowth, tier 3: druid_texture_alt_B and the bare weirwood beside him at
+# 0.55, which is the size #274 measured -- 2.06 m across, the tile it stands
+# on, and 2.89 tall. This line has no second model: the PlantWarrior was set
+# aside on #250 for reading as a different creature rather than the same person
+# promoted, so the Druid keeps his own body at all three rungs.
+tower overgrowth    Kaykit/adventurers/Druid.fbx  Kaykit/adventurers/druid_staff.fbx@0,0,-90  -  Idle_A  Kaykit/adventurers/druid_texture_alt_B.png  Kaykit/forest-nature/Color8/Tree_Bare_1_C_Color8.fbx*0.55

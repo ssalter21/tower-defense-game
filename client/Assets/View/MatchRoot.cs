@@ -548,13 +548,20 @@ namespace View
         /// "the art is not wired up" on exactly the checkout where somebody is
         /// trying to see whether the art works.
         /// </remarks>
+        /// <param name="look">
+        /// The look every effect in this match is drawn at, or null for the one
+        /// the game ships. Only the frame capture passes one, and only because
+        /// every effect number and colour is a placeholder somebody has to see
+        /// the alternatives to; see <see cref="EffectLook"/>.
+        /// </param>
         public MatchView BeginMatch(
             UnitTypeTable types,
             Ruleset rules,
             TowerLayout layout,
             WaveScript wave,
             ulong seed,
-            MatchArt art)
+            MatchArt art,
+            EffectLook look = null)
         {
             if (Map == null)
             {
@@ -579,7 +586,20 @@ namespace View
             host.transform.SetParent(transform, worldPositionStays: false);
 
             MatchView = host.AddComponent<MatchView>();
-            MatchView.Begin(Map, rules, types, layout, wave, seed, art);
+
+            // The floor's own bounds and not a second reckoning off the map.
+            // Only a candidate about where a ground effect stops reads this;
+            // see MatchDecorations, whose two members for it are off in the
+            // look the game ships.
+            Bounds footprint = Floor.WorldBounds;
+
+            var board = new Rect(
+                footprint.min.x,
+                footprint.min.z,
+                footprint.size.x,
+                footprint.size.z);
+
+            MatchView.Begin(Map, rules, types, layout, wave, seed, art, board, look);
 
             // The layout does not change for the life of a match, so the board
             // is dressed around it once rather than watched.

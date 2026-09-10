@@ -53,6 +53,14 @@ namespace View
         /// <param name="proved">The session, held against a fresh run of its own script.</param>
         /// <param name="directory">The folder the script is written into.</param>
         /// <returns>The path written, or null where there was nothing to write.</returns>
+        /// <remarks>
+        /// The separators are made one character before the path leaves.
+        /// <c>Application.persistentDataPath</c> is written with forward slashes
+        /// and <see cref="Path.Combine"/> joins with the platform's own, so the
+        /// plain call produces a path that changes separator half way along —
+        /// and this path is read out to whoever played, on the end frame, by
+        /// <see cref="Wording"/>.
+        /// </remarks>
         public static string Written(ProvedSession proved, string directory)
         {
             if (proved is null) throw new ArgumentNullException(nameof(proved));
@@ -65,7 +73,7 @@ namespace View
 
             Directory.CreateDirectory(directory);
 
-            string path = Path.Combine(directory, FileName);
+            string path = Path.Combine(directory, FileName).Replace('/', Path.DirectorySeparatorChar);
 
             File.WriteAllText(path, proved.Script, Utf8);
 

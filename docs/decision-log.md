@@ -1632,3 +1632,667 @@ splash, the tier signal) stand in `roster.md` until he does. Each of those is it
 **The theme it fixes on the creep side is undead, plus the dark and hooded.** Skeletons were already the
 creeps; the Mystery Monthly characters that read as gothic monsters or as masked and cloaked join them, and
 everything modern, mechanical or comic is set aside with a one-line reason so it is not re-derived.
+
+---
+
+## 5 September 2026, last — Sam signs the roster, and six standing proposals move
+
+The [expansion proposal](roster-expansion-proposal.md) was reviewed by Sam in full and taken. The entry above
+recorded the *direction* and said each of the five standing proposals it would retire "is its own entry here
+when it moves". They moved. A sixth reversal — the capstone token — was not in the proposal and arrived in the
+review.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **[The roster](roster.md#proposals-retired-on-5-september-2026)** — Captain and Hero | The Soldier line's tier 2 is an attack-speed aura and its tier 3 a 360° sweep | **Both retired as proposals.** The aura is the **Paladin's Blessing**; the sweep is the **Barbarian's Slam** | A tier 2 is one stat now, and both mechanics belong on models that ship the prop for them — a book and a statue, a two-handed slam clip. Neither row ever reached `units.txt`, so no id is burned |
+| **[The roster](roster.md#proposals-retired-on-5-september-2026)** — the elemental branch | The Mage line forks at tier 2 into Pyromancer and Cryomancer and rejoins at the Frostfire Archmage | **The branch is retired.** Tier 2 is the **Sorcerer**, one stat; tier 3 is **Unravel**. The area slow is the **Druid's Overgrowth** | Three stages, no branch. It closes the roster's own open question that the tier-2 element pick was temporary, and it makes *one line, three stages* an invariant with no exception. Two roads ending at one tower made the pick a tempo decision rather than a build decision |
+| **[The roster](roster.md#4--mage--tier-1--status-live)** — the Mage's splash | Author the splash, reprice the row, or make it fire three shots — "picking one is a signature rather than a fix" | **The splash is authored** — origin `target`, radius 1000, payload `damage` — **and the price is deliberately not touched.** The row stays at 92 against a rule that says 30 | Sam, 5 September 2026: *"The only thing on the mage thats deferred is the appropriate costing, all the functionality stays, it needs the splash."* Repricing a row whose value is a splash radius is what the cost rule is worst at; the price waits for the automated balance sweeps to be good enough to derive it. The gap is now held open on purpose rather than unanswered |
+| **[The roster](roster.md#7--skeleton-mage--status-live)** — id 7 | id 7 is the **Necromancer**, wearing `Skeleton_Mage`, and the pack's dedicated Necromancer model "is left unused, which is a choice and not an oversight" | **id 7 is relabelled Skeleton Mage** and its long-unsigned aura is signed as **haste** (+20 speed, friend, radius 2000). A new **Necromancer** row wears the Necromancer model and takes the shield aura originally designed for id 7 | The pack's own necromancer should be the necromancer. The id does not move so no hash moves; only the new aura does that. The `units.txt` label moves too — `necromancer` becomes `skeleton-mage` — because two rows cannot share one, and renaming a label is free |
+| **[The roster](roster.md#the-tier-signal-is-never-size)** — the tier signal | "Size is the tier signal, and it is the only one." The Ranger is the Archer at 1.5 scale | **Size is retired as a tier signal.** A rung is told apart by **colour, a prop, or a second model** — never by how big it is. Size now tells the two *sides* apart and nothing else | Sam, 5 September 2026: *"I dont like the size upgrade any more, I want it reverted. There needs to be changes to the assets, maybe new equipment or a new continuous aura or glow on the tower, colour change that makes sense."* Scaling a Paladin 1.5x when the pack ships a helmeted Paladin wastes the pack |
+| **[The roster](roster.md#what-things-cost)** — what a capstone costs | The gates were **deleted, not switched off**, on 13 August, and the per-wave type limit went with them | **A capstone token comes back as a plain currency**: +1 at rounds 3, 6 and 9, spent on a capstone edge. **No gate comes back with it** — no capacity schedule, no per-wave type limit, no offering | The 14 August entry re-proposed gates carrying *both* a capacity schedule and a token; **only the token half is taken.** Sam, 5 September 2026: *"You get a capstone token on round 3 6 9. Its fine that they are not priced in, it's limited by the increments."* Nine capstones against three tokens is what makes the choice of line a decision |
+
+**Scarcity is the grant schedule, not the price, and that is a decision rather than a gap.** Five of the nine
+capstones — Shield Wall, Blessing, Consecration, Overgrowth, Unravel — change neither the damage roll nor the
+bodies a shot hits, so the cost rule would price each identically to the rung below it. **No capstone premium
+is to be authored.** An authored fudge factor inside a file whose whole claim is that both sides of the purse
+are arithmetic would be a worse artefact than a flat number the sweep can report.
+
+**The three engine asks were decided with the rest.** The **Cursed Villager becomes the Werewolf on the first
+damage it takes**, and a lethal first hit does not kill it — the change resolves ahead of the death, so the
+Werewolf enters on its own full 2600 and no Villager can ever be one-shot. The **Necromancer raises a Minion
+every 150 ticks with no cap**, bounded only by how long it lives. The **Grave Robber pays 12 gold** to the
+defender that kills it, half its own price, and a leaked one pays nothing.
+
+> **The uncapped Necromancer was raised as a problem and kept as a trade-off.** A slowed Necromancer raises
+> *more* — the speed floor is a tenth, so a fully-slowed one crosses in ~17,000 ticks instead of ~1,545 and
+> raises on the order of a hundred Minions instead of ten. Shield Wall and Overgrowth are slows, so the two
+> capstones built to handle a push are the two that make this body worst. Sam, 5 September 2026: *"I dont care
+> that it gets stronger in theory if you slow it, thats an interesting trade off to spamming or stacking
+> slows."* Recorded because it will look like an oversight to whoever meets it in a sweep.
+>
+> **What it does cost is a proof.** `Match.RequireItArrives` guarantees at construction that every *authored*
+> order reaches the exit inside the tick ceiling, at the floor speed — and a creep spawned at runtime is in no
+> order. Nothing runs away, because a Minion does not itself raise, but the arithmetic has to be re-derived
+> over the spawner's own floored crossing time rather than assumed. That is the spawn ticket's ADR.
+
+**Names: all 35 kept as proposed, and the grammar asymmetry is deliberate.** Tiers 1 and 2 are named for a
+body — Sergeant, Templar, Bishop, Sorcerer, Elder, Cutthroat, Artificer — and every capstone is named for a
+move: Shield Wall, Slam, Blessing, Consecration, Unravel, Overgrowth, Overwatch, Fan of Knives, Mortar. That
+was put to Sam as a problem, since a row is a unit and every other row is named for the thing on the tile. He
+kept it: *"the towers are tier 1 and 2 but the capstone is the name of an upgrade instead."* A capstone is the
+one rung bought with a different currency and it is not a new body — it is a thing the tower learns to do.
+
+**Models: all confirmed from a rendered sheet, with three changes.** The **Marksman holds `crossbow_2handed`,
+not his rifle** — the only firearm the roster would touch, and it puts the top of the Archer line in a
+different century. The **Grave Robber wears `Hoarder_Backpack`, not the sword** — the pack is what the mechanic
+is about, and a sword on a creep that never attacks reads as a lie. And the **PlantWarrior is set aside**: it
+was proposed as the Druid's tier 3 and was the only one of the six second models that read as a *different
+creature* rather than the same person promoted. The Druid keeps his body and gains a **bare weirwood** on the
+tile beside him — `Tree_Bare_*_Color8` from the Forest Nature pack, cream-white trunk under a red canopy.
+
+**What the signing bought that is work rather than prose.** A per-row texture does not exist in the view —
+`UnitArt` has no material field — so tier colour is a small view feature plus an import of the alternate
+textures, none of which are in the repo. There is **no socket for a prop beside a tower**, only two hand
+bones, so the Engineer's turret, the Paladin's statue, the Cleric's font and the Druid's tree have nowhere to
+stand; the Engineer line cannot be drawn as designed at any tier without one. And a **glow is deliberately not
+a tier signal** — it is reserved for reading *"this tower is projecting an aura"*, which is the meaning that
+matters in play; the client has no `ParticleSystem` and two play-mode tests forbid one, so it would have to be
+real mesh geometry either way.
+
+---
+
+## 6 September 2026 — the Villager transforms, and two written-down claims move with it
+
+[#267](https://github.com/ssalter21/tower-defense-game/issues/267) built the first of the three engine asks
+signed on 5 September: a creep becomes another row mid-lane. Two claims this repository had written down
+turned out to be wrong once it existed, and both are here rather than edited away.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 "paid that price once, deliberately and **for the last time before the map is measured**" | **Layout 4, and the map is not measured yet.** A body that stops being one row and starts being another cannot be said in any arrangement of the twenty-eight columns, because every one of them describes a body that is one thing for as long as it exists. So `becomes` is the twenty-ninth column, layout 3 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired |
+| **[The roster](roster.md)** — the Villager/Werewolf pair | "The pair is therefore worth 1800 + 2600 = 4400 effective health *always*, not as a worst case" | **It is worth the Werewolf's 2860 effective health.** That arithmetic belonged to a trigger nobody signed — it is what a change *on death* would be worth. The signed trigger is the **first damage taken** and the change resolves ahead of it, so the Villager's own 1800 is never spent and the roll that triggers the change lands on the Werewolf. The band test moved with it, 36 to 88. **Whether the pair should be worth both pools is Sam's, and is unsigned** — it means moving the trigger onto the death, which is a different mechanic; it is an [open question](open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death) rather than a decision this ticket took |
+
+**The reading taken, spelled out, because a later reader will need it.** "The change resolves ahead of the
+death" was signed; three implementations of that sentence were available, and the one taken is **the change
+resolves ahead of the *damage***. The shot arrives, the pools in front of health absorb, and if anything got
+past then the body becomes the row it names — and *then* the roll is resolved, through the new row's armour
+and against the new row's pool and death check. "Cannot be one-shot" is therefore not a rule at all: the row
+that named a successor is already gone when the death check runs, so no hit of any size can kill it. The two
+rejected readings both apply the damage first and then need an invented clamp — one point of health, so that
+the transformation has somebody to happen to — and a clamp would make the Werewolf's entering pool a function
+of how hard the Villager was hit, which is the opposite of what the roster signs. See
+[ADR-0059](adr/0059-a-creep-becomes-another-row-mid-lane.md).
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 3` → `layout 4`, and `unit-types/3` → `unit-types/4`, for the one column.
+- `SimulationVersion` **10 → 11**, because the tick loop's rules moved: a body can change row, and the matrix
+  is consulted against the row it changed into.
+- `match-state/3` → `match-state/4`. **Which row a creep is stopped being a constant of the creep**, so the
+  type id is folded every tick beside its health and its phase instead of once at the spawn — and every stored
+  record's rolling hash stops reproducing whether or not its roster authors a transformation.
+- `rule-fingerprint/8` → `rule-fingerprint/9`, the third bump taken for the scenario rather than the shape of
+  the fold: no roster in `DerivationTests` named a row to become, so the rules ran nowhere and the fingerprint
+  would have recorded only that the state hash had a new layout.
+
+**What is free is every record format.** `RecordFormat` is untouched: a roster is pinned by its content hash
+and never by its column count, so the replay bundle, the ghost, the wave and the command stream all carry the
+new hash in the field they already had.
+
+---
+
+## 6 September 2026 — a creep raises creeps, and the layout row moves a second time in a day
+
+[#268](https://github.com/ssalter21/tower-defense-game/issues/268) built the second of the three engine asks
+signed on 5 September: the Necromancer raises a Minion beside itself every 150 ticks, uncapped. One claim this
+repository had written down moves with it, and one number it had estimated turns out to be wrong in the
+direction that matters.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 was "the last widening before the map is measured", and [#267](https://github.com/ssalter21/tower-defense-game/issues/267) already recorded that layout 4 broke it | **Layout 5, hours later, and the map is still not measured.** A creep putting a creep on the board cannot be said in any arrangement of the twenty-nine columns: every one of them describes what a body *is*, and `becomes` is one body changing row rather than a second body arriving. So `raises` and `raisePeriod` are the thirtieth and thirty-first, layout 4 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired again |
+| **[The roster](roster.md)** — the Necromancer | "It lives about 1,545 ticks and raises **roughly ten**"; a fully-slowed one raises "on the order of a hundred" | **Eleven against the committed defense, and about a hundred and seventy at the floor speed.** The estimate was close and the reading it implies was not: four hundred gold of Necromancers returns **1200%** of its gold against a band of 60 to 95, where it returned 100 before. Nineteen bodies are sent and **228** leak |
+
+**Uncapped is the decision and the reading is the finding.** [#250](https://github.com/ssalter21/tower-defense-game/issues/250)
+signed the cadence and signed the absence of a cap in the same sentence, with the trade-off written beside
+it: *a slowed one raises ten times as many, kept as a trade-off*. Shield Wall and Overgrowth are slows, so the
+two capstones built to handle a push are the two that make this body worst. **No cap, decay or diminishing
+return was added to make the number look better**, and no creep number was retuned: the return band was
+already asserted as MISSED at both ends and the Necromancer's entry in the over list is updated from 100 to
+1200 rather than converted to a pass.
+
+**Two decisions the ticket had to take, both recorded in [ADR-0060](adr/0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md).**
+
+- **A raised body enters the array at the end, with the next entity id**, so the array stays in ascending id
+  order — which `ReportPasses`, `Acquire` and the fold all read as part of the rules. The tiebreak follows
+  from that and follows in the conservative direction: a body raised level with its raiser has the higher id
+  and **loses every tie**, so a tower looking at both shoots the raiser.
+- **A raised body's leak charges health, at the price of the row it is.** A body reaching the exit takes as
+  much health off a defense whether or not anybody bought it, so charging nothing would make the raise free in
+  the run economy. What nobody paid is the *sender's* half: creep cost is derived from effective health and a
+  spawner's price cannot see what it spawns, so 21 gold of Necromancer arrives with 110 gold of Minions behind
+  it. That gap is [open](open-questions.md#what-is-a-spawner-worth) and held open, beside the Mage's splash and
+  the Vampire's shield.
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 4` → `layout 5`, and `unit-types/4` → `unit-types/5`, for the two columns.
+- `SimulationVersion` **11 → 12**, because the tick loop grew a phase: a body puts a body on the corridor at
+  the close of a tick, beside the wave's own release.
+- `match-state/4` → `match-state/5`. The clock each creep raises on joins the per-tick fold, and the running
+  count of leaks nobody sent joins the totals — so a run one tick from putting a body down stops hashing like
+  one that is two ticks from it.
+- `rule-fingerprint/9` → `rule-fingerprint/10`, the fourth bump taken for the scenario rather than the shape
+  of the fold: no roster in `DerivationTests` raised anything, so the rule ran nowhere.
+
+**What is free is every record format.** `RecordFormat` is untouched, for the reason #267 gives: a roster is
+pinned by its content hash and never by its column count.
+
+---
+
+## 6 September 2026 — a kill pays, and both balance instruments turn out to be blind to it
+
+[#269](https://github.com/ssalter21/tower-defense-game/issues/269) built the last of the three engine asks
+signed on 5 September: the Grave Robber pays twelve gold to whoever kills it, mid-match, into the one purse.
+The mechanic is small and what it measured is not.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[`content/units.txt`](../content/units.txt)** — the layout row | Layout 3 was "the last widening before the map is measured"; layouts 4 and 5 already broke it, hours apart | **Layout 6, the same day, and the map is still not measured.** What a body is worth *dead* cannot be said in any arrangement of the thirty-one columns: `cost` is what it is worth *alive*, charged against health when it reaches the exit, and a kill is the opposite outcome. So `bounty` is the thirty-second, layout 5 keeps its own reader branch and its own hash label, and every record stamped against the roster before this is retired again |
+| **[The roster](roster.md)** — "the sweep is what is meant to derive it" | Every unpriced thing on this roster is held open for the sweep to measure | **The sweep cannot see this one, and neither can the return band.** Both instruments came back byte-identical, for two different structural reasons, and no number was touched to make that happen |
+
+**Neither instrument is broken and neither is being relaxed.** The return band plays four hundred gold of one
+row against the committed defense and reads `leaked × 100 / count`: it is a **leak rate**, which is exactly why
+cost cancels out of it, and a body that was *killed* is outside the ratio entirely. The sweep plays whole runs
+and varies the row a run **sends**, where a bounty is paid to whoever **kills** — so it would reach a run
+through the opponents it defends against, and every opponent in the committed sweep is the stand-in out of
+`content/field.txt`, which sends Minions. The Grave Robber reads 81 in the band and 367 in the sweep, before
+and after, to the digit.
+
+**What a reading of it needs is a stand-in that sends the row**, which is one line of `content/field.txt` and a
+regenerated report — and that is deliberately not done here. The stand-in's column is calibrated rather than
+chosen: its own header carries the measurement that a field member with the right total and the wrong number of
+columns is a walkover, so swapping the row it sends would move every reading in the report for a reason that
+has nothing to do with any of them.
+
+**Three decisions the ticket had to take, all recorded in
+[ADR-0061](adr/0061-a-kill-pays-the-defender.md).**
+
+- **The payment is read off the row the body is standing as when it dies**, and never off the order that sent
+  it. That is forced rather than chosen: a body a spawner raised is in no order at all, and one that changed
+  row mid-lane is not the row its order names. It is deliberately *not* how a leak is priced, because a leak
+  survives only as a count per order and a kill is resolved with the body still in the array.
+- **The money is minted rather than taken**, and **the one purse spends it on either half of the board.** With
+  two wallets, "a kill pays the defender" would mean the defense funds itself; with one, a round that kills
+  well sends a bigger wave next round. That coupling is the one purse's and not the bounty's, and it is the
+  first income that depends on what a player *built* rather than on what a player *sent*.
+- **What the kills paid joins the per-tick fold.** The count of kills beside it cannot stand in for it: two
+  matches that killed the same number of different rows agree on every other field in that fold, and a body
+  that has been cleared away leaves nothing else behind. That is the shape of the bug #254 found in the
+  snapshot comparison.
+
+**One thing was deliberately not refused.** A bounty above the row's own cost loads perfectly well. Twelve is
+half of twenty-four and `docs/roster.md` argues that half for *that row*; whether a body may ever be worth more
+dead than it cost to send is a design question nobody has taken, and a refusal at load would take it.
+
+**And one adjacent hole is named rather than fixed.** `WaveScript.FullPrice` is documented as the ceiling on
+what a round can deal, and since #268 it is not one: a raised body's leak is charged at the raised row's price
+and `FullPrice` counts only the bodies an order sends, so a pool holding a spawner bounds the load walk's bonus
+below what a round could really earn — the one direction that produces false refusals. Nothing in the committed
+content reaches it, and it is #268's line rather than this one's. The bounty's own ceiling,
+`WaveScript.MostBountyPayable`, does count what a spawner puts down, bounded by `Match.TickCeiling` over the
+raise period.
+
+### The bill
+
+Two retirements, both deliberate, and the label bumps that come with them.
+
+- `content/units.txt` `layout 5` → `layout 6`, and `unit-types/5` → `unit-types/6`, for the one column.
+- `SimulationVersion` **12 → 13**, because a match now produces a number a run spends.
+- `match-state/5` → `match-state/6`. What the kills have paid joins the per-tick fold.
+- `rule-fingerprint/10` → `rule-fingerprint/11`, and this one is **the first bump since
+  `rule-fingerprint/6` that the scenario alone could not answer**. #269's rule fires where a body's health
+  reaches zero, and **not one of the six halves that fold already had kills anything at all** — every body on
+  every roster in `DerivationTests` walks to the exit. A bounty put on the sixth half's roster moved the
+  fingerprint by nothing. The seventh half is a defense that kills what walks at it, over rows that pay three
+  different numbers by three different routes.
+
+**What is free is every record format**, again, and for the reason #267 gives.
+
+**And one measured fact about the frames, found while re-capturing them.**
+[`docs/frames/README.md`](frames/README.md) said "a frame is a function of its tick and nothing else". It is
+not: capturing `-Ticks "342,344"` and `-Ticks "311,342,344"` produce different bytes for the two shared frames,
+reproducibly, and only the three-tick list reproduces what is committed. #268 measured the same thing and
+recorded it in a commit message; the README now says it, and its magic-lines recipe is the list that actually
+made those frames.
+
+---
+
+## 6 September 2026, later — a capstone costs a token, and the 14 August proposal is half taken
+
+[#273](https://github.com/ssalter21/tower-defense-game/issues/273) built the second currency the roster has
+been describing since the nine tower lines were signed: **a capstone token, granted one at rounds 3, 6 and 9,
+and the whole price of a capstone edge.** Three tokens against nine capstones, so which line reaches its top
+is the decision.
+
+**This is the [14 August proposal](#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant)
+half taken, and the half is deliberate.** That entry brought the gate rounds back carrying two things at once:
+a **capacity schedule** — 2, 4, 6, 8 slots and 10, 20, 30, 40 count — and a **grant** that pays for a capstone.
+Only the grant is built. The capacity half is not deferred pending a ticket and is not scheduled; it is where
+[13 August](#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster) left it. **Read
+that entry as partly taken from here on.**
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **[§3 — one purse](vision.md#one-purse)** | *The purse is the only scarcity on the sending side* | **Still true, and it is now a sentence about one side of the board.** Nothing bounds a wave; what gained a second scarcity is the tower side, and only the top of a line |
+| **The 14 August table's second row** | Waves 3, 6 and 9 widen the wave and deepen what a slot may hold | **Rounds 3, 6 and 9 hand over one token and do nothing else.** No slot count, no per-slot depth, no menu, no offering. The rounds are a schedule and not a gate |
+| **[The roster](roster.md#what-things-cost)** | The token is a rule stated on that page and not yet code | **It is code.** A capstone row carries no gold price at all, and what is left open there is the client: a player holding no token sees a line stop at its second rung with nothing saying why |
+| **[`content/upgrades.txt`](../content/upgrades.txt)** | *That is the whole content of an edge: no tier number, no direction marker, no cost* | **The keyword is the cost.** `upgrade` is the target's gold price and `capstone` is one token; the arity is still two ids, and the file is layout 2 |
+
+### The keyword is a layout even though no column moved
+
+`content/units.txt` states the rule that **adding or moving a column is a new layout and a new label**, because
+two different column counts under one label is a silent misread nothing here could detect. This is the narrower
+case: the count did not move and **what the keyword column means did**. Two ladders whose rows mean two
+different things, both calling themselves layout 1, is the same class of thing — so `content/upgrades.txt` goes
+to **layout 2** under `upgrade-ladder/2`, the price joins the fold there and not before, and layout 1 is kept
+as a branch that reads every edge in gold and hashes to exactly what it always did.
+
+**A keyword rather than a third column, and rather than reading the shape of the ladder.** A third column would
+widen all eighteen rows to carry a price nine of them have. Deriving a capstone from the graph — the top of a
+line is a unit with no outgoing edge — would make the price a property of what somebody authored *above* a row:
+a fourth rung would silently re-price the third, and a line deliberately two rungs deep would silently make its
+second rung free.
+
+**That last clause about layout 1 needed an assertion of its own.** Regenerating the goldens copies
+`content/upgrades.txt` over `content/golden/defense-1.upgrades`, so the moment the committed file moved to
+layout 2 there was no committed layout-1 ladder left for the older branch to be measured against.
+`UpgradeLadderTests` now pins that branch's hash as a literal, the way `ContentTests` pins the oldest unit
+table's.
+
+### What the record did not need
+
+**No record format moved and none had to.** A command stream already carries the wave index every grant is a
+function of and the actions every spend is a function of, and the ladder hash in its header pins which edges
+cost a token — so a stored token count would be a second copy of a derivation, free to disagree with the
+first. `CommandStream.Check` folds the balance forward beside the purse and the board, **exactly rather than at
+a ceiling**, because nothing about a token depends on how a round played. `RecordFormat.CommandVersion` stays
+3 and its reader branches are untouched. [ADR-0062](adr/0062-a-capstone-costs-a-token.md) states that decision.
+
+**And one rule is left uncovered by every hash in this repository, named rather than fixed.** *Which* edges
+cost a token is in the ladder hash; *how many tokens a round holds* is a list in `sim/Run.cs`, and moving it
+would make refused streams legal with every stamp on every record still agreeing. The rule fingerprint cannot
+reach it — the scenario it folds over has a ladder with no edges, so no capstone is ever priced there — and
+widening that scenario would be a `SimulationVersion` bump for a rule that has not moved, which is the mistake
+`DerivationTests`' own remarks name. So the schedule is pinned by an assertion there whose comment says what a
+change to it owes.
+
+### The capstone is unpriced on purpose, and the tool now says how unpriced
+
+**Seven of the nine capstones price flat against the rung below, not five.** Five change neither term of the
+damage rule — Shield Wall, Blessing, Consecration, Overgrowth and Unravel are auras or debuffs. **Slam and
+Mortar are the other two**, and the reason is
+[#256](https://github.com/ssalter21/tower-defense-game/issues/256)'s: the rule's bodies term is the `targets`
+column, a damage-bubble row must leave `targets` at 1 because a bubble is one shot drawing one roll, so the
+rule counts one body for a swing that hits everything touching the Barbarian. Seven is what `show-ladder`
+prints and seven is what `docs/roster.md` says.
+
+**No premium was authored to compensate**, which is what the ticket asked for and what the cost section already
+argued. Scarcity is the grant schedule and not the price. What changed instead is what the tool *says* on those
+seven: the flat-price note now ends *the rule prices the capstone at what it replaces — and nothing charges
+that, because a token buys it*, so a reading and a bill are no longer the same sentence.
+
+### The scripted player had to learn to spend one, and what it will not spend
+
+`CoverThenUpgradeBot` builds both walls in the balance report, so a bot that could not spend a token would
+leave the mechanic unmeasured — and, worse, would compose phases the rules refuse: its gold loop would still
+have scored Fan of Knives and Overwatch on their cost columns and bought them with money nothing charges.
+
+It spends a token the round it arrives, in a loop of its own after the gold, on the capstone that puts the most
+damage on the route **per tick** — the gold loops' score with the gold taken out. **The one clause that is not
+the gold loops' rule is the comparison against what is standing**: a capstone consumes the rung under it, so
+one that scores worse would make a wall worse for a token. That clause was added after watching it happen: the
+first build of the loop bought a capstone that lowered the stand-in's wall, and the committed run's fourth
+round moved from 160 dealt to 187 — an instrument getting dumber rather than a finding about the roster.
+
+**What the bot will not spend is most of them.** Five of the nine change no damage roll and no body count at
+all, and the bot's score is damage — so those tokens go unspent, and the report says so by reporting a run that
+did not spend them. That is the score's known blindness rather than a statement about the roster.
+
+### And the sweep cannot see this mechanic at all
+
+**`content/sweep.csv` came back byte-identical**, over seventeen rows and a hundred and thirty-six runs. That is
+the reading, and it is a fact about the instrument rather than about the token.
+
+**A ten-round bot run from an empty board ends on fourteen towers and every one of them is a line's *first*
+rung** — five soldiers, four rogues, three clerics and a druid, measured on seed 20260807. The cover phase goes
+on finding a cheap root that watches route nothing watches yet, and never climbs; with no rung 2 standing there
+is no capstone edge to climb, so all three tokens are held to the end of the run. The canned stand-in *does*
+reach a rung 2 — it opens behind `content/defense.txt` with a purse of its own — and the capstone above that
+rung scores exactly what the rung scores, which is precisely the swap the "must beat what is standing" clause
+declines.
+
+**This is [6 September's bounty finding](#6-september-2026--a-kill-pays-and-both-balance-instruments-turn-out-to-be-blind-to-it)
+a second time, in a different structure.** A mechanic can be built, tested and correct and still be invisible to
+the balance report, because the report is played by one scripted player and that player's rule does not reach
+it. Nothing was retuned and no number was softened to produce a movement: **what a reading of this needs is a
+player that climbs**, which is a change to `CoverThenUpgradeBot`'s cover phase and not to anything this ticket
+decided.
+
+### The bill
+
+One retirement, deliberate, and one label bump with it.
+
+- `content/upgrades.txt` `layout 1` → `layout 2`, and `upgrade-ladder/1` → `upgrade-ladder/2`, for the second
+  keyword. The ladder hash goes `6C432E189630BF3C` → `A52476D83A039248` and the content hash it folds into
+  goes `CEAD5CE53790DD40` → `FAA0B1831B2CE190`.
+- **`SimulationVersion` stays 13.** Nothing in a tick loop moved, and every stream recorded before this is
+  already retired at the content stamp.
+- **Every record format is free**, again.
+
+**The committed match is untouched by the mechanic** — it is a defense and a wave read off files, with no build
+phase in it: 3 of 40 leaked, tick 5302, state `441D37E128517F3D`, the same four landmarks. What moved is its
+header, where the content stamp and the defense and wave hashes that fold the roster's content hash all
+followed the ladder. **The committed run is untouched too**, and that is a fact about `content/commands.txt`
+rather than about the rule: its four rounds place archers and never climb a line.
+
+---
+
+## 6 September 2026, last — a creep may be as tall as a tower, and the rule that said otherwise is deleted
+
+`ImportedArtTests.EveryCreepStandsUnmistakablyLowerThanEveryTower` had been red since the Black Knight landed
+on [#261](https://github.com/ssalter21/tower-defense-game/issues/261), and the whole roster effort finished
+around it: the ticket stayed open, the integrate ticket
+[#271](https://github.com/ssalter21/tower-defense-game/issues/271) stayed blocked behind it, and no agent
+touched the assertion, because every way out was a number or a rule a player sees and
+[AGENTS.md](../AGENTS.md) rule 6 puts those with Sam.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| **`roster.md`**, the scale table | Every creep is drawn at 0.5 because *"a creep is unmistakably smaller than the thing shooting it, at any camera angle"* | **The multiplier holds; the promise does not.** 0.5 is what is applied, and what it produces depends on which rig the model was authored on. A `Rig_Large` body at 0.5 draws at tower height, and that is allowed. |
+| **`ImportedArtTests`** | The tallest creep measures under four-fifths of the shortest tower, or the suite is red | **Deleted.** Not loosened to a threshold the four current bodies happen to clear — a weaker number would have been the same rule with a worse reason. |
+
+**Sam's words, and they name the reason the threshold was never the point:** *"remove the assert, I think this
+was something built out of something I said but I'm not attached to it. Maybe in the future some bosses will
+be larger than towers."* The rule was a reading of an earlier remark about size, hardened into an assertion by
+somebody building against it, and asserting it back was the mistake — a test can hold a decision, but it
+cannot make one.
+
+**Three ways out were on the table and none of them was taken.** A third multiplier for the Large rig,
+different models for those four rows, or dropping the clause. The first two are the shape of a project
+protecting an invariant it never wanted; the third is the one that leaves room for the thing Sam actually
+wants, which is a boss that towers over the board. **A future boss row is now a content decision rather than a
+test to argue with.**
+
+**What is lost is real and is written down.** That test instantiated every shipped row and measured its
+renderers' world bounds, and it was the only thing on the project comparing two packs' authoring scales
+against each other — the multipliers alone prove nothing, since a half applied to a taller model is not
+smaller than a one applied to a shorter one. A row imported at the wrong scale is now caught by looking at it.
+That is a real gap, and the honest version of closing it is a *band per rig* rather than an ordering between
+the two roles, which is a rule nobody has needed yet.
+
+**Nothing else moved.** No model, no multiplier, no content file, no golden: the deleted test asserted about
+art the branch already ships and changing it changes no byte a simulation reads. What follows is that
+[#261](https://github.com/ssalter21/tower-defense-game/issues/261) closes and
+[#271](https://github.com/ssalter21/tower-defense-game/issues/271) unblocks, which is the whole of the roster
+expansion waiting on one sentence from the person whose call it was.
+
+---
+
+## 6 September 2026, after the roster — integrating it turns up two things nobody wrote down
+
+The roster expansion's integrate ticket brought `main` into the effort branch and retired the stand-in
+allowance. Neither of those was meant to be interesting. Both were.
+
+### The branch and main both minted ADR 0058
+
+`main` merged [#243](https://github.com/ssalter21/tower-defense-game/issues/243) as
+`0058-a-sweep-row-is-a-creep-against-one-attack-type`; the roster branch had already written
+`0058-a-creep-becomes-another-row-mid-lane` and three more above it. Two records with one number, allocated in
+two branches that never saw each other.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| The branch's four records | 0058 becomes, 0059 raises, 0060 bounty, 0061 token | **0059, 0060, 0061, 0062.** The branch renumbers and `main` keeps 0058. |
+| `docs/adr/README.md` | Listed 0058–0060 and never listed the capstone-token record at all | All four listed, the token one included — it had been missing since it was written. |
+
+**The branch moved because `main` is where a number becomes public.** Main's 0058 is cited from `simcli/`, from
+a research note and from a merged pull request; renumbering it would break references that already exist
+outside this branch. The roster's four had never left it. That is the whole of the rule, and it is written
+here because nothing else in the repository says what to do when two branches allocate the same number.
+
+**The cost landed somewhere nobody would predict: twenty-two pictures.** Those four ADRs are cited by path in
+`content/units.txt` and `content/upgrades.txt` comments, and `Get-DrawnContentStamp` digests those files
+**byte for byte** — its own comment says a re-wrapped comment that moves no number still moves the stamp, and
+calls that the safe direction. So renumbering a comment aged every committed frame and chrome sheet. All
+twenty-two were re-captured and **all twenty-two came back byte-identical**, which is the check working as
+designed rather than a false alarm to be suppressed: it asked for proof and the proof was cheap.
+
+**Re-capturing them re-proved [6 September's tick-list finding](#6-september-2026--a-creep-raises-creeps-and-the-layout-row-moves-a-second-time-in-a-day) the hard way.** Nine of the nineteen frames came back
+*different* on the first attempt, because they were captured with a combined tick list rather than the list
+each was originally drawn with. `docs/frames/README.md` already says which frames stand on a line of their own
+and that the line is their whole list; ignoring it produced nine wrong pictures in one command. Re-run at the
+recorded lists, every one matched.
+
+### The stand-in allowance is gone, and with it the last thing that could hide a missing row
+
+[#251](https://github.com/ssalter21/tower-defense-game/issues/251) opened an allow-list so a simulation row
+could land before its art, drawing the Prototype Dummy until art arrived.
+[#262](https://github.com/ssalter21/tower-defense-game/issues/262) emptied it early. This ticket removed the
+mechanism: `UnboundUnits`, its five tests, and three exemptions that read it.
+
+**An empty allow-list and no allow-list are not the same thing**, which is why removing it was a ticket rather
+than a tidy-up. While the class existed, three assertions carried a branch for it —
+`NoTwoRowsOnOneModelAreDrawnAlike` skipped listed rows, `EveryTowerFiresFromAPointOnItsOwnArt` held them to
+naming *no* anchor, and `EveryUnitIsCalledWhatTheRosterCallsIt` let one off the name index. Every one of those
+branches was unreachable, and an unreachable branch in a test is a rule nobody is enforcing that reads like one
+somebody is. A row with no art now throws by name out of `MatchArt.For`, which is what it did before #251.
+
+**The test fixture is a complete second transcription again.** `Tests.Fixtures.ChosenArt` deliberately keeps its
+own copy of every art assignment so that two tables must agree — one choosing the wrong model is a failure
+rather than a tautology. `UnboundUnits` was the single thing it read across from the builder's side, because
+two lists of rows-with-no-art could only ever disagree by one being stale. That exception is gone with the
+mechanism.
+
+### What the numbers came to
+
+EditMode **100 of 100** — six fewer cases than before, being the five `UnboundUnitsTests` and the retired
+height assertion. PlayMode **165 of 165**, the built player **163 passed and 2 skipped**, and every static
+check green. The committed match is untouched at state `441D37E128517F3D`, 3 of 40 leaked, and a content hash
+that never moved: comments are not scanned, so a citation is free to be corrected.
+
+---
+
+## 7 September 2026 — every aura becomes one flat translucent circle, and nothing is drawn on a body again
+
+[#279](https://github.com/ssalter21/tower-defense-game/issues/279) rendered twenty-four candidate effect looks
+and put them in front of Sam. **He took none of them**, and signed something simpler than anything on the sheet.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning`** — capstone signatures | Ten shapes signed, four unsigned; each aura drawn as the plainest thing that says what that row does | **Every aura is one flat translucent circle** at the reach it reported, in its own colour. Nine shapes — a ring, cracks, a halo, a light, roots, a cage, plates, a crown of shards — became one | The shapes were placeholders competing to be a vocabulary, and the vocabulary is not what is wanted. What is wanted is animation and particle work nobody has done; until then one honest shape beats nine invented ones |
+| **`EffectMarks`** — the wash | A wash of colour on a body while a payload is in force | **Nothing is drawn on a body at all.** The colour wash is gone, and so are the four shapes drawn on the bodies an aura *found* — the Blessing's halo over each tower, the haste's ring over each creep, the frostbite's crown at each tower's feet, the Overgrowth's roots under each held body | Whether a body is affected is read off the circle it is standing in. A second thing saying so is a second thing to design |
+| **`BubbleSignature`** — what a member selects | A shape | **A colour and a lifetime.** The member names are kept, because they still say whose aura it is | The rows still need telling apart; only the means changed |
+| **The Overgrowth** | Roots under each held body, *because* a shape at its radius would cover ten boards | **Draws nothing at all** — the one aura on the roster with no decoration | Its reach is sixty hexes. A circle at that radius is a hundred and twenty across on a board nineteen wide: the screen washed flat rather than an area shown. An aura that covers everything has no impact area worth outlining |
+
+### The finding that made the rejection cheap
+
+**None of the twenty-four was wrong; the question they were answering was.** #279's own measurement said as
+much before Sam saw it — `tower-marks-on` moved 0.09% of a 1600×900 frame and `frost-halo` 0.04%, against ~2%
+for anything drawn on the ground. Nine shapes competing for a fifteenth of a percent of the screen is a
+vocabulary nobody can read, and the sheet made that visible in a way the constants never did.
+
+The other #279 finding is what the new rule fixes head-on: **the shared "ring" was a filled disc drawn opaque**,
+so at the two hexes every aura on the roster carries it was a plate over the corridor and the bodies standing on
+it. The shape was right and the surface was wrong. Nothing in this project had a transparent material until
+today — `ViewMaterials` shipped one opaque path, so alpha on a colour did nothing at all.
+
+### This is interim, and the thing standing in the way of the real answer is a test
+
+**What these effects should finally be is first-class animation with real particle work.** This client cannot
+host that as written: `MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera` forbids `ParticleSystem`, line
+renderers, trail renderers, sprites and canvases anywhere in the match, because all of them billboard and this
+camera orbits freely. Getting there means mesh-output VFX or a deliberate decision that the guard comes off for
+effects — **which is a decision, not a detail, and it is not taken here.**
+
+### What came out with it
+
+`EffectMeshes` lost five of its eight builders — `Ring`, `Cracks`, `Roots`, `Dome`, `Spikes` — and `MatchTuning`
+lost thirty-two constants that only those shapes read. `MatchView` lost `TowersWithin` and `CreepsWithin`
+entirely: they existed to answer "which bodies did this aura find", and nothing asks any more. The three shapes
+left in `EffectMeshes` are the Mortar's burst, the Unravel's strip and the Fan of Knives' knife — **shots and
+blasts, which are not auras and were not part of what moved.**
+
+The twenty-four candidate files and their committed frames are deleted rather than kept. They are pictures of
+nine shapes that no longer exist; the history of `docs/frames/effect-candidates/` and #279 hold them.
+
+### One thing is still unsigned, and it is a number
+
+**How translucent.** `MatchTuning.AuraDiscAlpha` is 0.28 and nobody chose it — it is the plainest value that
+lets a two-hex circle read without covering what is standing in it. A bracket of three candidates is committed
+beside the frames so it can be signed off pictures rather than off constants, and the case that decides it is
+two circles overlapping rather than one on empty floor.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905** — unchanged, which is the point: every constant in `MatchTuning` is
+declared not to be a simulation input, and thirty-two of them left without the match noticing. EditMode
+**114 of 114**, PlayMode **165 of 165** including `NothingInTheMatchTurnsToFaceTheCamera` and
+`EverythingDrawnIsRealGeometryLitByARealLight` — a translucent surface is still real geometry lit by the real
+light.
+
+---
+
+## 7 September 2026, later — the alpha is signed, and the particle ban turns out never to have been the rule
+
+Two things, and the second is a correction rather than a reversal.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning.AuraDiscAlpha`** | `0.28`, declared a placeholder — that auras are translucent circles was signed, how translucent was not | **`0.45`, signed.** Picked off a rendered bracket of 0.15, 0.28 and 0.45 | At 0.28 the cold circles read and the Blessing's gold, on yellow-green grass, does not. At 0.15 all three auras merge into one haze and stop being separable. 0.45 keeps them apart without doing what the opaque ring did |
+| **`MatchViewTests.NothingInTheMatchTurnsToFaceTheCamera`** | No `ParticleSystem` may exist anywhere in the match | **Nothing may billboard.** A particle system is allowed in `Mesh` render mode, refused in every other, and refused in mesh mode if its alignment is `View` or `Facing` | The test was enforcing something stricter than the rule it was named after, and the difference had begun to cost real work |
+
+### The alpha was decided on the right frame, which is the only interesting thing about it
+
+**Two circles overlapping, not one on empty floor.** A single circle reads at almost any alpha; what the heavy end of the bracket risks is lying over the corridor and the bodies walking down it, and that only shows where two auras cross. Tick 272 of the `creep-auras` context has the Necromancer, the Witch and the Skeleton Mage all pulsing within a few ticks of each other with bodies walking through, which is why both committed ticks are that context.
+
+The three frames stay in [`docs/frames/effect-candidates/`](frames/effect-candidates/README.md) as evidence for a decision rather than as a description of the board — the footing the Mage hat-pitch bracket already sits on. **The baseline candidate now names `0.28` outright**, where it used to name no value and draw whatever the file held: with the file at 0.45 a candidate naming nothing would quietly become a second picture of the winner, and that frame would stop being a picture of what lost.
+
+### The particle ban was reading a sentence the vision does not contain
+
+**Where the no-billboards rule actually comes from.** [#3](https://github.com/ssalter21/tower-defense-game/issues/3) — "Top-down grid or side-on lane?" — welded the playfield shape to the camera and was closed on 1 August 2026 by answering them separately. The playfield became the hex corridor; the camera became a free orbit, overturning Part III's "fixed camera, no free rotation". The docs of that day record the cost in the same sentence that records the answer: a free orbit *"makes no billboards, no flat cards, no painted-on shadows a mandatory art rule"*. [`vision.md`](vision.md) §6 still carries it.
+
+**That rule is about behaviour and the test was about a component.** A billboard is a card that rotates to keep facing the viewer, so an orbiting player either watches it spin or, pinned, watches it vanish edge-on — the rule is sound and is not being weakened. But Unity's particle renderer has a `Mesh` render mode that emits real geometry per particle and faces nothing, which satisfies the rule completely. The guard rejected it twice over anyway: once by asserting no `ParticleSystem` existed, and again by a loop demanding every `Renderer` be a `MeshRenderer` or `SkinnedMeshRenderer`, which `ParticleSystemRenderer` is not.
+
+**The cost of the confusion was not hypothetical.** Hours earlier the same day, the interim circle look was written up — in this log, in `roster.md`, in `MatchTuning`'s own header and in the candidates sidecar — as blocked on a client that "cannot host" particle work. That was wrong in every one of those places, and all four now say what the rule says.
+
+**Nothing was loosened that catches a real billboard.** Line renderers, trail renderers, sprites and canvases are still refused outright, because none of them has a non-billboarding mode worth the branch. `CameraRigTests` still holds the behavioural half — orbit the rig, assert nothing moved — which is what catches a billboard this list has not thought of.
+
+**And the relaxation is tested rather than assumed.** The match ships no particle system, so every new assertion about render modes would otherwise pass over an empty list, which is exactly how a guard that has stopped guarding looks. `ABillboardingParticleSystemIsStillRefused` stands one up inside a real match and walks it through three states: billboard mode is refused, mesh mode in world space is accepted, and mesh mode aligned to face the camera is refused again. That last case is the one worth having — real meshes turned to face the camera are a billboard with extra steps.
+
+### What is still Sam's
+
+**Whether the no-billboards rule survives at all.** Nothing above touches it; the correction only stops the test claiming more than the rule does. Sam has asked to see what billboarding actually costs before deciding whether to keep the rule, which is [#290](https://github.com/ssalter21/tower-defense-game/issues/290) and is a prototype rather than an argument.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **114 of 114**, PlayMode **166 of 166** — one more than before, being the new particle test. Twelve committed frames redrawn at the signed alpha.
+
+## 7 September 2026, later still — four of the things that do not read at 1x are signed, and three of them turn out not to be size questions
+
+Issue [#280](https://github.com/ssalter21/tower-defense-game/issues/280) rendered twenty candidates for the four findings [#270](https://github.com/ssalter21/tower-defense-game/issues/270) made by photographing the built player rather than a sheet. Sam signed four things off them, and one of the four is a rule the roster never stated.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`MatchTuning.GroundEffectsClipToBoard`** | did not exist; an aura was laid at the radius the bubble reported and stopped nowhere | **`true`, signed.** A ground effect is cut off where the board ends | An emitter near a rim threw a disc out over the background, which nothing else in the match does. The alternative that keeps a whole circle shrinks it until it fits, and that draws a reach that is not the reach |
+| **`MatchTuning.ConsecrationLightTicks`** | `26`, of a thirty-tick period — "nearly the whole of it" | **`30`: the light is always on** | Sam rejected the bracket's premise rather than picking from it. Ground a font has claimed should not flicker, and 26 of 30 was a hole in the floor that blinked |
+| **`content/units.txt`, unit 25's `bubbleRadius`** | `3000` — three hexes | **`2000` — two hexes** | Off a rendered bracket of three, two and one. **This is a balance change and not a look**: it decides which bodies the aura finds |
+| **`MatchTuning.KnifeLength`** | `0.55` m, declared a placeholder | **`0.85` m, signed**, in the shipped pale grey | Off a bracket of 0.55, 0.85 and 1.1 plus a dark blade at the shipped length. The answer was a size and not a contrast |
+
+### The measurement is the finding, and it says three of the four questions were the wrong questions
+
+Against its own baseline, a candidate that moves a circle **on the ground** changes one to two per cent of a 1600x900 frame. A candidate that moves an object **through the air** changes between four hundredths and three hundredths of one per cent. Doubling the thrown knife's length is 209 pixels out of 1,440,000; darkening it is 58.
+
+So the knife was signed at 0.85 knowing it is very nearly invisible at play size, and **the magic bolt and the mortar shell were not signed at all**. Sam's words: they *"look horrendous as is without any particle effects such as a smoke cloud or magical effects"*, and they stay exactly as they are as placeholders until that work is done. Their brackets are kept in [`docs/frames/effect-candidates/`](frames/effect-candidates/README.md) as the record that a size and a colour were tried and measured, so the next person does not try them again. That work is not blocked: the particle ban was corrected earlier the same day and a `Mesh`-mode particle system is allowed.
+
+### Clipping a circle costs a mesh, because this project has no shader
+
+Every other effect is a Unity primitive or bars out of `EffectMeshes`. A circle that stops at a line is neither, so `EffectMeshes.ClippedDisc` cuts the outline against the board with four half-planes -- the standard Sutherland-Hodgman -- and builds the flat solid that is left. **It rendered inside out first**, because an anticlockwise outline in Unity's left-handed frame winds the top face downwards; a translucent disc drawn inside out is not visibly wrong, it is simply absent, which reads as an aura that never fired. Only opening the frame caught it. `EffectMeshTests.AWindingIsNotTakenOnTrust` now checks every triangle against its own normal.
+
+**Where the board ends is now load-bearing**, so it has one definition and a test says so. `MatchRoot` hands `MatchView` the floor's own `WorldBounds`; a fixture with no floor works it out through `HexGeometry.Footprint`, and `HexFloorTests.TheFootprintAgreesWithTheFloorThatWasActuallyBuilt` asserts the two agree on the shipped map. A board with no area is refused outright rather than obeyed, because obeying it would draw every aura as nothing.
+
+### The radius change retired the record, and the record came back unchanged
+
+Moving one number in `content/units.txt` moves the content hash, so `content/match.replay` and every golden artefact stamped against it were retired and regenerated with `./tools/run-headless-match.ps1 -Regenerate`. **Only the header stamps moved.** Every simulated tick, all four landmarks and the run outcome are byte-identical -- 3 of 40 leaked, tick 5302, state `441D37E128517F3D` -- because the recorded defense is Archers and Mages and stands no Consecration at all. The regeneration is real and the branch carries it; what it proves is that this balance change is inert for the run everything else is measured against.
+
+### What is still Sam's
+
+**The bolt and the shell**, once there is VFX work to judge them with. And the chrome half of [#285](https://github.com/ssalter21/tower-defense-game/issues/285), which is still waiting on [#282](https://github.com/ssalter21/tower-defense-game/issues/282).
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **120 of 120**, PlayMode **167 of 167** -- one more than before, being the footprint assertion. Forty-four candidate frames and nineteen committed frames redrawn under the signed look.
+---
+
+## 10 September 2026, integrating again — the collision rule turns out not to be about ADR numbers
+
+The roster branch met `main` a second time, and the thing that collided was not a record number.
+
+### Both branches minted simulation version 11
+
+`main` took 10 to 11 for the half step. The roster branch took 10 to 11, 12 and 13 for #267, #268 and #269.
+Neither could see the other, which is the same shape as [6 September's ADR
+collision](#the-branch-and-main-both-minted-adr-0058) one seam over.
+
+| Where | What it said | What is true now |
+|---|---|---|
+| The branch's three versions | 11 becomes, 12 raises, 13 bounty | **12, 13 and 14.** The branch renumbers and `main` keeps 11. |
+| `SimulationVersion.Current` | 13 here, 11 there | **14** — the merged build is neither, and every record made under either is retired |
+
+**The rule written for ADR numbers is the rule, and it was not rewritten to fit.** *`main` is where a number
+becomes public.* Nothing about it was specific to `docs/adr/`, and applying it to a version constant took no
+amendment — which is the useful thing to know about it, and the reason this entry is four lines rather than a
+second ruling.
+
+**What renumbering costs here that it did not cost there, and it is written into the table rather than
+here.** An ADR keeps saying what it said under a new number. A `BehaviourByVersion` row is a *measurement*, and
+no build on this line was ever version 12 or 13 — the three rules arrive together, on top of the half step, in
+one merge. So those two fingerprints are kept as what the branch's builds folded to and are labelled as that,
+rather than being recomputed into numbers no build ever produced. Only the row for `Current` is asserted, and
+that one was read off the merged build.
+
+### Four assertions moved that neither branch touched, and every one is the board
+
+The merged simulation leaks **8 of 40** and ends on **tick 5439**, against the branch's 3 and 5302 and main's
+18 and 5758. Downstream of that, four tests went red in files that never conflicted. None was retuned green.
+
+- **A version-1 bundle tells the level plane apart again.** Flat leaks four where the committed board leaks
+  eight — and the *sign* is the finding. Height used to be the towers' advantage; the regraded board is one
+  the hand-placed six cannot reach across, so folding it flat now **helps** the defense. The assertion said in
+  its own comment that the two would part again when the match moved. They did.
+- **The canned pool opens one tower up.** Both branches had moved this line for opposite reasons — a dearer
+  candidate list prices the opening purchase out, a landscape hands it somewhere to go — so the count is read
+  off the merged run rather than argued from either half.
+- **The build bot buys eight different roots where it bought six.** The barbarian and the paladin are route
+  the flat map never left open.
+- **Every gold-share reading moved and not one row changed list.** Which is exactly why the lists are what is
+  written down and the readings are not.
+
+### The pictures again, and this time they are genuinely different
+
+`content/map.txt` is one of the four files the drawn-content stamp digests, so main's regrade aged twenty
+committed pictures. Unlike September's twenty-two — which came back byte-identical, because only a comment had
+moved — these are photographs of a board that no longer exists, and all twenty came back changed. Three chrome
+sheets, seven match frames and ten effect candidates, each re-captured with the tick list its own README
+records rather than one tick at a time.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **138 of 138**, PlayMode **172 of 172** -- neither of the
+last two runs anywhere but here, and nothing had compiled the two branches' engine-side code together until
+this ran. `check-docs.ps1` green on every claim, the headless verify agreeing with all four regenerated
+artefacts, the streaming copy back in sync, and the determinism matrix green on all six rows.

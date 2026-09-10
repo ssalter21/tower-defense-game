@@ -1,0 +1,121 @@
+# The last six creep bodies -- ids 38, 43, 44, 47, 48 and 49 -- as they are now
+# bound, as a set.
+#
+# WHAT THIS IS FOR. The question docs/roster-creep-bodies.txt asked of the first
+# six creeps to come off the stand-in list, asked of the six that were left:
+# whether each body reads as the thing docs/roster.md says it is, once it is
+# wearing its atlas, holding its props and walking. With these bound the
+# stand-in list is empty and every row of content/units.txt draws its own model.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-creep-bodies-rest.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle and no test reads it.
+# Edit a line, run it again, look again. The one committed copy is
+# docs/frames/roster/creep-bodies-rest-sheet.png, under a name the tool does not
+# write, because every candidate run rewrites candidates-sheet.png.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# THIS TRANSCRIBES THE BINDINGS AND DOES NOT DECIDE THEM. Every model, prop and
+# clip below is the one MatchSceneBuilder and Tests.Fixtures.ChosenArt bind for
+# that row, which is what docs/roster.md signs. A line here that disagrees with
+# those tables is this file being wrong, not the tables. The three lines that
+# are NOT bindings are marked "COMPARISON" and are the questions this sheet is
+# here to put in front of somebody.
+#
+# THE POSE IS THE WALK, BECAUSE A CREEP HAS NO OTHER. A tower is posed by three
+# clips and docs/roster.md names them per rung; a creep walks and dies, and both
+# of those are the same two clip names for every row. So no line below is a
+# framing choice: each carries the walk the match actually draws that body with.
+#
+# ALL SIX ARE ON THE MEDIUM RIG, so every clip below is the bare Walking_A that
+# resolves in the Rig_Medium banks -- the same pair MatchArt shares across every
+# row that names none of its own. The four Large-rig bodies that had to name
+# their own bank are on the earlier sheet, not this one.
+#
+# EVERYTHING HELD IS IN THE MELEE HAND. None of these six is signed for a
+# shield, which is the one prop the live rows put in the off hand, so every
+# right-hand field below is a weapon and every left-hand field is empty.
+#
+# FOUR THINGS ON THIS SHEET ARE QUESTIONS RATHER THAN RESULTS.
+#
+#   THE GRAVE ROBBER'S BODY ALREADY WEARS ITS PACK. That row's Looks line is
+#   "Hoarder, wearing Hoarder_Backpack -- the backpack, not the sword", and
+#   Hoarder.fbx carries Hoarder_Backpack as a skinned piece of itself: one of
+#   the thirteen materials on that body is the pack. The pack also ships that
+#   piece a second time as a model of its own, and hanging that model off a hand
+#   draws a second backpack in front of a body already wearing one -- which no
+#   reading of "wearing" asks for. So the row is bound with empty hands and the
+#   held reading is below it as a comparison. Whether the pack reads loudly
+#   enough as worn is the eye check; if it does not, that is a line in
+#   docs/roster.md to move and not a thing to correct here.
+#
+#   AND IT WEARS A SWORD TOO, WHICH THAT SAME LINE DOES NOT WANT. "A sword on a
+#   creep that never attacks reads as a lie" is the reason that row gives for
+#   choosing the pack over Hoarder_Sword -- but Hoarder_FrontPouch_Sword is
+#   another of the body's thirteen materials, sheathed at the belt, and it
+#   cannot be taken off without editing a model. Nothing was put in a hand;
+#   the sword on the tile is the one the character was authored with. Whether
+#   that is the lie the line meant is that page's to say.
+#
+#   THE WITCH'S BROOM LIES ALONG THE ARM, AS EVERY LONG PROP IN THIS PACK DOES.
+#   docs/roster.md names "Witch, Broom" and no turn, so it is bound at the
+#   bone's own rotation -- and this collection authors a shaft along the hand
+#   bone's local +Y, which is why the Mage's staff, the Sorcerer's and the
+#   Druid's each carry a quarter turn that stands them up. Nothing signs one
+#   here. The turned broom is below as a comparison; which of the two is a witch
+#   carrying a broom is a look, and the answer belongs on that row.
+#
+#   AND SO DOES THE NECROMANCER'S SCYTHE, FOR THE SAME REASON. Skeleton_Scythe
+#   is a shaft along the same axis -- 2.09 m along the bone's local +Y against
+#   1.34 across -- so it comes out level at hip height with the blade curling up
+#   in front of the chest. docs/roster.md names "the pack's own Necromancer
+#   model, Skeleton_Scythe" and no turn either. The turned scythe is below as a
+#   comparison, so the two rows that raise this question are both answerable off
+#   one sheet rather than one of them being a sentence.
+
+# ------------------------------------------------------- the six as bound ---
+
+# Necromancer, id 38: Ward and Raise, and the pack's own Necromancer model --
+# the body that had been sitting unused while the name pointed at a
+# Skeleton_Mage. The scythe comes out of the pack folder; Art/Weapons holds four
+# of that pack's props and not this one.
+creep necromancer      Kaykit/skeletons/Necromancer.fbx                                          Kaykit/skeletons/Skeleton_Scythe.fbx                                     -                                                                                Walking_A
+# Vampire, id 43: a raw pool armour does not apply to, in front of health. Its
+# own pack's sword, and the wings are part of the body rather than a prop.
+creep vampire          Kaykit/mystery-monthly-series-5/vampire/Vampire.fbx                       Kaykit/mystery-monthly-series-5/vampire/Vampire_Sword.fbx                -                                                                                Walking_A
+# Witch, id 44: Hex Ward, thirty armour to every creep within two hexes. The
+# broom is bound at the bone's own rotation, which is what that row signs.
+creep witch            Kaykit/mystery-monthly-series-5/witch/Witch.fbx                           Kaykit/mystery-monthly-series-5/witch/Broom.fbx                          -                                                                                Walking_A
+# Cursed Villager, id 47: the Werewolf's first form, walking on its own until
+# #267 joins the two. The axe is the one its own pack ships beside its
+# woodpiles, not any of the nine others in the collection called some form of
+# "axe".
+creep cursed-villager  Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Man.fbx                 Kaykit/mystery-monthly-series-4/werewolf/axe.fbx                         -                                                                                Walking_A
+# Werewolf, id 48: what the Villager becomes, and the same pack's other body.
+# Its Looks line names no prop, so both hands are empty.
+creep werewolf         Kaykit/mystery-monthly-series-4/werewolf/Werewolf_Wolf.fbx                -                                                                        -                                                                                Walking_A
+# Grave Robber, id 49: the pack soaks hits and pays twelve gold to whoever kills
+# it. Empty hands, because the body imports already wearing the backpack its
+# Looks line names.
+creep grave-robber     Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx                       -                                                                        -                                                                                Walking_A
+
+# -------------------------------------------------------- the open questions ---
+
+# COMPARISON, not a binding: the Grave Robber with the pack's standalone
+# Hoarder_Backpack hung off the melee hand, which is the other reading of
+# "wearing Hoarder_Backpack". The body above it is already wearing one.
+creep grave-robber-pack-held Kaykit/mystery-monthly-series-6/hoarder/Hoarder.fbx                 Kaykit/mystery-monthly-series-6/hoarder/Hoarder_Backpack.fbx             -                                                                                Walking_A
+# COMPARISON, not a binding: the Witch with the quarter turn the three staffs
+# carry, which stands a shaft on end in the fist. The bound row above it takes
+# the bone's own rotation, which is what docs/roster.md signs.
+creep witch-broom-upright Kaykit/mystery-monthly-series-5/witch/Witch.fbx                        Kaykit/mystery-monthly-series-5/witch/Broom.fbx@0,0,-90                   -                                                                                Walking_A
+# COMPARISON, not a binding: the Necromancer with the same quarter turn on its
+# scythe, which is a shaft on the same axis as the broom and the three staffs.
+# The bound row above it takes the bone's own rotation, which is what
+# docs/roster.md signs.
+creep necromancer-scythe-upright Kaykit/skeletons/Necromancer.fbx                                Kaykit/skeletons/Skeleton_Scythe.fbx@0,0,-90                             -                                                                                Walking_A

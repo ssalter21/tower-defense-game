@@ -56,6 +56,8 @@ namespace View
 
         private readonly Purse _opening;
 
+        private readonly int _capstoneTokens;
+
         private readonly CostTable _costs;
 
         private readonly UnitTypeTable _types;
@@ -82,6 +84,7 @@ namespace View
         /// <param name="carried">What the round already fields and cannot give up.</param>
         /// <param name="ladder">The upgrade edges. What may be placed and what may be climbed into.</param>
         /// <param name="purse">What the round opens with.</param>
+        /// <param name="capstoneTokens">How many capstone tokens the round opens with.</param>
         /// <param name="costs">What everything is priced at.</param>
         /// <param name="types">The roster.</param>
         /// <param name="map">The playfield a cell is on, or is not.</param>
@@ -91,12 +94,14 @@ namespace View
             WaveScript carried,
             UpgradeLadder ladder,
             Purse purse,
+            int capstoneTokens,
             CostTable costs,
             UnitTypeTable types,
             HexMap map,
             Board board)
         {
             Wave = wave;
+            _capstoneTokens = capstoneTokens;
             _carried = carried ?? throw new ArgumentNullException(nameof(carried));
             _ladder = ladder ?? throw new ArgumentNullException(nameof(ladder));
             _opening = purse ?? throw new ArgumentNullException(nameof(purse));
@@ -137,6 +142,7 @@ namespace View
                 run.Carrying,
                 run.Ladder,
                 run.Purse,
+                run.CapstoneTokens,
                 run.Costs,
                 run.Types,
                 run.Map,
@@ -513,7 +519,9 @@ namespace View
         /// Only what resolves: an edge whose target this round cannot afford is
         /// not offered, and neither is anything on a cell with nothing standing
         /// on it. A tower with no affordable upgrade offers none, which is what
-        /// ADR-0051's prevention means at a hex.
+        /// ADR-0051's prevention means at a hex. A capstone the round holds no
+        /// token for is unaffordable in exactly that sense and drops out here
+        /// through the same resolve, with no second rule about it.
         /// </remarks>
         public IReadOnlyList<UnitType> UpgradesOn(int column, int row)
         {
@@ -544,11 +552,34 @@ namespace View
         }
 
         /// <summary>
+        /// Whether climbing to this rung from what stands on a cell is bought
+        /// with a capstone token rather than with gold.
+        /// </summary>
+        /// <remarks>
+        /// Asked of the ladder, which is where the price is written, so a bar
+        /// that prints what a rung costs is reading the same file the refusal
+        /// reads. False for a cell with nothing on it: there is no edge to
+        /// price, and <see cref="UpgradesOn"/> offers nothing there.
+        /// </remarks>
+        public bool CostsACapstoneToken(int column, int row, UnitType rung)
+        {
+            if (rung is null)
+            {
+                throw new ArgumentNullException(nameof(rung));
+            }
+
+            UnitType standing = StandingOn(column, row);
+
+            return !(standing is null) && _ladder.IsCapstoneEdge(standing.Id, rung.Id);
+        }
+
+        /// <summary>
         /// One resolution of a candidate, against the round's opening state.
         /// The single call every question in this class is answered by.
         /// </summary>
         private Build Resolve(BuildPhase phase) =>
-            phase.Resolve(Wave, _carried, _ladder, _opening, _costs, _types, _map, _standing);
+            phase.Resolve(
+                Wave, _carried, _ladder, _opening, _capstoneTokens, _costs, _types, _map, _standing);
 
         /// <summary>
         /// Whether a wave would resolve on this phase's actions. The wave half

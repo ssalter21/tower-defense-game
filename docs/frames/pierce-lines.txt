@@ -1,0 +1,45 @@
+# The six rows of the Archer and Rogue lines, standing on the recorded board.
+#
+# WHAT THIS IS FOR. tools/capture-match-frames.ps1 draws the recorded match, and
+# the recorded defense is six towers of two types -- content/defense.txt's own
+# header says they were computed by a bot's rule rather than chosen. One of
+# those two is the Archer, so a frame of the record can show the bottom of this
+# page's first line and nothing else of it: no Ranger, no Overwatch, and not one
+# rung of the Rogue line.
+#
+#     ./tools/capture-match-frames.ps1 -Defense "docs/frames/pierce-lines.txt" `
+#         -Ticks "300,700" -Distance 22 -Width 1600
+#
+# The map, the wave and the seed still come out of content/match.replay, so the
+# corridor and the bodies walking it are the ones every other frame shows. Only
+# what is standing beside them has moved. Frames from such a run are named after
+# this file rather than match-tick-, because the tick in a match-tick- filename
+# is a claim about the run content/landmarks.txt was made from and this is not
+# that run.
+#
+# NOTHING HERE IS A BALANCE PROPOSAL. It is six rows put where they can be
+# photographed. content/defense.txt is the defense the authored match is fought
+# by and this changes nothing about it.
+#
+# THE SIX ARE BUNCHED ROUND THE ENTRANCE, AND THEY HAVE TO BE. The shortest
+# reach here is the Rogue line's two hexes, and what the frames want is bodies
+# inside every one of the six at the same tick -- three at once, for the throw
+# that goes to three bodies. The stretch of corridor leaving the entrance is
+# where the wave is densest, so it is the one stretch that answers that. The
+# loader's own rule still applies: a tower whose range cannot touch the route is
+# refused as a mistyped coordinate.
+#
+# Tests.PlayMode/MatchViewTests stands the same six on the same cells, so what
+# these frames show and what that file asserts are the same board.
+#
+# Same format as content/defense.txt: type, column, row, counted the way
+# content/map.txt is written, ascending by row and then by column.
+#
+#       type  col  row
+
+tower    3    3    0
+tower   14    5    0
+tower   31    2    2
+tower   32    5    2
+tower   33    2    4
+tower   34    7    4

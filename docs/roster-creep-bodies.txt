@@ -1,0 +1,113 @@
+# The six creep bodies of ids 39 to 46 as they are now bound, as a set.
+#
+# WHAT THIS IS FOR. The same question docs/roster-melee-lines.txt,
+# docs/roster-caster-lines.txt and docs/roster-pierce-turret-lines.txt ask of
+# the nine tower lines, asked of the first six creeps to come off the stand-in
+# list: whether each body reads as the thing docs/roster.md says it is, once it
+# is wearing its atlas, holding its props and walking in its own rig's cycle.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-creep-bodies.txt
+#
+# One PNG per line into docs/frames/roster, plus candidates-sheet.png and
+# candidates-manifest.txt. Nothing here is an oracle and no test reads it.
+# Edit a line, run it again, look again. The one committed copy is
+# docs/frames/roster/creep-bodies-sheet.png, under a name the tool does not
+# write, because every candidate run rewrites candidates-sheet.png.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out:
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+#
+# THIS TRANSCRIBES THE BINDINGS AND DOES NOT DECIDE THEM. Every model, prop and
+# clip below is the one MatchSceneBuilder and Tests.Fixtures.ChosenArt bind for
+# that row, which is what docs/roster.md signs. A line here that disagrees with
+# those tables is this file being wrong, not the tables. The four lines that are
+# NOT bindings are marked "COMPARISON" and are the two open questions this sheet
+# is here to put in front of somebody.
+#
+# THE POSE IS THE WALK, BECAUSE A CREEP HAS NO OTHER. A tower is posed by three
+# clips and docs/roster.md names them per rung; a creep walks and dies, and both
+# of those are the same two clip names for every row. So no line below is a
+# framing choice: each carries the walk the match actually draws that body with.
+#
+# FOUR OF THESE ARE ON THE LARGE RIG AND SAY SO IN THEIR CLIP FIELD.
+# Walking_A and Death_A exist in the Rig_Medium banks and again in the Rig_Large
+# ones, and a medium clip on a Large skeleton does not throw -- it drives bones
+# that are not there and leaves the body sliding down the corridor in its bind
+# pose. So the Bone Golem, the Black Knight, the Frost Wight and the Abomination
+# name Rig_Large_MovementBasic/Walking_A, here and in both binding tables, where
+# the Fiend and the Shade take the bare name.
+#
+# A SHIELD GOES IN THE OFF HAND AND EVERYTHING ELSE IN THE MELEE HAND.
+# docs/roster.md names each row's props and does not say which hand takes which,
+# so these follow the live rows: the Skeleton's shield, the Sergeant's and the
+# Templar's are all off-hand. The Abomination's look names the barndoor alone,
+# so its melee hand is empty.
+#
+# THE FIEND'S BACKPACK IS IN ITS FIST FOR WANT OF A SOCKET ON THE SPINE.
+# Tiefling_SwordsBackpack is a scabbarded pair worn on the back and this project
+# has two bone sockets rather than three -- the same gap the Ranger's quiver
+# sits in, which docs/roster.md names on that row. Whether it reads at all from
+# the front is the thing to look at on that tile.
+#
+# TWO THINGS ON THIS SHEET ARE QUESTIONS RATHER THAN RESULTS.
+#
+#   THE SHADE'S ATLAS IS UNPICKED AND IS SAM'S. That row's Looks line asks for
+#   "the darkest of the pack's four atlases" and names none of them. An atlas is
+#   a sheet of swatches, so how dark a body reads depends which of them its UVs
+#   land on and is not measurable off the file -- whole-atlas mean luminance is
+#   116, 118, 123 and 135 for A to D and says nothing useful. The row is bound
+#   in the sheet the model imports wearing, which is A, and the other three are
+#   below it as a comparison. Whichever reads as a silhouette at gameplay
+#   distance is the answer, and until one is chosen nothing is decided.
+#
+#   THE FROST WIGHT'S AXE IS THE MEDIUM EXPORT, AS SIGNED. docs/roster.md names
+#   FrostGolem_Axe on that row where the other three Large bodies are each
+#   signed for their own _Large weapon, and the pack ships FrostGolem_Axe_Large
+#   as well. Bound as signed; the Large export is below it as a comparison. If
+#   the medium axe reads as hand-sized on a body twice the height, that is a
+#   line in docs/roster.md to move and not a thing to correct here.
+
+# ------------------------------------------------------ the Large-rig four ---
+
+# Bone Golem, id 39: nothing but mass, at half the Minion's speed. Its own
+# pack's axe in the export sized for this rig, and the copy of the skeleton
+# sheet that sits in the pack folder rather than the one in Art/Characters.
+creep bone-golem       Kaykit/skeletons/Skeleton_Golem.fbx                                       Kaykit/skeletons/Skeleton_Golem_Axe_Large.fbx                            -                                                                                Rig_Large_MovementBasic/Walking_A
+# Black Knight, id 40: the Knight's twin, nothing but armour. Sword in the melee
+# hand and shield in the off hand, both _Large.
+creep black-knight     Kaykit/mystery-monthly-series-5/black-knight/BlackKnight.fbx              Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Sword_Large.fbx Kaykit/mystery-monthly-series-5/black-knight/BlackKnight_Shield_Large.fbx        Rig_Large_MovementBasic/Walking_A
+# Frost Wight, id 41: the only creep aura that reaches the tower side. Bound
+# with FrostGolem_Axe, the medium export, which is what that row signs.
+creep frost-wight      Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem.fbx                 Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem_Axe.fbx            -                                                                                Rig_Large_MovementBasic/Walking_A
+# Abomination, id 42: the biggest body on the board, and no armour -- flesh
+# rather than bone. The barndoor is the only thing its Looks line names, so the
+# melee hand is empty.
+creep abomination      Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity.fbx               -                                                                        Kaykit/mystery-monthly-series-6/monstrosity/Monstrosity_BarndoorShield_Large.fbx Rig_Large_MovementBasic/Walking_A
+
+# ------------------------------------------------- the dark and the hooded ---
+
+# Fiend, id 45: an arcane heavy, and a horned demon rather than an undead body
+# -- the theme is undead, and the dark or hooded, and this is the dark half.
+# The backpack is in the fist for want of a spine socket.
+creep fiend            Kaykit/mystery-monthly-series-5/tiefling/Tiefling.fbx                     Kaykit/mystery-monthly-series-5/tiefling/Tiefling_SwordsBackpack.fbx     -                                                                                Walking_A
+# Shade, id 46: three times the Minion's speed and the fine end of the
+# granularity axis. It names no atlas, because its binding names none -- the
+# darkest of the pack's four has not been picked, so the row draws in
+# ninja_texture_A, the sheet the model imports wearing.
+creep shade            Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                           Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx                   -                                                                                Walking_A
+
+# ---------------------------------------------------- the two open questions ---
+
+# COMPARISON, not a binding: the Shade in the pack's other three atlases, named
+# where the bound tile above leaves the field off. Which of the four is "the
+# darkest" is the one thing docs/roster.md leaves open on that row, and it is
+# answered by looking rather than by measuring.
+creep shade-atlas-B    Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                           Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx                   -                                                                                Walking_A                         Kaykit/mystery-monthly-series-4/ninja/ninja_texture_B.png
+creep shade-atlas-C    Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                           Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx                   -                                                                                Walking_A                         Kaykit/mystery-monthly-series-4/ninja/ninja_texture_C.png
+creep shade-atlas-D    Kaykit/mystery-monthly-series-4/ninja/Ninja.fbx                           Kaykit/mystery-monthly-series-4/ninja/Ninja_Katana.fbx                   -                                                                                Walking_A                         Kaykit/mystery-monthly-series-4/ninja/ninja_texture_D.png
+# COMPARISON, not a binding: the Frost Wight holding the _Large axe the other
+# three Large bodies are signed for. The bound row above it holds the medium one
+# docs/roster.md names.
+creep frost-wight-large-axe Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem.fbx            Kaykit/mystery-monthly-series-5/frostgolem/FrostGolem_Axe_Large.fbx      -                                                                                Rig_Large_MovementBasic/Walking_A

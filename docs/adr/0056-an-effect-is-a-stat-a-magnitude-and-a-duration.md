@@ -135,8 +135,10 @@ it stands in front of.
 > something had to be chosen for the column to mean anything at all — and what it grants, how long it lasts
 > and whether killing the emitter strips it are shapes of the Necromancer rather than shapes of the
 > simulation. What is written above is the implementer's reading, taken because an implementation cannot
-> leave it blank; it is Sam's to confirm or move, and [the roster](../roster.md#7--necromancer--status-live)
-> carries it as an open question rather than a closed one.
+> leave it blank; it is Sam's to confirm or move, and
+> [the Necromancer](../roster.md#38--necromancer--status-live) is the row it now applies to — the ward aura
+> landed there when the roster widened, and id 7, which had been called the necromancer, took a haste aura
+> and the Skeleton Mage's name instead.
 
 **A floor under the cooldown modifier.** The speed floor exists because a speed of zero is a *termination*
 hazard — nothing else in the simulation has one. A cooldown of zero is an ordinary authoring that the column
@@ -160,8 +162,14 @@ fixed, and inventing a sixth keyword would be widening the schema that #213 clos
 modifiable and the fifth name is taken; it is written here rather than left as a silence.
 
 **An event for a modifier landing.** [ADR-0008](0008-match-events-are-decorative.md) makes events decorative
-and there are six of them; a seventh would be a view contract taken in a ticket about rules. What a slow does
-is in the state hash, and a view that wants to draw one wants a snapshot field, which is its own decision.
+and none of them is a fact about one unit's state; one for a modifier arriving would be a view contract taken
+in a ticket about rules. What a slow does is in the state hash, and a view that wants to draw one wants a
+snapshot field — which is what
+[#254](https://github.com/ssalter21/tower-defense-game/issues/254) added, and
+[ADR-0007](0007-snapshot-is-the-only-view-input.md) is where the four fields and the reasoning behind them
+live. The two events
+[#253](https://github.com/ssalter21/tower-defense-game/issues/253) added report a *bubble going off* and not
+what it left behind, which is the same line drawn from the other side.
 
 ## What it cost
 

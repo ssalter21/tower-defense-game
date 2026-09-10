@@ -1,0 +1,25 @@
+# The Elder holding the staff, on the board, at the size the game is played at.
+#
+# WHY. Sam signed the staff on 10 Sep 2026 -- "Druid has staff only, it can have
+# potions if it has an aura" -- and signed the board as the court that decides.
+# The staff was picked off the 46-tile sheet, which is magnification. It has
+# never been drawn at 1600x900, and the sheet is the instrument this map has
+# twice caught disagreeing with the frame.
+#
+# WHAT THE SHEET ALREADY SAYS ABOUT IT. Against the shipped Elder on a 28x37
+# tile -- about the size a body gets at 1600x900 -- the staff moves 90 px of
+# 1,036, which is the fourth loudest of the forty-five props. Twelve of the
+# forty-five move zero. So the staff is the kind of prop that ought to survive
+# the frame; this is the run that says whether it does.
+#
+# THE STAFF IS AUTHORED FOR THE RIGHT HAND, like every weapon in this pack, so
+# in the off hand it hangs untilted. That is a thing to look at rather than a
+# fault in the render.
+#
+# NOTHING THE GAME SHIPS FROM MOVES. Applied to a copy of the wired art for the
+# length of one run. See UnitArtFile.cs.
+
+label     the Elder holding the staff
+question  does the signed prop read at 1600x900, where the sheet said it should
+
+hand  29  left  Kaykit/adventurers/staff.fbx

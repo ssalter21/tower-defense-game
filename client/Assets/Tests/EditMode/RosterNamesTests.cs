@@ -1,6 +1,8 @@
+using System.Linq;
 using NUnit.Framework;
 using Sim;
 using View;
+using View.Editor;
 
 namespace Tests.EditMode
 {
@@ -9,7 +11,7 @@ namespace Tests.EditMode
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>The nine names are written out here on purpose.</b> They are
+    /// <b>Every name is written out here on purpose.</b> They are
     /// <c>docs/roster.md</c>'s index table, copied by hand, so that a change to
     /// the derivation in <see cref="RosterNames"/> is caught against what the
     /// design document says rather than against a second run of the same
@@ -26,20 +28,72 @@ namespace Tests.EditMode
     public class RosterNamesTests
     {
         /// <summary>
-        /// Every live row of <c>content/units.txt</c>, by id, with the name
-        /// <c>docs/roster.md</c>'s index gives it.
+        /// Every live row of <c>content/units.txt</c> whose name
+        /// <c>docs/roster.md</c>'s index has signed, by id.
         /// </summary>
+        /// <remarks>
+        /// <b>Every shipped row is here, and there is no exemption.</b> While a
+        /// row could land in the simulation ahead of its art and draw a
+        /// stand-in until it arrived, the walk below let such a row off — but
+        /// only for its art, never for its name, because a name was signed with
+        /// the rest of the roster and does not wait on a model. The stand-in is
+        /// retired, so the exemption went with it and this table is held
+        /// against every row there is.
+        /// </remarks>
+        /// <remarks>
+        /// <b>Id 7 is Skeleton Mage and the Necromancer is id 38, and the two
+        /// had to move together.</b> <c>docs/roster.md</c> renamed id 7 to free
+        /// the name for the creep that should carry it, and two rows cannot
+        /// share a label — so the relabel waited for the row that wanted the
+        /// name. Both are here now, which is what closes the one disagreement
+        /// this table used to record against the file.
+        /// </remarks>
         private static readonly (int Id, string Name)[] TheRoster =
         {
             (1, "Minion"),
             (2, "Skeleton Scout"),
             (3, "Archer"),
             (4, "Mage"),
-            (7, "Necromancer"),
+            (7, "Skeleton Mage"),
             (11, "Soldier"),
             (12, "Skeleton"),
             (13, "Skeleton Warrior"),
             (14, "Ranger"),
+            (15, "Sergeant"),
+            (16, "Shield Wall"),
+            (17, "Barbarian"),
+            (18, "Berserker"),
+            (19, "Slam"),
+            (20, "Paladin"),
+            (21, "Templar"),
+            (22, "Blessing"),
+            (23, "Cleric"),
+            (24, "Bishop"),
+            (25, "Consecration"),
+            (26, "Sorcerer"),
+            (27, "Unravel"),
+            (28, "Druid"),
+            (29, "Elder"),
+            (30, "Overgrowth"),
+            (31, "Overwatch"),
+            (32, "Rogue"),
+            (33, "Cutthroat"),
+            (34, "Fan of Knives"),
+            (35, "Engineer"),
+            (36, "Artificer"),
+            (37, "Mortar"),
+            (38, "Necromancer"),
+            (39, "Bone Golem"),
+            (40, "Black Knight"),
+            (41, "Frost Wight"),
+            (42, "Abomination"),
+            (43, "Vampire"),
+            (44, "Witch"),
+            (45, "Fiend"),
+            (46, "Shade"),
+            (47, "Cursed Villager"),
+            (48, "Werewolf"),
+            (49, "Grave Robber"),
         };
 
         [Test]
@@ -47,11 +101,17 @@ namespace Tests.EditMode
         {
             UnitTypeTable types = StreamingContent.ReadUnitTypes();
 
-            Assert.That(
-                types.Count,
-                Is.EqualTo(TheRoster.Length),
-                "A row was added or retired and this table was not told.");
+            foreach (UnitType type in types.Types)
+            {
+                Assert.That(
+                    TheRoster.Any(r => r.Id == type.Id),
+                    Is.True,
+                    "Unit " + type.Id + " (" + type.Label + ") was added and this table was not told. "
+                    + "Every shipped row is named in docs/roster.md's index and nothing is exempt.");
+            }
 
+            // ById throws on an id this table names and the shipped rows no
+            // longer do, which is the retired half of the same check.
             foreach ((int id, string name) in TheRoster)
             {
                 Assert.That(RosterNames.Of(types.ById(id)), Is.EqualTo(name));

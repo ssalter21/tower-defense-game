@@ -20,7 +20,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The roster expansion proposal](roster-expansion-proposal.md) | Nine tower lines and seventeen creeps drawn from every KayKit character, for review — placeholders until the roster signs them |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 58 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 62 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/README.md) | The five deep dives the vision was built on, the row-by-row account of what it overturned in them, and the specifications whose implementation is gone |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
@@ -63,6 +63,7 @@ code or the content file whose number it explains:
 | [A player build measures no text without a PanelSettings asset](research/a-player-build-measures-no-text-without-a-panelsettings-asset.md) | A build drew none of its HUD while the editor drew all of it. What is different about a player? |
 | [How long Unity takes to notice a rebuilt plug-in](research/unity-hot-reload-timing.md) | Does an agent working while nobody is at the keyboard get stuck waiting for a reimport? |
 | [What agents can build unattended](research/what-agents-can-build-unattended.md) | Which seams can an `/afk` run take to green, what proves each, and what must a person hand over first? |
+| [Driving the built player with synthetic input](research/driving-the-built-player-with-synthetic-input.md) | Can an agent play the shipped executable itself, and what does it have to get right before the game looks broken? |
 
 > **One caveat the hot-reload note carries.** `unity.com` returns 403 to automated fetching, so every licence
 > and pricing claim written against it was read via a browser user-agent as extracted text. A human should

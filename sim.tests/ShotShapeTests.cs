@@ -200,6 +200,52 @@ public class ShotShapeTests
     }
 
     [Fact]
+    public void A_bubble_that_fires_with_an_attack_says_so_on_the_tick_it_goes_off()
+    {
+        // The decoration contract for the two origins: the event names the
+        // entity the bubble is centred on, so whatever is listening looks the
+        // position up in the snapshot it is drawing rather than being handed
+        // one. Ids count from one and the towers take the front of the space,
+        // so the one tower here is 1 and the three creeps are 2, 3 and 4.
+        //
+        // OBSERVED: name the target rather than the emitter for a self-centred
+        // bubble in Match.Land. The mortar half stays green -- a blast is
+        // centred on its target either way -- and the sweep half goes red at 2
+        // against 1, which is a ring drawn over the creep a Soldier swung at
+        // instead of around the Soldier.
+        TheMatch.EventLog mortar = Played(13, ThreeAbreast, ticks: 10);
+        int[] blasts = mortar.IndicesOf("blast");
+
+        Assert.Single(blasts);
+        Assert.Equal(2, mortar.Subjects[blasts[0]]);
+        Assert.Equal(3000, mortar.Amounts[blasts[0]]);
+        Assert.Equal(BubblePayload.Damage, mortar.Payloads[blasts[0]]);
+
+        // The tick it went off on, which for a projectile is not the tick it
+        // was fired on: the draw happens at the muzzle and the bubble at the
+        // landing, and the flight is the five ticks between them.
+        int flight = UnitTypeTable.Parse("shot shapes", TheFixtures).ById(13).ProjectileFlightTicks;
+
+        Assert.Equal(
+            mortar.Ticks[mortar.IndicesOf("fired")[0]] + flight,
+            mortar.Ticks[blasts[0]]);
+
+        // A sweep is the same event centred on the tower, and it goes off on
+        // the tick the shot was fired, because a hitscan shot has no flight to
+        // be in the middle of.
+        TheMatch.EventLog sweep = Played(12, ThreeAbreast);
+        int[] swept = sweep.IndicesOf("blast");
+
+        Assert.Single(swept);
+        Assert.Equal(1, sweep.Subjects[swept[0]]);
+        Assert.Equal(sweep.Ticks[sweep.IndicesOf("fired")[0]], sweep.Ticks[swept[0]]);
+
+        // And a row with no bubble at all says nothing, which is what makes the
+        // counts above a fact about the bubble rather than about firing.
+        Assert.Equal(0, Played(10, ThreeAbreast).CountOf("blast"));
+    }
+
+    [Fact]
     public void A_sweep_fires_where_it_stands_when_its_target_has_gone_and_a_blast_does_not()
     {
         // The two origins told apart by the case that separates them. A fast
@@ -228,6 +274,12 @@ public class ShotShapeTests
         Assert.Equal(1, blast.CountOf("fired"));
         Assert.Equal(1, blast.CountOf("leaked"));
         Assert.Equal(0, blast.CountOf("damaged"));
+
+        // And the same in what each says out loud: a bubble with no centre is
+        // not a bubble that went off somewhere invisible, it is one that never
+        // went off, so there is nothing to draw and nothing said.
+        Assert.Equal(1, sweep.CountOf("blast"));
+        Assert.Equal(0, blast.CountOf("blast"));
     }
 
     [Fact]
@@ -293,10 +345,9 @@ public class ShotShapeTests
             WaveScript.Parse("shot shapes wave", wave, types),
             Seed);
 
-        var log = new TheMatch.EventLog();
-        match.Advance(ticks, log);
-
-        return log;
+        // A tick at a time, so that every event carries the tick it arrived on.
+        // The counts and amounts every test here reads are the same either way.
+        return TheMatch.Watched(match, ticks);
     }
 
     /// <summary>What every landing in a log took off a health pool, in order.</summary>

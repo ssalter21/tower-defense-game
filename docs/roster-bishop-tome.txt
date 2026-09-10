@@ -1,0 +1,52 @@
+# Where the Bishop's tome goes, and what a magic bolt leaves from.
+#
+# WHAT THIS IS FOR. docs/roster.md's tier-2 Cleric line names Cleric_Mace and
+# never says where Cleric_Tome goes. A hand holds one thing, so the mace took
+# the hand the tome was in -- the way the Blessing's book takes the Templar's
+# hammer's -- and the visible consequence is that a HITSCAN MAGIC BOLT NOW
+# LEAVES THE HEAD OF A BLUNT WEAPON, because the anchor follows the prop.
+# Issue #281. DECIDES NOTHING.
+#
+#     tools/capture-armed-roster.ps1 -SetFile docs/roster-bishop-tome.txt
+#
+# The committed copy is docs/frames/roster/bishop-tome-sheet.png.
+#
+# FOUR CANDIDATES, AND THE FOURTH IS NOT ON THIS SHEET. The ticket names the
+# tome in the off hand, the tome as a beside prop, the mace in the off hand, and
+# the anchor moved off the mace. A sheet is a still of a posed character and
+# carries no bolt, so the fourth is drawn through the real match instead --
+# docs/roster-art-bishop-anchor-tome.txt, by tools/capture-match-frames.ps1
+# -Art. What THIS sheet answers is the three that are about where a prop sits.
+#
+# THE OFF HAND IS EMPTY ON EVERY RUNG OF THIS LINE, which is why two of these
+# candidates exist at all: the Cleric, the Bishop and the Consecration all bind
+# a null left hand, so nothing has to be displaced to put the tome back.
+#
+# EVERY WEAPON IN THIS PACK IS AUTHORED FOR THE RIGHT HAND, so an off-hand prop
+# hangs untilted -- the finding docs/roster-expansion-candidates.txt recorded
+# about the Fan of Knives' second dagger. Whether a tome reads at all in that
+# hand is part of what is being looked at, and is not a fault in the file.
+#
+# HOW A LINE READS. The eight fields docs/roster-expansion-candidates.txt's
+# header writes out. The clip is each row's own idle, which is Idle_A -- this
+# line needed no framing exception on docs/roster-caster-lines.txt and needs
+# none here.
+#
+#     side  name  model  right-hand  left-hand  clip  [texture [beside]]
+
+# Shipped: the mace in the hand the tome was in, and no tome anywhere. The
+# thing the other three are read against.
+tower bishop-mace-only       Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  -                  Rig_Medium_General/Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png
+# The tome in the off hand, mace kept in the fist that swings it.
+tower bishop-tome-off-hand   Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx  Rig_Medium_General/Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png
+# The tome on the ground beside him, which is the socket the Consecration's font
+# and the Blessing's statue already stand in. A tome is not a font:
+# whether a book on the floor reads as a tier signal or as dropped litter is the
+# eye check.
+tower bishop-tome-beside     Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  -                  Rig_Medium_General/Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx*1
+# The other way round: the tome back in the hand the Cleric holds it in, and the
+# mace in the off hand. This is the one candidate that also moves the anchor
+# without being asked to -- the bolt would leave the tome again, as it does at
+# tier 1 -- so it is the only tile here that answers the head-of-a-mace problem
+# on its own.
+tower bishop-mace-off-hand   Kaykit/mystery-monthly-series-6/cleric/Cleric.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Tome.fbx  Kaykit/mystery-monthly-series-6/cleric/Cleric_Mace.fbx  Rig_Medium_General/Idle_A  Kaykit/mystery-monthly-series-6/cleric/cleric_texture_B.png

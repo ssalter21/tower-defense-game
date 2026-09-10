@@ -1,20 +1,168 @@
-# The capture writes six frames by default; two of them are committed as
-# documentation. README.md says which two and why.
+# The capture writes six frames by default; nineteen of the frames in this
+# folder are committed as documentation -- four of the recorded match, one of
+# the effects fixture, three of the four melee and impact lines standing on the
+# recorded board, three of the two pierce lines standing on it, four of the
+# three magic lines standing on it and four of the six creep rows that carry an
+# aura or a pool walking it. README.md says which nineteen and why.
 #
-# The other four must not be committed, and that cannot be left to whoever runs
-# the capture next. The fourth working agreement is explicit about it: "if a
-# generated file must **not** be committed, that has to be arranged by
+# Everything else it writes must not be committed, and that cannot be left to
+# whoever runs the capture next. The fourth working agreement is explicit about
+# it: "if a generated file must **not** be committed, that has to be arranged by
 # construction — an ignore rule — and not by remembering."
 #
-# Without this file, a plain `tools/capture-match-frames.ps1` leaves four
-# untracked PNGs sitting in the tree, and the build gate's last step — the one
+# Without this file, a plain `tools/capture-match-frames.ps1` leaves untracked
+# PNGs sitting in the tree, and the build gate's last step — the one
 # that fails a push whose run rewrote the repository — goes red for a reason
 # that has nothing to do with the push.
 #
-# The two negations are not load-bearing today, because an ignore rule cannot
-# govern a file git already tracks. They are here so that re-adding either
-# frame after a deliberate deletion works without anybody having to remember
+# The negations are not load-bearing today, because an ignore rule cannot
+# govern a file git already tracks. They are here so that re-adding any of these
+# frames after a deliberate deletion works without anybody having to remember
 # this file exists.
 *.png
 !match-tick-1096.png
+!match-tick-1229.png
+!match-tick-1546.png
 !match-tick-2700.png
+!effects-roster-tick-0700.png
+!four-lines-tick-0572.png
+!four-lines-tick-0780.png
+!four-lines-tick-0813.png
+!pierce-lines-tick-0516.png
+!pierce-lines-tick-0673.png
+!pierce-lines-tick-0674.png
+!magic-lines-tick-0311.png
+!magic-lines-tick-0331.png
+!magic-lines-tick-0342.png
+!magic-lines-tick-0344.png
+!creep-auras-tick-0094.png
+!creep-auras-tick-0271.png
+!creep-auras-tick-0272.png
+!creep-auras-tick-0276.png
+
+# The one sheet out of the armed-roster capture that is kept: the four props
+# that stand on the ground beside a tower, at the sizes they are drawn at.
+# Named rather than covered by a pattern, and not the tool's own
+# candidates-sheet.png -- that name is written again by every candidate run,
+# so a committed file under it would be rewritten by somebody asking an
+# unrelated question. This is a copy under a name nothing else writes.
+!roster/beside-props-sheet.png
+
+# And the one out of the melee art pass: the nine rungs of the Knight, the
+# Barbarian and the Paladin drawn as their rows are now bound. Named for the
+# same reason as the sheet above -- the tool writes candidates-sheet.png on
+# every set run, so the committed copy carries a name nothing else writes.
+!roster/melee-lines-sheet.png
+
+# And the one out of the caster art pass: the nine rungs of the Cleric, the
+# Mage and the Druid, kept under a name of its own for the same reason.
+!roster/caster-lines-sheet.png
+
+# And the one out of the pierce-and-turret art pass: the nine rungs of the
+# Archer, the Rogue and the Engineer, kept under a name of its own for the same
+# reason.
+!roster/pierce-turret-lines-sheet.png
+
+# And the one out of the first creep art pass: the six bodies of ids 39 to 46,
+# with the Shade's four atlases and the Frost Wight's two axes beside them as
+# the two questions that sheet asks. Same naming rule again.
+!roster/creep-bodies-sheet.png
+
+# And the one out of the second creep art pass, which empties the stand-in
+# list: the six bodies of ids 38, 43, 44 and 47 to 49, with the Grave Robber's
+# backpack held rather than worn and the Witch's broom turned upright beside
+# them as the two questions that sheet asks. Same naming rule again.
+!roster/creep-bodies-rest-sheet.png
+
+# And three out of the roster sign-off's first prototype ticket, each the one
+# sheet its own question is asked on. Same naming rule as every sheet above --
+# the tool writes candidates-sheet.png on every set run, so a committed copy
+# carries a name nothing else writes.
+#
+#   the Paladin line's three rungs in thirty-two clips, because ids 20, 21 and
+#   22 ship posed by nothing and stand in their import bind pose;
+#   the Witch's broom and the Necromancer's scythe at five turns each, because
+#   both lie flat in the fist;
+#   the Grave Robber with the sheathed sword and without, which needed the
+#   set file's !Node suffix because the blade is in the body mesh.
+!roster/paladin-clips-sheet.png
+!roster/prop-turns-sheet.png
+!roster/grave-robber-sword-sheet.png
+
+# And four out of the roster sign-off's third prototype ticket -- issue #281 --
+# each the one sheet its own question is asked on. Same naming rule as every
+# sheet above: the tool writes candidates-sheet.png on every set run, so a
+# committed copy carries a name nothing else writes.
+#
+#   the Engineer's turret at *1 leading the Mortar's four larger sizes, because
+#   docs/roster.md asks for "a heavier turret_base" and the collection ships one
+#   turret, so heavier can only be a size and a size is a comparison;
+#   the Artificer beside one prop, two props and the other prop, because his
+#   look names two things and a tower has one beside socket;
+#   the Elder holding every prop his own pack ships that is not already another
+#   line's identity, because his tier says colour PLUS a prop and his binding
+#   gives him colour;
+#   the Bishop's tome in three places, because the mace took its hand and a
+#   magic bolt now leaves the head of a blunt weapon.
+!roster/mortar-turret-weight-sheet.png
+!roster/artificer-second-prop-sheet.png
+!roster/elder-prop-sheet.png
+!roster/bishop-tome-sheet.png
+
+# And the four of them again at the size a body gets in the built player -- about
+# twenty-four pixels tall, which is what 1600x900 gives it. Issue #270 settled
+# that a sheet and the player disagree, and a difference that disappears here is
+# not a difference a player has. Kept beside the magnified sheet rather than
+# instead of it, because the pair IS the finding on three of these four
+# questions.
+!roster/mortar-turret-weight-played-sheet.png
+!roster/artificer-second-prop-played-sheet.png
+!roster/elder-prop-played-sheet.png
+!roster/bishop-tome-played-sheet.png
+
+# And three frames of the recorded match at tick 1546, the same tick and the
+# same distance as the committed match-tick-1546.png, at three camera pitches.
+# NOT a sheet -- the armed-roster tool stitches contact sheets and the match
+# capture does not, and the thing being compared is a whole 1600x900 frame
+# rather than a body on a plain ground. Three and not the seven that were
+# rendered: the shipped pitch, the shallowest that still frames the board and
+# one steeper, which is the bracket. The other four regenerate from the one
+# command in roster/mage-hat-pitch.txt.
+!roster/mage-hat-pitch-20.png
+!roster/mage-hat-pitch-35-shipped.png
+!roster/mage-hat-pitch-55.png
+
+# And the ten screen captures of the built player, which no capture tool writes
+# and nothing here regenerates: a whole ten-wave run on the wide roster, driven
+# by synthetic input. Named one at a time like every exception above, so the
+# next screenshot somebody drops into this folder is ignored until somebody
+# decides to keep it. played-run/README.md says what each one is.
+!played-run/build-phase.png
+!played-run/the-nine-lines-close.png
+!played-run/capstone-consecration.png
+!played-run/capstone-mortar.png
+!played-run/capstone-fan-of-knives.png
+!played-run/resolution.png
+!played-run/black-knight-beside-towers.png
+!played-run/a-slow-nobody-can-see.png
+!played-run/the-same-slow-close.png
+!played-run/run-over.png
+
+# The armed-roster capture's set run writes a manifest beside its PNGs, saying
+# which tile of the contact sheet is which. Same rule as the frames: it is
+# regenerated by whoever wants to look, it is nobody's documentation to keep,
+# and an untracked file here fails the gate's tree-clean step for a reason that
+# has nothing to do with the push. README.md is the only tracked prose in this
+# folder and is not a .txt. Named exactly rather than as *.txt, so a file
+# somebody does mean to keep here is not swallowed by a rule written for this
+# one.
+candidates-manifest.txt
+
+# And the index its -Strip run writes beside the filmstrips, saying how many
+# frames each one holds and how long its clip is. Same rule, and it earned the
+# line the hard way: the strips themselves are covered by *.png, so the first
+# run left exactly one unignored file per output directory and a `git add -A`
+# swept six of them into a commit. Named exactly rather than as *.txt, so a
+# file somebody does mean to keep here is not swallowed by a rule written for
+# this one.
+strip-index.txt

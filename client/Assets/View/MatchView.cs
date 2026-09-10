@@ -53,6 +53,15 @@ namespace View
     {
         private readonly Dictionary<int, Vector3> _drawnCreepPositions = new Dictionary<int, Vector3>();
 
+        /// <summary>
+        /// Which row each of those bodies is, filled in beside the positions
+        /// and cleared with them. Kept because a creep's own effect shape is a
+        /// property of its row and an event carries only the entity id — the
+        /// same lookup problem the position has, with the same at-most-a-tick
+        /// -behind answer.
+        /// </summary>
+        private readonly Dictionary<int, int> _drawnCreepTypes = new Dictionary<int, int>();
+
         private readonly Dictionary<int, CreepSnapshot> _previousCreeps =
             new Dictionary<int, CreepSnapshot>();
 
@@ -70,6 +79,13 @@ namespace View
 
         private MatchArt _art;
 
+        /// <summary>
+        /// The look every effect on this match is drawn at.
+        /// <see cref="EffectLook.Shipped"/> unless a capture handed one to
+        /// <see cref="Begin"/>; see <see cref="EffectLook"/> for why one would.
+        /// </summary>
+        private EffectLook _look = EffectLook.Shipped;
+
         private RoutePath _route;
 
         private UnitTypeTable _types;
@@ -77,6 +93,15 @@ namespace View
         private Ruleset _rules;
 
         private Material _projectileMaterial;
+
+        /// <summary>
+        /// The two segments of the bar every creep wears while something has
+        /// granted it a pool. Made once here, because a material per creep is
+        /// an asset instance per creep to destroy again.
+        /// </summary>
+        private Material _healthSegmentMaterial;
+
+        private Material _shieldSegmentMaterial;
 
         private Transform _creepParent;
 
@@ -147,6 +172,13 @@ namespace View
         /// Starts drawing a match. Builds the towers, which are static for its
         /// whole length, and pulls the first snapshot.
         /// </summary>
+        /// <param name="board">
+        /// The board's footprint in world x and z, which is where a ground
+        /// effect stops — see <see cref="MatchDecorations"/>. It is handed down
+        /// from the floor that was actually built rather than worked out again
+        /// from the map, because two answers to "where does the board end" is
+        /// exactly the second opinion this project keeps deleting.
+        /// </param>
         public void Begin(
             HexMap map,
             Ruleset rules,
@@ -154,7 +186,9 @@ namespace View
             TowerLayout layout,
             WaveScript wave,
             ulong seed,
-            MatchArt art)
+            MatchArt art,
+            Rect board,
+            EffectLook look = null)
         {
             if (map is null) throw new ArgumentNullException(nameof(map));
             if (rules is null) throw new ArgumentNullException(nameof(rules));
@@ -163,6 +197,7 @@ namespace View
 
             _types = types ?? throw new ArgumentNullException(nameof(types));
             _art = art ?? throw new ArgumentNullException(nameof(art));
+            _look = look ?? EffectLook.Shipped;
 
             // Kept so a seek can build the match again from nothing but these.
             // A seek re-simulates, so these five are the whole of what the view
@@ -174,7 +209,9 @@ namespace View
             _seed = seed;
 
             _route = RoutePath.For(map);
-            _projectileMaterial = ViewMaterials.Create("Projectile", MatchTuning.ProjectileColor);
+            _projectileMaterial = ViewMaterials.Create("Projectile", _look.ProjectileColor);
+            _healthSegmentMaterial = ViewMaterials.Create("HealthSegment", _look.HealthSegmentColor);
+            _shieldSegmentMaterial = ViewMaterials.Create("ShieldSegment", _look.ShieldSegmentColor);
 
             _creepParent = MakeGroup("Creeps");
             _projectileParent = MakeGroup("Projectiles");
@@ -185,7 +222,15 @@ namespace View
 
             BuildTowers(layout, towerParent);
 
-            Decorations = new MatchDecorations(transform, CreepPositionOf, TowerMuzzleOf);
+            Decorations = new MatchDecorations(
+                transform,
+                CreepPositionOf,
+                TowerMuzzleOf,
+                EntityGroundOf,
+                TowerSignatureOf,
+                CreepSignatureOf,
+                board,
+                _look);
 
             // Instant-resolve, and it is the same call as everything else:
             // construct, run, and never pull a snapshot.
@@ -279,7 +324,17 @@ namespace View
                 Destroy(_projectileMaterial);
             }
 
-            Decorations?.DestroyMaterials();
+            if (_healthSegmentMaterial != null)
+            {
+                Destroy(_healthSegmentMaterial);
+            }
+
+            if (_shieldSegmentMaterial != null)
+            {
+                Destroy(_shieldSegmentMaterial);
+            }
+
+            Decorations?.DestroyAssets();
         }
 
         /// <summary>
@@ -362,6 +417,7 @@ namespace View
         private void DrawCreeps(float alpha)
         {
             _drawnCreepPositions.Clear();
+            _drawnCreepTypes.Clear();
             _creepPool.BeginSync();
 
             foreach (CreepSnapshot creep in Current.Creeps)
@@ -381,6 +437,7 @@ namespace View
                 Vector3 position = _route.PointAt(distance, lateral);
 
                 _drawnCreepPositions[creep.Id] = position;
+                _drawnCreepTypes[creep.Id] = creep.TypeId;
 
                 view.Pose(
                     position,
@@ -388,6 +445,13 @@ namespace View
                     distance,
                     creep.State,
                     DyingFraction(creep, before, paired, alpha));
+
+                // The pool it is carrying, straight off the same row and
+                // never interpolated: a pool a creep half has is a pool nothing
+                // could spend. What a payload is doing to it is not drawn on
+                // the body at all -- the aura's circle on the floor is the
+                // whole of what says so.
+                view.Marks.Show(creep.Hp, _types.ById(creep.TypeId).MaxHp, creep.Shield);
             }
 
             _creepPool.EndSync();
@@ -556,7 +620,13 @@ namespace View
             host.transform.SetParent(_creepParent, worldPositionStays: false);
 
             var view = host.AddComponent<CreepView>();
-            view.Build(_art.ArtFor(unitId), _art.CreepWalkClip, _art.CreepDeathClip);
+            view.Build(
+                _art.ArtFor(unitId),
+                _art.WalkClipFor(unitId),
+                _art.DeathClipFor(unitId),
+                _healthSegmentMaterial,
+                _shieldSegmentMaterial,
+                _look);
 
             return view;
         }
@@ -567,7 +637,7 @@ namespace View
             host.transform.SetParent(_projectileParent, worldPositionStays: false);
 
             var view = host.AddComponent<ProjectileView>();
-            view.Build(_projectileMaterial);
+            view.Build(_projectileMaterial, _look.ProjectileRadius);
 
             return view;
         }
@@ -631,5 +701,72 @@ namespace View
 
         private Vector3? TowerMuzzleOf(int towerId) =>
             _towers.TryGetValue(towerId, out TowerView view) ? view.Muzzle : (Vector3?)null;
+
+        /// <summary>
+        /// Where an entity is standing, whichever kind it is — what a bubble's
+        /// ring is drawn under.
+        /// </summary>
+        /// <remarks>
+        /// Towers, creeps and projectiles are numbered out of one id space, so
+        /// a caller holding an id that could be either does not have to be told
+        /// which — and cannot be told wrong. A tower is at its own transform
+        /// and does not move; a creep is where it was last drawn, which is the
+        /// same at-most-a-tick-behind answer <see cref="CreepPositionOf"/>
+        /// gives and is allowed to be for the same reason.
+        /// </remarks>
+        private Vector3? EntityGroundOf(int entityId)
+        {
+            if (_towers.TryGetValue(entityId, out TowerView tower))
+            {
+                return tower.transform.position;
+            }
+
+            return CreepPositionOf(entityId);
+        }
+
+        /// <summary>
+        /// What the tower with this id draws its own bubble and its own shot
+        /// as, or null when the id is not a tower.
+        /// </summary>
+        /// <remarks>
+        /// <b>Null and a pair of <c>None</c>s are different answers.</b> A
+        /// bubble is centred on an entity out of the one id
+        /// space, and which kind of entity that is decides what the decoration
+        /// means: a tower at the centre is the row that emitted, and anything
+        /// else is a body a shot arrived at. Collapsing the two would draw a
+        /// tower's plain disc under a creep a mortar shell had just landed on.
+        /// </remarks>
+        private RowSignature? TowerSignatureOf(int entityId) =>
+            _towers.TryGetValue(entityId, out TowerView tower)
+                ? tower.Signature
+                : (RowSignature?)null;
+
+        /// <summary>
+        /// What the creep with this id draws its own bubble as, or null when
+        /// the id is not a body the view last drew.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Separate from <see cref="TowerSignatureOf"/> and not folded into
+        /// it.</b> That one's null is what tells a bubble centred on its
+        /// emitter from a blast centred on its victim, so a lookup answering
+        /// for creeps as well would draw a walking row's aura shape under a
+        /// body a mortar shell had just landed on. Only the aura asks this one,
+        /// and an aura is always centred on the thing that emitted it.
+        /// </para>
+        /// <para>
+        /// The row comes from the frame the view last drew rather than from the
+        /// snapshot being pulled, which is the at-most-a-tick-behind answer
+        /// <see cref="CreepPositionOf"/> gives and is allowed to be for the same
+        /// reason: a body that has just left is one the view is no longer
+        /// holding art for, and its pulse reaches nothing rather than reaching
+        /// a row nothing is drawn as.
+        /// </para>
+        /// </remarks>
+        private RowSignature? CreepSignatureOf(int entityId) =>
+            _drawnCreepTypes.TryGetValue(entityId, out int typeId)
+                ? _art.ArtFor(typeId).Signature
+                : (RowSignature?)null;
+
     }
 }

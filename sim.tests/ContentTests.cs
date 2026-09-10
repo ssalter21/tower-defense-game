@@ -37,14 +37,47 @@ public class ContentTests
 
     /// <summary>
     /// The same three rows again in column layout 3, carrying nothing in any of
-    /// the nine columns it adds -- which is what every committed row carries and
-    /// is not the same thing as a row that has no such columns.
+    /// the nine columns it adds -- which is not the same thing as a row that has
+    /// no such columns.
     /// </summary>
-    private const string ThreeCurrentRows = """
+    private const string ThreeRadialRows = """
         layout 3
         unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0
         unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0
         unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0
+        """;
+
+    /// <summary>
+    /// The same three rows once more in column layout 4, carrying nothing in the
+    /// one column it adds.
+    /// </summary>
+    private const string ThreeSuccessorRows = """
+        layout 4
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none
+        """;
+
+    /// <summary>
+    /// And once more in column layout 5, carrying nothing in either of the two
+    /// columns it adds.
+    /// </summary>
+    private const string ThreeRaisingRows = """
+        layout 5
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none none 0
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none none 0
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none none 0
+        """;
+
+    /// <summary>
+    /// And once more in column layout 6, paying nothing for being killed --
+    /// which is what every committed row but the Grave Robber carries.
+    /// </summary>
+    private const string ThreeCurrentRows = """
+        layout 6
+        unit 1 grunt  moving 240 34 0 0 0 0 0 0 none 0 12 10 none armoured 0 0 1 none none none 0 none 0 0 none none 0 0
+        unit 2 runner moving 130 61 0 0 0 0 0 0 none 0 12 15 none swift 0 0 1 none none none 0 none 0 0 none none 0 0
+        unit 7 bolt   placed 0 0 3200 14 3 2 9 15 hitscan 0 0 40 pierce none 0 0 1 none none none 0 none 0 0 none none 0 0
         """;
 
     /// <summary>
@@ -66,40 +99,129 @@ public class ContentTests
     private const ulong LayoutTwoHashOfThreeRows = 0x0EEC991C9FDDAF07UL;
 
     /// <summary>
+    /// What <see cref="ThreeRadialRows"/> hashed to before layout 4 existed, and
+    /// what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Pinned here for the reason layout 2's is: no golden bundle carries a
+    /// layout-3 table any more -- <c>content/golden/defense-1.units</c> was
+    /// re-recorded at layout 4 with the bundle beside it -- so a fold that moved
+    /// under layout 3's label would go unnoticed by everything else in this
+    /// repository, and the next widening is exactly when it would happen.
+    /// </remarks>
+    private const ulong LayoutThreeHashOfThreeRows = 0x6C404CE93E6484C1UL;
+
+    /// <summary>
+    /// What <see cref="ThreeSuccessorRows"/> hashed to before layout 5 existed,
+    /// and what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Pinned here for the reason layouts 2 and 3 are: no golden bundle carries
+    /// a layout-4 table any more, so a fold that moved under layout 4's label
+    /// would go unnoticed by everything else in this repository, and the next
+    /// widening is exactly when it would happen.
+    /// </remarks>
+    private const ulong LayoutFourHashOfThreeRows = 0xE30727A394A13D2CUL;
+
+    /// <summary>
+    /// What <see cref="ThreeRaisingRows"/> hashed to before layout 6 existed,
+    /// and what it has to go on hashing to.
+    /// </summary>
+    /// <remarks>
+    /// Pinned here for the reason layouts 2, 3 and 4 are: no golden bundle
+    /// carries a layout-5 table any more, so a fold that moved under layout 5's
+    /// label would go unnoticed by everything else in this repository, and the
+    /// next widening is exactly when it would happen.
+    /// </remarks>
+    private const ulong LayoutFiveHashOfThreeRows = 0xC8B9ECC587139537UL;
+
+    /// <summary>
     /// The Mage's id. Named because two tests below single the row out -- it is
     /// the one placed row the cost rule does not price, and why is a claim of
     /// its own.
     /// </summary>
     private const int Mage = 4;
 
+    /// <summary>The Archer line's capstone, which is the longest reach on the roster.</summary>
+    private const int Overwatch = 31;
+
+    /// <summary>The Engineer, whose shell is the longest thing in the air.</summary>
+    private const int Engineer = 35;
+
+    /// <summary>The Shade, which is the cheapest body on the roster and the fastest.</summary>
+    private const int Shade = 46;
+
+    /// <summary>The Bone Golem, which is the dearest body.</summary>
+    private const int BoneGolem = 39;
+
+    /// <summary>The Abomination, which is the slowest.</summary>
+    private const int Abomination = 42;
+
+    /// <summary>The Black Knight, which carries the most armour.</summary>
+    private const int BlackKnight = 40;
+
+    /// <summary>
+    /// The effective health one gold buys a sender at the creep rule's rate.
+    /// </summary>
+    private const int EffectiveHealthPerGold = 160;
+
+    /// <summary>
+    /// The Mage line, which is the one line the cost rule does not price. The
+    /// Mage is priced for a splash the bodies term cannot count, and the two
+    /// rungs above it carry that price scaled by the cooldown they changed, so
+    /// all three sit outside the rule together.
+    /// </summary>
+    private static readonly int[] TheMageLine = { Mage, 26 /* sorcerer */, 27 /* unravel */ };
+
+    /// <summary>
+    /// The nine tower lines: an attack type and three rungs each, in ascending
+    /// order. Transcribed from docs/roster.md's index rather than walked out of
+    /// content/upgrades.txt, because reading the lines off the ladder would be
+    /// checking that file against itself.
+    /// </summary>
+    private static readonly (string Name, AttackType Attack, int[] Rungs)[] TheNineLines =
+    {
+        ("Knight", AttackType.Impact, new[] { 11, 15, 16 }),
+        ("Barbarian", AttackType.Impact, new[] { 17, 18, 19 }),
+        ("Engineer", AttackType.Impact, new[] { 35, 36, 37 }),
+        ("Archer", AttackType.Pierce, new[] { 3, 14, 31 }),
+        ("Rogue", AttackType.Pierce, new[] { 32, 33, 34 }),
+        ("Mage", AttackType.Magic, new[] { 4, 26, 27 }),
+        ("Paladin", AttackType.Magic, new[] { 20, 21, 22 }),
+        ("Cleric", AttackType.Magic, new[] { 23, 24, 25 }),
+        ("Druid", AttackType.Magic, new[] { 28, 29, 30 }),
+    };
+
     [Fact]
     public void The_committed_unit_table_parses()
     {
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        Assert.Equal(9, table.Count);
+        Assert.Equal(44, table.Count);
         Assert.Equal("minion", table.ById(1).Label);
         Assert.Equal(UnitRole.Moving, table.ById(2).Role);
         Assert.Equal(Delivery.Hitscan, table.ById(3).Delivery);
         Assert.Equal(Delivery.Projectile, table.ById(4).Delivery);
         Assert.Equal(33, table.ById(4).ProjectileFlightTicks);
 
-        // Five of them walk, which is what an offering is drawn out of, and
-        // four stand. The walker count is what lets the ruleset ask for three
-        // ordinary options a round, and it is the tightest it has ever been:
-        // five walkers against three options puts most of the roster on every
-        // menu.
+        // Seventeen of them walk, which is what an offering is drawn out of,
+        // and twenty-seven stand -- nine tower lines of three rungs each. The
+        // walker count is what lets the ruleset ask for three ordinary options
+        // a round, and twelve more of them is the loosest it has ever been:
+        // seventeen walkers against three options puts most of the roster off
+        // any one menu.
         //
-        // The Ranger is the fourth thing that stands and it changed neither of
-        // those, which is the point of a tier being a row: an offering is drawn
-        // from the walkers alone, so a new tower does not enter a menu and
-        // cannot move a draw.
+        // The twenty-three rows the nine lines added moved only the second of
+        // those numbers, which is the point of a tier being a row: an offering
+        // is drawn from the walkers alone, so a new tower does not enter a menu
+        // and cannot move a draw. The twelve creep rows move the first, and
+        // that is the same rule read from the other side.
         //
         // OBSERVED: change the skeleton's role from moving to placed in
-        // content/units.txt. The walker count goes red, 5 against 4, and the
+        // content/units.txt. The walker count goes red, 17 against 16, and the
         // offering's own refusal follows it in BuildPhaseTests.
-        Assert.Equal(5, table.Types.Count(row => row.Role == UnitRole.Moving));
-        Assert.Equal(4, table.Types.Count(row => row.Role == UnitRole.Placed));
+        Assert.Equal(17, table.Types.Count(row => row.Role == UnitRole.Moving));
+        Assert.Equal(27, table.Types.Count(row => row.Role == UnitRole.Placed));
 
         // The five retired ids are gone and stay gone. Ids are never reused, so
         // these are not holes waiting to be filled -- a stored record pinning
@@ -141,20 +263,65 @@ public class ContentTests
     }
 
     [Fact]
+    public void The_committed_ladder_prices_the_top_of_every_line_in_tokens_and_nothing_else()
+    {
+        // Nine lines, nine capstones, nine capstone edges -- and no other edge
+        // priced in tokens. The lines are read out of the roster.md
+        // transcription above rather than out of the ladder, for the reason
+        // TheNineLines exists: reading them off content/upgrades.txt would be
+        // checking that file against itself.
+        //
+        // This IS a census and the fault check above deliberately is not, and
+        // the difference is which way the file is expected to grow. A tenth
+        // tower line is a tenth entry in TheNineLines, which docs/roster.md's
+        // index already has to gain; a token price appearing on a middle rung is
+        // a capstone somebody spelled onto the wrong row, and nothing else in
+        // this repository would say so.
+        //
+        // OBSERVED: change one `capstone` row of content/upgrades.txt back to
+        // `upgrade`. This goes red naming the pair, and that line's top starts
+        // charging its cost column -- 41 gold for a Shield Wall, out of the
+        // purse, in any round that can afford it.
+        UnitTypeTable types = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UpgradeLadder ladder = UpgradeLadder.Parse(File.ReadAllText(RepoLayout.UpgradesFile), types);
+
+        var tops = new List<(int From, int To)>();
+
+        foreach ((string name, AttackType attack, int[] rungs) in TheNineLines)
+        {
+            Assert.True(
+                ladder.IsCapstoneEdge(rungs[1], rungs[2]),
+                "The " + name + " line's top rung is not priced in capstone tokens.");
+            Assert.False(
+                ladder.IsCapstoneEdge(rungs[0], rungs[1]),
+                "The " + name + " line's second rung is priced in capstone tokens.");
+
+            tops.Add((rungs[1], rungs[2]));
+        }
+
+        Assert.Equal(
+            tops.OrderBy(top => top.From).ToArray(),
+            ladder.Edges
+                .Where(edge => edge.Price == EdgePrice.CapstoneToken)
+                .Select(edge => (edge.From, edge.To))
+                .OrderBy(top => top.From)
+                .ToArray());
+    }
+
+    [Fact]
     public void The_roster_spans_the_matrix_and_every_shape_is_a_row()
     {
-        // Eight units and no nineteenth column. Every attack type and every
-        // armour type is on the roster, so nothing in the matrix is a cell no
-        // committed unit can reach -- and under the signed roster's one-type-
-        // per-tower-line rule the three attack types are covered exactly once
-        // each rather than lopsidedly, which is what makes a tower's line
+        // Every attack type and every armour type is on the roster, so nothing
+        // in the matrix is a cell no committed unit can reach -- and under the
+        // signed roster's one-type-per-tower-line rule a line carries one type
+        // from its root to its capstone, which is what makes a tower's line
         // readable off the board.
         //
-        // OBSERVED: give the Mage `pierce` instead of `magic` -- one word in
-        // content/units.txt. The distinct-attack-types assertion goes red
-        // straight away, because with three towers and three types there is no
-        // second row carrying magic to hide behind. That is the whole gain of
-        // one type per line: the roster cannot lose a type quietly.
+        // OBSERVED: give the Sorcerer `pierce` instead of `magic` -- one word
+        // in content/units.txt. The per-line assertion below goes red on the
+        // Mage line, because a line's type is held against every rung of it.
+        // That is the whole gain of one type per line: the roster cannot lose a
+        // type quietly.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
         Assert.Equal(UnitTypeTable.CurrentLayout, table.Layout);
@@ -173,42 +340,87 @@ public class ContentTests
                 .Distinct()
                 .OrderBy(type => (int)type));
 
-        // The ends of each axis, named. The Skeleton Scout is the cheapest body
-        // and the fastest; the Skeleton Warrior is the dearest, the slowest and
-        // carries the most armour; the Mage outranges the other towers and is
-        // the only one that puts anything in the air; the Soldier is the
-        // shortest-ranged and the cheapest thing that stands.
+        // The ends of each axis, named. The Shade is the cheapest body and the
+        // fastest; the Bone Golem is the dearest, the Abomination the slowest
+        // and the Black Knight carries the most armour; Overwatch outranges
+        // every other tower at eight hexes and the Engineer's shell spends the
+        // longest in the air; the Soldier is the cheapest thing that stands and
+        // shares the shortest reach with the three other melee rungs.
         //
-        // OBSERVED: take the Warrior's forty-five points of armour down to
-        // zero. Its own row goes red, 45 against 0, and the dearest-walker
-        // assertion goes red with it -- at zero armour the Warrior prices at 21
-        // and the Necromancer's 19 is no longer the row it beats by much --
-        // because armour points are half of what a heavy body is.
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost), table.ById(2).Cost);
-        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(2).SpeedMilliHexPerTick);
-        Assert.Equal(table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost), table.ById(13).Cost);
+        // ALL FOUR WALKER ENDS MOVED WHEN THE ROSTER WIDENED, and every one of
+        // them moved to a different row: the twelve creep rows signed on
+        // 5 September 2026 span 8 to 90 gold, 12 to 84 milli-hexes a tick and 0
+        // to 80 points of armour, where the five before them spanned 9 to 31,
+        // 18 to 56 and 0 to 45. Naming four rows rather than two is what that
+        // costs, and it is what stops one row quietly holding two ends.
+        //
+        // OBSERVED: take the Black Knight's eighty points of armour down to
+        // zero. Its own row goes red, 80 against 0, and nothing else does --
+        // which is the shape of the check: an end is held against the row that
+        // holds it rather than against a number written twice.
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.Cost),
+            table.ById(Shade).Cost);
+        Assert.Equal(table.Types.Max(row => row.SpeedMilliHexPerTick), table.ById(Shade).SpeedMilliHexPerTick);
+        Assert.Equal(
+            table.Types.Where(row => row.Role == UnitRole.Moving).Max(row => row.Cost),
+            table.ById(BoneGolem).Cost);
         Assert.Equal(
             table.Types.Where(row => row.Role == UnitRole.Moving).Min(row => row.SpeedMilliHexPerTick),
-            table.ById(13).SpeedMilliHexPerTick);
+            table.ById(Abomination).SpeedMilliHexPerTick);
+        Assert.Equal(
+            table.Types.Max(row => row.Armour),
+            table.ById(BlackKnight).Armour);
+        Assert.Equal(80, table.ById(BlackKnight).Armour);
         Assert.Equal(45, table.ById(13).Armour);
-        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(4).RangeMilliHex);
-        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
-        Assert.Equal(table.Types.Max(row => row.ProjectileFlightTicks), table.ById(4).ProjectileFlightTicks);
+        Assert.Equal(table.Types.Max(row => row.RangeMilliHex), table.ById(Overwatch).RangeMilliHex);
+        Assert.Equal(8000, table.ById(Overwatch).RangeMilliHex);
+        Assert.Equal(AttackType.Magic, table.ById(Mage).AttackType);
+        Assert.Equal(
+            table.Types.Max(row => row.ProjectileFlightTicks),
+            table.ById(Engineer).ProjectileFlightTicks);
         Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
         Assert.Equal(
             table.Types.Where(row => row.Role == UnitRole.Placed).Min(row => row.RangeMilliHex),
             table.ById(11).RangeMilliHex);
 
-        // One attack type per tower line, spelled out. This is the rule the
+        // One attack type per tower line, line by line. This is the rule the
         // roster was signed under and it is what lets a player read what a
-        // tower does to a body from which line it came from.
+        // tower does to a body from which line it came from. Impact three
+        // times, pierce twice and magic four times: magic is over-represented
+        // on purpose, because the creep side is undead and mostly armoured.
         //
-        // OBSERVED: give the Soldier `pierce`. This goes red on its own row,
-        // Impact against Pierce, and the distinct-types assertion above goes
-        // red with it because impact then belongs to nothing.
-        Assert.Equal(AttackType.Impact, table.ById(11).AttackType);
-        Assert.Equal(AttackType.Pierce, table.ById(3).AttackType);
-        Assert.Equal(AttackType.Magic, table.ById(4).AttackType);
+        // OBSERVED: give the Soldier `pierce`. This goes red naming the Knight
+        // line, Impact against Pierce, because a line's type is held against
+        // every rung of it rather than against the set of types on the roster.
+        foreach ((string name, AttackType attack, int[] rungs) in TheNineLines)
+        {
+            Assert.Equal(3, rungs.Length);
+
+            foreach (int rung in rungs)
+            {
+                Assert.Equal(attack, table.ById(rung).AttackType);
+            }
+        }
+
+        Assert.Equal(3, TheNineLines.Count(line => line.Attack == AttackType.Impact));
+        Assert.Equal(2, TheNineLines.Count(line => line.Attack == AttackType.Pierce));
+        Assert.Equal(4, TheNineLines.Count(line => line.Attack == AttackType.Magic));
+
+        // And the creep side balances that back: seven armoured, five swift,
+        // five arcane. Magic is over-represented among the towers on purpose
+        // and armoured among the creeps for the same reason, so the two counts
+        // are one decision read from its two ends -- which is why the spread is
+        // held here rather than left to whoever adds the next row.
+        //
+        // OBSERVED: make the Fiend armoured instead of arcane. This goes red,
+        // eight armoured against seven, and nothing else in the file notices --
+        // which is the whole reason the count is written down.
+        UnitType[] walkers = table.Types.Where(row => row.Role == UnitRole.Moving).ToArray();
+
+        Assert.Equal(7, walkers.Count(row => row.ArmourType == ArmourType.Armoured));
+        Assert.Equal(5, walkers.Count(row => row.ArmourType == ArmourType.Swift));
+        Assert.Equal(5, walkers.Count(row => row.ArmourType == ArmourType.Arcane));
     }
 
     [Fact]
@@ -232,15 +444,15 @@ public class ContentTests
 
         foreach (UnitType creep in table.Types.Where(row => row.Role == UnitRole.Moving))
         {
-            int effective = creep.MaxHp * (100 + creep.Armour) / 100;
+            int effective = EffectiveHealth(creep);
 
             Assert.True(
-                Math.Abs(effective - (creep.Cost * 160)) * 10 <= effective,
+                Math.Abs(effective - (creep.Cost * EffectiveHealthPerGold)) * 10 <= effective,
                 creep.Label
                 + " costs "
                 + creep.Cost
                 + " gold, which buys "
-                + (creep.Cost * 160)
+                + (creep.Cost * EffectiveHealthPerGold)
                 + " effective health at the roster's rate, against the "
                 + effective
                 + " it actually carries. Every walking row is within a tenth of it.");
@@ -261,6 +473,14 @@ public class ContentTests
         Assert.Equal(AttackType.None, table.ById(1).AttackType);
         Assert.Equal(0, table.ById(1).Armour);
         Assert.Equal(ArmourType.Swift, table.ById(2).ArmourType);
+
+        // The two speeds nothing is allowed to move. The Scout is exactly twice
+        // the Minion, so the two are level for exactly one tick as one passes
+        // the other -- which is the case the target-selection tiebreak exists
+        // for, and the only case that consults it. Every creep row added since
+        // is authored around this pair rather than over it.
+        Assert.Equal(28, table.ById(1).SpeedMilliHexPerTick);
+        Assert.Equal(56, table.ById(2).SpeedMilliHexPerTick);
 
         // A tower: an attack type, and no armour type because it has no health
         // pool to be protected.
@@ -289,9 +509,13 @@ public class ContentTests
         // everything else, because no column said how many bodies a shot hit.
         // One does now, so the rule reads the row instead of guessing at it.
         //
-        // What that exposed is the Mage, and it is asserted below rather than
-        // tuned away: see The_mage_is_priced_for_a_splash_nobody_has_authored.
-        // Every other placed row is priced on the shots it actually fires.
+        // What that exposed is the Mage line, and it is asserted below rather
+        // than tuned away: see The_mage_carries_its_splash_and_still_costs
+        // _what_a_splash_is_not_priced_at. The Mage is priced for a splash the
+        // bodies term cannot count, and the Sorcerer and Unravel are that price
+        // scaled by the cooldown they changed -- so the three of them are the
+        // one line the rule does not reach, and every other placed row is
+        // priced on the shots it actually fires.
         //
         // OBSERVED: halve the Archer's cost, 40 to 20, in content/units.txt.
         // This goes red naming it -- "archer costs 20 gold, which is 5 damage a
@@ -300,14 +524,10 @@ public class ContentTests
         // anybody plays a round of it.
         UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
 
-        foreach (UnitType tower in table.Types.Where(row => row.Role == UnitRole.Placed && row.Id != Mage))
+        foreach (UnitType tower in table.Types
+                     .Where(row => row.Role == UnitRole.Placed && !TheMageLine.Contains(row.Id)))
         {
-            int bodies = tower.Targets;
-            int average = (tower.DamageMin + tower.DamageMax) / 2;
-
-            // Damage a second, times bodies, at thirty ticks a second. Held as
-            // one integer expression so no division rounds before the compare.
-            int perSecondTimesBodies = average * bodies * Match.TicksPerSecond / tower.CooldownTicks;
+            int perSecondTimesBodies = DamageASecondTimesBodies(tower);
 
             Assert.True(
                 Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
@@ -347,8 +567,7 @@ public class ContentTests
 
         foreach (UnitType tower in table.Types)
         {
-            int perSecondTimesBodies =
-                (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
+            int perSecondTimesBodies = DamageASecondTimesBodies(tower);
 
             Assert.True(
                 Math.Abs(perSecondTimesBodies - (tower.Cost * 5)) * 50 <= perSecondTimesBodies,
@@ -357,34 +576,182 @@ public class ContentTests
     }
 
     [Fact]
-    public void The_mage_is_priced_for_a_splash_nobody_has_authored()
+    public void The_mage_carries_its_splash_and_still_costs_what_a_splash_is_not_priced_at()
     {
-        // THE FINDING, PINNED RATHER THAN TUNED AWAY. The Mage costs 92 gold,
-        // which is three bodies' worth of the cost rule, and it fires one
-        // projectile at one creep: its splash has been a design statement in
-        // docs/roster.md -- "splash of one additional hex", radius 1000 -- and
-        // never a thing the simulation did. The old bodies term guessed three
-        // from the delivery column and hid that; the targets column does not.
+        // THE FINDING, PINNED RATHER THAN TUNED AWAY -- and half of it has now
+        // been answered. The Mage costs 92 gold, which is three bodies' worth
+        // of the cost rule, and for as long as the roster has existed it fired
+        // one projectile at one creep: the splash was a design statement in
+        // docs/roster.md and never a thing the simulation did.
         //
-        // Layout 3 is the first schema that could carry the splash, as a bubble
-        // on the target with a radius and a damage payload. Authoring it, or
-        // repricing the row to what it does, is a design decision, and #216
-        // took neither: this is the standing question in the artefact rather
-        // than a number quietly moved to make an assertion green.
+        // It is a thing the simulation does now. The row carries the bubble the
+        // roster describes -- origin target, radius 1000, payload damage -- so
+        // the shot lands its roll on everything within a hex of what it hit.
         //
-        // OBSERVED: it goes red both ways. Author the Mage a bubble and the
-        // ratio stops being three; reprice it to 30 and the same. Either edit
-        // is somebody deciding what a Mage is, and either edit is meant to
-        // arrive here.
-        UnitType mage = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile)).ById(Mage);
+        // WHAT IS STILL OPEN IS THE PRICE, ON PURPOSE. A bubble is one shot
+        // drawing one roll however many bodies it encloses, so the targets
+        // column is 1 and the rule reads 30 gold against the 92 on the row.
+        // Repricing a tower whose value is a radius is exactly what this rule
+        // is worst at, and the 92 waits on a balance sweep that can derive it.
+        //
+        // OBSERVED: take the bubble off the Mage and the first half goes red;
+        // reprice the row to 30 and the second half does. Either edit is
+        // somebody deciding what a Mage is, and either edit is meant to arrive
+        // here.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+        UnitType mage = table.ById(Mage);
+
+        Assert.True(mage.Bubble.Present, "the Mage's splash is a bubble on the row");
+        Assert.Equal(1000, mage.Bubble.RadiusMilliHex);
+        Assert.Equal(BubbleOrigin.Target, mage.Bubble.Origin);
+        Assert.Equal(BubbleAffects.Enemy, mage.Bubble.Affects);
+        Assert.Equal(BubblePayload.Damage, mage.Bubble.Payload);
+        Assert.True(mage.Bubble.FiresWithTheAttack, "a splash goes off with the shot rather than on a clock");
 
         Assert.Equal(1, mage.Targets);
-        Assert.False(mage.Bubble.Present);
 
-        int perSecond = (mage.DamageMin + mage.DamageMax) / 2 * Match.TicksPerSecond / mage.CooldownTicks;
+        // The whole line, both numbers, in the order the ids ascend: the Mage,
+        // the Sorcerer and Unravel. The two above it are the Mage at a shorter
+        // cooldown, so 92 scaled by 54 over 40 is the 124 they carry, and the
+        // rule reads 41 against it. Held as two vectors rather than as a
+        // tolerance, because a rung drifting anywhere at all is a rung leaving
+        // this exemption and it should say so by name.
+        Assert.Equal(
+            new[] { 92, 124, 124 },
+            TheMageLine.Select(rung => table.ById(rung).Cost));
 
-        Assert.Equal(30, perSecond / 5);
-        Assert.Equal(92, mage.Cost);
+        Assert.Equal(
+            new[] { 30, 41, 41 },
+            TheMageLine.Select(rung => DamageASecondTimesBodies(table.ById(rung)) / 5));
+    }
+
+    /// <summary>
+    /// The top of the cost rule for one placed row: the middle of its damage
+    /// roll, times the bodies one shot hits, over the ticks between its shots,
+    /// at thirty ticks a second. The gold the rule asks for is this over five.
+    /// </summary>
+    /// <remarks>
+    /// One integer expression, so no division rounds before a comparison, and
+    /// one copy of it, so the rule and the two tests that single rows out of it
+    /// cannot drift apart.
+    /// </remarks>
+    private static int DamageASecondTimesBodies(UnitType tower) =>
+        (tower.DamageMin + tower.DamageMax) / 2 * tower.Targets * Match.TicksPerSecond / tower.CooldownTicks;
+
+    /// <summary>
+    /// The pool a walking row stands on against the damage matrix: its health
+    /// times its armour multiplier. It is what the creep price is derived from.
+    /// </summary>
+    /// <remarks>
+    /// <b>A shield is deliberately not in it.</b> A shield is raw -- armour and
+    /// the type chart do not touch it -- and the cost rule has no term for one,
+    /// so the two rows carrying a pool are priced as though they did not. One
+    /// expression, so the rule and the note about what it cannot see are
+    /// reading the same number.
+    /// </remarks>
+    private static int EffectiveHealth(UnitType creep) =>
+        creep.MaxHp * (100 + creep.Armour) / 100;
+
+    [Fact]
+    public void The_four_creep_auras_are_on_the_rows_the_roster_signs_them_on()
+    {
+        // Four walking rows carry a bubble and every one of them is an aura:
+        // a creep never attacks, so there is no shot for a bubble to go off
+        // with and a period is the only clock one can have. What each carries
+        // is transcribed from docs/roster.md rather than derived, so a row
+        // quietly changing what it does arrives here as a named difference.
+        //
+        // THE SIDE A BUBBLE REACHES DEPENDS ON WHAT IS EMITTING IT. Three of
+        // these say `friend` and reach the other creeps; the Frost Wight says
+        // `enemy` and is the one aura on the roster that reaches the tower
+        // side, which is why its payload is a cooldown and theirs are not.
+        //
+        // OBSERVED: give the Witch a payload of `speed` instead of `armour`.
+        // This goes red on her row, and nothing at load refuses it -- a speed
+        // reaching creeps is a legal bubble, so the only thing standing between
+        // the roster and a second haste aura is this list.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        (int Id, string Label, BubbleAffects Affects, BubblePayload Payload, int Magnitude, int Period, int Duration)[] auras =
+        {
+            (7, "skeleton-mage", BubbleAffects.Friend, BubblePayload.Speed, 20, 30, 30),
+            (38, "necromancer", BubbleAffects.Friend, BubblePayload.Shield, 25, 90, 0),
+            (41, "frost-wight", BubbleAffects.Enemy, BubblePayload.Cooldown, 30, 30, 30),
+            (44, "witch", BubbleAffects.Friend, BubblePayload.Armour, 30, 30, 30),
+        };
+
+        foreach ((int id, string label, BubbleAffects affects, BubblePayload payload, int magnitude, int period, int duration) in auras)
+        {
+            UnitType creep = table.ById(id);
+
+            Assert.Equal(label, creep.Label);
+            Assert.Equal(UnitRole.Moving, creep.Role);
+            Assert.True(creep.Bubble.IsAnAura, label + " carries an aura rather than a bubble on a shot");
+            Assert.Equal(BubbleOrigin.Self, creep.Bubble.Origin);
+            Assert.Equal(2000, creep.Bubble.RadiusMilliHex);
+            Assert.Equal(affects, creep.Bubble.Affects);
+            Assert.Equal(payload, creep.Bubble.Payload);
+            Assert.Equal(magnitude, creep.Bubble.Magnitude);
+            Assert.Equal(period, creep.Bubble.PeriodTicks);
+            Assert.Equal(duration, creep.Bubble.DurationTicks);
+        }
+
+        // And those four are all of them, so a fifth is a decision somebody
+        // took rather than a row that slipped in beside four others.
+        Assert.Equal(
+            auras.Select(aura => aura.Id),
+            table.Types.Where(row => row.Role == UnitRole.Moving && row.Bubble.Present).Select(row => row.Id));
+    }
+
+    [Fact]
+    public void The_two_raw_pools_on_the_roster_are_unpriced_and_the_rows_carry_the_gap()
+    {
+        // THE FINDING, PINNED RATHER THAN TUNED AWAY, and it is the creep
+        // side's version of the Mage's. A creep costs its effective health over
+        // a hundred and sixty, and effective health is the pool times the
+        // armour multiplier -- so a shield, which is raw and which armour and
+        // the type chart do not touch, is worth nothing to the price at all.
+        //
+        // Two rows carry one. The Vampire's 1400 is half its own health again
+        // and the Grave Robber's 2000 two thirds of its, and both are priced as
+        // though neither existed: what the defense actually has to spend to
+        // stop them is the sum, and what the sender is charged is the pool
+        // alone.
+        //
+        // THE GAP IS HELD OPEN ON PURPOSE. It is the same family as range and
+        // bubble radius on the tower rule -- a term nobody has a coefficient
+        // for -- and the sweep is what is meant to derive one. Hand-correcting
+        // either cost here would be authoring a creep price, which the roster
+        // says is never authored.
+        //
+        // OBSERVED: reprice the Vampire to cover its shield. Every_walking_row
+        // above goes red rather than this, because that rule is the one being
+        // obeyed and this is the note about what it cannot see.
+        UnitTypeTable table = UnitTypeTable.Parse(File.ReadAllText(RepoLayout.UnitsFile));
+
+        UnitType[] pools = table.Types
+            .Where(row => row.Role == UnitRole.Moving && row.Shield > 0)
+            .ToArray();
+
+        Assert.Equal(new[] { "vampire", "grave-robber" }, pools.Select(row => row.Label));
+        Assert.Equal(new[] { 1400, 2000 }, pools.Select(row => row.Shield));
+
+        foreach (UnitType creep in pools)
+        {
+            int priced = EffectiveHealth(creep);
+            int carried = priced + creep.Shield;
+
+            Assert.True(
+                creep.Cost * EffectiveHealthPerGold < carried,
+                creep.Label
+                + " costs "
+                + creep.Cost
+                + " gold, which the rule derived from "
+                + priced
+                + " effective health -- and the body actually stands on "
+                + carried
+                + ", because the shield is raw and the rule has no term for it.");
+        }
     }
 
     [Fact]
@@ -497,20 +864,67 @@ public class ContentTests
         // absent ones as zeroes under the old label, this pair would be equal.
         UnitTypeTable one = UnitTypeTable.Parse(ThreeGoodRows);
         UnitTypeTable two = UnitTypeTable.Parse(ThreeTypedRows);
-        UnitTypeTable three = UnitTypeTable.Parse(ThreeCurrentRows);
+        UnitTypeTable three = UnitTypeTable.Parse(ThreeRadialRows);
+        UnitTypeTable four = UnitTypeTable.Parse(ThreeSuccessorRows);
+        UnitTypeTable five = UnitTypeTable.Parse(ThreeRaisingRows);
+        UnitTypeTable six = UnitTypeTable.Parse(ThreeCurrentRows);
 
         Assert.Equal(UnitTypeTable.DefaultLayout, one.Layout);
         Assert.Equal(2, two.Layout);
-        Assert.Equal(UnitTypeTable.CurrentLayout, three.Layout);
+        Assert.Equal(3, three.Layout);
+        Assert.Equal(4, four.Layout);
+        Assert.Equal(5, five.Layout);
+        Assert.Equal(UnitTypeTable.CurrentLayout, six.Layout);
 
         Assert.Equal(one.ById(1).MaxHp, two.ById(1).MaxHp);
         Assert.Equal(two.ById(1).MaxHp, three.ById(1).MaxHp);
+        Assert.Equal(three.ById(1).MaxHp, four.ById(1).MaxHp);
+        Assert.Equal(four.ById(1).MaxHp, five.ById(1).MaxHp);
+        Assert.Equal(five.ById(1).MaxHp, six.ById(1).MaxHp);
         Assert.Equal(two.ById(7).Cost, three.ById(7).Cost);
-        Assert.Equal(two.ById(7).AttackType, three.ById(7).AttackType);
+        Assert.Equal(three.ById(7).Cost, four.ById(7).Cost);
+        Assert.Equal(four.ById(7).Cost, five.ById(7).Cost);
+        Assert.Equal(five.ById(7).Cost, six.ById(7).Cost);
+        Assert.Equal(five.ById(7).AttackType, six.ById(7).AttackType);
 
-        Assert.NotEqual(one.ContentHash, two.ContentHash);
-        Assert.NotEqual(two.ContentHash, three.ContentHash);
-        Assert.NotEqual(one.ContentHash, three.ContentHash);
+        var hashes = new[]
+        {
+            one.ContentHash,
+            two.ContentHash,
+            three.ContentHash,
+            four.ContentHash,
+            five.ContentHash,
+            six.ContentHash,
+        };
+
+        Assert.Equal(hashes.Length, hashes.Distinct().Count());
+    }
+
+    [Fact]
+    public void A_layout_three_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time, one layout
+        // on: layout 3 is what content/units.txt was an hour ago, and a widening
+        // that quietly changed how one reads would retire records nobody edited.
+        //
+        // OBSERVED: fold the successor id in UnitType.Fold's layout-3 branch as
+        // well. This goes red against the literal, and nothing else in the suite
+        // notices.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeRadialRows);
+
+        Assert.Equal(3, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutThreeHashOfThreeRows), table.ContentHash);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Equal(1, table.ById(7).Targets);
+        Assert.False(table.ById(7).Bubble.Present);
+
+        // And what such a row carries in the column it does not have: a body
+        // that is only ever the row it spawned as. That is what a layout-3 row
+        // IS, and not a default standing in for something it stated.
+        Assert.Null(table.ById(1).Becomes);
+        Assert.Null(table.ById(2).Becomes);
+        Assert.Null(table.ById(7).Becomes);
     }
 
     [Fact]
@@ -551,6 +965,60 @@ public class ContentTests
     }
 
     [Fact]
+    public void A_layout_four_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time, one layout
+        // on again: layout 4 is what content/units.txt was an hour ago, and a
+        // widening that quietly changed how one reads would retire records
+        // nobody edited.
+        //
+        // OBSERVED: fold the raised row's id in UnitType.Fold's layout-4 branch
+        // as well. This goes red against the literal, and nothing else in the
+        // suite notices.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeSuccessorRows);
+
+        Assert.Equal(4, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutFourHashOfThreeRows), table.ContentHash);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Null(table.ById(1).Becomes);
+
+        // And what such a row carries in the two columns it does not have: a
+        // body that puts nothing on the board, on no clock. That is what a
+        // layout-4 row IS, and not a default standing in for something it
+        // stated.
+        Assert.Null(table.ById(1).Raises);
+        Assert.Null(table.ById(7).Raises);
+        Assert.Equal(0, table.ById(1).RaisePeriodTicks);
+    }
+
+    [Fact]
+    public void A_layout_five_table_still_parses_and_carries_exactly_what_it_always_did()
+    {
+        // The half of a widening that has to be checked every time, one layout
+        // on again: layout 5 is what content/units.txt was an hour ago, and a
+        // widening that quietly changed how one reads would retire records
+        // nobody edited.
+        //
+        // OBSERVED: fold the bounty in UnitType.Fold's layout-5 branch as well.
+        // This goes red against the literal, and nothing else in the suite
+        // notices.
+        UnitTypeTable table = UnitTypeTable.Parse(ThreeRaisingRows);
+
+        Assert.Equal(5, table.Layout);
+        Assert.Equal(Hash64.FromValue(LayoutFiveHashOfThreeRows), table.ContentHash);
+        Assert.Equal(3, table.Count);
+        Assert.Equal(10, table.ById(1).Cost);
+        Assert.Null(table.ById(1).Raises);
+
+        // And what such a row carries in the column it does not have: a body
+        // whose death pays the defender nothing. That is what a layout-5 row
+        // IS, and not a default standing in for something it stated.
+        Assert.Equal(0, table.ById(1).Bounty);
+        Assert.Equal(0, table.ById(7).Bounty);
+    }
+
+    [Fact]
     public void The_current_layout_folds_the_columns_it_added()
     {
         // A layout that declared four columns and folded none of them would let
@@ -575,6 +1043,31 @@ public class ContentTests
         Assert.NotEqual(
             UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
             UnitTypeTable.Parse(ThreeCurrentRows.Replace("0 40 pierce", "0 40 magic")).ContentHash);
+
+        // And the one column layout 4 added. A row that names the row it becomes
+        // is a row that plays differently from the day it was authored, so a
+        // record made against the roster before it has to be retired.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 2 none 0 0")).ContentHash);
+
+        // And the two layout 5 added, one at a time. The period moves the hash
+        // on its own, so a spawner retuned from one raise a second to one every
+        // five retires the records made under the faster one.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30 0")).ContentHash);
+
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 30 0")).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none 2 31 0")).ContentHash);
+
+        // And the one layout 6 added. A row that pays for being killed is a row
+        // that funds a defense from the day it was authored, so a record made
+        // against the roster before it has to be retired.
+        Assert.NotEqual(
+            UnitTypeTable.Parse(ThreeCurrentRows).ContentHash,
+            UnitTypeTable.Parse(ThreeCurrentRows.Replace("armoured 0 0 1 none none none 0 none 0 0 none none 0 0", "armoured 0 0 1 none none none 0 none 0 0 none none 0 2")).ContentHash);
     }
 
     [Fact]
@@ -589,7 +1082,7 @@ public class ContentTests
         // columns were added in the wrong order parses as the current layout
         // with its fields transposed.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "# the layout row, forgotten")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "# the layout row, forgotten")));
 
         Assert.Contains("column layout 1 has 15", thrown.Message, StringComparison.Ordinal);
         Assert.Contains("'layout' row", thrown.Message, StringComparison.Ordinal);
@@ -608,9 +1101,9 @@ public class ContentTests
     public void A_row_with_layout_twos_columns_under_a_layout_three_declaration_refuses_by_name()
     {
         // The widening's own version of the test above, and the acceptance
-        // criterion in as many words: a layout-3 row with the wrong field count
-        // is refused rather than read against shifted fields. Nine columns is a
-        // lot to leave off, and leaving off any of them would otherwise slide a
+        // criterion in as many words: a row with the wrong field count is
+        // refused rather than read against shifted fields. Nine columns is a lot
+        // to leave off, and leaving off any of them would otherwise slide a
         // bubble magnitude into a duration.
         ContentException thrown = Assert.Throws<ContentException>(
             () => UnitTypeTable.Parse(ThreeTypedRows.Replace("layout 2", "layout 3")));
@@ -620,9 +1113,65 @@ public class ContentTests
         // And one column short of the twenty-eight, which is the shape a real
         // mistake takes: a row that lost a field rather than nine of them.
         ContentException short_ = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("none 0 none 0 0", "none 0 none 0")));
+            () => UnitTypeTable.Parse(ThreeRadialRows.Replace("none 0 none 0 0", "none 0 none 0")));
 
         Assert.Contains("column layout 3 has 28", short_.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_threes_columns_under_a_layout_four_declaration_refuses_by_name()
+    {
+        // Layout 4's own version of it, and the acceptance criterion again: a
+        // row whose count does not match the layout it declared is refused. One
+        // column is the easiest of all of them to leave off, because a table
+        // that gained a single column looks finished the moment the layout row
+        // is edited.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeRadialRows.Replace("layout 3", "layout 4")));
+
+        Assert.Contains("column layout 4 has 29", thrown.Message, StringComparison.Ordinal);
+
+        // And one field too many, which is the same mistake from the other side:
+        // the columns written and the layout row left where it was.
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeSuccessorRows.Replace("layout 4", "layout 3")));
+
+        Assert.Contains("column layout 3 has 28", over.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_fours_columns_under_a_layout_five_declaration_refuses_by_name()
+    {
+        // Layout 5's own version of it. Two columns is the count a designer is
+        // likeliest to get half right -- the row it raises typed in and the
+        // cadence forgotten -- and the refusal names both counts rather than
+        // reading the period out of the column before it.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeSuccessorRows.Replace("layout 4", "layout 5")));
+
+        Assert.Contains("column layout 5 has 31", thrown.Message, StringComparison.Ordinal);
+
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeRaisingRows.Replace("layout 5", "layout 4")));
+
+        Assert.Contains("column layout 4 has 29", over.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_row_with_layout_fives_columns_under_a_layout_six_declaration_refuses_by_name()
+    {
+        // Layout 6's own version of it, and the one column is the easiest of
+        // all of them to leave off: a table that gained a single column looks
+        // finished the moment the layout row is edited.
+        ContentException thrown = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeRaisingRows.Replace("layout 5", "layout 6")));
+
+        Assert.Contains("column layout 6 has 32", thrown.Message, StringComparison.Ordinal);
+
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "layout 5")));
+
+        Assert.Contains("column layout 5 has 31", over.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -632,13 +1181,16 @@ public class ContentTests
         // branch somebody deleted arrives here rather than passing an
         // inequality and falling through a switch.
         ContentException thrown = Assert.Throws<ContentException>(
-            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 3", "layout 4")));
+            () => UnitTypeTable.Parse(ThreeCurrentRows.Replace("layout 6", "layout 7")));
 
-        Assert.Contains("declares column layout 4", thrown.Message, StringComparison.Ordinal);
+        Assert.Contains("declares column layout 7", thrown.Message, StringComparison.Ordinal);
         Assert.False(UnitTypeTable.IsKnownLayout(0));
-        Assert.False(UnitTypeTable.IsKnownLayout(4));
+        Assert.False(UnitTypeTable.IsKnownLayout(7));
         Assert.True(UnitTypeTable.IsKnownLayout(1));
         Assert.True(UnitTypeTable.IsKnownLayout(2));
+        Assert.True(UnitTypeTable.IsKnownLayout(3));
+        Assert.True(UnitTypeTable.IsKnownLayout(4));
+        Assert.True(UnitTypeTable.IsKnownLayout(5));
         Assert.True(UnitTypeTable.IsKnownLayout(UnitTypeTable.CurrentLayout));
     }
 

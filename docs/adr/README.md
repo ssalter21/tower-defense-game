@@ -24,6 +24,10 @@ These were extracted from the source comments when the project moved to a commen
 | [0052](0052-a-creep-is-bought-once-and-the-phase-is-charged-the-increase.md) | A creep is bought once, a phase names its whole wave, and the purse is charged the increase |
 | [0054](0054-height-is-a-relationship-and-a-radius-is-a-sphere.md) | Height is a relationship, a radius is a sphere, and a floor is under both |
 | [0056](0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md) | An effect is a stat, a magnitude and a duration, and a creep never drops below a tenth of its speed |
+| [0059](0059-a-creep-becomes-another-row-mid-lane.md) | A creep becomes another row mid-lane, ahead of the damage that triggered it |
+| [0060](0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md) | A creep raises a creep, and the board is what caps it |
+| [0061](0061-a-kill-pays-the-defender.md) | A kill pays the defender, and the band that measures leaks cannot see it |
+| [0062](0062-a-capstone-costs-a-token.md) | A capstone costs a token, and the count is derived rather than stored |
 
 ## The simulation/view boundary
 

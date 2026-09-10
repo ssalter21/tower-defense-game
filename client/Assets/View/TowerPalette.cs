@@ -476,6 +476,22 @@ namespace View
             return offer;
         }
 
+        /// <summary>
+        /// What one rung on the offered hex costs, in the words a player reads:
+        /// the target's gold price, or the one capstone token a capstone edge
+        /// takes instead.
+        /// </summary>
+        /// <remarks>
+        /// The round is asked which it is, and the round asks the ladder --
+        /// so the price on the button and the price the build phase charges are
+        /// one file read once. A bar that printed gold on a capstone would be
+        /// naming a currency nothing spends there.
+        /// </remarks>
+        private string PriceOfRung(UnitType rung) =>
+            _round.CostsACapstoneToken(_offerColumn, _offerRow, rung)
+                ? RosterNames.CapstoneToken()
+                : RosterNames.Gold(_round.PriceOf(rung));
+
         private void DrawOffer(IReadOnlyList<UnitType> rungs)
         {
             _offer.Clear();
@@ -488,7 +504,7 @@ namespace View
                 var button = new Button
                 {
                     name = "Rung " + RosterNames.Of(rung),
-                    text = RosterNames.Of(rung) + "   " + RosterNames.Gold(_round.PriceOf(rung)),
+                    text = RosterNames.Of(rung) + "   " + PriceOfRung(rung),
                 };
 
                 button.style.height = RungHeight;
