@@ -10,11 +10,11 @@
 #
 #       picture                        drawn from
 
-picture  mage-anchor-book-edge-tick-1540.png  98DDCD917FDC5CD1
-picture  mage-anchor-book-edge-tick-1580.png  98DDCD917FDC5CD1
-picture  mage-anchor-hat-top-tick-1540.png  98DDCD917FDC5CD1
-picture  mage-anchor-hat-top-tick-1580.png  98DDCD917FDC5CD1
-picture  mage-anchor-muzzle-height-tick-1540.png  98DDCD917FDC5CD1
-picture  mage-anchor-muzzle-height-tick-1580.png  98DDCD917FDC5CD1
-picture  match-tick-1540.png             98DDCD917FDC5CD1
-picture  match-tick-1580.png             98DDCD917FDC5CD1
+picture  mage-anchor-book-edge-tick-1540.png  2F5438C884EF6856
+picture  mage-anchor-book-edge-tick-1580.png  2F5438C884EF6856
+picture  mage-anchor-hat-top-tick-1540.png  2F5438C884EF6856
+picture  mage-anchor-hat-top-tick-1580.png  2F5438C884EF6856
+picture  mage-anchor-muzzle-height-tick-1540.png  2F5438C884EF6856
+picture  mage-anchor-muzzle-height-tick-1580.png  2F5438C884EF6856
+picture  match-tick-1540.png             2F5438C884EF6856
+picture  match-tick-1580.png             2F5438C884EF6856
