@@ -122,9 +122,11 @@ namespace View
         /// (<see cref="Run.CapstoneTokenRounds"/>) and this is a count over it.
         /// </para>
         /// <para>
-        /// The wording is the mock's, signed with the placement by #285 on 11
-        /// September 2026 and not separately: what a token is called on screen
-        /// is a word a player reads, and this is the one place it is spelled.
+        /// The wording is the mock's. #285 signed the placement -- a fourth
+        /// header field -- on 11 September 2026 and said nothing about the
+        /// words, which the mock had called placeholders; what a token is
+        /// called on screen is a word a player reads, so they are Sam's to
+        /// respell, and this is the one place they are spelled.
         /// </para>
         /// </remarks>
         public static string CapstoneTokens(int held, int spent, int toCome) =>

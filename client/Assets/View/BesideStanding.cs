@@ -24,15 +24,16 @@ namespace View
     /// the alternatives -- the prop tucked inside its own hex, or no prop at all.
     /// </para>
     /// <para>
-    /// <b>Ranked, not searched.</b> Every neighbour that is ground with nothing
-    /// on it is scored by how far toward the asked direction it lies, with a
-    /// smaller weight for lying away from the corridor. The cell the art asked
-    /// for wins whenever it is free, because nothing else is as far toward it;
-    /// when it is taken, the cell sixty degrees behind it beats the one sixty
-    /// degrees in front, and both beat anything on the far side. The corridor
-    /// is never a candidate, whether or not the route currently runs through
-    /// the cell asked for, because a prop on the route is a prop creeps walk
-    /// through.
+    /// <b>The asked cell first, then behind.</b> The neighbour the art's offset
+    /// lands on is taken whenever it is free ground. When it is not, every
+    /// other neighbour that is free ground is ranked by how far away from the
+    /// corridor it lies, with a smaller weight for lying toward the asked
+    /// side -- so the cell sixty degrees behind the taken one wins, the one
+    /// behind on the far side comes next, and the cells toward the corridor
+    /// come last. Behind is the side a prop can move to without ever standing
+    /// where creeps walk, which is what the candidate the sitting signed said
+    /// of itself. The corridor is never a candidate at all, whether or not the
+    /// route runs through the cell asked for.
     /// </para>
     /// <para>
     /// <b>The prop stands on the tile, at the tile's height.</b> The offset
@@ -59,12 +60,11 @@ namespace View
         public const float InsideTheHex = 0.8f;
 
         /// <summary>
-        /// How much lying away from the corridor counts beside lying toward the
-        /// asked direction. Small enough that the asked cell always wins when it
-        /// is free; large enough to break the tie between the two cells either
-        /// side of it.
+        /// How much lying toward the asked side counts beside lying away from
+        /// the corridor, once the asked cell itself is taken: enough to break
+        /// the tie between the two cells equally far behind, and no more.
         /// </summary>
-        private const float BehindWeight = 0.25f;
+        private const float AskedSideWeight = 0.25f;
 
         /// <summary>
         /// Where the prop of the tower on (<paramref name="column"/>,
@@ -96,27 +96,42 @@ namespace View
             Vector3 behind = -Flat(resting * Vector3.forward).normalized;
 
             Hex hex = Hex.FromOddRowOffset(column, row);
+            int askedDirection = -1;
+            float nearestToAsked = float.NegativeInfinity;
             float best = float.NegativeInfinity;
             Vector3 chosen = Vector3.zero;
 
             for (int direction = 0; direction < Hex.DirectionCount; direction++)
             {
                 Hex.ToOddRowOffset(hex.Neighbour(direction), out int neighbourColumn, out int neighbourRow);
+                Vector3 across = Flat(HexGeometry.ToWorld(neighbourColumn, neighbourRow) - Flat(here)).normalized;
+                float towardAsked = Vector3.Dot(across, toward);
+
+                if (towardAsked > nearestToAsked)
+                {
+                    nearestToAsked = towardAsked;
+                    askedDirection = direction;
+                }
 
                 if (!IsFreeGround(map, occupied, neighbourColumn, neighbourRow))
                 {
                     continue;
                 }
 
-                Vector3 delta = HexGeometry.ToWorld(neighbourColumn, neighbourRow, map.LevelAt(neighbourColumn, neighbourRow)) - here;
-                Vector3 across = Flat(delta).normalized;
-                float score = Vector3.Dot(across, toward) + (BehindWeight * Vector3.Dot(across, behind));
+                float score = Vector3.Dot(across, behind) + (AskedSideWeight * towardAsked);
 
                 if (score > best)
                 {
                     best = score;
-                    chosen = delta;
+                    chosen = Standing(map, here, neighbourColumn, neighbourRow);
                 }
+            }
+
+            Hex.ToOddRowOffset(hex.Neighbour(askedDirection), out int askedColumn, out int askedRow);
+
+            if (IsFreeGround(map, occupied, askedColumn, askedRow))
+            {
+                return Quaternion.Inverse(resting) * Standing(map, here, askedColumn, askedRow);
             }
 
             if (best == float.NegativeInfinity)
@@ -126,6 +141,10 @@ namespace View
 
             return Quaternion.Inverse(resting) * chosen;
         }
+
+        /// <summary>From the tower's root to the centre of a neighbouring cell, at that cell's own height.</summary>
+        private static Vector3 Standing(HexMap map, Vector3 here, int column, int row) =>
+            HexGeometry.ToWorld(column, row, map.LevelAt(column, row)) - here;
 
         private static bool IsFreeGround(HexMap map, Func<int, int, bool> occupied, int column, int row)
         {

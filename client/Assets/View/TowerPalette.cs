@@ -426,20 +426,11 @@ namespace View
                 button.Add(picture);
             }
 
-            var name = new Label { name = "Name", text = RosterNames.Of(type), pickingMode = PickingMode.Ignore };
+            Label name = Line("Name", RosterNames.Of(type), NameSize);
             name.style.color = RuntimePanel.LabelColor;
-            name.style.fontSize = NameSize;
-            name.style.unityTextAlign = TextAnchor.MiddleCenter;
 
-            var price = new Label
-            {
-                name = "Price",
-                text = Wording(index, _round.PriceOf(type)),
-                pickingMode = PickingMode.Ignore,
-            };
-
-            price.style.fontSize = PriceSize;
-            price.style.unityTextAlign = TextAnchor.MiddleCenter;
+            // Coloured by Restyle, for the purse, so no colour here.
+            Label price = Line("Price", Wording(index, _round.PriceOf(type)), PriceSize);
 
             button.Add(name);
             button.Add(price);
@@ -448,6 +439,20 @@ namespace View
             bar.Add(button);
             _entries.Add(new Entry(type, button, price));
             _buttons.Add(button);
+        }
+
+        /// <summary>
+        /// One centred line of a button that is a name over a price: an entry's
+        /// and a rung's are the same shape at different sizes.
+        /// </summary>
+        private static Label Line(string name, string text, int size)
+        {
+            var line = new Label { name = name, text = text, pickingMode = PickingMode.Ignore };
+
+            line.style.fontSize = size;
+            line.style.unityTextAlign = TextAnchor.MiddleCenter;
+
+            return line;
         }
 
         /// <summary>
@@ -521,15 +526,11 @@ namespace View
                 // label the surface carries -- a capstone's name over "1
                 // capstone token" -- fits the offer's width instead of running
                 // off both sides of it onto the board. Signed by #285.
-                var name = new Label { name = "Name", text = RosterNames.Of(rung), pickingMode = PickingMode.Ignore };
+                Label name = Line("Name", RosterNames.Of(rung), RungNameSize);
                 name.style.color = RuntimePanel.LabelColor;
-                name.style.fontSize = RungNameSize;
-                name.style.unityTextAlign = TextAnchor.MiddleCenter;
 
-                var price = new Label { name = "Price", text = PriceOfRung(rung), pickingMode = PickingMode.Ignore };
+                Label price = Line("Price", PriceOfRung(rung), RungPriceSize);
                 price.style.color = QuietColor;
-                price.style.fontSize = RungPriceSize;
-                price.style.unityTextAlign = TextAnchor.MiddleCenter;
 
                 button.Add(name);
                 button.Add(price);

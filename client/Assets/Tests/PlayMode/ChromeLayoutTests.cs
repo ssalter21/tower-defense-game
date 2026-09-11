@@ -46,9 +46,6 @@ namespace Tests.PlayMode
     /// </remarks>
     public class ChromeLayoutTests : ViewTest
     {
-        /// <summary>The offer's width, which every rung has to fit inside.</summary>
-        private const float OfferWidth = 208f;
-
         /// <summary>Enough to carry the whole roster into one wave, and to climb a ladder.</summary>
         private const int ADeepPurse = 100000;
 
@@ -151,13 +148,33 @@ namespace Tests.PlayMode
 
             Assert.That(empty.xMin, Is.GreaterThanOrEqualTo(viewport.xMin - 1f), "The empty box is on screen.");
             Assert.That(empty.xMax, Is.LessThanOrEqualTo(viewport.xMax + 1f), "The empty box is on screen.");
+
+            // The words the sitting used were "a scroll wheel": from the start
+            // of the strip, one notch down moves it along. Sent to the strip's
+            // content, which is where a ScrollView listens.
+            scroller.scrollOffset = Vector2.zero;
+
+            yield return null;
+
+            var notch = new Event { type = EventType.ScrollWheel, delta = new Vector2(0f, 1f), mousePosition = viewport.center };
+
+            using (WheelEvent wheel = WheelEvent.GetPooled(notch))
+            {
+                wheel.target = scroller.contentContainer;
+                scroller.contentContainer.SendEvent(wheel);
+            }
+
+            yield return null;
+
+            Assert.That(scroller.scrollOffset.x, Is.GreaterThan(0f), "A wheel notch scrolls the strip.");
         }
 
         /// <summary>
-        /// Every name on the roster, over the longest price the surface
+        /// Every tower name on the roster, over the longest price the surface
         /// carries, fits the width of a rung. Measured, not laid out: a label
         /// in a column stretches to its parent's width whatever its text, so
-        /// the text is what is measured.
+        /// the text is what is measured. Towers only, because a creep is never
+        /// a rung.
         /// </summary>
         /// <remarks>
         /// Asserted on a real rung -- the Ranger's capstone, offered to a round
@@ -167,7 +184,7 @@ namespace Tests.PlayMode
         /// for.
         /// </remarks>
         [UnityTest]
-        public IEnumerator EveryNameOnTheRosterFitsARungOverItsPrice()
+        public IEnumerator EveryTowerNameOnTheRosterFitsARungOverItsPrice()
         {
             MatchRoot root = Playfield();
 
@@ -191,13 +208,21 @@ namespace Tests.PlayMode
             Assert.That(price, Is.Not.Null, "A rung is a name over a price.");
             Assert.That(price.text, Is.EqualTo(RosterNames.CapstoneToken()), "The longest price the surface carries.");
 
-            float room = OfferWidth - rung.resolvedStyle.paddingLeft - rung.resolvedStyle.paddingRight;
+            // The rung's own laid-out width, which is the offer's, and not a copy
+            // of the palette's constant: a narrower offer has to turn this red.
+            float room = rung.resolvedStyle.width - rung.resolvedStyle.paddingLeft - rung.resolvedStyle.paddingRight;
             var tooWide = new StringBuilder();
 
+            Assert.That(room, Is.GreaterThan(0f), "The rung has been laid out.");
             Assert.That(Width(price, price.text), Is.LessThanOrEqualTo(room), "The price fits a rung.");
 
             foreach (UnitType type in Types().Types)
             {
+                if (type.Role != UnitRole.Placed)
+                {
+                    continue;
+                }
+
                 float width = Width(name, RosterNames.Of(type));
 
                 if (width > room)

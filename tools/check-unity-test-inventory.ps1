@@ -45,7 +45,7 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 # The declared inventory: test methods, then path. These are the tests the
 # build gate does not run.
 $declaration = @'
-  7  client/Assets/Tests/EditMode/BesideStandingTests.cs
+  8  client/Assets/Tests/EditMode/BesideStandingTests.cs
   4  client/Assets/Tests/EditMode/BoardBakeTests.cs
   7  client/Assets/Tests/EditMode/BoardDraftTests.cs
  10  client/Assets/Tests/EditMode/BoardDressingTests.cs

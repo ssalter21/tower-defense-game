@@ -76,6 +76,19 @@ namespace Tests.EditMode
         }
 
         [Test]
+        public void WithTheCellBehindTakenTooThePropGoesBehindOnTheFarSideRatherThanTowardTheCorridor()
+        {
+            Vector3 offset = BesideStanding.On(
+                HexMap.Parse(Map), Either((3, 2), (2, 3)), Column, Row, Quaternion.identity, Asked);
+
+            Assert.That(
+                offset,
+                Is.EqualTo(Delta(Map, 1, 3)).Using(Near),
+                "Behind and to the left beats in front and to the right: away from the corridor first, "
+                + "toward the asked side second.");
+        }
+
+        [Test]
         public void TheCorridorIsNeverATile()
         {
             // A tower on row one: two of its neighbours are corridor, one of the
@@ -141,6 +154,9 @@ namespace Tests.EditMode
 
         private static System.Func<int, int, bool> Only(int column, int row) =>
             (c, r) => c == column && r == row;
+
+        private static System.Func<int, int, bool> Either((int Column, int Row) first, (int Column, int Row) second) =>
+            (c, r) => (c == first.Column && r == first.Row) || (c == second.Column && r == second.Row);
 
         /// <summary>From the tower's cell to another, at each cell's own height.</summary>
         private static Vector3 Delta(string map, int column, int row) => Delta(map, Column, Row, column, row);

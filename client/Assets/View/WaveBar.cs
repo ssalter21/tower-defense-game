@@ -578,6 +578,9 @@ namespace View
         /// </remarks>
         private void Redraw()
         {
+            int before = _boxes.Count;
+            Vector2 offset = _scroller.scrollOffset;
+
             _scroller.Clear();
             _boxes.Clear();
 
@@ -591,13 +594,25 @@ namespace View
             AddEmptyBox(slots.Count);
             Restyle();
 
-            // A box just added has no layout until the panel next lays out, and
-            // ScrollTo reads one, so this waits a frame -- and reads the last
-            // box then rather than now, because a second redraw before the
-            // frame has replaced every box and ScrollTo refuses one that is no
-            // longer a child. The empty box is the end of the row, which is
-            // where the row grows.
-            _scroller.schedule.Execute(() => _scroller.ScrollTo(_boxes[_boxes.Count - 1]));
+            // A row that grew scrolls its new end into view; one that did not
+            // stays where it was scrolled to, so raising a count on the twelfth
+            // box does not yank the strip to the eighteenth. Either waits a
+            // frame, because a box just added has no layout until the panel
+            // next lays out, and reads the last box then rather than now: a
+            // second redraw before the frame has replaced every box.
+            bool grew = _boxes.Count > before;
+
+            _scroller.schedule.Execute(() =>
+            {
+                if (grew)
+                {
+                    _scroller.ScrollTo(_boxes[_boxes.Count - 1]);
+                }
+                else
+                {
+                    _scroller.scrollOffset = offset;
+                }
+            });
 
             Changed?.Invoke();
         }

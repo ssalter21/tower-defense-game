@@ -112,8 +112,9 @@ namespace View
 
         /// <summary>
         /// Puts what is drawn back in step with the composed board. Called after
-        /// every change; cheap where nothing moved, because it compares before
-        /// it builds.
+        /// every change: a tower is rebuilt only where its type moved, because
+        /// it compares before it builds, and every prop is re-stood, because
+        /// the tower placed this click is what makes a neighbour's tile taken.
         /// </summary>
         public void Follow()
         {
