@@ -711,7 +711,7 @@ indirection is not a second set of values.
   magnification or not at all. Those frames are [`rung-candidates/`](rung-candidates/README.md).
 
   **Where the Mage's flash leaves from is the fifth such question, and it is one a played frame does
-  decide.** [`mage-anchor/`](mage-anchor/mage-anchor.txt) draws the shipped anchor and three others
+  decide.** [`mage-anchor/`](mage-anchor/README.md) draws the shipped anchor and three others
   through the same seam at the two ticks the Mages fire nearest the pitch sweep's, plus the camera
   swung 45° either way; every candidate moves 0.26–0.66% of the frame, because a flash sits on the
   body rather than crossing the air. The finding is in the baseline, not the candidates: the Mage
