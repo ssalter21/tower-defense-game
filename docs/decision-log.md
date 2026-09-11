@@ -2343,3 +2343,50 @@ The rest of #285 — the knife and the bolt, `ProjectileColor`, where a ground e
 ### What the numbers came to
 
 `dotnet test sim.tests` **905 of 905**, EditMode **148 of 148**, PlayMode **175 of 175** — eight more edit-mode tests (`BesideStandingTests`) and three more play-mode (`ChromeLayoutTests`). **The same 175 in a built player**, `run-player-tests.ps1`, 173 passed and the two parity tests skipped as they always are: that run is the one place `UNITY_EDITOR` is undefined, and it is where the layout assertions were verified in the built player rather than in the editor. Five chrome sheets, the three baseline sheets and four beside-prop frames redrawn.
+
+## 11 September 2026, later — the committed match stays under its band, and the miss now has an expiry
+
+Issue [#283](https://github.com/ssalter21/tower-defense-game/issues/283) put the four balance findings the roster expansion refused to hide in front of Sam. This entry and the three after it are the four rulings, one entry per decision as the ticket asked. The evidence was already on the branch — the sweep, the two bands asserted *as missed*, `show-ladder` — so nothing here needed a new artefact; what it needed was a person choosing between the ways out.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| `docs/roster.md`, the tuning target | ten to twenty of forty leak; three do, as of 5 September, and the miss is the Mage's splash, left as a consequence of authoring a signed row | **Ten to twenty is still the target, eight of forty leak, and the miss is a person's choice rather than a deferral.** It ends on one of two triggers: a Unity playtest saying the leak *feels* wrong, or the sweep-derived cost landing | Two things moved the count in opposite directions. The Mage's splash first — priced for three bodies since the roster was signed, hitting one until #256 authored the bubble, and the committed defense is four archers and two mages — took it from twelve to three. Then the board became a landscape on 10 September and the merged simulation was neither side's: `main` alone leaked eighteen, the roster alone three, and the hand-placed six on the regraded board leak eight |
+| `sim.tests/MatchTests.cs`, `The_match_is_under_the_partial_break_it_is_tuned_for_and_that_is_the_splash` | `Assert.True(result.Leaked < 10)`, naming the `InRange(10, 20)` to put back | **The same assertion, and its comment says a person chose this** | The band goes red the day somebody retunes, saying which assertion to restore. A band nobody can reach is worse than one that says out loud it is not being reached |
+
+**The two alternatives were on the table and declined.** Moving the band to cover eight fits a claim to a board that changed the week before — the landscape is a week old and the number has moved once already. Retuning the defense or the wave toward the band tunes by hand the very number the sweep-derived cost is meant to move, and every hand retune is a number that rule overwrites the day it lands. Keeping the miss asserted costs nothing now and is the only one of the three that does not have to be undone.
+
+**Why it has an expiry.** A standing acknowledgement with no end is a shrug. The two triggers are the two things that could show the miss matters: a person feeling the leak in Unity, which is the only surface feel is judged on, or the derived cost changing the numbers under the assertion. Either one reopens the question; until one fires, the test is the record.
+
+## 11 September 2026, later still — six rows stay outside their return band, because there is no price lever to pull
+
+The second of #283's four. The sweep measures four hundred gold of one creep against the committed defense and expects each row to return 60 to 95 percent of its gold. The ticket said two rows were out; the roster at the head of the branch already said six — five under, one over — and the landscape moved every reading but three without moving a single row between lists.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| `sim.tests/MatchTests.cs`, `Every_walking_row_returns_a_comparable_share_of_its_gold_against_the_committed_defense` | two exact lists, under and over, asserted *as missed*, with the `InRange(60, 95)` to put back named | **The same two lists, and the comment says a person chose this.** Under: Minion 37, Skeleton Warrior 58, Bone Golem 50, Abomination 40, Shade 36. Over: Necromancer 1200 | A creep's cost is **derived** — effective health over 160 — so the only way to make the Minion cheaper is to make it weaker, which reopens a row the roster signed. There is no price lever; there is only a health lever, and that is a different decision |
+| `docs/roster.md`, the findings section | the six readings measured on 6 September, on the flat board | **Re-measured on 11 September on the landscape.** Every reading moved except the Vampire's 94, the Black Knight's 71 and the Necromancer's 1200; no row changed list; the floor is the Shade at 36 | The regrade repriced every tower's reach, so the readings had to be taken again; that no row crossed a band edge is the useful finding |
+
+**Retiring the band for the sweep's weaker claim was declined.** The sweep also asserts that no row deals zero, and that claim survives every retune. But the return band is the one test that says a row is *free money*, and it is the test that caught the Necromancer. Trading it for the weaker claim would make the record quieter, not more honest.
+
+**Two readings are written down so nobody reports them as new.** The Skeleton Mage sits on the band's upper edge at exactly 95 — in, by the test's `> 95`; one more leak in twenty-one and it joins the Necromancer's list. And the Vampire's 94 and the Grave Robber's 87 are the Necromancer's gap without the aura: a shield the cost rule has no term for. All three go with the next entry.
+
+## 11 September 2026, later again — the Necromancer keeps its derived 21, and its 1200 is the acceptance test for the rule that will replace it
+
+The third of #283's four. The Necromancer returns 1399 dealt per hundred gold in the sweep and 1200 against the committed defense, wins none of its own runs, and is three unpriced things at once — a pool, a reach and a raise — on a cost rule that reads only health and armour.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| `content/units.txt`, row 38, and `docs/roster.md` § 38 | cost 21, derived; **Open — none** | **Cost 21, derived, by decision rather than by omission.** The row's *Open* line says so, and names the 1200 here and the 1399 in the sweep as the acceptance test for the sweep-derived cost | A hand price was on the table — 21 plus the eleven Minions it raises against the committed defense, about 131 — and declined: it would be the first authored cost on a table derived everywhere else, guessed against one corridor, and overwritten the day the sweep-derived rule lands. A cap on the raise was on the table and is out of scope: it reopens a row the roster signed |
+
+**What the acceptance test says.** The day a creep price can see a pool, a reach and a raise, the Necromancer's two readings come inside their bands — or the rule is wrong. That is a sharper test of the rule than any hand price would have been, and it is the reason leaving the number is not the same as leaving the question. The Vampire and the Grave Robber, whose shields the same rule cannot see, are the same test at a smaller scale.
+
+## 11 September 2026, later once more — `dying` is signed by rig on the twelve rows the roster had left it blank
+
+The last of #283's four, and the only one that moves a golden artefact.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| `content/units.txt`, the `dying` column on rows 38–49; `docs/roster.md`, the creep table | **0** — the blank showing through, not a number; "how long a body takes to die is the art ticket's to sign" | **36 on the medium rig, 48 on the Large rig** — the Bone Golem, the Black Knight, the Frost Wight and the Abomination | The table already carried one signal: four of the five rows signed on 8 August die in 36 and the Warrior, the heaviest of them, in 48. Signing by rig extends the one rule the signed rows already follow rather than picking twelve numbers by eye. At zero, `CreepView` never drew a death — the clip plays across exactly the ticks the simulation gives the state, so a corpse was gone the tick it fell, and the clips are already bound, `Death_A` on both rigs |
+| `content/golden/`, the trace, the landmarks, the replay, the run outcome | content hash `CC20B0E6288BAAB4` | **`3FF843B3F6B950C4`.** Regenerated deliberately; the PR carries `regenerated-deliberately` | A dying body is untargetable, raises nothing and pulses nothing, so the number moves no leak and no reading. Measured on every row's column against the committed defense: not one leak count changed, and the only tick that moved is the Shade's final one, by the 36 its last body now lies there. The committed wave sends neither of the twelve, so the golden result — eight of forty, tick 5439 — is unchanged and only the hash moved |
+
+**Signed by the rule, open to being moved by eye.** This is a number a player sees, and the rule that signed it is a reading of the existing rows rather than a look at the clips. It is the smallest signing that makes a death draw at all; a clip-length pass, with the sheets, can move any of the twelve without touching anything else.

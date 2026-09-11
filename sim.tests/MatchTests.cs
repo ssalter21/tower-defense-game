@@ -116,20 +116,33 @@ public class MatchTests
         // watch move, and the band docs/roster.md signs is a quarter to a half
         // of the wave -- ten to twenty of forty.
         //
-        // THE COMMITTED MATCH IS UNDER THAT BAND AND IT IS LEFT THERE. Three of
-        // forty leak. What moved it is the Mage's splash: the row has been
-        // priced for three bodies since the roster was signed and it hit one
-        // until #256 authored the bubble the price was for, and the committed
-        // defense is four archers and two mages. Nothing was retuned to answer
-        // it -- retuning means moving creep numbers docs/roster.md signs, or the
-        // committed defense, and both are decisions rather than consequences of
-        // this one.
+        // THE COMMITTED MATCH IS UNDER THAT BAND AND IT IS LEFT THERE. Eight of
+        // forty leak. What first moved it was the Mage's splash: the row has
+        // been priced for three bodies since the roster was signed and it hit
+        // one until #256 authored the bubble the price was for, and the
+        // committed defense is four archers and two mages -- that took the
+        // count from twelve to three. Then the board became a landscape on 10
+        // September 2026 and the merged simulation was neither side's: main
+        // alone leaked eighteen, the roster alone three, and the hand-placed
+        // six on the regraded board leak eight. Nothing was retuned to answer
+        // either -- retuning means moving creep numbers docs/roster.md signs, or
+        // the committed defense, and both are decisions rather than
+        // consequences of this one.
         //
         // So the band is asserted as MISSED rather than deleted or widened. The
         // day somebody retunes the wave or the defense, this goes red saying the
         // leak came back inside the band, and the assertion to restore is the
         // InRange this replaced. A band nobody can reach is worse than a band
         // that says out loud that it is not being reached.
+        //
+        // A PERSON CHOSE THIS, ON 11 SEPTEMBER 2026, WITH THE ALTERNATIVES ON THE
+        // TABLE: moving the band to fit the artefact, or retuning the defense or
+        // the wave toward it, both of which were declined -- the first because
+        // it fits a claim to a board that changed a week earlier, the second
+        // because it tunes by hand a number the sweep-derived cost is meant to
+        // move. The miss ends on one of two triggers, named so it has an expiry
+        // rather than a shrug: a Unity playtest saying the leak FEELS wrong, or
+        // the derived cost landing. docs/decision-log.md, 11 September 2026.
         //
         // OBSERVED: divide every order tick in content/wave.txt by three, which
         // is what leaving that file alone through the clock dilation would have
@@ -218,6 +231,17 @@ public class MatchTests
         // So the band is asserted as MISSED at both ends rather than widened.
         // The day somebody retunes, one of these two lists changes and the test
         // says which assertion to put back.
+        //
+        // A PERSON CHOSE THIS, ON 11 SEPTEMBER 2026, and the reason both lists
+        // stand is that there is no price lever to pull: a creep's cost is
+        // DERIVED, effective health over 160, so the only way to make the Minion
+        // cheaper is to make it weaker, which reopens a row the roster signed.
+        // Retiring the band for the sweep's weaker "no row deals zero" claim was
+        // declined because this is the one test that says a row is free money,
+        // and it is the test that caught the Necromancer. The Necromancer stays
+        // at its derived 21, and its 1200 here and 1399 in the sweep are the
+        // acceptance test for the sweep-derived cost when that rule lands.
+        // docs/decision-log.md, 11 September 2026.
         //
         // OBSERVED: put the Skeleton Scout at 500 health and 3 gold. It joins
         // the under list -- "skeleton-scout at 0" -- because five hundred

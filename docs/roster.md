@@ -782,18 +782,18 @@ not available: `armourValue 0` means the type still applies, at zero points.
 | 7 | Skeleton Mage | 2400 | 33 | arcane | 25 | — | 36 | 3000 | **19** |
 | 12 | Skeleton | 2200 | 28 | armoured | 20 | — | 36 | 2640 | **17** |
 | 13 | Skeleton Warrior | 3400 | 18 | armoured | 45 | — | 48 | 4930 | **31** |
-| 38 | Necromancer | 2600 | 28 | arcane | 30 | — | 0 | 3380 | **21** |
-| 39 | Bone Golem | 9000 | 14 | armoured | 60 | — | 0 | 14400 | **90** |
-| 40 | Black Knight | 5000 | 22 | armoured | 80 | — | 0 | 9000 | **56** |
-| 41 | Frost Wight | 6000 | 16 | arcane | 40 | — | 0 | 8400 | **53** |
-| 42 | Abomination | 12000 | 12 | armoured | 0 | — | 0 | 12000 | **75** |
-| 43 | Vampire | 2800 | 44 | swift | 20 | 1400 | 0 | 3360 | **21** |
-| 44 | Witch | 2000 | 33 | arcane | 20 | — | 0 | 2400 | **15** |
-| 45 | Fiend | 3200 | 33 | arcane | 45 | — | 0 | 4640 | **29** |
-| 46 | Shade | 1200 | 84 | swift | 0 | — | 0 | 1200 | **8** |
-| 47 | Cursed Villager | 1800 | 28 | swift | 0 | — | 0 | 1800 | **11** |
-| 48 | Werewolf | 2600 | 50 | swift | 10 | — | 0 | 2860 | **18** |
-| 49 | Grave Robber | 3000 | 22 | armoured | 30 | 2000 | 0 | 3900 | **24** |
+| 38 | Necromancer | 2600 | 28 | arcane | 30 | — | 36 | 3380 | **21** |
+| 39 | Bone Golem | 9000 | 14 | armoured | 60 | — | 48 | 14400 | **90** |
+| 40 | Black Knight | 5000 | 22 | armoured | 80 | — | 48 | 9000 | **56** |
+| 41 | Frost Wight | 6000 | 16 | arcane | 40 | — | 48 | 8400 | **53** |
+| 42 | Abomination | 12000 | 12 | armoured | 0 | — | 48 | 12000 | **75** |
+| 43 | Vampire | 2800 | 44 | swift | 20 | 1400 | 36 | 3360 | **21** |
+| 44 | Witch | 2000 | 33 | arcane | 20 | — | 36 | 2400 | **15** |
+| 45 | Fiend | 3200 | 33 | arcane | 45 | — | 36 | 4640 | **29** |
+| 46 | Shade | 1200 | 84 | swift | 0 | — | 36 | 1200 | **8** |
+| 47 | Cursed Villager | 1800 | 28 | swift | 0 | — | 36 | 1800 | **11** |
+| 48 | Werewolf | 2600 | 50 | swift | 10 | — | 36 | 2860 | **18** |
+| 49 | Grave Robber | 3000 | 22 | armoured | 30 | 2000 | 36 | 3900 | **24** |
 
 > **The effective-health column is what the price is derived from, and it does not include the shield.** The
 > Vampire stands on 3360 plus 1400 raw and the Grave Robber on 3900 plus 2000, and neither is charged for the
@@ -805,12 +805,16 @@ not available: `armourValue 0` means the type still applies, at zero points.
 > thing someone recomputes later, reads as an error, and silently "corrects" in the other direction — and one
 > rule for all three is what stops the correction being made row by row.
 
-> ⚠️ **`dying` is UNSIGNED on the twelve new rows, and the zero in the table is the blank showing through
-> rather than an answer.** Four of the five older rows carry 36 and the Warrior 48. This page signs no dying
-> number for the twelve, and the column in `content/units.txt` has to hold something, so it holds zero — the
-> absence, in the same sense the tower rows hold zero windup and backswing for the lines this page does not
-> sign them for. **How long a body takes to die is how a death reads on screen, and it is Sam's to sign**,
-> with the clips. Until then a corpse is gone the tick after it falls.
+> **`dying` is signed on every row, by rig, since 11 September 2026.** A body on the medium rig dies over
+> **36** ticks and one on the Large rig — the Bone Golem, the Black Knight, the Frost Wight and the
+> Abomination — over **48**, which is the one signal the table already carried: four of the five rows signed
+> in August die in 36 and the Warrior, the heaviest of them, in 48. The twelve rows added on 5 September held
+> zero until then, as the blank showing through rather than a number, and at zero
+> `CreepView` never drew a death at all — the clip plays across exactly the ticks the simulation gives the
+> state, so a corpse was gone the tick it fell. A dying body is untargetable, raises nothing and pulses
+> nothing, so the number moves no leak and no reading; what it moves is the content hash, and the frame a
+> person sees. Signed by the rule rather than by eye, and open to being moved by eye later without touching
+> anything else — the clips are already bound, `Death_A` on both rigs. `decision-log.md`, 11 September 2026.
 
 ### 1 · Minion · status live
 
@@ -898,7 +902,13 @@ would re-baseline every measurement in the sweep.
 - **Draws** — a flat translucent circle on the ground out to the two hexes the ward covers, in the pool's own
   blue, for ten ticks. It is the moment the pool went out and not the pool: what a body then carries is the bar
   above it. The shape is **signed**; the alpha is not.
-- **Open** — none.
+- **Open** — none. **The cost stays at its derived 21 until the levers are priced, by decision on
+  11 September 2026** — not by omission. A hand price was on the table (21 plus the eleven Minions it raises
+  against the committed defense, about 131) and declined: it would be the first authored cost on a table that
+  is derived everywhere else, guessed against one corridor, and overwritten the day the sweep-derived rule
+  lands. A cap on the raise was on the table and is out of scope — it reopens a row this page signed. **The
+  1200 here and the 1399 in the sweep are the acceptance test for that rule**: the day a creep price can see a
+  pool, a reach and a raise, both readings come inside their bands or the rule is wrong. `decision-log.md`.
 
 > **The first raise is a whole period after it arrives**, and every one after that a period apart — where an
 > aura pulses on the tick its emitter spawns. The two are deliberately different: a pulse costs a body nothing
@@ -981,8 +991,9 @@ would re-baseline every measurement in the sweep.
   other mark.
 - **Open** — **the shield is unpriced, and the sweep has now measured what that is worth.** The cost rule has
   no term for a pool, so this row is cheaper than it should be: it returns 94 percent of a column's gold
-  against the committed defense, the highest reading inside the band. Known gap, same family as radius and
-  range; a sweep target, not something to hand-correct.
+  against the committed defense, a point under the band's edge, beside the Cursed Villager and one under the
+  Skeleton Mage. Known gap, same family as radius and range; a sweep target, not something to hand-correct —
+  ruled so on 11 September 2026, alongside the Necromancer.
 
 ### 44 · Witch · status live
 
@@ -1157,29 +1168,45 @@ the Shade is the fine end of the granularity axis — and the sweep is the Barba
 tells you nothing when it changes, and one that collapses tells you nothing either; a partial break makes the
 leak count a number a person can watch. Ten to twenty of forty is the target.
 
-> ⚠️ **Three of forty leak, as of 5 September 2026, and it is the Mage's splash.** The row has been priced for
-> three bodies since the roster was signed and hit one until the bubble was authored; the committed defense is
-> four archers and two mages, so authoring it roughly tripled what the two of them remove. Nothing was retuned
-> to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
-> decisions rather than consequences of authoring a signed row.
+> ⚠️ **Eight of forty leak, as of 10 September 2026, and the miss is a person's choice as of the 11th.** Two
+> things moved it, in opposite directions. The Mage's splash first: the row has been priced for three bodies
+> since the roster was signed and hit one until the bubble was authored; the committed defense is four archers
+> and two mages, so authoring it roughly tripled what the two of them remove, and took the count from twelve to
+> three. Then the board became a landscape, and the merged simulation was neither side's — `main` alone leaked
+> eighteen, the roster alone three, and the hand-placed six on the regraded board leak eight. Nothing was
+> retuned to answer either — a retune means moving creep numbers this page signs, or the committed defense,
+> and both are decisions rather than consequences of authoring a signed row or regrading a board.
+>
+> **The miss stands, with a named expiry.** On 11 September 2026 the three ways out were put on the table —
+> keep the miss asserted, move the band to cover eight, or retune the defense or the wave toward it — and the
+> first was chosen: moving the band fits a claim to a board that changed the week before, and a hand retune
+> moves the very number the sweep-derived cost is meant to move. The band is ten to twenty, the match leaks
+> eight, and the assertion says both. It ends on one of two triggers: **a Unity playtest saying the leak feels
+> wrong, or the derived cost landing.** `decision-log.md`, 11 September 2026.
 >
 > **Six creep rows are outside their own band with it, and one of the six is out by an order of
 > magnitude.** Four hundred gold of one creep against the
 > committed defense returns 60 to 95 percent of its gold for eleven of the seventeen rows; five are under and
-> one is over. The full table, measured on 6 September 2026 with the transformation and the raise in:
+> one is over. The full table, measured on 11 September 2026 on the landscape, with the transformation and the
+> raise in — every reading but three moved when the board was regraded, the Vampire, the Black Knight and the
+> Necromancer holding their number, and not one row changed list:
 >
 > | row | returns | | row | returns |
 > |---|---|---|---|---|
-> | Minion | **25** | | Vampire | 94 |
-> | Skeleton Scout | 77 | | Witch | 84 |
-> | Skeleton Mage | 90 | | Fiend | 84 |
-> | Skeleton | 69 | | Shade | **42** |
-> | Skeleton Warrior | **41** | | Cursed Villager | 88 |
-> | Necromancer | **1200** | | Werewolf | 86 |
-> | Bone Golem | **25** | | Grave Robber | 81 |
+> | Minion | **37** | | Vampire | 94 |
+> | Skeleton Scout | 84 | | Witch | 88 |
+> | Skeleton Mage | 95 | | Fiend | 92 |
+> | Skeleton | 78 | | Shade | **36** |
+> | Skeleton Warrior | **58** | | Cursed Villager | 94 |
+> | Necromancer | **1200** | | Werewolf | 90 |
+> | Bone Golem | **50** | | Grave Robber | 87 |
 > | Black Knight | 71 | | | |
-> | Frost Wight | 71 | | | |
-> | Abomination | **20** | | | |
+> | Frost Wight | 85 | | | |
+> | Abomination | **40** | | | |
+>
+> **The Skeleton Mage sits on the band's upper edge, at exactly 95.** In, by the test's `> 95`; one more leak
+> in twenty-one and it joins the Necromancer's list. Written down so the day it does, nobody reads it as a
+> new finding.
 >
 > **Under the band, for two opposite reasons.** A splash is worth most against a dense column, and a column of
 > one cheap row is the densest thing that can be sent — so what the Mage's splash costs most is the fine end
@@ -1187,11 +1214,12 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > and the Warrior are under it from the coarse end instead: the slowest bodies on the board stand in front of
 > the wall longest and are shot at for longer.
 >
-> **The Cursed Villager left that list when it learned to transform, 36 to 88**, and it is the only reading
-> [#267](https://github.com/ssalter21/tower-defense-game/issues/267) moved. Thirty-six of them is still the
-> densest column the Mage's splash can be pointed at; what changed is that each of those bodies is now the
-> Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's 1800. The Werewolf's
-> own 86 is unchanged, because nothing sends a Werewolf.
+> **The Cursed Villager left that list when it learned to transform, 36 to 88 on the flat board**, and it is
+> the only reading [#267](https://github.com/ssalter21/tower-defense-game/issues/267) moved. Thirty-six of
+> them is still the densest column the Mage's splash can be pointed at; what changed is that each of those
+> bodies is now the Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's
+> 1800. The Werewolf's own reading matches it, because nothing sends a Werewolf; on the landscape the two read
+> 94 and 90.
 >
 > **Over the band, one row, and it is the Necromancer — which is now three unpriced things at once.**
 > Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the two hexes
@@ -1204,11 +1232,17 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > front of 3360 the price was derived from — and the Grave Robber's 2000 sits behind an armoured body slow
 > enough to be shot for it.
 >
-> **Nothing here is retuned.** Every reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends
-> of the band, as two exact lists — rather than widened away, so the day somebody retunes, the tests go red
-> and say which band to put back.
+> **Nothing here is retuned, and since 11 September 2026 that is a ruling rather than a deferral.** Every
+> reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends of the band, as two exact lists —
+> rather than widened away, so the day somebody retunes, the tests go red and say which band to put back. The
+> two alternatives were put on the table and declined. There is no price lever for the five under: a creep's
+> cost is derived, so making the Minion cheaper means making it weaker, which reopens a signed row. Retiring
+> the band for the sweep's weaker "no row deals zero" would give up the one test that says a row is free
+> money — the test that caught the Necromancer. And the Necromancer keeps its derived 21, with the 1200 here
+> and the 1399 below pinned as the acceptance test for the sweep-derived cost; the Vampire's 94 and the Grave
+> Robber's 87 are the same gap without the aura, and go with it.
 >
-> **And no row deals zero.** The floor of the table is the Abomination at 20, so there is no dead row on the
+> **And no row deals zero.** The floor of the table is the Shade at 36, so there is no dead row on the
 > menu. **Two rows never win a round of the sweep, for opposite reasons.** The Minion is the old one, at 21
 > dealt per hundred gold: it deals too little. The Necromancer is the new one, at **1399** — the highest
 > figure in the report by a factor of three — and it wins nothing because the sweep plays a row against
