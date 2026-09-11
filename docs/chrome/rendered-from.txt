@@ -10,6 +10,6 @@
 #
 #       picture                        drawn from
 
-picture  as-built-build.png              98DDCD917FDC5CD1
-picture  as-built-offer.png              98DDCD917FDC5CD1
-picture  as-built-placed.png             98DDCD917FDC5CD1
+picture  as-built-build.png              2F5438C884EF6856
+picture  as-built-offer.png              2F5438C884EF6856
+picture  as-built-placed.png             2F5438C884EF6856
