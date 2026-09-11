@@ -1,0 +1,19 @@
+# The flash from the far edge of the open book rather than from its spine.
+#
+# THE QUESTION. Where the Mage's flash leaves from, now that a camera pitch
+# has been shown not to clear the hat. Issue #289.
+#
+# THE SHIPPED ANCHOR IS THE BOOK'S OWN ORIGIN -- EffectAnchor.At(spellbook_open)
+# -- which is the point the prop hangs from the hand bone, so the flash starts
+# in the fist. This is the same book, and the far end of it along the axis its
+# pages run: the flash leaves the edge of the book furthest from the hand,
+# which is the book's equivalent of a staff's tip against a staff's grip.
+#
+# WHAT TO LOOK AT. Whether an anchor at the far edge of a small prop moves the
+# flash far enough to clear the brim at 35 degrees, or whether it moves it by
+# less than the hat is wide -- which is what the pitch sweep predicts.
+
+label     the flash from the far edge of the book
+question  where the Mage's flash leaves from, when the hat covers the hand at the shipped pitch
+
+anchor  4  tip-of spellbook_open 0,0,1

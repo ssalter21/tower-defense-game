@@ -1,0 +1,19 @@
+# The flash from the point of the hat.
+#
+# THE QUESTION. Where the Mage's flash leaves from, now that a camera pitch
+# has been shown not to clear the hat. Issue #289.
+#
+# THE ONE PLACE THE HAT CANNOT COVER IS ITS OWN TOP. 'Mage' is the body's root
+# node, and the far end of the whole body along +Y is the tip of the hat, so
+# this is the flash leaving the highest point the model has. It is not on
+# anything the Mage holds, which is the trade: the roster's rule is that a
+# shot leaves the prop that fires it, and this candidate breaks that rule to
+# show what breaking it buys.
+#
+# WHAT TO LOOK AT. Whether a flash on the hat reads as the Mage casting or as
+# the hat catching fire.
+
+label     the flash from the point of the hat
+question  where the Mage's flash leaves from, when the hat covers the hand at the shipped pitch
+
+anchor  4  tip-of Mage 0,1,0

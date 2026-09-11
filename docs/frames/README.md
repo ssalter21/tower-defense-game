@@ -710,6 +710,14 @@ indirection is not a second set of values.
   the turret is the only one of the four that clears the second — and the other three are decided at
   magnification or not at all. Those frames are [`rung-candidates/`](rung-candidates/README.md).
 
+  **Where the Mage's flash leaves from is the fifth such question, and it is one a played frame does
+  decide.** [`mage-anchor/`](mage-anchor/README.md) draws the shipped anchor and three others
+  through the same seam at the two ticks the Mages fire nearest the pitch sweep's, plus the camera
+  swung 45° either way; every candidate moves 0.26–0.66% of the frame, because a flash sits on the
+  body rather than crossing the air. The finding is in the baseline, not the candidates: the Mage
+  nearest the camera shows **no flash at all** today, and the fixed height the anchors replaced never
+  showed one either. Issue #289.
+
   **The Elder's sheet is forty-six tiles and nothing was shortlisted**, because a shortlist is the
   decision made quietly with the rejected alternatives never shown. It is every prop his own pack ships
   minus the characters and the thirteen already bound to another line. Its own `.txt` measures which
