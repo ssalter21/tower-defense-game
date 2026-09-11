@@ -24,17 +24,21 @@ Issues and PRDs for this repo live as GitHub Issues in `ssalter21/tower-defense-
 
 ## Review boundary
 
-Where human review happens. **This repo uses `effort`**: one PR per effort, not per ticket.
+Where human review happens. **This repo uses `stack`**: one PR per ticket, each branched from the head of the
+newest open PR rather than from the default branch, so review reads in the order the work was built and no
+ticket waits on a merge.
 
-At `/to-tickets` publish time, cut `effort/<slug>` from the default branch. Each implement ticket carries a
-`## Target branch` section naming it and lands there as one unsquashed commit, so a fresh `/implement` session
-needs no other context; per-ticket `/code-review` is the gate at that granularity. A final **integrate
-ticket** — blocked by every other ticket in the effort — brings the branch up to date with the default branch,
-runs the full suite and `/code-review` against the merge-base, then opens the single PR `effort/<slug>` →
-default, its body assembled from the spec and, where the effort has a map, the map's Decisions-so-far section.
+The **base** of new work is the head branch of the newest open PR, or the default branch when none is open;
+`/implement` finds it and opens the ticket's PR against it. Tickets carry no branch section — the base is
+found at implement time, not at publish time, because it depends on what has merged since the tickets were
+written. Merging the bottom PR deletes its branch and GitHub retargets the PR above it at the default branch,
+so the stack drains from the bottom with nobody rebasing; a bottom PR that changes under review is rebased
+into the PRs above it before they are read.
 
-The reason is review granularity. Fourteen separate PRs for one architectural effort is fourteen
-context-switches for a human who needs to see the whole shape to judge any part of it.
+The reason is review order. A reviewer reading a stack sees each ticket as the diff it was, on top of the
+tickets before it, and merges bottom-up without waiting for the effort to finish; a single effort PR shows the
+whole shape but only once everything in it is done, and fourteen ticket PRs cut from main each re-show the
+others' churn.
 
 ## When a skill says "publish to the issue tracker"
 
@@ -98,9 +102,9 @@ Used by `/wayfinder`. The **map** is a tracking issue, and each ticket is a **na
   `## Decisions so far` section** (edit the body, not a comment).
 
 Closing a blocker is what unblocks its dependents — GitHub recomputes `blocked_by` from issue state, so there
-is nothing else to update. Under the `effort` review boundary a ticket closes when its commit is on the effort
-branch and pushed, not when the effort's PR merges; that is deliberate, since waiting for the merge would keep
-every dependent blocked for the whole run.
+is nothing else to update. Under the `stack` review boundary a ticket closes when its PR is open and pushed,
+not when that PR merges; that is deliberate, since waiting for the merge would keep every dependent blocked
+for the whole run.
 
 ### Map body template
 
