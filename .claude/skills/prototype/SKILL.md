@@ -106,4 +106,5 @@ Check `git status` before committing: `git add -A` swept six generated indexes i
 
 Post the sheet, the set file and the command on the ticket, close it, and leave the decision to the sitting.
 Findings the render made on its own — a pair of tiles that came out identical, a direction a sweep ruled out —
-go in the report; they are usually worth more than the pictures.
+go in the report; they are usually worth more than the pictures. Summarise the decision to be made back to the user.
+Create assets that clearly and simply provide the information that the user needs to make the decision.
