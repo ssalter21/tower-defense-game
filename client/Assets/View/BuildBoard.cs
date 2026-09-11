@@ -112,8 +112,9 @@ namespace View
 
         /// <summary>
         /// Puts what is drawn back in step with the composed board. Called after
-        /// every change; cheap where nothing moved, because it compares before
-        /// it builds.
+        /// every change: a tower is rebuilt only where its type moved, because
+        /// it compares before it builds, and every prop is re-stood, because
+        /// the tower placed this click is what makes a neighbour's tile taken.
         /// </summary>
         public void Follow()
         {
@@ -132,6 +133,20 @@ namespace View
                 // it, so the old model goes and the new one takes its place.
                 Remove(placement.Id);
                 Draw(placement);
+            }
+
+            // Every prop, and not only the ones just drawn: a tower placed this
+            // click is what makes a neighbour's asked tile taken, so the
+            // neighbour's prop moves too. The board is asked and not the
+            // placement, because a prop wants a cell nothing stands on.
+            for (int index = 0; index < board.Count; index++)
+            {
+                Placement placement = board.Placements[index];
+
+                if (_towers.TryGetValue(placement.Id, out TowerView view) && view != null)
+                {
+                    view.StandBesideOn(_map, (column, row) => !board.IsFree(column, row), placement.Column, placement.Row);
+                }
             }
 
             // A tower and a grove want the same hex, so the grove gives way.

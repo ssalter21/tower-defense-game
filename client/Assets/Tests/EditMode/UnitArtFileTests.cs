@@ -312,19 +312,24 @@ namespace Tests.EditMode
             Assert.That(thrown.Message, Does.Contain("nothing stands beside row " + Mortar));
         }
 
-        /// <summary>Every candidate art file the branch commits, by absolute path.</summary>
+        /// <summary>
+        /// Every candidate art file the branch commits, by absolute path. The
+        /// rung candidates only: #282's beside-prop candidates came out when
+        /// #284 signed the free neighbour, and these come out when it signs
+        /// the rest.
+        /// </summary>
         private static IEnumerable<string> CommittedCandidates()
         {
             var files = new List<string>();
 
-            foreach (string name in new[] { "rung-candidates", "beside-props" })
+            foreach (string name in new[] { "rung-candidates" })
             {
                 string folder = Path.Combine(RepositoryRoot(), "docs", "frames", name);
 
                 Assert.That(
                     Directory.Exists(folder),
                     Is.True,
-                    "No candidate art at " + folder + ". Issues #281 and #282 are drawn from these.");
+                    "No candidate art at " + folder + ". Issue #281 is drawn from these.");
 
                 string[] found = Directory.GetFiles(folder, "*.txt");
 

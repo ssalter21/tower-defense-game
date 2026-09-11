@@ -7,12 +7,12 @@ namespace View
 {
     /// <summary>
     /// The one bar that is up in every mode: which wave this is, how much
-    /// health is left, how much gold there is, and the one button that moves
-    /// the run on.
+    /// health is left, how much gold there is, how many capstone tokens, and
+    /// the one button that moves the run on.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// <b>Three fields, and it is the same three in both modes.</b> The header
+    /// <b>Four fields, and it is the same four in both modes.</b> The header
     /// is anchored to the top of the screen and the playback controls are along
     /// the bottom, so entering and leaving watch mode adds and removes chrome
     /// <i>beneath</i> this bar and never moves it. A header that reflowed as the
@@ -26,6 +26,15 @@ namespace View
     /// player composes against, and the reason it is on the bar rather than
     /// beside the palette. What the wave itself is doing is the wave bar's job
     /// (#197), which is on screen beside this in build mode.
+    /// </para>
+    /// <para>
+    /// <b>The token count is the second scarcity, said where the first is.</b>
+    /// A run is granted a capstone token on three rounds and can spend it on
+    /// nothing but the top of a line, and until #285 nothing on screen said how
+    /// many it held: a player at wave two clicked a Bishop, saw a ladder that
+    /// opened on nothing, and had nothing telling them why. The count is
+    /// derived from the command stream and not stored (ADR-0062), so this is
+    /// display and no state -- the loop reads it the way it reads the gold.
     /// </para>
     /// <para>
     /// <b>No forecast, in any mode.</b> Every number here is something the run
@@ -79,6 +88,9 @@ namespace View
         /// <summary>What there is to spend.</summary>
         public Label Gold { get; private set; }
 
+        /// <summary>Capstone tokens held, spent and still to come.</summary>
+        public Label Tokens { get; private set; }
+
         /// <summary>The one button. What it says is the loop's to decide.</summary>
         public Button Action { get; private set; }
 
@@ -122,6 +134,9 @@ namespace View
 
             Gold.text = RosterNames.Gold(_loop.Gold);
 
+            Tokens.text = RosterNames.CapstoneTokens(
+                _loop.CapstoneTokensHeld, _loop.CapstoneTokensSpent, _loop.CapstoneTokensToCome);
+
             string label = _loop.ActionLabel;
 
             Action.text = label;
@@ -156,8 +171,9 @@ namespace View
             Wave = AddField(bar, "Wave");
             Health = AddField(bar, "Health");
             Gold = AddField(bar, "Gold");
+            Tokens = AddField(bar, "Tokens");
 
-            // Pushes the button to the far end, so the three fields read as one
+            // Pushes the button to the far end, so the four fields read as one
             // group and the thing that moves the run on is nowhere near them.
             var spacer = new VisualElement { name = "Spacer", pickingMode = PickingMode.Ignore };
             spacer.style.flexGrow = 1f;
