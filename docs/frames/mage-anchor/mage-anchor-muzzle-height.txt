@@ -1,0 +1,18 @@
+# The flash from the fixed height every tower fired from before the anchors.
+#
+# THE QUESTION. Where the Mage's flash leaves from, now that a camera pitch
+# has been shown not to clear the hat. Issue #289.
+#
+# WHAT WAS TRADED AWAY. Before the effect anchors landed every tower fired
+# from MatchTuning.TowerMuzzleHeight -- 1.4 m straight above its own root --
+# whatever it held and whichever way it faced. 'anchor 4 -' takes the Mage's
+# anchor off and lets TowerView fall back to exactly that, so this is the
+# picture the anchors replaced, drawn on today's board.
+#
+# WHAT TO LOOK AT. Where 1.4 m falls on a body at tower scale wearing a hat
+# that wide: whether it is inside the hat, on the brim, or clear of it.
+
+label     the flash from 1.4 m above the root, which is where it left from before the anchors
+question  where the Mage's flash leaves from, when the hat covers the hand at the shipped pitch
+
+anchor  4  -
