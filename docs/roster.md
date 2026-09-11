@@ -243,7 +243,11 @@ row wears, the two views put it on the body before anything goes in a hand, and 
 above name are imported beside their own packs. **A third socket is built too, and it is not a hand bone**:
 `UnitArt` carries a beside prop — a model and a size — and `TowerView` stands it one tile from the tower root,
 where it stays while the tower turns to aim. `turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's
-weirwood each have somewhere to stand. **The size is per prop and it is a view fact**, never a column in
+weirwood each have somewhere to stand. **When a tower is standing on that tile, the prop moves to a free
+neighbour** — the nearest to the tower's right and away from the corridor, never the corridor itself, and
+inside the tower's own hex when every neighbour is taken. That is `BesideStanding`, signed by #284 on 11
+September 2026 over the prop tucked into its own hex and over no prop at all; the frames are under
+[`docs/frames/beside-props/`](frames/beside-props/README.md). **The size is per prop and it is a view fact**, never a column in
 `content/units.txt`: the three props authored in their characters' own packs come in at the right size, and a
 Forest Nature tree does not. The quiver the Ranger carries is still in its fist, because that is a spine socket
 and not this one.

@@ -89,13 +89,18 @@ namespace View
 
         private const float OfferWidth = 208f;
 
-        private const float RungHeight = 40f;
+        /// <summary>Tall enough for a name over a price; a rung is two lines.</summary>
+        private const float RungHeight = 64f;
 
         private const float OfferAnchorHeight = 2.2f;
 
         private const int NameSize = 22;
 
         private const int PriceSize = 18;
+
+        private const int RungNameSize = 18;
+
+        private const int RungPriceSize = 15;
 
         /// <summary>What the chosen entry is drawn in.</summary>
         private static readonly Color ChosenColor = new Color(0.45f, 0.68f, 0.85f, 1f);
@@ -501,20 +506,33 @@ namespace View
 
             foreach (UnitType rung in rungs)
             {
-                var button = new Button
-                {
-                    name = "Rung " + RosterNames.Of(rung),
-                    text = RosterNames.Of(rung) + "   " + PriceOfRung(rung),
-                };
+                var button = new Button { name = "Rung " + RosterNames.Of(rung), text = string.Empty };
 
                 button.style.height = RungHeight;
                 button.style.marginLeft = 0f;
                 button.style.marginRight = 0f;
                 button.style.marginTop = 0f;
                 button.style.marginBottom = 0f;
+                button.style.flexDirection = FlexDirection.Column;
+                button.style.justifyContent = Justify.Center;
                 button.style.backgroundColor = RuntimePanel.ControlColor;
-                button.style.color = RuntimePanel.LabelColor;
-                button.style.fontSize = PriceSize;
+
+                // Two lines, the price beneath the name, so that the longest
+                // label the surface carries -- a capstone's name over "1
+                // capstone token" -- fits the offer's width instead of running
+                // off both sides of it onto the board. Signed by #285.
+                var name = new Label { name = "Name", text = RosterNames.Of(rung), pickingMode = PickingMode.Ignore };
+                name.style.color = RuntimePanel.LabelColor;
+                name.style.fontSize = RungNameSize;
+                name.style.unityTextAlign = TextAnchor.MiddleCenter;
+
+                var price = new Label { name = "Price", text = PriceOfRung(rung), pickingMode = PickingMode.Ignore };
+                price.style.color = QuietColor;
+                price.style.fontSize = RungPriceSize;
+                price.style.unityTextAlign = TextAnchor.MiddleCenter;
+
+                button.Add(name);
+                button.Add(price);
 
                 UnitType chosen = rung;
                 button.clicked += () => Take(chosen);

@@ -2296,3 +2296,44 @@ records rather than one tick at a time.
 last two runs anywhere but here, and nothing had compiled the two branches' engine-side code together until
 this ran. `check-docs.ps1` green on every claim, the headless verify agreeing with all four regenerated
 artefacts, the streaming copy back in sync, and the determinism matrix green on all six rows.
+
+---
+
+## 11 September 2026 — the four places the chrome stopped fitting are signed, and three of the four are holding answers
+
+Issue [#282](https://github.com/ssalter21/tower-defense-game/issues/282) rendered candidates for the four places the roster's forty-four rows broke the chrome that twelve had fitted — the wave bar, the offer's longest rung, a standing token count, and a beside prop on an occupied tile — every one drawn at 1600×900 through the real chrome and the real match. Sam signed one of each off the sheets, the chrome three for [#285](https://github.com/ssalter21/tower-defense-game/issues/285) and the prop for [#284](https://github.com/ssalter21/tower-defense-game/issues/284), in four sentences.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`WaveBar`** | a row of 176-unit boxes with nothing bounding it; "scrolling or wrapping is the answer when a played round actually overflows, and not before" | **The boxes sit in a horizontal `ScrollView`.** A scroller shows once they overflow, the wheel scrolls it, and every redraw scrolls the trailing empty box into view | Seventeen creeps and the empty box want 3280 units of 1872, and #270 photographed the eleventh cut in half. Off scroll, wrap, and two shrinks — 128-unit boxes fit thirteen, 96-unit boxes fit all seventeen at 13-point type. Sam: *"for now just have a scroll wheel"* |
+| **`TowerPalette`, a rung** | one line, 40 tall: the name, three spaces, the price, in a 208-wide offer | **Two lines, 64 tall: the name at 18 over the price at 15.** The offer stays 208 and centred on its hex | *Consecration   1 capstone token* ran off both sides of the panel onto the board, at the top of every line, every run. Off width-auto (hangs right of its hex), a fixed 336, and this. The words were not shortened; "1 token" would have fitted the shipped width and it is Sam's to spell |
+| **`RunHeader`** | three fields — wave, health, gold | **Four: `Capstone tokens N held · N spent · N to come`, after the gold.** Read off the composed round while one is composed, the way the gold is, and through the wave on screen otherwise | A player holding none clicked a Bishop, saw a ladder that opened on nothing, and had nothing saying why. Off the header, three pips, and a line at the ladder. The count is derived from the command stream and not stored (ADR-0062); this is display only. The wording is the mock's, signed with the placement |
+| **`BesideProp.NextTile`** | one tile to the tower's right, whatever is standing there | **A free neighbour** — the nearest to the tower's right and away from the corridor, never the corridor, and inside the tower's own hex when every neighbour is taken. `BesideStanding`, asked by both board views, applied by `TowerView` | With towers in a row the Mortar's turret, the Consecration's font and the Overgrowth's weirwood were drawn inside the neighbour's hex. Off the prop tucked 0.8 m into its own hex (one number), the free neighbour (a view that knows the board), and no prop (the Mortar's shell anchor would have had to move). Sam: *"the prop needs to be in free neighbour"* |
+
+### Three of the four are holding answers, and Sam said so in the same breath
+
+*"The UI will need a major rework, as I've never directed what currently exists."* That sentence is the finding of this sitting as much as the four rulings are. Every piece of build chrome on screen — the header, the palette, the wave bar, the offer — was built by an agent to a ticket and never put in front of a person as a whole; the chosen arrangement from 17 August (`docs/chrome/chosen-build-phase.png`, the wave along a side rail in portraits) is still the direction, still waits on `RosterThumbnails`, and is still unbuilt. So the scroll view, the two-line rung and the header field are what keeps forty-four rows on screen until the chrome is directed, and they were signed as that. The prop rule is the exception: it is a rule about the board and it stands whatever the chrome becomes.
+
+**What that changes about the record.** [`docs/chrome/README.md`](chrome/README.md) now says the shipped chrome is a holding answer under the chosen arrangement, and [`docs/chrome/overflows/`](chrome/overflows/README.md) keeps five sheets of it at the two late-round states the candidates were compared at — the candidates themselves, classes and sheets, came out as PR #293 said they would.
+
+### The prop rule has a fallback nobody signed, and it is written down as one
+
+A free-neighbour rule needs an answer for a tower with no free neighbour, and the sitting was not asked one. The answer built is the prop inside its own hex, 0.8 m sideways — the *tucked-in* candidate Sam did not pick, kept as what a prop does when there is nowhere else rather than as a look. It is one constant (`BesideStanding.InsideTheHex`) and one test, and it will be seen the day a capstone is ringed.
+
+Two more edges the rule takes a position on without a ruling: the prop stands **at the neighbour's own height**, since a cell is where a thing stands and not a direction to lean; and **props are not counted as standing** — two adjacent capstones can choose one free cell between them, because towers are the only thing the board records.
+
+### Every layout that overflowed now has an assertion, against the roster rather than a count
+
+#285 asked that a signed layout come with a test, since a layout that silently overflows at n+1 entries will happen again and the roster is still growing. `ChromeLayoutTests` carries three: the bar scrolls to its empty box with **every creep the roster has** in it; **every name on the roster** fits a rung over the longest price the surface carries, measured through the rung's own label; and the header's four fields sit before the button with the spacer still holding width. Each reads the roster off `content/units.txt` rather than asserting seventeen or forty-four, so the row that breaks one is the row that turns it red.
+
+### What the frames say
+
+The five chrome sheets and the beside-prop frames were redrawn under the signed layouts — and this time the beside-prop frames are **tracked**. PR #293's sixteen candidate frames were never committed: `docs/frames/.gitignore` ignores every PNG and that folder had no un-ignore, so only `rendered-from.txt` landed and the frames Sam decided from existed in one worktree. The record of the alternatives is that PR's description and the measurements the README keeps; the rule as built is what the folder now shows.
+
+### What is still Sam's
+
+The rest of #285 — the knife and the bolt, `ProjectileColor`, where a ground effect may reach — and all of #284 but the prop. And the rework itself, which has no ticket yet.
+
+### What the numbers came to
+
+`dotnet test sim.tests` **905 of 905**, EditMode **147 of 147**, PlayMode **175 of 175** — seven more edit-mode tests (`BesideStandingTests`) and three more play-mode (`ChromeLayoutTests`). Five chrome sheets and four beside-prop frames redrawn.

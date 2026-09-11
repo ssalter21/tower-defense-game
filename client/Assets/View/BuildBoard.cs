@@ -134,6 +134,20 @@ namespace View
                 Draw(placement);
             }
 
+            // Every prop, and not only the ones just drawn: a tower placed this
+            // click is what makes a neighbour's asked tile taken, so the
+            // neighbour's prop moves too. The board is asked and not the
+            // placement, because a prop wants a cell nothing stands on.
+            for (int index = 0; index < board.Count; index++)
+            {
+                Placement placement = board.Placements[index];
+
+                if (_towers.TryGetValue(placement.Id, out TowerView view) && view != null)
+                {
+                    view.StandBesideOn(_map, (column, row) => !board.IsFree(column, row), placement.Column, placement.Row);
+                }
+            }
+
             // A tower and a grove want the same hex, so the grove gives way.
             // Done here rather than in Draw because this is the one place that
             // knows the whole board, and telling the floor the whole of it is

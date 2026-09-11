@@ -109,6 +109,31 @@ namespace View
         public static string CapstoneToken() => "1 capstone token";
 
         /// <summary>
+        /// A run's standing count of capstone tokens, in words:
+        /// <c>Capstone tokens  2 held  ·  1 spent  ·  0 to come</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Three numbers and not one, because the one a player needs changes
+        /// with the round: at wave two it is that none has been granted yet and
+        /// one is coming, which is why a Bishop's ladder opens on nothing; at
+        /// wave nine it is how many are left to spend. The schedule itself --
+        /// which waves grant -- is not said here; it is the simulation's
+        /// (<see cref="Run.CapstoneTokenRounds"/>) and this is a count over it.
+        /// </para>
+        /// <para>
+        /// The wording is the mock's, signed with the placement by #285 on 11
+        /// September 2026 and not separately: what a token is called on screen
+        /// is a word a player reads, and this is the one place it is spelled.
+        /// </para>
+        /// </remarks>
+        public static string CapstoneTokens(int held, int spent, int toCome) =>
+            "Capstone tokens  " + held.ToString(CultureInfo.InvariantCulture)
+            + " held  ·  " + spent.ToString(CultureInfo.InvariantCulture)
+            + " spent  ·  " + toCome.ToString(CultureInfo.InvariantCulture)
+            + " to come";
+
+        /// <summary>
         /// How many of one creep a wave box is sending: <c>x3</c>.
         /// </summary>
         /// <remarks>

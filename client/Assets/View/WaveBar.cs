@@ -20,10 +20,21 @@ namespace View
     /// the anchors by #179, and a fixed row here would put that gate back in
     /// through the interface after the rules had let it go. The purse is the
     /// only scarcity there is on this side, so the row is honest about being
-    /// unbounded. <b>What that costs is layout</b>, and it is real: a late round
-    /// with a deep purse can want more boxes than the screen is wide. Scrolling
-    /// or wrapping is the answer when a played round actually overflows, and not
-    /// before.
+    /// unbounded.
+    /// </para>
+    /// <para>
+    /// <b>The boxes scroll sideways once there are more than the screen is
+    /// wide.</b> The roster's forty-four rows made that a played round rather
+    /// than a possibility -- seventeen creeps and the trailing empty box want
+    /// 3280 panel units of the 1872 between the margins, and #270 photographed
+    /// the eleventh box cut in half. The boxes sit in a horizontal
+    /// <see cref="ScrollView"/>, the toolkit's own answer and the one that holds
+    /// at any count: the wheel scrolls it, a scroller appears under the boxes
+    /// only once they overflow, and a redraw scrolls the trailing empty box into
+    /// view so the one box a creep is added through is never off screen. It is a
+    /// holding answer -- the sitting that signed it (#285) said the chrome as a
+    /// whole waits on a direction nobody has yet given -- so the boxes keep
+    /// their size and their type and nothing else about the row moves.
     /// </para>
     /// <para>
     /// <b>Position is arrival order, so dragging is a decision.</b>
@@ -133,6 +144,8 @@ namespace View
 
         private VisualElement _row;
 
+        private ScrollView _scroller;
+
         private VisualElement _list;
 
         private bool _listing;
@@ -162,6 +175,9 @@ namespace View
 
         /// <summary>The panel the row is drawn on.</summary>
         public UIDocument Document { get; private set; }
+
+        /// <summary>The strip the boxes scroll along.</summary>
+        public ScrollView Scroller => _scroller;
 
         /// <summary>
         /// Every box, in the order they are laid out: one per filled slot, and
@@ -492,6 +508,9 @@ namespace View
             _row = Row();
             document.rootVisualElement.Add(_row);
 
+            _scroller = Strip();
+            _row.Add(_scroller);
+
             _list = ListPanel();
             document.rootVisualElement.Add(_list);
 
@@ -528,6 +547,25 @@ namespace View
         }
 
         /// <summary>
+        /// The strip the boxes are laid along: as wide as the row's margins
+        /// leave, scrolling sideways, and showing a scroller only once the
+        /// boxes are wider than it is.
+        /// </summary>
+        private static ScrollView Strip()
+        {
+            var scroller = new ScrollView(ScrollViewMode.Horizontal) { name = "Scroller" };
+
+            scroller.style.flexGrow = 1f;
+            scroller.style.height = BarHeight;
+            scroller.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+            scroller.verticalScrollerVisibility = ScrollerVisibility.Hidden;
+            scroller.contentContainer.style.flexDirection = FlexDirection.Row;
+            scroller.contentContainer.style.alignItems = Align.Center;
+
+            return scroller;
+        }
+
+        /// <summary>
         /// Rebuilds the row from the composed wave: one box per filled slot, and
         /// one empty box behind them.
         /// </summary>
@@ -540,7 +578,7 @@ namespace View
         /// </remarks>
         private void Redraw()
         {
-            _row.Clear();
+            _scroller.Clear();
             _boxes.Clear();
 
             IReadOnlyList<WaveSlot> slots = _round.Slots;
@@ -552,6 +590,14 @@ namespace View
 
             AddEmptyBox(slots.Count);
             Restyle();
+
+            // A box just added has no layout until the panel next lays out, and
+            // ScrollTo reads one, so this waits a frame -- and reads the last
+            // box then rather than now, because a second redraw before the
+            // frame has replaced every box and ScrollTo refuses one that is no
+            // longer a child. The empty box is the end of the row, which is
+            // where the row grows.
+            _scroller.schedule.Execute(() => _scroller.ScrollTo(_boxes[_boxes.Count - 1]));
 
             Changed?.Invoke();
         }
@@ -623,7 +669,7 @@ namespace View
             // there is one ending rather than two.
             box.RegisterCallback<PointerCaptureOutEvent>(_ => Release());
 
-            _row.Add(box);
+            _scroller.Add(box);
             _boxes.Add(box);
         }
 
@@ -647,7 +693,7 @@ namespace View
             box.Add(plus);
             box.RegisterCallback<PointerDownEvent>(_ => Open(index));
 
-            _row.Add(box);
+            _scroller.Add(box);
             _boxes.Add(box);
         }
 

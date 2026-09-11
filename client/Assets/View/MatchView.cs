@@ -571,6 +571,13 @@ namespace View
 
         private void BuildTowers(TowerLayout layout, Transform parent)
         {
+            var standing = new HashSet<(int Column, int Row)>();
+
+            for (int index = 0; index < layout.Count; index++)
+            {
+                standing.Add((layout.Towers[index].Column, layout.Towers[index].Row));
+            }
+
             for (int index = 0; index < layout.Count; index++)
             {
                 PlacedTower placed = layout.Towers[index];
@@ -604,6 +611,9 @@ namespace View
                 {
                     view.BuildStatic(id, placed.Type, art, resting);
                 }
+
+                // The layout never changes once a match is up, so once is enough.
+                view.StandBesideOn(_map, (column, row) => standing.Contains((column, row)), placed.Column, placed.Row);
 
                 _towers.Add(id, view);
             }
