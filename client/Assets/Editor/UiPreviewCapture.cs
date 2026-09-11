@@ -143,7 +143,10 @@ namespace View.Editor
         /// What a candidate layout implements. Named in a spec by type name and
         /// found by reflection, so a candidate can be a scratch file staged into
         /// the project for one run and deleted afterwards — nothing unchosen is
-        /// ever committed, so nothing unchosen may be hard-coded here.
+        /// hard-coded here. A candidate that is waiting on a sitting lives
+        /// under <c>Editor/ChromeCandidates/</c> beside the sheets it drew,
+        /// the way a candidate art file lives beside its frames, and comes
+        /// out when the sitting has signed.
         /// </summary>
         public interface IUiPreviewLayout
         {
@@ -201,6 +204,10 @@ namespace View.Editor
             /// </remarks>
             public string place;
 
+            public string upgrade;
+
+            public int wave = 1;
+
             public string notes;
         }
 
@@ -217,6 +224,7 @@ namespace View.Editor
             public string label;
             public string state;
             public string candidate;
+            public int wave;
             public string png;
             public string notes;
         }
@@ -346,12 +354,85 @@ namespace View.Editor
                 SceneFraming.CameraDefaultPitchDegrees,
                 root.CameraRig.FramedDistance);
 
+            PlayTo(root, loop, shot.wave);
             ApplyState(shot, root, loop);
             ApplyCandidate(shot, root, loop);
 
             Redirect(root, loop);
 
             _frames = 0;
+        }
+
+        private static void PlayTo(MatchRoot root, RunLoop loop, int wave)
+        {
+            if (wave < 1)
+            {
+                throw new InvalidDataException(
+                    "A shot's wave is " + wave + ". The opening round is 1, and there is nothing "
+                    + "before it.");
+            }
+
+            while (loop.Wave < wave)
+            {
+                ComposedRound round = root.Composing;
+
+                foreach (BuildAction action in CoverThenUpgradeBot.Decide(loop.Run))
+                {
+                    round.Do(action);
+                }
+
+                root.Building.Follow();
+                root.Palette.Follow();
+
+                SendOneOfEach(root);
+
+                int played = loop.Wave;
+                loop.Commit();
+
+                if (loop.Run.IsOver)
+                {
+                    throw new InvalidOperationException(
+                        "The run ended at wave " + played + " (" + loop.Run.Outcome + "), so wave "
+                        + wave + " is not a round it ever composes. The scripted player lost the "
+                        + "board before the shot.");
+                }
+
+                loop.GoOn();
+            }
+        }
+
+        private static void SendOneOfEach(MatchRoot root)
+        {
+            ComposedRound round = root.Composing;
+
+            foreach (UnitType creep in round.Roster)
+            {
+                int index = round.Slots.Count;
+
+                if (!Offered(round.Sendable(index), creep))
+                {
+                    continue;
+                }
+
+                root.Wave.Open(index);
+                root.Wave.Choose(creep);
+            }
+
+            root.Wave.Close();
+            root.Palette.Follow();
+        }
+
+        private static bool Offered(IReadOnlyList<UnitType> sendable, UnitType creep)
+        {
+            foreach (UnitType offered in sendable)
+            {
+                if (offered.Id == creep.Id)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -373,12 +454,12 @@ namespace View.Editor
                     return;
 
                 case "build-placed":
-                    Place(root, shot.place, out _, out _);
+                    Place(root, shot, out _, out _);
                     Send(root, 2);
                     return;
 
                 case "build-hover":
-                    Place(root, shot.place, out _, out _);
+                    Place(root, shot, out _, out _);
 
                     // Two, and the number is the purse again. A hex lights only
                     // where the rules would take a tower, so a state that had
@@ -390,7 +471,7 @@ namespace View.Editor
                     return;
 
                 case "build-offer":
-                    Place(root, shot.place, out int column, out int row);
+                    Place(root, shot, out int column, out int row);
                     root.Palette.Offer(column, row);
                     root.Palette.Follow();
 
@@ -441,9 +522,10 @@ namespace View.Editor
         /// first sheet off this tool showed.
         /// </para>
         /// </remarks>
-        private static void Place(MatchRoot root, string label, out int column, out int row)
+        private static void Place(MatchRoot root, ShotSpec shot, out int column, out int row)
         {
             ComposedRound round = root.Composing;
+            string label = shot.place;
             UnitType chosen = null;
 
             foreach (UnitType tower in round.Palette)
@@ -493,8 +575,36 @@ namespace View.Editor
 
             round.Do(BuildAction.Of(ActionKind.Place, chosen.Id, column, row));
 
+            if (!string.IsNullOrWhiteSpace(shot.upgrade))
+            {
+                foreach (string rung in shot.upgrade.Split(','))
+                {
+                    Climb(round, rung.Trim(), column, row);
+                }
+            }
+
             root.Building.Follow();
             root.Palette.Follow();
+        }
+
+        private static void Climb(ComposedRound round, string label, int column, int row)
+        {
+            foreach (UnitType rung in round.UpgradesOn(column, row))
+            {
+                if (!string.Equals(rung.Label, label, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                round.Do(BuildAction.Of(ActionKind.Upgrade, rung.Id, column, row));
+
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "The " + round.StandingOn(column, row).Label + " at (" + column + ", " + row
+                + ") is not offering \"" + label + "\". Either no edge of content/upgrades.txt goes "
+                + "there from it, or the purse cannot cover the rung: " + round.Gold + " gold is left.");
         }
 
         /// <summary>
@@ -779,6 +889,7 @@ namespace View.Editor
                 label = shot.label,
                 state = shot.state,
                 candidate = string.IsNullOrWhiteSpace(shot.candidate) ? "as-built" : shot.candidate,
+                wave = shot.wave,
                 png = png,
                 notes = shot.notes,
             });
