@@ -129,6 +129,25 @@ namespace View.Editor
         /// </remarks>
         private const float WeirwoodScale = 0.55f;
 
+        /// <summary>
+        /// The turret grows up the Engineer line — signed on 10 September 2026
+        /// as "scale the tower twice" — because the pack ships one turret and
+        /// no second Engineer, so the line has no prop and no second model to
+        /// tell its rungs apart with.
+        /// </summary>
+        /// <remarks>
+        /// This is the one place a prop's size carries a rung, and
+        /// <c>docs/roster.md</c> says so: the rule that a rung is never a size
+        /// is about the body. The Mortar's step is the only rung candidate
+        /// that read at 1600x900 on issue #281 — 0.19% of the frame against
+        /// at most 0.06% for a prop in a hand.
+        /// </remarks>
+        private const float EngineerTurretScale = 1f;
+
+        private const float ArtificerTurretScale = 1.25f;
+
+        private const float MortarTurretScale = 1.5f;
+
         /// <summary>The Sergeant's off-hand shield, which the Shield Wall raises.</summary>
         private const string ShieldSquarePath = "Assets/Art/Kaykit/adventurers/shield_square.fbx";
 
@@ -328,6 +347,17 @@ namespace View.Editor
         /// </remarks>
         private const string RaiseClipName = "Ranged_Magic_Raise";
 
+        /// <summary>
+        /// The Engineer line's windup: the man works the turret rather than
+        /// swinging the wrench, because the turret is what fires.
+        /// </summary>
+        /// <remarks>
+        /// Signed on 11 September 2026 on issue #284, off the same
+        /// <c>Rig_Medium_General</c> filmstrips issue #278 drew for the
+        /// Paladin — one bank, so a clip looks the same on either body.
+        /// </remarks>
+        private const string UseItemClipName = "Use_Item";
+
         private const string TwoHandedChopClipName = "Melee_2H_Attack_Chop";
 
         /// <summary>The raised guard the Shield Wall stands in between swings.</summary>
@@ -440,6 +470,12 @@ namespace View.Editor
 
         private const string SpellbookNode = "spellbook_open";
 
+        /// <summary>
+        /// The Mage's own body mesh, whose far end along +Y is the point of
+        /// the hat.
+        /// </summary>
+        private const string MageNode = "Mage";
+
         private const string ClericTomeNode = "Cleric_Tome";
 
         private const string ClericMaceNode = "Cleric_Mace";
@@ -508,6 +544,19 @@ namespace View.Editor
         /// </summary>
         private static readonly EffectAnchor Spellbook = EffectAnchor.At(SpellbookNode);
 
+        /// <summary>
+        /// The point of the Mage's hat, signed on 11 September 2026 on issue
+        /// #284 off the four anchors issue #289 drew: the one origin the hat
+        /// cannot cover from any side the camera sees the Mage from.
+        /// </summary>
+        /// <remarks>
+        /// The spellbook this replaced put the flash wholly under the hat on
+        /// the Mage nearest the camera, and the fixed height before it never
+        /// showed one either. The Sorcerer keeps its staff tip; a staff is
+        /// held high enough to clear the hat, and a book is not.
+        /// </remarks>
+        private static readonly EffectAnchor HatTop = EffectAnchor.AtTipOf(MageNode, Vector3.up);
+
         /// <summary>The Cleric's tome, held the same way.</summary>
         private static readonly EffectAnchor ClericTome = EffectAnchor.At(ClericTomeNode);
 
@@ -517,6 +566,13 @@ namespace View.Editor
         /// <summary>The head of the Bishop's mace.</summary>
         private static readonly EffectAnchor MaceHead =
             EffectAnchor.AtTipOf(ClericMaceNode, AlongTheShaft);
+
+        /// <summary>
+        /// The empty off hand the Bishop's and the Consecration's bolt leaves
+        /// from, signed on 10 September 2026: a mace is a melee weapon and
+        /// does not fire, and the tome was refused in every position.
+        /// </summary>
+        private static readonly EffectAnchor OpenOffHand = EffectAnchor.At(WeaponSocket.OffHand);
 
         /// <summary>The head of the Druid's staff.</summary>
         private static readonly EffectAnchor DruidStaffTip =
@@ -590,15 +646,14 @@ namespace View.Editor
         /// Engineer.
         /// </para>
         /// <para>
-        /// <b>The Artificer stands beside one thing and his look names two.</b>
-        /// <c>docs/roster.md</c> puts an <c>ammo_crate</c> beside the turret at
-        /// that rung, and a tower has one beside slot — which that page writes
-        /// on the rung's own <c>Needs</c> line as a thing the engine would have
-        /// to gain. What the one slot holds is the turret, because the turret
-        /// is what the Engineer's shell leaves from at every rung and the
-        /// crate would take the anchor's own prop off the board; so the crate
-        /// is not drawn and the Artificer is told from the Engineer by colour
-        /// alone. Nothing is invented to close that gap here.
+        /// <b>The Engineer line is the one line a prop's size carries.</b>
+        /// The pack ships one turret and no second Engineer, and the
+        /// <c>ammo_crate</c> the roster once put beside the Artificer was
+        /// refused on 10 September 2026 — the Engineer's own body mesh already
+        /// wears a gold box, so a crate was the same box twice. What tells the
+        /// three rungs apart is the atlas and the turret's scale, at
+        /// <see cref="EngineerTurretScale"/>, <see cref="ArtificerTurretScale"/>
+        /// and <see cref="MortarTurretScale"/>.
         /// </para>
         /// <para>
         /// <b>A rung inherits what the rung below it holds, and its
@@ -626,31 +681,24 @@ namespace View.Editor
         /// in and the Bishop's mace takes the Cleric's tome, because a
         /// <c>Looks</c> line names the thing that changed and a hand holds one
         /// thing. The Templar's shield stays because it is in the other hand.
-        /// <c>docs/roster.md</c> does not say where the tome goes when the mace
-        /// arrives, and moving it to the off hand would be inventing a second
-        /// assignment rather than reading one; so the tome is put down, and
-        /// whether that is the read is on the sheet as a question.
+        /// The tome was refused in every position on 10 September 2026, so
+        /// the Bishop's off hand is empty — and it is what the bolt leaves
+        /// from, because a mace is a melee weapon and does not fire.
         /// </para>
         /// <para>
-        /// <b>The Engineer line is bound with no clips, and that is the record
-        /// speaking rather than an omission.</b> <c>docs/roster.md</c> names a
-        /// clip on every rung of the Knight, Barbarian, Cleric, Druid and Rogue
-        /// lines and none on any rung of that one, whose windup and backswing
-        /// carry the <c>_</c> that page puts on a number nobody has signed. A
-        /// clip chosen here to fill the gap would be this table deciding how a
-        /// tower swings, so those three rows stand in their bind pose until the
-        /// ask is answered.
-        /// </para>
-        /// <para>
-        /// <b>The Paladin line stood in that bind pose too until 6 September
-        /// 2026.</b> Ids 20, 21 and 22 carried three nulls apiece for the same
-        /// reason, and it was a bug on the board rather than a gap in a
-        /// document: three towers with their arms straight out. Issue #278 put
-        /// all thirty-two clips a hammer or a book could be swung with up as
-        /// filmstrips and the developer picked from them — the chop for the
-        /// Paladin and the Templar, <see cref="RaiseClipName"/> for the
-        /// Blessing. The durations are still unsigned; a clip is what the tower
-        /// does and a duration is how many ticks it gets to do it in.
+        /// <b>The Paladin and Engineer lines stood in their bind pose until
+        /// their clips were signed.</b> Ids 20 to 22 carried three nulls apiece
+        /// until 6 September 2026 and ids 35 to 37 until 11 September, because
+        /// <c>docs/roster.md</c> named no clip on any of the six and a clip
+        /// chosen here would have been this table deciding how a tower swings.
+        /// It was a bug on the board rather than a gap in a document: six
+        /// towers with their arms straight out. Issue #278 put all thirty-two
+        /// clips of the <c>Rig_Medium_General</c> bank up as filmstrips and
+        /// the developer picked from them — the chop for the Paladin and the
+        /// Templar, <see cref="RaiseClipName"/> for the Blessing,
+        /// <see cref="UseItemClipName"/> for all three Engineer rungs. The
+        /// durations are still unsigned; a clip is what the tower does and a
+        /// duration is how many ticks it gets to do it in.
         /// </para>
         /// <para>
         /// <b>The Overwatch is posed by one clip in all three states, because
@@ -771,7 +819,7 @@ namespace View.Editor
                 Bow, default),
             (4, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, null,
                 SpellbookPath, null, RestClipName, SpellcastClipName, RestClipName, default, default,
-                Spellbook, default),
+                HatTop, default),
             (7, "Assets/Art/Characters/Skeleton_Mage.fbx", MatchArt.CreepScale, null,
                 SkeletonStaffPath, null, null, null, null, StaffQuarterTurn, default, default, default),
             (11, "Assets/Art/Characters/Knight.fbx", MatchArt.TowerScale, null,
@@ -815,10 +863,10 @@ namespace View.Editor
                 ClericTome, default),
             (24, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, ClericAltAtlasPath,
                 ClericMacePath, null, RestClipName, ShootClipName, RestClipName, default, default,
-                MaceHead, default),
+                OpenOffHand, default),
             (25, ClericFolder + "Cleric.fbx", MatchArt.TowerScale, ClericAltAtlasPath,
                 ClericMacePath, null, RestClipName, ShootClipName, RestClipName, default, default,
-                MaceHead, (ClericFontPath, 1f, BesideProp.NextTile)),
+                OpenOffHand, (ClericFontPath, 1f, BesideProp.NextTile)),
             (26, "Assets/Art/Characters/Mage.fbx", MatchArt.TowerScale, MageAltAtlasPath,
                 StaffPath, null, RestClipName, SpellcastClipName, RestClipName, StaffQuarterTurn, default,
                 StaffTip, default),
@@ -847,14 +895,14 @@ namespace View.Editor
                 DaggerPath, DaggerPath, RestClipName, DualwieldSliceClipName, RestClipName,
                 default, default, Dagger, default),
             (35, EngineerPath, MatchArt.TowerScale, null,
-                WrenchPath, null, null, null, null, default, default,
-                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+                WrenchPath, null, RestClipName, UseItemClipName, RestClipName, default, default,
+                TurretMuzzle, (TurretPath, EngineerTurretScale, BesideProp.NextTile)),
             (36, EngineerPath, MatchArt.TowerScale, EngineerAltAAtlasPath,
-                WrenchPath, null, null, null, null, default, default,
-                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+                WrenchPath, null, RestClipName, UseItemClipName, RestClipName, default, default,
+                TurretMuzzle, (TurretPath, ArtificerTurretScale, BesideProp.NextTile)),
             (37, EngineerPath, MatchArt.TowerScale, EngineerAltBAtlasPath,
-                WrenchPath, null, null, null, null, default, default,
-                TurretMuzzle, (TurretPath, 1f, BesideProp.NextTile)),
+                WrenchPath, null, RestClipName, UseItemClipName, RestClipName, default, default,
+                TurretMuzzle, (TurretPath, MortarTurretScale, BesideProp.NextTile)),
             (38, NecromancerPath, MatchArt.CreepScale, null,
                 SkeletonScythePath, null, null, null, null, default, default, default, default),
             (39, SkeletonGolemPath, MatchArt.CreepScale, null,
