@@ -58,6 +58,10 @@ namespace Tests.PlayMode
 
         private const int FreeRow = 0;
 
+        private const int PlayerWidth = 1600;
+
+        private const int PlayerHeight = 900;
+
         /// <summary>
         /// Build mode puts three bars up. Each is asserted, because they are
         /// three panels built independently and a fix that reached only the one
@@ -235,6 +239,45 @@ namespace Tests.PlayMode
                 tooWide.ToString(),
                 Is.Empty,
                 "Names wider than the " + room.ToString("F0") + " units a rung has for one: " + tooWide);
+        }
+
+        [UnityTest]
+        public IEnumerator EveryRootOnTheRosterFitsThePaletteBar()
+        {
+            MatchRoot root = Playfield();
+
+            root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
+
+            var playerScreen = new RenderTexture(PlayerWidth, PlayerHeight, 24) { name = "Player screen" };
+
+            try
+            {
+                root.Palette.Document.panelSettings.targetTexture = playerScreen;
+
+                yield return null;
+                yield return null;
+
+                VisualElement bar = root.Palette.Document.rootVisualElement.Q<VisualElement>("Palette");
+                IReadOnlyList<Button> entries = root.Palette.Entries;
+                float barsRightEdge = bar.worldBound.xMax - bar.resolvedStyle.paddingRight;
+                Button last = entries[entries.Count - 1];
+
+                Assert.That(entries.Count, Is.EqualTo(root.Composing.Palette.Count), "One entry per root the round may build.");
+                Assert.That(
+                    bar.worldBound.width,
+                    Is.EqualTo(RuntimePanel.ReferenceResolution.x).Within(1f),
+                    "The premise: the bar is laid out at the width the player gives it.");
+                Assert.That(
+                    last.worldBound.xMax,
+                    Is.LessThanOrEqualTo(barsRightEdge),
+                    "The last entry, " + last.name + ", ends " + (last.worldBound.xMax - barsRightEdge).ToString("F0")
+                    + " units past the bar's padding; every root has to fit the bar or the next one added clips quietly.");
+            }
+            finally
+            {
+                playerScreen.Release();
+                Object.Destroy(playerScreen);
+            }
         }
 
         /// <summary>

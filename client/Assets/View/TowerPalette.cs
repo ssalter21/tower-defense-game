@@ -83,7 +83,7 @@ namespace View
         /// </summary>
         public const float BarHeight = 104f;
 
-        private const float EntryWidth = 208f;
+        private const float EntryWidth = 196f;
 
         private const float EntryHeight = 76f;
 

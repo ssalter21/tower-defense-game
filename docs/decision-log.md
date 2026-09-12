@@ -2440,3 +2440,23 @@ by a colour.
 
 EditMode **149 of 149** and PlayMode **175 of 175** after the scene was rebuilt with the new bindings, editor closed. Eleven committed frames redrawn under the signed art — the Engineer line posed and its turrets stepped, the Bishop's bolt off the hand, the Mage's orb above the hat — and the five default-framing and effects-roster frames byte-identical, since no changed row fires on those ticks. `check-docs` green on every claim.
 No golden moved; `content/` is untouched.
+
+## 12 September 2026 — the palette bar's ninth entry fits, and the number that fits it is a holding answer
+
+[#256](https://github.com/ssalter21/tower-defense-game/issues/256) took the roster from three buildable roots to nine, and the bar clipped the ninth: an entry was 208 units wide with `flexShrink` 0, and nine of them at 208 + 12 want 1980 of the 1872 a 1920-unit panel has between its margins. The Mage was cut off at the right edge on every chrome sheet since, reachable by the key `9` and not by the pointer. [#275](https://github.com/ssalter21/tower-defense-game/issues/275) recorded it rather than fixing it, because how nine entries lay out is a visual decision. Sam ruled in the [#285](https://github.com/ssalter21/tower-defense-game/issues/285) sitting on 12 September: shrink each entry so nine fit, with *"the UI will need a major pass anyway. Everything chrome is placeholder."*
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| **`TowerPalette`, an entry** | 208 wide, nine of them on a 1920-unit panel | **196 wide.** Nine at 196 + 12 want 1872 of the 1872 between the margins — the exact fit | Off shrink, wrap, scroll and widen — the wave bar's three shapes are drawn on the row directly above the palette on `docs/chrome/overflows/wave-bar.png`, so the sitting read what each costs off that sheet. Shrink is the one shape under which a **tenth** root turns a test red rather than clipping or hiding quietly. The number is tuned to today's nine roots; the offer stays 208 and the two-line rung is untouched, since the offer is its own width |
+
+### A tenth root turns a test red
+
+`ChromeLayoutTests.EveryRootOnTheRosterFitsThePaletteBar` asserts the last entry's right edge is inside the bar's padding, read off the bar's own resolved layout the way the rung test reads a rung rather than a copy of the constant. The palette's panel is pointed at a 1600×900 texture first — the size the built player runs at and the sheets are drawn at — because every panel matches *height*, so its width in units is the window's aspect ratio, and a batchmode editor's screen is 640 by 480, at which the bar is 1440 units wide and fits nothing. The premise is asserted before the fit: the bar is 1920 units wide. Against the shipped 208 the test read *Entry Mage ends 96 units past the bar's padding*.
+
+### The fourth holding answer
+
+[`docs/chrome/README.md`](chrome/README.md) names it beside the scroll view, the two-line rung and the header field: what keeps nine roots on the bar until the chrome is directed, and not a direction. The chosen arrangement from 17 August is still where the build phase is going.
+
+### What the numbers came to
+
+EditMode **149 of 149**, PlayMode **176 of 176** -- one more, `EveryRootOnTheRosterFitsThePaletteBar` -- and **the same 176 in a built player**, `run-player-tests.ps1`, 174 passed and the two parity tests skipped as they always are, editor closed throughout. The three baseline chrome sheets and the five in `docs/chrome/overflows/` redrawn with the ninth entry on the bar. `check-docs` green on every claim. `content/` is untouched and no golden moved.
