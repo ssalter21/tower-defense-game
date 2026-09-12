@@ -1,0 +1,31 @@
+{
+  "outDir": "docs/chrome/overflows",
+  "width": 1600,
+  "shots": [
+    { "id": "wave-bar-as-built", "label": "Wave 9: the bar as it ships, every creep the roster has in it", "state": "build", "wave": 9,
+      "notes": "The overflow #270 played, drawn through the capture. Seventeen boxes and the trailing empty one." },
+    { "id": "wave-bar-scrolls", "label": "Wave 9: the boxes scroll sideways", "state": "build", "wave": 9, "candidate": "WaveBarScrolls" },
+    { "id": "wave-bar-wraps", "label": "Wave 9: the boxes wrap onto a second line", "state": "build", "wave": 9, "candidate": "WaveBarWraps" },
+    { "id": "wave-bar-shrinks", "label": "Wave 9: every box at 128, type at 18", "state": "build", "wave": 9, "candidate": "WaveBarShrinks" },
+    { "id": "wave-bar-shrinks-to-fit", "label": "Wave 9: every box at 96, type at 13, the width that fits seventeen", "state": "build", "wave": 9, "candidate": "WaveBarShrinksToFit" },
+
+    { "id": "offer-as-built", "label": "Wave 9: a Bishop's ladder as it ships, offering the Consecration for a token", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop",
+      "notes": "The longest rung label on the surface, overflowing the 208-wide offer on both sides." },
+    { "id": "offer-fits-its-longest-rung", "label": "Wave 9: the offer sizes itself to its longest rung", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "OfferFitsItsLongestRung" },
+    { "id": "offer-is-wider", "label": "Wave 9: the offer at 336, still centred on the hex", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "OfferIsWider" },
+    { "id": "offer-prices-beneath-the-name", "label": "Wave 9: each rung two lines, the price beneath the name", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "OfferPricesBeneathTheName" },
+
+    { "id": "tokens-w9-in-the-header", "label": "Wave 9, tokens held: a count in the header after the gold", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensInTheHeader" },
+    { "id": "tokens-w9-as-pips", "label": "Wave 9, tokens held: three pips in the header, held, spent, to come", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensAsPipsInTheHeader" },
+    { "id": "tokens-w9-at-the-ladder", "label": "Wave 9, tokens held: the count on the open ladder", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensAtTheLadder" },
+
+    { "id": "tokens-w9-spent-in-the-header", "label": "Wave 9, the Consecration bought this round: the count in the header with one spent", "state": "build-placed", "wave": 9, "place": "Cleric", "upgrade": "Bishop, Consecration", "candidate": "TokensInTheHeader" },
+    { "id": "tokens-w9-spent-as-pips", "label": "Wave 9, the Consecration bought this round: the pips with one spent", "state": "build-placed", "wave": 9, "place": "Cleric", "upgrade": "Bishop, Consecration", "candidate": "TokensAsPipsInTheHeader" },
+
+    { "id": "tokens-w2-as-built", "label": "Wave 2, no token yet: a Bishop standing, and its ladder opens on nothing", "state": "build-placed", "wave": 2, "place": "Cleric", "upgrade": "Bishop",
+      "notes": "The moment the ticket names: a line stops and nothing on screen says why." },
+    { "id": "tokens-w2-in-the-header", "label": "Wave 2, no token yet: the count in the header", "state": "build-placed", "wave": 2, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensInTheHeader" },
+    { "id": "tokens-w2-as-pips", "label": "Wave 2, no token yet: the pips in the header", "state": "build-placed", "wave": 2, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensAsPipsInTheHeader" },
+    { "id": "tokens-w2-at-the-ladder", "label": "Wave 2, no token yet: a line at the Bishop's hex saying why the ladder stops", "state": "build-placed", "wave": 2, "place": "Cleric", "upgrade": "Bishop", "candidate": "TokensAtTheLadder" }
+  ]
+}

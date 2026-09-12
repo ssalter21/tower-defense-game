@@ -1,0 +1,31 @@
+# The prop moved to a neighbour nothing is standing on.
+#
+# THE QUESTION. Whether a prop that moves around its tower to find room reads
+# as the tower's prop, or as furniture that happens to be near it. Issue #282,
+# question 4.
+#
+# WHAT THIS SPELLS, AND WHAT IT DOES NOT BUILD. The candidate the ticket names
+# is a RULE: pick a free neighbour. Nothing in the view knows what stands on a
+# neighbouring tile, so the rule is not built here; what this file spells is
+# the rule's OUTCOME for docs/frames/beside-props.txt, worked out by hand for
+# each of the three rows. A signed answer of "free neighbour" is a view change
+# -- BesideProp would need the board -- and that is the sitting's to weigh
+# against a picture of what it would look like.
+#
+# THE OFFSETS ARE IN THE FRAME THE TOWER RESTS IN, sideways then forward, in
+# metres, and were computed from RoutePath.FacingFrom the same way the landing
+# cells in beside-props.txt were:
+#
+#     the Mortar        (9, 3)  -> (10, 2)   -1.732, -1.0    behind and to its left
+#     the Consecration  (13, 3) -> (14, 2)   -1.0, -1.732    behind and to its left
+#     the Overgrowth    (12, 9) -> (13, 10)   1.0, -1.732    behind and to its right
+#
+# "Behind" is away from the corridor, which is the side a prop can move to
+# without ever standing on the route.
+
+label     the prop on a neighbour nothing stands on
+question  whether a prop that moves to find room still reads as the tower's
+
+stand  37  -1.732,-1
+stand  25  -1,-1.732
+stand  30  1,-1.732
