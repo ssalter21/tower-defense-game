@@ -66,7 +66,7 @@ $declaration = @'
   4  client/Assets/Tests/PlayMode/BoardSceneryViewTests.cs
  18  client/Assets/Tests/PlayMode/BuildingTests.cs
  11  client/Assets/Tests/PlayMode/CameraRigTests.cs
-  5  client/Assets/Tests/PlayMode/ChromeLayoutTests.cs
+  6  client/Assets/Tests/PlayMode/ChromeLayoutTests.cs
   9  client/Assets/Tests/PlayMode/HexFloorTests.cs
   7  client/Assets/Tests/PlayMode/HexPickingTests.cs
   5  client/Assets/Tests/PlayMode/HorizonTests.cs
