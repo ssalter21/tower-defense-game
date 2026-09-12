@@ -101,14 +101,13 @@ and it is a plain currency: it goes up on those three rounds and it is spent on 
 [13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung), for the building it recalls: a run is handed a capstone and sets
 it on a tower. The code's name for it is `CapstoneToken`, and the CLI still prints `1 capstone token`;
 only what a player reads is respelled. **And it banks** — an unspent capstone is held until something spends
-it, so three may be set at round 9 and the schedule is a budget rather than a deadline. The code had done that
-since 6 September; it was signed on
+it, so three may be set at round 9 and the schedule is a budget rather than a deadline — signed on
 [13 September](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code).
 
 **Scarcity is the grant schedule rather than the price.** Five of the nine capstones change neither the damage
 roll nor the bodies a shot hits, so the cost rule would price them identically to the rung below; that is
-accepted rather than corrected. What makes a token a decision is that there are three and nine places to put
-one. The token has no income, no exchange rate and one sink, so it does not reopen the one-purse question.
+accepted rather than corrected. What makes a capstone a decision is that there are three and nine places to
+put one. It has no income, no exchange rate and one sink, so it does not reopen the one-purse question.
 
 *(designed, not built)* — **the capacity gate is a separate thing and it is not decided.** The idea was that
 the same three rounds also widen the wave: two more slots and ten more count each time.

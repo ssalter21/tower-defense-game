@@ -15,12 +15,15 @@ namespace View.Editor
     /// <b>Why more than one, when the game draws exactly one.</b>
     /// <see cref="BesideProp"/> holds a single model and
     /// <see cref="TowerView"/> places a single instance of it, which is the
-    /// whole of the Artificer's problem: <c>docs/roster.md</c> puts an
-    /// <c>ammo_crate</c> beside his turret, one socket holds one prop, and the
-    /// turret wins because it is where the shell leaves from — so that rung is
-    /// told from the Engineer by colour alone. Three things could answer that
-    /// and two of them are two props on one tile. A candidate that cannot be
-    /// drawn cannot be put up for signature.
+    /// whole of the Artificer's problem as it stood: <c>docs/roster.md</c> put
+    /// an <c>ammo_crate</c> beside his turret, one socket holds one prop, and
+    /// the turret wins because it is where the shell leaves from — so that rung
+    /// was told from the Engineer by colour alone. Three things could answer
+    /// that and two of them are two props on one tile. A candidate that cannot
+    /// be drawn cannot be put up for signature. The answer taken on 11 September
+    /// 2026 was the third — the one turret at 1.25 — so the crate is gone from
+    /// the page; the group stays because the next rung wanting two things will
+    /// ask the same question.
     /// </para>
     /// <para>
     /// <b>And it is still one prop by the time the view sees it.</b> Several
