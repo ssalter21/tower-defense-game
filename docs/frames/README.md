@@ -144,7 +144,7 @@ And one that is **not** a frame of the recorded match:
   used to be washed in one colour as well; that came off on 7 September 2026,
   so what a slow looks like here is the Shield Wall's circle and nothing on the
   body. Captured with `-Distance 20 -Width 1600` against
-  [`effects-roster.txt`](effects-roster.txt), which is the shipped roster with a
+  `effects-roster.txt`, which is the shipped roster with a
   bubble added to two of its rows — the recorded wave sends Minions and Skeleton
   Scouts against Archers and Mages, and not one of those four rows authors a
   bubble that lasts. The Mage's splash is damage and lands instantly, and the
@@ -164,7 +164,7 @@ And one that is **not** a frame of the recorded match:
 And three that are frames of the recorded board with **somebody else's defense
 standing on it** — the twelve rows of the Knight, Barbarian, Paladin and
 Engineer lines, out of
-[`four-lines.txt`](four-lines.txt), all at `-Width 1600`. **Three of the four are the same shape now.** Issue #263 signed a
+`four-lines.txt`, all at `-Width 1600`. **Three of the four are the same shape now.** Issue #263 signed a
 ring for the Shield Wall's slow, a shock across the ground for the Slam, a glow
 on every tower the Blessing reaches and a burst at the radius the Mortar landed
 in; Sam replaced the first three with one flat translucent circle at the reach
@@ -217,7 +217,7 @@ every one of them by `ImportedArtTests`, which logs the distance, and asserted
 on this board by `MatchViewTests`.
 
 And three of the recorded board with the **six rows of the Archer and Rogue
-lines** standing on it, out of [`pierce-lines.txt`](pierce-lines.txt), all at
+lines** standing on it, out of `pierce-lines.txt`, all at
 `-Width 1600`. **Every shape in them is a placeholder and none of it is
 signed.** What issue #264 signed is two shapes — the Overwatch's single shot
 drawing a tracer the length of the leg it crossed, and the Fan of Knives
@@ -266,7 +266,7 @@ row's anchor was found under, which is where that measurement comes from; which
 hand the capstone *should* throw from is on `roster.md` as a question.
 
 And four of the recorded board with the **nine rows of the Mage, Cleric and
-Druid lines** standing on it, out of [`magic-lines.txt`](magic-lines.txt), all at
+Druid lines** standing on it, out of `magic-lines.txt`, all at
 `-Width 1600`. **Every colour, size and duration in them is a placeholder and
 none of those is signed.** What issue #265 signed is four shapes — a bolt leaving the tome or the
 staff tip, the Consecration's light on the ground, the Overgrowth's roots on
@@ -323,7 +323,7 @@ Consecration fire from the head of a mace**, because the tier-2 line names
 tome's hand — #259's open question, visible in these frames.
 
 And four of the recorded board with a **wave of the six creep rows that carry
-an aura or a pool** walking it, out of [`creep-auras.txt`](creep-auras.txt), all
+an aura or a pool** walking it, out of `creep-auras.txt`, all
 at `-Width 1600`. **Every colour, size, duration and — unlike the ten signed
 shapes above — every *shape* in them is a placeholder, and none of it is
 signed.** Issue #266 asked for four creep effects leaving the staff, the scythe,

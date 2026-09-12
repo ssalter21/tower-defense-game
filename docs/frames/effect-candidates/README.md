@@ -54,9 +54,9 @@ file somebody actually chose. Sam picked it off these three frames:
 
 | Candidate | Alpha | What it was trying to be | |
 |---|---|---|---|
-| [`aura-alpha-light.txt`](aura-alpha-light.txt) | 0.15 | the floor barely tinted | rejected — the three auras merge into one haze and stop being separable |
-| [`aura-alpha-shipped.txt`](aura-alpha-shipped.txt) | 0.28 | the value nobody chose | rejected — the cold circles read, the Blessing's gold does not |
-| [`aura-alpha-heavy.txt`](aura-alpha-heavy.txt) | 0.45 | the circle reads first | **signed** |
+| `aura-alpha-light.txt` | 0.15 | the floor barely tinted | rejected — the three auras merge into one haze and stop being separable |
+| `aura-alpha-shipped.txt` | 0.28 | the value nobody chose | rejected — the cold circles read, the Blessing's gold does not |
+| `aura-alpha-heavy.txt` | 0.45 | the circle reads first | **signed** |
 
 **Two circles overlapping is what decided it, not one on empty floor.** A single
 circle reads at almost any alpha. What the heavy end risked was doing what the
@@ -82,17 +82,17 @@ one drawn through the real match at the framing the built player uses.
 
 | Bracket | Candidates | Signed |
 |---|---|---|
-| the thrown knife | [`knife-as-shipped`](knife-as-shipped.txt) 0.55 m . [`knife-half-again`](knife-half-again.txt) 0.85 m . [`knife-double`](knife-double.txt) 1.1 m . [`knife-dark`](knife-dark.txt) dark blade | **0.85 m, pale grey** -- the answer was a size, not a contrast |
-| where a ground effect stops | [`reach-clipped`](reach-clipped.txt) . [`reach-unclipped`](reach-unclipped.txt) . [`reach-shrunk`](reach-shrunk.txt) | **clipped at the rim** -- `MatchTuning.GroundEffectsClipToBoard` |
+| the thrown knife | `knife-as-shipped` 0.55 m . `knife-half-again` 0.85 m . `knife-double` 1.1 m . `knife-dark` dark blade | **0.85 m, pale grey** -- the answer was a size, not a contrast |
+| where a ground effect stops | `reach-clipped` . `reach-unclipped` . `reach-shrunk` | **clipped at the rim** -- `MatchTuning.GroundEffectsClipToBoard` |
 | the Consecration's duty | 26 / 15 / 8 ticks of 30 | **always on.** The premise rejected, not a value picked -- the candidates are deleted, there is no cycle left to photograph |
 | the Consecration's radius | three / two / one hex, as unit tables | **two hexes**, in `content/units.txt`. A balance change, so the fixtures went with the question |
-| the magic bolt | [`bolt-as-shipped`](bolt-as-shipped.txt) . [`bolt-half-again`](bolt-half-again.txt) . [`bolt-double`](bolt-double.txt) . [`bolt-dark`](bolt-dark.txt) | **nothing -- parked.** Kept as the record that a size and a colour were tried |
-| the mortar shell | [`shell-as-shipped`](shell-as-shipped.txt) . [`shell-pale`](shell-pale.txt) . [`shell-warm`](shell-warm.txt) . [`shell-bigger`](shell-bigger.txt) | **nothing -- parked**, for the same reason |
+| the magic bolt | `bolt-as-shipped` . `bolt-half-again` . `bolt-double` . `bolt-dark` | **nothing -- parked.** Kept as the record that a size and a colour were tried |
+| the mortar shell | `shell-as-shipped` . `shell-pale` . `shell-warm` . `shell-bigger` | **nothing -- parked**, for the same reason |
 
 **Where a ground effect may reach was signed nowhere before this.** What the aura
 shapes *do* is [`docs/roster.md`](../../roster.md)'s and was already signed; that
 they ran off the edge of the board and hung over the background was a consequence
-nobody chose. [`rim-emitters.txt`](../rim-emitters.txt) is the only defense on the
+nobody chose. `rim-emitters.txt` is the only defense on the
 board that stands an aura on a rim -- with one standing nowhere near one, as the
 control, so a candidate that moved the control was doing something nobody asked.
 

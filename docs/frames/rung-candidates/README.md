@@ -35,7 +35,7 @@ precisely what it drew before. See [`UnitArtFile.cs`](../../../client/Assets/Edi
 
 ## The board
 
-All five rows stand on [`../underserved-rungs.txt`](../underserved-rungs.txt), against the recorded
+All five rows stand on `../underserved-rungs.txt`, against the recorded
 map, wave and seed. The tier-1 Engineer is on it and is not a question: *"heavier"* is a comparison, and
 the thing the Mortar's turret has to be heavier **than** is the one standing beside him — so rows 35, 36
 and 37 are within three cells of each other and one frame carries all three turrets at one camera.
