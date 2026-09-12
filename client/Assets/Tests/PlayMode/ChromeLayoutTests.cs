@@ -268,6 +268,10 @@ namespace Tests.PlayMode
                     Is.EqualTo(RuntimePanel.ReferenceResolution.x).Within(1f),
                     "The premise: the bar is laid out at the width the player gives it.");
                 Assert.That(
+                    last.worldBound.yMin,
+                    Is.EqualTo(entries[0].worldBound.yMin).Within(1f),
+                    "Every entry is on the one row the bar has; a second row would fall below it.");
+                Assert.That(
                     last.worldBound.xMax,
                     Is.LessThanOrEqualTo(barsRightEdge),
                     "The last entry, " + last.name + ", ends " + (last.worldBound.xMax - barsRightEdge).ToString("F0")
@@ -275,8 +279,9 @@ namespace Tests.PlayMode
             }
             finally
             {
+                root.Palette.Document.panelSettings.targetTexture = null;
                 playerScreen.Release();
-                Object.Destroy(playerScreen);
+                Object.DestroyImmediate(playerScreen);
             }
         }
 
