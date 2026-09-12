@@ -27,8 +27,9 @@ of the branch below me".
 3. **Rebase.** Record `git rev-parse HEAD`. A stacked base is rewritten every time its own PR syncs, so a plain
    `git rebase origin/<base>` would replay the base's *old* commits as if they were this branch's. Replay only
    this branch's own commits:
-   - With a PR: `N=$(gh pr view --json commits --jq '.commits | length')`, then
-     `git rebase --onto origin/<base> HEAD~N`.
+   - With a PR: two separate commands — `gh pr view --json commits --jq '.commits | length'` to get N, then
+     `git rebase --onto origin/<base> HEAD~<N>` with the number written in. The worktree guard refuses a git
+     command that carries a `$(...)` substitution.
    - Without a PR: `git log --oneline origin/<base>..HEAD` first. If every line is a commit made in this
      worktree, `git rebase origin/<base>`. If not, the branch was cut from a since-rewritten tip: count the
      commits that are yours and use `--onto` as above.
