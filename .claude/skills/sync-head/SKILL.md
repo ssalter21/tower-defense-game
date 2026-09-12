@@ -13,6 +13,16 @@ of the branch below me".
 
 ## Steps
 
+0. **Stand in a stack worktree.** `git branch --show-current`. If it is `main`, this checkout is the floor the
+   stack sits on, not a branch in it: do not rebase it, and do not fall through to `sync-main` — Sam ran
+   `sync-head` because he wants the top of the stack. Find the newest open PR's head
+   (`gh pr list --state open --limit 1 --json headRefName --jq '.[0].headRefName'`), then the worktree that
+   holds it: in `git worktree list --porcelain`, the `worktree <path>` line above `branch refs/heads/<head>`.
+   Run every step below from that path, by absolute path. Do not check the branch out here — a branch lives
+   in one worktree only, and `--ignore-other-worktrees` strips it from the sibling, whose index then shows
+   phantom staged deletions. If no worktree holds it, add one:
+   `git worktree add .claude/worktrees/<head without its worktree- prefix> <head>`, and say so in the report.
+
 1. **Find the base.** Three cases, checked in order:
    - This branch has an open PR: `gh pr view --json baseRefName --jq .baseRefName`. GitHub retargets a PR when
      its base merges, so this stays right as the stack shrinks.
@@ -24,7 +34,12 @@ of the branch below me".
 
 2. **Clear the tree.** sync-main step 2, with the stash tagged `sync-head`.
 
-3. **Rebase.** Record `git rev-parse HEAD`. A stacked base is rewritten every time its own PR syncs, so a plain
+3. **Rebase.** Record `git rev-parse HEAD`. First catch up with this branch's own remote:
+   `git merge --ff-only origin/<this-branch>` — a PR merged *into* this branch (the one stacked above it) moves
+   origin ahead of the local checkout. Then `git merge-base --is-ancestor origin/<base> HEAD`; if that is true
+   the branch already sits on its base and there is nothing to rebase — go to step 5.
+
+   Otherwise: a stacked base is rewritten every time its own PR syncs, so a plain
    `git rebase origin/<base>` would replay the base's *old* commits as if they were this branch's. Replay only
    this branch's own commits:
    - With a PR: two separate commands — `gh pr view --json commits --jq '.commits | length'` to get N, then
@@ -36,7 +51,8 @@ of the branch below me".
 
 4. **Conflicts and restore.** sync-main steps 4 and 5.
 
-5. **Report.** sync-main step 6, plus the base branch and the PR it was read from.
+5. **Report.** sync-main step 6, plus the base branch and the PR it was read from, and — if step 0 hopped —
+   which worktree the work happened in.
 
 ## Rules
 
