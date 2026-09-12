@@ -90,20 +90,22 @@ load-bearing half of rows 4 and 5 and is the reason those two stopped being judg
 not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
 somebody sits down with the build.
 
-**What the gate rounds' remaining loose ends are, and what the defense currency is called.** Two of the four
-readings here were settled on
+**What the gate rounds' one remaining loose end is: the capacity schedule.** Two of the four readings here
+were settled on
 [5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
 **a grant is one token**, which is what makes it three capstones a run, and **a capstone costs the token and no
 gold** — charging gold on top would make the token a permit rather than a price, which is a different mechanic
 with a different failure mode. Both are now rules in [the roster](roster.md#what-things-cost) rather than
-readings.
+readings. The other two were signed on
+[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung): **the currency is a capstone**, and
+[**a capstone banks**](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code) — the code had banked since 6 September, and the docs caught up.
 
-Two are still open, and both are cheap to move while nothing is built. **The currency has no name**, and
-everything player-facing here gets named deliberately — gold took two goes. **Whether a token banks** leans
-toward yes, since a token that must be spent on the round it arrives forces the decision at the moment the run
-knows least. A third is open for a different reason: **the capacity schedule** — the opening pair of two slots
-and ten count, and the 2/4/6/8 and 10/20/30/40 steps — was deleted on 13 August and only the token half came
-back, so it is a design waiting on a playtest rather than a reading waiting on a signature.
+What is still open is **the capacity schedule** — the opening pair of two slots and ten count, and the 2/4/6/8
+and 10/20/30/40 steps — deleted on 13 August, with only the token half coming back. It is a design waiting on
+a playtest, and since
+[13 September](decision-log.md#13-september-2026-later-again--the-capacity-gate-waits-on-the-people-playtest-and-the-run-this-ticket-asked-for-is-not-played) the playtest has a name: the people playtest, the playtestable build Sam
+is scoping alongside the balance sweep. Not a run on a branch — one was offered on #287 and declined as
+throwaway — so "waiting on a playtest" points at a thing that is coming rather than at nothing.
 
 **Whether the wave is always on screen, or behind a control.** The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently

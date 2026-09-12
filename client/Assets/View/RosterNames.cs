@@ -98,19 +98,29 @@ namespace View
         public static string Gold(int gold) =>
             gold.ToString(CultureInfo.InvariantCulture) + " gold";
 
-        /// <summary>What a capstone edge costs, in words: <c>1 capstone token</c>.</summary>
+        /// <summary>What a capstone edge costs, in words: <c>1 capstone</c>.</summary>
         /// <remarks>
+        /// <para>
         /// Beside <see cref="Gold"/> for the reason that is here: it is
-        /// player-facing wording, and a second surface that showed a token would
-        /// otherwise invent its own name for it. It takes no amount because
-        /// there is none to take — a capstone edge costs one token and there is
-        /// no column anywhere that could make it another number.
+        /// player-facing wording, and a second surface that showed the currency
+        /// would otherwise invent its own name for it. It takes no amount because
+        /// there is none to take — a capstone edge costs one and there is no
+        /// column anywhere that could make it another number.
+        /// </para>
+        /// <para>
+        /// <b>The currency is a capstone.</b> Sam named it on 13 September 2026
+        /// (#287), for the building the word recalls: a run is handed a capstone
+        /// and sets it on a tower, so one capstone buys one capstone rung. The
+        /// code keeps <c>CapstoneToken</c> as its own name for the same thing,
+        /// because nothing a player reads is spelled there and renaming the
+        /// simulation's identifiers buys nobody anything.
+        /// </para>
         /// </remarks>
-        public static string CapstoneToken() => "1 capstone token";
+        public static string CapstoneToken() => "1 capstone";
 
         /// <summary>
-        /// A run's standing count of capstone tokens, in words:
-        /// <c>Capstone tokens  2 held  ·  1 spent  ·  0 to come</c>.
+        /// A run's standing count of capstones, in words:
+        /// <c>Capstones  2 held  ·  1 spent  ·  0 to come</c>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -122,15 +132,16 @@ namespace View
         /// (<see cref="Run.CapstoneTokenRounds"/>) and this is a count over it.
         /// </para>
         /// <para>
-        /// The wording is the mock's. #285 signed the placement -- a fourth
-        /// header field -- on 11 September 2026 and said nothing about the
-        /// words, which the mock had called placeholders; what a token is
-        /// called on screen is a word a player reads, so they are Sam's to
-        /// respell, and this is the one place they are spelled.
+        /// The noun is signed and the rest is the mock's. #285 signed the
+        /// placement -- a fourth header field -- on 11 September 2026 and said
+        /// nothing about the words; #287 named the currency a capstone on
+        /// 13 September (see <see cref="CapstoneToken"/>). <i>Held · spent ·
+        /// to come</i> is still the mock's wording, a holding answer like the
+        /// rest of the chrome, and this is the one place it is spelled.
         /// </para>
         /// </remarks>
         public static string CapstoneTokens(int held, int spent, int toCome) =>
-            "Capstone tokens  " + held.ToString(CultureInfo.InvariantCulture)
+            "Capstones  " + held.ToString(CultureInfo.InvariantCulture)
             + " held  ·  " + spent.ToString(CultureInfo.InvariantCulture)
             + " spent  ·  " + toCome.ToString(CultureInfo.InvariantCulture)
             + " to come";
