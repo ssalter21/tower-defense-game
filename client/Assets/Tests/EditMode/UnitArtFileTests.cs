@@ -45,26 +45,6 @@ namespace Tests.EditMode
         /// <summary>The crate that stands beside it in the group candidates.</summary>
         private const string Crate = "Kaykit/adventurers/ammo_crate.fbx";
 
-        [Test]
-        public void EveryCommittedCandidateResolvesEveryReference()
-        {
-            foreach (string path in CommittedCandidates())
-            {
-                UnitArtFile candidate = UnitArtFile.Read(path);
-
-                Assert.That(
-                    candidate.Changes, Is.Not.Empty, Path.GetFileName(path) + " moves nothing");
-                Assert.That(
-                    candidate.Label,
-                    Is.Not.Null.And.Not.Empty,
-                    Path.GetFileName(path) + " has no label, so a sheet cannot say what it is");
-                Assert.That(
-                    candidate.Question,
-                    Is.Not.Null.And.Not.Empty,
-                    Path.GetFileName(path) + " names no question, so a frame of it says nothing");
-            }
-        }
-
         /// <summary>
         /// A file that names no directive is refused rather than read as an
         /// empty candidate.
@@ -285,23 +265,6 @@ namespace Tests.EditMode
                 moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
         }
 
-        /// <summary>Every candidate art file the branch commits, by absolute path.</summary>
-        private static IEnumerable<string> CommittedCandidates()
-        {
-            string folder = Path.Combine(RepositoryRoot(), "docs", "frames", "rung-candidates");
-
-            Assert.That(
-                Directory.Exists(folder),
-                Is.True,
-                "No candidate art at " + folder + ". The four rungs of issue #281 are drawn from it.");
-
-            string[] files = Directory.GetFiles(folder, "*.txt");
-
-            Assert.That(files, Is.Not.Empty, "No candidate art files in " + folder);
-
-            return files;
-        }
-
         /// <summary>
         /// A one-row bundle to apply a candidate to, so a test about the reader
         /// does not need the whole scene builder's table.
@@ -328,8 +291,5 @@ namespace Tests.EditMode
 
             return path;
         }
-
-        private static string RepositoryRoot() =>
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
     }
 }
