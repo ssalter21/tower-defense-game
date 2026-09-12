@@ -40,6 +40,14 @@ tickets before it, and merges bottom-up without waiting for the effort to finish
 whole shape but only once everything in it is done, and fourteen ticket PRs cut from main each re-show the
 others' churn.
 
+**A small change that is not a ticket goes off the stack.** A skill, a doc fix, a tooling tweak has no reason
+to queue behind the effort it is unrelated to, and a stack buries it: a PR merged into the top of a five-PR
+stack is "merged" on GitHub and still five merges from the default branch. The off-stack lane is cut from
+`origin/main` and opens its PR with `--base main`. It is allowed when all three hold: it is one small PR and not
+a ticket in an effort; it touches no file any open stack PR touches (`gh pr diff <n> --name-only` per open PR);
+and nothing in the stack waits on it. After it merges, the bottom PR of the stack runs `/sync-main` in its
+worktree, so the stack is never read against a stale main. `/implement` does not choose this lane; a person does.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a new issue: `gh issue create --title "<title>" --label "effort:<slug>,type:<kind>" --body "<body>"`.
