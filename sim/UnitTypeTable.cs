@@ -890,7 +890,7 @@ namespace Sim
 
             if (layout >= 6)
             {
-                bounty = ReadBounty(source, line, fields[31], role, maxHp);
+                bounty = ReadBounty(source, line, fields[31], role, maxHp, cost);
             }
 
             return new UnitType(
@@ -933,11 +933,15 @@ namespace Sim
         /// column in this file is refused by.
         /// </para>
         /// <para>
-        /// <b>What is deliberately not checked is the row's own cost.</b> The
-        /// Grave Robber's twelve is half its twenty-four and
-        /// <c>docs/roster.md</c> argues that half; whether a body may ever be
-        /// worth more dead than it cost to send is a design question nobody has
-        /// taken, and refusing it here would take it.
+        /// <b>A body is never worth more dead than it cost to send.</b> The
+        /// money is minted into the one purse, so a bounty past the row's cost
+        /// would make killing the field's wave a better income than the round's
+        /// own, and nothing downstream can see it: the return band is a leak
+        /// rate, the sweep's stand-in sends no paying row, and neither was taught
+        /// to -- ruled on 12 September 2026, in <c>docs/decision-log.md</c>.
+        /// This line is the whole fence. Equal is allowed: the ceiling says
+        /// <i>not more than</i>, and how far under it a row sits is that row's
+        /// argument in <c>docs/roster.md</c>, not the table's.
         /// </para>
         /// </remarks>
         private static int ReadBounty(
@@ -945,7 +949,8 @@ namespace Sim
             int line,
             string field,
             UnitRole role,
-            int maxHp)
+            int maxHp,
+            int cost)
         {
             int bounty = DataText.IntegerInRange(source, line, "the bounty", field, 0, int.MaxValue);
 
@@ -970,6 +975,20 @@ namespace Sim
                     line,
                     "has no health pool and pays a bounty. A payment is made where a body is killed, and "
                     + "a unit with no pool cannot be damaged at all.");
+            }
+
+            if (bounty > cost)
+            {
+                throw new ContentException(
+                    source,
+                    line,
+                    "pays a bounty of "
+                    + bounty.ToString(CultureInfo.InvariantCulture)
+                    + " and costs "
+                    + cost.ToString(CultureInfo.InvariantCulture)
+                    + " to send. A body is never worth more dead than it cost: the bounty is minted "
+                    + "into the one purse, and a row that pays out more than it took in makes killing "
+                    + "the field's wave a better income than the round's own.");
             }
 
             return bounty;

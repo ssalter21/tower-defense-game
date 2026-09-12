@@ -125,9 +125,10 @@ the Werewolf's 2860 effective health — the Villager's own 1800 is never touche
 ahead of the damage — so 11 gold buys what the rule prices at 18. The Werewolf's own 18 is a price nobody
 pays, because nothing sends one. That gap is held open rather than closed, exactly as the Mage's splash and
 the Vampire's shield are: cost is derived and is never a lever, and a coefficient for a transforming pair is
-the sweep's to derive. **Whether the pair ought to be worth both pools is a design question and not this
-one** — it means moving the trigger onto the death — and it is
-[open](../open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death).
+the sweep's to derive. **Whether the pair ought to be worth both pools was a design question and not this
+one** — it means moving the trigger onto the death — and Sam signed the trigger as built on 12 September 2026:
+it stays on the first damage, the property it buys being the point of the row
+([the decision log](../decision-log.md#12-september-2026-later--the-villagers-trigger-stays-on-the-first-damage-and-the-pair-is-worth-what-that-trigger-makes-it)).
 
 ## Where it lives
 

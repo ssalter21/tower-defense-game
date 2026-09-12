@@ -49,6 +49,13 @@ public static class TheSweep
     private const int CostField = 15;
 
     /// <summary>
+    /// Where the bounty column sits, zeroed alongside the cost: a row that
+    /// pays more than it costs is refused by the table before the sweep sees
+    /// it, and the refusal this fixture exists to reach is the sweep's own.
+    /// </summary>
+    private const int BountyField = 31;
+
+    /// <summary>
     /// A sweep over the committed content, against the canned field the harness
     /// ships with.
     /// </summary>
@@ -215,6 +222,12 @@ public static class TheSweep
             }
 
             fields[CostField] = "0";
+
+            if (fields.Length > BountyField)
+            {
+                fields[BountyField] = "0";
+            }
+
             lines[index] = string.Join("   ", fields);
             edited++;
         }
