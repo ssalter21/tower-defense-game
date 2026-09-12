@@ -260,6 +260,27 @@ public class BountyTests
     }
 
     [Fact]
+    public void A_body_may_not_be_worth_more_dead_than_it_cost_to_send()
+    {
+        // The one fence on the column, ruled on 12 September 2026: the money
+        // is minted into the one purse, so a row paying out more than it took
+        // in would make killing the field's wave a better income than the
+        // round's own -- and nothing downstream can see it, because the return
+        // band is a leak rate and the sweep's stand-in sends no paying row.
+        // The fixture row costs twelve, so thirteen is refused and twelve is
+        // not: the ceiling says "not more than", and how far under it a row
+        // sits is that row's argument in docs/roster.md rather than the table's.
+        ContentException over = Assert.Throws<ContentException>(
+            () => UnitTypeTable.Parse("bounty fixtures", PlantedText.Replace(OneRowThatPays, PaysTwo, PaysThirteenAndCostsTwelve)));
+
+        Assert.Contains("pays a bounty of 13 and costs 12 to send", over.Message, StringComparison.Ordinal);
+
+        Assert.Equal(
+            12,
+            UnitTypeTable.Parse("bounty fixtures", PlantedText.Replace(OneRowThatPays, PaysTwo, PaysTwelveAndCostsTwelve)).ById(1).Bounty);
+    }
+
+    [Fact]
     public void What_the_kills_paid_is_the_fourth_line_of_what_a_wave_pays_a_purse()
     {
         // Where the money lands. A round meets K opponents twice over, and only
@@ -350,6 +371,12 @@ public class BountyTests
 
     private const string NoPoolAndPaysTwo =
         "unit  1 payer  moving 0   10 0    0  0 0 0   0   none    0 4 12 none   none     0 0 1 none none none 0 none 0 0 none none 0  2";
+
+    private const string PaysThirteenAndCostsTwelve =
+        "unit  1 payer  moving 400 10 0    0  0 0 0   0   none    0 4 12 none   armoured 0 0 1 none none none 0 none 0 0 none none 0  13";
+
+    private const string PaysTwelveAndCostsTwelve =
+        "unit  1 payer  moving 400 10 0    0  0 0 0   0   none    0 4 12 none   armoured 0 0 1 none none none 0 none 0 0 none none 0  12";
 
     /// <summary>
     /// Four hundred gold of Grave Robbers, which is the column the roster's own
