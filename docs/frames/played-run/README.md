@@ -39,7 +39,11 @@ aura became one flat translucent circle and the wash on a modified body came off
 — see [the decision log](../../decision-log.md). So the spikes, the hex plates
 and the haste rings in `resolution.png` are shapes the game no longer draws, and
 the plainly-blue slowed bodies in the two slow frames are a wash that no longer
-exists.
+exists. Two more captions have dated the same way: `build-phase.png`'s bar no
+longer runs off the right edge, because since 11 September the boxes scroll,
+and `capstone-consecration.png`'s disc is no longer three hexes, flickering,
+and off the south edge — since 7 September it reaches two, is always on, and is
+clipped where the board ends.
 
 **They are kept and not re-captured, and that is the rule below rather than an
 oversight.** A photograph of a session is dated by the session; re-capturing one

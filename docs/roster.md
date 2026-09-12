@@ -50,15 +50,21 @@ signing **damage, cooldown and how many bodies it hits**.
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
-**The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone token
-at rounds 3, 6 and 9** — three a run against nine capstones — and the token is the whole price. **A capstone
-row therefore carries no gold price**: it has a `cost` column like every other row, nothing ever charges it,
-and `show-ladder` prints `1 capstone token` where it prints a number of gold on every other edge. That
-retires the shallow-U exemption this section used to reserve: an exemption to a gold rule, for a thing gold
-does not buy, is a clause about nothing.
+**The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone at
+rounds 3, 6 and 9** — three a run against nine capstone rungs — and that capstone is the whole price. **The
+currency is called a capstone** where a player reads it — the offer says `1 capstone`, the header
+`Capstones N held · N spent · N to come` — and `CapstoneToken` in the code, signed on
+[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung).
+**A capstone row therefore carries no gold price**: it has a `cost` column like every other row, nothing ever
+charges it, and `show-ladder` prints `1 capstone token` where it prints a number of gold on every other edge.
+That retires the shallow-U exemption this section used to reserve: an exemption to a gold rule, for a thing
+gold does not buy, is a clause about nothing.
 
-> **The token is a currency, not a gate.** It goes up on those three rounds and it is spent on a capstone
-> edge; that is the whole mechanic. The gates were deleted on
+> **The capstone is a currency, not a gate, and it banks.** It goes up on those three rounds, an unspent one
+> is held until something spends it — so three may be set at round 9 and the schedule is a budget rather than
+> a deadline, signed on
+> [13 September 2026](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code)
+> — and it is spent on a capstone edge; that is the whole mechanic. The gates were deleted on
 > [13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
 > and they are not coming back with it — no capacity schedule, no per-wave type limit, no offering. The
 > [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.** Built on
@@ -209,7 +215,7 @@ beats armoured. The creep table balances it back with swift and arcane bodies.
 **The second stage is one stat. The third stage is a capstone that changes how the tower works**, and each
 capstone is drawn from what its model is holding or wearing.
 
-### The tier signal is never size
+### The tier signal is never the body's size
 
 **Size is retired as a tier signal for the body**, reversed on 5 September 2026. A rung is told apart by
 **what the body wears, holds or stands beside** — never by how big the body is. Three materials, in the order
@@ -285,9 +291,14 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 ### What a row is drawn as
 
 Every bubble in the game drew one shared disc on the ground and every hitscan shot one shared tracer until
-#263, #264 and #265. Ten shapes are signed now, and **the shape is all that is signed** — every colour, size
-and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
-disc and the marks on a creep already are.
+#263, #264 and #265. Ten shapes are signed now, and **the shape is nearly all that is signed** — every colour,
+size and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, save what
+a person took on 7 September 2026:
+[the disc's alpha](decision-log.md#7-september-2026-later--the-alpha-is-signed-and-the-particle-ban-turns-out-never-to-have-been-the-rule),
+and then
+[three more](decision-log.md#7-september-2026-later-still--four-of-the-things-that-do-not-read-at-1x-are-signed-and-three-of-them-turn-out-not-to-be-size-questions)
+— the knife at 0.85 m, a ground effect clipped where the board ends, and the Consecration's light always on,
+its two-hex reach being a number in `content/units.txt` rather than a look.
 
 **Every placeholder this page still carries waits on one thing, and it is not argued here until then.** The
 colours, sizes and durations in `MatchTuning`; the four creep aura shapes below, all drawn as one interim disc
@@ -1363,7 +1374,7 @@ imports are copied out of it by hand.
 > work the art tickets carry, not another decision.
 
 **Size tells the two sides apart and nothing else.** It was the tier signal until 5 September 2026 and it is
-**retired as one** — see [the tier signal](#the-tier-signal-is-never-size). Two multipliers remain, applied to
+**retired as one** — see [the tier signal](#the-tier-signal-is-never-the-bodys-size). Two multipliers remain, applied to
 the model as it is drawn:
 
 | What | Scale | Why |
@@ -1520,15 +1531,19 @@ open.
    6 September 2026 by [#273](https://github.com/ssalter21/tower-defense-game/issues/273) and
    [ADR-0062](adr/0062-a-capstone-costs-a-token.md): `content/upgrades.txt` goes to layout 2, a `capstone` row
    costs one token and no gold, and the grant lands at the opening of rounds 3, 6 and 9 so all three are
-   spendable in a nine-round run. **What is left open is the client.** A rung the round can pay for reads
-   `Shield Wall   1 capstone token` on the hex it is offered at, and one it cannot is simply not offered — so
-   a player holding no token sees a line stop at its second rung with nothing saying why. The run header
-   shows gold and has no second counter beside it. That is a visual decision rather than a rule, so it is
-   proposed here rather than taken.
-7. **The beside slot is built and one rung wants two of it.** The Engineer's turret, the Paladin's statue,
+   spendable in a nine-round run. **The client half was taken on 11 September 2026 by
+   [#285](https://github.com/ssalter21/tower-defense-game/issues/285)**, as a holding answer: a rung the round
+   can pay for reads its name over `1 capstone` on the hex it is offered at, one it cannot is simply not
+   offered, and the run header carries a fourth field after the gold — `Capstones N held · N spent · N to
+   come` — so a ladder that opens on nothing says why. The spelling is
+   [13 September's](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung).
+   Everything chrome waits on a direction, which is a fresh effort and not this page's.
+7. **The beside slot is built, and no rung wants two of it.** The Engineer's turret, the Paladin's statue,
    the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
-   down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —
-   the one look on this page the socket as built cannot draw whole.
+   down per prop. The Artificer's crate was drawn and not taken: on
+   [11 September 2026](decision-log.md#11-september-2026-after-the-balance-findings--the-rosters-art-stops-being-provisional-and-two-lines-bend-the-tier-rule-to-do-it)
+   the Engineer line is told apart by the size of its one turret instead, so no look on this page asks the
+   socket for more than it draws.
 8. **The Mortar's burst reaches two rows nobody asked about it for, down from three.** A signature is chosen
    by the row the event names, and a blast centred on its target names the body the shot arrived at rather
    than the shooter — so the burst is what *any* target-centred blast draws. **The Unravel came out of it on
