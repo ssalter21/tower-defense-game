@@ -27,7 +27,7 @@ entries, 28,221 of them files. **The four export formats are 90% of that weight,
 imported.** `Assets/fbx(unity)/` across all 21 packs that ship it is 4,247 models and 171 textures — 154 MB,
 whose largest single file is the 443 KB `christmas_tree_decorated.fbx`, comfortably inside the 5 MB cap in
 `tools/check-file-sizes.ps1`. That subset **is** in the repository, at `client/Assets/Art/Kaykit/`, since
-29 August 2026; see [the decision log](../decision-log.md#29-august-2026--the-whole-collection-is-imported).
+29 August 2026; see [the decision log](../decision-log/2026-08.md#29-august-2026--the-whole-collection-is-imported).
 
 **It is extracted, and it is extracted outside this repository**, at the same level as the checkout rather
 than inside it:

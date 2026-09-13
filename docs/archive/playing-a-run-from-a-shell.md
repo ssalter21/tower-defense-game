@@ -11,7 +11,7 @@
 > **The work described here was built, and then it was deleted.** The shell's standing purpose is mass
 > headless simulation, the client is where a run is played now, and reproducing a run without opening Unity
 > survives in `play-run`. That reversal is
-> [the decision log's](../decision-log.md#the-interactive-verb-is-not-what-the-shell-is-for), and what was
+> [the decision log's](../decision-log/2026-08.md#the-interactive-verb-is-not-what-the-shell-is-for), and what was
 > *decided* along the way is
 > [ADR-0050](../adr/0050-a-decision-is-composed-in-a-local-and-proved-before-it-is-written.md); neither is
 > restated here.

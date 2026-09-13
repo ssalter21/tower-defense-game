@@ -11,7 +11,7 @@ now asks it.
 | **the floor** | anything with any reach reaches the hexes touching it | neither; it is above the arithmetic |
 
 Decided in [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
-[the decision log](../decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for), built in
+[the decision log](../decision-log/2026-08.md#16-august-2026-later--one-format-version-and-the-map-it-is-for), built in
 #215. The per-level value and the tier count are recorded together in [seam 9](../build-order.md#9--the-board),
 because neither means anything without the other.
 
