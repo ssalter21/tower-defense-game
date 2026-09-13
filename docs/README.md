@@ -18,11 +18,12 @@ is real — and every mode of it is the same machine at a different latency.*
 | [Open questions](open-questions.md) | In scope, undecided, and what each one is waiting on |
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
+| [The roster's art](roster-art.md) | How a rung is told from the rung below, what every effect draws, which pack is which side, and what size means |
 | [The playtest protocol](playtest.md) | What six people are asked to look at and say, once a round and once a run, and where it is written down |
 | [The sit-down](sit-down.md) | The walking skeleton's instrument: twelve things to look at in the build, once, each naming the exact tick |
 | [The board tools](board-tools.md) | `Tools > Board > Edit Map`, `Scenery` and `Dress` — what each bakes into `content/`, what it must not do, and how an agent runs it without an editor |
 | [`specs/`](specs/) | A specification written before a rebuild — what a tool is for, what it plays, what it reports. One so far, the sweep harness, holding its five questions |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 62 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 63 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/README.md) | The five deep dives the vision was built on, the row-by-row account of what it overturned in them, the specifications whose implementation is gone, and the two proposals that were taken whole |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |
@@ -50,6 +51,7 @@ code or the content file whose number it explains:
 | [A purse in one column beats the same purse in four](research/a-purse-in-one-column-beats-the-same-purse-in-four.md) | The sweep says taking more ingredients makes you worse. Why does spreading one purse across more columns lose? |
 | [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
 | [A sweep row measures the wall's attack type](research/a-sweep-row-measures-the-walls-attack-type.md) | Two of the sweep's five rows report zero. Is that a lost control, or the damage matrix working? |
+| [The tuning target, and what each row returns against it](research/the-tuning-target.md) | Where does the committed match sit against its leak band, which six creep rows are outside their own, and which of the misses has a lever? |
 
 **Asset research**, on the art that is actually on the machine:
 
