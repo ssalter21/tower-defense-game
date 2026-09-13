@@ -154,15 +154,20 @@
 #   targets column cannot count. That flatness is left standing for
 #   ./tools/show-ladder.ps1 to report as a note.
 #
-#   WINDUP AND BACKSWING ARE ZERO ON THE SIXTEEN ROWS THE ROSTER DID NOT SIGN
-#   THEM FOR, so those rows fire the tick they acquire and go straight back on
-#   cooldown. docs/roster.md signs both on the Knight line, on the Barbarian
-#   line, and on the Mage and Archer rows that were already here -- which the
-#   Sorcerer, Unravel and the Ranger inherit. It signs neither on the Paladin,
-#   Cleric, Druid, Rogue and Engineer lines, nor on Overwatch, whose two rungs
-#   below carry 9 and 6 and whose own tuning is a different shape. Zero is the
-#   absence and not a chosen number: picking one is picking how a tower feels,
-#   and the ticket that chooses each line's clips is where it is signed.
+#   WINDUP AND BACKSWING ARE SIGNED ON EVERY TOWER ROW, AND ON FOUR OF THEM THE
+#   SIGNED NUMBER IS ZERO. Both add to the cooldown: a tower spends the windup
+#   before its shot lands, the backswing after, and only then starts the wait
+#   the cooldown column names, so the gap between two shots is the sum of the
+#   three and the cost rule, which prices damage a second on the cooldown alone,
+#   does not see the other two. The Knight, Barbarian, Mage and Archer lines were
+#   signed by play in August; the Paladin, Cleric, Druid and Engineer lines were
+#   signed on 13 September 2026 at the proportion those four sit near -- windup
+#   about 0.45 of the cooldown, backswing about two thirds of the windup --
+#   played once and kept. The Rogue line and Overwatch carry zero as a choice:
+#   a knife fires the tick it sees you, and the crossbow holds an aiming pose
+#   with no swing to draw. Every rung carries its line's pair; a rung's own
+#   cooldown does not move it. See docs/roster.md and the 13 September 2026
+#   entry in docs/decision-log.md.
 #
 #   THE TOWER CONSTANT IS TIED TO THE TICK RATE. "Five damage a second" is a
 #   number about seconds, and cooldowns here are in ticks at thirty ticks a
@@ -396,11 +401,12 @@
 #            NOTHING: reaching the exit is the opposite outcome and is already
 #            priced, at the cost column, against health. A row that stands or a
 #            row with no health pool may not carry one, because nothing kills
-#            either. NOTHING HERE CHECKS IT AGAINST THE COST COLUMN: the twelve
-#            below is half the row's own twenty-four and docs/roster.md argues
-#            that half for that row, but whether a body may ever be worth more
-#            dead than it cost to send is a design question nobody has taken, and
-#            a refusal would take it
+#            either. IT IS CHECKED AGAINST THE COST COLUMN, AND THAT IS THE ONLY
+#            FENCE: a bounty may not exceed the row's cost, equal allowed, and
+#            the reader refuses a row that pays more dead than it cost to send.
+#            The twelve below is half the row's own twenty-four and
+#            docs/roster.md argues that half for that row; the fence was ruled
+#            on 12 September 2026, and no row is pushed to it
 #
 # THERE IS NO CAP ON HOW MANY ONE BODY RAISES, AND THAT IS THE DECISION. It
 # raises for as long as it is alive and walking, so the board is what bounds it:
@@ -468,24 +474,24 @@ unit  16   shield-wall       placed  0      0      1000   11        7       5   
 unit  17   barbarian         placed  0      0      1000   45        20      12         200     300     hitscan     0       0      33    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  18   berserker         placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  19   slam              placed  0      0      1000   45        20      12         300     450     hitscan     0       0      50    impact  none       0  0       1        1000          self          enemy          0             damage         0                0                        none  none  0    0
-unit  20   paladin           placed  0      0      1000   24        0       0          120     180     hitscan     0       0      37    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  21   templar           placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  22   blessing          placed  0      0      1000   24        0       0          180     270     hitscan     0       0      56    magic   none       0  0       1        2000          self          friend         30            cooldown       -25              30                       none  none  0    0
-unit  23   cleric            placed  0      0      3200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  24   bishop            placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  25   consecration      placed  0      0      4200   30        0       0          130     190     hitscan     0       0      32    magic   none       0  0       1        2000          self          enemy          30            armour         -30              30                       none  none  0    0
+unit  20   paladin           placed  0      0      1000   24        11       7          120     180     hitscan     0       0      37    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  21   templar           placed  0      0      1000   24        11       7          180     270     hitscan     0       0      56    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  22   blessing          placed  0      0      1000   24        11       7          180     270     hitscan     0       0      56    magic   none       0  0       1        2000          self          friend         30            cooldown       -25              30                       none  none  0    0
+unit  23   cleric            placed  0      0      3200   30        14       9          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  24   bishop            placed  0      0      4200   30        14       9          130     190     hitscan     0       0      32    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  25   consecration      placed  0      0      4200   30        14       9          130     190     hitscan     0       0      32    magic   none       0  0       1        2000          self          enemy          30            armour         -30              30                       none  none  0    0
 unit  26   sorcerer          placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             damage         0                0                        none  none  0    0
 unit  27   unravel           placed  0      0      4600   40        21      15         210     340     projectile  33      0     124    magic   none       0  0       1        1000          target        enemy          0             armour         -60              150                      none  none  0    0
-unit  28   druid             placed  0      0      3600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  29   elder             placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  30   overgrowth        placed  0      0      4600   36        0       0          150     210     hitscan     0       0      30    magic   none       0  0       1        60000         self          enemy          30            speed          -20              30                       none  none  0    0
+unit  28   druid             placed  0      0      3600   36        16       11          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  29   elder             placed  0      0      4600   36        16       11          150     210     hitscan     0       0      30    magic   none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  30   overgrowth        placed  0      0      4600   36        16       11          150     210     hitscan     0       0      30    magic   none       0  0       1        60000         self          enemy          30            speed          -20              30                       none  none  0    0
 unit  31   overwatch         placed  0      0      8000   60        0       0          500     700     hitscan     0       0      60    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  32   rogue             placed  0      0      2200   9         0       0          40      60      hitscan     0       0      33    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  33   cutthroat         placed  0      0      2200   7         0       0          40      60      hitscan     0       0      43    pierce  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  34   fan-of-knives     placed  0      0      2200   7         0       0          40      60      hitscan     0       0     129    pierce  none       0  0       3        none          none          none           0             none           0                0                        none  none  0    0
-unit  35   engineer          placed  0      0      4000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  36   artificer         placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
-unit  37   mortar            placed  0      0      5000   60        0       0          250     350     projectile  45      0      30    impact  none       0  0       1        1500          target        enemy          0             damage         0                0                        none  none  0    0
+unit  35   engineer          placed  0      0      4000   60        27       18          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  36   artificer         placed  0      0      5000   60        27       18          250     350     projectile  45      0      30    impact  none       0  0       1        none          none          none           0             none           0                0                        none  none  0    0
+unit  37   mortar            placed  0      0      5000   60        27       18          250     350     projectile  45      0      30    impact  none       0  0       1        1500          target        enemy          0             damage         0                0                        none  none  0    0
 unit  38   necromancer       moving  2600   28     0      0         0       0          0       0       none        0       36     21    none    arcane    30  0       1        2000          self          friend         90            shield         25               0                        none  1     150  0
 unit  39   bone-golem        moving  9000   14     0      0         0       0          0       0       none        0       48     90    none    armoured  60  0       1        none          none          none           0             none           0                0                        none  none  0    0
 unit  40   black-knight      moving  5000   22     0      0         0       0          0       0       none        0       48     56    none    armoured  80  0       1        none          none          none           0             none           0                0                        none  none  0    0

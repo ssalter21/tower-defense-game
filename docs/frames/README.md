@@ -505,9 +505,10 @@ says no. It is written by the capture and never by hand; see
   no clips, because `roster.md` names one on every rung of the Archer and Rogue lines and none on any rung of
   that one, so they stand in their bind pose in the game. They are posed here in `Idle_A`, which is the clip
   both earlier candidate sheets already put that model up in. That was framing and not a binding when the
-  sheet was drawn; on 11 September 2026 the line was bound to `Idle_A` and `Use_Item`, and the `_` on its
-  windup and backswing is open under
-  [#297](https://github.com/ssalter21/tower-defense-game/issues/297), to be signed from a played build.
+  sheet was drawn; on 11 September 2026 the line was bound to `Idle_A` and `Use_Item`, and on 13 September
+  its windup and backswing were signed from a played build under
+  [#297](https://github.com/ssalter21/tower-defense-game/issues/297) — 27 and 18 ticks, the wrench at about
+  1.8× its authored speed.
 
   **Ten things on it are questions rather than results, and five of them are asks for
   [`roster.md`](../roster.md) rather than for the eye.**
