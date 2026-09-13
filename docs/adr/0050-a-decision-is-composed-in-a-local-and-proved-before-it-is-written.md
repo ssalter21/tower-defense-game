@@ -12,7 +12,7 @@
 > `client/Assets/View/WrittenRun.cs` is now the only half that opens one. The guarantee that carried the whole
 > step — a session that disagreed hands back **no script at all** — is the script's own and is unweakened.
 >
-> Why the verb went is [the decision log's](../decision-log.md#the-interactive-verb-is-not-what-the-shell-is-for);
+> Why the verb went is [the decision log's](../decision-log/2026-08.md#the-interactive-verb-is-not-what-the-shell-is-for);
 > what it was built from is [the archived specification](../archive/playing-a-run-from-a-shell.md).
 
 The interactive verb adds no simulation surface. `play` composes a round's `BuildPhase` **in a local**, prices

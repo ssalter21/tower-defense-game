@@ -128,7 +128,7 @@ the Vampire's shield are: cost is derived and is never a lever, and a coefficien
 the sweep's to derive. **Whether the pair ought to be worth both pools was a design question and not this
 one** — it means moving the trigger onto the death — and Sam signed the trigger as built on 12 September 2026:
 it stays on the first damage, the property it buys being the point of the row
-([the decision log](../decision-log.md#12-september-2026-later--the-villagers-trigger-stays-on-the-first-damage-and-the-pair-is-worth-what-that-trigger-makes-it)).
+([the decision log](../decision-log/2026-09.md#12-september-2026-later--the-villagers-trigger-stays-on-the-first-damage-and-the-pair-is-worth-what-that-trigger-makes-it)).
 
 ## Where it lives
 

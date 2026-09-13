@@ -43,7 +43,7 @@ stand-in sends no paying row (both accepted as blind the same day). Equal is all
 more than*, and how far under it a row sits is that row's argument in `docs/roster.md` — the Grave Robber's
 twelve is half its twenty-four. It was deliberately left unrefused when this record was written, as a question
 nobody had taken; Sam took it on 12 September 2026
-([the decision log](../decision-log.md#12-september-2026-later-still--a-body-is-never-worth-more-dead-than-it-cost-to-send-and-the-table-refuses-one-that-is)).
+([the decision log](../decision-log/2026-09.md#12-september-2026-later-still--a-body-is-never-worth-more-dead-than-it-cost-to-send-and-the-table-refuses-one-that-is)).
 
 ## Where the payment is made, and which row pays
 
