@@ -32,8 +32,7 @@ is real — and every mode of it is the same machine at a different latency.*
 In [`research/`](research/). They are **evidence, not design documents**: each resolves one question, cites
 primary sources, and decides nothing.
 
-**Nine remained of twenty-four, and one has been written since.** [Fifteen were
-retired](decision-log.md#5-september-2026-later--fifteen-research-notes-are-retired) on 5 September 2026, and
+**Fifteen notes have been retired**, and
 the test each one was held to was not its age but whether anything still needed it: a note stays if code, a
 content file or an ADR cites it, or if it holds a measurement that costs real time to take again. A survey
 whose verdict has been read and written into the vision, an ADR or [open

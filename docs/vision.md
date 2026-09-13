@@ -101,15 +101,11 @@ metrics are read off it.
 **Two halves, and only one of them is decided.** The capstone is; the capacity schedule is not.
 
 **Rounds 3, 6 and 9 each grant one capstone.** Three a run against nine capstone rungs, and the capstone is
-what a capstone rung costs — no gold. **This half is decided**, on
-[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move),
-and it is a plain currency: it goes up on those three rounds and it is spent on a capstone edge. Nothing else.
-**The currency is called a capstone** — Sam's word, on
-[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung), for the building it recalls: a run is handed a capstone and sets
-it on a tower. The code's name for it is `CapstoneToken`, and the CLI still prints `1 capstone token`;
-only what a player reads is respelled. **And it banks** — an unspent capstone is held until something spends
-it, so three may be set at round 9 and the schedule is a budget rather than a deadline — signed on
-[13 September](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code).
+what a capstone rung costs — no gold. It is a plain currency: it goes up on those three rounds and it is spent
+on a capstone edge. Nothing else. **The currency is called a capstone**, for the building it recalls: a run is
+handed a capstone and sets it on a tower. The code's name for it is `CapstoneToken`, and the CLI prints
+`1 capstone token`; only what a player reads is respelled. **And it banks** — an unspent capstone is held until
+something spends it, so three may be set at round 9 and the schedule is a budget rather than a deadline.
 
 **Scarcity is the grant schedule rather than the price.** Five of the nine capstones change neither the damage
 roll nor the bodies a shot hits, so the cost rule would price them identically to the rung below; that is
@@ -126,24 +122,20 @@ the same three rounds also widen the wave: two more slots and ten more count eac
 | 6–8 | 6 | 30 |
 | 9–10 | 8 | 40 |
 
-**A gate would ration capacity, never which kinds.** That schedule was deleted on
-[13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
-along with the per-wave type limit, and **what bounds a wave today is the purse.** It is written down here so
-it is not re-derived, not because it is coming back on a date. One hard constraint if it ever does: **for
-every gate, its counter is purchasable strictly before it.**
+**A gate would ration capacity, never which kinds.** There is no per-wave type limit, and **what bounds a wave
+today is the purse.** The schedule is written down here so it is not re-derived, not because it is coming back
+on a date. One hard constraint if it ever does: **for every gate, its counter is purchasable strictly before
+it.**
 
 **If the schedule returns it has two layers turning over at different rates.** Its **shape** — which gate
 carries which tier, and which one opens the counter — would hold for a whole rotation and is what preparation
 is a skill about. Its **filling** — which creeps sit on each gate's menu — would be drawn per run and is where
 replay value comes from. **The ghost pool would not shard for it**: ghosts draw on `(map, stage)` alone.
 
-**The capacity schedule waits on the people playtest** — the playtestable build Sam is scoping alongside the
-balance sweep, ruled on
-[13 September 2026](decision-log.md#13-september-2026-later-again--the-capacity-gate-waits-on-the-people-playtest-and-the-run-this-ticket-asked-for-is-not-played). It stopped waiting on the roster when the roster got its depth on
-5 September, and it is not waiting on a run played on a branch: one was offered and declined, because a run
-played before the sweep and the playtestable build exist would be thrown out with them. Until that playtest,
-the purse is the only thing bounding a wave, and the ruling — schedule it, delete it, or keep waiting — comes
-with the playtest's evidence.
+**The capacity schedule waits on the people playtest** — the playtestable build, alongside the balance sweep.
+It is not waiting on a run played on a branch: a run played before the sweep and the playtestable build exist
+would be thrown out with them. Until that playtest, the purse is the only thing bounding a wave, and the
+ruling — schedule it, delete it, or keep waiting — comes with the playtest's evidence.
 
 ### Depth is the point
 

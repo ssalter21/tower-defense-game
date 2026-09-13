@@ -9,10 +9,8 @@ The design this builds is [the vision](vision.md). Reversals are in [the decisio
 ## The sequence
 
 Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–6 are built and step 7
-is next.** [The first played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) found the
-roster too shallow for the build phase to be a decision worth making, and for a day that put step 3 back in
-front of step 5; [the same evening reversed it](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster).
-The finding stands and the sequence does not follow from it — see
+is next.** A played run found the roster too shallow for the build phase to be a decision worth making; the
+finding stands and the sequence does not follow from it — see
 [step 3 is not finished](#step-3-is-not-finished-and-a-played-run-is-how-that-was-found) below.
 
 | # | Step | What it delivers | Size |
@@ -23,16 +21,14 @@ The finding stands and the sequence does not follow from it — see
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
 | 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
 | 6 | **Opponents read from a folder of stored rounds** | The whole loop at zero latency, with no service in it. A stored round is a wall and a wave at a stage, and a run draws K of them recorded at its own — [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | Small — the defense and the wave already round-trip |
-| 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](archive/playtest-rebaseline-proposal.md) scopes each and orders them; taken whole on 13 September 2026 | Medium each; they run in parallel once the first two are on a branch |
+| 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](archive/playtest-rebaseline-proposal.md) scopes each and orders them | Medium each; they run in parallel once the first two are on a branch |
 | 8 | **Then** the generative depth, the two-board interface, and the service | | |
 
-**Step 5 was fifth deliberately, and the argument for it is finished.** The four questions it was held behind —
-is the economy tense, is the roster varied, is composing a wave interesting, does send order matter — were
-asked in the order they were cheapest to ask, two from a shell and two from the client, and the reasoning is
-in [the decision log](decision-log.md#13-august-2026--the-first-run-played-by-a-person). **The test that
-survives it as a rule: is it a picture, or a number?** Numbers the simulation already computes are answerable
-at a prompt; pictures wait for the client. Step 7 is all pictures, and they are judged by six people rather
-than one.
+**Step 5 was fifth deliberately.** The four questions it was held behind — is the economy tense, is the
+roster varied, is composing a wave interesting, does send order matter — were asked in the order they were
+cheapest to ask, two from a shell and two from the client. **The rule that survives: is it a picture, or a
+number?** Numbers the simulation already computes are answerable at a prompt; pictures wait for the client.
+Step 7 is all pictures, and they are judged by six people rather than one.
 
 ### Step 3 is not finished, and a played run is how that was found
 
@@ -41,23 +37,18 @@ yet: **composing a wave is not interesting enough, and the build phase has not g
 What it wants is plenty of money to spend and options worth spending it on, and neither is judgeable against
 six walkers and four towers — three of which are equivalent on a one-hex corridor.
 
-**Seam 3 is next, and it is widened rather than deepened.** The client can now be clicked and played, so
-the judgement step 5 was waiting for has been made: the game is to be fun to play now, and what that wants is
+**Seam 3 is widened rather than deepened.** The game is to be fun to play now, and what that wants is
 breadth — as many towers and creeps as the collection on disk supports, every tower line three stages with a
-capstone at the top. The candidate roster is
-[the expansion proposal](archive/roster-expansion-proposal.md), taken on 5 September 2026 and signed on
-[the roster](roster.md), which is the page that says what of it is still a placeholder. The reversal is
-[in the decision log](decision-log.md#5-september-2026-later-still--the-roster-widens-and-seam-3-comes-off-the-shelf).
+capstone at the top. [The roster](roster.md) is the page that says what of it is still a placeholder.
 
-What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
-the special rounds and the per-wave type limit all come out of the played game, and go back when the roster
-is deep enough for a gate to be gating something worth having. **The type limit is the first of the four to
-be redesigned rather than merely parked** — [the gate rounds](vision.md#the-gates) make
-it a public capacity schedule with a second dimension in it, and the order is unchanged: the roster gets its
-depth first and the schedule is fitted to it afterwards. Gating a shallow roster holds back early
-testing and buys nothing, and a mechanic carried switched-off through a client build is a tax on every step
-of it. What stays is the **upgrade prerequisite**: a unit that is some edge's target cannot be placed
-directly, so an Archer must stand before a Ranger can.
+**Four things are deleted rather than deferred**: the forced pick, the round menu, the special rounds and the
+per-wave type limit. They go back when the roster is deep enough for a gate to be gating something worth
+having. **The type limit is the first of the four to be redesigned rather than merely parked** —
+[the gate rounds](vision.md#the-gates) make it a public capacity schedule with a second dimension in it, and
+the order is unchanged: the roster gets its depth first and the schedule is fitted to it afterwards. Gating a
+shallow roster holds back early testing and buys nothing, and a mechanic carried switched-off through a client
+build is a tax on every step of it. What stays is the **upgrade prerequisite**: a unit that is some edge's
+target cannot be placed directly, so an Archer must stand before a Ranger can.
 
 ## Three obligations the sequence carries
 
@@ -177,30 +168,23 @@ bill of **nine game changer creeps per shape**, tiered across three gates, one o
 three-way cycle, a counter is a `bonusVsTag` integer rather than an immunity, and every damage and health
 number is authored at the ×10 scale.
 
-**The menu half of that is deferred, and the bill is not owed yet.** The
-[13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) took the take gate
-and the anchor schedule out of the played game until this seam has produced a roster deep enough for a gate to
-be gating something worth having, and
-[#179](https://github.com/ssalter21/tower-defense-game/issues/179) then deleted them outright — so
-`content/schedule.txt` and its twelve placeholder names are gone rather than standing in for content nobody
-should be designing yet. Re-authoring them is this seam's work if the depth ever calls for it.
+**The menu half of that is deferred, and the bill is not owed yet.** There is no take gate, no anchor
+schedule and no `content/schedule.txt` in the played game, rather than placeholders standing in for content
+nobody should be designing yet. Re-authoring them is this seam's work if the depth ever calls for it.
 **The depth comes first, and the gate is fitted to it afterwards.** The damage-model constraints are
 untouched by that.
 
-**The capacity half came back on 14 August, and it needs no depth to be true** — a schedule of slots and count
-caps rations room rather than options, so none of it waits on the roster. What it does need is a roster worth
-rationing: two slots against four creep types is the shallow-roster complaint one round further on, which is
-why the schedule is design and not a ticket. See
-[the entry](decision-log.md#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant).
+**The capacity half needs no depth to be true** — a schedule of slots and count caps rations room rather than
+options, so none of it waits on the roster. What it does need is a roster worth rationing: two slots against
+four creep types is the shallow-roster complaint one round further on, which is why the schedule is design and
+not a ticket.
 
-**A third bill arrives with it: a capstone per tower line.** A gate hands over a capstone and the capstone buys
-the top of a line, so three capstones a run wants meaningfully more than three rungs to choose between — and each
-of them signed against a pricing rule that
-[no longer reaches them](roster.md#what-things-cost).
+**A third bill: a capstone per tower line.** A gate hands over a capstone and the capstone buys the top of a
+line, so three capstones a run wants meaningfully more than three rungs to choose between — and each of them
+sits outside [the pricing rule](roster.md#what-things-cost), because gold does not buy it.
 
-What is left in their place is the upgrade ladder, which is now the one prerequisite the game has: a unit some
-edge of `content/upgrades.txt` points at is refused to `place` and reached by upgrading into. See
-[the 13 August entry](decision-log.md#13-august-2026-later-still--the-gates-are-actually-out-and-the-ladder-becomes-the-rule-it-was-an-annotation-to).
+**The upgrade ladder is the one prerequisite the game has**: a unit some edge of `content/upgrades.txt` points
+at is refused to `place` and reached by upgrading into.
 
 ### 4 · The balance harness
 
@@ -209,9 +193,9 @@ The tool and the definitions underneath it: what a sweep is, what it measures, w
 is paid for once, against every round of the run that is left — and how a verdict gets back into `content/`
 without invalidating a pool of stored ghosts.
 
-**It owes step 1 less than it used to.** The bonus was measured against a field until #209 made it a share of
-what a wave dealt; a round is still resolved against K opponents drawn from the sweep's canned set, so the
-harness is still what a run's damage is dealt *to* — but nothing about the payment waits on step 6 any more.
+**The bonus is a share of what a wave dealt**, and a round is resolved against K opponents drawn from the
+sweep's canned set, so the harness is what a run's damage is dealt *to*; nothing about the payment waits on
+step 6.
 
 **It waits for no other seam.** At 2.75 ms a match it is a `simcli` mode and a CSV. If the generative direction
 is ever adopted, its documented failure mode — a U-shaped meta where the widest and narrowest builds dominate —
@@ -220,15 +204,13 @@ is caught by win rate **binned by number of ingredients taken**, a grouping rath
 **Pointed at maps it scores them**, which is what makes
 [generated rotation](vision.md#the-board-is-a-maze) a filter rather than a hope. **The sweep
 must take its map as a parameter, not as a fixed input.** One further column is owed: the both-columns check.
-Outcome spread and the ingredient bin are no longer columns — `--per-run` writes a row per run, so both are a
-query over a file the sweep already produced rather than an edit to the harness. See
-[the 16 August entry](decision-log.md#16-august-2026--the-sweeps-owed-columns-become-queries).
+Outcome spread and the ingredient bin are queries, not columns — `--per-run` writes a row per run, so both
+are read off a file the sweep already produced rather than an edit to the harness.
 
-**It is owed a specification before another column.** Sam's ruling on 13 September 2026 is that the harness
-does not do what it is needed for, and what it is needed for is not written down; what is written down is
-every thing it cannot see. [`docs/specs/sweep-harness.md`](specs/sweep-harness.md) holds the five questions
-the specification has to answer, in the order they decide each other, and it is written from a sitting rather
-than from a ticket.
+**It is owed a specification before another column.** The harness does not do what it is needed for, and
+what it is needed for is not written down; what is written down is every thing it cannot see.
+[`docs/specs/sweep-harness.md`](specs/sweep-harness.md) holds the five questions the specification has to
+answer, in the order they decide each other, and it is written from a sitting rather than from a ticket.
 
 ### 5 · The service
 
@@ -276,7 +258,7 @@ watchable, the stats and histogram that turn a result into a comparison, and the
 **The build phase's arrangement is decided, and it was decided off pictures.** Six layouts were rendered
 against the real board with the real prices on them and chosen from by looking — the tool is
 [`tools/capture-ui-previews.ps1`](../tools/capture-ui-previews.ps1) and the reasoning for choosing that way is
-in [the chrome sheets](chrome/README.md). What was chosen, on 17 August 2026, is
+in [the chrome sheets](chrome/README.md). What was chosen is
 [`docs/chrome/chosen-build-phase.png`](chrome/chosen-build-phase.png):
 
 - **The chrome is as little as it can be** — one line of run state, one commit button, and nothing else that is
@@ -294,20 +276,18 @@ comfortably holds three towers against a roster that is meant to get deeper, so 
 has to survive seam 3**, and it wants a sheet of its own against a padded-out roster before any of this is
 built.
 
-**The wheel supersedes the menu's placement and keeps the rest.** On 13 September 2026 the build phase became:
-select a hex, and the options for that hex open in a wheel around it — the nine roots on an empty cell, the
-ladder on an occupied one. That is the 17 August decision with the menu wrapped round the cell instead of
-beside it; the one-line header and the wave rail stand. The MVP is wedges with a name and a price on them,
+**The wheel supersedes the menu's placement and keeps the rest.** The build phase is: select a hex, and the
+options for that hex open in a wheel around it — the nine roots on an empty cell, the ladder on an occupied
+one. That is the chosen arrangement with the menu wrapped round the cell instead of beside it; the one-line
+header and the wave rail stand. The MVP is wedges with a name and a price on them,
 not portraits, so the thumbnail seam stays load-bearing and stops blocking. What the wheel holds, and whether
 the wave moves onto a wheel of its own on the entrance hex, are decided from a sheet — see
 [open questions](open-questions.md#what-the-playtest-rebaseline-leaves-for-a-sitting).
 
 ### 8 · The presentation
 
-The KayKit purchase and licence confirmation
-([#56](https://github.com/ssalter21/tower-defense-game/issues/56)), the atlas-recolour workflow, the `.blend`
-editing path, and the lighting, VFX and camera work that makes stock models look composed. Independent of the
-others.
+The KayKit collection, the atlas-recolour workflow, the `.blend` editing path, and the lighting, VFX and
+camera work that makes stock models look composed. Independent of the others.
 
 **Two things stop it being purely an art seam.** The camera is a *directed* camera: the whole match resolves
 before anything is drawn, so the moments worth showing can be chosen by computed salience rather than captured.
@@ -315,7 +295,7 @@ And a map with elevation is a lighting and readability problem, since height is 
 player who cannot tell which tier a placement is on cannot read the range that comes with it**, which makes
 elevation legibility a veto rather than a nicety.
 
-**It is on the critical path now, and the first piece is the animation score.**
+**It is on the critical path, and the first piece is the animation score.**
 [§6](vision.md#6-what-it-looks-like) says what an animation is; this seam builds it one tower line at a time —
 two lines first, one melee and one ranged, so both shapes of the problem are settled before the other seven
 copy them — and every line's clips, speed and release frame are a look, signed from a sheet rendered at the
@@ -325,24 +305,21 @@ shipped framing. Real projectiles and mesh-mode particles land with it.
 
 **The maze and elevation.** None of the other eight is the right home: seam 1 owns the rules of a match, seam
 3 the units, seam 4 the measuring tool, seam 5 the storage. Its destination is a board that is verifiable,
-deterministic and demonstrably worth playing. **Pathfinding is no longer in it and never will be, and
-generation and rotation are deferred behind the first hand-authored map** — [#213](https://github.com/ssalter21/tower-defense-game/issues/213), recorded in
-[the decision log](decision-log.md#16-august-2026-later--one-format-version-and-the-map-it-is-for).
+deterministic and demonstrably worth playing. **There is no pathfinding in it and never will be, and
+generation and rotation are deferred behind the first hand-authored map.**
 
 - **The maze and elevation** — **nine levels of half a block each**, a level worth **250 milli-hex**, applied
   as the signed difference `baseRange + (towerLevel − targetLevel) × 250` rather than as a bonus for standing
-  high. A whole block is two levels and still buys half a hex, which is what it was worth when a level *was* a
-  block; the half step in between is new, and it is what lets a slope be graded instead of stepped. Radii read
-  as spheres, `hexDistance × 1000 + |levelDifference| × 250 ≤ radius`, so height only ever costs them, and
-  a floor guarantees any tower reaches the hexes touching it. **The ceiling moved with the count:** four blocks
-  of relief is a two-hex refund where three tiers capped it at one, which is asserted in `ReachTests` rather
-  than left to be discovered. How the map preserves the send column
-  [ordering](vision.md#depth-is-the-point) needs is still a design question, with a legibility veto on it.
+  high. A whole block is two levels and buys half a hex; the half step is what lets a slope be graded instead
+  of stepped. Radii read as spheres, `hexDistance × 1000 + |levelDifference| × 250 ≤ radius`, so height only
+  ever costs them, and a floor guarantees any tower reaches the hexes touching it. **The ceiling:** four
+  blocks of relief is a two-hex refund, asserted in `ReachTests` rather than left to be discovered. How the map
+  preserves the send column [ordering](vision.md#depth-is-the-point) needs is a design question, with a
+  legibility veto on it.
 - **The single path** — a map folds but never branches, and the player never alters the route by building, so
-  `HexMap`'s existing load-time trace is the whole of it: still one hex wide, still asserted, still no search
-  in the hot loop. The rule that a corridor cell may not have three corridor neighbours is **kept**, so two
-  legs of a fold are never adjacent and a longer path comes from a bigger board rather than a tighter one.
-  **No pathfinder and no line of sight**, both permanently.
+  `HexMap`'s load-time trace is the whole of it: one hex wide, asserted, no search in the hot loop. A corridor
+  cell may not have three corridor neighbours, so two legs of a fold are never adjacent and a longer path comes
+  from a bigger board rather than a tighter one. **No pathfinder and no line of sight**, both permanently.
 - **The record** — elevation is a third coordinate and the **map** carries it; `TowerLayout` does not, because
   a tower stands on a hex and the hex knows its level. A format version and a hash-layout bump for the map,
   while `RecordFormat.TowerBytes` and `GhostRecord` are untouched. Cheap now, expensive later, and the reason
