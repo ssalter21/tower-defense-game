@@ -1,0 +1,9 @@
+# Read by ripgrep (and so by every agent's Grep tool), not by git.
+# Tracked trees that are copies or history: a search that lands here answers about
+# something this project no longer builds, or answers the same thing twice.
+
+# Superseded documents. docs/archive/README.md says what each was for.
+docs/archive/
+
+# sync-streaming-content.ps1 copies content/ here for the player; content/ is the one to read.
+client/Assets/StreamingAssets/content/

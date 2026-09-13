@@ -335,7 +335,7 @@ by hand while it is.
 
 ## What the playtest rebaseline leaves for a sitting
 
-[The proposal](playtest-rebaseline-proposal.md) was taken whole on
+[The proposal](archive/playtest-rebaseline-proposal.md) was taken whole on
 [13 September 2026](decision-log.md#13-september-2026-after-the-map--the-vision-is-rebaselined-on-a-playtest-of-six-friends-and-five-claims-reverse),
 and it put these beside their costs rather than deciding them. Each is Sam's, and each is what a ticket on
 step 7 has to carry before an agent starts. Plain words: a *metric* is one number a round or a run produces;

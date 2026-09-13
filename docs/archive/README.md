@@ -22,6 +22,15 @@ They read best in sequence — each answers a question raised by the one before 
 |---|---|
 | [Playing a run from a shell](playing-a-run-from-a-shell.md) | `simcli play` — a run taken a round at a time at a prompt. Built, then deleted: the shell is for mass headless simulation, the client is where a run is played, and `play-run` still replays one. The tests that pinned its §2, §3 and §5 went with the verb. |
 
+## Proposals that were taken whole
+
+**Applied, not current.** Each was reviewed as a document and taken; what it changed is on the vision, the build order, open questions and the roster, and the decision log records the day. They are kept as the argument as it was read, not as a second statement of any decision.
+
+| Document | What it proposed, and where it went |
+|---|---|
+| [The roster expansion proposal](roster-expansion-proposal.md) | Nine tower lines and seventeen creeps drawn from every KayKit character. Taken on 5 September 2026; what was signed is on [the roster](../roster.md). |
+| [The playtest rebaseline proposal](playtest-rebaseline-proposal.md) | Six MVP efforts between the build and a lobby of six friends, and the edits each standing document would take. Taken whole on 13 September 2026; applied to [the vision](../vision.md), [the build order](../build-order.md) and [open questions](../open-questions.md). |
+
 ## What the vision overturns
 
 Row by row, so nothing below is left standing where it has been replaced. **This is the only place that

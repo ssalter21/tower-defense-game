@@ -23,7 +23,7 @@ The finding stands and the sequence does not follow from it — see
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
 | 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
 | 6 | **Opponents read from a folder of stored rounds** | The whole loop at zero latency, with no service in it. A stored round is a wall and a wave at a stage, and a run draws K of them recorded at its own — [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | Small — the defense and the wave already round-trip |
-| 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](playtest-rebaseline-proposal.md) scopes each and orders them; taken whole on 13 September 2026 | Medium each; they run in parallel once the first two are on a branch |
+| 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](archive/playtest-rebaseline-proposal.md) scopes each and orders them; taken whole on 13 September 2026 | Medium each; they run in parallel once the first two are on a branch |
 | 8 | **Then** the generative depth, the two-board interface, and the service | | |
 
 **Step 5 was fifth deliberately, and the argument for it is finished.** The four questions it was held behind —
@@ -45,7 +45,7 @@ six walkers and four towers — three of which are equivalent on a one-hex corri
 the judgement step 5 was waiting for has been made: the game is to be fun to play now, and what that wants is
 breadth — as many towers and creeps as the collection on disk supports, every tower line three stages with a
 capstone at the top. The candidate roster is
-[the expansion proposal](roster-expansion-proposal.md), taken on 5 September 2026 and signed on
+[the expansion proposal](archive/roster-expansion-proposal.md), taken on 5 September 2026 and signed on
 [the roster](roster.md), which is the page that says what of it is still a placeholder. The reversal is
 [in the decision log](decision-log.md#5-september-2026-later-still--the-roster-widens-and-seam-3-comes-off-the-shelf).
 

@@ -1621,7 +1621,7 @@ file, `AGENTS.md`, four ADRs, the archive and the two surviving notes that refer
 | Where | What it said | What is true now | Why |
 |---|---|---|---|
 | **[The build order](build-order.md#step-3-is-not-finished-and-a-played-run-is-how-that-was-found)** | Seam 3 is parked behind a playable client, and when it resumes its shape is *upgrading the creeps that exist*, in stats and speed, rather than authoring new unit types | **Seam 3 is next, and it is breadth.** As many towers and creeps as the collection supports; every tower line three stages — a base, a single-stat rung, and a capstone that changes how the tower works, drawn from what its model carries | Sam, 5 September 2026: *"I've changed my mind on how to approach the build. I want to make the game fun to play now. I want to now introduce as many towers and creeps as possible."* The client the roster was parked behind exists, so the wait is over |
-| **[The roster](roster.md#what-is-deliberately-absent)** | Three shapes are absent and blocked on art — fast and cheap in numbers, slow and dear and very tough, fast and durable at once | **Candidates are named for all three**, in [the expansion proposal](roster-expansion-proposal.md). The proposal is under review and signs nothing | Every character in the KayKit collection is on disk, so "needs a model" is no longer a blocker; it is a choice |
+| **[The roster](roster.md#what-is-deliberately-absent)** | Three shapes are absent and blocked on art — fast and cheap in numbers, slow and dear and very tough, fast and durable at once | **Candidates are named for all three**, in [the expansion proposal](archive/roster-expansion-proposal.md). The proposal is under review and signs nothing | Every character in the KayKit collection is on disk, so "needs a model" is no longer a blocker; it is a choice |
 
 **What was decided is the direction, and only the direction.** The proposal names 9 tower lines and 17 creeps,
 assigns 31 of the 61 rigged KayKit characters and sets 30 aside. Every name, model and number in it is a
@@ -1637,7 +1637,7 @@ everything modern, mechanical or comic is set aside with a one-line reason so it
 
 ## 5 September 2026, last — Sam signs the roster, and six standing proposals move
 
-The [expansion proposal](roster-expansion-proposal.md) was reviewed by Sam in full and taken. The entry above
+The [expansion proposal](archive/roster-expansion-proposal.md) was reviewed by Sam in full and taken. The entry above
 recorded the *direction* and said each of the five standing proposals it would retire "is its own entry here
 when it moves". They moved. A sixth reversal — the capstone token — was not in the proposal and arrived in the
 review.
@@ -2538,7 +2538,7 @@ The map's last ticket, [#297](https://github.com/ssalter21/tower-defense-game/is
 
 ## 13 September 2026, after the map — the vision is rebaselined on a playtest of six friends, and five claims reverse
 
-Sam, with the roster sign-off map closed: *"I need to rebaseline the vision. I have a goal that is I want to be able to play a lobby of around 6 friends to start playtesting."* Six problems came with it — the animations and projectiles look bad even as placeholders and want a new approach, tower by tower; the UI is bad and the vision is a hex that opens its options in a wheel; the map has odd angles and wants smoothing; there is no main menu or settings, so no wrapper for an actual game; the scoring is wrong, and should be a build against every other board in the lobby scored by where it sits on the curve, after Opus Magnum; and the sweep harness does not do what is needed and wants a whole spec. All six want MVPs, as soon as possible. [The proposal](playtest-rebaseline-proposal.md) was written against that, merged as [PR #309](https://github.com/ssalter21/tower-defense-game/pull/309), and taken whole: *"merge it and apply the doc updates."* This entry is the application.
+Sam, with the roster sign-off map closed: *"I need to rebaseline the vision. I have a goal that is I want to be able to play a lobby of around 6 friends to start playtesting."* Six problems came with it — the animations and projectiles look bad even as placeholders and want a new approach, tower by tower; the UI is bad and the vision is a hex that opens its options in a wheel; the map has odd angles and wants smoothing; there is no main menu or settings, so no wrapper for an actual game; the scoring is wrong, and should be a build against every other board in the lobby scored by where it sits on the curve, after Opus Magnum; and the sweep harness does not do what is needed and wants a whole spec. All six want MVPs, as soon as possible. [The proposal](archive/playtest-rebaseline-proposal.md) was written against that, merged as [PR #309](https://github.com/ssalter21/tower-defense-game/pull/309), and taken whole: *"merge it and apply the doc updates."* This entry is the application.
 
 **Five claims reverse.**
 

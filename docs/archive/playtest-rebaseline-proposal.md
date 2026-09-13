@@ -1,7 +1,7 @@
 # The playtest rebaseline
 
 **A proposal, written 13 September 2026, for review.** It decides nothing. The vision moves only when Sam
-edits [`vision.md`](vision.md) and records the reversal in [the decision log](decision-log.md); this page says
+edits [`vision.md`](../vision.md) and records the reversal in [the decision log](../decision-log.md); this page says
 what those edits would be and why, so that the sitting that makes them has the whole picture in one place.
 It is the same kind of document as [the roster expansion proposal](roster-expansion-proposal.md): the
 argument as it was put, kept beside what was taken from it.
@@ -29,7 +29,7 @@ because they are one effort.
 The standing documents are written around a different sequence: find the loop at zero latency against
 opponents read from a folder, judge the economy and the roster from a shell, and defer every mode of
 multiplayer until after the loop is found. That sequence has done its work. Steps 1 to 6 of
-[the build order](build-order.md) are built, the roster has forty-four rows, the client can be clicked and
+[the build order](../build-order.md) are built, the roster has forty-four rows, the client can be clicked and
 played, and the thing the sequence was protecting the project from, an engine effort spent on a game that
 was not fun, is no longer the risk. The risk now is that nobody but Sam has played it.
 
@@ -37,23 +37,23 @@ was not fun, is no longer the risk. The risk now is that nobody but Sam has play
 
 | Where | What it says today | What the goal makes true |
 |---|---|---|
-| [Bottom line, pillar 4](vision.md#bottom-line) | *The multiplayer is real, and all of it is deferred.* | The lobby is the next thing built. The round-robin, co-op and the social layer stay deferred |
-| [§3, what a match is](vision.md#3-what-a-match-is) | *Runs rank by waves survived, then health remaining; the offense never enters the placing.* | A run has several scores, each a position on the lobby's curve, and the offense is one of them |
-| [§6, what it looks like](vision.md#6-what-it-looks-like) | *Art is not a risk item.* | The models are not the risk. How they animate, and what a shot looks like, is the work standing between the build and a playtest |
+| [Bottom line, pillar 4](../vision.md#bottom-line) | *The multiplayer is real, and all of it is deferred.* | The lobby is the next thing built. The round-robin, co-op and the social layer stay deferred |
+| [§3, what a match is](../vision.md#3-what-a-match-is) | *Runs rank by waves survived, then health remaining; the offense never enters the placing.* | A run has several scores, each a position on the lobby's curve, and the offense is one of them |
+| [§6, what it looks like](../vision.md#6-what-it-looks-like) | *Art is not a risk item.* | The models are not the risk. How they animate, and what a shot looks like, is the work standing between the build and a playtest |
 
-**Two more move by degree rather than by reversal.** [§2](vision.md#2-the-loop--one-machine-at-three-latencies)
+**Two more move by degree rather than by reversal.** [§2](../vision.md#2-the-loop--one-machine-at-three-latencies)
 says every round draws ten stored defenses and ten waves, and a lobby smaller than ten is topped up from the
 pool. For a lobby of six friends the honest reading is *everyone present, and nobody else*: topping up from
 the pool would have four of every ten opponents be the sim's own bot, which nobody in the room composed and
-which dies at wave 4 under the signed roster. [§7](vision.md#7-what-runs-it) says a real server is the only
+which dies at wave 4 under the signed roster. [§7](../vision.md#7-what-runs-it) says a real server is the only
 permanent obligation. It still is, and the lobby MVP does not need it yet, for the reason in section 3.
 
 **What the goal leaves alone, and it is most of the vision.** One machine at every latency, the submission
 barrier, no lockstep and no rollback, the planning phase as the whole game, nothing forecast and everything
 mechanical shown, determinism as the deliverable, the maze that folds and climbs, KayKit as the final art
-pipeline, nothing persisting but a rating. In particular [§9](vision.md#9-the-planning-phase-is-the-game)
+pipeline, nothing persisting but a rating. In particular [§9](../vision.md#9-the-planning-phase-is-the-game)
 already says *place players against a histogram, not a leaderboard*, and
-[ADR-0035](adr/0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) already refuses a single score. The
+[ADR-0035](../adr/0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) already refuses a single score. The
 Opus Magnum scoring is that sentence built, not a new direction.
 
 **The build order's sequence needs a new step 7.** Today it reads *then the generative depth, the two-board
@@ -91,13 +91,13 @@ other board in the lobby; each player sees where their round sat on the lobby's 
 Opus Magnum shows a solution against every other solution.
 
 **The MVP is a shared folder, and the format already exists.** A stored round is a wall and a wave at a stage
-([ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md)), a run draws the rounds stored at its
+([ADR-0057](../adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md)), a run draws the rounds stored at its
 stage, and the client already reads a pool folder. A lobby is that folder shared between six machines by
 whatever syncs files (a Dropbox or Drive folder, Syncthing, a network share). The barrier from
-[§2](vision.md#2-the-loop--one-machine-at-three-latencies), *everyone present has submitted*, is the client
+[§2](../vision.md#2-the-loop--one-machine-at-three-latencies), *everyone present has submitted*, is the client
 counting the rounds at stage N in the folder against the lobby's size and waiting. Resolution is local and
 deterministic on every machine, so every player watches the same match without exchanging results. A round
-is hundreds of bytes. No server, no sockets, no accounts, and [§7](vision.md#7-what-runs-it)'s obligation is
+is hundreds of bytes. No server, no sockets, no accounts, and [§7](../vision.md#7-what-runs-it)'s obligation is
 deferred rather than repealed, exactly as the build order says it should be.
 
 Two facts to state before it is chosen. A synced folder has no ordering guarantee and can show a half-written
@@ -124,7 +124,7 @@ the candidates:
 | Gold unspent, or gold per point of damage | Efficiency, the analogue of Opus Magnum's cost | Spent and unspent gold are on the sweep row already; the run would need to carry them |
 
 `PerformanceField` computes a percentile against a population, and the
-[open question](open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it) of whether to
+[open question](../open-questions.md#is-the-field-measurement-kept-now-that-nothing-prices-off-it) of whether to
 keep it is answered by this: it gets its consumer, and the consumer is the score. With six players a
 percentile is coarse, so what is shown is the six bars with yours lit rather than a number.
 
@@ -161,10 +161,10 @@ until the wheel is played. Portraits are not in the MVP. A wedge with a name on 
 `RosterThumbnails` becoming real is a separate art decision the wheel should not wait on.
 
 **What the standing record says.** The 17 August arrangement,
-[`chosen-build-phase.png`](chrome/chosen-build-phase.png), put the towers *at the hex* with the options opening
+[`chosen-build-phase.png`](../chrome/chosen-build-phase.png), put the towers *at the hex* with the options opening
 beside it and the wave along a side rail in portraits. The wheel is the same decision with the menu wrapped
 round the cell instead of beside it, so the arrangement is superseded in one respect and confirmed in the
-other. The [open question](open-questions.md#the-questions) of whether the wave is always on screen or behind
+other. The [open question](../open-questions.md#the-questions) of whether the wave is always on screen or behind
 a control is reopened by a wheel, because the natural place for the wave is a wheel on the entrance hex, and
 that is exactly *behind a click*, which the 13 August finding warns against.
 
@@ -180,7 +180,7 @@ that is exactly *behind a click*, which the 13 August finding warns against.
 
 **What verifies it.** A sheet from `capture-ui-previews.ps1` at each of its four states, then a played round.
 `ChromeLayoutTests` holds the roster against the wedges the way it holds it against the bar. The rule from
-[the chrome sheets](chrome/README.md) stands: a layout is chosen from a picture, never from a sentence.
+[the chrome sheets](../chrome/README.md) stands: a layout is chosen from a picture, never from a sentence.
 
 **Documents it moves.** The chrome README (the chosen arrangement is superseded on the menu and kept on the
 rail; a new chosen sheet); build order seam 7 (the wheel is the planning surface's MVP; the watching surface
@@ -204,7 +204,7 @@ timeline, kept in the art file beside the row: which clip plays in which state, 
 frame of the swing the shot is released. The simulation's windup and backswing numbers are then derived from
 the score rather than the clip being stretched to the numbers: windup is the frames before the release frame
 at the signed speed, backswing the frames after, both in ticks. The view still asks *what is the pose at
-tick t*, so [ADR-0019](adr/0019-the-view-has-no-clock.md) holds, seeks stay exact and the two locomotion
+tick t*, so [ADR-0019](../adr/0019-the-view-has-no-clock.md) holds, seeks stay exact and the two locomotion
 tests stay green. The one design consequence is that a rate of fire becomes a property of the clip and the
 speed it is played at, which is a balance input; the cost rule already reads none of it, so nothing is
 priced differently until the sweep is.
@@ -213,7 +213,7 @@ For projectiles, the same idea: a shot is a KayKit model on a path from the rele
 not from a derived point, with a trail as a mesh-mode particle system, which the billboard guard permits.
 An impact is a short mesh-mode burst. A particle system can be simulated to a time and restarted, so an
 effect on a seek is re-simulated to the tick the way the match is, and
-[ADR-0008](adr/0008-match-events-are-decorative.md) is kept: the effect is drawn from what the snapshot says
+[ADR-0008](../adr/0008-match-events-are-decorative.md) is kept: the effect is drawn from what the snapshot says
 happened, never from an event the seek did not hear.
 
 **Per tower, because Sam said so and the rules agree.** Nine lines, twenty-seven rows, and each row's clips,
@@ -248,7 +248,7 @@ posts under a floating tile.
 **Where the jank comes from.** A step between two cells one level apart is drawn as the higher tile with a
 cliff post under it, and only the corridor gets the pack's ramp pieces; ground cells beside it rise on sloped
 tiles whose slope points one way. Where three cells of three heights meet, the pieces do not agree and the
-corners show. [The research note](research/what-makes-the-board-read-flat.md) halved the level so a step is
+corners show. [The research note](../research/what-makes-the-board-read-flat.md) halved the level so a step is
 half a metre, tried decorative ledges, measured no tonal change and rejected them; it did not try a
 continuous surface.
 
@@ -277,7 +277,7 @@ role, since a skin is a dressing decision; a decision-log entry.
 settings screen, and a screen at the end of a run that shows the six bars.
 
 **The MVP.** Four screens in UI Toolkit, in the one scene. The match root idles until a run starts, so
-[ADR-0029](adr/0029-exactly-one-match-root.md) and `SceneRootTests` hold and every batchmode capture keeps
+[ADR-0029](../adr/0029-exactly-one-match-root.md) and `SceneRootTests` hold and every batchmode capture keeps
 working. Settings persist to the player's data folder: display mode and resolution, master volume, mouse
 sensitivity, the player's name, the lobby folder's path. The end-of-run screen is section 3.1's six bars and
 the old outcome line. Escape opens a pause menu with resume, settings and quit.
@@ -290,7 +290,7 @@ sit-down's *Before you start* section and its row 12, the clean-machine double-c
 acceptance test.
 
 **Documents it moves.** The sit-down; AGENTS.md rule 3's list if a script is added; ADR-0029 gains the
-sentence that the root may be idle; the vision's [§8, out of scope](vision.md#8-out-of-scope) stays as it is,
+sentence that the root may be idle; the vision's [§8, out of scope](../vision.md#8-out-of-scope) stays as it is,
 since a menu is not a store page.
 
 ### 3.6 · The sweep harness specification
@@ -339,36 +339,36 @@ What each standing document says that the goal makes stale, and the suggested ed
 
 | Document | Says today | Suggested update |
 |---|---|---|
-| [`vision.md`](vision.md) pillar 4 | The multiplayer is real, and all of it is deferred | The lobby is next; the round-robin, co-op and the social layer stay deferred |
+| [`vision.md`](../vision.md) pillar 4 | The multiplayer is real, and all of it is deferred | The lobby is next; the round-robin, co-op and the social layer stay deferred |
 | `vision.md` §2 | K = 10 in every mode, topped up from the pool | K is everyone present in a lobby, with no top-up; ten from the pool in the round-robin |
 | `vision.md` §3 | Runs rank by waves survived then health; the offense never enters the placing | A run is scored per metric as a position on the lobby's curve; whether the positions combine is Sam's ruling, recorded in the same edit |
 | `vision.md` §6 | Art is not a risk item; the effort goes into lighting, VFX and camera | Keep the second half, strike the first, and add the animation score as the approach |
 | `vision.md` §7 | A real server, self-run, not built | Add: the lobby MVP runs on a shared folder, and the server is the relay that replaces it |
-| [`build-order.md`](build-order.md) sequence | Steps 1 to 4 built, step 5 next, then step 7 is depth, the two-board interface and the service | Steps 1 to 6 built; step 7 is the playtest MVPs in section 5's order; the old step 7 becomes step 8 |
+| [`build-order.md`](../build-order.md) sequence | Steps 1 to 4 built, step 5 next, then step 7 is depth, the two-board interface and the service | Steps 1 to 6 built; step 7 is the playtest MVPs in section 5's order; the old step 7 becomes step 8 |
 | `build-order.md` step 5 prose | *Step 5 is fifth deliberately*, and the shell-versus-client reasoning | Keep the finding, retire the argument to the decision log; it argued for a sequence that is complete |
 | `build-order.md` seam 2 | After step 6, half-paid by step 2 | Its first half is the lobby folder and barrier, built now |
 | `build-order.md` seam 4 | Owed columns are queries | Owed a specification first |
 | `build-order.md` seam 7 | The 17 August arrangement, with the menu beside the hex | The wheel supersedes the menu's placement and keeps the rail; the watching surface is untouched |
 | `build-order.md` seam 8 | Independent, whenever there is appetite | On the critical path; the animation score per tower |
 | `build-order.md` seam 9 | Generation and rotation deferred behind the first authored map | Add smoothing as the seam's next piece, under the legibility veto |
-| [`open-questions.md`](open-questions.md) | Is the field measurement kept | Answered: it is the score's consumer |
+| [`open-questions.md`](../open-questions.md) | Is the field measurement kept | Answered: it is the score's consumer |
 | `open-questions.md` | Whether the wave is always on screen | Reopened by the wheel; decided from a sheet |
 | `open-questions.md` | What a thumbnail is | Deferred behind the wheel's text MVP, still load-bearing |
 | `open-questions.md` | The sit-down's seven tick rows | Retire onto `LocomotionTests`; the playtest is the new instrument |
 | `open-questions.md` | Rating at two scales; the gamble | The lobby is the friend-group scale and is built first; the gamble waits on a pool |
 | `open-questions.md` | The bot's value score; zero rows; what a spawner is worth | Owned by the sweep spec |
-| [`decision-log.md`](decision-log.md) | Ends on 13 September, windup and backswing | Entries for each reversal above, on the day Sam makes it: the placing, K for a lobby, the multiplayer's deferral, art as a risk, the 17 August arrangement's menu |
-| [`roster.md`](roster.md) | A `Looks` line per row; sixteen windup and backswing numbers signed as holding answers | The `Looks` line carries the animation score once signed; the sixteen numbers are re-derived from it |
-| [`sit-down.md`](sit-down.md) | Twelve things to look at, once, at ticks of the recorded match | Retired, or rewritten as the playtest protocol: what six people are asked to look at and say, and what is recorded where. Row 12 becomes the wrapper's acceptance test |
-| [`chrome/README.md`](chrome/README.md) | The chosen arrangement is what the build phase is being built toward | Superseded on the menu, kept on the rail; a new chosen sheet once the wheel is picked from one |
-| [`docs/README.md`](README.md) | The index | This page; `specs/`; the playtest protocol |
-| [`AGENTS.md`](../AGENTS.md) | Rule 3's script list; *where things are written down* | New scripts as they land; `docs/specs/` |
-| [`research/what-agents-can-build-unattended.md`](research/what-agents-can-build-unattended.md) | B1 is the 17 August chrome; the four rows worth doing | Stale on B1 and B7; the note's method stands, its table does not. Either amend or retire under the 5 September rule |
-| [ADR-0035](adr/0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | Placing is waves then health; a single score is refused | Amend: the placing is per-metric position; the refusal of a single score is the reason |
-| [ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md) | Largely superseded; nothing reads the measurement | Amend: the score reads it, against the lobby |
-| [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | A run draws K at its own stage from a folder | Amend: a lobby is the folder, and the barrier is the count at the stage |
-| [ADR-0028](adr/0028-generated-placeholder-art-marks-the-seam.md) | Generated meshes mark the seam | The seam closes as each tower's score lands; say so in an amendment |
-| [ADR-0008](adr/0008-match-events-are-decorative.md), [ADR-0019](adr/0019-the-view-has-no-clock.md) | Events are decorative; the view has no clock | Both hold; add the sentence on how a particle effect is simulated to a tick |
+| [`decision-log.md`](../decision-log.md) | Ends on 13 September, windup and backswing | Entries for each reversal above, on the day Sam makes it: the placing, K for a lobby, the multiplayer's deferral, art as a risk, the 17 August arrangement's menu |
+| [`roster.md`](../roster.md) | A `Looks` line per row; sixteen windup and backswing numbers signed as holding answers | The `Looks` line carries the animation score once signed; the sixteen numbers are re-derived from it |
+| [`sit-down.md`](../sit-down.md) | Twelve things to look at, once, at ticks of the recorded match | Retired, or rewritten as the playtest protocol: what six people are asked to look at and say, and what is recorded where. Row 12 becomes the wrapper's acceptance test |
+| [`chrome/README.md`](../chrome/README.md) | The chosen arrangement is what the build phase is being built toward | Superseded on the menu, kept on the rail; a new chosen sheet once the wheel is picked from one |
+| [`docs/README.md`](../README.md) | The index | This page; `specs/`; the playtest protocol |
+| [`AGENTS.md`](../../AGENTS.md) | Rule 3's script list; *where things are written down* | New scripts as they land; `docs/specs/` |
+| [`research/what-agents-can-build-unattended.md`](../research/what-agents-can-build-unattended.md) | B1 is the 17 August chrome; the four rows worth doing | Stale on B1 and B7; the note's method stands, its table does not. Either amend or retire under the 5 September rule |
+| [ADR-0035](../adr/0035-a-runs-outcome-is-a-vector-and-health-is-a-clock.md) | Placing is waves then health; a single score is refused | Amend: the placing is per-metric position; the refusal of a single score is the reason |
+| [ADR-0042](../adr/0042-the-field-is-measured-off-the-pool.md) | Largely superseded; nothing reads the measurement | Amend: the score reads it, against the lobby |
+| [ADR-0057](../adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | A run draws K at its own stage from a folder | Amend: a lobby is the folder, and the barrier is the count at the stage |
+| [ADR-0028](../adr/0028-generated-placeholder-art-marks-the-seam.md) | Generated meshes mark the seam | The seam closes as each tower's score lands; say so in an amendment |
+| [ADR-0008](../adr/0008-match-events-are-decorative.md), [ADR-0019](../adr/0019-the-view-has-no-clock.md) | Events are decorative; the view has no clock | Both hold; add the sentence on how a particle effect is simulated to a tick |
 | New ADRs | | A lobby is a shared folder; an animation is a score sampled by tick; a score is a position on a curve |
 | New documents | | `docs/specs/sweep-harness.md`; `docs/playtest.md`, the protocol the sit-down becomes |
 

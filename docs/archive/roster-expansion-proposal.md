@@ -6,10 +6,10 @@
 > are kept as written; every model is confirmed from a rendered sheet of all 32 candidates. All five reversals
 > in the table below are taken.
 >
-> **[`roster.md`](roster.md) is now the signed record** — every row on this page is there with `status:
+> **[`roster.md`](../roster.md) is now the signed record** — every row on this page is there with `status:
 > signed`, its model and props on its `Looks` line, and its numbers on its `Numbers` line. The reasoning for
 > each reversal is in
-> [the decision log](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move).
+> [the decision log](../decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move).
 > **This page is kept as the argument, not as the record.** Where the two disagree, `roster.md` wins.
 >
 > **The five things the review changed:**
