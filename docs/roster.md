@@ -205,7 +205,7 @@ roots may be placed and every other rung is reached by standing the one below it
 
 # Towers
 
-> **The widening is signed.** [The expansion proposal](roster-expansion-proposal.md) was taken on
+> **The widening is signed.** [The expansion proposal](archive/roster-expansion-proposal.md) was taken on
 > **5 September 2026**: nine lines, three stages each. The Captain, the Hero and the elemental branch are
 > retired with it, and their mechanics moved to capstones on models that ship the prop for them.
 
@@ -1206,7 +1206,7 @@ invalidates no record; it leaves those bundles pinned to an older roster, which 
 ## What is deliberately absent
 
 > **All three are filled as of 5 September 2026.** They were blocked on models, and the models arrived with
-> [the expansion](roster-expansion-proposal.md). The table below is kept as the record of what was absent and
+> [the expansion](archive/roster-expansion-proposal.md). The table below is kept as the record of what was absent and
 > what closed it.
 
 **Recorded so it is not silently re-proposed.** These were never design rejections — they were shapes that

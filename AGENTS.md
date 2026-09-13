@@ -1,132 +1,64 @@
 # Agent instructions
 
-Working rules for anything — human or agent — doing execution work in this repo.
-
-Six rules. Each exists because the obvious alternative fails quietly, which is the failure mode that costs the
-most to find later. Keep this file short: it is loaded into every agent's context, so anything that is a
-*finding* rather than an *instruction* belongs in [`docs/research/`](docs/research/).
+Working rules for anything — human or agent — doing execution work in this repo. Six rules, each because the
+obvious alternative fails quietly. **This file is loaded into every agent's context, so it holds instructions
+only**: a finding belongs in [`docs/research/`](docs/research/), a reference in [`docs/`](docs/README.md).
 
 ## 1. Compile feedback comes from the project-local editor log
 
-`client/Logs/Editor.log` is the log for this project. **Never read the global path** —
-`%LOCALAPPDATA%\Unity\Editor\Editor.log` on Windows — even though it is the one Unity's own documentation names.
-
-The trap is that the global file *exists* and *parses*. Reading it does not error; it answers, and the answer is
-about something else. Measured here minutes apart: 3,350 bytes in the global log against 724,920 in the
-project's own. An agent that trusts the global path gets a small, plausible, stale file and reports confidently
-on a compile that never happened.
+Read `client/Logs/Editor.log`. **Never read the global path** (`%LOCALAPPDATA%\Unity\Editor\Editor.log`), even
+though Unity's own documentation names it. It exists and it parses, and it is about a different compile —
+measured minutes apart: 3 KB in the global log against 725 KB in the project's own.
 
 ## 2. Say it in your reply when engine-side code went uncompiled
 
-If you wrote C# that Unity has not compiled, and getting it compiled would need the developer to alt-tab,
-**write that in your reply**. Do not sit and wait for an editor to notice. Do not quietly hand back untested
-code either.
+If you wrote C# that Unity has not compiled, and compiling it needs the developer to alt-tab, **write that in
+your reply**. Do not wait silently for an editor to notice, and do not hand back untested code without saying
+so.
 
-The point is where the friction lands. Waiting silently spends the developer's wall-clock time invisibly —
-nobody ever sees the total, so nobody ever fixes it.
-
-**The build gate will not catch it for you.** `dotnet test sim.tests` is every test that runs on a push; no
-EditMode or PlayMode test runs in continuous integration at all. Run them yourself, editor closed, with
-`run-editmode-tests.ps1`, `run-playmode-tests.ps1` or `run-unity-tests.ps1` — there is nowhere else they run.
-The gate names what it skips instead, in `check-unity-test-inventory.ps1`, and goes red when that list stops
-matching the tests on disk. It counts them; it does not compile them — a test added or removed turns it red, a
-test or a view file *changed* does not. Engine-side code can be edited into something that will not build and
-every gate step will still pass.
-
-**A scheduled task runs all three overnight, so a break shows up the morning after rather than weeks later.**
-`register-nightly-unity.ps1` puts `nightly-unity.ps1` on the machine at 03:00, and it writes one line per
-runner — date, runner, pass or fail, tests run, exit code — to `client/Logs/nightly.log`, which git ignores.
-It tests one checkout as it stood at 03:00, so it is a catch and not a substitute for running the one you
-changed.
+**The build gate will not catch it.** `dotnet test sim.tests` is everything CI runs; no EditMode or PlayMode
+test runs there. Run them yourself, editor closed: `run-editmode-tests.ps1`, `run-playmode-tests.ps1` or
+`run-unity-tests.ps1`. `check-unity-test-inventory.ps1` counts the client's tests and goes red when the count
+changes; it does not compile them, so a *changed* test or view file passes every gate step unbuilt.
+`nightly-unity.ps1` (registered by `register-nightly-unity.ps1`; 03:00; one line per runner to
+`client/Logs/nightly.log`) tests one checkout the morning after — a catch, not a substitute for running the
+one you changed.
 
 ## 3. Every automation has a static command-line entry point
 
-Anything an agent needs to run lives in `tools/` and runs from a shell: `run-headless-match.ps1`,
-`run-parity-run.ps1`, `run-unity-tests.ps1`, `run-playmode-tests.ps1`, `run-editmode-tests.ps1`,
-`run-player-tests.ps1`, `nightly-unity.ps1`, `register-nightly-unity.ps1`,
-`build-player.ps1`, `build-match-scene.ps1`, `build-test-assets.ps1`,
-`build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
-`render-map.ps1`, `run-sweep.ps1`, `show-ladder.ps1`,
-`capture-match-frames.ps1`, `capture-art-previews.ps1`, `capture-ui-previews.ps1`,
-`capture-armed-roster.ps1`, `capture-rung-candidates.ps1`, `capture-chrome-overflows.ps1`,
-`capture-beside-props.ps1`, `check-docs.ps1`,
-`check-file-sizes.ps1`,
-`check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
+Anything an agent needs to run lives in `tools/` and runs from a shell — `ls tools/*.ps1`; every script's
+header says what it is for. **Nothing may depend on an editor bridge** — no plug-in that must be present in a
+running editor, no socket to a live Unity, no "open the project and press the button". A bridge is a
+dependency on a session, which a fresh clone, a CI runner and an overnight agent do not have. Batchmode
+(`-batchmode -executeMethod`, `-batchmode -runTests`) needs the editor closed and works from nothing.
 
-**Nothing may depend on an editor bridge being installed** — no plug-in that has to be present in a running
-editor, no socket to a live Unity, no "first open the project and press the button". A bridge is a dependency on
-a *session*, and sessions are exactly what a fresh clone, a CI runner and an overnight agent do not have.
-Batchmode (`-batchmode -executeMethod`, `-batchmode -runTests`) needs the editor closed and works from nothing.
-
-**The board itself is drawn in Unity, and `content/map.txt` is still the artifact.** `Tools > Board > Edit Map`
-opens a window that paints hexes and tiers in the scene view and bakes that file. It does not hold a second copy
-of the map's rules: a draft is legal exactly when `HexMap.ParseUtf8` accepts it, so the editor refuses in the
-simulation's own sentence and cannot drift from it. Loading the committed board and baking it unchanged is
-asserted to be byte-for-byte identical -- `BoardDraftTests` -- because a bake that moved the board by a space
-would invalidate `defense.txt`, `match.replay`, the landmark table and the cell coordinates in seventeen
-`sim.tests` files for no visible reason. The bake names that chain and runs none of it.
-
-**The whole KayKit collection is imported, and a model is addressed by name.** `client/Assets/Art/Kaykit/`
-holds all 4,247 models of the 21 packs that ship an `fbx(unity)` export. `Tools > Board > Scenery` is the
-palette: search it, pick one, place it on a cell. In `content/dressing.txt` that is a **`model`** line naming
-the path under that folder -- `model 3 4 city-builder/building_A 0 0 0 100` -- as against a **`place`** line,
-which asks a *family* for its n-th and is what the generator writes. Both verbs stay: a generator scattering a
-board it has never seen must be able to ask for "a grove", and a person who has looked at the thing means that
-one. **Each pack ships its own atlas**, so a named model carries its own material and only family pieces wear
-the board's one surface; drawing a City Builder crate against the hexagon atlas produces confetti, not a
-slightly-wrong crate. **The scene carries only the models the dressing file names**, resolved at scene-build
-time -- so a bake that adds a model needs `build-match-scene.ps1` after it, which the bake's own log line says.
-
-**The board's dressing is the one thing edited by hand, and it still obeys this.** `Tools > Board > Dress`
-draws the real floor and scenery into the open scene so a human can move things; `Bake` writes what they left to
-`content/dressing.txt`; `Clear` takes it down. **Drawing the board again carries unbaked work forward rather than
-discarding it** -- both tools share one preview and the map editor rebuilds it after every stroke, so a teardown
-that read the file back would mean painting one hex threw away every tree somebody had moved. What is standing is
-measured against the map the floor was *drawn from* (`HexFloor.Map`), never the one about to be drawn, or a stroke
-would pin the generator's own scenery into the file as though a person had placed it. `Clear` is therefore the
-only way back to the committed file, and the only way to lose the work in one click. Every preview object carries `HideFlags.DontSave`, so none of it
-reaches `Match.unity` and the scene stays generated. All three are `public static void` with no arguments, so an
-agent runs them with `-batchmode -executeMethod View.Editor.BoardDressingTools.Bake` like anything else --
-there is no bridge and no session. Where the scenery goes by default is
-`client/Assets/Settings/BoardDressing.asset`, which `build-match-scene.ps1` creates once and then never touches
-again, because it is the one asset in this project a person tunes rather than derives.
+The board's editor menus — `Tools > Board > Edit Map`, `Scenery`, `Dress` — obey this: each is a
+`public static void` with no arguments, and `content/map.txt` and `content/dressing.txt` stay the artefacts.
+What each does, and the `model`/`place` verbs in the dressing file, are in
+[the board tools](docs/board-tools.md).
 
 ## 4. Generated files are committed beside the change that caused them
 
-If a change causes a file to be regenerated — a lockfile, a `.meta`, a built plug-in — that file goes in the
-same commit. Not a follow-up, not "it'll regenerate".
-
-The rule is what makes a fresh clone the same project as the one it was cloned from. The corollary bites too: if
-a generated file must **not** be committed, that has to be arranged by construction — an ignore rule — and not
-by remembering. Ignore rules only govern untracked files, so a *tracked* generated file like
-`client/Packages/packages-lock.json` has to be watched for by hand. See `client/.gitignore`, which carries the
-scars.
+Whatever a change regenerates — a lockfile, a `.meta`, a built plug-in — goes in the same commit. Not a
+follow-up, not "it'll regenerate". That is what makes a fresh clone the same project. The corollary: a
+generated file that must **not** be committed is excluded by an ignore rule, never by remembering — and ignore
+rules only govern untracked files, so a *tracked* one like `client/Packages/packages-lock.json` has to be
+watched by hand. `client/.gitignore` carries the scars.
 
 ## 5. A worktree is finished when `git worktree list` stops naming it
 
-`git worktree remove` is two operations in one command: it unregisters the worktree, *then* deletes the files.
-**Close the editor before removing one.** An open Unity holds handles on `client/Library`, the delete half
-fails, and the unregister half has already happened.
-
-What survives is the quiet part: a full directory under `.claude/worktrees/` whose `.git` file is gone. Neither
-`git worktree list` nor `git worktree prune` can see it — it is no longer a stale worktree, just a directory,
-and nothing will ever come back for it. Five accumulated here before anyone looked, about 130,000 files. The
-check that finds them is `ls .claude/worktrees` against `git worktree list`; anything in the first and not the
-second is an orphan.
-
-Delete the branch too once its pull request merges. GitHub drops the remote branch on merge, but the local one
-is yours to remove; `git branch --merged origin/main` lists everything that has already landed.
+**Close the editor before `git worktree remove`.** The command unregisters and then deletes; an open Unity
+holds `client/Library`, the delete fails, and what remains is a directory under `.claude/worktrees/` with no
+`.git` file that neither `list` nor `prune` can see. Five accumulated here, about 130,000 files. The check:
+anything in `ls .claude/worktrees` and not in `git worktree list` is an orphan. Delete the local branch too
+once its pull request merges — `git branch --merged origin/main` lists them.
 
 ## 6. What verifies an area decides how much of it an agent may do unattended
 
-The gate covers the simulation completely and, as rule 2 says, counts the client's tests without running them,
-so an agent working alone has hard evidence about one half of this repository and thin evidence about the
-other. **Match the autonomy to what would actually catch the change being wrong**, per the gradient below.
-Treating every area alike is what fails quietly: hold a change a player will see to the simulation's standard
-and every check still passes, on an artefact nobody has looked at. The rule was asked for by
-the software-factory note, since retired; the evidence that survives it is
-[What agents can build unattended](docs/research/what-agents-can-build-unattended.md), which names the
-instruments each row rests on and the standing rules the last row cites.
+The gate proves the simulation and only counts the client's tests (rule 2), so **match the autonomy to what
+would actually catch the change being wrong.** Holding a visual change to the simulation's standard passes
+every check on an artefact nobody has looked at. The evidence each row rests on is
+[What agents can build unattended](docs/research/what-agents-can-build-unattended.md).
 
 | Area | What verifies it | Autonomy |
 |---|---|---|
@@ -140,35 +72,26 @@ instruments each row rests on and the standing rules the last row cites.
 
 ## Waiting on Unity
 
-Three facts, measured. The evidence is in
-[How long Unity takes to notice a rebuilt plug-in](docs/research/unity-hot-reload-timing.md).
+Measured in [How long Unity takes to notice a rebuilt plug-in](docs/research/unity-hot-reload-timing.md).
 
-- **Unattended work does not stall.** An untouched editor picks up a rebuilt plug-in on its own — but the delay
-  ranged from 18 seconds to 11 minutes for the *same* editor doing the *same* thing. Poll for evidence; never
-  sleep a fixed interval and assume.
-- **Poll the project-local log for a marker your own code emitted.** Silence there means *not yet*, and never
-  means *failed* — the log is written lazily and an idle editor can leave it hours behind.
-- **If you need it now, close the editor and use batchmode.** `SetForegroundWindow` is refused to a background
-  process, so an agent cannot force the refresh. Asking the developer to alt-tab works and costs about
+- **Unattended work does not stall** — an untouched editor picks up a rebuilt plug-in on its own — but the
+  delay ranged from 18 seconds to 11 minutes for the same editor doing the same thing. Poll for evidence;
+  never sleep a fixed interval and assume.
+- **Poll `client/Logs/Editor.log` for a marker your own code emitted.** Silence means *not yet*, never
+  *failed* — the log is written lazily and an idle editor can leave it hours behind.
+- **If you need it now, close the editor and use batchmode.** An agent cannot force the refresh
+  (`SetForegroundWindow` is refused to a background process); asking the developer to alt-tab costs about
   18 seconds.
 
 ## Where things are written down
 
-- [`docs/vision.md`](docs/vision.md) — the standing document: what the game is. It holds only what is decided;
-  [`docs/build-order.md`](docs/build-order.md) holds the sequence and the nine seams,
-  [`docs/open-questions.md`](docs/open-questions.md) what is in scope but undecided, and
-  [`docs/decision-log.md`](docs/decision-log.md) every reversal.
-- [`docs/roster.md`](docs/roster.md) — the design side of `content/units.txt`: what each unit is for and what
-  about it is still unsigned.
-- [`docs/adr/`](docs/adr/) — why the code is shaped the way it is. **The source carries no comments** — the code
-  says what it does through its names — so everything a comment would have held lives here, in the commit
-  message, or on the ticket.
-- [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
-- [`docs/specs/`](docs/specs/) — a specification written before a rebuild: what a tool is for, what it plays,
-  what it reports, and how a verdict reaches `content/`. Written from a sitting, reviewed as a document.
-- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the review
-  boundary, and how blocking, claiming and closing a ticket are done here.
+[`docs/README.md`](docs/README.md) is the index. [`docs/vision.md`](docs/vision.md) is the standing document
+and holds decisions only; [`docs/decision-log.md`](docs/decision-log.md) holds every reversal and is written,
+not read — nothing an agent needs in order to act lives only there.
+[`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) is the tracker doc.
 
-**When a decision moves, the vision is edited and the reversal is recorded in the decision log.** Do not leave
-a struck-through claim, a "this used to say" aside or a dated amendment inside a standing document — that is
-what the log is for.
+**The source carries no comments** — the code says what it does through its names, and the why lives in
+[`docs/adr/`](docs/adr/), the commit message or the ticket.
+
+**When a decision moves, edit the vision and record the reversal in the log.** Never leave a struck-through
+claim, a "this used to say" aside or a dated amendment inside a standing document.
