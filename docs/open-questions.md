@@ -6,12 +6,9 @@ question leaves this file when it is decided — into [the vision](vision.md), w
 
 ## What the design research found
 
-**Nothing is in flight, and the notes are gone.** Five surveys were commissioned against this file between 3
-and 6 August 2026. Every one came back, every verdict below was taken out of it and into the vision, this file
-or an ADR, and the notes themselves were
-[retired on 5 September](decision-log.md#5-september-2026-later--fifteen-research-notes-are-retired). What
-they found is here; the working is not, and re-commissioning a survey against the design as it now stands is
-cheaper than keeping one written against a design that has moved. They were decision inputs for
+**The surveys are retired; their verdicts are here.** Each verdict was taken into the vision, this file or an
+ADR, and the working is not kept: re-commissioning a survey against the design as it now stands is cheaper
+than keeping one written against a design that has moved. They were decision inputs for
 [seams 1, 3 and 7](build-order.md#the-nine-seams).
 
 | The question | What it found |
@@ -80,32 +77,13 @@ entity drawn as N bodies, and hitscan for fast squad weapons — with delivery k
 legibility, and the attention budget of watching two boards — converge on squads being an archetype rather than
 the model for the whole defense.** [Seam 1](build-order.md#1--the-match-format)'s to take or leave.
 
-**What the seven tick-anchored sit-down rows point at now that a build opens on a run.**
-[The sit-down](sit-down.md)'s rows 4 to 10 name a tick of `content/match.replay`, which the player opened on
-until [#198](decision-log.md#14-august-2026-later--the-client-stops-opening-on-the-recorded-match) and no longer
-does. Two answers, and both are cheap: **re-anchor them** to a round a run reproduces — which needs a committed
-script, a seed and a landmark table for that round rather than for the recorded match, and buys a checklist that
-walks the same path a player does — or **retire them** onto `LocomotionTests`, which already carries the
-load-bearing half of rows 4 and 5 and is the reason those two stopped being judgements. The rows themselves are
-not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
-somebody sits down with the build.
-
-**What the gate rounds' one remaining loose end is: the capacity schedule.** Two of the four readings here
-were settled on
-[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
-**a grant is one token**, which is what makes it three capstones a run, and **a capstone costs the token and no
-gold** — charging gold on top would make the token a permit rather than a price, which is a different mechanic
-with a different failure mode. Both are now rules in [the roster](roster.md#what-things-cost) rather than
-readings. The other two were signed on
-[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung): **the currency is a capstone**, and
-[**a capstone banks**](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code) — the code had banked since 6 September, and the docs caught up.
-
-What is still open is **the capacity schedule** — the opening pair of two slots and ten count, and the 2/4/6/8
-and 10/20/30/40 steps — deleted on 13 August, with only the token half coming back. It is a design waiting on
-a playtest, and since
-[13 September](decision-log.md#13-september-2026-later-again--the-capacity-gate-waits-on-the-people-playtest-and-the-run-this-ticket-asked-for-is-not-played) the playtest has a name: the people playtest, the playtestable build Sam
-is scoping alongside the balance sweep. Not a run on a branch — one was offered on #287 and declined as
-throwaway — so "waiting on a playtest" points at a thing that is coming rather than at nothing.
+**The capacity schedule.** The capstone half of [the gate rounds](vision.md#the-gates) is decided and is in
+[the roster](roster.md#what-things-cost) as rules: a grant is one capstone, a capstone costs the token and no
+gold — charging gold on top would make it a permit rather than a price, a different mechanic with a different
+failure mode — the currency is called a capstone, and it banks. What is open is the schedule itself: the
+opening pair of two slots and ten count, and the 2/4/6/8 and 10/20/30/40 steps. It waits on the people
+playtest — the playtestable build, alongside the balance sweep — and not on a run played on a branch, which
+would be thrown out with them.
 
 **Whether the wave is always on screen, or behind a control.** Reopened by the wheel. The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
@@ -113,14 +91,13 @@ visible as a rail, and the wheel keeps the rail; but once a hex opens a wheel, t
 is a wheel of its own on the entrance hex, which is exactly behind a click. Sam's remark on choosing the rail
 was that the sending is not the most important part, and that it may end up behind a UI element — which is a
 real option and worth stating rather than drifting into. **What it costs is stated too, because it cuts against a finding this project keeps making:**
-[the sending survey](#what-the-design-research-found) and the
-[13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) both land on the
+[the sending survey](#what-the-design-research-found) and the first played run both land on the
 attacking half being the underweighted one, and a surface that is behind a click is a surface that gets used
 less. The honest test is a sheet either way and a played round, not an argument.
 
-**What a thumbnail is, now that a layout depends on one.** `RosterThumbnails` returns null and says so
+**What a thumbnail is.** `RosterThumbnails` returns null and says so
 deliberately — no per-unit image is committed anywhere, and both ways to close it are art decisions. The
-chosen arrangement puts portraits at the centre of the build phase, so the seam is now load-bearing. **The
+chosen arrangement puts portraits at the centre of the build phase, so the seam is load-bearing. **The
 wheel's MVP is wedges with words on them, so the seam stays load-bearing and stops blocking**: the wheel is
 played before a portrait exists, and the portrait is signed after. The
 mockups borrowed `tools/capture-armed-roster.ps1`'s framing — a three-quarter front at 215°, chosen to show
@@ -180,15 +157,12 @@ someone who does not have the game is a different artefact from one you watch in
 
 **What the cost rule does not price.** The placed-unit rule prices average damage, cooldown and the bodies a
 shot hits; the walking rule prices health and armour points. It prices **neither range, nor bubble radius, nor
-shield, nor duration** — and [#213](https://github.com/ssalter21/tower-defense-game/issues/213) has just made
-range worth substantially more by tying it to elevation. That silence is deliberate and stays until the map
+shield, nor duration** — and elevation makes range worth substantially more. That silence is deliberate and stays until the map
 has been measured, because a coefficient guessed against the one-hex corridor is a coefficient priced against
 geometry that is going away. **The silence is not a judgement that these levers are free.**
 
-**The Mage's gap is now half-answered, and the open half is the price.** Settled on
-[5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
-**the splash is authored** — a bubble on the target, radius 1000, damage payload — and **the 92 is not
-touched**. The rule prices the row at 30 because `bodies` reads `targets`, which is 1; the row costs 92 because
+**The Mage's price.** **The splash is authored** — a bubble on the target, radius 1000, damage payload — and
+**the 92 is not touched**. The rule prices the row at 30 because `bodies` reads `targets`, which is 1; the row costs 92 because
 92 was three bodies' worth of a splash. Authoring the splash makes the row do what it was priced for without
 making the *rule* say so, since the rule counts `targets` and not bubble radius.
 
@@ -209,75 +183,53 @@ uptime holds a creep at the floor indefinitely. With the floor in place that is 
 correctness one. Diminishing returns is the standard answer and a real mechanic players learn; it costs a
 per-creep counter and can be taken at any time, so it is not on the critical path of the migration.
 
-**What a slowed creep looks like.** The contract is settled and the look is not. Timed effects landed in
-[#217](https://github.com/ssalter21/tower-defense-game/issues/217) as internal state, visible in no `Snapshot`
-field at all, and [#254](https://github.com/ssalter21/tower-defense-game/issues/254) answered the question of
-*which field* the way that was open between "is it slowed" and "what is on it": a creep carries the two
+**What a slowed creep looks like.** The contract is settled and the look is not. A creep carries the two
 percentages in force and the pool in front of its health, a tower carries the percentage its cooldown is
 displaced by, and a magnitude is a displacement whose sign says which way — so one field covers a slow and a
 haste both. They are snapshot fields and not events because a seek re-simulates and hears nothing, so an
 event-driven tint would be right until the first drag of the scrub bar; the reasoning is in
 [ADR-0007](adr/0007-snapshot-is-the-only-view-input.md) and the line from the other side is in
-[ADR-0008](adr/0008-match-events-are-decorative.md). **What is left open is entirely the look, and most of it was closed on
-7 September 2026 by being answered in the negative.** Nothing is drawn on a body carrying a modifier at all:
-the wash of one colour per payload came off with every other mark on a body an aura found, so which bodies an
-aura caught is read off the translucent circle it lays on the floor. That settles four of the five things #254
-recorded as nobody's decision — which way a speed moved, a body carrying both a speed and an armour modifier, a
-tower carrying one, and the wash itself — by drawing none of them; see [the decision log](decision-log.md).
-**What is still a placeholder is the bar**: two segments above the body, photographed in
+[ADR-0008](adr/0008-match-events-are-decorative.md). **Nothing is drawn on a body carrying a modifier** — no
+wash per payload, nothing for which way a speed moved, nothing on a body carrying two modifiers or on a tower
+carrying one; which bodies an aura caught is read off the translucent circle it lays on the floor. **What is
+still a placeholder is the bar**: two segments above the body, photographed in
 [`docs/frames/effects-roster-tick-0700.png`](frames/README.md), which does not turn to face the camera and
 whose segments are both shares of the authored health. That decision is Sam's, and so is how see-through the
 circles should be.
 
-**Two halves of `bubbleMagnitude` went unimplemented, and together they are a column the signed table has and
-the schema does not.** [#213](https://github.com/ssalter21/tower-defense-game/issues/213)'s column table reads
-"`bubbleMagnitude` | A damage amount, or a percentage" and names five modifiable stats including damage.
-Neither half of *damage* survived contact with the code, for a good reason each time and by a different ticket.
-[#216](https://github.com/ssalter21/tower-defense-game/issues/216) declared a bubble one shot drawing one roll,
-so a flat amount beside a `damage` payload would be a second damage source with a draw of its own
-([ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md)).
-[#217](https://github.com/ssalter21/tower-defense-game/issues/217) found the keyword already taken — `damage`
-means "the attack's own roll, spread" — so a damage *modifier* has no name left to be authored under
-([ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md)).
+**A damage payload has no name, so the schema is narrower than the signed column table.** An author **can**
+spread the attack's own roll over a sphere, apply a percentage to speed, cooldown or armour, and grant a
+shield. An author **cannot** write a bubble dealing a flat amount, and cannot write a damage buff or debuff of
+any kind — the "+x% damage to nearby towers" shape the Cleric's Zeal wants. Two ADRs each close one half: a
+bubble is one shot drawing one roll, so a flat amount beside a `damage` payload would be a second damage
+source with a draw of its own ([ADR-0055](adr/0055-a-sweep-a-blast-and-an-aura-are-one-bubble.md)); and the
+keyword `damage` means "the attack's own roll, spread", so a damage *modifier* has no name left to be authored
+under ([ADR-0056](adr/0056-an-effect-is-a-stat-a-magnitude-and-a-duration.md)).
 
-Said plainly, so nobody has to reconstruct it from two ADRs: an author **can** spread the attack's own roll
-over a sphere, apply a percentage to speed, cooldown or armour, and grant a shield. An author **cannot** write
-a bubble dealing a flat amount, and cannot write a damage buff or debuff of any kind — including the "+x%
-damage to nearby towers" shape the retired Captain was described by in the same table that authorised the
-columns — and the shape the Cleric's Zeal wants now.
+The way out is cheap and costs no format version, because it is a keyword rather than a column: a sixth
+payload value distinguishing "the roll this attack made" from "the damage stat", at which point both halves
+come back. **It is not an agent's to name** — a payload keyword is roster vocabulary — and it is named when it
+is built, not before: naming a payload word nobody is implementing would be signing a word blind. Consecration,
+an armour aura authorable today, is the Cleric's capstone instead, and Zeal is written into
+[the roster](roster.md#25--consecration--tier-3--status-live) as its *successor* so it is not re-invented.
+Until the word exists, `roster.md`'s column table says the schema is narrower than the decision rather than
+quietly restating the decision as the narrowing.
 
-Each ticket recorded its own half in its own ADR; the sum was never put in front of anybody. The way out is
-cheap and costs no format version, because it is a keyword rather than a column: a sixth payload value
-distinguishing "the roll this attack made" from "the damage stat", at which point both halves come back. **What
-it is not is an agent's to name** — a payload keyword is roster vocabulary. Until it is named, `roster.md`'s
-column table says the schema is narrower than the decision rather than quietly restating the decision as the
-narrowing.
-
-**Its naming was deliberately deferred on 5 September 2026, with a reason.** The Cleric's capstone was the
-first row that would have needed it: *Zeal*, every tower within two hexes dealing more damage. **Consecration
-was signed instead** — an armour aura, authorable today — and Zeal is written into
-[the roster](roster.md#consecration--tier-3--status-signed) as the *successor* rather than the alternative, so
-it is not re-invented. Naming a payload word nobody is implementing this effort would be signing a word blind;
-it gets named when it is built.
-
-**Whether an aura may carry damage.** #217 refuses `bubblePeriod > 0` beside a `damage` payload at load, on the
+**Whether an aura may carry damage.** The loader refuses `bubblePeriod > 0` beside a `damage` payload, on the
 argument that a pulse drawing dice outside a shot breaks the single-stream guarantee. The argument is sound and
-the refusal may well be right. It is here because #213 permits a positive period beside any payload and says "A
-whole-board pulse tower is one row", off Sam's own remark that a whole-board sweep "would, I guess, behave like
-a pulse" — so the refusal closes a shape the decision opened. That shape survives as a period of 0, which fires
-with the attack instead of pulsing. Striking the refusal is one line if a pulsing damage aura is wanted; what
-it would then need is a stated rule for where its dice come from.
+the refusal may well be right. It is here because the signed column table permits a positive period beside any
+payload — a whole-board pulse tower as one row — so the refusal closes a shape the decision opened. That shape
+survives as a period of 0, which fires with the attack instead of pulsing. Striking the refusal is one line if
+a pulsing damage aura is wanted; what it would then need is a stated rule for where its dice come from.
 
 ### Does the bot's value score divide by the gold it spends or by the gold it adds?
 
-*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
+*Owned by [the sweep specification](specs/sweep-harness.md).*
 
-**Left standing by [#236](https://github.com/ssalter21/tower-defense-game/issues/236) rather than settled
-inside it.** That ticket decided what a purchase on a covered route is worth — damage a tick, times the bodies
-a shot hits, times the route hexes it reaches, per gold of the price difference — and `CoverThenUpgradeBot`
-implements exactly that. The difference is the wrinkle: an upgrade costs its target's **full** price, which
-`content/upgrades.txt` has said since the ladder was authored, so the number the score divides by is not the
-number the purse hands over.
+**What a purchase on a covered route is worth** is damage a tick, times the bodies a shot hits, times the
+route hexes it reaches, per gold of the price difference, and `CoverThenUpgradeBot` implements exactly that.
+The difference is the wrinkle: an upgrade costs its target's **full** price, so the number the score divides
+by is not the number the purse hands over.
 
 **What that buys is a stepping stone.** A 30-gold soldier stood on a good cell and turned into an archer in
 the same round is 70 gold spent on a 40-gold archer, and the rule rates it highly because the second half of
@@ -291,15 +243,13 @@ settles it is whether this bot is meant to model a player valuing a board or a p
 
 ### Is a sweep row worth reading when the wall stops its creep outright?
 
-*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
+*Owned by [the sweep specification](specs/sweep-harness.md).*
 
-**Raised by [#236](https://github.com/ssalter21/tower-defense-game/issues/236)'s regeneration.** A defense
-that spends its whole share on a covered route now stops the light end of the roster: `content/sweep.csv` has
-the skeleton scout dealing **0** over eight runs and the minion **2,073**, against 52,687 and 36,847 before.
-A row of zeroes ranks against nothing, carries a cost efficiency of zero that means "never got through" rather
-than "poor value", and cannot disagree with itself across seeds — `SweepTests` had to move its determinism
-assertion up the roster to find a number that still moves — first to id 7, and then, once that row gained a
-haste aura and began leaking in full, to the skeleton.
+A defense that spends its whole share on a covered route stops the light end of the roster:
+`content/sweep.csv` has the skeleton scout dealing **0** over eight runs and the minion **2,073**. A row of
+zeroes ranks against nothing, carries a cost efficiency of zero that means "never got through" rather than
+"poor value", and cannot disagree with itself across seeds — `SweepTests` pins its determinism assertion on
+the skeleton, a row whose number still moves.
 
 **It is a real reading of the board and not a broken harness**, which is what makes it a question. Three
 shapes it could take: leave it and read a zero as the finding it is; play the sweep against a thinner wall so
@@ -309,11 +259,9 @@ choose between honesty and signal.
 
 ### What is a spawner worth?
 
-*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
+*Owned by [the sweep specification](specs/sweep-harness.md).*
 
-**Raised by [#268](https://github.com/ssalter21/tower-defense-game/issues/268) building the raise
-[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed.** Creep cost is effective health
-over 160, per row, derived and never authored — so the Necromancer's 21 gold is its own 3380 effective health
+Creep cost is effective health over 160, per row, derived and never authored — so the Necromancer's 21 gold is its own 3380 effective health
 and cannot see a single Minion. Measured: one Necromancer raises **11** Minions before it leaks, so 21 gold of
 body arrives with **110 gold** of bodies behind it, and four hundred gold of them returns **1200%** against a
 band of 60 to 95.
@@ -321,23 +269,19 @@ band of 60 to 95.
 **A raised body's leak *is* charged**, at the price of the row it is, so the defending half of the exchange is
 honest. What is not priced is the sending half. Three shapes the answer could take: a term in the creep rule
 that multiplies a row's price by what it raises over the crossing time, which prices a spawner against one
-corridor and is the thing this project has twice refused to guess; a cap or a decay on the raise, which
-[#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed against in as many words; or leave
-it, read the 1200 as the finding it is, and let the sweep derive a coefficient once there is a board worth
-deriving it against.
+corridor and is the thing this project has twice refused to guess; a cap or a decay on the raise, which the
+signed raise rules out in as many words; or leave it, read the 1200 as the finding it is, and let the sweep
+derive a coefficient once there is a board worth deriving it against.
 
 **It is the third silence of the same kind**, beside the Mage's splash and the Vampire's shield, and it is the
-loudest of the three by an order of magnitude. **The third shape is the one taken**, on
-[11 September 2026](decision-log.md#11-september-2026-later-again--the-necromancer-keeps-its-derived-21-and-its-1200-is-the-acceptance-test-for-the-rule-that-will-replace-it):
-the Necromancer keeps its derived 21, and the 1200 is the acceptance test for the sweep-derived rule that will
-replace the cost algorithm. What a spawner is worth is still open; what is settled is that nothing is retuned
-by hand while it is.
+loudest of the three by an order of magnitude. **The third shape is the one taken**: the Necromancer keeps its
+derived 21, and the 1200 is the acceptance test for the sweep-derived rule that will replace the cost
+algorithm. What a spawner is worth is open; what is settled is that nothing is retuned by hand while it is.
 
 ## What the playtest rebaseline leaves for a sitting
 
-[The proposal](archive/playtest-rebaseline-proposal.md) was taken whole on
-[13 September 2026](decision-log.md#13-september-2026-after-the-map--the-vision-is-rebaselined-on-a-playtest-of-six-friends-and-five-claims-reverse),
-and it put these beside their costs rather than deciding them. Each is Sam's, and each is what a ticket on
+[The proposal](archive/playtest-rebaseline-proposal.md) put these beside their costs rather than deciding
+them. Each is Sam's, and each is what a ticket on
 step 7 has to carry before an agent starts. Plain words: a *metric* is one number a round or a run produces;
 a *position* is where that number sits among the players in the lobby; the *release frame* is the frame of a
 swing on which the shot leaves the hand.
