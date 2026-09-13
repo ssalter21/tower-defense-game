@@ -143,7 +143,7 @@ ruling — schedule it, delete it, or keep waiting — comes with the playtest's
 
 - **The attacking half is as deep as the defending half.**
 - **Your defense decides your offense** — a tower unlocks a skill tree for the creeps you can buy.
-  [The research pushed back on this one](open-questions.md#what-the-design-research-found);
+  [The research pushed back on this one](research/design-surveys-digest.md);
   [seam 1](build-order.md#1--the-match-format) owns the call.
 - **You choose the order they come out in.** A wave is a sequence, not a bag. Order is a lever only on a
   single-file path, only where speeds differ, and only where *a count is a column, not a pile*.
@@ -151,7 +151,7 @@ ruling — schedule it, delete it, or keep waiting — comes with the playtest's
 Creeps get **classes and roles** — tanks, damage, support, swarm, specialists — rather than a stat ladder.
 
 **Nothing is to be built from this section.** [Seam 1](build-order.md#1--the-match-format) chooses, from
-[what the depth research found](open-questions.md#what-the-design-research-found).
+[what the depth research found](research/design-surveys-digest.md).
 
 ### The board is a maze
 

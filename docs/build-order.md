@@ -75,7 +75,7 @@ target cannot be placed directly, so an Archer must stand before a Ranger can.
 - **It does not decide the match format in full before building anything.** Steps 1–3 are the smallest form of
   seam 1's ruleset that can be played, chosen so that being wrong costs a text file rather than an effort.
 - **It does not commit to the generative roster.**
-  [The depth research](open-questions.md#what-the-design-research-found) ranked it first and the reasoning
+  [The depth research](research/design-surveys-digest.md) ranked it first and the reasoning
   holds, but it signs a content bill of **25 to 56 authored units** decided by rule rather than taste. The
   authored-pool direction composes onto the generative one later at no cost, so nothing is lost by starting
   flat.
@@ -127,7 +127,7 @@ tokens a gate hands over. The question the sweep is owed is the one a capacity b
 round.
 
 **The cheapest coherent starting point is already identified**, and it is what steps 1–3 build:
-[the sending research](open-questions.md#what-the-design-research-found) ranked *universal roster — the wave
+[the sending research](research/design-surveys-digest.md) ranked *universal roster — the wave
 **is** the order and the clock* first, because its cost is approximately zero. The ordered wave, the tie-break rule and
 the overtake landmark all exist and are tested.
 
@@ -327,7 +327,7 @@ generation and rotation are deferred behind the first hand-authored map.**
 - **The first map is hand-authored**, and **generation and rotation wait behind it** — seed-to-map as a pure
   function, a `simcli` mode to invoke it, the   sweep-scored archive, and the schedule that draws from it, all downstream of one map that is demonstrably
   good to score candidates against. What the survey found is in
-  [open questions](open-questions.md#what-the-design-research-found).
+  [open questions](research/design-surveys-digest.md).
 - **Smoothing** — a step between two cells is drawn today as the higher tile on a cliff post, and only the
   corridor gets a ramp; where three heights meet the pieces disagree. Two candidates, rendered and not argued:
   a skin over the grid, one mesh whose corners sit at the mean height of the cells meeting there; or a piece
