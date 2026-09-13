@@ -6,14 +6,21 @@
 # WHY THIS IS NOT JUST capture-ui-previews.ps1. It is: the spec is
 # docs/chrome/overflows/spec.json and this passes it through. What this file
 # adds is the one place that says what that spec is FOR and why its shots are
-# taken at wave 9 and wave 2 rather than at the opening round:
+# taken at wave 4 and wave 2 rather than at the opening round:
 #
-#   wave 9   is the first round at which a run has been granted all three
-#            capstone tokens, and the round #270 photographed with every creep
-#            the roster has in the bar. The rounds before it are played by the
-#            simulation's own scripted player (CoverThenUpgradeBot) on the tower
-#            side, and on the wave side by sending one of every creep the purse
-#            can still cover, cheapest first -- see UiPreviewCapture.PlayTo.
+#   wave 4   is the last round the simulation's own scripted player composes
+#            under the table #297 signed: it plays the rounds before it
+#            (CoverThenUpgradeBot on the tower side, and on the wave side one of
+#            every creep the purse can still cover, cheapest first -- see
+#            UiPreviewCapture.PlayTo) and loses the board committing wave 4.
+#            One capstone token is in hand by then, granted at wave 3, and the
+#            bar already overflows. The sheets were wave 9 until 13 September
+#            2026 -- all three tokens held and every one of the seventeen creeps
+#            in the bar, which is the round #270 photographed -- and go back to
+#            it when a run reaches wave 9 again; the wave is one number in the
+#            spec. Why the bot stopped surviving is on #297: it buys on
+#            cooldown, and windup and backswing are a rate-of-fire tax nothing
+#            prices.
 #   wave 2   is a round with a purse deep enough to stand a Cleric and climb it
 #            to a Bishop, and no token granted yet -- so the Bishop's ladder
 #            opens on nothing, which is the moment #282 said nothing on screen

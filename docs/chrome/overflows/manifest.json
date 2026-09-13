@@ -2,19 +2,19 @@
     "shots": [
         {
             "id": "wave-bar",
-            "label": "Wave 9: every creep the roster has in the bar, and the bar scrolls",
+            "label": "Wave 4: every creep the purse covers in the bar, and the bar scrolls",
             "state": "build",
             "candidate": "as-built",
-            "wave": 9,
+            "wave": 4,
             "png": "wave-bar.png",
-            "notes": "The overflow #270 played. Seventeen boxes and the trailing empty one in a horizontal ScrollView, scrolled to the empty box."
+            "notes": "The overflow #270 played. Every creep the purse covers and the trailing empty one in a horizontal ScrollView, scrolled to the empty box. Wave 4 because the scripted player loses the board committing it under the table #297 signed; wave 9 held seventeen."
         },
         {
             "id": "offer",
-            "label": "Wave 9: a Bishop's ladder offering the Consecration for a token, the price beneath the name",
+            "label": "Wave 4: a Bishop's ladder offering the Consecration for a token, the price beneath the name",
             "state": "build-offer",
             "candidate": "as-built",
-            "wave": 9,
+            "wave": 4,
             "png": "offer.png",
             "notes": "The longest rung label on the surface, on two lines inside the 208-wide offer."
         },
@@ -28,21 +28,21 @@
             "notes": "The moment #282 named: the Bishop's ladder opens on nothing, and the header now says why."
         },
         {
-            "id": "tokens-w9",
-            "label": "Wave 9, three tokens held: the header count with the ladder open",
+            "id": "tokens-w4",
+            "label": "Wave 4, one token held: the header count with the ladder open",
             "state": "build-offer",
             "candidate": "as-built",
-            "wave": 9,
-            "png": "tokens-w9.png",
+            "wave": 4,
+            "png": "tokens-w4.png",
             "notes": ""
         },
         {
-            "id": "tokens-w9-spent",
-            "label": "Wave 9, the Consecration bought this round: the header count with one spent",
+            "id": "tokens-w4-spent",
+            "label": "Wave 4, the Consecration bought this round: the header count with one spent",
             "state": "build-placed",
             "candidate": "as-built",
-            "wave": 9,
-            "png": "tokens-w9-spent.png",
+            "wave": 4,
+            "png": "tokens-w4-spent.png",
             "notes": ""
         }
     ]
