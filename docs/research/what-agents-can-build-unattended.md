@@ -53,6 +53,11 @@ the goal — more of your time on design and playtesting — rather than against
 (real value, but not before the rows above it), **Hygiene** (cheap, protects the AFK runs, changes nothing you
 play).
 
+**Rows B1 and B7 are superseded by [the playtest rebaseline](../playtest-rebaseline-proposal.md) of
+13 September 2026**: the build phase being built toward is the hex wheel rather than the 17 August menu, and
+the sheets B7 asks for are the animation score's, one tower line at a time. The method this note describes
+stands; read the table as the 3 September priorities.
+
 | # | What you have at the end | Worth it | Why |
 |---|---|---|---|
 | A1 | AFK runs that know what they may touch unattended and what they must hand back | Hygiene | Half an hour; every later run reads it. Changes nothing in the game |

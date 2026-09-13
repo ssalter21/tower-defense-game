@@ -20,8 +20,9 @@ and every mode of it is the same machine at a different latency.**
 2. **The planning phase is the game.** Nothing happens during a wave, so all the skill is build-and-compose.
 3. **Shallow to look at, extreme to play.** Legible to a stranger in a minute; Element TD's combinatorial
    depth underneath; the attacking half as deep as the defending one.
-4. **The multiplayer is real, and all of it is deferred.** Round-robin, lobby, co-op and a social layer are in
-   the destination. None are built; the loop is found at zero latency first.
+4. **The multiplayer is real, and the lobby is next.** Round-robin, lobby, co-op and a social layer are in
+   the destination. The loop was found at zero latency first; the lobby is built for a playtest of about six
+   friends, and the round-robin, co-op and the social layer stay deferred behind it.
 5. **They are one machine.** Every mode is *submit → wait → resolve → watch*. **No lockstep, no rollback, no
    tick synchronisation — only a submission barrier.**
 
@@ -51,9 +52,11 @@ Every mode is **submit → wait → resolve → watch**, repeated.
 **The lobby is simultaneous-turn, not real-time.** The network collects N submissions and broadcasts the
 result; nothing is synchronised while a wave runs.
 
-**K = 10 in every mode.** Each round draws a fresh field of ten stored defenses and ten waves at the same
-stage, and a round's result is the average across the ten. A lobby smaller than ten is topped up from the pool
-at that `(map, stage)`. **N and K are lifecycle parameters, not constants.**
+**K is everyone present in a lobby, and ten in the round-robin.** In a lobby every wave runs at every other
+board present and at nobody else's: a lobby of six is a field of five, and the pool tops nothing up, because a
+stored bot round is a board nobody in the room composed. In the round-robin each round draws a fresh field of
+ten stored defenses and ten waves at the same `(map, stage)`. Either way a round's result is the average
+across the field. **N and K are lifecycle parameters, not constants.**
 
 **The pool needs depth at every stage, not just at the end.**
 
@@ -71,9 +74,13 @@ because it is finished, at that stage, forever.
 
 **Health is a pool denominated in gold, and a leaked creep costs health equal to its cost, one for one.** Gold
 cannot repair it. Damage taken in a round is the field average, not the sum. Zero health ends the run — a flag
-for the harness, not a rule, so a sweep can run in no-death mode. **Runs rank by waves survived, then health
-remaining; the offense never enters the placing.** A run's outcome is a **vector** — per round,
-`(leak cost dealt, leak cost taken)`, plus how it terminated — never a scalar.
+for the harness, not a rule, so a sweep can run in no-death mode. **A run is scored the way Opus Magnum scores
+a solution: several metrics, each a position on the lobby's curve, never added into one number** *(designed,
+not built)*. The offense is one of the metrics. What a player is shown is every player's bar with their own
+lit, not a rank. Which metrics, and whether the positions ever combine into a placing, are
+[open questions](open-questions.md#what-the-playtest-rebaseline-leaves-for-a-sitting). A run's outcome is a
+**vector** — per round, `(leak cost dealt, leak cost taken)`, plus how it terminated — never a scalar, and the
+metrics are read off it.
 
 ### One purse
 
@@ -246,7 +253,15 @@ palette textures, so a faction variant costs one texture and one material and ze
 
 **The effort goes into lighting, VFX and camera; faction recolours; and UI and information design** — not
 custom character geometry. Showing two battles, an economy and a build menu at once is the hardest visual
-problem here, and it is UI work. **Art is not a risk item.**
+problem here, and it is UI work. **The models are not a risk item; how they animate and what a shot looks
+like is the work in front of the playtest.**
+
+*(designed, not built)* — **an animation is a score per tower, sampled by tick.** A score says which clip plays
+in which state, at what speed, and on which frame of the swing the shot is released; the windup and backswing
+are derived from the score, never a clip stretched to fit the numbers. The view still has no clock, so a seek
+stays exact. A shot is a model on a path from the release frame's hand, with a trail and an arrival drawn as
+mesh-mode particles, which the no-billboards rule permits. One tower line at a time, and every line's clips,
+speed and release frame are a look.
 
 ---
 
@@ -256,7 +271,13 @@ problem here, and it is UI work. **Art is not a risk item.**
 Determinism means the server re-runs any claimed result, so **anti-cheat falls out for free**. A ghost record
 is hundreds of bytes.
 
-**This is the only permanent obligation in the plan.** Everything else can be put down and picked up.
+**The lobby runs on a shared folder first** *(designed, not built)*. A stored round is a wall and a wave at a
+stage, a run already reads a folder of them, and a lobby is that folder shared between the machines present by
+whatever syncs files. The barrier is the client counting the rounds at its stage against the lobby's size.
+Resolution is local and deterministic on every machine, so nobody exchanges a result. The server is the relay
+that replaces the folder, and it is deferred, not repealed.
+
+**The server is the only permanent obligation in the plan.** Everything else can be put down and picked up.
 
 ---
 
