@@ -4,29 +4,25 @@
 reads; this one holds what each unit is *for*, what it looks like, and what about it is still unsigned. Where a
 number appears here it is a **proposal** until it appears there.
 
-This is a working document. It is meant to be opened, argued with and edited every time new gameplay is
-specified, so it is written line-by-line rather than as a wide table — a wide table is unreadable in a diff and
-miserable to edit by hand.
-
 ## How to edit this
 
-**One block per unit, the same five lines every time.** Leave a line blank when it is undecided. **A blank is
-not an omission, it is the ask** — the blanks are the agenda for the next conversation.
+- Write one block per unit, the same five lines every time, and leave a line blank when it is undecided: a
+  blank is not an omission, it is the ask, and the blanks are the agenda for the next conversation.
 
 | Line | What goes on it |
 |---|---|
 | `Does` | The mechanic, in the terms the simulation would have to implement |
 | `Looks` | The art direction — model, silhouette, what reads at a glance |
-| `Numbers` | Only what has actually been decided. `_` for what has not |
-| `Needs` | What the schema or the engine would have to gain. `nothing` means it is authorable today |
+| `Numbers` | `units.txt` on a live row; on a proposed one, only what has been decided, `_` for what has not |
+| `Needs` | What the schema or the engine would have to gain; `nothing` means it is authorable today |
 | `Open` | The question that has to be settled before it can be signed |
 
-**Status is one of four words.** `proposed` — written here and nowhere else. `signed` — the numbers are agreed.
-`live` — there is a row in `content/units.txt`. `retired` — there was one, and there is not now.
-
-**Ids come from `units.txt`'s one global space and ascend forever.** Never reused, never an index, never
-reserved in advance — the next unit built takes id 50, whatever it is. **A tier is its own id and its own row**;
-the Sergeant is not the Soldier with a flag set.
+- Give every row one of four statuses: `proposed` (written here and nowhere else), `signed` (the numbers are
+  agreed), `live` (there is a row in `content/units.txt`), `retired` (there was one, and there is not now).
+- Take the next id from `units.txt`'s one global space and never reuse one: ids ascend forever, are not an
+  index and are not reserved in advance — the next unit built takes id 50, whatever it is. A tier is its own
+  id and its own row; the Sergeant is not the Soldier with a flag set.
+- Write line by line, not as a wide table, because a wide table is unreadable in a diff.
 
 ## What things cost
 
