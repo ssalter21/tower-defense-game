@@ -1,144 +1,74 @@
 # Issue tracker: GitHub Issues
 
-Issues and PRDs for this repo live as GitHub Issues in `ssalter21/tower-defense-game`, managed via the
-`gh` CLI. Skills that say "the tracker doc" mean this file.
+Issues and PRDs for this repo are GitHub Issues in `ssalter21/tower-defense-game`, driven by the `gh` CLI. A
+skill that says "the tracker doc" means this file.
 
 ## Conventions
 
-- One label per feature/effort: `effort:<slug>` (e.g. `effort:deepening`), applied to every issue belonging to
-  that effort.
-- The PRD/tracking issue for an effort carries the `map` label in addition to its `effort:<slug>` label.
-- Ticket type is recorded as a `type:<kind>` label (`type:grilling` / `type:research` / `type:prototype` /
-  `type:task`).
-- Triage state uses `ready-for-agent` (fully specified, an agent can start) and `wontfix` (will not be
-  actioned). This repo carries no `needs-triage` / `needs-info` / `ready-for-human` labels — a ticket that is
-  not `ready-for-agent` is simply unlabelled for triage. Create the label before using it rather than assuming
-  it exists.
-- `regenerated-deliberately` goes on a pull request whose branch moves a golden artefact — the trace, the
-  landmark table, `content/golden/`, the sweep, the run outcome, the replay or the command list. The build
-  gate's `tools/check-golden-label.ps1` step is red without it, so the label is a person saying they read
-  the regenerated diff.
-- Native issue state is the source of truth for open/closed — there is no separate `Status:` line. "Resolved"
-  means the issue is closed with an `## Answer` comment; "claimed" means it is open and assigned.
-- Comments and conversation history are ordinary GitHub issue comments.
+- Label every issue in an effort `effort:<slug>`; label the effort's PRD/tracking issue `map` as well.
+- Label the ticket type `type:grilling` / `type:research` / `type:prototype` / `type:task`.
+- Label a fully specified ticket `ready-for-agent`; label one that will not be actioned `wontfix`. There is no
+  `needs-triage`, `needs-info` or `ready-for-human` — an untriaged ticket is simply unlabelled. Create a label
+  before using it rather than assuming it exists.
+- Label a pull request `regenerated-deliberately` when its branch moves a golden artefact — the trace, the
+  landmark table, `content/golden/`, the sweep, the run outcome, the replay or the command list — because the
+  gate's `tools/check-golden-label.ps1` is red without it, and the label is a person saying they read the
+  regenerated diff.
+- Read open/closed off native issue state; there is no `Status:` line. "Resolved" is closed with an
+  `## Answer` comment; "claimed" is open and assigned.
+- Converse in ordinary issue comments.
 
-## Review boundary
+## Review boundary: `stack`
 
-Where human review happens. **This repo uses `stack`**: one PR per ticket, each branched from the head of the
-newest open PR rather than from the default branch, so review reads in the order the work was built and no
-ticket waits on a merge.
+- Open one PR per ticket, branched from the head of the newest open PR — or from the default branch when
+  none is open — and targeted at it, so review reads in the order the work was built and no ticket waits on
+  a merge. `/implement` finds the base at implement time; tickets carry no branch section, because the base
+  depends on what has merged since the tickets were written.
+- Expect the stack to drain from the bottom: merging the bottom PR deletes its branch and GitHub retargets the
+  one above at the default branch. Rebase a bottom PR that changed under review into the PRs above it before
+  they are read.
+- Take a small change that is not a ticket **off the stack** — cut from `origin/main`, opened with
+  `--base main` — when all three hold: it is one small PR and not a ticket in an effort; it touches no file an
+  open stack PR touches (`gh pr diff <n> --name-only` per open PR); and nothing in the stack waits on it. After
+  it merges, run `/sync-main` in the bottom PR's worktree so the stack is never read against a stale main. A
+  person chooses this lane, never `/implement`.
 
-The **base** of new work is the head branch of the newest open PR, or the default branch when none is open;
-`/implement` finds it and opens the ticket's PR against it. Tickets carry no branch section — the base is
-found at implement time, not at publish time, because it depends on what has merged since the tickets were
-written. Merging the bottom PR deletes its branch and GitHub retargets the PR above it at the default branch,
-so the stack drains from the bottom with nobody rebasing; a bottom PR that changes under review is rebased
-into the PRs above it before they are read.
+## Commands
 
-The reason is review order. A reviewer reading a stack sees each ticket as the diff it was, on top of the
-tickets before it, and merges bottom-up without waiting for the effort to finish; a single effort PR shows the
-whole shape but only once everything in it is done, and fourteen ticket PRs cut from main each re-show the
-others' churn.
-
-**A small change that is not a ticket goes off the stack.** A skill, a doc fix, a tooling tweak has no reason
-to queue behind the effort it is unrelated to, and a stack buries it: a PR merged into the top of a five-PR
-stack is "merged" on GitHub and still five merges from the default branch. The off-stack lane is cut from
-`origin/main` and opens its PR with `--base main`. It is allowed when all three hold: it is one small PR and not
-a ticket in an effort; it touches no file any open stack PR touches (`gh pr diff <n> --name-only` per open PR);
-and nothing in the stack waits on it. After it merges, the bottom PR of the stack runs `/sync-main` in its
-worktree, so the stack is never read against a stale main. `/implement` does not choose this lane; a person does.
-
-## When a skill says "publish to the issue tracker"
-
-Create a new issue: `gh issue create --title "<title>" --label "effort:<slug>,type:<kind>" --body "<body>"`.
-To attach it to a tracking/map issue, wire it as a **native sub-issue** — pass `--parent <map-number>` at
-creation (or `gh issue edit <map-number> --add-sub-issue <n>` after) rather than only mentioning the parent in
-the body. See "Wayfinding operations" for the full child-ticket recipe.
-
-## When a skill says "fetch the relevant ticket"
-
-`gh issue view <number>`. The user will normally pass the issue number or URL directly.
-
-## Session-start overview
-
-Ask for the narrow fields. `gh issue view --json ...comments...` across an effort pulls every comment body and
-burns a lot of tokens for a status glance.
-
-- Open issues, one line each:
-  `gh issue list --state open --limit 50 --json number,title,labels,assignees --jq '.[] | "\(.number)\t\([.labels[].name] | join(","))\t\(.title)"'`
-- Frontier candidates for one effort:
-  `gh issue list --label effort:<slug> --state open --json number,title,assignees --jq '.[] | select(.assignees == []) | "\(.number)\t\(.title)"'`
-  — then drop any with an open blocker (see **Frontier** below).
-- The map: `gh issue list --label map --state open --json number,title,url,body`
-- One issue in full, comments excluded: `gh issue view <number>`. Add `--comments` only when the conversation
-  history is actually needed.
+- **Publish a ticket:** `gh issue create --title "<title>" --label "effort:<slug>,type:<kind>" --body "<body>"`.
+  Parent it to its map at creation with `--parent <map-number>` (or `gh issue edit <map-number>
+  --add-sub-issue <n>` after) — the native sub-issue is the link; a `Part of …` line in the body is prose.
+- **Fetch a ticket:** `gh issue view <number>`. Add `--comments` only when the history is actually needed.
+- **Session-start overview** — ask for the narrow fields; `--json …comments…` across an effort burns tokens
+  for a glance:
+  - Open issues, one line each:
+    `gh issue list --state open --limit 50 --json number,title,labels,assignees --jq '.[] | "\(.number)\t\([.labels[].name] | join(","))\t\(.title)"'`
+  - Frontier candidates for one effort:
+    `gh issue list --label effort:<slug> --state open --json number,title,assignees --jq '.[] | select(.assignees == []) | "\(.number)\t\(.title)"'`
+    — then drop any with an open blocker.
+  - The map: `gh issue list --label map --state open --json number,title,url,body`
 
 ## Wayfinding operations
 
-Used by `/wayfinder`. The **map** is a tracking issue, and each ticket is a **native GitHub sub-issue** of it.
-(Labels stay repo-local: `map` / `effort:<slug>` / `type:<kind>`, not the skill's `wayfinder:*` vocabulary.)
+What `/wayfinder` needs that is specific to this repo; the map's shape, the frontier and the claim are the
+skill's.
 
-- **Map**: a GitHub issue labeled `map` + `effort:<slug>`, body holding the Destination / Notes /
-  Decisions-so-far / Not-yet-specified / Out-of-scope sections (see the map body template below). The map is an
-  **index** — resolved decisions are appended as one-line gists to the body's `## Decisions so far` section,
-  each linking its child ticket where the detail lives. Do **not** log decisions as comments; the body is the
-  canonical decision index.
-- **Child ticket**: a GitHub issue labeled `type:<kind>` + `effort:<slug>`, wired to the map as a **native
-  sub-issue** so the tracker UI renders the hierarchy and progress rollup. Create it already parented:
+- Keep the labels repo-local — `map` / `effort:<slug>` / `type:<kind>`, not the skill's `wayfinder:*` words.
+- Create a child ticket already parented and triaged:
   `gh issue create --parent <map-number> --label "effort:<slug>,type:<kind>,ready-for-agent" --title "..." --body "..."`.
-  Retro-wire an existing child with `gh issue edit <map-number> --add-sub-issue <child-number>`. A
-  human-readable `Part of the <effort> effort: #<map-number>` line in the body is optional prose, not the
-  link — the sub-issue relationship is.
-- **Blocking**: GitHub's **native issue dependencies** are the canonical, UI-visible representation, and this
-  repo's tickets *also* carry a `## Blocked by` section in the body. Both are in use; the native edge wins when
-  they disagree, and a ticket that gains an edge should have its body section updated to match. Add an edge
-  with
+- Record a blocking edge natively **and** in the ticket's `## Blocked by` body section; the native edge wins
+  when they disagree. Add one with
   `gh api --method POST repos/ssalter21/tower-defense-game/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`,
-  where `<blocker-db-id>` is the blocker's numeric **database id**
-  (`gh api repos/ssalter21/tower-defense-game/issues/<n> --jq .id`, _not_ the `#number` or `node_id`). Read the
-  edges back with
-  `gh api repos/ssalter21/tower-defense-game/issues/<n> --jq .issue_dependencies_summary` — `blocked_by` is the
-  count of **open** blockers. To list which ones:
+  where `<blocker-db-id>` is the blocker's numeric **database id** —
+  `gh api repos/ssalter21/tower-defense-game/issues/<n> --jq .id` — not the `#number` and not the `node_id`.
+  Read edges back with `gh api repos/ssalter21/tower-defense-game/issues/<n> --jq .issue_dependencies_summary`
+  (`blocked_by` counts **open** blockers) or list them with
   `gh api repos/ssalter21/tower-defense-game/issues/<n>/dependencies/blocked_by --jq '.[] | "\(.number)\t\(.state)\t\(.title)"'`.
-  A ticket is unblocked when every blocker is closed.
-- **Frontier**: the map's open sub-issues with no assignee and no open blocker; first by number wins.
-  `gh issue list --label effort:<slug> --state open` lists candidates — drop any with an assignee or an open
-  blocker (`issue_dependencies_summary.blocked_by > 0`, or an open issue in the `## Blocked by` section).
-- **Claim**: `gh issue edit <number> --add-assignee @me` before starting work — the session's first write.
-- **Resolve**: `gh issue comment <number> --body "## Answer\n\n..."`, then
-  `gh issue close <number> --reason completed`, then **append a one-line gist + link to the map body's
-  `## Decisions so far` section** (edit the body, not a comment).
-
-Closing a blocker is what unblocks its dependents — GitHub recomputes `blocked_by` from issue state, so there
-is nothing else to update. Under the `stack` review boundary a ticket closes when its PR is open and pushed,
-not when that PR merges; that is deliberate, since waiting for the merge would keep every dependent blocked
-for the whole run.
-
-### Map body template
-
-```markdown
-## Destination
-
-<what reaching the end of this map looks like — the spec, decision, or change this effort is finding its way to. One or two lines.>
-
-## Notes
-
-<domain; skills every session should consult; standing preferences for this effort>
-
-## Decisions so far
-
-<!-- the index — one line per closed ticket, linking the child where the detail lives -->
-
-- [<closed ticket title>](link) — <one-line gist of the answer>
-
-## Not yet specified
-
-<!-- in-scope fog you can't ticket yet; graduates as the frontier advances -->
-
-## Out of scope
-
-<!-- work ruled beyond the destination; closed, never graduates -->
-```
-
-Open tickets are **not** listed in the body — they are the map's open sub-issues, found by query. The tracker
-UI renders the sub-issue hierarchy, so no manual `## Children` list is needed.
+- Claim: `gh issue edit <number> --add-assignee @me`, as the session's first write.
+- Resolve: `gh issue comment <number> --body "## Answer\n\n..."`, then
+  `gh issue close <number> --reason completed`, then append a one-line gist and link to the map body's
+  `## Decisions so far` — edit the body, not a comment, because the body is the decision index.
+- Close a ticket when its PR is open and pushed, not when it merges, because under `stack` waiting for the
+  merge would keep every dependent blocked for the whole run. Closing a blocker is what unblocks its
+  dependents; GitHub recomputes `blocked_by` from issue state.
+- List no open tickets in the map body — they are its open sub-issues, found by query.
