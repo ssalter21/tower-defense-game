@@ -36,8 +36,8 @@ primary sources, and decides nothing.
 **Fifteen notes have been retired**, and
 the test each one was held to was not its age but whether anything still needed it: a note stays if code, a
 content file or an ADR cites it, or if it holds a measurement that costs real time to take again. A survey
-whose verdict has been read and written into the vision, an ADR or [open
-questions](open-questions.md#what-the-design-research-found) is finished work, and keeping the working beside
+whose verdict has been read and written into the vision, an ADR or
+[the digest](research/design-surveys-digest.md) is finished work, and keeping the working beside
 the answer only gives a reader two places to look and one of them stale.
 
 **Simulation research**, measured in this repository rather than commissioned. Each of these is cited from the
@@ -52,6 +52,12 @@ code or the content file whose number it explains:
 | [Why the golden trace moved when the balance did not](research/the-tenfold-rescale-and-the-dice.md) | Multiplying every damage and health number by ten moved every generated artefact. Is that the rescale working, or a desync? |
 | [A sweep row measures the wall's attack type](research/a-sweep-row-measures-the-walls-attack-type.md) | Two of the sweep's five rows report zero. Is that a lost control, or the damage matrix working? |
 | [The tuning target, and what each row returns against it](research/the-tuning-target.md) | Where does the committed match sit against its leak band, which six creep rows are outside their own, and which of the misses has a lever? |
+
+**Design research**, the digest of the nine retired surveys:
+
+| Note | The question it answers |
+|---|---|
+| [What the design surveys found](research/design-surveys-digest.md) | What did each survey conclude, once the working is thrown away — and what could a 2.75 ms match be spent on? |
 
 **Asset research**, on the art that is actually on the machine:
 
@@ -72,8 +78,8 @@ code or the content file whose number it explains:
 > and pricing claim written against it was read via a browser user-agent as extracted text. A human should
 > confirm those in a real browser before relying on them commercially.
 
-**Where the retired notes went.** The nine design surveys are summarised, verdict by verdict, in [open
-questions](open-questions.md#what-the-design-research-found), which also carries the one thing in them that had
+**Where the retired notes went.** The nine design surveys are summarised, verdict by verdict, in
+[the design surveys digest](research/design-surveys-digest.md), which also carries the one thing in them that had
 not been written down anywhere else: the fourteen uses a 2.75 ms match could be put to. The three Unity
 build notes had all been adopted and then enforced by something that cannot go stale — `AGENTS.md` rule 3
 forbids the editor bridge one of them recommended, and `tools/check-project-settings.ps1` asserts the settings

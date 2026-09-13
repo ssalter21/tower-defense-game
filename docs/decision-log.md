@@ -120,7 +120,7 @@ Three claims were written before the walking skeleton existed, and reading the f
 
 ## 6 August 2026 — six reversals
 
-Made after [the skill note](open-questions.md#what-the-design-research-found) audited which of the genre's skill axes
+Made after [the skill note](research/design-surveys-digest.md) audited which of the genre's skill axes
 this design could still charge the player for. Four of the six exist to buy back an axis the design had deleted
 or inverted.
 
@@ -1591,7 +1591,7 @@ survey against the design as it now stands is cheaper than reading an old one an
 
 | What went | Why it could |
 |---|---|
-| **Nine design surveys** — build depth, the attacking half, towers-versus-squads, upgrade graphs, creep variety, Element TD's ancestry, and the three HTML notes on fun, the planning phase and generated maps | Every verdict is in [open questions](open-questions.md#what-the-design-research-found), which had already carried five of them in a summary table. Three said of themselves that they decided nothing; three carried banners saying their premise had moved. The upgrade-graph survey landed whole into ADRs 0043, 0044 and 0045, each of which names the shape it rules out in its own words |
+| **Nine design surveys** — build depth, the attacking half, towers-versus-squads, upgrade graphs, creep variety, Element TD's ancestry, and the three HTML notes on fun, the planning phase and generated maps | Every verdict is in [open questions](research/design-surveys-digest.md), which had already carried five of them in a summary table. Three said of themselves that they decided nothing; three carried banners saying their premise had moved. The upgrade-graph survey landed whole into ADRs 0043, 0044 and 0045, each of which names the shape it rules out in its own words |
 | **Three Unity build notes** — the agent workflow, project settings, sim-library integration | All three were adopted and then outlived by something that cannot go stale. `AGENTS.md` rule 3 now *forbids* the editor bridge the workflow note recommended; `tools/check-project-settings.ps1` asserts what the settings note chose; the integration note had corrected itself in four amendments |
 | **The software factory** | It asked for the autonomy gradient to be written down. It was, on 3 September, as `AGENTS.md` rule 6. The rule outlives the argument for it |
 | **Two KayKit listings** — the model index and the character roster | The index transcribed 2,252 model names; all 4,247 models are now imported at `client/Assets/Art/Kaykit/`, so `ls` answers the question against the files instead of against a copy of them. The character roster declared itself superseded on the numbers by the collection inventory, which stays |
@@ -1599,7 +1599,7 @@ survey against the design as it now stands is cheaper than reading an old one an
 **One thing was salvaged rather than summarised.** The planning-phase note catalogued fourteen uses of a
 re-runnable 2.75 ms match as design material — six with no equivalent in the genre — and that list existed
 nowhere else. It is now a ranked table in [open
-questions](open-questions.md#what-a-275-ms-match-could-be-spent-on), which is where an undecided menu of
+questions](research/design-surveys-digest.md#what-a-275-ms-match-could-be-spent-on), which is where an undecided menu of
 options belongs anyway.
 
 **What this costs, stated rather than discovered later.** The primary sources are gone with the notes: a
