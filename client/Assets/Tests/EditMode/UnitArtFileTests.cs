@@ -285,19 +285,53 @@ namespace Tests.EditMode
                 moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
         }
 
+        [Test]
+        public void AStandLineMovesWhereTheBesidePropStands()
+        {
+            string path = TempFile(
+                "beside " + Mortar + " " + Turret + "*1.5",
+                "stand  " + Mortar + " 1,-0.5");
+
+            UnitArtFile candidate = UnitArtFile.Read(path);
+            MatchArt moved = candidate.Applied(OneRow(Mortar));
+
+            Assert.That(candidate.Changes, Has.Count.EqualTo(1));
+            Assert.That(moved.ArtFor(Mortar).Beside.Offset, Is.EqualTo(new Vector3(1f, 0f, -0.5f)));
+            Assert.That(moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void AStandLineOnARowWithNothingBesideItIsRefusedWhenApplied()
+        {
+            string path = TempFile("stand " + Mortar + " 1,0");
+            UnitArtFile candidate = UnitArtFile.Read(path);
+
+            IOException thrown = Assert.Throws<IOException>(
+                () => candidate.Applied(OneRow(Mortar)));
+
+            Assert.That(thrown.Message, Does.Contain("nothing stands beside row " + Mortar));
+        }
+
         /// <summary>Every candidate art file the branch commits, by absolute path.</summary>
         private static IEnumerable<string> CommittedCandidates()
         {
-            string folder = Path.Combine(RepositoryRoot(), "docs", "frames", "rung-candidates");
+            var files = new List<string>();
 
-            Assert.That(
-                Directory.Exists(folder),
-                Is.True,
-                "No candidate art at " + folder + ". The four rungs of issue #281 are drawn from it.");
+            foreach (string name in new[] { "rung-candidates", "beside-props" })
+            {
+                string folder = Path.Combine(RepositoryRoot(), "docs", "frames", name);
 
-            string[] files = Directory.GetFiles(folder, "*.txt");
+                Assert.That(
+                    Directory.Exists(folder),
+                    Is.True,
+                    "No candidate art at " + folder + ". Issues #281 and #282 are drawn from these.");
 
-            Assert.That(files, Is.Not.Empty, "No candidate art files in " + folder);
+                string[] found = Directory.GetFiles(folder, "*.txt");
+
+                Assert.That(found, Is.Not.Empty, "No candidate art files in " + folder);
+
+                files.AddRange(found);
+            }
 
             return files;
         }

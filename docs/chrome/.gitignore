@@ -23,3 +23,12 @@ manifest.json
 !as-built-placed.png
 !as-built-offer.png
 !chosen-build-phase.png
+
+# overflows/ is the exception, and it is one on purpose: the sheets there are
+# the candidates issue #282 rendered for the roster sign-off sittings (#284 and
+# #285), committed the way docs/frames/rung-candidates/ commits its frames --
+# beside the spec that drew them and the .txt that says what each is a
+# candidate for. They come out when the sitting has signed, with the candidate
+# classes under client/Assets/Editor/ChromeCandidates/ that drew them.
+!overflows/*.png
+!overflows/manifest.json

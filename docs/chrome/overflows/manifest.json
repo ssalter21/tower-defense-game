@@ -1,0 +1,166 @@
+{
+    "shots": [
+        {
+            "id": "wave-bar-as-built",
+            "label": "Wave 9: the bar as it ships, every creep the roster has in it",
+            "state": "build",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "wave-bar-as-built.png",
+            "notes": "The overflow #270 played, drawn through the capture. Seventeen boxes and the trailing empty one."
+        },
+        {
+            "id": "wave-bar-scrolls",
+            "label": "Wave 9: the boxes scroll sideways",
+            "state": "build",
+            "candidate": "WaveBarScrolls",
+            "wave": 9,
+            "png": "wave-bar-scrolls.png",
+            "notes": ""
+        },
+        {
+            "id": "wave-bar-wraps",
+            "label": "Wave 9: the boxes wrap onto a second line",
+            "state": "build",
+            "candidate": "WaveBarWraps",
+            "wave": 9,
+            "png": "wave-bar-wraps.png",
+            "notes": ""
+        },
+        {
+            "id": "wave-bar-shrinks",
+            "label": "Wave 9: every box at 128, type at 18",
+            "state": "build",
+            "candidate": "WaveBarShrinks",
+            "wave": 9,
+            "png": "wave-bar-shrinks.png",
+            "notes": ""
+        },
+        {
+            "id": "wave-bar-shrinks-to-fit",
+            "label": "Wave 9: every box at 96, type at 13, the width that fits seventeen",
+            "state": "build",
+            "candidate": "WaveBarShrinksToFit",
+            "wave": 9,
+            "png": "wave-bar-shrinks-to-fit.png",
+            "notes": ""
+        },
+        {
+            "id": "offer-as-built",
+            "label": "Wave 9: a Bishop's ladder as it ships, offering the Consecration for a token",
+            "state": "build-offer",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "offer-as-built.png",
+            "notes": "The longest rung label on the surface, overflowing the 208-wide offer on both sides."
+        },
+        {
+            "id": "offer-fits-its-longest-rung",
+            "label": "Wave 9: the offer sizes itself to its longest rung",
+            "state": "build-offer",
+            "candidate": "OfferFitsItsLongestRung",
+            "wave": 9,
+            "png": "offer-fits-its-longest-rung.png",
+            "notes": ""
+        },
+        {
+            "id": "offer-is-wider",
+            "label": "Wave 9: the offer at 336, still centred on the hex",
+            "state": "build-offer",
+            "candidate": "OfferIsWider",
+            "wave": 9,
+            "png": "offer-is-wider.png",
+            "notes": ""
+        },
+        {
+            "id": "offer-prices-beneath-the-name",
+            "label": "Wave 9: each rung two lines, the price beneath the name",
+            "state": "build-offer",
+            "candidate": "OfferPricesBeneathTheName",
+            "wave": 9,
+            "png": "offer-prices-beneath-the-name.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-in-the-header",
+            "label": "Wave 9, tokens held: a count in the header after the gold",
+            "state": "build-offer",
+            "candidate": "TokensInTheHeader",
+            "wave": 9,
+            "png": "tokens-w9-in-the-header.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-as-pips",
+            "label": "Wave 9, tokens held: three pips in the header, held, spent, to come",
+            "state": "build-offer",
+            "candidate": "TokensAsPipsInTheHeader",
+            "wave": 9,
+            "png": "tokens-w9-as-pips.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-at-the-ladder",
+            "label": "Wave 9, tokens held: the count on the open ladder",
+            "state": "build-offer",
+            "candidate": "TokensAtTheLadder",
+            "wave": 9,
+            "png": "tokens-w9-at-the-ladder.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-spent-in-the-header",
+            "label": "Wave 9, the Consecration bought this round: the count in the header with one spent",
+            "state": "build-placed",
+            "candidate": "TokensInTheHeader",
+            "wave": 9,
+            "png": "tokens-w9-spent-in-the-header.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-spent-as-pips",
+            "label": "Wave 9, the Consecration bought this round: the pips with one spent",
+            "state": "build-placed",
+            "candidate": "TokensAsPipsInTheHeader",
+            "wave": 9,
+            "png": "tokens-w9-spent-as-pips.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w2-as-built",
+            "label": "Wave 2, no token yet: a Bishop standing, and its ladder opens on nothing",
+            "state": "build-placed",
+            "candidate": "as-built",
+            "wave": 2,
+            "png": "tokens-w2-as-built.png",
+            "notes": "The moment the ticket names: a line stops and nothing on screen says why."
+        },
+        {
+            "id": "tokens-w2-in-the-header",
+            "label": "Wave 2, no token yet: the count in the header",
+            "state": "build-placed",
+            "candidate": "TokensInTheHeader",
+            "wave": 2,
+            "png": "tokens-w2-in-the-header.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w2-as-pips",
+            "label": "Wave 2, no token yet: the pips in the header",
+            "state": "build-placed",
+            "candidate": "TokensAsPipsInTheHeader",
+            "wave": 2,
+            "png": "tokens-w2-as-pips.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w2-at-the-ladder",
+            "label": "Wave 2, no token yet: a line at the Bishop's hex saying why the ladder stops",
+            "state": "build-placed",
+            "candidate": "TokensAtTheLadder",
+            "wave": 2,
+            "png": "tokens-w2-at-the-ladder.png",
+            "notes": ""
+        }
+    ]
+}

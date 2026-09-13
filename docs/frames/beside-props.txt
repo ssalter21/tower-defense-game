@@ -1,0 +1,65 @@
+# The three capstones that stand a prop beside them, each with a tower on the
+# tile the prop stands on. Issue #282, question 4.
+#
+# WHAT THIS IS FOR. BesideProp.NextTile puts a tower's prop one column pitch to
+# its right, in the frame it rests in, and nothing says what happens when a
+# tower is standing there. #270 played it: with towers in a row the Mortar's
+# turret, the Consecration's font and the Overgrowth's weirwood were drawn
+# inside the neighbouring tower's hex. A lone tower cannot show that, so this
+# board stands each of the three with the offending neighbour in place.
+#
+#     ./tools/capture-beside-props.ps1
+#
+# WHICH TILE THE PROP LANDS ON WAS COMPUTED, NOT GUESSED. A tower rests facing
+# the nearest point of the route (RoutePath.FacingFrom), so "one tile to its
+# right" is a different board cell for every tower. For the three cells below:
+#
+#     the Mortar        at (9, 3)   faces (0.50, -0.87)   prop lands on (8, 3)
+#     the Consecration  at (13, 3)  faces (0.00, -1.00)   prop lands on (12, 3)
+#     the Overgrowth    at (12, 9)  faces (0.00,  1.00)   prop lands on (13, 9)
+#
+# Each of those three cells holds a Mage. Three more Mages ring each capstone
+# so the collision is with a row of towers and not a pair, and TWO
+# NEIGHBOURS OF EACH ARE LEFT FREE on purpose -- (10, 2) and (10, 4) for the
+# Mortar, (14, 2) and (14, 4) for the Consecration, (13, 8) and (13, 10) for
+# the Overgrowth -- because one of the candidates moves the prop to a free
+# neighbour, and a ring with no free neighbour would leave that candidate
+# nothing to draw.
+#
+# The candidate looks are in docs/frames/beside-props/, one file each, applied
+# through -matchFrameArt. The map, the wave and the seed still come out of
+# content/match.replay; only what is standing has moved. Frames from this
+# board are named after this file rather than match-tick-, for the reason
+# underserved-rungs.txt gives.
+#
+# EVERY TOWER HERE REACHES THE ROUTE, AND THE RING IS MAGES BECAUSE ARCHERS DID
+# NOT. The first draft ringed the capstones with Archers, whose 3200 reaches
+# three hexes on the flat; the loader refused (9, 2) because the climb between
+# levels is counted against reach, and three hexes over a rise is not three.
+# A Mage reaches 4600, and the farthest ring cell from a route hex is three.
+# The loader refuses a tower that reaches nothing rather than standing it.
+#
+# NOTHING HERE IS A BALANCE PROPOSAL. Fifteen towers around three cells is a
+# board that photographs a prop; content/defense.txt is the defense the
+# authored match is fought by and this changes nothing about it.
+#
+# Same format as content/defense.txt: type, column, row, counted the way
+# content/map.txt is written, ascending by row and then by column.
+#
+#       type  col  row
+
+tower    4    9    2
+tower    4   13    2
+tower    4    8    3
+tower   37    9    3
+tower    4   10    3
+tower    4   12    3
+tower   25   13    3
+tower    4   14    3
+tower    4    9    4
+tower    4   13    4
+tower    4   12    8
+tower    4   11    9
+tower   30   12    9
+tower    4   13    9
+tower    4   12   10

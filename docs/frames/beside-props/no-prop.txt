@@ -1,0 +1,29 @@
+# The prop not drawn at all.
+#
+# THE QUESTION. What the three capstones look like beside a row of towers with
+# nothing on the ground beside them -- the outcome of a rule that drops the
+# prop when its tile is taken, and also the cheapest thing that could be done.
+# Issue #282, question 4.
+#
+# WHAT TO LOOK AT. Every one of the three is told from the rung below it by
+# the prop: docs/roster.md signs the Mortar as the Artificer's turret made
+# heavier, the Consecration as the Bishop with a font, the Overgrowth as the
+# Elder with a weirwood. With the prop gone, whether a Mortar in a crowd reads
+# as anything but an Artificer is the eye check, and #281 already found that
+# the Artificer's own crate is his body mesh.
+
+# THE MORTAR'S ANCHOR MOVES WITH THE PROP, AND IT HAS TO. His shells leave from
+# the turret's muzzle -- the anchor is a node inside the beside prop -- so a
+# frame with the turret gone has nowhere for a shell to leave from and the
+# capture refuses it by name. The wrench in his hand is the only other thing
+# he holds, so the anchor goes to its tip here. That is a second change riding
+# on the first, and it is one more thing "no prop" costs the Mortar that it
+# does not cost the other two.
+
+label     no prop when the tile beside is taken
+question  whether the three capstones are still told apart with nothing beside them
+
+beside  37  -
+beside  25  -
+beside  30  -
+anchor  37  tip-of engineer_Wrench 0,1,0

@@ -1,0 +1,30 @@
+# What each picture in this directory was drawn from: one line per
+# picture, and a digest over content/map.txt, content/units.txt,
+# content/upgrades.txt and content/dressing.txt as they stood when it
+# was captured.
+#
+# WRITTEN BY THE CAPTURE AND NEVER BY HAND. It says a picture was drawn,
+# and only the thing that drew it knows that. tools/check-docs.ps1 reads
+# it where a commit date cannot answer -- a re-render that came out
+# pixel-identical leaves git nothing to date.
+#
+#       picture                        drawn from
+
+picture  offer-as-built.png              98DDCD917FDC5CD1
+picture  offer-fits-its-longest-rung.png  98DDCD917FDC5CD1
+picture  offer-is-wider.png              98DDCD917FDC5CD1
+picture  offer-prices-beneath-the-name.png  98DDCD917FDC5CD1
+picture  tokens-w2-as-built.png          98DDCD917FDC5CD1
+picture  tokens-w2-as-pips.png           98DDCD917FDC5CD1
+picture  tokens-w2-at-the-ladder.png     98DDCD917FDC5CD1
+picture  tokens-w2-in-the-header.png     98DDCD917FDC5CD1
+picture  tokens-w9-as-pips.png           98DDCD917FDC5CD1
+picture  tokens-w9-at-the-ladder.png     98DDCD917FDC5CD1
+picture  tokens-w9-in-the-header.png     98DDCD917FDC5CD1
+picture  tokens-w9-spent-as-pips.png     98DDCD917FDC5CD1
+picture  tokens-w9-spent-in-the-header.png  98DDCD917FDC5CD1
+picture  wave-bar-as-built.png           98DDCD917FDC5CD1
+picture  wave-bar-scrolls.png            98DDCD917FDC5CD1
+picture  wave-bar-shrinks-to-fit.png     98DDCD917FDC5CD1
+picture  wave-bar-shrinks.png            98DDCD917FDC5CD1
+picture  wave-bar-wraps.png              98DDCD917FDC5CD1
