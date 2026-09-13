@@ -97,7 +97,7 @@ column and row itself.
 smell. It is here because the sphere is half of one decision and the half that is easiest to get wrong later:
 a bubble authored against `Shoots` would be a cliff-blanketing aura discovered after it shipped. The rule is
 written down, tested, and waiting for the column that
-[the roster](../roster.md#what-this-roster-needs-that-the-schema-does-not-have) says is coming.
+[the roster](../roster.md#the-columns-the-blocks-point-at) says is coming.
 
 ## What was rejected
 

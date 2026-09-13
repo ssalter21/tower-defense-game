@@ -278,6 +278,30 @@ loudest of the three by an order of magnitude. **The third shape is the one take
 derived 21, and the 1200 is the acceptance test for the sweep-derived rule that will replace the cost
 algorithm. What a spawner is worth is open; what is settled is that nothing is retuned by hand while it is.
 
+## What the drawn shapes left open
+
+Three questions the roster's effects raised that are bigger than any one row; each waits on the billboarding
+prototype, #290, which decides what the match may draw that is not a flat mesh, and each is Sam's to sign.
+
+**The Mage's and the Sorcerer's splash draw the Mortar's burst, and cannot be told from it.** A signature is
+chosen by the row the event names, and a blast centred on its target names the body the shot arrived at rather
+than the shooter — so the burst is what *any* target-centred `damage` blast draws; the Unravel's carries
+`armour`, which is what tells it apart. Three routes were tried and refused: putting the shooter on the event,
+which [ADR-0008](adr/0008-match-events-are-decorative.md) exists to refuse; reading it off an earlier
+`TowerFired`, which builds state out of an event stream that seeks discard; and inferring it from
+`ProjectileSnapshot.TypeId` over the previous tick's shells, which is ambiguous when two shells arrive on one
+body in one tick and reaches nothing for a hitscan blast. Either the two splashes are content with the burst,
+or telling them apart needs something that is neither the row nor the payload.
+
+**What ships for the Blessing is a circle on the floor and the word signed was "glow".** Nothing is drawn on a
+blessed tower; what is drawn says where the blessing reaches rather than who got it. A lit floor and a body lit
+from within are two different pictures and only the second is what "glow" plainly means — the same question
+the real particle work will answer, rather than one to settle with another placeholder.
+
+**The Overgrowth draws nothing, and nobody has checked that a board-wide hold is legible with no mark for it.**
+It is the one aura on the roster with nothing on screen; the hold reads through the creeps not moving, or it
+does not, and that is an eye check.
+
 ## What the playtest rebaseline leaves for a sitting
 
 [The proposal](archive/playtest-rebaseline-proposal.md) put these beside their costs rather than deciding
