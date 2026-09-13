@@ -211,8 +211,9 @@ capstone is drawn from what its model is holding or wearing.
 
 ### The tier signal is never size
 
-**Size is retired as a tier signal**, reversed on 5 September 2026. A rung is told apart by **what the body
-wears, holds or stands beside** — never by how big it is. Three materials, in the order they are reached for:
+**Size is retired as a tier signal for the body**, reversed on 5 September 2026. A rung is told apart by
+**what the body wears, holds or stands beside** — never by how big the body is. Three materials, in the order
+they are reached for:
 
 | Material | What it is | Where it applies |
 |---|---|---|
@@ -220,8 +221,18 @@ wears, holds or stands beside** — never by how big it is. Three materials, in 
 | **A prop** | A different or additional thing in a hand, or standing on the tile beside the tower | Every line |
 | **A second model** | A different character, the same person promoted | Knight, Cleric and Engineer have none anywhere in the collection; the other six do |
 
-**Tier 2 is colour plus a prop. Tier 3 is the second model where one exists, and colour plus a signature prop
-where one does not.** Knight, Cleric, Engineer and Druid take the second road.
+**Tier 2 is colour, plus a prop where the rung has something to hold. Tier 3 is the second model where one
+exists, and colour plus a signature prop where one does not.** Knight, Cleric, Engineer and Druid take the
+second road.
+
+**Two lines bend that sentence, and both were signed by looking rather than by reading it.** The Elder is
+colour alone: forty-five props were drawn in its hand on 11 September 2026 and Sam took none — thirteen of
+them cannot be told from an empty hand even at magnification, and the rest joined a staff that already reads
+as the Druid's. And the Engineer line is told apart by the **size of its turret** — drawn at 1, 1.25 and 1.5
+up the line, "scale the tower twice" — because the pack ships one turret and no second Engineer, the body
+already wears the gold box a crate would have doubled, and the Mortar's step is the only rung candidate that
+read at 1600x900 on #281 (0.19% of the frame, against at most 0.06% for a prop in a hand). A prop may be a
+size; a body may not, because size is what tells a creep from a tower.
 
 > **A glow is not a tier signal, and that is a reservation rather than an omission.** A persistent glow is
 > reserved for reading *"this tower is projecting an aura"* — Shield Wall, Blessing, Consecration and
@@ -252,9 +263,10 @@ September 2026 over the prop tucked into its own hex and over no prop at all; th
 Forest Nature tree does not. The quiver the Ranger carries is still in its fist, because that is a spine socket
 and not this one.
 
-**One tower has one beside slot, and one rung wants two.** The Artificer's look puts an `ammo_crate` beside
-the turret. That is the one place on this page the socket as built does not reach, and it is written on that
-rung's `Needs` line rather than settled here.
+**One tower has one beside slot, and that is enough.** The Artificer's look once put an `ammo_crate` beside
+the turret, which would have been two; the crate was refused on 10 September 2026 on #281, since the
+Engineer's own body mesh already wears a gold box and a crate was the same box twice. No rung names two
+things on the ground now.
 
 **Every tier on this page is a row in `content/units.txt` as of 5 September 2026**, at ids 15 to 37 in the
 order the lines are written above. Layout 3 authors every shape and #217 plays them; see [the column
@@ -265,8 +277,10 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 > **Sixteen rows carry zero**: the Paladin, Cleric, Druid, Rogue and Engineer lines, which say nothing about
 > either, and Overwatch, whose two rungs below carry 9 and 6 and whose own tuning is a different shape. Zero is
 > a tower that fires the tick it acquires and goes straight back on cooldown — the absence and not a choice.
-> How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
-> ticket that picks a line's clips is where a real number is signed.
+> How long a tower winds up is how it feels, so the `_` is on each of those six blocks below. Every one of
+> those blocks names its clips now — the Paladin line since 6 September 2026 and the Engineer line since
+> 11 September — and the number is still `_`, on purpose: Sam ruled on #284 that a windup is not read off a
+> clip's contact frame but signed from a played build, which is #297.
 
 ### What a row is drawn as
 
@@ -274,6 +288,15 @@ Every bubble in the game drew one shared disc on the ground and every hitscan sh
 #263, #264 and #265. Ten shapes are signed now, and **the shape is all that is signed** — every colour, size
 and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
 disc and the marks on a creep already are.
+
+**Every placeholder this page still carries waits on one thing, and it is not argued here until then.** The
+colours, sizes and durations in `MatchTuning`; the four creep aura shapes below, all drawn as one interim disc
+since 7 September 2026; the Vampire's and the Grave Robber's pools; the Mage's bolt and the Mortar's shell,
+which Sam parked on 7 September as unsignable without a smoke cloud or a magical effect behind them. All of
+them are the same question — what the match may draw that is not a flat mesh — and that is #290, the
+billboarding prototype. Sam confirmed on 11 September 2026, on #284, that none of them is re-listed as open
+on a row until #290 answers; the twenty-four effect candidates #279 drew were struck the same day the wash
+came off the body, and this page does not re-open them.
 
 **The four creep auras below the table are a weaker claim than the ten above it, and the difference is the
 point of this paragraph.** #266 asked for those four to leave the creep's staff, scythe, broom or axe, and
@@ -294,7 +317,7 @@ colour**, which is not true of any of the ten.
 | 30 · Overgrowth | A patch of roots breaking the ground under every body the aura is holding | On what the bubble found, not on the bubble |
 | 31 · Overwatch | One heavy bar the length of the leg the shot crossed | From the crossbow to the body it was aimed at |
 | 34 · Fan of Knives | One knife per shot, crossing to the body it found — three knives where the throw found three bodies | From the hand to each body |
-| 23, 24, 25, 28, 29, 30 · the Cleric and Druid lines | A short bolt crossing to the body the shot found | From the tome, the mace head or the staff tip |
+| 23, 24, 25, 28, 29, 30 · the Cleric and Druid lines | A short bolt crossing to the body the shot found | From the tome, the Bishop's open off hand or the staff tip |
 | 27 · Unravel | A band broken into plates, lying on the ground out to the edge of the strip | On the hex the bolt arrived at |
 | 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
 
@@ -499,8 +522,11 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 ### 24 · Bishop · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`. The bolt is the Cleric's and it leaves the head of
-  the mace, because the mace took the tome's hand — #259's question, not this rung's.
+- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace` in the melee hand and the off hand empty. The bolt
+  is the Cleric's and it leaves the **open off hand**: a mace is a melee weapon and does not fire, and the
+  tome was refused in every position — in the off hand, beside him, anchored — because it fouls the
+  animation and the model. Signed 10 September 2026 against #281's four candidates; #259's question is
+  answered.
 - **Numbers** — range 3200 → **4200**. Cost 32 — **range is unpriced**, so the rung costs what the Cleric
   costs. Same shape as `archer → ranger`, and the ladder prints a flat-price note against it for the same
   reason.
@@ -514,7 +540,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
   on the ground — **drawn at 1**, which is 0.81 m tall and 1.44 across, a basin at knee height. The Cleric has
   **no second model anywhere in the collection**, so this line is colour and props at every rung. Every pulse
   lays a disc of light on the ground out to the edge of the aura, so what the font has claimed is the ground
-  itself rather than a boundary round it; the bolt is the line's, off the mace head. **The light is centred on
+  itself rather than a boundary round it; the bolt is the line's, off the open off hand. **The light is centred on
   the tower and not on the font**, which stands one tile away: the aura's own centre is the tower, and a disc
   drawn round the prop would report a reach the simulation never had.
 - **Numbers** — aura: origin `self`, radius 2000, affects `enemy`, payload `armour`, magnitude −30, period 30,
@@ -588,9 +614,13 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 4 · Mage · tier 1 · status live
 
 - **Does** — magic damage with splash of one additional hex.
-- **Looks** — the mage, book in hand. The flash leaves the open spellbook and the shell is what crosses to the
-  body; the splash it lands with draws the Mortar's burst, which is the open question below and not this
-  rung's choice.
+- **Looks** — the mage, book in hand. The flash leaves the **point of the hat** and the shell is what crosses
+  to the body; the splash it lands with draws the Mortar's burst, which is the open question below and not
+  this rung's choice. The hat was signed on 11 September 2026 against #289's four anchors and two camera
+  yaws, drawn at the framing the built player uses: from the open spellbook, the Mage nearest the camera
+  showed no flash at all — the orb was wholly under the hat — and the fixed height the anchors replaced never
+  showed one either. The hat's point is the one origin the hat cannot cover, and the cost, a tracer leaving
+  from a hat, is one a sheet shows and a played frame does not. The Sorcerer keeps its staff tip.
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
 - **Needs** — nothing. The splash is on the row as of 5 September 2026: origin `target`, radius 1000,
@@ -648,7 +678,9 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 29 · Elder · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Druid`, `druid_texture_alt_A`. The staff and the bolt are the Druid's.
+- **Looks** — `Druid`, `druid_texture_alt_A`. The staff and the bolt are the Druid's, and nothing joins
+  them: this rung is colour alone, signed 10 September 2026 against the forty-five props #281 drew in its
+  hand — *"Druid has staff only, it can have potions if it has an aura"*, and it has none.
 - **Numbers** — range 3600 → **4600**. Cost 30 — range is unpriced, same shape as `archer → ranger`.
 - **Needs** — nothing.
 - **Open** — none.
@@ -671,8 +703,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 > **The Druid keeps his own body, and the PlantWarrior is set aside.** It was proposed as this line's second
 > model and it is rejected: of the six second models it was the only one that read as a *different creature*
-> rather than the same person promoted. So this line has no model swap, and it is colour and a prop at every
-> rung, like the Knight, the Cleric and the Engineer.
+> rather than the same person promoted. So this line has no model swap, and it is colour at every rung and a
+> prop where the rung has one — the Overgrowth's weirwood, and nothing on the Elder.
 
 > **A whole-board pulse is one row.** The roster has said so since layout 3 and nobody had built one. This is
 > where the retired elemental branch's area slow went. **A creep never drops below a tenth of its authored
@@ -726,7 +758,9 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — four hexes, slow lobbed shot, one target.
 - **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing —
   **drawn at 1**, which is 1.13 m tall and 1.00 across, and the shell leaves the top of it at 0.77 m rather
-  than leaving the man.
+  than leaving the man. He rests in `Idle_A` and works the turret with **`Use_Item`** — signed 11 September
+  2026 off #278's filmstrips, which are the same `Rig_Medium_General` bank, so a clip looks the same on him
+  as on the Paladin — and all three rungs share both.
 - **Numbers** — range 4000, cooldown 60, damage 250–350, windup `_`, backswing `_`, projectile, flight 45,
   impact, cost ~30.
 - **Needs** — nothing. The beside slot is built.
@@ -735,19 +769,21 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 36 · Artificer · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret — the crate is 0.46 m
-  tall at 1.
+- **Looks** — `Engineer`, `engineer_texture_alt_A`, and the turret **drawn at 1.25**. The `ammo_crate` this
+  line once named was refused on 10 September 2026 on #281: the body already wears a gold box, so the crate
+  was the same box twice, and *"scale the tower twice"* is what tells the three rungs apart instead.
 - **Numbers** — range 4000 → **5000**. Cost 30 — range is unpriced.
-- **Needs** — **a second beside slot.** A tower has one, and this rung names two things standing on the
-  ground; until there are two, this rung draws the turret or the crate and not both.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 ### 37 · Mortar · tier 3 · status live
 
 - **Does** — the shell bursts across a hex and a half.
-- **Looks** — `Engineer`, `engineer_texture_alt_B`, a heavier `turret_base` beside him and the lobbing arc
-  drawn. The Engineer has **no second model anywhere in the collection**, so this line is colour and props at
-  every rung. The shell bursts in shards on the body it arrived at, out to the radius it landed in.
+- **Looks** — `Engineer`, `engineer_texture_alt_B`, the turret **drawn at 1.5** and the lobbing arc drawn.
+  The Engineer has **no second model anywhere in the collection**, so this line is colour and a turret that
+  grows at every rung — signed 10 September 2026 against #281's bracket of 1.25, 1.5, 1.75 and 2, the one
+  rung candidate that read at 1600x900. The shell bursts in shards on the body it arrived at, out to the
+  radius it landed in.
 - **Numbers** — bubble on target: radius 1500, payload `damage`.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — **the burst is one of two shapes no row selects**, so the Mage's and the Sorcerer's splash wear

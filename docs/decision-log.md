@@ -2390,3 +2390,53 @@ The last of #283's four, and the only one that moves a golden artefact.
 | `content/golden/`, the trace, the landmarks, the replay, the run outcome | content hash `CC20B0E6288BAAB4` | **`3FF843B3F6B950C4`.** Regenerated deliberately; the PR carries `regenerated-deliberately` | A dying body is untargetable, raises nothing and pulses nothing, so the number moves no leak and no reading. Measured on every row's column against the committed defense: not one leak count changed, and the only tick that moved is the Shade's final one, by the 36 its last body now lies there. The committed wave sends neither of the twelve, so the golden result — eight of forty, tick 5439 — is unchanged and only the hash moved |
 
 **Signed by the rule, open to being moved by eye.** This is a number a player sees, and the rule that signed it is a reading of the existing rows rather than a look at the clips. It is the smallest signing that makes a death draw at all; a clip-length pass, with the sheets, can move any of the twelve without touching anything else.
+
+## 11 September 2026, after the balance findings — the roster's art stops being provisional, and two lines bend the tier rule to do it
+
+The sitting [#284](https://github.com/ssalter21/tower-defense-game/issues/284) was written for: every
+candidate [#278](https://github.com/ssalter21/tower-defense-game/issues/278),
+[#279](https://github.com/ssalter21/tower-defense-game/issues/279),
+[#281](https://github.com/ssalter21/tower-defense-game/issues/281) and
+[#289](https://github.com/ssalter21/tower-defense-game/issues/289) drew is now picked or struck. Most of it had
+been signed already — the prop turns and the Grave Robber's blade on 6 September, the twenty-four effect
+candidates struck and the wash taken off the body on 7 September, the four rungs on 10 September — and lived
+only in commit messages and candidate sidecars, which is not where a decision lives. This entry is where they
+land, together with the four things the sitting itself decided.
+
+| Where | What it said | What is true now | Why |
+|---|---|---|---|
+| `docs/roster.md`, the tier rule | *"A rung is told apart by what the body wears, holds or stands beside — never by how big it is"* | **Never by how big the body is.** A prop may be a size: the Engineer line's turret draws at 1, 1.25 and 1.5 up the line | Sam signed the Mortar's turret at 1.5 and "scale the tower twice" on 10 September, and the page said the opposite. The rule was written to stop a rung being a taller man — size is what tells a creep from a tower — and a turret is not the man. The Mortar's step is the only rung candidate that read at 1600x900: 0.19% of the frame, against at most 0.06% for a prop in a hand |
+| `docs/roster.md`, the tier rule | *"Tier 2 is colour plus a prop"* | **Colour, plus a prop where the rung has something to hold.** The Elder is colour alone | Forty-five props were drawn in the Elder's hand and Sam took none — "Druid has staff only, it can have potions if it has an aura", and it has none. Thirteen of the forty-five could not be told from an empty hand at magnification; a prop smaller than a potion is not a prop |
+| `MatchSceneBuilder`, ids 35–37; `docs/roster.md` §§ 35–37 | The Engineer line bound with no clips, standing in its import bind pose; the Artificer's `ammo_crate` on a *Needs* line asking for a second beside slot | **`Idle_A` at rest, `Use_Item` as the windup, on all three rungs. No crate; the turret at 1 / 1.25 / 1.5.** *Needs* — nothing | The bind pose was the same bug the Paladin line carried until 6 September, three towers with their arms straight out. The Engineer is on the Paladin's `Rig_Medium_General` bank, so #278's thirty-two filmstrips show every clip he could hold and no new sheet was needed; the man works the turret because the turret is what fires. The crate was refused on 10 September: the Engineer's own body mesh wears a gold box, so a crate was the same box twice |
+| `MatchSceneBuilder`, ids 24 and 25; `docs/roster.md` § 24 | The Bishop's bolt leaves the head of the mace, and where the tome goes when the mace takes its hand is "#259's question" | **The tome is gone, and the bolt leaves the open off hand.** #259's question is answered | A mace is a melee weapon and does not fire; the tome fouled the animation and the model in every position it was drawn. The empty `handslot.l` is the one origin on the body that needs no prop and no socket, and it reads better than the mace did — the mace hangs at the hip inside the silhouette; the off hand is clear of the body at hand height |
+| `MatchSceneBuilder`, id 4; `docs/roster.md` § 4 | The Mage's flash leaves the open spellbook | **It leaves the point of the hat** (`tip-of Mage 0,1,0`). The Sorcerer keeps its staff tip | Drawn at the framing the built player uses, the Mage nearest the camera showed **no flash at all** from the spellbook — the orb was wholly under the hat — and the fixed height before the anchors never showed one either; the anchor is what brought it half out, not what put it under. A −45° camera yaw clears the hat and a tree covers the orb instead; the book's far edge moves it 15 px. Only the hat's point has an orb in frame at both ticks. The cost — a tracer leaving from a hat — is one a sheet shows and a played frame does not |
+| `docs/roster.md`, the windup blockquote | *"the art ticket that picks a line's clips is where a real number is signed"* | **The clips are picked on every zero row and the sixteen numbers are still `_`, on purpose.** [#297](https://github.com/ssalter21/tower-defense-game/issues/297) signs them from a played build | A windup is how a tower feels, and feel is judged in Unity. A number read off a clip's contact frame without playing it is exactly what the page refused to do the first time |
+| `docs/roster.md`, "What a row is drawn as" | The placeholders in `MatchTuning`, the four creep aura shapes, the pools, the bolt and the shell — each listed as open where it stood | **All parked in one sentence behind [#290](https://github.com/ssalter21/tower-defense-game/issues/290)**, the billboarding prototype, and not re-listed on a row until it answers | They are one question — what the match may draw that is not a flat mesh — and Sam parked the bolt and the shell on it on 7 September. Re-arguing any of them on a row before it answers is arguing the same question with a different picture |
+
+### What the sitting did not have to decide, and why it looked that way
+
+**Every row on the six sheets was already `live`, which the page defines as past `signed`.** The ticket was
+written against a branch where the sheets were unreviewed; by the sitting they had been looked at on 5
+September and every candidate off them signed on the 6th. The ticket's six numbered asks reduced to the seven
+rows above — and one of them, the measured-heights paragraph, had been rewritten on 6 September with
+[its own entry](#6-september-2026-last--a-creep-may-be-as-tall-as-a-tower-and-the-rule-that-said-otherwise-is-deleted)
+before the ticket was filed. The lesson is in the map's notes now: a signing made on a prototype ticket is in
+its commit message until somebody moves it, and the sitting that follows has to read the commits before the
+ticket.
+
+**One correction to the sitting's own working.** The Artificer's turret was put to Sam at 1.0 on the strength
+of #281's 225-pixel count for the ×1.25 step; `a9d06c7d` had already retracted that count — the step is
+visible, and the number was small because the Artificer stands on the row furthest from the camera behind his
+own body. The 10 September ruling, 1 / 1.25 / 1.5, is what was bound.
+
+**Slow and haste are told apart on the body by nothing, and that is the answer rather than a gap.** The
+ticket asked for the two to be distinguishable on the body at 1600x900. The 7 September ruling that a
+modifier in force is drawn nowhere on the body stands; what tells them apart is the ring on the ground, and
+[#279](https://github.com/ssalter21/tower-defense-game/issues/279) measured every on-body candidate at under a
+quarter of one per cent of the frame — smaller than a roster thumbnail — so the ask could not have been met
+by a colour.
+
+### What the numbers came to
+
+EditMode **149 of 149** and PlayMode **175 of 175** after the scene was rebuilt with the new bindings, editor closed. Eleven committed frames redrawn under the signed art — the Engineer line posed and its turrets stepped, the Bishop's bolt off the hand, the Mage's orb above the hat — and the five default-framing and effects-roster frames byte-identical, since no changed row fires on those ticks. `check-docs` green on every claim.
+No golden moved; `content/` is untouched.
