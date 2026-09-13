@@ -17,11 +17,11 @@ records them:
 
 | sheet | what it shows | what was signed |
 |---|---|---|
-| `wave-bar.png` | wave 9, seventeen creeps and the empty box | **The boxes scroll sideways.** A horizontal `ScrollView`, the scroller under the boxes once they overflow, the empty box scrolled into view on every redraw. A holding answer: the chrome as a whole waits on a direction |
-| `offer.png` | wave 9, a Bishop's ladder open | **The price beneath the name.** A rung is two lines, 64 tall, the name at 18 over the price at 15; the panel stays 208 wide and centred on its hex |
+| `wave-bar.png` | wave 4, every creep the round offers and the empty box | **The boxes scroll sideways.** A horizontal `ScrollView`, the scroller under the boxes once they overflow, the empty box scrolled into view on every redraw. A holding answer: the chrome as a whole waits on a direction |
+| `offer.png` | wave 4, a Bishop's ladder open | **The price beneath the name.** A rung is two lines, 64 tall, the name at 18 over the price at 15; the panel stays 208 wide and centred on its hex |
 | `tokens-w2.png` | wave 2, a Bishop standing, no token granted yet | **A fourth header field after the gold**: *Capstone tokens 0 held · 0 spent · 3 to come* as the sheet was drawn; the shipped field reads *Capstones 0 held · 0 spent · 3 to come* since the 13 September respelling, and the sheets predate it. This is the moment the ticket named — a ladder that opens on nothing — and the header now says why |
-| `tokens-w9.png` | wave 9, three held, the ladder open | the same field with a token to spend |
-| `tokens-w9-spent.png` | wave 9, the Consecration bought this round | the same field with one spent, read off the composed round the way the gold is |
+| `tokens-w4.png` | wave 4, one held, the ladder open | the same field with a token to spend |
+| `tokens-w4-spent.png` | wave 4, the Consecration bought this round | the same field with one spent, read off the composed round the way the gold is |
 
 The fourth place, a beside prop on an occupied tile, is a board question and lives in
 [`docs/frames/beside-props/`](../../frames/beside-props/README.md).
@@ -36,10 +36,26 @@ capture **plays the rounds before it** through the loop's own `Commit` and `GoOn
 still cover, cheapest first. A shot also carries `upgrade`, a path of rungs the placed tower is climbed
 through, because a Bishop is climbed to, not placed. See `UiPreviewCapture.PlayTo`.
 
-Two facts come off that run and are in every header here: **the bot never spends a token** (three held, none
-spent at wave 9 — it stands no tier-2 rung by then), so the spent state is drawn from a shot that buys the
-Consecration in the round photographed; and **health is 198 of 800 at wave 9**, because the same policy leaks
-three quarters of the pool. Nobody tuned it.
+Two facts come off that run and are in every header here: **the bot never spends a token** (one held, none
+spent at wave 4 — it stands no tier-2 rung by then), so the spent state is drawn from a shot that buys the
+Consecration in the round photographed; and **health is 271 of 800 at wave 4**, because the same policy leaks
+two thirds of the pool in three rounds. Nobody tuned it.
+
+## Why wave 4 and not wave 9
+
+These sheets were drawn at wave 9 until 13 September 2026: the first round with all three tokens granted, and
+the round [#270](https://github.com/ssalter21/tower-defense-game/issues/270) photographed with every one of
+the seventeen creeps in the bar. Under the windup and backswing table
+[#297](https://github.com/ssalter21/tower-defense-game/issues/297) signed that day, the scripted player
+**loses the board committing wave 4** — 0 of 800 — so wave 9 is a round it never composes and the capture
+refuses the shot rather than draw a game the project does not ship. Wave 4 is the last round it does compose,
+and it still shows all three answers: one token is in hand, granted at wave 3, so the ladder offers the
+Consecration; the bar overflows and scrolls, with fourteen boxes rather than seventeen, ending at the Frost
+Wight — the round does not offer that shot the three dearest creeps, the Black Knight, the Abomination and
+the Bone Golem; and the header's fourth field reads *1 held · 0 spent · 2 to come*. What is lost is the full
+bar and the full count. The wave is one number in spec.json, and goes back to 9 when a run reaches it
+again; why the bot stopped surviving — it buys on cooldown, and windup and backswing are a rate-of-fire tax
+nothing prices — is recorded on #297 and as the cost rule's third gap on [docs/roster.md](../../roster.md).
 
 ## What holds the answers
 

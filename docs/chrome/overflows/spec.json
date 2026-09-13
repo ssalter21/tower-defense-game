@@ -2,15 +2,15 @@
   "outDir": "docs/chrome/overflows",
   "width": 1600,
   "shots": [
-    { "id": "wave-bar", "label": "Wave 9: every creep the roster has in the bar, and the bar scrolls", "state": "build", "wave": 9,
-      "notes": "The overflow #270 played. Seventeen boxes and the trailing empty one in a horizontal ScrollView, scrolled to the empty box." },
+    { "id": "wave-bar", "label": "Wave 4: every creep the round offers in the bar, and the bar scrolls", "state": "build", "wave": 4,
+      "notes": "The overflow #270 played. Every creep the round offers and the trailing empty one in a horizontal ScrollView, scrolled to the empty box. Wave 4 because the scripted player loses the board committing it under the table #297 signed; wave 9 held seventeen." },
 
-    { "id": "offer", "label": "Wave 9: a Bishop's ladder offering the Consecration for a token, the price beneath the name", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop",
+    { "id": "offer", "label": "Wave 4: a Bishop's ladder offering the Consecration for a token, the price beneath the name", "state": "build-offer", "wave": 4, "place": "Cleric", "upgrade": "Bishop",
       "notes": "The longest rung label on the surface, on two lines inside the 208-wide offer." },
 
     { "id": "tokens-w2", "label": "Wave 2, no token yet: a Bishop standing, and the header says none is held and three are to come", "state": "build-placed", "wave": 2, "place": "Cleric", "upgrade": "Bishop",
       "notes": "The moment #282 named: the Bishop's ladder opens on nothing, and the header now says why." },
-    { "id": "tokens-w9", "label": "Wave 9, three tokens held: the header count with the ladder open", "state": "build-offer", "wave": 9, "place": "Cleric", "upgrade": "Bishop" },
-    { "id": "tokens-w9-spent", "label": "Wave 9, the Consecration bought this round: the header count with one spent", "state": "build-placed", "wave": 9, "place": "Cleric", "upgrade": "Bishop, Consecration" }
+    { "id": "tokens-w4", "label": "Wave 4, one token held: the header count with the ladder open", "state": "build-offer", "wave": 4, "place": "Cleric", "upgrade": "Bishop" },
+    { "id": "tokens-w4-spent", "label": "Wave 4, the Consecration bought this round: the header count with one spent", "state": "build-placed", "wave": 4, "place": "Cleric", "upgrade": "Bishop, Consecration" }
   ]
 }
