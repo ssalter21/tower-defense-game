@@ -8,7 +8,7 @@ The design this builds is [the vision](vision.md). Reversals are in [the decisio
 
 ## The sequence
 
-Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–4 are built and step 5
+Steps 1–4 need no engine, no licence and no editor; they run from a shell. **Steps 1–6 are built and step 7
 is next.** [The first played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) found the
 roster too shallow for the build phase to be a decision worth making, and for a day that put step 3 back in
 front of step 5; [the same evening reversed it](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster).
@@ -23,20 +23,16 @@ The finding stands and the sequence does not follow from it — see
 | 4 | **The sweep harness: every unit against every defense, win rate and cost-efficiency to a CSV** | Balance becomes a computation while the roster is still small enough to enumerate rather than sample | Small |
 | 5 | **Build-phase interaction in the client: click a hex, place, compose the next wave, commit** | The first thing that is *playable* rather than readable | Medium |
 | 6 | **Opponents read from a folder of stored rounds** | The whole loop at zero latency, with no service in it. A stored round is a wall and a wave at a stage, and a run draws K of them recorded at its own — [ADR-0057](adr/0057-a-stored-round-is-a-wall-and-a-wave-at-a-stage.md) | Small — the defense and the wave already round-trip |
-| 7 | **Then** the generative depth, the two-board interface, and the service | | |
+| 7 | **The people playtest: a lobby of about six friends, and the six MVPs it needs** — the wrapper and the lobby folder, the per-metric score, the hex wheel, the animation score on two tower lines, one board-smoothing candidate, and the sweep specification. [The proposal](playtest-rebaseline-proposal.md) scopes each and orders them; taken whole on 13 September 2026 | Medium each; they run in parallel once the first two are on a branch |
+| 8 | **Then** the generative depth, the two-board interface, and the service | | |
 
-**Step 5 is fifth deliberately.** Is the economy tense, is composing a wave interesting, does send order matter,
-is the roster varied — these are the questions worth asking before an engine effort, at a fraction of the
-wall-clock cost of asking through one. The engine answers whether it *reads* and whether it *feels*, which are
-worth nothing if the cheap answers were no.
-
-**Two of the four turned out not to be answerable from a shell, and that is a reversal.** The sentence here
-used to claim all four were. A run played at a prompt on 13 August 2026 answered *is the economy tense* and
-*is the roster varied*, and could not answer *is composing a wave interesting* or *does send order matter* —
-because those are judged off range indicators and replays, which a terminal will never carry and which are not
-worth building there. **The test that survives is: is it a picture, or a number?** Numbers the simulation
-already computes are answerable at a prompt; pictures wait for the client. The full reasoning is in
-[the decision log](decision-log.md#13-august-2026--the-first-run-played-by-a-person).
+**Step 5 was fifth deliberately, and the argument for it is finished.** The four questions it was held behind —
+is the economy tense, is the roster varied, is composing a wave interesting, does send order matter — were
+asked in the order they were cheapest to ask, two from a shell and two from the client, and the reasoning is
+in [the decision log](decision-log.md#13-august-2026--the-first-run-played-by-a-person). **The test that
+survives it as a rule: is it a picture, or a number?** Numbers the simulation already computes are answerable
+at a prompt; pictures wait for the client. Step 7 is all pictures, and they are judged by six people rather
+than one.
 
 ### Step 3 is not finished, and a played run is how that was found
 
@@ -105,14 +101,14 @@ Each is the subject of its own wayfinder map — its own destination, decision t
 | # | Seam | The destination | Where it lands |
 |---|---|---|---|
 | 1 | **The match format** | A decided-in-full ruleset for a single match, including the shape of its depth | Steps 1–3 are its first half, taken as experiments |
-| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | After step 6, half-paid by step 2 |
+| 2 | **The submission barrier** | One mode architecture proven to serve all three latencies | Its lobby half is step 7's first piece; the rest after |
 | 3 | **The roster** | What towers and attacking units exist, and what they vary by | Step 3 flat; deepened after step 5, revisited at step 7 |
-| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | Step 4 |
+| 4 | **The balance harness** | A tool that names what is mispriced, and the definition of mispriced | Step 4 built it; step 7 owes it [a specification](specs/sweep-harness.md) before it is rebuilt |
 | 5 | **The service** | Accounts, pool, submission, standings, replays, re-simulation | After step 6 |
 | 6 | **The social layer** | What makes an absent opponent feel like a person | After seam 5 |
-| 7 | **The interface** | Reading twenty boards, an economy and a build menu at once | Step 5 is its single-board half |
-| 8 | **The presentation** | The art pipeline, and what makes it look composed | Independent, whenever there is appetite |
-| 9 | **The board** | The maze and elevation. No pathfinder, ever; generation and rotation deferred behind the first authored map | Nothing before step 5 needs it; everything after is shaped by it |
+| 7 | **The interface** | Reading twenty boards, an economy and a build menu at once | Step 5 is its single-board half; step 7 replaces the menu with the hex wheel |
+| 8 | **The presentation** | The art pipeline, and what makes it look composed | On step 7's path: the animation score, one tower line at a time |
+| 9 | **The board** | The maze and elevation. No pathfinder, ever; generation and rotation deferred behind the first authored map; smoothing between tiers is step 7's piece of it | Nothing before step 5 needs it; everything after is shaped by it |
 
 ### 1 · The match format
 
@@ -154,6 +150,11 @@ floor that keeps every stage populated. If the unification is wrong, this projec
 **The modes differ on *information*, and this seam must establish that the difference lives entirely above the
 barrier.** If it reaches into the record or the sim, the unification claim is weaker than §2 says. It also
 inherits the pool's index: a draw is `(map, stage)` rather than stage alone — see [seam 9](#9--the-board).
+
+**The lobby half is built first, on a shared folder.** [§7](vision.md#7-what-runs-it) says how: the pool
+folder shared between the machines present, and a barrier that is a count of rounds at a stage. The
+unification claim gets its first test from that, since the same client reads the same folder whether one
+machine wrote it or six did.
 
 ### 3 · The roster
 
@@ -223,6 +224,12 @@ Outcome spread and the ingredient bin are no longer columns — `--per-run` writ
 query over a file the sweep already produced rather than an edit to the harness. See
 [the 16 August entry](decision-log.md#16-august-2026--the-sweeps-owed-columns-become-queries).
 
+**It is owed a specification before another column.** Sam's ruling on 13 September 2026 is that the harness
+does not do what it is needed for, and what it is needed for is not written down; what is written down is
+every thing it cannot see. [`docs/specs/sweep-harness.md`](specs/sweep-harness.md) holds the five questions
+the specification has to answer, in the order they decide each other, and it is written from a sitting rather
+than from a ticket.
+
 ### 5 · The service
 
 The permanent obligation from [§7](vision.md#7-what-runs-it). Accounts and identity, the pool and its stage
@@ -287,6 +294,14 @@ comfortably holds three towers against a roster that is meant to get deeper, so 
 has to survive seam 3**, and it wants a sheet of its own against a padded-out roster before any of this is
 built.
 
+**The wheel supersedes the menu's placement and keeps the rest.** On 13 September 2026 the build phase became:
+select a hex, and the options for that hex open in a wheel around it — the nine roots on an empty cell, the
+ladder on an occupied one. That is the 17 August decision with the menu wrapped round the cell instead of
+beside it; the one-line header and the wave rail stand. The MVP is wedges with a name and a price on them,
+not portraits, so the thumbnail seam stays load-bearing and stops blocking. What the wheel holds, and whether
+the wave moves onto a wheel of its own on the entrance hex, are decided from a sheet — see
+[open questions](open-questions.md#what-the-playtest-rebaseline-leaves-for-a-sitting).
+
 ### 8 · The presentation
 
 The KayKit purchase and licence confirmation
@@ -299,6 +314,12 @@ before anything is drawn, so the moments worth showing can be chosen by computed
 And a map with elevation is a lighting and readability problem, since height is load-bearing information — **a
 player who cannot tell which tier a placement is on cannot read the range that comes with it**, which makes
 elevation legibility a veto rather than a nicety.
+
+**It is on the critical path now, and the first piece is the animation score.**
+[§6](vision.md#6-what-it-looks-like) says what an animation is; this seam builds it one tower line at a time —
+two lines first, one melee and one ranged, so both shapes of the problem are settled before the other seven
+copy them — and every line's clips, speed and release frame are a look, signed from a sheet rendered at the
+shipped framing. Real projectiles and mesh-mode particles land with it.
 
 ### 9 · The board
 
@@ -327,9 +348,16 @@ generation and rotation are deferred behind the first hand-authored map** — [#
   while `RecordFormat.TowerBytes` and `GhostRecord` are untouched. Cheap now, expensive later, and the reason
   this seam wants charting before step 5.
 - **The first map is hand-authored**, and **generation and rotation wait behind it** — seed-to-map as a pure
-  function, a `simcli` mode to invoke it, the sweep-scored archive, and the schedule that draws from it, all
-  downstream of one map that is demonstrably good to score candidates against. What the survey found is in
+  function, a `simcli` mode to invoke it, the   sweep-scored archive, and the schedule that draws from it, all downstream of one map that is demonstrably
+  good to score candidates against. What the survey found is in
   [open questions](open-questions.md#what-the-design-research-found).
+- **Smoothing** — a step between two cells is drawn today as the higher tile on a cliff post, and only the
+  corridor gets a ramp; where three heights meet the pieces disagree. Two candidates, rendered and not argued:
+  a skin over the grid, one mesh whose corners sit at the mean height of the cells meeting there; or a piece
+  for every neighbour case the slope limiter allows. Either is judged under the legibility veto from
+  [seam 8](#8--the-presentation): a slope that smooths the level out of sight has smoothed away the range that
+  comes with it, so a contour or a colour band per level is on the table beside both. Picking stays a rule
+  about cells and never reads the mesh.
 
 **Nothing before step 5 needs it, and everything after step 5 is shaped by it.** Steps 1–4 run against the
 corridor that exists, so **the numbers they produce are provisional by construction** — stated where they are

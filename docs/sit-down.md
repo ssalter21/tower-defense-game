@@ -2,6 +2,12 @@
 
 Twelve things to look at in the build, once, in one sitting.
 
+**This is the walking skeleton's instrument, and it has run.** The people playtest has its own,
+[the playtest protocol](playtest.md). Rows 4 to 10 below name ticks of the recorded match, which the player
+no longer opens on; on 13 September 2026 they were retired onto `LocomotionTests`, which carries their
+load-bearing half, rather than re-anchored. Row 12, the clean-machine double-click, is the wrapper's
+acceptance test.
+
 This is the end of the walking-skeleton slice, and it is the only verification
 of scrubbing that survives — the test that scrubbed and compared the result to a
 re-simulation was deleted for being a tautology, because it was. What replaces

@@ -66,6 +66,11 @@ it as *invalid escape character* rather than as a bad path.
   [the build order](../build-order.md#7--the-interface), with its two loose ends in
   [open questions](../open-questions.md).
 
+**On 13 September 2026 the wheel superseded the menu's placement and kept the rest.** Select a hex and its
+options open in a wheel around it; the one-line header and the rail stand. `chosen-build-phase.png` records
+the 17 August decision and is kept as that. The wheel gets a chosen sheet of its own once one is picked from a
+rendered set, and until then the direction is written in [the build order](../build-order.md#7--the-interface).
+
 **What ships in the meantime is a holding answer, and it was signed as one.** On 11 September 2026 sitting
 [#285](https://github.com/ssalter21/tower-defense-game/issues/285) signed the three answers in
 [`overflows/`](overflows/README.md) — the wave bar scrolls, a rung's price goes beneath its name, the

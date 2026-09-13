@@ -295,7 +295,9 @@ list](#what-this-roster-needs-that-the-schema-does-not-have). What each one stil
 > **A pair belongs to a line, not a rung** — the Sergeant at cooldown 11 keeps the Soldier's 7 and 5, the
 > Blessing keeps the Paladin's — so a rung's own cooldown never moves it. Sam's verdict on the played build,
 > recorded with the numbers: *"all these towers need reworks, the animations look terrible."* The sixteen are
-> holding answers under that sentence; the rework is its own effort.
+> holding answers under that sentence. The rework is [the animation score](vision.md#6-what-it-looks-like),
+> taken on 13 September 2026: once a line's score is signed, its windup and backswing are derived from the
+> release frame rather than authored, and these numbers move with it, line by line.
 
 ### What a row is drawn as
 

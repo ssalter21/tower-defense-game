@@ -107,11 +107,12 @@ a playtest, and since
 is scoping alongside the balance sweep. Not a run on a branch — one was offered on #287 and declined as
 throwaway — so "waiting on a playtest" points at a thing that is coming rather than at nothing.
 
-**Whether the wave is always on screen, or behind a control.** The
+**Whether the wave is always on screen, or behind a control.** Reopened by the wheel. The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
-visible as a rail of portraits. Sam's remark on choosing it was that the sending is not the most important
-part, and that it may end up behind a UI element — which is a real option and worth stating rather than
-drifting into. **What it costs is stated too, because it cuts against a finding this project keeps making:**
+visible as a rail, and the wheel keeps the rail; but once a hex opens a wheel, the natural home for the wave
+is a wheel of its own on the entrance hex, which is exactly behind a click. Sam's remark on choosing the rail
+was that the sending is not the most important part, and that it may end up behind a UI element — which is a
+real option and worth stating rather than drifting into. **What it costs is stated too, because it cuts against a finding this project keeps making:**
 [the sending survey](#what-the-design-research-found) and the
 [13 August played run](decision-log.md#13-august-2026--the-first-run-played-by-a-person) both land on the
 attacking half being the underweighted one, and a surface that is behind a click is a surface that gets used
@@ -119,7 +120,9 @@ less. The honest test is a sheet either way and a played round, not an argument.
 
 **What a thumbnail is, now that a layout depends on one.** `RosterThumbnails` returns null and says so
 deliberately — no per-unit image is committed anywhere, and both ways to close it are art decisions. The
-chosen arrangement puts portraits at the centre of the build phase, so the seam is now load-bearing. The
+chosen arrangement puts portraits at the centre of the build phase, so the seam is now load-bearing. **The
+wheel's MVP is wedges with words on them, so the seam stays load-bearing and stops blocking**: the wheel is
+played before a portrait exists, and the portrait is signed after. The
 mockups borrowed `tools/capture-armed-roster.ps1`'s framing — a three-quarter front at 215°, chosen to show
 both hands — keyed and cropped square, which is a stand-in and not a decision. The two answers on file are a
 committed image per live row, addressed by type id, or a bake with a camera, a pose and a framing chosen per
@@ -132,7 +135,8 @@ is a different content problem from anything else here. Revisit once seams 1 and
 
 **The gamble.** Opting out of the field average to face a single opponent drawn from the distribution, possibly
 choosing where in the distribution to draw from. The antidote to averaging making every round tend toward the
-mean, with best-of-ten as its natural payoff. Not decidable before a real field exists at step 6.
+mean, with best-of-ten as its natural payoff. Not decidable before a real field exists: a lobby is a field of
+five, too few to draw from, so this waits on the round-robin's pool.
 
 **The paid predictor.** Named so it is not reinvented: an **average heatmap of where creeps died, layered onto
 your own build**, aggregated over the simulated games. It needs per-cell kill attribution and a board to draw
@@ -166,38 +170,9 @@ everything else, and a sweep that gains a dimension per modifier.
 that no player sees a map twice, or small enough that maps become known quantities with a metagame, is a design
 choice and not a capacity one — and it is the cadence question viewed from the other end.
 
-**Rating at two scales at once.** The pool is all players and the rivalry is a friend group. Whether those are
-one ladder or two is unresolved.
-
-### Is the field measurement kept, now that nothing prices off it?
-
-**A decision for a human, raised by [#209](https://github.com/ssalter21/tower-defense-game/issues/209) and
-deliberately not taken by it.** Gold is now paid for the health damage a wave does, so the payment reads no
-distribution and no rank. That leaves `PerformanceField`, `Run.Field`, `Run.FieldSamples`, `MeasureField`, the
-`run-measure/1` draw and the percentile lookup compiling, tested, and called by nothing —
-[ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md) is largely superseded, its own recorded cost
-included.
-
-**What keeping it costs is now nearly nothing, which is the surprise.** The measurement was lazy already and a
-played round no longer asks for it, so the **half a run per run** the ADR records — the committed sweep going
-from 9,600 matches to 14,400, and from about eight seconds to thirteen — is not being spent. What is left is
-one measurement's worth of code that nothing exercises in anger, which is the ordinary cost of a capability
-kept warm: it can rot without anything going red.
-
-**What deleting it costs is the only answer on file to "where does this run sit against the field".** A placing,
-a ladder, a percentile shown to a player, or a bonus that goes back to being relative all want exactly this,
-and it is about a hundred lines with an ADR behind it.
-
-**[#208](https://github.com/ssalter21/tower-defense-game/issues/208) has landed and did not wait on this.** The
-pool is now a population per round and the measurement reads all of it at once, so the two are decoupled: the
-answer here is still open, and taking it either way is still one measurement's worth of code. What #208 did
-settle is the price of keeping it as it stands — the spread it reports is over a population no single round
-fights, which is written into [ADR-0042](adr/0042-the-field-is-measured-off-the-pool.md)'s amendment. Anything
-that gives the measurement a consumer has to pay that back by measuring per round.
-
-**Three answers, and the middle one is not obviously wrong.** Delete it and take it back off git if it is
-wanted. Keep it as it stands and accept untested-in-anger code. Or keep it and give it a consumer that is not
-the purse — the sweep reporting where a run sat is the cheap one.
+**Rating at two scales at once.** The pool is all players and the rivalry is a friend group. The lobby is the
+friend-group scale and is built first, with every player's bar shown and no rating at all; whether the two
+scales are one ladder or two is unresolved until a pool exists.
 
 **Does a shareable browser replay viewer matter enough to move the simulation to Rust?** **Current assumption:
 no — C# throughout.** It bears on [seam 6](build-order.md#6--the-social-layer), since a replay you can send
@@ -295,6 +270,8 @@ it would then need is a stated rule for where its dice come from.
 
 ### Does the bot's value score divide by the gold it spends or by the gold it adds?
 
+*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
+
 **Left standing by [#236](https://github.com/ssalter21/tower-defense-game/issues/236) rather than settled
 inside it.** That ticket decided what a purchase on a covered route is worth — damage a tick, times the bodies
 a shot hits, times the route hexes it reaches, per gold of the price difference — and `CoverThenUpgradeBot`
@@ -314,6 +291,8 @@ settles it is whether this bot is meant to model a player valuing a board or a p
 
 ### Is a sweep row worth reading when the wall stops its creep outright?
 
+*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
+
 **Raised by [#236](https://github.com/ssalter21/tower-defense-game/issues/236)'s regeneration.** A defense
 that spends its whole share on a covered route now stops the light end of the roster: `content/sweep.csv` has
 the skeleton scout dealing **0** over eight runs and the minion **2,073**, against 52,687 and 36,847 before.
@@ -329,6 +308,8 @@ a creep that never gets through is still ranked by how far it got. The last is t
 choose between honesty and signal.
 
 ### What is a spawner worth?
+
+*Owned by [the sweep specification](specs/sweep-harness.md) since 13 September 2026.*
 
 **Raised by [#268](https://github.com/ssalter21/tower-defense-game/issues/268) building the raise
 [#250](https://github.com/ssalter21/tower-defense-game/issues/250) signed.** Creep cost is effective health
@@ -351,3 +332,41 @@ loudest of the three by an order of magnitude. **The third shape is the one take
 the Necromancer keeps its derived 21, and the 1200 is the acceptance test for the sweep-derived rule that will
 replace the cost algorithm. What a spawner is worth is still open; what is settled is that nothing is retuned
 by hand while it is.
+
+## What the playtest rebaseline leaves for a sitting
+
+[The proposal](playtest-rebaseline-proposal.md) was taken whole on
+[13 September 2026](decision-log.md#13-september-2026-after-the-map--the-vision-is-rebaselined-on-a-playtest-of-six-friends-and-five-claims-reverse),
+and it put these beside their costs rather than deciding them. Each is Sam's, and each is what a ticket on
+step 7 has to carry before an agent starts. Plain words: a *metric* is one number a round or a run produces;
+a *position* is where that number sits among the players in the lobby; the *release frame* is the frame of a
+swing on which the shot leaves the hand.
+
+- **Which metrics are scored.** Leak cost dealt, leak cost taken, health remaining or waves survived, gold
+  unspent — all four, fewer, or others. Short term each is a bar on the end-of-round screen. Long term each
+  is a thing a player optimises for, and a metric nobody can move is noise.
+- **Whether the positions combine into one placing at the end of the run.** Opus Magnum never combines. A
+  single placing makes a winner, which a room of friends will want; it also lets the offense decide the
+  winner, which the old placing forbade.
+- **Whether health taken stays the field average or becomes the sum of the waves.** Average keeps every number
+  the sweep produced comparable. Sum makes a lobby of six twice as lethal as a lobby of three.
+- **Whether a player sees the other boards before committing.** §3 calls this scouting in the lobby: the
+  opponent's defense as of the end of the previous round, stale, never live. The folder makes it free; whether
+  it is shown is a design choice.
+- **What the wheel holds on an empty hex.** The nine roots, only the ones the purse affords, or the roots with
+  the ladder reachable from each. Nine wedges with names fit; nine with ladders do not.
+- **Where the wave is composed.** On the bar as today, in a wheel on the entrance hex, or both. One sheet
+  either way. A wave behind a click is a wave composed less carefully, and the attacking half is already the
+  underweighted one.
+- **Whether the wheel opens on hover or on click.** Hover is what lights a cell today; a wheel that opens on
+  hover covers the neighbours a player is about to look at.
+- **Which two tower lines are animated first.** The recommendation is one melee line and one ranged line.
+- **Whether the release frame sets the windup number, or the signed number picks the clip speed.** The first
+  keeps the clip honest and moves sixteen content numbers again, with the golden and every dated picture. The
+  second keeps the numbers and accepts that some swings play fast.
+- **What a shot is allowed to be.** A model from the pack, a generated mesh, or a particle trail alone.
+- **Which smoothing candidate ships, and how a level stays readable on it.** The skin or the pieces, from a
+  sheet, with the contour or colour band asked of the same picture.
+- **The words on the wrapper's screens, and which settings ship first.**
+- **The sweep specification's five questions**, which are its own document:
+  [`specs/sweep-harness.md`](specs/sweep-harness.md).

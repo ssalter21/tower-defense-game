@@ -164,6 +164,8 @@ Three facts, measured. The evidence is in
   says what it does through its names — so everything a comment would have held lives here, in the commit
   message, or on the ticket.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
+- [`docs/specs/`](docs/specs/) — a specification written before a rebuild: what a tool is for, what it plays,
+  what it reports, and how a verdict reaches `content/`. Written from a sitting, reviewed as a document.
 - [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the review
   boundary, and how blocking, claiming and closing a ticket are done here.
 
