@@ -10,4 +10,4 @@
 #
 #       picture                        drawn from
 
-picture  match-tick-1546.png             2F5438C884EF6856
+picture  match-tick-1546.png             0D3C9E832B11C66C

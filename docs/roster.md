@@ -41,11 +41,16 @@ that one wallet can buy both — which is what [§3's one purse](vision.md#one-p
 Signing a creep therefore means signing **health, speed and armour**; the price follows. Signing a tower means
 signing **damage, cooldown and how many bodies it hits**.
 
-> ⚠️ **Two honest gaps in the tower rule.**
+> ⚠️ **Three honest gaps in the tower rule.**
 >
 > **It does not price range.** A one-hex tower and an eight-hex tower with the same damage cost the same, so
 > the Soldier being cheap is an accident of the formula agreeing with the design rather than the formula
 > knowing that reach is worth paying for.
+>
+> **It does not price windup or backswing.** A tower spends its windup before a shot and its backswing after,
+> and only then starts the cooldown the rule reads, so "two swings a second" on the Soldier is 1.1 once its
+> 7 and 5 are counted, and every row with a pair is priced for a rate it does not reach. The sweep's bot reads
+> the cooldown alone too. A cost derived from the sweep would see the whole cycle; this rule does not.
 >
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
@@ -278,15 +283,19 @@ things on the ground now.
 order the lines are written above. Layout 3 authors every shape and #217 plays them; see [the column
 list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is its art.
 
-> **Windup and backswing are the one pair of numbers this page has not signed.** The Knight and Barbarian
-> lines carry both, and so do the Mage and the Archer — which the Sorcerer, Unravel and the Ranger inherit.
-> **Sixteen rows carry zero**: the Paladin, Cleric, Druid, Rogue and Engineer lines, which say nothing about
-> either, and Overwatch, whose two rungs below carry 9 and 6 and whose own tuning is a different shape. Zero is
-> a tower that fires the tick it acquires and goes straight back on cooldown — the absence and not a choice.
-> How long a tower winds up is how it feels, so the `_` is on each of those six blocks below. Every one of
-> those blocks names its clips now — the Paladin line since 6 September 2026 and the Engineer line since
-> 11 September — and the number is still `_`, on purpose: Sam ruled on #284 that a windup is not read off a
-> clip's contact frame but signed from a played build, which is #297.
+> **Windup and backswing are signed on every tower row, and on four of them the signed number is zero.**
+> Both add to the cooldown — a tower spends the windup before its shot lands and the backswing after it, and
+> the view stretches the swing clip across the windup and the rest clip across the backswing, so at zero a
+> tower fires inside the tick it acquires and its swing is never drawn. The Knight, Barbarian, Mage and Archer
+> lines were signed by play in August. The Paladin, Cleric, Druid and Engineer lines were signed on
+> [13 September 2026](decision-log.md#13-september-2026-last--windup-and-backswing-are-signed-on-the-sixteen-rows-and-on-four-of-them-the-number-is-zero) at the proportion those four sit near — windup about 0.45 of the
+> cooldown, backswing about two thirds of the windup — played once from a built player and kept. **The Rogue
+> line and Overwatch carry zero as a choice**: a knife fires the tick it sees you and a 7-tick cooldown has no
+> room for a windup that reads, and the Overwatch holds an aiming pose in every slot with no swing to draw.
+> **A pair belongs to a line, not a rung** — the Sergeant at cooldown 11 keeps the Soldier's 7 and 5, the
+> Blessing keeps the Paladin's — so a rung's own cooldown never moves it. Sam's verdict on the played build,
+> recorded with the numbers: *"all these towers need reworks, the animations look terrible."* The sixteen are
+> holding answers under that sentence; the rework is its own effort.
 
 ### What a row is drawn as
 
@@ -487,7 +496,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 
 - **Does** — one hex, holy damage, one target.
 - **Looks** — `Paladin`, bare head, `paladin_hammer`, swinging **`Melee_1H_Attack_Chop`**.
-- **Numbers** — range 1000, cooldown 24, damage 120–180, windup `_`, backswing `_`, hitscan, magic, cost ~37.
+- **Numbers** — range 1000, cooldown 24, damage 120–180, windup 11, backswing 7, hitscan, magic, cost ~37.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -526,7 +535,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 - **Does** — three hexes, holy bolt, one target.
 - **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of
   the tome, crossing to the body it found.
-- **Numbers** — range 3200, cooldown 30, damage 130–190, windup `_`, backswing `_`, hitscan, magic, cost ~32.
+- **Numbers** — range 3200, cooldown 30, damage 130–190, windup 14, backswing 9, hitscan, magic, cost ~32.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -608,7 +617,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Looks** — the **`Marksman`** model, prone-ish `Ranged_2H_Aiming`, holding **`crossbow_2handed`** from the
   Adventurers pack. Every shot draws one heavy bar from the crossbow to the body, the whole length of the leg
   it crossed — which is the line's own read, since eight hexes against the Archer's three is what this row is.
-- **Numbers** — range **8000**, cooldown 60, damage 500–700, windup `_`, backswing `_`, hitscan, pierce.
+- **Numbers** — range **8000**, cooldown 60, damage 500–700, windup 0, backswing 0 (signed as zero), hitscan, pierce.
   Cost ~60.
 - **Needs** — nothing.
 - **Open** — none.
@@ -682,7 +691,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — three and a half hexes, nature bolt, one target.
 - **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of the
   staff tip, the same shape the Cleric line fires.
-- **Numbers** — range 3600, cooldown 36, damage 150–210, windup `_`, backswing `_`, hitscan, magic, cost ~30.
+- **Numbers** — range 3600, cooldown 36, damage 150–210, windup 16, backswing 11, hitscan, magic, cost ~30.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -728,7 +737,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 - **Does** — two hexes, three throws a second, light.
 - **Looks** — `Rogue`, `dagger`, the `Throw` clip.
-- **Numbers** — range 2200, cooldown 9, damage 40–60, windup `_`, backswing `_`, hitscan, pierce, cost ~33.
+- **Numbers** — range 2200, cooldown 9, damage 40–60, windup 0, backswing 0 (signed as zero), hitscan, pierce, cost ~33.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -772,7 +781,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
   than leaving the man. He rests in `Idle_A` and works the turret with **`Use_Item`** — signed 11 September
   2026 off #278's filmstrips, which are the same `Rig_Medium_General` bank, so a clip looks the same on him
   as on the Paladin — and all three rungs share both.
-- **Numbers** — range 4000, cooldown 60, damage 250–350, windup `_`, backswing `_`, projectile, flight 45,
+- **Numbers** — range 4000, cooldown 60, damage 250–350, windup 27, backswing 18, projectile, flight 45,
   impact, cost ~30.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — none.
