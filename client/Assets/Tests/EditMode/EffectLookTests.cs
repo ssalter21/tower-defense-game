@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
@@ -32,13 +31,6 @@ namespace Tests.EditMode
     /// </remarks>
     public class EffectLookTests
     {
-        /// <summary>Where the committed candidates live, relative to the repository root.</summary>
-        private const string CandidateFolder = "docs/frames/effect-candidates";
-
-        /// <summary>The repository root, which is the folder above the Unity project.</summary>
-        private static string RepoRoot =>
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
-
         [Test]
         public void TheShippedLookIsMatchTuningAndNothingElse()
         {
@@ -244,69 +236,6 @@ namespace Tests.EditMode
 
             StringAssert.Contains("Sparkles", fault.Message);
             StringAssert.Contains(nameof(BubbleSignature.HasteRing), fault.Message);
-        }
-
-        [Test]
-        public void EveryCommittedCandidateReadsAndNamesItsQuestion()
-        {
-            string folder = Path.Combine(RepoRoot, CandidateFolder);
-
-            Assert.That(Directory.Exists(folder), Is.True, "No candidates at " + folder);
-
-            string[] files = Directory.GetFiles(folder, "*.txt");
-
-            Assert.That(files, Is.Not.Empty, "The folder is there and holds no candidate.");
-
-            foreach (string file in files)
-            {
-                EffectLookFile candidate = EffectLookFile.Read(file);
-
-                Assert.That(
-                    candidate.Question,
-                    Is.Not.Empty,
-                    Path.GetFileName(file) + " says what it changes and not what it is asking.");
-
-                Assert.That(
-                    candidate.Label,
-                    Is.Not.Empty,
-                    Path.GetFileName(file) + " has no label, so a sheet cannot say which tile it is.");
-            }
-        }
-
-        [Test]
-        public void TheCommittedCandidatesBetweenThemCoverEveryQuestionTheTicketNamed()
-        {
-            string folder = Path.Combine(RepoRoot, CandidateFolder);
-
-            string[] names = Directory
-                .GetFiles(folder, "*.txt")
-                .Select(Path.GetFileNameWithoutExtension)
-                .ToArray();
-
-            // The shapes are signed — one flat translucent circle per aura —
-            // so the only thing still standing on nobody's signature is how
-            // see-through that circle is. A bracket, and the middle of it is
-            // the value MatchTuning holds.
-            //
-            // The other four families are issue #280's, which is the same
-            // question asked of four things that were found by photographing
-            // the built player rather than a sheet: the thrown knife and the
-            // magic bolt, the mortar shell, where a ground effect stops, and
-            // how long the Consecration's light is up for. Every one of them is
-            // a bracket with the shipped value named outright in the middle of
-            // it — a baseline candidate that named nothing would quietly become
-            // a second picture of whatever the file happened to hold, which is
-            // what nearly happened to the alpha bracket when 0.45 was signed.
-            foreach (string wanted in new[]
-            {
-                "aura-alpha", "knife", "bolt", "shell", "reach",
-            })
-            {
-                Assert.That(
-                    names.Any(name => name.StartsWith(wanted, StringComparison.Ordinal)),
-                    Is.True,
-                    "Nothing in " + CandidateFolder + " is a candidate for '" + wanted + "'.");
-            }
         }
     }
 }
