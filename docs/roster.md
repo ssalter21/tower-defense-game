@@ -1099,10 +1099,12 @@ would re-baseline every measurement in the sweep.
 > armour and no row here is both — the same silence it keeps about the Mage's splash and the Vampire's shield,
 > and the sweep is what is meant to derive a term for it.
 >
-> **Whether the pair SHOULD be worth both pools is unsigned, and is not this ticket's to take.** Making it so
-> means moving the trigger off the first damage and onto the death, which is a different mechanic and a
-> different feel; the 4400 above is the arithmetic of that trigger, written beside this one's name. See
-> [the open questions](open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death).
+> **The trigger is signed as built: first damage, not death.** Sam took it on 12 September 2026 — the
+> property is the point of the row, and the 7 gold between what the rule prices and what is charged is a
+> pricing gap for the sweep-derived cost, not a reason to move a trigger. The 4400 is the arithmetic of the
+> trigger that was declined, and stays here so nobody derives it again.
+> [The decision log](decision-log.md#12-september-2026-later--the-villagers-trigger-stays-on-the-first-damage-and-the-pair-is-worth-what-that-trigger-makes-it)
+> has the two feels weighed.
 
 > **This is the pairing `lancer` occupied with no design behind it.** Now the design is the transformation.
 
@@ -1125,6 +1127,11 @@ would re-baseline every measurement in the sweep.
   added the `bounty` column, and this is the one row on the roster that fills it in.
 - **Open** — the shield is unpriced, as the Vampire's is.
 
+> **A bounty may not exceed the row's cost, and the table refuses one that does.** Signed 12 September 2026:
+> the money is minted, so a body worth more dead than sent makes killing the field's wave a better income
+> than the round's own, and no instrument would see it. Equal is allowed; the half below is this row's own
+> argument. [The decision log](decision-log.md#12-september-2026-later-still--a-body-is-never-worth-more-dead-than-it-cost-to-send-and-the-table-refuses-one-that-is).
+>
 > **Twelve is half its own price, and the half is the point.** Paying its full 24 back would make it free to
 > send. Half means killing it refunds half of what the attacker laid out, so it is a body that rewards being
 > killed without being one you are glad to see. **A leaked Grave Robber pays nothing** — reaching the exit is
