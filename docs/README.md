@@ -23,7 +23,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The sit-down](sit-down.md) | The walking skeleton's instrument: twelve things to look at in the build, once, each naming the exact tick |
 | [The board tools](board-tools.md) | `Tools > Board > Edit Map`, `Scenery` and `Dress` — what each bakes into `content/`, what it must not do, and how an agent runs it without an editor |
 | [`specs/`](specs/) | A specification written before a rebuild — what a tool is for, what it plays, what it reports. One so far, the sweep harness, holding its five questions |
-| [`adr/`](adr/) | Why the code is shaped the way it is — 63 records. Source comments say *what*; these say *why* |
+| [`adr/`](adr/) | Why the code is shaped the way it is — 64 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
 | [`archive/`](archive/README.md) | The five deep dives the vision was built on, the row-by-row account of what it overturned in them, the specifications whose implementation is gone, and the two proposals that were taken whole |
 | [`frames/`](frames/) | Rendered match frames — documentation, not an oracle |

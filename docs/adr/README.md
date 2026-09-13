@@ -28,6 +28,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0060](0060-a-creep-raises-a-creep-and-the-board-is-what-caps-it.md) | A creep raises a creep, and the board is what caps it |
 | [0061](0061-a-kill-pays-the-defender.md) | A kill pays the defender, and the band that measures leaks cannot see it |
 | [0062](0062-a-capstone-costs-a-token.md) | A capstone costs a token, and the count is derived rather than stored |
+| [0063](0063-a-price-is-derived-from-the-row-and-its-silences-are-named.md) | A price is derived from the row, and its silences are named |
 
 ## The simulation/view boundary
 
@@ -78,6 +79,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0028](0028-generated-placeholder-art-marks-the-seam.md) | Placeholder geometry is generated in code, marking the art seam |
 | [0029](0029-exactly-one-match-root.md) | Exactly one match root in the scene |
 | [0053](0053-the-chrome-loads-one-settings-asset-for-its-text-data.md) | The chrome loads one settings asset, for its text data and nothing else |
+| [0064](0064-a-committed-frame-is-documentation-not-an-oracle.md) | A committed frame is documentation, not an oracle |
 
 ## Reporting
 
