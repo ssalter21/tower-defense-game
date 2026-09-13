@@ -1,7 +1,7 @@
-# Renders the candidate chrome for the three overflows issue #282 is about --
-# the wave bar, the offer's longest rung, and a standing capstone-token count --
-# through the real chrome at 1600x900, which is the size the built player runs
-# at and the size all three break at.
+# Renders the shipped chrome at the two late-round states the roster's
+# forty-four rows stopped it fitting -- a wave with every creep in it, and a
+# Bishop's ladder offering a capstone for a token -- through the real chrome
+# at 1600x900, which is the size the built player runs at.
 #
 # WHY THIS IS NOT JUST capture-ui-previews.ps1. It is: the spec is
 # docs/chrome/overflows/spec.json and this passes it through. What this file
@@ -16,15 +16,15 @@
 #            can still cover, cheapest first -- see UiPreviewCapture.PlayTo.
 #   wave 2   is a round with a purse deep enough to stand a Cleric and climb it
 #            to a Bishop, and no token granted yet -- so the Bishop's ladder
-#            opens on nothing, which is the moment the ticket says nothing on
-#            screen explains.
+#            opens on nothing, which is the moment #282 said nothing on screen
+#            explained. The header's token field now does.
 #
-# THE CANDIDATES ARE CLASSES, NOT FILES, because a layout is code: they live in
-# client/Assets/Editor/ChromeCandidates/ and are named in the spec by type.
-# They come out of the project when the sitting has signed one.
-#
-# NOTHING HERE DECIDES ANYTHING. AGENTS.md rule 6 puts anything a player sees on
-# the human side of the line. This renders the alternatives and stops.
+# THIS WAS capture-chrome-candidates.ps1 until #285 signed. Issue #282 rendered
+# candidate layouts for these states as classes under
+# client/Assets/Editor/ChromeCandidates/, named in the spec by type; the
+# sitting signed one of each on 11 September 2026 (docs/decision-log.md) and
+# the classes came out with the sheets they drew. What the spec draws now is
+# the chrome as shipped, at the rounds the candidates were compared at.
 #
 # -batchmode -executeMethod, so the editor must be CLOSED. Never edit a file
 # while a run is going: it forces a synchronous recompile and the run dies with
@@ -42,6 +42,6 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (-not $Spec) { $Spec = Join-Path $repoRoot 'docs/chrome/overflows/spec.json' }
 
 & (Join-Path $PSScriptRoot 'capture-ui-previews.ps1') -Unity $Unity -Spec $Spec `
-    -LogFile (Join-Path $repoRoot 'capture-chrome-candidates.log')
+    -LogFile (Join-Path $repoRoot 'capture-chrome-overflows.log')
 
 exit $LASTEXITCODE

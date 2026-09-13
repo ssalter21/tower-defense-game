@@ -287,14 +287,14 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// The header carries three fields and the same three in both modes: the
-        /// wave, the health and the gold. Neither of them is a forecast and
-        /// neither names a slot count — #179 took the take and the slot bound
-        /// out of the rules, which is why the purse is the figure a wave is
-        /// composed against.
+        /// The header carries four fields and the same four in both modes: the
+        /// wave, the health, the gold and the capstone tokens. None of them is
+        /// a forecast and none names a slot count — #179 took the take and the
+        /// slot bound out of the rules, which is why the purse is the figure a
+        /// wave is composed against.
         /// </summary>
         [Test]
-        public void TheHeaderSaysTheWaveTheHealthAndTheGoldInBothModes()
+        public void TheHeaderSaysTheWaveTheHealthTheGoldAndTheTokensInBothModes()
         {
             MatchRoot root = Playfield();
             RunLoop loop = root.BeginRun(TheMatchOnScreen.Seed, Scratch(), TheMatchOnScreen.Art());
@@ -303,6 +303,10 @@ namespace Tests.PlayMode
             Assert.That(header.Wave.text, Is.EqualTo("Wave 1 of 10"));
             Assert.That(header.Health.text, Is.EqualTo("Health 800 of 800"));
             Assert.That(header.Gold.text, Is.EqualTo("100 gold"), "The purse a run opens on.");
+            Assert.That(
+                header.Tokens.text,
+                Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)),
+                "The first grant is at round three, so an opening round holds none and has all three to come.");
             Assert.That(header.Action.text, Is.EqualTo(RunLoop.CommitLabel));
             Assert.That(header.Ending.text, Is.Empty, "No end frame while the run is going.");
 
@@ -329,6 +333,25 @@ namespace Tests.PlayMode
 
             Assert.That(header.Wave.text, Is.EqualTo("Wave 2 of 10"));
             Assert.That(header.Action.text, Is.EqualTo(RunLoop.CommitLabel));
+            Assert.That(header.Tokens.text, Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)));
+
+            loop.Press();
+            header.Follow();
+
+            Assert.That(
+                header.Tokens.text,
+                Is.EqualTo(RosterNames.CapstoneTokens(0, 0, 3)),
+                "Watching wave two, the run has not been handed wave three's token yet: the count is "
+                + "through the wave on screen, not the one the run is about to build.");
+
+            loop.Press();
+            header.Follow();
+
+            Assert.That(header.Wave.text, Is.EqualTo("Wave 3 of 10"));
+            Assert.That(
+                header.Tokens.text,
+                Is.EqualTo(RosterNames.CapstoneTokens(1, 0, 2)),
+                "Round three is the first grant: one in hand, none spent, two still on the schedule.");
         }
 
         /// <summary>

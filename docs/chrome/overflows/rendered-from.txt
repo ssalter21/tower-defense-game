@@ -10,21 +10,8 @@
 #
 #       picture                        drawn from
 
-picture  offer-as-built.png              98DDCD917FDC5CD1
-picture  offer-fits-its-longest-rung.png  98DDCD917FDC5CD1
-picture  offer-is-wider.png              98DDCD917FDC5CD1
-picture  offer-prices-beneath-the-name.png  98DDCD917FDC5CD1
-picture  tokens-w2-as-built.png          98DDCD917FDC5CD1
-picture  tokens-w2-as-pips.png           98DDCD917FDC5CD1
-picture  tokens-w2-at-the-ladder.png     98DDCD917FDC5CD1
-picture  tokens-w2-in-the-header.png     98DDCD917FDC5CD1
-picture  tokens-w9-as-pips.png           98DDCD917FDC5CD1
-picture  tokens-w9-at-the-ladder.png     98DDCD917FDC5CD1
-picture  tokens-w9-in-the-header.png     98DDCD917FDC5CD1
-picture  tokens-w9-spent-as-pips.png     98DDCD917FDC5CD1
-picture  tokens-w9-spent-in-the-header.png  98DDCD917FDC5CD1
-picture  wave-bar-as-built.png           98DDCD917FDC5CD1
-picture  wave-bar-scrolls.png            98DDCD917FDC5CD1
-picture  wave-bar-shrinks-to-fit.png     98DDCD917FDC5CD1
-picture  wave-bar-shrinks.png            98DDCD917FDC5CD1
-picture  wave-bar-wraps.png              98DDCD917FDC5CD1
+picture  offer.png                       98DDCD917FDC5CD1
+picture  tokens-w2.png                   98DDCD917FDC5CD1
+picture  tokens-w9-spent.png             98DDCD917FDC5CD1
+picture  tokens-w9.png                   98DDCD917FDC5CD1
+picture  wave-bar.png                    98DDCD917FDC5CD1

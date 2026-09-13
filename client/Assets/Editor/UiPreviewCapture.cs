@@ -146,7 +146,7 @@ namespace View.Editor
         /// hard-coded here. A candidate that is waiting on a sitting lives
         /// under <c>Editor/ChromeCandidates/</c> beside the sheets it drew,
         /// the way a candidate art file lives beside its frames, and comes
-        /// out when the sitting has signed.
+        /// out when the sitting has signed — as #282's did when #285 signed.
         /// </summary>
         public interface IUiPreviewLayout
         {

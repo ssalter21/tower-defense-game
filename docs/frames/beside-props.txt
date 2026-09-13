@@ -1,12 +1,14 @@
 # The three capstones that stand a prop beside them, each with a tower on the
-# tile the prop stands on. Issue #282, question 4.
+# tile the prop asks for. Issue #282, question 4; signed by #284.
 #
-# WHAT THIS IS FOR. BesideProp.NextTile puts a tower's prop one column pitch to
-# its right, in the frame it rests in, and nothing says what happens when a
-# tower is standing there. #270 played it: with towers in a row the Mortar's
-# turret, the Consecration's font and the Overgrowth's weirwood were drawn
-# inside the neighbouring tower's hex. A lone tower cannot show that, so this
-# board stands each of the three with the offending neighbour in place.
+# WHAT THIS IS FOR. BesideProp.NextTile asks for the tile one column pitch to
+# the tower's right, in the frame it rests in, and until #284 nothing said what
+# happened when a tower was standing there. #270 played it: with towers in a
+# row the Mortar's turret, the Consecration's font and the Overgrowth's
+# weirwood were drawn inside the neighbouring tower's hex. A lone tower cannot
+# show that, so this board stands each of the three with the offending
+# neighbour in place -- and BesideStanding, the rule the sitting signed, moves
+# each prop to a free neighbour. The frames show it doing so.
 #
 #     ./tools/capture-beside-props.ps1
 #
@@ -22,15 +24,12 @@
 # so the collision is with a row of towers and not a pair, and TWO
 # NEIGHBOURS OF EACH ARE LEFT FREE on purpose -- (10, 2) and (10, 4) for the
 # Mortar, (14, 2) and (14, 4) for the Consecration, (13, 8) and (13, 10) for
-# the Overgrowth -- because one of the candidates moves the prop to a free
-# neighbour, and a ring with no free neighbour would leave that candidate
-# nothing to draw.
+# the Overgrowth -- because the rule moves the prop to a free neighbour, and a
+# ring with none would show only its fallback: the prop inside its own hex.
 #
-# The candidate looks are in docs/frames/beside-props/, one file each, applied
-# through -matchFrameArt. The map, the wave and the seed still come out of
-# content/match.replay; only what is standing has moved. Frames from this
-# board are named after this file rather than match-tick-, for the reason
-# underserved-rungs.txt gives.
+# The map, the wave and the seed still come out of content/match.replay; only
+# what is standing has moved. Frames from this board are named after this file
+# rather than match-tick-, for the reason underserved-rungs.txt gives.
 #
 # EVERY TOWER HERE REACHES THE ROUTE, AND THE RING IS MAGES BECAUSE ARCHERS DID
 # NOT. The first draft ringed the capstones with Archers, whose 3200 reaches

@@ -172,6 +172,38 @@ namespace View
                 ? _root.Composing.Gold
                 : Run.Purse.Gold;
 
+        /// <summary>
+        /// The capstone tokens in hand: what the composed round would leave
+        /// while one is being composed, and what the wave on screen had
+        /// otherwise.
+        /// </summary>
+        /// <remarks>
+        /// The composed figure for the reason <see cref="Gold"/> is: a capstone
+        /// bought this round is a token no longer held, and the count has to
+        /// move as the ladder is climbed. Off the composing side it is counted
+        /// through the wave on screen and not through the one after it, which
+        /// is what <see cref="Run.CapstoneTokens"/> looks ahead to -- a run
+        /// watching wave two has not been handed wave three's token yet.
+        /// </remarks>
+        public int CapstoneTokensHeld =>
+            Mode == RunMode.Building && _root.Composing != null
+                ? _root.Composing.CapstoneTokens
+                : Run.CapstoneTokensGrantedThrough(Wave) - CapstoneTokensSpentByRoundsPlayed;
+
+        /// <summary>Capstone tokens the run has spent, this round's included while one is composed.</summary>
+        public int CapstoneTokensSpent => Run.CapstoneTokensGrantedThrough(Wave) - CapstoneTokensHeld;
+
+        /// <summary>Capstone tokens the schedule has still to grant after the wave on screen.</summary>
+        public int CapstoneTokensToCome => Run.CapstoneTokenRounds.Count - Run.CapstoneTokensGrantedThrough(Wave);
+
+        /// <summary>
+        /// What the rounds already played spent, read back out of the run's
+        /// own figure: the run counts what it has been granted for the round
+        /// about to build, less this.
+        /// </summary>
+        private int CapstoneTokensSpentByRoundsPlayed =>
+            Run.CapstoneTokensGrantedThrough(Run.Round + 1) - Run.CapstoneTokens;
+
         /// <summary>What the button says, or nothing where there is no button.</summary>
         public string ActionLabel
         {

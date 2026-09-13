@@ -89,13 +89,18 @@ namespace View
 
         private const float OfferWidth = 208f;
 
-        private const float RungHeight = 40f;
+        /// <summary>Tall enough for a name over a price; a rung is two lines.</summary>
+        private const float RungHeight = 64f;
 
         private const float OfferAnchorHeight = 2.2f;
 
         private const int NameSize = 22;
 
         private const int PriceSize = 18;
+
+        private const int RungNameSize = 18;
+
+        private const int RungPriceSize = 15;
 
         /// <summary>What the chosen entry is drawn in.</summary>
         private static readonly Color ChosenColor = new Color(0.45f, 0.68f, 0.85f, 1f);
@@ -421,20 +426,11 @@ namespace View
                 button.Add(picture);
             }
 
-            var name = new Label { name = "Name", text = RosterNames.Of(type), pickingMode = PickingMode.Ignore };
+            Label name = Line("Name", RosterNames.Of(type), NameSize);
             name.style.color = RuntimePanel.LabelColor;
-            name.style.fontSize = NameSize;
-            name.style.unityTextAlign = TextAnchor.MiddleCenter;
 
-            var price = new Label
-            {
-                name = "Price",
-                text = Wording(index, _round.PriceOf(type)),
-                pickingMode = PickingMode.Ignore,
-            };
-
-            price.style.fontSize = PriceSize;
-            price.style.unityTextAlign = TextAnchor.MiddleCenter;
+            // Coloured by Restyle, for the purse, so no colour here.
+            Label price = Line("Price", Wording(index, _round.PriceOf(type)), PriceSize);
 
             button.Add(name);
             button.Add(price);
@@ -443,6 +439,20 @@ namespace View
             bar.Add(button);
             _entries.Add(new Entry(type, button, price));
             _buttons.Add(button);
+        }
+
+        /// <summary>
+        /// One centred line of a button that is a name over a price: an entry's
+        /// and a rung's are the same shape at different sizes.
+        /// </summary>
+        private static Label Line(string name, string text, int size)
+        {
+            var line = new Label { name = name, text = text, pickingMode = PickingMode.Ignore };
+
+            line.style.fontSize = size;
+            line.style.unityTextAlign = TextAnchor.MiddleCenter;
+
+            return line;
         }
 
         /// <summary>
@@ -501,20 +511,29 @@ namespace View
 
             foreach (UnitType rung in rungs)
             {
-                var button = new Button
-                {
-                    name = "Rung " + RosterNames.Of(rung),
-                    text = RosterNames.Of(rung) + "   " + PriceOfRung(rung),
-                };
+                var button = new Button { name = "Rung " + RosterNames.Of(rung), text = string.Empty };
 
                 button.style.height = RungHeight;
                 button.style.marginLeft = 0f;
                 button.style.marginRight = 0f;
                 button.style.marginTop = 0f;
                 button.style.marginBottom = 0f;
+                button.style.flexDirection = FlexDirection.Column;
+                button.style.justifyContent = Justify.Center;
                 button.style.backgroundColor = RuntimePanel.ControlColor;
-                button.style.color = RuntimePanel.LabelColor;
-                button.style.fontSize = PriceSize;
+
+                // Two lines, the price beneath the name, so that the longest
+                // label the surface carries -- a capstone's name over "1
+                // capstone token" -- fits the offer's width instead of running
+                // off both sides of it onto the board. Signed by #285.
+                Label name = Line("Name", RosterNames.Of(rung), RungNameSize);
+                name.style.color = RuntimePanel.LabelColor;
+
+                Label price = Line("Price", PriceOfRung(rung), RungPriceSize);
+                price.style.color = QuietColor;
+
+                button.Add(name);
+                button.Add(price);
 
                 UnitType chosen = rung;
                 button.clicked += () => Take(chosen);
