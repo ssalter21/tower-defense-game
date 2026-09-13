@@ -46,4 +46,6 @@ three quarters of the pool. Nobody tuned it.
 `Tests.PlayMode/ChromeLayoutTests` carries one assertion per overflow, against the roster as shipped rather
 than the count that fitted today: the bar scrolls to its empty box with every creep in it; every name on the
 roster fits a rung over the longest price; the header's four fields sit before the button with the spacer
-still holding width. The next row added turns one of them red rather than clipping quietly.
+still holding width; and, since [#275](https://github.com/ssalter21/tower-defense-game/issues/275), every
+root the round may build fits the palette bar on the row beneath — the bar in every sheet here. The next row
+added turns one of them red rather than clipping quietly.
