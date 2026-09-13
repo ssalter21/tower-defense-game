@@ -10,8 +10,8 @@
 #
 #       picture                        drawn from
 
-picture  offer.png                       98DDCD917FDC5CD1
-picture  tokens-w2.png                   98DDCD917FDC5CD1
-picture  tokens-w9-spent.png             98DDCD917FDC5CD1
-picture  tokens-w9.png                   98DDCD917FDC5CD1
-picture  wave-bar.png                    98DDCD917FDC5CD1
+picture  offer.png                       2F5438C884EF6856
+picture  tokens-w2.png                   2F5438C884EF6856
+picture  tokens-w9-spent.png             2F5438C884EF6856
+picture  tokens-w9.png                   2F5438C884EF6856
+picture  wave-bar.png                    2F5438C884EF6856

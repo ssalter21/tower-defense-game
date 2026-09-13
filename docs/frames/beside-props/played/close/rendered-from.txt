@@ -10,8 +10,8 @@
 #
 #       picture                        drawn from
 
-picture  beside-props-tick-0200.png      98DDCD917FDC5CD1
-picture  beside-props-tick-0320.png      98DDCD917FDC5CD1
+picture  beside-props-tick-0200.png      2F5438C884EF6856
+picture  beside-props-tick-0320.png      2F5438C884EF6856
 picture  free-neighbour-tick-0200.png    98DDCD917FDC5CD1
 picture  free-neighbour-tick-0320.png    98DDCD917FDC5CD1
 picture  no-prop-tick-0200.png           98DDCD917FDC5CD1
