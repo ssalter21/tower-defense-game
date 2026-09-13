@@ -69,7 +69,7 @@ it as *invalid escape character* rather than as a bad path.
 **What ships in the meantime is a holding answer, and it was signed as one.** On 11 September 2026 sitting
 [#285](https://github.com/ssalter21/tower-defense-game/issues/285) signed the three answers in
 [`overflows/`](overflows/README.md) — the wave bar scrolls, a rung's price goes beneath its name, the
-capstone-token count is a fourth header field — with the words that the chrome as a whole "will need a major
+capstone count is a fourth header field — with the words that the chrome as a whole "will need a major
 rework", since nothing that currently exists was ever directed. On 12 September the same sitting signed a
 fourth for [#275](https://github.com/ssalter21/tower-defense-game/issues/275): a palette entry is 196 wide,
 the width at which today's nine roots exactly fill the bar, and a tenth turns `ChromeLayoutTests` red. The

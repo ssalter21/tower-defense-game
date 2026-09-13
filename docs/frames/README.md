@@ -130,8 +130,11 @@ Four frames, kept as a record of what the match looks like:
   shows is a flash and a tracer at the right place rather than a staff with a
   light on the end of it. That the anchor is on the staff and not on a height
   above the root is asserted in `ImportedArtTests`, which logs the measurement
-  for every tower; whether the Mage's silhouette should read better than this is
-  a question for whoever owns the art.
+  for every tower. The staff has since gone — row 4 holds the spellbook, and on
+  11 September 2026 the flash was moved to leave the point of the hat, the one
+  place seen from behind that puts an orb in frame at all
+  ([`mage-anchor/`](mage-anchor/README.md)); this frame is the picture of the
+  staff it replaced.
 
 The last two are the pair the effect anchors landed with: before them every
 tower fired from one fixed height above its own root, whatever it was holding.
@@ -473,7 +476,9 @@ says no. It is written by the capture and never by hand; see
   head of a blunt weapon, because the anchor follows the prop.
   **The Elder is colour and nothing else.** That page says "tier 2 is colour plus a prop", and its own Elder
   block names `druid_texture_alt_A` and no prop, with `Open — none`. The row is bound as its block is
-  written; the block and the rule disagree, and which gives is not this sheet's to settle.
+  written; the block and the rule disagree, and which gives is not this sheet's to settle. The rule gave: on
+  11 September 2026 Sam drew forty-five props in the Elder's hand and took none, and the roster now says the
+  Elder is colour alone.
   The **Lorekeeper's `Lorekeeper_Tome`** is a lectern rather than a hand book — it hangs off the fist and
   covers the body from the chest down, which is the whole silhouette of the Unravel tile.
   The **Mage's `spellbook_open`** comes to rest edge-on at the hip and reads as a closed book at the camera's
@@ -499,8 +504,10 @@ says no. It is written by the capture and never by hand; see
   **The Engineer line needed the framing exception the Paladin line needed.** Its three rows are bound with
   no clips, because `roster.md` names one on every rung of the Archer and Rogue lines and none on any rung of
   that one, so they stand in their bind pose in the game. They are posed here in `Idle_A`, which is the clip
-  both earlier candidate sheets already put that model up in. That is framing and not a binding, and the `_`
-  on that line's windup and backswing still stands.
+  both earlier candidate sheets already put that model up in. That was framing and not a binding when the
+  sheet was drawn; on 11 September 2026 the line was bound to `Idle_A` and `Use_Item`, and the `_` on its
+  windup and backswing is open under
+  [#297](https://github.com/ssalter21/tower-defense-game/issues/297), to be signed from a played build.
 
   **Ten things on it are questions rather than results, and five of them are asks for
   [`roster.md`](../roster.md) rather than for the eye.**
@@ -512,7 +519,9 @@ says no. It is written by the capture and never by hand; see
   **The Mortar's turret is not a heavier one.** That page asks for "a heavier `turret_base`", and
   `turret_base` is the only turret in the whole collection while size is retired as a tier signal everywhere
   else on the page — so there is nothing a heavier one could be bound to and it is the same prop at the same
-  size. What "heavier" means is that page's to say.
+  size. What "heavier" means is that page's to say. It said, on 11 September 2026: a prop may be a size
+  though a body may not, and the one turret is drawn at 1, 1.25 and 1.5 up the line — which answers the
+  crate above too, since the Artificer no longer needs one.
   **The Overwatch is posed by one clip in all three of its states.** Its `Looks` line names a stance,
   `Ranged_2H_Aiming`, and no swing; a row is animated only when it carries three clips, so an idle on its own
   would leave that stance unreachable, and carrying the Ranger's bow draw and release up onto a body holding
@@ -715,8 +724,9 @@ indirection is not a second set of values.
   through the same seam at the two ticks the Mages fire nearest the pitch sweep's, plus the camera
   swung 45° either way; every candidate moves 0.26–0.66% of the frame, because a flash sits on the
   body rather than crossing the air. The finding is in the baseline, not the candidates: the Mage
-  nearest the camera shows **no flash at all** today, and the fixed height the anchors replaced never
-  showed one either. Issue #289.
+  nearest the camera shows **no flash at all** at the shipped anchor, and the fixed height the anchors
+  replaced never showed one either. Issue #289; signed on 11 September 2026 — the flash leaves the point of
+  the hat, the one candidate that puts an orb in frame at both ticks.
 
   **The Elder's sheet is forty-six tiles and nothing was shortlisted**, because a shortlist is the
   decision made quietly with the rejected alternatives never shown. It is every prop his own pack ships

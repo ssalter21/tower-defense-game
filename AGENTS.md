@@ -164,7 +164,7 @@ Three facts, measured. The evidence is in
   says what it does through its names — so everything a comment would have held lives here, in the commit
   message, or on the ticket.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
-- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the effort review
+- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the review
   boundary, and how blocking, claiming and closing a ticket are done here.
 
 **When a decision moves, the vision is edited and the reversal is recorded in the decision log.** Do not leave

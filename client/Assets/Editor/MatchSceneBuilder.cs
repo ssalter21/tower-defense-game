@@ -739,12 +739,14 @@ namespace View.Editor
         /// weapon.
         /// </para>
         /// <para>
-        /// <b>The anchor is where the shot leaves, and it names the weapon
-        /// rather than the body.</b> It is what keeps the Mage's spell off the
-        /// point in front of its chest that a height above the root would put it
-        /// at, and what makes the Archer's arrow leave a bow rather than the
-        /// same point on a taller model. A row that walks anchors nowhere:
-        /// nothing in the simulation gives a creep a shot to draw.
+        /// <b>The anchor is where the shot leaves, and it names a part of the
+        /// model rather than a height above the root.</b> It is what makes the
+        /// Archer's arrow leave a bow rather than the same point on a taller
+        /// model, and what puts the Mage's flash at the point of its hat — the
+        /// one place, seen from behind, that shows an orb at all, signed on
+        /// 11 September 2026 from four anchors drawn at the shipped framing. A row
+        /// that walks anchors nowhere: nothing in the simulation gives a creep a
+        /// shot to draw.
         /// </para>
         /// <para>
         /// <b>The creep rows carry no clips at all, and that is the shape of a

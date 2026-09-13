@@ -19,7 +19,7 @@ records them:
 |---|---|---|
 | `wave-bar.png` | wave 9, seventeen creeps and the empty box | **The boxes scroll sideways.** A horizontal `ScrollView`, the scroller under the boxes once they overflow, the empty box scrolled into view on every redraw. A holding answer: the chrome as a whole waits on a direction |
 | `offer.png` | wave 9, a Bishop's ladder open | **The price beneath the name.** A rung is two lines, 64 tall, the name at 18 over the price at 15; the panel stays 208 wide and centred on its hex |
-| `tokens-w2.png` | wave 2, a Bishop standing, no token granted yet | **A fourth header field after the gold**: *Capstone tokens 0 held · 0 spent · 3 to come*. This is the moment the ticket named — a ladder that opens on nothing — and the header now says why |
+| `tokens-w2.png` | wave 2, a Bishop standing, no token granted yet | **A fourth header field after the gold**: *Capstone tokens 0 held · 0 spent · 3 to come* as the sheet was drawn; the shipped field reads *Capstones 0 held · 0 spent · 3 to come* since the 13 September respelling, and the sheets predate it. This is the moment the ticket named — a ladder that opens on nothing — and the header now says why |
 | `tokens-w9.png` | wave 9, three held, the ladder open | the same field with a token to spend |
 | `tokens-w9-spent.png` | wave 9, the Consecration bought this round | the same field with one spent, read off the composed round the way the gold is |
 

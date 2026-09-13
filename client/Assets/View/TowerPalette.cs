@@ -524,8 +524,8 @@ namespace View
 
                 // Two lines, the price beneath the name, so that the longest
                 // label the surface carries -- a capstone's name over "1
-                // capstone token" -- fits the offer's width instead of running
-                // off both sides of it onto the board. Signed by #285.
+                // capstone" -- fits the offer's width instead of running off
+                // both sides of it onto the board. Signed by #285.
                 Label name = Line("Name", RosterNames.Of(rung), RungNameSize);
                 name.style.color = RuntimePanel.LabelColor;
 
