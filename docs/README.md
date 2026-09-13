@@ -19,6 +19,7 @@ is real — and every mode of it is the same machine at a different latency.*
 | [The decision log](decision-log.md) | Every time the vision changed its own mind, and why |
 | [The roster](roster.md) | Every unit that exists or is proposed — what it is for, what it looks like, and what about it is still unsigned |
 | [The roster expansion proposal](roster-expansion-proposal.md) | Nine tower lines and seventeen creeps drawn from every KayKit character — the proposal as it was reviewed; what was taken and signed is on the roster |
+| [The playtest rebaseline proposal](playtest-rebaseline-proposal.md) | Six MVP efforts between the build and a lobby of six friends, and the edits each standing document would take; a proposal for review, deciding nothing |
 | [The sit-down](sit-down.md) | Twelve things to look at in the build, once, each naming the exact tick |
 | [`adr/`](adr/) | Why the code is shaped the way it is — 62 records. Source comments say *what*; these say *why* |
 | [`research/`](research/) | Evidence notes. Each answers one question and cites primary sources |
