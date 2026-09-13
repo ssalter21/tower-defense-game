@@ -66,6 +66,16 @@ it as *invalid escape character* rather than as a bad path.
   [the build order](../build-order.md#7--the-interface), with its two loose ends in
   [open questions](../open-questions.md).
 
+**What ships in the meantime is a holding answer, and it was signed as one.** On 11 September 2026 sitting
+[#285](https://github.com/ssalter21/tower-defense-game/issues/285) signed the three answers in
+[`overflows/`](overflows/README.md) — the wave bar scrolls, a rung's price goes beneath its name, the
+capstone count is a fourth header field — with the words that the chrome as a whole "will need a major
+rework", since nothing that currently exists was ever directed. On 12 September the same sitting signed a
+fourth for [#275](https://github.com/ssalter21/tower-defense-game/issues/275): a palette entry is 196 wide,
+the width at which today's nine roots exactly fill the bar, and a tenth turns `ChromeLayoutTests` red. The
+chosen arrangement above is still the direction; these keep the roster's forty-four rows on screen until it is
+built.
+
 **The baseline**, three sheets of the chrome as it stands, which is what a candidate is held against:
 
 - `as-built-build.png` — the opening build phase. A hundred gold, nothing placed, nothing sent.

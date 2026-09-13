@@ -48,7 +48,8 @@ Anything an agent needs to run lives in `tools/` and runs from a shell: `run-hea
 `build-panel-settings.ps1`, `adopt-unity-project.ps1`, `sync-streaming-content.ps1`, `seed-pool.ps1`,
 `render-map.ps1`, `run-sweep.ps1`, `show-ladder.ps1`,
 `capture-match-frames.ps1`, `capture-art-previews.ps1`, `capture-ui-previews.ps1`,
-`capture-armed-roster.ps1`, `capture-rung-candidates.ps1`, `check-docs.ps1`,
+`capture-armed-roster.ps1`, `capture-rung-candidates.ps1`, `capture-chrome-overflows.ps1`,
+`capture-beside-props.ps1`, `check-docs.ps1`,
 `check-file-sizes.ps1`,
 `check-golden-label.ps1`, `check-project-settings.ps1`, `check-unity-test-inventory.ps1`.
 
@@ -163,7 +164,7 @@ Three facts, measured. The evidence is in
   says what it does through its names — so everything a comment would have held lives here, in the commit
   message, or on the ticket.
 - [`docs/research/`](docs/research/) — evidence notes. Each answers one question and cites primary sources.
-- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the effort review
+- [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md) — the tracker doc: labels, the review
   boundary, and how blocking, claiming and closing a ticket are done here.
 
 **When a decision moves, the vision is edited and the reversal is recorded in the decision log.** Do not leave

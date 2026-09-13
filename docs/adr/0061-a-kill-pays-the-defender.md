@@ -23,7 +23,7 @@ one column earlier. The cost is one branch and one label.
 
 **Why no existing column could say it.** `cost` is what a body is worth **alive** — a leak charges it against
 health, one for one — and what a kill pays is the opposite outcome of the same body. A rule deriving one from
-the other would be a design decision (see below, where one is deliberately not taken), so it is a column.
+the other would be a design decision, so it is a column.
 
 **What the table refuses**, both where the column is read:
 
@@ -31,13 +31,19 @@ the other would be a design decision (see below, where one is deliberately not t
 |---|---|
 | A row that stands and pays | Nothing that stands is ever damaged here, so the kill the payment is made on never happens |
 | A row with no health pool that pays | It cannot be damaged at all, so the same |
+| A bounty above the row's own cost | A body is never worth more dead than it cost to send — see below |
 
-Both are the rule every other unread column in this file is refused by: a number read by nothing that still
-moves the content hash.
+The first two are the rule every other unread column in this file is refused by: a number read by nothing that
+still moves the content hash.
 
-**And one thing is deliberately not refused: a bounty above the row's own cost.** The Grave Robber's twelve is
-half its twenty-four and the roster's argument is about that row's number. Whether a body may ever be worth
-more dead than it cost to send is a design question nobody has taken, and a refusal here would take it.
+**The third is a design ruling, and it is the one fence on the column.** The money is minted into the one
+purse, so a row that pays out more than it took in makes killing the field's wave a better income than the
+round's own — and nothing downstream would see it, because the return band is a leak rate and the sweep's
+stand-in sends no paying row (both accepted as blind the same day). Equal is allowed: the ceiling says *not
+more than*, and how far under it a row sits is that row's argument in `docs/roster.md` — the Grave Robber's
+twelve is half its twenty-four. It was deliberately left unrefused when this record was written, as a question
+nobody had taken; Sam took it on 12 September 2026
+([the decision log](../decision-log.md#12-september-2026-later-still--a-body-is-never-worth-more-dead-than-it-cost-to-send-and-the-table-refuses-one-that-is)).
 
 ## Where the payment is made, and which row pays
 

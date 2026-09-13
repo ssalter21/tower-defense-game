@@ -343,8 +343,8 @@ namespace Tests.PlayMode
             Assert.That(root.Palette.IsOffering, Is.True);
             Assert.That((root.Palette.OfferColumn, root.Palette.OfferRow), Is.EqualTo((FreeColumn, FreeRow)));
             Assert.That(root.Palette.Rungs.Count, Is.EqualTo(1));
-            Assert.That(root.Palette.Rungs[0].text, Does.Contain("Ranger"));
-            Assert.That(root.Palette.Rungs[0].text, Does.Contain("40 gold"));
+            Assert.That(Wording(root.Palette.Rungs[0]), Does.Contain("Ranger"));
+            Assert.That(Wording(root.Palette.Rungs[0]), Does.Contain("40 gold"));
         }
 
         [Test]
@@ -415,10 +415,14 @@ namespace Tests.PlayMode
             held.Pointer.Click(ScreenPointOf(held, FreeColumn, FreeRow));
 
             Assert.That(held.Palette.Rungs.Count, Is.EqualTo(1));
-            Assert.That(held.Palette.Rungs[0].text, Does.Contain("Overwatch"));
-            Assert.That(held.Palette.Rungs[0].text, Does.Contain("1 capstone token"));
+            Assert.That(Wording(held.Palette.Rungs[0]), Does.Contain("Overwatch"));
+            Assert.That(Wording(held.Palette.Rungs[0]), Does.Contain("1 capstone"));
             Assert.That(
-                held.Palette.Rungs[0].text,
+                Wording(held.Palette.Rungs[0]),
+                Does.Not.Contain("token"),
+                "The currency is a capstone, signed 13 September 2026; 'token' is the code's word, not the player's.");
+            Assert.That(
+                Wording(held.Palette.Rungs[0]),
                 Does.Not.Contain("gold"),
                 "A capstone carries no gold price, so the button must not name one.");
 

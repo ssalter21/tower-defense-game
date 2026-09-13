@@ -167,6 +167,8 @@ namespace View
         /// <summary>What would be left in the purse if it were committed now.</summary>
         public int Gold => _resolved.Purse.Gold;
 
+        public int CapstoneTokens => _capstoneTokens - _resolved.CapstoneTokensSpent;
+
         /// <summary>
         /// Every tower that may be stood on an empty cell outright, cheapest
         /// first. What the palette lists.

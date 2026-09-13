@@ -1,0 +1,49 @@
+{
+    "shots": [
+        {
+            "id": "wave-bar",
+            "label": "Wave 9: every creep the roster has in the bar, and the bar scrolls",
+            "state": "build",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "wave-bar.png",
+            "notes": "The overflow #270 played. Seventeen boxes and the trailing empty one in a horizontal ScrollView, scrolled to the empty box."
+        },
+        {
+            "id": "offer",
+            "label": "Wave 9: a Bishop's ladder offering the Consecration for a token, the price beneath the name",
+            "state": "build-offer",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "offer.png",
+            "notes": "The longest rung label on the surface, on two lines inside the 208-wide offer."
+        },
+        {
+            "id": "tokens-w2",
+            "label": "Wave 2, no token yet: a Bishop standing, and the header says none is held and three are to come",
+            "state": "build-placed",
+            "candidate": "as-built",
+            "wave": 2,
+            "png": "tokens-w2.png",
+            "notes": "The moment #282 named: the Bishop's ladder opens on nothing, and the header now says why."
+        },
+        {
+            "id": "tokens-w9",
+            "label": "Wave 9, three tokens held: the header count with the ladder open",
+            "state": "build-offer",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "tokens-w9.png",
+            "notes": ""
+        },
+        {
+            "id": "tokens-w9-spent",
+            "label": "Wave 9, the Consecration bought this round: the header count with one spent",
+            "state": "build-placed",
+            "candidate": "as-built",
+            "wave": 9,
+            "png": "tokens-w9-spent.png",
+            "notes": ""
+        }
+    ]
+}

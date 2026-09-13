@@ -64,6 +64,8 @@ namespace View
 
         private Vector3 _besideOffset;
 
+        private Vector3 _besideAsked;
+
         private Quaternion _besideRotation = Quaternion.identity;
 
         private Quaternion _restingRotation = Quaternion.identity;
@@ -283,9 +285,34 @@ namespace View
 
             Beside = DrawnModel.Under(transform, prop.Model, prop.Scale);
             _besideOffset = prop.Offset;
+            _besideAsked = prop.Offset;
 
             // Composed with the resting facing in Stand rather than overwritten.
             _besideRotation = Beside.transform.localRotation;
+        }
+
+        /// <summary>
+        /// Moves the beside prop onto a tile nothing stands on, given the board
+        /// it is standing in. Nothing happens for a tower with nothing beside
+        /// it.
+        /// </summary>
+        /// <remarks>
+        /// The view knows its art's offset and its resting facing and not its
+        /// cell or its neighbours, so the board that drew it tells it those --
+        /// once when it is built, and again whenever the board changes, since
+        /// the tower stood beside it later is what makes the asked tile taken.
+        /// The rule is <see cref="BesideStanding"/>'s; this applies the answer.
+        /// </remarks>
+        public void StandBesideOn(HexMap map, Func<int, int, bool> occupied, int column, int row)
+        {
+            if (Beside == null)
+            {
+                return;
+            }
+
+            _besideOffset = BesideStanding.On(map, occupied, column, row, _restingRotation, _besideAsked);
+
+            Stand();
         }
 
         /// <summary>

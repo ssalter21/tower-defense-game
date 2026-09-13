@@ -49,8 +49,8 @@ six walkers and four towers — three of which are equivalent on a one-hex corri
 the judgement step 5 was waiting for has been made: the game is to be fun to play now, and what that wants is
 breadth — as many towers and creeps as the collection on disk supports, every tower line three stages with a
 capstone at the top. The candidate roster is
-[the expansion proposal](roster-expansion-proposal.md), under review; nothing in it is signed until
-[the roster](roster.md) says so. The reversal is
+[the expansion proposal](roster-expansion-proposal.md), taken on 5 September 2026 and signed on
+[the roster](roster.md), which is the page that says what of it is still a placeholder. The reversal is
 [in the decision log](decision-log.md#5-september-2026-later-still--the-roster-widens-and-seam-3-comes-off-the-shelf).
 
 What was going to help does not, and is **deleted rather than deferred**: the forced pick, the round menu,
@@ -192,8 +192,8 @@ rationing: two slots against four creep types is the shallow-roster complaint on
 why the schedule is design and not a ticket. See
 [the entry](decision-log.md#14-august-2026-later-still--the-gates-come-back-with-a-different-job-and-a-capstone-is-paid-for-out-of-a-grant).
 
-**A third bill arrives with it: a capstone per tower line.** A gate hands over a token and the token buys the
-top of a line, so three tokens a run wants meaningfully more than three capstones to choose between — and each
+**A third bill arrives with it: a capstone per tower line.** A gate hands over a capstone and the capstone buys
+the top of a line, so three capstones a run wants meaningfully more than three rungs to choose between — and each
 of them signed against a pricing rule that
 [no longer reaches them](roster.md#what-things-cost).
 

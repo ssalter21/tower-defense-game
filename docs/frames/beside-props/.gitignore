@@ -1,0 +1,21 @@
+# The folder above ignores every PNG and names its exceptions one at a time,
+# because the default capture writes frames nobody asked for and an untracked
+# file there fails the gate's tree-clean step for a reason that has nothing to
+# do with the push. The same rule applies here.
+#
+# BOTH FRAMINGS ARE COMMITTED, because they answer different questions. The
+# wide frame is the one the game is played at and the one that decides; a
+# beside prop moving one tile changes about a tenth of one per cent of it. The
+# close frame (-Distance 22) is where the prop is legible, and on this board it
+# works: the three clusters stand mid-board, inside the crop. README.md carries
+# the measurement.
+#
+# What is here is the baseline -- the free-neighbour rule as built, on the
+# board that makes it act. The candidate frames #282 drew were never tracked
+# (this file did not exist, and the folder above's rule caught them); the
+# record of what the alternatives looked like is PR #293's description and the
+# README's measurements.
+#
+#   ./tools/capture-beside-props.ps1                   redraws everything
+!played/wide/*.png
+!played/close/*.png

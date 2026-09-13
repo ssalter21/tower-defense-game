@@ -265,6 +265,62 @@ namespace Tests.EditMode
                 moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
         }
 
+        [Test]
+        public void AStandLineMovesWhereTheBesidePropStands()
+        {
+            string path = TempFile(
+                "beside " + Mortar + " " + Turret + "*1.5",
+                "stand  " + Mortar + " 1,-0.5");
+
+            UnitArtFile candidate = UnitArtFile.Read(path);
+            MatchArt moved = candidate.Applied(OneRow(Mortar));
+
+            Assert.That(candidate.Changes, Has.Count.EqualTo(1));
+            Assert.That(moved.ArtFor(Mortar).Beside.Offset, Is.EqualTo(new Vector3(1f, 0f, -0.5f)));
+            Assert.That(moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
+        }
+
+        /// <summary>
+        /// An anchor of nothing takes the row's anchor away rather than leaving
+        /// it alone, so a candidate can show where a tower fired from before
+        /// the anchors landed.
+        /// </summary>
+        [Test]
+        public void AnAnchorOfNothingUnsetsTheRowsAnchor()
+        {
+            string path = TempFile("anchor " + Bishop + " -");
+            UnitArtFile candidate = UnitArtFile.Read(path);
+
+            MatchArt wired = MatchArt.Of(
+                new[]
+                {
+                    UnitArt.Armed(
+                        Bishop, new GameObject("body"), 1f, null, null, null, null, null,
+                        effectAnchor: EffectAnchor.At("Cleric_Tome"))
+                },
+                new AnimationClip(),
+                new AnimationClip());
+
+            Assert.That(wired.ArtFor(Bishop).EffectAnchor.IsSet, Is.True);
+
+            MatchArt moved = candidate.Applied(wired);
+
+            Assert.That(candidate.Changes[0].Anchor, Is.Not.Null);
+            Assert.That(moved.ArtFor(Bishop).EffectAnchor.IsSet, Is.False);
+        }
+
+        [Test]
+        public void AStandLineOnARowWithNothingBesideItIsRefusedWhenApplied()
+        {
+            string path = TempFile("stand " + Mortar + " 1,0");
+            UnitArtFile candidate = UnitArtFile.Read(path);
+
+            IOException thrown = Assert.Throws<IOException>(
+                () => candidate.Applied(OneRow(Mortar)));
+
+            Assert.That(thrown.Message, Does.Contain("nothing stands beside row " + Mortar));
+        }
+
         /// <summary>
         /// A one-row bundle to apply a candidate to, so a test about the reader
         /// does not need the whole scene builder's table.

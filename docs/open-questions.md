@@ -90,20 +90,22 @@ load-bearing half of rows 4 and 5 and is the reason those two stopped being judg
 not in question; every one of them names a real failure mode. Not blocking, and worth deciding the next time
 somebody sits down with the build.
 
-**What the gate rounds' remaining loose ends are, and what the defense currency is called.** Two of the four
-readings here were settled on
+**What the gate rounds' one remaining loose end is: the capacity schedule.** Two of the four readings here
+were settled on
 [5 September 2026](decision-log.md#5-september-2026-last--sam-signs-the-roster-and-six-standing-proposals-move):
 **a grant is one token**, which is what makes it three capstones a run, and **a capstone costs the token and no
 gold** — charging gold on top would make the token a permit rather than a price, which is a different mechanic
 with a different failure mode. Both are now rules in [the roster](roster.md#what-things-cost) rather than
-readings.
+readings. The other two were signed on
+[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung): **the currency is a capstone**, and
+[**a capstone banks**](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code) — the code had banked since 6 September, and the docs caught up.
 
-Two are still open, and both are cheap to move while nothing is built. **The currency has no name**, and
-everything player-facing here gets named deliberately — gold took two goes. **Whether a token banks** leans
-toward yes, since a token that must be spent on the round it arrives forces the decision at the moment the run
-knows least. A third is open for a different reason: **the capacity schedule** — the opening pair of two slots
-and ten count, and the 2/4/6/8 and 10/20/30/40 steps — was deleted on 13 August and only the token half came
-back, so it is a design waiting on a playtest rather than a reading waiting on a signature.
+What is still open is **the capacity schedule** — the opening pair of two slots and ten count, and the 2/4/6/8
+and 10/20/30/40 steps — deleted on 13 August, with only the token half coming back. It is a design waiting on
+a playtest, and since
+[13 September](decision-log.md#13-september-2026-later-again--the-capacity-gate-waits-on-the-people-playtest-and-the-run-this-ticket-asked-for-is-not-played) the playtest has a name: the people playtest, the playtestable build Sam
+is scoping alongside the balance sweep. Not a run on a branch — one was offered on #287 and declined as
+throwaway — so "waiting on a playtest" points at a thing that is coming rather than at nothing.
 
 **Whether the wave is always on screen, or behind a control.** The
 [chosen build-phase arrangement](build-order.md#7--the-interface) keeps what you are sending permanently
@@ -326,22 +328,6 @@ that every row leaks something; or add a column that says what a row *survived* 
 a creep that never gets through is still ranked by how far it got. The last is the only one that does not
 choose between honesty and signal.
 
-### Should the Cursed Villager transform on damage, or on death?
-
-**Raised by [#267](https://github.com/ssalter21/tower-defense-game/issues/267) building the trigger #250
-signed.** The signed sentence is *the Villager transforms on first damage taken and cannot be one-shot*, and
-the roster wrote a consequence beside it: *the pair is therefore worth 1800 + 2600 = 4400 effective health
-always*. Those two do not both hold. A change that resolves ahead of the damage means the Villager's 1800 is
-never spent — the roll that triggers it lands on the Werewolf — so a Villager is **2860 effective health for
-11 gold**, which the cost rule prices at 18. The 4400 is what a change **on death** would be worth.
-
-**The mechanic is built to the signed trigger and the arithmetic is corrected to match it.** What is not
-decided is which of the two was wanted. On damage, the Villager is a wolf almost immediately and its own pool
-is decoration; on death, it is a body that has to be killed twice and the first form is half of what was paid
-for. They feel different and they price differently, and the second is a bigger creep than anything else on
-the roster for eleven gold. **Nothing is retuned either way** — the price is derived, and a transforming pair
-is the third thing the rule cannot see, beside the Mage's splash and the Vampire's shield.
-
 ### What is a spawner worth?
 
 **Raised by [#268](https://github.com/ssalter21/tower-defense-game/issues/268) building the raise
@@ -360,25 +346,8 @@ it, read the 1200 as the finding it is, and let the sweep derive a coefficient o
 deriving it against.
 
 **It is the third silence of the same kind**, beside the Mage's splash and the Vampire's shield, and it is the
-loudest of the three by an order of magnitude. Nothing is retuned either way while it stands.
-
-### Two asks the roster hands back, which had no home until now
-
-**Raised by the whole-branch review at the end of the unattended run**, which found both recorded in commit
-messages and in `docs/frames/README.md` and nowhere a reader of the record would look. Neither was edited into
-a signed block, which was right — but a deferral nobody can find is not deferred, it is lost.
-
-**The Elder is colour and nothing else.** `roster.md` states the rule as *"tier 2 is colour plus a prop"*, and
-the Elder's own block names `druid_texture_alt_A`, no prop, and `Open — none`. The block and the rule
-disagree. [#259](https://github.com/ssalter21/tower-defense-game/issues/259) bound the block as written rather
-than inventing a prop to satisfy the rule, which leaves the contradiction standing where a reader can see it.
-Either the Elder gains a prop or the rule admits an exception; both are Sam's.
-
-**The Paladin line's three clips are unsigned, so those rows stand in their bind pose.** `roster.md` names a
-clip on every rung of the Knight and Barbarian lines and none on any rung of the Paladin's, whose windup and
-backswing carry this page's `_`. [#258](https://github.com/ssalter21/tower-defense-game/issues/258) bound ids
-20, 21 and 22 with model, props, atlas, statue and anchor and **null clips**, rather than guessing a
-plausible-looking clip name — so in play a Blessing fires without moving. The same is true of the whole
-Engineer line ([#260](https://github.com/ssalter21/tower-defense-game/issues/260)), and the Cleric and Druid
-lines carry a nought-tick windup, which the simulation enters and leaves inside one tick, so they never
-visibly wind up either ([#265](https://github.com/ssalter21/tower-defense-game/issues/265)).
+loudest of the three by an order of magnitude. **The third shape is the one taken**, on
+[11 September 2026](decision-log.md#11-september-2026-later-again--the-necromancer-keeps-its-derived-21-and-its-1200-is-the-acceptance-test-for-the-rule-that-will-replace-it):
+the Necromancer keeps its derived 21, and the 1200 is the acceptance test for the sweep-derived rule that will
+replace the cost algorithm. What a spawner is worth is still open; what is settled is that nothing is retuned
+by hand while it is.

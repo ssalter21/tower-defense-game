@@ -57,6 +57,7 @@ namespace View.Editor
     /// atlas     29  Kaykit/adventurers/druid_texture_alt_A.png
     /// anchor    24  Cleric_Tome
     /// anchor    24  tip-of Cleric_Tome 0,1,0
+    /// anchor    4   -
     /// </code>
     /// </remarks>
     public sealed class UnitArtFile
@@ -72,6 +73,8 @@ namespace View.Editor
 
         /// <summary>The directive that moves what a row holds.</summary>
         public const string HandDirective = "hand";
+
+        public const string StandDirective = "stand";
 
         /// <summary>The directive that moves the atlas a row wears.</summary>
         public const string AtlasDirective = "atlas";
@@ -149,6 +152,7 @@ namespace View.Editor
                         question = Rest(line, fields[0]);
                         break;
                     case BesideDirective:
+                    case StandDirective:
                     case HandDirective:
                     case AtlasDirective:
                     case AnchorDirective:
@@ -158,8 +162,8 @@ namespace View.Editor
                         faults.Add(
                             where + ": '" + fields[0] + "' is not a directive. The lines are '"
                             + LabelDirective + "', '" + QuestionDirective + "', '" + BesideDirective
-                            + "', '" + HandDirective + "', '" + AtlasDirective + "' and '"
-                            + AnchorDirective + "'.");
+                            + "', '" + StandDirective + "', '" + HandDirective + "', '" + AtlasDirective
+                            + "' and '" + AnchorDirective + "'.");
                         break;
                 }
             }
@@ -265,6 +269,8 @@ namespace View.Editor
             /// <summary>What stands beside it, or null to leave that alone.</summary>
             public BesideProp? Beside { get; internal set; }
 
+            public Vector3? Stand { get; internal set; }
+
             /// <summary>The atlas it wears, or null to leave that alone.</summary>
             public Texture2D Texture { get; internal set; }
 
@@ -279,9 +285,27 @@ namespace View.Editor
             {
                 UnitArt drawn = unit.WithLook(RightHand, LeftHand, Beside, Texture, Anchor);
 
+                if (Stand.HasValue)
+                {
+                    drawn = drawn.WithLook(null, null, Stood(drawn.Beside, Stand.Value), null, null);
+                }
+
                 return RightHandCleared || LeftHandCleared
                     ? drawn.WithEmptyHands(RightHandCleared, LeftHandCleared)
                     : drawn;
+            }
+
+            private BesideProp Stood(BesideProp beside, Vector3 offset)
+            {
+                if (!beside.IsSet)
+                {
+                    throw new IOException(
+                        "'" + StandDirective + " " + UnitId + "' moves where the row's beside prop stands, and "
+                        + "nothing stands beside row " + UnitId + ". Name a prop with '" + BesideDirective
+                        + "' on the same row, or pick a row that has one.");
+                }
+
+                return BesideProp.Standing(beside.Model, beside.Scale, offset);
             }
         }
 
@@ -309,6 +333,7 @@ namespace View.Editor
                 already.RightHandCleared |= change.RightHandCleared;
                 already.LeftHandCleared |= change.LeftHandCleared;
                 already.Beside = change.Beside ?? already.Beside;
+                already.Stand = change.Stand ?? already.Stand;
                 already.Texture = change.Texture ?? already.Texture;
                 already.Anchor = change.Anchor ?? already.Anchor;
                 already.Spelled.AddRange(change.Spelled);
@@ -351,6 +376,9 @@ namespace View.Editor
                 case BesideDirective:
                     Beside(where, fields, faults, change);
                     break;
+                case StandDirective:
+                    Stand(where, fields, faults, change);
+                    break;
                 case HandDirective:
                     Hand(where, fields, faults, change);
                     break;
@@ -388,6 +416,25 @@ namespace View.Editor
             {
                 change.Beside = BesideProp.OnTheNextTile(model, scale);
             }
+        }
+
+        private static void Stand(string where, string[] fields, List<string> faults, Change change)
+        {
+            string[] parts = fields[2].Split(',');
+
+            if (parts.Length != 2
+                || !float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float x)
+                || !float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float z))
+            {
+                faults.Add(
+                    where + ": '" + StandDirective + "' is '" + StandDirective + " <unit id> <dx>,<dz>' -- "
+                    + "metres from the tower's root, sideways then forward, in the frame it rests in. "
+                    + "One tile sideways is " + HexGeometry.ColumnPitch.ToString(CultureInfo.InvariantCulture)
+                    + ",0, which is where the shipped socket puts a prop.");
+                return;
+            }
+
+            change.Stand = new Vector3(x, 0f, z);
         }
 
         /// <summary>What the row holds, in the hand the line names.</summary>
@@ -464,19 +511,33 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// Where the row's effects leave from: a node by name, or the tip of one
-        /// along a direction.
+        /// Where the row's effects leave from: a node by name, the tip of one
+        /// along a direction, or nothing at all.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// <b>Nothing is a candidate.</b> A row with no anchor fires from
+        /// <c>MatchTuning.TowerMuzzleHeight</c> above its own root, which is
+        /// what every tower did before the anchors landed — so "what was
+        /// traded away" is a picture a sheet can be asked for, and it is
+        /// spelled the way an empty hand and an empty tile are.
+        /// </para>
+        /// <para>
         /// The node is not checked against the model here, unlike every other
         /// reference in this file, because which nodes a body carries depends on
         /// the model bound to the row and this file names a row rather than a
         /// model. <c>EffectAnchor</c> already throws by name at bind time when a
         /// node is not there, which is a loud failure in the run rather than a
         /// silent one in the picture.
+        /// </para>
         /// </remarks>
         private static EffectAnchor? Anchor(string where, string[] fields, List<string> faults)
         {
+            if (fields[2] == BesideGroup.Empty)
+            {
+                return EffectAnchor.None;
+            }
+
             if (fields[2] != TipOf)
             {
                 return EffectAnchor.At(fields[2]);

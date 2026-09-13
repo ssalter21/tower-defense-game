@@ -1,0 +1,21 @@
+# The folder above ignores every PNG and names its exceptions one at a time,
+# because the default capture writes six frames nobody asked for and an
+# untracked file there fails the gate's tree-clean step for a reason that has
+# nothing to do with the push. The same rule applies here, and it lands where
+# rung-candidates/.gitignore landed: the wide frame is the only one there is.
+#
+# ONE TICK, ONE CAMERA, THE FRAMING THE GAME SHIPS. Every picture here is tick
+# 1546 of the recorded match at -Distance 22 -Width 1600, which is the
+# committed match-tick-1546.png's framing and the pitch sweep's. played/ holds
+# the shipped anchor and the three anchor candidates at the shipped yaw; the two
+# yaw-* directories hold the shipped anchor with the camera swung, which is the
+# only way to turn the Mage without touching a binding, since a tower faces its
+# target and not a number in a table.
+#
+# THE WHOLE FOLDER IS TEMPORARY. It is the set of alternatives #284 signs from,
+# and it goes when the signing does.
+#
+#   the commands are in mage-anchor.txt
+!played/*.png
+!yaw-plus-45/*.png
+!yaw-minus-45/*.png

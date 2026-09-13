@@ -41,24 +41,35 @@ that one wallet can buy both — which is what [§3's one purse](vision.md#one-p
 Signing a creep therefore means signing **health, speed and armour**; the price follows. Signing a tower means
 signing **damage, cooldown and how many bodies it hits**.
 
-> ⚠️ **Two honest gaps in the tower rule.**
+> ⚠️ **Three honest gaps in the tower rule.**
 >
 > **It does not price range.** A one-hex tower and an eight-hex tower with the same damage cost the same, so
 > the Soldier being cheap is an accident of the formula agreeing with the design rather than the formula
 > knowing that reach is worth paying for.
 >
+> **It does not price windup or backswing.** A tower spends its windup before a shot and its backswing after,
+> and only then starts the cooldown the rule reads, so "two swings a second" on the Soldier is 1.1 once its
+> 7 and 5 are counted, and every row with a pair is priced for a rate it does not reach. The sweep's bot reads
+> the cooldown alone too. A cost derived from the sweep would see the whole cycle; this rule does not.
+>
 > **The constant is tied to the tick rate.** "Five damage a second" is a number about seconds. If
 > [the clock](#the-clock) moves, re-derive the constant or every tower silently stops being based.
 
-**The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone token
-at rounds 3, 6 and 9** — three a run against nine capstones — and the token is the whole price. **A capstone
-row therefore carries no gold price**: it has a `cost` column like every other row, nothing ever charges it,
-and `show-ladder` prints `1 capstone token` where it prints a number of gold on every other edge. That
-retires the shallow-U exemption this section used to reserve: an exemption to a gold rule, for a thing gold
-does not buy, is a clause about nothing.
+**The rule does not reach a capstone, because gold does not buy one.** A run is granted **one capstone at
+rounds 3, 6 and 9** — three a run against nine capstone rungs — and that capstone is the whole price. **The
+currency is called a capstone** where a player reads it — the offer says `1 capstone`, the header
+`Capstones N held · N spent · N to come` — and `CapstoneToken` in the code, signed on
+[13 September 2026](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung).
+**A capstone row therefore carries no gold price**: it has a `cost` column like every other row, nothing ever
+charges it, and `show-ladder` prints `1 capstone token` where it prints a number of gold on every other edge.
+That retires the shallow-U exemption this section used to reserve: an exemption to a gold rule, for a thing
+gold does not buy, is a clause about nothing.
 
-> **The token is a currency, not a gate.** It goes up on those three rounds and it is spent on a capstone
-> edge; that is the whole mechanic. The gates were deleted on
+> **The capstone is a currency, not a gate, and it banks.** It goes up on those three rounds, an unspent one
+> is held until something spends it — so three may be set at round 9 and the schedule is a budget rather than
+> a deadline, signed on
+> [13 September 2026](decision-log.md#13-september-2026-later--a-capstone-banks-so-the-schedule-is-a-budget-and-the-docs-catch-up-with-the-code)
+> — and it is spent on a capstone edge; that is the whole mechanic. The gates were deleted on
 > [13 August 2026](decision-log.md#13-august-2026-later--the-gates-come-out-and-the-client-comes-before-the-roster)
 > and they are not coming back with it — no capacity schedule, no per-wave type limit, no offering. The
 > [14 August proposal](decision-log.md) carried both halves; **only the token half is taken.** Built on
@@ -209,10 +220,11 @@ beats armoured. The creep table balances it back with swift and arcane bodies.
 **The second stage is one stat. The third stage is a capstone that changes how the tower works**, and each
 capstone is drawn from what its model is holding or wearing.
 
-### The tier signal is never size
+### The tier signal is never the body's size
 
-**Size is retired as a tier signal**, reversed on 5 September 2026. A rung is told apart by **what the body
-wears, holds or stands beside** — never by how big it is. Three materials, in the order they are reached for:
+**Size is retired as a tier signal for the body**, reversed on 5 September 2026. A rung is told apart by
+**what the body wears, holds or stands beside** — never by how big the body is. Three materials, in the order
+they are reached for:
 
 | Material | What it is | Where it applies |
 |---|---|---|
@@ -220,8 +232,18 @@ wears, holds or stands beside** — never by how big it is. Three materials, in 
 | **A prop** | A different or additional thing in a hand, or standing on the tile beside the tower | Every line |
 | **A second model** | A different character, the same person promoted | Knight, Cleric and Engineer have none anywhere in the collection; the other six do |
 
-**Tier 2 is colour plus a prop. Tier 3 is the second model where one exists, and colour plus a signature prop
-where one does not.** Knight, Cleric, Engineer and Druid take the second road.
+**Tier 2 is colour, plus a prop where the rung has something to hold. Tier 3 is the second model where one
+exists, and colour plus a signature prop where one does not.** Knight, Cleric, Engineer and Druid take the
+second road.
+
+**Two lines bend that sentence, and both were signed by looking rather than by reading it.** The Elder is
+colour alone: forty-five props were drawn in its hand on 11 September 2026 and Sam took none — thirteen of
+them cannot be told from an empty hand even at magnification, and the rest joined a staff that already reads
+as the Druid's. And the Engineer line is told apart by the **size of its turret** — drawn at 1, 1.25 and 1.5
+up the line, "scale the tower twice" — because the pack ships one turret and no second Engineer, the body
+already wears the gold box a crate would have doubled, and the Mortar's step is the only rung candidate that
+read at 1600x900 on #281 (0.19% of the frame, against at most 0.06% for a prop in a hand). A prop may be a
+size; a body may not, because size is what tells a creep from a tower.
 
 > **A glow is not a tier signal, and that is a reservation rather than an omission.** A persistent glow is
 > reserved for reading *"this tower is projecting an aura"* — Shield Wall, Blessing, Consecration and
@@ -243,33 +265,58 @@ row wears, the two views put it on the body before anything goes in a hand, and 
 above name are imported beside their own packs. **A third socket is built too, and it is not a hand bone**:
 `UnitArt` carries a beside prop — a model and a size — and `TowerView` stands it one tile from the tower root,
 where it stays while the tower turns to aim. `turret_base`, `paladin_statue`, `Cleric_Font` and the Druid's
-weirwood each have somewhere to stand. **The size is per prop and it is a view fact**, never a column in
+weirwood each have somewhere to stand. **When a tower is standing on that tile, the prop moves to a free
+neighbour** — the nearest to the tower's right and away from the corridor, never the corridor itself, and
+inside the tower's own hex when every neighbour is taken. That is `BesideStanding`, signed by #284 on 11
+September 2026 over the prop tucked into its own hex and over no prop at all; the frames are under
+[`docs/frames/beside-props/`](frames/beside-props/README.md). **The size is per prop and it is a view fact**, never a column in
 `content/units.txt`: the three props authored in their characters' own packs come in at the right size, and a
 Forest Nature tree does not. The quiver the Ranger carries is still in its fist, because that is a spine socket
 and not this one.
 
-**One tower has one beside slot, and one rung wants two.** The Artificer's look puts an `ammo_crate` beside
-the turret. That is the one place on this page the socket as built does not reach, and it is written on that
-rung's `Needs` line rather than settled here.
+**One tower has one beside slot, and that is enough.** The Artificer's look once put an `ammo_crate` beside
+the turret, which would have been two; the crate was refused on 10 September 2026 on #281, since the
+Engineer's own body mesh already wears a gold box and a crate was the same box twice. No rung names two
+things on the ground now.
 
 **Every tier on this page is a row in `content/units.txt` as of 5 September 2026**, at ids 15 to 37 in the
 order the lines are written above. Layout 3 authors every shape and #217 plays them; see [the column
 list](#what-this-roster-needs-that-the-schema-does-not-have). What each one still needs is its art.
 
-> **Windup and backswing are the one pair of numbers this page has not signed.** The Knight and Barbarian
-> lines carry both, and so do the Mage and the Archer — which the Sorcerer, Unravel and the Ranger inherit.
-> **Sixteen rows carry zero**: the Paladin, Cleric, Druid, Rogue and Engineer lines, which say nothing about
-> either, and Overwatch, whose two rungs below carry 9 and 6 and whose own tuning is a different shape. Zero is
-> a tower that fires the tick it acquires and goes straight back on cooldown — the absence and not a choice.
-> How long a tower winds up is how it feels, so the `_` is on each of those six blocks below, and the art
-> ticket that picks a line's clips is where a real number is signed.
+> **Windup and backswing are signed on every tower row, and on four of them the signed number is zero.**
+> Both add to the cooldown — a tower spends the windup before its shot lands and the backswing after it, and
+> the view stretches the swing clip across the windup and the rest clip across the backswing, so at zero a
+> tower fires inside the tick it acquires and its swing is never drawn. The Knight, Barbarian, Mage and Archer
+> lines were signed by play in August. The Paladin, Cleric, Druid and Engineer lines were signed on
+> [13 September 2026](decision-log.md#13-september-2026-last--windup-and-backswing-are-signed-on-the-sixteen-rows-and-on-four-of-them-the-number-is-zero) at the proportion those four sit near — windup about 0.45 of the
+> cooldown, backswing about two thirds of the windup — played once from a built player and kept. **The Rogue
+> line and Overwatch carry zero as a choice**: a knife fires the tick it sees you and a 7-tick cooldown has no
+> room for a windup that reads, and the Overwatch holds an aiming pose in every slot with no swing to draw.
+> **A pair belongs to a line, not a rung** — the Sergeant at cooldown 11 keeps the Soldier's 7 and 5, the
+> Blessing keeps the Paladin's — so a rung's own cooldown never moves it. Sam's verdict on the played build,
+> recorded with the numbers: *"all these towers need reworks, the animations look terrible."* The sixteen are
+> holding answers under that sentence; the rework is its own effort.
 
 ### What a row is drawn as
 
 Every bubble in the game drew one shared disc on the ground and every hitscan shot one shared tracer until
-#263, #264 and #265. Ten shapes are signed now, and **the shape is all that is signed** — every colour, size
-and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, exactly as the
-disc and the marks on a creep already are.
+#263, #264 and #265. Ten shapes are signed now, and **the shape is nearly all that is signed** — every colour,
+size and duration is the plainest thing that draws it and is declared a placeholder in `MatchTuning`, save what
+a person took on 7 September 2026:
+[the disc's alpha](decision-log.md#7-september-2026-later--the-alpha-is-signed-and-the-particle-ban-turns-out-never-to-have-been-the-rule),
+and then
+[three more](decision-log.md#7-september-2026-later-still--four-of-the-things-that-do-not-read-at-1x-are-signed-and-three-of-them-turn-out-not-to-be-size-questions)
+— the knife at 0.85 m, a ground effect clipped where the board ends, and the Consecration's light always on,
+its two-hex reach being a number in `content/units.txt` rather than a look.
+
+**Every placeholder this page still carries waits on one thing, and it is not argued here until then.** The
+colours, sizes and durations in `MatchTuning`; the four creep aura shapes below, all drawn as one interim disc
+since 7 September 2026; the Vampire's and the Grave Robber's pools; the Mage's bolt and the Mortar's shell,
+which Sam parked on 7 September as unsignable without a smoke cloud or a magical effect behind them. All of
+them are the same question — what the match may draw that is not a flat mesh — and that is #290, the
+billboarding prototype. Sam confirmed on 11 September 2026, on #284, that none of them is re-listed as open
+on a row until #290 answers; the twenty-four effect candidates #279 drew were struck the same day the wash
+came off the body, and this page does not re-open them.
 
 **The four creep auras below the table are a weaker claim than the ten above it, and the difference is the
 point of this paragraph.** #266 asked for those four to leave the creep's staff, scythe, broom or axe, and
@@ -290,7 +337,7 @@ colour**, which is not true of any of the ten.
 | 30 · Overgrowth | A patch of roots breaking the ground under every body the aura is holding | On what the bubble found, not on the bubble |
 | 31 · Overwatch | One heavy bar the length of the leg the shot crossed | From the crossbow to the body it was aimed at |
 | 34 · Fan of Knives | One knife per shot, crossing to the body it found — three knives where the throw found three bodies | From the hand to each body |
-| 23, 24, 25, 28, 29, 30 · the Cleric and Druid lines | A short bolt crossing to the body the shot found | From the tome, the mace head or the staff tip |
+| 23, 24, 25, 28, 29, 30 · the Cleric and Druid lines | A short bolt crossing to the body the shot found | From the tome, the Bishop's open off hand or the staff tip |
 | 27 · Unravel | A band broken into plates, lying on the ground out to the edge of the strip | On the hex the bolt arrived at |
 | 37 · Mortar | A burst of shards at the radius the blast reached | On the body the shell arrived at |
 
@@ -449,7 +496,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 
 - **Does** — one hex, holy damage, one target.
 - **Looks** — `Paladin`, bare head, `paladin_hammer`, swinging **`Melee_1H_Attack_Chop`**.
-- **Numbers** — range 1000, cooldown 24, damage 120–180, windup `_`, backswing `_`, hitscan, magic, cost ~37.
+- **Numbers** — range 1000, cooldown 24, damage 120–180, windup 11, backswing 7, hitscan, magic, cost ~37.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -488,15 +535,18 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
 - **Does** — three hexes, holy bolt, one target.
 - **Looks** — `Cleric`, `Cleric_Tome`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of
   the tome, crossing to the body it found.
-- **Numbers** — range 3200, cooldown 30, damage 130–190, windup `_`, backswing `_`, hitscan, magic, cost ~32.
+- **Numbers** — range 3200, cooldown 30, damage 130–190, windup 14, backswing 9, hitscan, magic, cost ~32.
 - **Needs** — nothing.
 - **Open** — none.
 
 ### 24 · Bishop · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace`. The bolt is the Cleric's and it leaves the head of
-  the mace, because the mace took the tome's hand — #259's question, not this rung's.
+- **Looks** — `Cleric`, `cleric_texture_B`, `Cleric_Mace` in the melee hand and the off hand empty. The bolt
+  is the Cleric's and it leaves the **open off hand**: a mace is a melee weapon and does not fire, and the
+  tome was refused in every position — in the off hand, beside him, anchored — because it fouls the
+  animation and the model. Signed 10 September 2026 against #281's four candidates; #259's question is
+  answered.
 - **Numbers** — range 3200 → **4200**. Cost 32 — **range is unpriced**, so the rung costs what the Cleric
   costs. Same shape as `archer → ranger`, and the ladder prints a flat-price note against it for the same
   reason.
@@ -510,7 +560,7 @@ and not the shot: every row that draws one is hitscan, and the damage landed on 
   on the ground — **drawn at 1**, which is 0.81 m tall and 1.44 across, a basin at knee height. The Cleric has
   **no second model anywhere in the collection**, so this line is colour and props at every rung. Every pulse
   lays a disc of light on the ground out to the edge of the aura, so what the font has claimed is the ground
-  itself rather than a boundary round it; the bolt is the line's, off the mace head. **The light is centred on
+  itself rather than a boundary round it; the bolt is the line's, off the open off hand. **The light is centred on
   the tower and not on the font**, which stands one tile away: the aura's own centre is the tower, and a disc
   drawn round the prop would report a reach the simulation never had.
 - **Numbers** — aura: origin `self`, radius 2000, affects `enemy`, payload `armour`, magnitude −30, period 30,
@@ -567,7 +617,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Looks** — the **`Marksman`** model, prone-ish `Ranged_2H_Aiming`, holding **`crossbow_2handed`** from the
   Adventurers pack. Every shot draws one heavy bar from the crossbow to the body, the whole length of the leg
   it crossed — which is the line's own read, since eight hexes against the Archer's three is what this row is.
-- **Numbers** — range **8000**, cooldown 60, damage 500–700, windup `_`, backswing `_`, hitscan, pierce.
+- **Numbers** — range **8000**, cooldown 60, damage 500–700, windup 0, backswing 0 (signed as zero), hitscan, pierce.
   Cost ~60.
 - **Needs** — nothing.
 - **Open** — none.
@@ -584,9 +634,13 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 4 · Mage · tier 1 · status live
 
 - **Does** — magic damage with splash of one additional hex.
-- **Looks** — the mage, book in hand. The flash leaves the open spellbook and the shell is what crosses to the
-  body; the splash it lands with draws the Mortar's burst, which is the open question below and not this
-  rung's choice.
+- **Looks** — the mage, book in hand. The flash leaves the **point of the hat** and the shell is what crosses
+  to the body; the splash it lands with draws the Mortar's burst, which is the open question below and not
+  this rung's choice. The hat was signed on 11 September 2026 against #289's four anchors and two camera
+  yaws, drawn at the framing the built player uses: from the open spellbook, the Mage nearest the camera
+  showed no flash at all — the orb was wholly under the hat — and the fixed height the anchors replaced never
+  showed one either. The hat's point is the one origin the hat cannot cover, and the cost, a tracer leaving
+  from a hat, is one a sheet shows and a played frame does not. The Sorcerer keeps its staff tip.
 - **Numbers** — range 4600, cooldown 54, damage 210–340, windup 21, backswing 15, projectile, flight 33,
   splash radius 1000, magic, **cost 92**.
 - **Needs** — nothing. The splash is on the row as of 5 September 2026: origin `target`, radius 1000,
@@ -637,14 +691,16 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — three and a half hexes, nature bolt, one target.
 - **Looks** — `Druid`, `druid_staff`, `Ranged_Magic_Shoot`. Every shot puts a short bolt in the air out of the
   staff tip, the same shape the Cleric line fires.
-- **Numbers** — range 3600, cooldown 36, damage 150–210, windup `_`, backswing `_`, hitscan, magic, cost ~30.
+- **Numbers** — range 3600, cooldown 36, damage 150–210, windup 16, backswing 11, hitscan, magic, cost ~30.
 - **Needs** — nothing.
 - **Open** — none.
 
 ### 29 · Elder · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Druid`, `druid_texture_alt_A`. The staff and the bolt are the Druid's.
+- **Looks** — `Druid`, `druid_texture_alt_A`. The staff and the bolt are the Druid's, and nothing joins
+  them: this rung is colour alone, signed 10 September 2026 against the forty-five props #281 drew in its
+  hand — *"Druid has staff only, it can have potions if it has an aura"*, and it has none.
 - **Numbers** — range 3600 → **4600**. Cost 30 — range is unpriced, same shape as `archer → ranger`.
 - **Needs** — nothing.
 - **Open** — none.
@@ -667,8 +723,8 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 > **The Druid keeps his own body, and the PlantWarrior is set aside.** It was proposed as this line's second
 > model and it is rejected: of the six second models it was the only one that read as a *different creature*
-> rather than the same person promoted. So this line has no model swap, and it is colour and a prop at every
-> rung, like the Knight, the Cleric and the Engineer.
+> rather than the same person promoted. So this line has no model swap, and it is colour at every rung and a
+> prop where the rung has one — the Overgrowth's weirwood, and nothing on the Elder.
 
 > **A whole-board pulse is one row.** The roster has said so since layout 3 and nobody had built one. This is
 > where the retired elemental branch's area slow went. **A creep never drops below a tenth of its authored
@@ -681,7 +737,7 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 
 - **Does** — two hexes, three throws a second, light.
 - **Looks** — `Rogue`, `dagger`, the `Throw` clip.
-- **Numbers** — range 2200, cooldown 9, damage 40–60, windup `_`, backswing `_`, hitscan, pierce, cost ~33.
+- **Numbers** — range 2200, cooldown 9, damage 40–60, windup 0, backswing 0 (signed as zero), hitscan, pierce, cost ~33.
 - **Needs** — nothing.
 - **Open** — none.
 
@@ -722,8 +778,10 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 - **Does** — four hexes, slow lobbed shot, one target.
 - **Looks** — `Engineer`, `engineer_Wrench` in hand, a `turret_base` on the tile beside him doing the firing —
   **drawn at 1**, which is 1.13 m tall and 1.00 across, and the shell leaves the top of it at 0.77 m rather
-  than leaving the man.
-- **Numbers** — range 4000, cooldown 60, damage 250–350, windup `_`, backswing `_`, projectile, flight 45,
+  than leaving the man. He rests in `Idle_A` and works the turret with **`Use_Item`** — signed 11 September
+  2026 off #278's filmstrips, which are the same `Rig_Medium_General` bank, so a clip looks the same on him
+  as on the Paladin — and all three rungs share both.
+- **Numbers** — range 4000, cooldown 60, damage 250–350, windup 27, backswing 18, projectile, flight 45,
   impact, cost ~30.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — none.
@@ -731,19 +789,21 @@ the six committed defense slots are Archers, so retuning this row moves most of 
 ### 36 · Artificer · tier 2 · status live
 
 - **Does** — reaches further. One stat.
-- **Looks** — `Engineer`, `engineer_texture_alt_A`, an `ammo_crate` beside the turret — the crate is 0.46 m
-  tall at 1.
+- **Looks** — `Engineer`, `engineer_texture_alt_A`, and the turret **drawn at 1.25**. The `ammo_crate` this
+  line once named was refused on 10 September 2026 on #281: the body already wears a gold box, so the crate
+  was the same box twice, and *"scale the tower twice"* is what tells the three rungs apart instead.
 - **Numbers** — range 4000 → **5000**. Cost 30 — range is unpriced.
-- **Needs** — **a second beside slot.** A tower has one, and this rung names two things standing on the
-  ground; until there are two, this rung draws the turret or the crate and not both.
+- **Needs** — nothing. The beside slot is built.
 - **Open** — none.
 
 ### 37 · Mortar · tier 3 · status live
 
 - **Does** — the shell bursts across a hex and a half.
-- **Looks** — `Engineer`, `engineer_texture_alt_B`, a heavier `turret_base` beside him and the lobbing arc
-  drawn. The Engineer has **no second model anywhere in the collection**, so this line is colour and props at
-  every rung. The shell bursts in shards on the body it arrived at, out to the radius it landed in.
+- **Looks** — `Engineer`, `engineer_texture_alt_B`, the turret **drawn at 1.5** and the lobbing arc drawn.
+  The Engineer has **no second model anywhere in the collection**, so this line is colour and a turret that
+  grows at every rung — signed 10 September 2026 against #281's bracket of 1.25, 1.5, 1.75 and 2, the one
+  rung candidate that read at 1600x900. The shell bursts in shards on the body it arrived at, out to the
+  radius it landed in.
 - **Numbers** — bubble on target: radius 1500, payload `damage`.
 - **Needs** — nothing. The beside slot is built.
 - **Open** — **the burst is one of two shapes no row selects**, so the Mage's and the Sorcerer's splash wear
@@ -778,18 +838,18 @@ not available: `armourValue 0` means the type still applies, at zero points.
 | 7 | Skeleton Mage | 2400 | 33 | arcane | 25 | — | 36 | 3000 | **19** |
 | 12 | Skeleton | 2200 | 28 | armoured | 20 | — | 36 | 2640 | **17** |
 | 13 | Skeleton Warrior | 3400 | 18 | armoured | 45 | — | 48 | 4930 | **31** |
-| 38 | Necromancer | 2600 | 28 | arcane | 30 | — | 0 | 3380 | **21** |
-| 39 | Bone Golem | 9000 | 14 | armoured | 60 | — | 0 | 14400 | **90** |
-| 40 | Black Knight | 5000 | 22 | armoured | 80 | — | 0 | 9000 | **56** |
-| 41 | Frost Wight | 6000 | 16 | arcane | 40 | — | 0 | 8400 | **53** |
-| 42 | Abomination | 12000 | 12 | armoured | 0 | — | 0 | 12000 | **75** |
-| 43 | Vampire | 2800 | 44 | swift | 20 | 1400 | 0 | 3360 | **21** |
-| 44 | Witch | 2000 | 33 | arcane | 20 | — | 0 | 2400 | **15** |
-| 45 | Fiend | 3200 | 33 | arcane | 45 | — | 0 | 4640 | **29** |
-| 46 | Shade | 1200 | 84 | swift | 0 | — | 0 | 1200 | **8** |
-| 47 | Cursed Villager | 1800 | 28 | swift | 0 | — | 0 | 1800 | **11** |
-| 48 | Werewolf | 2600 | 50 | swift | 10 | — | 0 | 2860 | **18** |
-| 49 | Grave Robber | 3000 | 22 | armoured | 30 | 2000 | 0 | 3900 | **24** |
+| 38 | Necromancer | 2600 | 28 | arcane | 30 | — | 36 | 3380 | **21** |
+| 39 | Bone Golem | 9000 | 14 | armoured | 60 | — | 48 | 14400 | **90** |
+| 40 | Black Knight | 5000 | 22 | armoured | 80 | — | 48 | 9000 | **56** |
+| 41 | Frost Wight | 6000 | 16 | arcane | 40 | — | 48 | 8400 | **53** |
+| 42 | Abomination | 12000 | 12 | armoured | 0 | — | 48 | 12000 | **75** |
+| 43 | Vampire | 2800 | 44 | swift | 20 | 1400 | 36 | 3360 | **21** |
+| 44 | Witch | 2000 | 33 | arcane | 20 | — | 36 | 2400 | **15** |
+| 45 | Fiend | 3200 | 33 | arcane | 45 | — | 36 | 4640 | **29** |
+| 46 | Shade | 1200 | 84 | swift | 0 | — | 36 | 1200 | **8** |
+| 47 | Cursed Villager | 1800 | 28 | swift | 0 | — | 36 | 1800 | **11** |
+| 48 | Werewolf | 2600 | 50 | swift | 10 | — | 36 | 2860 | **18** |
+| 49 | Grave Robber | 3000 | 22 | armoured | 30 | 2000 | 36 | 3900 | **24** |
 
 > **The effective-health column is what the price is derived from, and it does not include the shield.** The
 > Vampire stands on 3360 plus 1400 raw and the Grave Robber on 3900 plus 2000, and neither is charged for the
@@ -801,12 +861,16 @@ not available: `armourValue 0` means the type still applies, at zero points.
 > thing someone recomputes later, reads as an error, and silently "corrects" in the other direction — and one
 > rule for all three is what stops the correction being made row by row.
 
-> ⚠️ **`dying` is UNSIGNED on the twelve new rows, and the zero in the table is the blank showing through
-> rather than an answer.** Four of the five older rows carry 36 and the Warrior 48. This page signs no dying
-> number for the twelve, and the column in `content/units.txt` has to hold something, so it holds zero — the
-> absence, in the same sense the tower rows hold zero windup and backswing for the lines this page does not
-> sign them for. **How long a body takes to die is how a death reads on screen, and it is Sam's to sign**,
-> with the clips. Until then a corpse is gone the tick after it falls.
+> **`dying` is signed on every row, by rig, since 11 September 2026.** A body on the medium rig dies over
+> **36** ticks and one on the Large rig — the Bone Golem, the Black Knight, the Frost Wight and the
+> Abomination — over **48**, which is the one signal the table already carried: four of the five rows signed
+> in August die in 36 and the Warrior, the heaviest of them, in 48. The twelve rows added on 5 September held
+> zero until then, as the blank showing through rather than a number, and at zero
+> `CreepView` never drew a death at all — the clip plays across exactly the ticks the simulation gives the
+> state, so a corpse was gone the tick it fell. A dying body is untargetable, raises nothing and pulses
+> nothing, so the number moves no leak and no reading; what it moves is the content hash, and the frame a
+> person sees. Signed by the rule rather than by eye, and open to being moved by eye later without touching
+> anything else — the clips are already bound, `Death_A` on both rigs. `decision-log.md`, 11 September 2026.
 
 ### 1 · Minion · status live
 
@@ -894,7 +958,13 @@ would re-baseline every measurement in the sweep.
 - **Draws** — a flat translucent circle on the ground out to the two hexes the ward covers, in the pool's own
   blue, for ten ticks. It is the moment the pool went out and not the pool: what a body then carries is the bar
   above it. The shape is **signed**; the alpha is not.
-- **Open** — none.
+- **Open** — none. **The cost stays at its derived 21 until the levers are priced, by decision on
+  11 September 2026** — not by omission. A hand price was on the table (21 plus the eleven Minions it raises
+  against the committed defense, about 131) and declined: it would be the first authored cost on a table that
+  is derived everywhere else, guessed against one corridor, and overwritten the day the sweep-derived rule
+  lands. A cap on the raise was on the table and is out of scope — it reopens a row this page signed. **The
+  1200 here and the 1399 in the sweep are the acceptance test for that rule**: the day a creep price can see a
+  pool, a reach and a raise, both readings come inside their bands or the rule is wrong. `decision-log.md`.
 
 > **The first raise is a whole period after it arrives**, and every one after that a period apart — where an
 > aura pulses on the tick its emitter spawns. The two are deliberately different: a pulse costs a body nothing
@@ -977,8 +1047,9 @@ would re-baseline every measurement in the sweep.
   other mark.
 - **Open** — **the shield is unpriced, and the sweep has now measured what that is worth.** The cost rule has
   no term for a pool, so this row is cheaper than it should be: it returns 94 percent of a column's gold
-  against the committed defense, the highest reading inside the band. Known gap, same family as radius and
-  range; a sweep target, not something to hand-correct.
+  against the committed defense, a point under the band's edge, beside the Cursed Villager and one under the
+  Skeleton Mage. Known gap, same family as radius and range; a sweep target, not something to hand-correct —
+  ruled so on 11 September 2026, alongside the Necromancer.
 
 ### 44 · Witch · status live
 
@@ -1048,10 +1119,12 @@ would re-baseline every measurement in the sweep.
 > armour and no row here is both — the same silence it keeps about the Mage's splash and the Vampire's shield,
 > and the sweep is what is meant to derive a term for it.
 >
-> **Whether the pair SHOULD be worth both pools is unsigned, and is not this ticket's to take.** Making it so
-> means moving the trigger off the first damage and onto the death, which is a different mechanic and a
-> different feel; the 4400 above is the arithmetic of that trigger, written beside this one's name. See
-> [the open questions](open-questions.md#should-the-cursed-villager-transform-on-damage-or-on-death).
+> **The trigger is signed as built: first damage, not death.** Sam took it on 12 September 2026 — the
+> property is the point of the row, and the 7 gold between what the rule prices and what is charged is a
+> pricing gap for the sweep-derived cost, not a reason to move a trigger. The 4400 is the arithmetic of the
+> trigger that was declined, and stays here so nobody derives it again.
+> [The decision log](decision-log.md#12-september-2026-later--the-villagers-trigger-stays-on-the-first-damage-and-the-pair-is-worth-what-that-trigger-makes-it)
+> has the two feels weighed.
 
 > **This is the pairing `lancer` occupied with no design behind it.** Now the design is the transformation.
 
@@ -1074,6 +1147,11 @@ would re-baseline every measurement in the sweep.
   added the `bounty` column, and this is the one row on the roster that fills it in.
 - **Open** — the shield is unpriced, as the Vampire's is.
 
+> **A bounty may not exceed the row's cost, and the table refuses one that does.** Signed 12 September 2026:
+> the money is minted, so a body worth more dead than sent makes killing the field's wave a better income
+> than the round's own, and no instrument would see it. Equal is allowed; the half below is this row's own
+> argument. [The decision log](decision-log.md#12-september-2026-later-still--a-body-is-never-worth-more-dead-than-it-cost-to-send-and-the-table-refuses-one-that-is).
+>
 > **Twelve is half its own price, and the half is the point.** Paying its full 24 back would make it free to
 > send. Half means killing it refunds half of what the attacker laid out, so it is a body that rewards being
 > killed without being one you are glad to see. **A leaked Grave Robber pays nothing** — reaching the exit is
@@ -1153,29 +1231,45 @@ the Shade is the fine end of the granularity axis — and the sweep is the Barba
 tells you nothing when it changes, and one that collapses tells you nothing either; a partial break makes the
 leak count a number a person can watch. Ten to twenty of forty is the target.
 
-> ⚠️ **Three of forty leak, as of 5 September 2026, and it is the Mage's splash.** The row has been priced for
-> three bodies since the roster was signed and hit one until the bubble was authored; the committed defense is
-> four archers and two mages, so authoring it roughly tripled what the two of them remove. Nothing was retuned
-> to answer it — a retune means moving creep numbers this page signs, or the committed defense, and both are
-> decisions rather than consequences of authoring a signed row.
+> ⚠️ **Eight of forty leak, as of 10 September 2026, and the miss is a person's choice as of the 11th.** Two
+> things moved it, in opposite directions. The Mage's splash first: the row has been priced for three bodies
+> since the roster was signed and hit one until the bubble was authored; the committed defense is four archers
+> and two mages, so authoring it roughly tripled what the two of them remove, and took the count from twelve to
+> three. Then the board became a landscape, and the merged simulation was neither side's — `main` alone leaked
+> eighteen, the roster alone three, and the hand-placed six on the regraded board leak eight. Nothing was
+> retuned to answer either — a retune means moving creep numbers this page signs, or the committed defense,
+> and both are decisions rather than consequences of authoring a signed row or regrading a board.
+>
+> **The miss stands, with a named expiry.** On 11 September 2026 the three ways out were put on the table —
+> keep the miss asserted, move the band to cover eight, or retune the defense or the wave toward it — and the
+> first was chosen: moving the band fits a claim to a board that changed the week before, and a hand retune
+> moves the very number the sweep-derived cost is meant to move. The band is ten to twenty, the match leaks
+> eight, and the assertion says both. It ends on one of two triggers: **a Unity playtest saying the leak feels
+> wrong, or the derived cost landing.** `decision-log.md`, 11 September 2026.
 >
 > **Six creep rows are outside their own band with it, and one of the six is out by an order of
 > magnitude.** Four hundred gold of one creep against the
 > committed defense returns 60 to 95 percent of its gold for eleven of the seventeen rows; five are under and
-> one is over. The full table, measured on 6 September 2026 with the transformation and the raise in:
+> one is over. The full table, measured on 11 September 2026 on the landscape, with the transformation and the
+> raise in — every reading but three moved when the board was regraded, the Vampire, the Black Knight and the
+> Necromancer holding their number, and not one row changed list:
 >
 > | row | returns | | row | returns |
 > |---|---|---|---|---|
-> | Minion | **25** | | Vampire | 94 |
-> | Skeleton Scout | 77 | | Witch | 84 |
-> | Skeleton Mage | 90 | | Fiend | 84 |
-> | Skeleton | 69 | | Shade | **42** |
-> | Skeleton Warrior | **41** | | Cursed Villager | 88 |
-> | Necromancer | **1200** | | Werewolf | 86 |
-> | Bone Golem | **25** | | Grave Robber | 81 |
+> | Minion | **37** | | Vampire | 94 |
+> | Skeleton Scout | 84 | | Witch | 88 |
+> | Skeleton Mage | 95 | | Fiend | 92 |
+> | Skeleton | 78 | | Shade | **36** |
+> | Skeleton Warrior | **58** | | Cursed Villager | 94 |
+> | Necromancer | **1200** | | Werewolf | 90 |
+> | Bone Golem | **50** | | Grave Robber | 87 |
 > | Black Knight | 71 | | | |
-> | Frost Wight | 71 | | | |
-> | Abomination | **20** | | | |
+> | Frost Wight | 85 | | | |
+> | Abomination | **40** | | | |
+>
+> **The Skeleton Mage sits on the band's upper edge, at exactly 95.** In, by the test's `> 95`; one more leak
+> in twenty-one and it joins the Necromancer's list. Written down so the day it does, nobody reads it as a
+> new finding.
 >
 > **Under the band, for two opposite reasons.** A splash is worth most against a dense column, and a column of
 > one cheap row is the densest thing that can be sent — so what the Mage's splash costs most is the fine end
@@ -1183,11 +1277,12 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > and the Warrior are under it from the coarse end instead: the slowest bodies on the board stand in front of
 > the wall longest and are shot at for longer.
 >
-> **The Cursed Villager left that list when it learned to transform, 36 to 88**, and it is the only reading
-> [#267](https://github.com/ssalter21/tower-defense-game/issues/267) moved. Thirty-six of them is still the
-> densest column the Mage's splash can be pointed at; what changed is that each of those bodies is now the
-> Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's 1800. The Werewolf's
-> own 86 is unchanged, because nothing sends a Werewolf.
+> **The Cursed Villager left that list when it learned to transform, 36 to 88 on the flat board**, and it is
+> the only reading [#267](https://github.com/ssalter21/tower-defense-game/issues/267) moved. Thirty-six of
+> them is still the densest column the Mage's splash can be pointed at; what changed is that each of those
+> bodies is now the Werewolf's 2860 effective health at the Villager's 11 gold, where it was the Villager's
+> 1800. The Werewolf's own reading matches it, because nothing sends a Werewolf; on the landscape the two read
+> 94 and 90.
 >
 > **Over the band, one row, and it is the Necromancer — which is now three unpriced things at once.**
 > Nineteen of them walk together and each pulses a pool worth a quarter of a body's health over the two hexes
@@ -1200,11 +1295,17 @@ leak count a number a person can watch. Ten to twenty of forty is the target.
 > front of 3360 the price was derived from — and the Grave Robber's 2000 sits behind an armoured body slow
 > enough to be shot for it.
 >
-> **Nothing here is retuned.** Every reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends
-> of the band, as two exact lists — rather than widened away, so the day somebody retunes, the tests go red
-> and say which band to put back.
+> **Nothing here is retuned, and since 11 September 2026 that is a ruling rather than a deferral.** Every
+> reading is asserted as *missed* in `sim.tests/MatchTests.cs` — both ends of the band, as two exact lists —
+> rather than widened away, so the day somebody retunes, the tests go red and say which band to put back. The
+> two alternatives were put on the table and declined. There is no price lever for the five under: a creep's
+> cost is derived, so making the Minion cheaper means making it weaker, which reopens a signed row. Retiring
+> the band for the sweep's weaker "no row deals zero" would give up the one test that says a row is free
+> money — the test that caught the Necromancer. And the Necromancer keeps its derived 21, with the 1200 here
+> and the 1399 below pinned as the acceptance test for the sweep-derived cost; the Vampire's 94 and the Grave
+> Robber's 87 are the same gap without the aura, and go with it.
 >
-> **And no row deals zero.** The floor of the table is the Abomination at 20, so there is no dead row on the
+> **And no row deals zero.** The floor of the table is the Shade at 36, so there is no dead row on the
 > menu. **Two rows never win a round of the sweep, for opposite reasons.** The Minion is the old one, at 21
 > dealt per hundred gold: it deals too little. The Necromancer is the new one, at **1399** — the highest
 > figure in the report by a factor of three — and it wins nothing because the sweep plays a row against
@@ -1282,7 +1383,7 @@ imports are copied out of it by hand.
 > work the art tickets carry, not another decision.
 
 **Size tells the two sides apart and nothing else.** It was the tier signal until 5 September 2026 and it is
-**retired as one** — see [the tier signal](#the-tier-signal-is-never-size). Two multipliers remain, applied to
+**retired as one** — see [the tier signal](#the-tier-signal-is-never-the-bodys-size). Two multipliers remain, applied to
 the model as it is drawn:
 
 | What | Scale | Why |
@@ -1439,15 +1540,19 @@ open.
    6 September 2026 by [#273](https://github.com/ssalter21/tower-defense-game/issues/273) and
    [ADR-0062](adr/0062-a-capstone-costs-a-token.md): `content/upgrades.txt` goes to layout 2, a `capstone` row
    costs one token and no gold, and the grant lands at the opening of rounds 3, 6 and 9 so all three are
-   spendable in a nine-round run. **What is left open is the client.** A rung the round can pay for reads
-   `Shield Wall   1 capstone token` on the hex it is offered at, and one it cannot is simply not offered — so
-   a player holding no token sees a line stop at its second rung with nothing saying why. The run header
-   shows gold and has no second counter beside it. That is a visual decision rather than a rule, so it is
-   proposed here rather than taken.
-7. **The beside slot is built and one rung wants two of it.** The Engineer's turret, the Paladin's statue,
+   spendable in a nine-round run. **The client half was taken on 11 September 2026 by
+   [#285](https://github.com/ssalter21/tower-defense-game/issues/285)**, as a holding answer: a rung the round
+   can pay for reads its name over `1 capstone` on the hex it is offered at, one it cannot is simply not
+   offered, and the run header carries a fourth field after the gold — `Capstones N held · N spent · N to
+   come` — so a ladder that opens on nothing says why. The spelling is
+   [13 September's](decision-log.md#13-september-2026--the-currency-is-a-capstone-and-one-capstone-sets-one-capstone-rung).
+   Everything chrome waits on a direction, which is a fresh effort and not this page's.
+7. **The beside slot is built, and no rung wants two of it.** The Engineer's turret, the Paladin's statue,
    the Cleric's font and the Druid's weirwood each stand one tile from their tower's root, at a size written
-   down per prop. The Artificer's look puts a crate beside the turret, which is two props beside one tower —
-   the one look on this page the socket as built cannot draw whole.
+   down per prop. The Artificer's crate was drawn and not taken: on
+   [11 September 2026](decision-log.md#11-september-2026-after-the-balance-findings--the-rosters-art-stops-being-provisional-and-two-lines-bend-the-tier-rule-to-do-it)
+   the Engineer line is told apart by the size of its one turret instead, so no look on this page asks the
+   socket for more than it draws.
 8. **The Mortar's burst reaches two rows nobody asked about it for, down from three.** A signature is chosen
    by the row the event names, and a blast centred on its target names the body the shot arrived at rather
    than the shooter — so the burst is what *any* target-centred blast draws. **The Unravel came out of it on
