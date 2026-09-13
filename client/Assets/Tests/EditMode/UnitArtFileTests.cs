@@ -300,6 +300,35 @@ namespace Tests.EditMode
             Assert.That(moved.ArtFor(Mortar).Beside.Scale, Is.EqualTo(1.5f).Within(0.0001f));
         }
 
+        /// <summary>
+        /// An anchor of nothing takes the row's anchor away rather than leaving
+        /// it alone, so a candidate can show where a tower fired from before
+        /// the anchors landed.
+        /// </summary>
+        [Test]
+        public void AnAnchorOfNothingUnsetsTheRowsAnchor()
+        {
+            string path = TempFile("anchor " + Bishop + " -");
+            UnitArtFile candidate = UnitArtFile.Read(path);
+
+            MatchArt wired = MatchArt.Of(
+                new[]
+                {
+                    UnitArt.Armed(
+                        Bishop, new GameObject("body"), 1f, null, null, null, null, null,
+                        effectAnchor: EffectAnchor.At("Cleric_Tome"))
+                },
+                new AnimationClip(),
+                new AnimationClip());
+
+            Assert.That(wired.ArtFor(Bishop).EffectAnchor.IsSet, Is.True);
+
+            MatchArt moved = candidate.Applied(wired);
+
+            Assert.That(candidate.Changes[0].Anchor, Is.Not.Null);
+            Assert.That(moved.ArtFor(Bishop).EffectAnchor.IsSet, Is.False);
+        }
+
         [Test]
         public void AStandLineOnARowWithNothingBesideItIsRefusedWhenApplied()
         {
@@ -314,22 +343,22 @@ namespace Tests.EditMode
 
         /// <summary>
         /// Every candidate art file the branch commits, by absolute path. The
-        /// rung candidates only: #282's beside-prop candidates came out when
-        /// #284 signed the free neighbour, and these come out when it signs
-        /// the rest.
+        /// rung candidates and the Mage's anchor candidates: #282's beside-prop
+        /// candidates came out when #284 signed the free neighbour, and these
+        /// come out when it signs the rest.
         /// </summary>
         private static IEnumerable<string> CommittedCandidates()
         {
             var files = new List<string>();
 
-            foreach (string name in new[] { "rung-candidates" })
+            foreach (string name in new[] { "rung-candidates", "mage-anchor" })
             {
                 string folder = Path.Combine(RepositoryRoot(), "docs", "frames", name);
 
                 Assert.That(
                     Directory.Exists(folder),
                     Is.True,
-                    "No candidate art at " + folder + ". Issue #281 is drawn from these.");
+                    "No candidate art at " + folder + ". Issues #281 and #289 are drawn from these.");
 
                 string[] found = Directory.GetFiles(folder, "*.txt");
 

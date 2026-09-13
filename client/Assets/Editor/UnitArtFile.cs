@@ -57,6 +57,7 @@ namespace View.Editor
     /// atlas     29  Kaykit/adventurers/druid_texture_alt_A.png
     /// anchor    24  Cleric_Tome
     /// anchor    24  tip-of Cleric_Tome 0,1,0
+    /// anchor    4   -
     /// </code>
     /// </remarks>
     public sealed class UnitArtFile
@@ -510,19 +511,33 @@ namespace View.Editor
         }
 
         /// <summary>
-        /// Where the row's effects leave from: a node by name, or the tip of one
-        /// along a direction.
+        /// Where the row's effects leave from: a node by name, the tip of one
+        /// along a direction, or nothing at all.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// <b>Nothing is a candidate.</b> A row with no anchor fires from
+        /// <c>MatchTuning.TowerMuzzleHeight</c> above its own root, which is
+        /// what every tower did before the anchors landed — so "what was
+        /// traded away" is a picture a sheet can be asked for, and it is
+        /// spelled the way an empty hand and an empty tile are.
+        /// </para>
+        /// <para>
         /// The node is not checked against the model here, unlike every other
         /// reference in this file, because which nodes a body carries depends on
         /// the model bound to the row and this file names a row rather than a
         /// model. <c>EffectAnchor</c> already throws by name at bind time when a
         /// node is not there, which is a loud failure in the run rather than a
         /// silent one in the picture.
+        /// </para>
         /// </remarks>
         private static EffectAnchor? Anchor(string where, string[] fields, List<string> faults)
         {
+            if (fields[2] == BesideGroup.Empty)
+            {
+                return EffectAnchor.None;
+            }
+
             if (fields[2] != TipOf)
             {
                 return EffectAnchor.At(fields[2]);
