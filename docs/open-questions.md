@@ -257,8 +257,6 @@ swing on which the shot leaves the hand.
   keeps the clip honest and moves sixteen content numbers again, with the golden and every dated picture. The
   second keeps the numbers and accepts that some swings play fast.
 - **What a shot is allowed to be.** A model from the pack, a generated mesh, or a particle trail alone.
-- **Which smoothing candidate ships, and how a level stays readable on it.** The skin or the pieces, from a
-  sheet, with the contour or colour band asked of the same picture.
 - **The words on the wrapper's screens, and which settings ship first.**
 - **The sweep specification's five questions**, which are its own document:
   [`specs/sweep-harness.md`](specs/sweep-harness.md).
