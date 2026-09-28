@@ -251,11 +251,11 @@ namespace Sim
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <b>These two are the sweep's economy dials, and this is the seam they
-        /// turn on.</b> They decide what scouting is worth, which is a number
-        /// the harness is meant to move rather than an argument somebody settled
-        /// -- so a sweep retunes them here instead of every caller reaching for
-        /// a second ruleset file.
+        /// <b>These two are the economy's dials, and this is the seam they turn
+        /// on.</b> They decide what scouting is worth, which is a number a retune
+        /// is meant to move rather than an argument somebody settled -- so a
+        /// retune turns them here instead of every caller reaching for a second
+        /// ruleset file.
         /// </para>
         /// <para>
         /// <b>The content hash moves with them.</b> It is a fold over the parsed
@@ -324,7 +324,7 @@ namespace Sim
                     + " to "
                     + column.Maximum.ToString(CultureInfo.InvariantCulture)
                     + ". A number handed in here has had no file to be refused at, so it is held to the "
-                    + "range the authored column is held to -- otherwise a sweep is the one caller that "
+                    + "range the authored column is held to -- otherwise this is the one route that "
                     + "can build a ruleset no text file could express.");
             }
 

@@ -86,5 +86,5 @@ These were extracted from the source comments when the project moved to a commen
 | # | Decision |
 |---|---|
 | [0027](0027-a-landmark-table-with-a-hole-refuses-to-render.md) | A landmark table with a hole in it refuses to render |
-| [0041](0041-the-sweep-computes-rows-and-the-shell-writes-them.md) | The sweep computes rows and the shell writes them, and every rate arrives with its operands |
-| [0058](0058-a-sweep-row-is-a-creep-against-one-attack-type.md) | A sweep row is a creep against one attack type, and the wall is an axis of the report |
+| [0041](0041-the-sweep-computes-rows-and-the-shell-writes-them.md) | The sweep computes rows and the shell writes them, and every rate arrives with its operands — **retired 28 September 2026: the harness is deleted until [its specification](../specs/sweep-harness.md) is written** |
+| [0058](0058-a-sweep-row-is-a-creep-against-one-attack-type.md) | A sweep row is a creep against one attack type, and the wall is an axis of the report — **retired 28 September 2026, with the harness and the wall restriction** |
