@@ -139,7 +139,7 @@ public static class TheRuleset
     /// <see cref="Minimal"/> with the matrix rebuilt from three cells, cycled
     /// so that every row and every column is a permutation of them. Pierce
     /// against Swift is always the first of the three, which is what lets a
-    /// sweep move one multiplier at a time.
+    /// test move one multiplier at a time.
     /// </summary>
     public static string WithCells(int first, int second, int third) =>
         PlantedText.Replace(

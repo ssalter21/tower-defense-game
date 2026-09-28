@@ -73,8 +73,8 @@ because it is finished, at that stage, forever.
 **A run is ten waves.** A round is one build phase plus the wave after it.
 
 **Health is a pool denominated in gold, and a leaked creep costs health equal to its cost, one for one.** Gold
-cannot repair it. Damage taken in a round is the field average, not the sum. Zero health ends the run — a flag
-for the harness, not a rule, so a sweep can run in no-death mode. **A run is scored the way Opus Magnum scores
+cannot repair it. Damage taken in a round is the field average, not the sum. Zero health ends the run — a flag,
+not a rule, so a scripted run can be played in no-death mode. **A run is scored the way Opus Magnum scores
 a solution: several metrics, each a position on the lobby's curve, never added into one number** *(designed,
 not built)*. The offense is one of the metrics. What a player is shown is every player's bar with their own
 lit, not a rank. Which metrics, and whether the positions ever combine into a placing, are
@@ -132,9 +132,8 @@ carries which tier, and which one opens the counter — would hold for a whole r
 is a skill about. Its **filling** — which creeps sit on each gate's menu — would be drawn per run and is where
 replay value comes from. **The ghost pool would not shard for it**: ghosts draw on `(map, stage)` alone.
 
-**The capacity schedule waits on the people playtest** — the playtestable build, alongside the balance sweep.
-It is not waiting on a run played on a branch: a run played before the sweep and the playtestable build exist
-would be thrown out with them. Until that playtest, the purse is the only thing bounding a wave, and the
+**The capacity schedule waits on the people playtest** — the playtestable build. It is not waiting on a run
+played on a branch: a run played before the playtestable build exists would be thrown out with it. Until that playtest, the purse is the only thing bounding a wave, and the
 ruling — schedule it, delete it, or keep waiting — comes with the playtest's evidence.
 
 ### Depth is the point
@@ -215,8 +214,10 @@ the first run. **The onboarding ramp moves inside the run rather than disappeari
 ## 5. How it is balanced
 
 **Computed. The simulation tells you.** A committed match is **2.75 ms**, so a ten-thousand-matchup sweep is
-under a minute — a `simcli` mode and a CSV, worth having before the roster is large. Telemetry balancing needs
-volume this will never have; hand balancing confuses *feels strong* with *is strong*.
+under a minute — a `simcli` mode and a CSV. Telemetry balancing needs volume this will never have; hand
+balancing confuses *feels strong* with *is strong*. **The harness is designed, not built**: a first one was
+built at step 4 and removed on 28 September 2026, because until [its specification](specs/sweep-harness.md) says
+what it is for it cost more than it returned — see [the decision log](decision-log/2026-09.md#28-september-2026--the-balance-harness-comes-out-until-it-is-specified).
 
 **The harness also scores maps.** Same sweep, different axis — so **the sweep takes its map as a parameter.**
 

@@ -6,15 +6,16 @@ machine at a different latency. What it is and where it is going lives in
 
 ## Status
 
-A deterministic integer simulation, a ghost record format, a headless CLI, a
-balance sweep, and a Unity 6 view that scrubs a recorded match from snapshots.
+A deterministic integer simulation, a ghost record format, a headless CLI, and
+a Unity 6 view that scrubs a recorded match from snapshots.
 A run is ten rounds of build phase and wave, authored as text and compiled to a
 command stream, against a canned field.
 
 [The build order](docs/build-order.md) sequences the rest by what
-is cheapest to learn rather than by what depends on what. Its first four steps —
-the economy, the run lifecycle, the roster and the sweep — are built and run
-from a shell with no engine in them. **Step 5, build-phase interaction in the
+is cheapest to learn rather than by what depends on what. Its first three steps —
+the economy, the run lifecycle and the roster — are built and run from a shell
+with no engine in them; the fourth, the balance harness, was built and then
+removed until it has a specification. **Step 5, build-phase interaction in the
 client, is what comes next**; the loop against stored ghosts is step 6.
 
 ## Ideas / scope
@@ -59,36 +60,6 @@ tool that prints the edges:
 ```
 ./tools/show-ladder.ps1
 ```
-
-The second thing is the balance harness:
-
-```
-./tools/run-sweep.ps1
-```
-
-It plays every creep in the roster over a population of runs and writes what
-they came to as a comma-separated file — win rate, cost efficiency, what
-attacking earned its sender beside what turning up paid, and all of those binned
-by how many ingredients a run ended up holding. Fourteen thousand
-matchups is a dozen seconds, which is the whole reason the tool is worth
-having before the roster is large. Every one of the six content files is an
-argument, so pointing it at another map to score it, or at another damage
-matrix, costs a flag rather than an edit.
-
-`content/sweep.csv` is the report a real sweep produced at the committed shape;
-`-Verify` checks it against a fresh one and `-Regenerate` rewrites it. Any bound
-the sweep placed on itself — a sampled seed count, a truncated roster — is a row
-of the file, so a partial report never reads as a complete one.
-
-Two arguments change what a sweep *is* rather than where it points. `-Policy`
-names the scripted player: `even-share` splits every purse between the board and
-the wave, `all-in` builds nothing and sends the lot, and two reports under the
-two of them are what says what the defensive half of a round is worth. `-PerRun`
-keeps a row for every run under the folded ones — the distribution the fold is a
-summary of, each row naming the seed that produced it, so an outlier is a run
-somebody can replay. The player's name is a row of the file like every other
-parameter, which is what stops two reports that differ only in it being mistaken
-for each other.
 
 A run is played in the client rather than at a prompt. What a session decided is
 written out there as a `content/commands.txt` script, but only after that script

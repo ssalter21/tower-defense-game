@@ -842,8 +842,8 @@ namespace Sim
         /// <remarks>
         /// One bill and two halves, said as a total and a part rather than as
         /// two totals, so nothing holding this has to add them up to get what
-        /// the purse moved by. What the wave cost is the difference, and it is
-        /// what the cost-efficiency column of a balance report is per -- see
+        /// the purse moved by. What the wave cost is the difference, which is
+        /// what a cost-efficiency figure would be measured per -- see
         /// <c>docs/adr/0041</c>.
         /// </remarks>
         public int Defense { get; }
