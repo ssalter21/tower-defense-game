@@ -68,10 +68,10 @@ passes every check on an artefact nobody has looked at. The evidence each row re
 
 ## 7. A session hands off before its context reaches 300k tokens
 
-**Investigation across more than three files goes to a subagent** that returns findings, not file contents. A tool
-output saved to disk is searched with `grep` or read by line range; an existing file changes by Edit; a frame is
-cropped or halved unless full size is what is judged. **At about 250k tokens on `/context`, hand off:** commit,
-push, `/handoff` on the ticket, start fresh. A Unity batchmode run is a good stop, the tree frozen and committed.
+**Investigation across more than three files goes to a subagent** that returns findings, not contents. A tool output
+saved to disk is grepped or read by line range, an existing file changes by Edit rather than Write, and a frame is
+cropped or halved before it is read, unless full size is judged. **At about 250k tokens on `/context`, hand off:**
+commit, push, `/handoff` on the ticket, start fresh. A batchmode run is a good stop: its tree is committed.
 
 ## Waiting on Unity
 
