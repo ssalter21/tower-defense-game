@@ -98,7 +98,7 @@ namespace View
         [Range(0f, 1f)]
         [Tooltip("The chance a cell standing over a lower one carries a mound on the lip of the drop.")]
         [SerializeField]
-        private float ridgeChance = 0.5f;
+        private float ridgeChance = 0f;
 
         [Range(0f, 4f)]
         [Tooltip("How far a cell on the board's edge hangs below its own face, in metres.")]

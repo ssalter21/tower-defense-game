@@ -106,7 +106,7 @@ namespace View
         /// top of it.
         /// </para>
         /// </remarks>
-        public float RidgeChance { get; set; } = 0.5f;
+        public float RidgeChance { get; set; } = 0f;
 
         /// <summary>
         /// How far a cell on the board's edge hangs below its own face, in

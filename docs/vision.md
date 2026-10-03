@@ -173,13 +173,13 @@ blocks**, and every number priced against it is provisional by construction. It 
 available to it, and every change of height on it is a single level -- half a block -- so nothing on it steps a
 whole one.
 
-*(decided, not built)* -- **the board is smoothed by a skin, and a level reads by a contour.** The ground is one
-generated mesh: a flat top per cell at its own height, a planar slope between two cells of different level, met
-to the road pieces at the height each has at its edge, and a bank of earth at the rim. It is regenerated from
-the map at scene-build time, so a new map costs nothing to author. On every edge where the level changes, a thin
-dark contour line, mid-slope; no tint per level, because a colour per level is a colour taken from every unit
-and effect. The dressing's ridge mounds go, since the drops they marked are slopes now. Neither changes what a
-cell is or where a tower stands.
+**The board is smoothed by a skin, and a level reads by a contour.** The ground is one generated mesh: a flat
+top per cell at its own height, a planar slope between two cells of different level, met to the road pieces at
+the height each has at its edge, and a bank of earth at the rim. It is regenerated from the map at scene-build
+time, so a new map costs nothing to author. On every edge where the level changes, a thin dark contour line,
+mid-slope; no tint per level, because a colour per level is a colour taken from every unit and effect. The
+dressing has no ridge mounds, since the drops they marked are slopes. Neither changes what a cell is or where a
+tower stands. [ADR-0065](adr/0065-the-ground-is-one-skin-regenerated-from-the-map.md).
 
 ### How a shot resolves
 

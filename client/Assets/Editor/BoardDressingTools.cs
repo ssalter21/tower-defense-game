@@ -180,6 +180,13 @@ namespace View.Editor
             }
         }
 
+        public static void Rebake()
+        {
+            Clear();
+            DressWith(StreamingContent.ReadMap());
+            Bake();
+        }
+
         [MenuItem("Tools/Board/Bake")]
         public static void Bake()
         {

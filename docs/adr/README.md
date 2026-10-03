@@ -80,6 +80,7 @@ These were extracted from the source comments when the project moved to a commen
 | [0029](0029-exactly-one-match-root.md) | Exactly one match root in the scene |
 | [0053](0053-the-chrome-loads-one-settings-asset-for-its-text-data.md) | The chrome loads one settings asset, for its text data and nothing else |
 | [0064](0064-a-committed-frame-is-documentation-not-an-oracle.md) | A committed frame is documentation, not an oracle |
+| [0065](0065-the-ground-is-one-skin-regenerated-from-the-map.md) | The ground is one skin regenerated from the map, and a level reads by a contour |
 
 ## Reporting
 

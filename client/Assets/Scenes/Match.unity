@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1378189714
+--- !u!1 &448630014
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,8 +127,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1378189716}
-  - component: {fileID: 1378189715}
+  - component: {fileID: 448630016}
+  - component: {fileID: 448630015}
   m_Layer: 0
   m_Name: Match
   m_TagString: Untagged
@@ -136,13 +136,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1378189715
+--- !u!114 &448630015
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1378189714}
+  m_GameObject: {fileID: 448630014}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 48c34606767969243be84ba846f82b91, type: 3}
@@ -160,9 +160,6 @@ MonoBehaviour:
     deadEnd: {fileID: 2316860884007315106, guid: 1e441b1cb6834748adf87ec5963403b6, type: 3}
     straightRamp: {fileID: -126285260458875959, guid: 1267bf0521704d4cb4bc7e87d209746a, type: 3}
     straightHalfRamp: {fileID: 3414782510651514855, guid: 2529b7eef89629441832885fec3a8e1b, type: 3}
-    groundSlopeLow: {fileID: 6427449192570835744, guid: cc5e903312dccfa41a1c6c5fcfa520ea, type: 3}
-    groundSlopeHigh: {fileID: -982574393197988068, guid: 8a2fbc9090465a74aa73ccd12d9db687, type: 3}
-    cliff: {fileID: 703726867841230225, guid: f61f9be82275441bada82099c14fd92e, type: 3}
     water: {fileID: 1477051960566787356, guid: 406371e3fd769b2419ff95047bbf108b, type: 3}
     surface: {fileID: 2100000, guid: 311b9a3e1c16dcf4cacf5e010042284c, type: 2}
     road: {fileID: 0}
@@ -1202,13 +1199,13 @@ MonoBehaviour:
       deathClip: {fileID: 0}
     creepWalkClip: {fileID: 7060811993321468294, guid: f185de5ac79569b4091502d465361499, type: 3}
     creepDeathClip: {fileID: -1923750366902163184, guid: b60846b11498cd6478c62e69928865a1, type: 3}
---- !u!4 &1378189716
+--- !u!4 &448630016
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1378189714}
+  m_GameObject: {fileID: 448630014}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -1221,4 +1218,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1378189716}
+  - {fileID: 448630016}

@@ -275,7 +275,7 @@ namespace View.Editor
                 // The tiles the scene carries. Without this the capture draws
                 // the blockout, which on a board with tiers is a flat hexagon
                 // with no sides and shows the background through every step.
-                root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
+                root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery(), MatchSceneBuilder.Dressing());
 
                 EffectLookFile effectCandidate = string.IsNullOrWhiteSpace(effects)
                     ? null

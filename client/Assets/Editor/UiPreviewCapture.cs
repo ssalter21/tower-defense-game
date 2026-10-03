@@ -331,7 +331,7 @@ namespace View.Editor
             // The tiles and scenery the scene carries. Without them the sheet
             // draws the blockout, which on a board with tiers is a flat hexagon
             // with no sides and shows the background through every step.
-            root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery());
+            root.Build(record.Map, MatchSceneBuilder.Tiles(), MatchSceneBuilder.Scenery(), MatchSceneBuilder.Dressing());
 
             RunLoop loop = root.BeginRun(record.Seed, Path.GetTempPath(), MatchSceneBuilder.Art());
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -8,9 +9,9 @@ using View;
 namespace Tests.PlayMode
 {
     /// <summary>
-    /// The floor: one tile per map-grid cell, road on the corridor and grass
-    /// everywhere else, with the hex dimensions measured off the mesh rather
-    /// than asserted about a constant.
+    /// The floor: a piece per corridor cell and one skin of ground between
+    /// them, with the hex dimensions measured off the mesh rather than
+    /// asserted about a constant.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -191,28 +192,156 @@ namespace Tests.PlayMode
         // -----------------------------------------------------------------
 
         [Test]
-        public void ThereIsExactlyOneTilePerGridCell()
+        public void TheCorridorIsPiecesAndTheGroundIsOneSkin()
         {
             MatchRoot root = BuildPlayfield();
             HexMap map = root.Map;
-
-            Assert.That(root.Floor.TileCount, Is.EqualTo(map.Width * map.Height));
-            Assert.That(root.Floor.transform.childCount, Is.EqualTo(map.Width * map.Height));
+            int corridor = 0;
 
             for (int row = 0; row < map.Height; row++)
             {
                 for (int column = 0; column < map.Width; column++)
                 {
-                    MeshRenderer tile = root.Floor.TileAt(column, row);
+                    bool isCorridor = map.CellAt(column, row) != MapCell.Ground;
+                    MeshRenderer piece = root.Floor.TileAt(column, row);
 
-                    Assert.That(tile, Is.Not.Null, "no tile at " + column + "," + row);
                     Assert.That(
-                        tile.transform.position,
+                        piece != null,
+                        Is.EqualTo(isCorridor),
+                        "cell " + column + "," + row + " is " + map.CellAt(column, row)
+                        + (isCorridor ? " and has no piece standing on it" : " and has a piece standing on it"));
+
+                    if (!isCorridor)
+                    {
+                        continue;
+                    }
+
+                    corridor++;
+
+                    Assert.That(
+                        piece.transform.position,
                         Is.EqualTo(HexGeometry.ToWorld(column, row, map.LevelAt(column, row)))
                             .Using(new VectorComparer(Tolerance)),
-                        "tile at " + column + "," + row + " is in the wrong place");
+                        "piece at " + column + "," + row + " is in the wrong place");
                 }
             }
+
+            Assert.That(root.Floor.TileCount, Is.EqualTo(corridor));
+            Assert.That(root.Floor.Tiles.Count(), Is.EqualTo(corridor));
+            Assert.That(root.Floor.Skin, Is.Not.Null, "no skin");
+            Assert.That(root.Floor.Contours, Is.Not.Null, "no contours");
+            Assert.That(
+                root.Floor.transform.childCount,
+                Is.EqualTo(corridor + 2),
+                "the floor is the corridor's pieces, one skin and one set of contours, and nothing else");
+            Assert.That(
+                root.Floor.transform.Cast<Transform>().Any(child => child.name.StartsWith("Cliff")),
+                Is.False,
+                "something is standing under the board");
+        }
+
+        [Test]
+        public void EveryGroundCellHasItsCentreOnTheSkinAtItsOwnLevel()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+            HashSet<(int, int, int)> vertices = VerticesOf(root.Floor.Skin);
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    if (map.CellAt(column, row) != MapCell.Ground)
+                    {
+                        continue;
+                    }
+
+                    Vector3 centre = HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
+
+                    Assert.That(
+                        vertices.Contains(Rounded(centre)),
+                        Is.True,
+                        "the skin has no vertex at the centre of cell " + column + "," + row
+                        + " at level " + map.LevelAt(column, row) + ", so the cell does not stand at its own height");
+                }
+            }
+        }
+
+        [Test]
+        public void TheSkinMeetsEveryRoadPieceAtThePiecesOwnCorners()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+            HashSet<(int, int, int)> vertices = VerticesOf(root.Floor.Skin);
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    if (map.CellAt(column, row) == MapCell.Ground)
+                    {
+                        continue;
+                    }
+
+                    Vector3 centre = HexGeometry.ToWorld(column, row, map.LevelAt(column, row));
+
+                    for (int corner = 0; corner < Hex.DirectionCount; corner++)
+                    {
+                        Vector3 at = centre + HexGeometry.Corner(corner);
+
+                        if (!TouchesGround(map, column, row, at))
+                        {
+                            continue;
+                        }
+
+                        Assert.That(
+                            vertices.Contains(Rounded(at)),
+                            Is.True,
+                            "the skin has no vertex at corner " + corner + " of road cell " + column + "," + row
+                            + " at the piece's own height, so the ground does not meet the road at its edge");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void AContourLiesOnEveryEdgeWhereTheLevelChanges()
+        {
+            MatchRoot root = BuildPlayfield();
+            HexMap map = root.Map;
+            Mesh ribbons = root.Floor.Contours.GetComponent<MeshFilter>().sharedMesh;
+
+            int edges = 0;
+
+            for (int row = 0; row < map.Height; row++)
+            {
+                for (int column = 0; column < map.Width; column++)
+                {
+                    Hex hex = Hex.FromOddRowOffset(column, row);
+
+                    for (int direction = 0; direction < Hex.DirectionCount; direction++)
+                    {
+                        Hex.ToOddRowOffset(hex.Neighbour(direction), out int otherColumn, out int otherRow);
+
+                        if (otherColumn < 0 || otherColumn >= map.Width || otherRow < 0 || otherRow >= map.Height)
+                        {
+                            continue;
+                        }
+
+                        if (map.LevelAt(column, row) > map.LevelAt(otherColumn, otherRow))
+                        {
+                            edges++;
+                        }
+                    }
+                }
+            }
+
+            Assert.That(edges, Is.GreaterThan(0), "the committed board has no change of level on it");
+            Assert.That(
+                ribbons.triangles.Length / 3,
+                Is.EqualTo(edges * 4),
+                "two ribbons of two triangles per edge between two cells of different level");
+            Assert.That(root.Floor.Contours.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
         }
 
         [Test]
@@ -225,7 +354,7 @@ namespace Tests.PlayMode
             Rect reckoned = HexGeometry.Footprint(map.Width, map.Height);
 
             // Two ways of saying where the board stops, and they have to be one
-            // answer. The floor measures the tiles it placed; the footprint
+            // answer. The floor measures the cells it placed; the footprint
             // works it out from the map for the things that need the rim
             // without holding a floor -- a match drawn in a fixture, which is
             // most of them. Ground effects are clipped to this, so a
@@ -271,8 +400,8 @@ namespace Tests.PlayMode
         }
 
         /// <summary>
-        /// No decoration. Every tile is a mesh filter and a mesh renderer and
-        /// nothing else, because the moment a tile can carry something extra
+        /// No decoration. Every piece is a mesh filter and a mesh renderer and
+        /// nothing else, because the moment a piece can carry something extra
         /// there is a rule about when it should, and this renderer is supposed
         /// to have no rules in it at all.
         /// </summary>
@@ -281,7 +410,7 @@ namespace Tests.PlayMode
         {
             MatchRoot root = BuildPlayfield();
 
-            foreach (MeshRenderer tile in root.Floor.Tiles)
+            foreach (MeshRenderer tile in root.Floor.Tiles.Append(root.Floor.Skin).Append(root.Floor.Contours))
             {
                 Component[] components = tile.GetComponents<Component>();
 
@@ -324,6 +453,56 @@ namespace Tests.PlayMode
                 Is.EqualTo(new[] { nameof(StreamingContent) + "." + nameof(StreamingContent.ReadMap) }),
                 "Something in the view is producing a map other than by handing bytes to the "
                 + "simulation's parser.");
+        }
+
+        private static HashSet<(int, int, int)> VerticesOf(MeshRenderer renderer)
+        {
+            Transform at = renderer.transform;
+            var found = new HashSet<(int, int, int)>();
+
+            foreach (Vector3 vertex in renderer.GetComponent<MeshFilter>().sharedMesh.vertices)
+            {
+                found.Add(Rounded(at.TransformPoint(vertex)));
+            }
+
+            return found;
+        }
+
+        private static (int, int, int) Rounded(Vector3 point) =>
+            (Mathf.RoundToInt(point.x * 1000f), Mathf.RoundToInt(point.y * 1000f), Mathf.RoundToInt(point.z * 1000f));
+
+        private static bool TouchesGround(HexMap map, int column, int row, Vector3 cornerXZ)
+        {
+            Hex hex = Hex.FromOddRowOffset(column, row);
+
+            for (int direction = 0; direction < Hex.DirectionCount; direction++)
+            {
+                Hex.ToOddRowOffset(hex.Neighbour(direction), out int otherColumn, out int otherRow);
+
+                if (otherColumn < 0 || otherColumn >= map.Width || otherRow < 0 || otherRow >= map.Height)
+                {
+                    continue;
+                }
+
+                if (map.CellAt(otherColumn, otherRow) != MapCell.Ground)
+                {
+                    continue;
+                }
+
+                Vector3 centre = HexGeometry.ToWorld(otherColumn, otherRow);
+
+                for (int corner = 0; corner < Hex.DirectionCount; corner++)
+                {
+                    Vector3 theirs = centre + HexGeometry.Corner(corner);
+
+                    if (Mathf.Abs(theirs.x - cornerXZ.x) < Tolerance && Mathf.Abs(theirs.z - cornerXZ.z) < Tolerance)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         /// <summary>Component-wise vector comparison, because NUnit's default is exact.</summary>

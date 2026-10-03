@@ -104,7 +104,7 @@ namespace Tests.EditMode
         /// </para>
         /// </remarks>
         /// <summary>
-        /// The two ramps and the two grass slopes, and how many levels each is
+        /// The two ramps, and how many levels each is
         /// claimed to climb. This is the table the whole half-step grid rests
         /// on: a level is half a block because the pack cuts a piece that rises
         /// half a block, and if that stopped being true the board would be
@@ -114,8 +114,6 @@ namespace Tests.EditMode
         {
             (TilePiece.StraightHalfRamp, TilePiece.Straight, 1),
             (TilePiece.StraightRamp, TilePiece.Straight, 2),
-            (TilePiece.GroundSlopeLow, TilePiece.Ground, 1),
-            (TilePiece.GroundSlopeHigh, TilePiece.Ground, 2),
         };
 
         [Test]

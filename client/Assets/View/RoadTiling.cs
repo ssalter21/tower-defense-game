@@ -40,28 +40,12 @@ namespace View
         StraightHalfRamp,
 
         /// <summary>
-        /// Ground rising half a block across itself, with no path on it. What
-        /// turns a hillside into a hillside rather than a flight of stairs.
-        /// </summary>
-        GroundSlopeLow,
-
-        /// <summary>Ground rising a whole block across itself.</summary>
-        GroundSlopeHigh,
-
-        /// <summary>
         /// Standing water. Chosen for a ground cell lying at or below the
         /// board's water line, which is a dressing decision and not a map one:
         /// the simulation has no idea a lake is there and a tower may still be
         /// built in it.
         /// </summary>
         Water,
-
-        /// <summary>
-        /// A metre of bare earth with no walkable face, stacked under a tile to
-        /// make the rest of a cliff. Never chosen for a cell -- the floor
-        /// repeats it downwards where a drop is deeper than one tile's body.
-        /// </summary>
-        Cliff,
     }
 
     /// <summary>A tile model and the turn that orients it. Rotation is in sixths.</summary>
@@ -173,10 +157,7 @@ namespace View
                 TilePiece.DeadEnd => DeadEndEdges,
                 TilePiece.StraightRamp => StraightEdges,
                 TilePiece.StraightHalfRamp => StraightEdges,
-                TilePiece.GroundSlopeLow => System.Array.Empty<int>(),
-                TilePiece.GroundSlopeHigh => System.Array.Empty<int>(),
                 TilePiece.Water => System.Array.Empty<int>(),
-                TilePiece.Cliff => System.Array.Empty<int>(),
                 _ => throw new System.InvalidOperationException("No edge table for " + piece + "."),
             };
 
@@ -193,9 +174,7 @@ namespace View
         {
             if (map.CellAt(column, row) == MapCell.Ground)
             {
-                return TryGroundSlope(map, column, row, out TileChoice slope)
-                    ? slope
-                    : new TileChoice(TilePiece.Ground, 0);
+                return new TileChoice(TilePiece.Ground, 0);
             }
 
             int edges = CorridorEdges(map, column, row);
@@ -326,94 +305,6 @@ namespace View
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// A grass slope if this ground cell sits on a hillside: one neighbour
-        /// a level or two above it, and the neighbour directly opposite no
-        /// higher than the cell itself.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// <b>The opposite edge is the whole test.</b> A slope piece has a low
-        /// side and a high side and they face each other, so a cell only wears
-        /// one where the ground genuinely runs downhill through it. Asking
-        /// only whether anything stands above would put a slope on a cell in a
-        /// pit, where its low side would face a wall and the tile would read as
-        /// a fault in the terrain rather than as a gradient.
-        /// </para>
-        /// <para>
-        /// <b>Off the grid counts as lower.</b> The board's rim falls away to
-        /// nothing, so a cell on the edge with high ground behind it is a
-        /// hillside running off the board, and drawing it as one is what stops
-        /// the border reading as a cut.
-        /// </para>
-        /// <para>
-        /// <b>The cell keeps the level the map gave it.</b> The tile is laid at
-        /// that level and rises from it, exactly as the road ramp is, so its
-        /// low edge meets the neighbour it came from and its high edge meets
-        /// the one it climbs to. Nothing here tells the simulation anything --
-        /// the cell is at one level and reaches what a cell at that level
-        /// reaches, whatever the surface across its width does.
-        /// </para>
-        /// </remarks>
-        private static bool TryGroundSlope(HexMap map, int column, int row, out TileChoice choice)
-        {
-            choice = default;
-
-            int here = map.LevelAt(column, row);
-            Hex hex = Hex.FromOddRowOffset(column, row);
-
-            for (int direction = 0; direction < Hex.DirectionCount; direction++)
-            {
-                if (!LevelAt(map, hex.Neighbour(direction), out int above))
-                {
-                    continue;
-                }
-
-                int climb = above - here;
-
-                if (climb != 1 && climb != 2)
-                {
-                    continue;
-                }
-
-                int opposite = (direction + (Hex.DirectionCount / 2)) % Hex.DirectionCount;
-
-                if (LevelAt(map, hex.Neighbour(opposite), out int behind) && behind > here)
-                {
-                    continue;
-                }
-
-                choice = new TileChoice(
-                    climb == 1 ? TilePiece.GroundSlopeLow : TilePiece.GroundSlopeHigh,
-                    Turn(RampHighEdge, direction));
-
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// The level of a hex, or false where it is off the grid. The one place
-        /// the bounds check and the odd-r conversion are paired, so no caller
-        /// here does either by hand.
-        /// </summary>
-        private static bool LevelAt(HexMap map, Hex hex, out int level)
-        {
-            Hex.ToOddRowOffset(hex, out int column, out int row);
-
-            if (column < 0 || column >= map.Width || row < 0 || row >= map.Height)
-            {
-                level = 0;
-
-                return false;
-            }
-
-            level = map.LevelAt(column, row);
-
-            return true;
         }
 
         /// <summary>
