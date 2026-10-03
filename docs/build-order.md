@@ -329,9 +329,10 @@ generation and rotation are deferred behind the first hand-authored map.**
   good to score candidates against. What the survey found is in
   [open questions](research/design-surveys-digest.md).
 - **Smoothing** — shipped as the skin: one mesh over the grid, a flat top per cell and a planar slope between
-  levels, met to the road pieces at their own edges, with a contour line on every edge where the level changes.
-  Chosen over a piece per neighbour case under the legibility veto from [seam 8](#8--the-presentation), and
-  over a colour band per level because a tint per level is a colour taken from every unit and effect
+  levels, met to the road pieces at their own edges, each level's ground a shade of the grass's green.
+  Chosen over a piece per neighbour case under the legibility veto from [seam 8](#8--the-presentation), over
+  a colour band per level because a hue per level is a colour taken from every unit and effect, and over the
+  contour line that first shipped, which Sam rejected on the ship frame
   ([ADR-0065](adr/0065-the-ground-is-one-skin-regenerated-from-the-map.md)). Picking stays a rule about
   cells and never reads the mesh.
 

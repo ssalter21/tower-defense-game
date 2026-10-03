@@ -4,7 +4,7 @@
 # answered by a picture rather than by a claim.
 #
 # THE BOARD IS THE ONE THE GAME BUILDS. The real MatchRoot draws the real
-# floor -- the skin, the contours, the road pieces, the dressing the asset
+# floor -- the skin in its shades of green, the road pieces, the dressing the asset
 # ships -- from content/map.txt read through the simulation's own parser, with
 # nothing standing on it and nobody walking it. The cells, the corridor and
 # the level of every cell come from the map and nothing here touches any of
@@ -13,7 +13,7 @@
 # THE SECOND CAMERA IS A PLAN. tools/render-map.ps1 draws the board as a
 # top-down SVG and has no Unity camera to borrow, so its view is taken here as
 # an orthographic camera looking straight down, which is the angle at which
-# height is invisible and the contour has to carry the whole of the reading.
+# height is invisible and the shades of green have to carry the whole of the reading.
 #
 # -batchmode -executeMethod, so it needs no editor session and nobody at a
 # keyboard -- and therefore requires the editor to be CLOSED, because batchmode
